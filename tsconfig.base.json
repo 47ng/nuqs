@@ -1,13 +1,13 @@
 {
   "compilerOptions": {
     "baseUrl": ".",
-    "target": "es2018",
     "lib": ["DOM"],
-    "module": "commonjs",
+    "moduleResolution": "node",
     "declaration": true,
     "outDir": "./dist",
     "rootDir": "./src",
     "esModuleInterop": true,
+    "jsx": "preserve",
 
     // Strict Type-Checking Options
     "strict": true,
@@ -28,6 +28,14 @@
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true
   },
-  "include": ["./src/**/*.ts"],
-  "exclude": ["./src/**/*.test.ts", "./dist", "./node_modules"]
+  "include": ["./src/**/*.ts", "./src/**/*.tsx"],
+  "exclude": [
+    "./src/**/*.test.ts",
+    "./src/**/*.test.tsx",
+    "./dist",
+    "./node_modules",
+    "./test",
+    "./pages",
+    "./.next"
+  ]
 }

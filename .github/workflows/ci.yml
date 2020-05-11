@@ -37,10 +37,10 @@ jobs:
         name: Install dependencies
       - run: yarn ci
         name: Run integration tests
-      - uses: coverallsapp/github-action@832e70b
-        name: Report code coverage
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+      # - uses: coverallsapp/github-action@832e70b
+      #   name: Report code coverage
+      #   with:
+      #     github-token: ${{ secrets.GITHUB_TOKEN }}
       - uses: 8398a7/action-slack@78391c2
         name: Notify on Slack
         if: always() # Pick up events even if the job fails or is canceled.

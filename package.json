@@ -1,21 +1,28 @@
 {
-  "name": "@chiffre/template-library",
+  "name": "next-usequerystate",
   "version": "0.0.0-semantically-released",
-  "description": "Template for Chiffre libraries",
-  "main": "dist/index.js",
+  "description": "useQueryState hook for Next.js - Like React.useState, but stored in the URL query string",
+  "type": "commonjs",
+  "main": "dist/cjs/index.js",
+  "module": "dist/esm/index.js",
+  "types": "dist/cjs/index.d.ts",
   "license": "MIT",
   "author": {
     "name": "François Best",
-    "email": "francois.best@chiffre.io",
-    "url": "https://chiffre.io"
+    "email": "contact@francoisbest.com",
+    "url": "https://francoisbest.com"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/chiffre-io/template-library"
+    "url": "https://github.com/47ng/next-usequerystate"
   },
   "keywords": [
-    "chiffre",
-    "template"
+    "nextjs",
+    "router",
+    "url",
+    "query-string",
+    "react-hook",
+    "useState"
   ],
   "publishConfig": {
     "access": "public"
@@ -24,19 +31,30 @@
     "test": "jest --coverage",
     "test:watch": "jest --watch",
     "build:clean": "rm -rf ./dist",
-    "build:ts": "tsc",
-    "build": "run-s build:clean build:ts",
-    "ci": "run-s build test"
+    "build:cjs": "tsc --project ./tsconfig.cjs.json",
+    "build:esm": "tsc --project ./tsconfig.esm.json",
+    "build": "run-s build:clean build:cjs build:esm",
+    "ci": "run-s build"
+  },
+  "peerDependencies": {
+    "next": "*",
+    "react-dom": "*",
+    "react": "*"
   },
   "dependencies": {},
   "devDependencies": {
     "@commitlint/config-conventional": "^8.3.4",
     "@types/jest": "^25.2.1",
     "@types/node": "^13.13.5",
+    "@types/react": "^16.9.35",
+    "@types/react-dom": "^16.9.8",
     "commitlint": "^8.3.5",
     "husky": "^4.2.5",
     "jest": "^25.5.4",
+    "next": "^9.3.6",
     "npm-run-all": "^4.1.5",
+    "react": "^16.13.1",
+    "react-dom": "^16.13.1",
     "ts-jest": "^25.5.1",
     "ts-node": "^8.10.1",
     "typescript": "^3.8.3"
@@ -44,7 +62,7 @@
   "jest": {
     "verbose": true,
     "preset": "ts-jest/presets/js-with-ts",
-    "testEnvironment": "node"
+    "testEnvironment": "jsdom"
   },
   "prettier": {
     "arrowParens": "avoid",
