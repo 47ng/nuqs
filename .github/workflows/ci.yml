@@ -1,0 +1,52 @@
+name: Continuous Integration
+
+on:
+  push:
+    branches:
+      - next
+      - feature/*
+      - dependabot/*
+  pull_request:
+    types: [opened, edited, reopened]
+
+jobs:
+  ci:
+    name: Continuous Integration
+    runs-on: ubuntu-latest
+    steps:
+      - id: short-sha1
+        name: Get short Git SHA-1
+        run: echo "::set-output name=value::$(echo $GITHUB_SHA | cut -c1-8)"
+      - run: echo ${{ steps.short-sha1.outputs.value }}
+        name: Print short SHA-1
+      - id: yarn-cache
+        name: Get Yarn cache path
+        run: echo "::set-output name=dir::$(yarn cache dir)"
+      - uses: actions/checkout@722adc6
+      - uses: actions/setup-node@1c5c137
+        with:
+          node-version: 12.x
+      - uses: actions/cache@70655ec
+        name: Load Yarn cache
+        with:
+          path: ${{ steps.yarn-cache.outputs.dir }}
+          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-yarn-
+      - run: yarn install --ignore-scripts
+        name: Install dependencies
+      - run: yarn ci
+        name: Run integration tests
+      - uses: coverallsapp/github-action@832e70b
+        name: Report code coverage
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: 8398a7/action-slack@78391c2
+        name: Notify on Slack
+        if: always() # Pick up events even if the job fails or is canceled.
+        with:
+          status: ${{ job.status }}
+          author_name: Continuous Integration
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
