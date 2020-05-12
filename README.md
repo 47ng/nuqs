@@ -60,8 +60,8 @@ Example outputs for our counter example:
 
 ## History options
 
-By default, operations on the HTML5 history is done by replacing the
-current history entry with the updated query when state changes.
+By default, state updates are done by replacing the current history entry with
+the updated query when state changes.
 
 You can see this as a sort of `git squash`, where all state-changing
 operations are merged into a single history value.
