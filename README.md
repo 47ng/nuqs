@@ -58,11 +58,11 @@ Example outputs for our hello world example:
 
 ## Parsing
 
-If the type you're expecting as state is not a string, you must pass a parsing
-function in the second argument object.
+If your state type is not a string, you must pass a parsing function in the
+second argument object.
 
-You may pass a `serialize` function
-for the opposite direction, by default `toString()` is used.
+You may pass a `serialize` function for the opposite direction, by default
+`toString()` is used.
 
 Example: simple counter stored in the URL:
 
