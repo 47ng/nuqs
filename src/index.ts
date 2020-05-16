@@ -1,15 +1,18 @@
 import React from 'react'
 import { useRouter } from 'next/router'
 
-export interface UseQueryStateOptions {
+export interface UseQueryStateOptions<T> {
   /**
    * The operation to use on state updates. Defaults to `replace`.
    */
   history: 'replace' | 'push'
+
+  parse: (value: string) => T | null
+  serialize: (value: T) => string
 }
 
 export type UseQueryStateReturn<T> = [
-  T,
+  T | null,
   React.Dispatch<React.SetStateAction<T>>
 ]
 
@@ -18,10 +21,14 @@ export type UseQueryStateReturn<T> = [
  *
  * @param key - The URL query string key to bind to
  */
-export function useQueryState(
+export function useQueryState<T = string>(
   key: string,
-  { history = 'replace' }: Partial<UseQueryStateOptions> = {}
-): UseQueryStateReturn<string | null> {
+  {
+    history = 'replace',
+    parse = x => (x as unknown) as T,
+    serialize = x => `${x}`
+  }: Partial<UseQueryStateOptions<T>> = {}
+): UseQueryStateReturn<T | null> {
   const router = useRouter()
 
   // Memoizing the update function has the advantage of making it
@@ -32,13 +39,14 @@ export function useQueryState(
     [history]
   )
 
-  const getValue = React.useCallback((): string | null => {
+  const getValue = React.useCallback((): T | null => {
     if (typeof window === 'undefined') {
       // Not available in an SSR context
       return null
     }
     const query = new URLSearchParams(window.location.search)
-    return query.get(key)
+    const value = query.get(key)
+    return value ? parse(value) : null
   }, [])
 
   // Update the state value only when the relevant key changes.
@@ -48,19 +56,24 @@ export function useQueryState(
   const value = React.useMemo(getValue, [router.query[key]])
 
   const update = React.useCallback(
-    (stateUpdater: React.SetStateAction<string | null>) => {
+    (stateUpdater: React.SetStateAction<T | null>) => {
+      const isUpdaterFunction = (
+        input: any
+      ): input is (prevState: T | null) => T | null => {
+        return typeof input === 'function'
+      }
+
       // Resolve the new value based on old value & updater
       const oldValue = getValue()
-      const newValue =
-        typeof stateUpdater === 'function'
-          ? stateUpdater(oldValue)
-          : stateUpdater
+      const newValue = isUpdaterFunction(stateUpdater)
+        ? stateUpdater(oldValue)
+        : stateUpdater
       // We can't rely on router.query here to avoid causing
       // unnecessary renders when other query parameters change.
       // URLSearchParams is already polyfilled by Next.js
       const query = new URLSearchParams(window.location.search)
       if (newValue) {
-        query.set(key, newValue)
+        query.set(key, serialize(newValue))
       } else {
         // Don't leave value-less keys hanging
         query.delete(key)

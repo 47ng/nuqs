@@ -23,24 +23,22 @@ $ npm install next-usequerystate
 
 ## Usage
 
-Example: simple counter stored in the URL:
-
 ```tsx
 import { useQueryState } from 'next-usequerystate'
 
 export default () => {
-  const [count, setCount] = useQueryState('count')
+  const [name, setName] = useQueryState('name')
   return (
     <>
-      <pre>count: {count}</pre>
-      <button onClick={() => setCount('0')}>Reset</button>
-      <button onClick={() => setCount(c => (parseInt(c) || 0) + 1)}>+</button>
-      <button onClick={() => setCount(c => (parseInt(c) || 0) - 1)}>-</button>
-      <button onClick={() => setCount(null)}>Clear</button>
+      <h1>Hello, {name || 'anonymous visitor'}!</h1>
+      <input value={name || ''} onChange={e => setName(e.target.value)} />
+      <button onClick={() => setName(null)}>Clear</button>
     </>
   )
 }
 ```
+
+![](./useQueryState.gif)
 
 ## Documentation
 
@@ -49,14 +47,45 @@ export default () => {
 It returns the value present in the query string as a string, or `null` if none
 was found.
 
-Example outputs for our counter example:
+Example outputs for our hello world example:
 
-| URL           | count value | Notes                   |
-| ------------- | ----------- | ----------------------- |
-| `/`           | `null`      | No `count` key in URL   |
-| `/?count=`    | `''`        | Empty string            |
-| `/?count=foo` | `'foo'`     |
-| `/?count=2`   | `'2'`       | Always returns a string |
+| URL          | name value | Notes                                                             |
+| ------------ | ---------- | ----------------------------------------------------------------- |
+| `/`          | `null`     | No `name` key in URL                                              |
+| `/?name=`    | `''`       | Empty string                                                      |
+| `/?name=foo` | `'foo'`    |
+| `/?name=2`   | `'2'`      | Always returns a string by default, see [Parsing](#parsing) below |
+
+## Parsing
+
+If the type you're expecting as state is not a string, you must pass a parsing
+function in the second argument object.
+
+You may pass a `serialize` function
+for the opposite direction, by default `toString()` is used.
+
+Example: simple counter stored in the URL:
+
+```tsx
+import { useQueryState } from 'next-usequerystate'
+
+export default () => {
+  const [count, setCount] = useQueryState('count', {
+    // TypeScript will automatically infer it's a number
+    // based on what `parse` returns.
+    parse: parseInt
+  })
+  return (
+    <>
+      <pre>count: {count}</pre>
+      <button onClick={() => setCount(0)}>Reset</button>
+      <button onClick={() => setCount(c => c || 0 + 1)}>+</button>
+      <button onClick={() => setCount(c => c || 0 - 1)}>-</button>
+      <button onClick={() => setCount(null)}>Clear</button>
+    </>
+  )
+}
+```
 
 ## History options
 

@@ -38,8 +38,8 @@
   },
   "peerDependencies": {
     "next": "*",
-    "react-dom": "*",
-    "react": "*"
+    "react": "*",
+    "react-dom": "*"
   },
   "dependencies": {},
   "devDependencies": {
