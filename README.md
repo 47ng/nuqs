@@ -44,8 +44,8 @@ export default () => {
 
 `useQueryState` takes one required argument: the key to use in the query string.
 
-It returns the value present in the query string as a string, or `null` if none
-was found.
+Like `React.useState`, it returns an array with the value present in the query
+string as a string (or `null` if none was found), and a state updater function.
 
 Example outputs for our hello world example:
 
