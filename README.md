@@ -116,4 +116,4 @@ hook will always return `null` on SSR/SSG.
 
 ## License
 
-[MIT](https://github.com/47ng/next-usequerystate/blob/next/LICENSE) - Made with ❤️ by [François Best](https://francoisbest.com).
+[MIT](https://github.com/47ng/next-usequerystate/blob/next/LICENSE) - Made with ❤️ by [François Best](https://francoisbest.com) - [Donations welcome](https://paypal.me/francoisbest?locale.x=fr_FR) 🙏
