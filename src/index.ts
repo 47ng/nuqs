@@ -78,8 +78,13 @@ export function useQueryState<T = string>(
         // Don't leave value-less keys hanging
         query.delete(key)
       }
+
+      // Remove fragment and query from asPath
+      // router.pathname includes dynamic route keys, rather than the route itself,
+      // e.g. /views/[view] rather than /views/my-view
+      const [asPath] = router.asPath.split(/\?|#/, 1)
       updateUrl?.call(router, {
-        pathname: router.pathname,
+        pathname: asPath,
         hash: window.location.hash,
         search: query.toString()
       })
