@@ -57,7 +57,7 @@
     "react": "^16.13.1",
     "react-dom": "^16.13.1",
     "ts-jest": "^26.0.0",
-    "ts-node": "^8.10.1",
+    "ts-node": "^9.0.0",
     "typescript": "^3.8.3"
   },
   "jest": {
