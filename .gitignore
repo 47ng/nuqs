@@ -5,3 +5,4 @@ coverage/
 yarn-error.log
 # Docker containers with persistance
 .volumes/
+package-lock.json
