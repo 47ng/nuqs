@@ -83,11 +83,19 @@ export function useQueryState<T = string>(
       // router.pathname includes dynamic route keys, rather than the route itself,
       // e.g. /views/[view] rather than /views/my-view
       const [asPath] = router.asPath.split(/\?|#/, 1)
-      updateUrl?.call(router, {
-        pathname: asPath,
-        hash: window.location.hash,
-        search: query.toString()
-      })
+      updateUrl?.call(
+        router,
+        {
+          pathname: router.pathname,
+          hash: window.location.hash,
+          search: query.toString()
+        },
+        {
+          pathname: asPath,
+          hash: window.location.hash,
+          search: query.toString()
+        }
+      )
     },
     [key, updateUrl]
   )
