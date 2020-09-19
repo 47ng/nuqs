@@ -58,7 +58,7 @@
     "react-dom": "^16.13.1",
     "ts-jest": "^26.0.0",
     "ts-node": "^9.0.0",
-    "typescript": "^3.8.3"
+    "typescript": "^4.0.3"
   },
   "jest": {
     "verbose": true,
