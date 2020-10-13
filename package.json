@@ -43,13 +43,13 @@
   },
   "dependencies": {},
   "devDependencies": {
-    "@commitlint/config-conventional": "^9.0.1",
+    "@commitlint/config-conventional": "^11.0.0",
     "@types/jest": "^26.0.0",
     "@types/node": "^14.0.1",
     "@types/react": "^16.9.35",
     "@types/react-dom": "^16.9.8",
     "@types/webpack": "^4.41.17",
-    "commitlint": "^9.1.0",
+    "commitlint": "^11.0.0",
     "husky": "^4.2.5",
     "jest": "^26.0.1",
     "next": "^9.3.6",
@@ -58,7 +58,7 @@
     "react-dom": "^16.13.1",
     "ts-jest": "^26.0.0",
     "ts-node": "^9.0.0",
-    "typescript": "^3.8.3"
+    "typescript": "^4.0.3"
   },
   "jest": {
     "verbose": true,
