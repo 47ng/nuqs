@@ -92,11 +92,11 @@ export function useQueryStates<T extends object>(
 
       Object.keys(newValues).forEach(key => {
         const newValue = newValues[key as keyof T]
-        if (newValue) {
+        if (newValue === null) {
+          query.delete(key)
+        } else if (newValue !== undefined) {
           const { serialize } = keys[key as keyof T]
           query.set(key, serialize(newValue as T[keyof T]))
-        } else {
-          query.delete(key)
         }
       })
 
