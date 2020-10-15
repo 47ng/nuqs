@@ -4,6 +4,7 @@
     "lib": ["DOM"],
     "moduleResolution": "node",
     "declaration": true,
+    "declarationDir": "./dist/types",
     "outDir": "./dist",
     "rootDir": "./src",
     "esModuleInterop": true,
