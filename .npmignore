@@ -1,5 +1,5 @@
 **/*.test.ts
-tsconfig.json
+tsconfig.*
 .env
 .volumes/
 yarn-error.log
