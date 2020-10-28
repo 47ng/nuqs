@@ -34,7 +34,7 @@
     "./src/**/*.test.ts",
     "./src/**/*.test.tsx",
     "./dist",
-    "./node_modules",
+    "node_modules",
     "./test",
     "./pages",
     "./.next"

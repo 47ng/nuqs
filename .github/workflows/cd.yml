@@ -13,11 +13,11 @@ jobs:
       - id: yarn-cache
         name: Get Yarn cache path
         run: echo "::set-output name=dir::$(yarn cache dir)"
-      - uses: actions/checkout@722adc6
-      - uses: actions/setup-node@1c5c137
+      - uses: actions/checkout@a81bbbf8298c0fa03ea29cdc473d45769f953675
+      - uses: actions/setup-node@56899e050abffc08c2b3b61f3ec6a79a9dc3223d
         with:
-          node-version: 12.x
-      - uses: actions/cache@70655ec
+          node-version: 14.x
+      - uses: actions/cache@d1255ad9362389eac595a9ae406b8e8cb3331f16
         name: Load Yarn cache
         with:
           path: ${{ steps.yarn-cache.outputs.dir }}
@@ -31,7 +31,7 @@ jobs:
 
       # Continuous Delivery Pipeline --
 
-      - uses: codfish/semantic-release-action@a313b22
+      - uses: codfish/semantic-release-action@e062b24edc9c1a2c4bb8b1f5cc914f3387c00458
         name: Semantic Release
         id: semantic
         env:
