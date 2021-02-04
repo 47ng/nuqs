@@ -2,6 +2,7 @@
   "compilerOptions": {
     "baseUrl": ".",
     "lib": ["DOM"],
+    "types": ["@types/webpack", "@types/jest", "./next-env"],
     "moduleResolution": "node",
     "declaration": true,
     "declarationDir": "./dist/types",
