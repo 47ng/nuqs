@@ -4,7 +4,7 @@
 [![MIT License](https://img.shields.io/github/license/47ng/next-usequerystate.svg?color=blue)](https://github.com/47ng/next-usequerystate/blob/next/LICENSE)
 [![Continuous Integration](https://github.com/47ng/next-usequerystate/workflows/Continuous%20Integration/badge.svg?branch=next)](https://github.com/47ng/next-usequerystate/actions)
 [![Coverage Status](https://coveralls.io/repos/github/47ng/next-usequerystate/badge.svg?branch=next)](https://coveralls.io/github/47ng/next-usequerystate?branch=next)
-[![Dependabot Status](https://api.dependabot.com/badges/status?host=github&repo=47ng/next-usequerystate)](https://dependabot.com)
+[![Depfu](https://badges.depfu.com/badges/acad53fa2b09b1e435a19d6d18f29af4/count.svg)](https://depfu.com/github/47ng/next-usequerystate?project_id=22104)
 
 useQueryState hook for Next.js - Like React.useState, but stored in the URL query string
 
