@@ -2,13 +2,14 @@ export type HistoryOptions = 'replace' | 'push'
 
 export type Serializers<T> = {
   parse: (value: string) => T | null
-  serialize: (value: T) => string
+  serialize: (value: T) => string | null
 }
 
 export type QueryTypeMap = {
   string: Serializers<string>
   integer: Serializers<number>
   float: Serializers<number>
+  boolean: Serializers<boolean>
   timestamp: Serializers<Date>
   isoDateTime: Serializers<Date>
 }
@@ -25,6 +26,10 @@ export const queryTypes: QueryTypeMap = {
   float: {
     parse: v => parseFloat(v),
     serialize: v => v.toString()
+  },
+  boolean: {
+    parse: v => Boolean(v) || v === '',
+    serialize: (v: boolean) => (v ? '' : null)
   },
   timestamp: {
     parse: v => new Date(v),
