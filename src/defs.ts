@@ -2,7 +2,7 @@ export type HistoryOptions = 'replace' | 'push'
 
 export type Serializers<T> = {
   parse: (value: string) => T | null
-  serialize: (value: T) => string | null
+  serialize: (value: T) => string
 }
 
 export type QueryTypeMap = {
@@ -28,8 +28,8 @@ export const queryTypes: QueryTypeMap = {
     serialize: v => v.toString()
   },
   boolean: {
-    parse: v => Boolean(v) || v === '',
-    serialize: (v: boolean) => (v ? '' : null)
+    parse: v => v === 'true',
+    serialize: (v: boolean) => (v ? 'true' : 'false')
   },
   timestamp: {
     parse: v => new Date(v),

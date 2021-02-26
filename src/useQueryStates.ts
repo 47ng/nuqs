@@ -96,12 +96,7 @@ export function useQueryStates<T extends object>(
           query.delete(key)
         } else if (newValue !== undefined) {
           const { serialize } = keys[key as keyof T]
-          const serialized = serialize(newValue as T[keyof T])
-          if (serialized) {
-            query.set(key, serialized)
-          } else {
-            query.delete(key)
-          }
+          query.set(key, serialize(newValue as T[keyof T]))
         }
       })
 
