@@ -70,11 +70,11 @@ export function useQueryState<T = string>(
       // unnecessary renders when other query parameters change.
       // URLSearchParams is already polyfilled by Next.js
       const query = new URLSearchParams(window.location.search)
-      if (newValue) {
-        query.set(key, serialize(newValue))
-      } else {
+      if (newValue === null || newValue === undefined) {
         // Don't leave value-less keys hanging
         query.delete(key)
+      } else {
+        query.set(key, serialize(newValue))
       }
 
       // Remove fragment and query from asPath
