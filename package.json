@@ -46,7 +46,7 @@
     "@commitlint/config-conventional": "^11.0.0",
     "@types/jest": "^26.0.15",
     "@types/node": "^14.14.31",
-    "@types/react": "^17.0.0",
+    "@types/react": "^17.0.2",
     "@types/react-dom": "^17.0.1",
     "@types/webpack": "^4.41.23",
     "commitlint": "^11.0.0",
@@ -54,7 +54,7 @@
     "jest": "^26.6.1",
     "next": "^10.0.7",
     "npm-run-all": "^4.1.5",
-    "ts-jest": "^26.4.3",
+    "ts-jest": "^26.5.2",
     "ts-node": "^9.0.0",
     "typescript": "^4.1.5"
   },
