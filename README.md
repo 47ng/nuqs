@@ -12,6 +12,7 @@ useQueryState hook for Next.js - Like React.useState, but stored in the URL quer
 
 - 🧘‍♀️ Simple: the URL is the source of truth.
 - 🕰 Replace history or append to use the Back button to navigate state updates
+- ⚡️ Built-in converters for common object types (number, float, boolean, Date)
 
 ## Installation
 
@@ -87,6 +88,21 @@ export default () => {
 }
 ```
 
+You can also use the built-in serializers/parsers for common object types:
+
+```ts
+import { queryTypes } from 'next-usequerystate'
+
+useQueryState('tag') // defaults to string
+useQueryState('count', queryTypes.integer)
+useQueryState('brightness', queryTypes.float)
+useQueryState('darkMode', queryTypes.boolean)
+useQueryState('after', queryTypes.timestamp)
+useQueryState('date', queryTypes.isoDateTime)
+```
+
+## Default value
+
 ## History options
 
 By default, state updates are done by replacing the current history entry with
@@ -112,10 +128,13 @@ Any other value for the `history` option will fallback to the default.
 ## Caveats
 
 Because the Next.js router is not available in an SSR context, this
-hook will always return `null` on SSR/SSG.
+hook will always return `null` (or the default value if supplied) on SSR/SSG.
 
 ## License
 
-[MIT](https://github.com/47ng/next-usequerystate/blob/next/LICENSE) - Made with ❤️ by [François Best](https://francoisbest.com)
+[MIT](https://github.com/47ng/next-usequerystate/blob/next/LICENSE)
 
-Using this package at work ? [Sponsor me](https://github.com/sponsors/franky47) to help with support and maintenance.
+- Made with ❤️ by [François Best](https://francoisbest.com)
+
+Using this package at work ? [Sponsor me](https://github.com/sponsors/franky47)
+to help with support and maintenance.

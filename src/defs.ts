@@ -32,7 +32,7 @@ export const queryTypes: QueryTypeMap = {
     serialize: (v: boolean) => (v ? 'true' : 'false')
   },
   timestamp: {
-    parse: v => new Date(v),
+    parse: v => new Date(parseInt(v)),
     serialize: (v: Date) => v.valueOf().toString()
   },
   isoDateTime: {
