@@ -1,7 +1,7 @@
 {
   "extends": "./tsconfig.base.json",
   "compilerOptions": {
-    "target": "ES2019", // Transpile optional chaining operator
+    "target": "ES2016", // Transpile optional chaining operator
     "module": "CommonJS",
     "outDir": "./dist/cjs"
   }
