@@ -36,11 +36,10 @@ jobs:
       #   name: Report code coverage
       #   with:
       #     github-token: ${{ secrets.GITHUB_TOKEN }}
-      - uses: 8398a7/action-slack@45986a1c69e93353648c176ce49eecddebebf64e
+      - uses: 47ng/actions-slack-notify@main
         name: Notify on Slack
-        if: ${{ failure() }}
+        if: always()
         with:
           status: ${{ job.status }}
-          author_name: Continuous Integration
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
