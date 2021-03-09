@@ -5,7 +5,6 @@
     "types": ["@types/webpack", "@types/jest", "./next-env"],
     "moduleResolution": "node",
     "declaration": true,
-    "declarationDir": "./dist/types",
     "outDir": "./dist",
     "rootDir": "./src",
     "esModuleInterop": true,
