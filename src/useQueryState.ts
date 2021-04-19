@@ -1,5 +1,5 @@
-import React from 'react'
 import { useRouter } from 'next/router'
+import React from 'react'
 import { HistoryOptions, Serializers } from './defs'
 
 export interface UseQueryStateOptions<T> extends Serializers<T> {
@@ -116,7 +116,7 @@ export function useQueryState<T = string>(
     }
     const query = new URLSearchParams(window.location.search)
     const value = query.get(key)
-    return value ? parse(value) : null
+    return value !== null ? parse(value) : null
   }, [])
 
   // Update the state value only when the relevant key changes.
