@@ -2,7 +2,6 @@
   "name": "next-usequerystate",
   "version": "0.0.0-semantically-released",
   "description": "useQueryState hook for Next.js - Like React.useState, but stored in the URL query string",
-  "type": "commonjs",
   "main": "dist/cjs/index.js",
   "module": "dist/esm/index.js",
   "types": "dist/esm/index.d.ts",
