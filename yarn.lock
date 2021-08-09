@@ -768,10 +768,10 @@
   resolved "https://registry.yarnpkg.com/@types/minimist/-/minimist-1.2.0.tgz#69a23a3ad29caf0097f06eda59b361ee2f0639f6"
   integrity sha1-aaI6OtKcrwCX8G7aWbNh7i8GOfY=
 
-"@types/node@*", "@types/node@^14.17.7":
-  version "14.17.7"
-  resolved "https://registry.yarnpkg.com/@types/node/-/node-14.17.7.tgz#e106997493e617edeba52fdbd965930da494113b"
-  integrity sha512-SYTdMaW47se8499q8m0fYKZZRlmq0RaRv6oYmlVm6DUm31l0fhOl1D03X8hGxohCKTI2Bg6w7W0TiYB51aJzag==
+"@types/node@*", "@types/node@^14.17.9":
+  version "14.17.9"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-14.17.9.tgz#b97c057e6138adb7b720df2bd0264b03c9f504fd"
+  integrity sha512-CMjgRNsks27IDwI785YMY0KLt3co/c0cQ5foxHYv/shC2w8oOnVwz5Ubq1QG5KzrcW+AXk6gzdnxIkDnTvzu3g==
 
 "@types/normalize-package-data@^2.4.0":
   version "2.4.0"
@@ -800,10 +800,10 @@
   dependencies:
     "@types/react" "*"
 
-"@types/react@*", "@types/react@^17.0.14":
-  version "17.0.14"
-  resolved "https://registry.yarnpkg.com/@types/react/-/react-17.0.14.tgz#f0629761ca02945c4e8fea99b8177f4c5c61fb0f"
-  integrity sha512-0WwKHUbWuQWOce61UexYuWTGuGY/8JvtUe/dtQ6lR4sZ3UiylHotJeWpf3ArP9+DSGUoLY3wbU59VyMrJps5VQ==
+"@types/react@*", "@types/react@^17.0.15":
+  version "17.0.15"
+  resolved "https://registry.yarnpkg.com/@types/react/-/react-17.0.15.tgz#c7533dc38025677e312606502df7656a6ea626d0"
+  integrity sha512-uTKHDK9STXFHLaKv6IMnwp52fm0hwU+N89w/p9grdUqcFA6WuqDyPhaWopbNyE1k/VhgzmHl8pu1L4wITtmlLw==
   dependencies:
     "@types/prop-types" "*"
     "@types/scheduler" "*"
