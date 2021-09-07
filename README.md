@@ -101,8 +101,6 @@ useQueryState('after', queryTypes.timestamp)
 useQueryState('date', queryTypes.isoDateTime)
 ```
 
-## Default value
-
 ## History options
 
 By default, state updates are done by replacing the current history entry with
