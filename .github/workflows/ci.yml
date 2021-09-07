@@ -21,7 +21,7 @@ jobs:
       - uses: actions/setup-node@56899e050abffc08c2b3b61f3ec6a79a9dc3223d
         with:
           node-version: 14.x
-      - uses: actions/cache@26968a09c0ea4f3e233fdddbafd1166051a095f6
+      - uses: actions/cache@c64c572235d810460d0d6876e9c705ad5002b353
         name: Load Yarn cache
         with:
           path: ${{ steps.yarn-cache.outputs.dir }}
