@@ -44,7 +44,7 @@
   "devDependencies": {
     "@commitlint/config-conventional": "^11.0.0",
     "@types/jest": "^26.0.24",
-    "@types/node": "^14.17.27",
+    "@types/node": "^14.17.29",
     "@types/react": "^17.0.24",
     "@types/react-dom": "^17.0.9",
     "@types/webpack": "^4.41.31",
@@ -55,7 +55,7 @@
     "npm-run-all": "^4.1.5",
     "ts-jest": "^26.5.6",
     "ts-node": "^9.0.0",
-    "typescript": "^4.4.3"
+    "typescript": "^4.4.4"
   },
   "jest": {
     "verbose": true,
