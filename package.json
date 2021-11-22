@@ -44,10 +44,10 @@
   "devDependencies": {
     "@commitlint/config-conventional": "^11.0.0",
     "@types/jest": "^26.0.24",
-    "@types/node": "^14.17.33",
+    "@types/node": "^14.17.34",
     "@types/react": "^17.0.33",
-    "@types/react-dom": "^17.0.10",
-    "@types/webpack": "^4.41.31",
+    "@types/react-dom": "^17.0.11",
+    "@types/webpack": "^4.41.32",
     "commitlint": "^11.0.0",
     "husky": "4.x",
     "jest": "^26.6.1",
