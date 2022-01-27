@@ -94,7 +94,7 @@ export function useQueryState<T = string>(
   key: string,
   {
     history = 'replace',
-    parse = x => (x as unknown) as T,
+    parse = x => x as unknown as T,
     serialize = x => `${x}`,
     defaultValue
   }: Partial<UseQueryStateOptions<T>> = {}
@@ -155,7 +155,7 @@ export function useQueryState<T = string>(
       const [asPath] = router.asPath.split(/\?|#/, 1)
       const search = query.toString()
       const hash = window.location.hash
-      updateUrl?.call(
+      return updateUrl?.call(
         router,
         {
           pathname: router.pathname,
