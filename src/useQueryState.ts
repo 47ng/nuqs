@@ -1,3 +1,4 @@
+import type { Router } from 'next/router'
 import { useRouter } from 'next/router'
 import React from 'react'
 import { HistoryOptions, Serializers } from './defs'
@@ -10,9 +11,16 @@ export interface UseQueryStateOptions<T> extends Serializers<T> {
   defaultValue: T
 }
 
+// Next.js does not export the TransitionsOption interface,
+// but we can get it from where it's used:
+type TransitionOptions = Parameters<Router['push']>[2]
+
 export type UseQueryStateReturn<T> = [
   T,
-  (value: React.SetStateAction<T>) => Promise<boolean>
+  (
+    value: React.SetStateAction<T>,
+    transitionOptions?: TransitionOptions
+  ) => Promise<boolean>
 ]
 
 export type UseQueryStateOptionsWithDefault<T> = Pick<
@@ -126,7 +134,10 @@ export function useQueryState<T = string>(
   const value = React.useMemo(getValue, [router.query[key]])
 
   const update = React.useCallback(
-    (stateUpdater: React.SetStateAction<T | null>) => {
+    (
+      stateUpdater: React.SetStateAction<T | null>,
+      transitionOptions?: TransitionOptions
+    ) => {
       const isUpdaterFunction = (
         input: any
       ): input is (prevState: T | null) => T | null => {
@@ -166,7 +177,8 @@ export function useQueryState<T = string>(
           pathname: asPath,
           hash,
           search
-        }
+        },
+        transitionOptions
       )
     },
     [key, updateUrl]

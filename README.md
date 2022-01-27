@@ -144,6 +144,22 @@ const MultipleQueriesDemo = () => {
 
 _Note: support to synchronously update multiple related queries at the same time will come in a future update. See #277._
 
+## Transition Options
+
+By default Next.js will scroll to the top of the page when changing things in the URL.
+
+To prevent this, `router.push()` and `router.replace()` have a third optional
+parameter to control transitions, which can be passed on the state setter here:
+
+```ts
+const [name, setName] = useQueryState('name')
+
+setName('Foo', {
+  scroll: false,
+  shallow: true // Don't run getStaticProps / getServerSideProps / getInitialProps
+})
+```
+
 ## Caveats
 
 Because the Next.js router is not available in an SSR context, this
