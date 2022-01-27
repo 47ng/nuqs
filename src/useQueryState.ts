@@ -12,7 +12,7 @@ export interface UseQueryStateOptions<T> extends Serializers<T> {
 
 export type UseQueryStateReturn<T> = [
   T,
-  React.Dispatch<React.SetStateAction<T>>
+  (value: React.SetStateAction<T>) => Promise<boolean>
 ]
 
 export type UseQueryStateOptionsWithDefault<T> = Pick<
