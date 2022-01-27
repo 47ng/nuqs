@@ -125,6 +125,25 @@ useQueryState('foo', { history: 'push' })
 
 Any other value for the `history` option will fallback to the default.
 
+## Multiple Queries
+
+Because the Next.js router has asynchronous methods, if you want to do multiple
+query updates in one go, you'll have to `await` them, otherwise the latter will
+overwrite the updates of the former:
+
+```ts
+const MultipleQueriesDemo = () => {
+  const [lat, setLat] = useQueryState('lat', queryTypes.float)
+  const [lng, setLng] = useQueryState('lng', queryTypes.float)
+  const randomCoordinates = React.useCallback(async () => {
+    await setLat(Math.random() * 180 - 90)
+    await setLng(Math.random() * 360 - 180)
+  }, [])
+}
+```
+
+_Note: support to synchronously update multiple related queries at the same time will come in a future update. See #277._
+
 ## Caveats
 
 Because the Next.js router is not available in an SSR context, this
