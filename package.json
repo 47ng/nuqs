@@ -37,7 +37,9 @@
     "test:e2e": "run-p --race test:e2e:*",
     "test:e2e:next": "next dev",
     "test:e2e:cypress": "cypress run --headless",
+    "cypress:install": "cypress install",
     "ci": "run-s build test:types",
+    "e2e": "run-s cypress:install test:e2e",
     "prepare": "husky install"
   },
   "peerDependencies": {
