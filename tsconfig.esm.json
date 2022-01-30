@@ -5,5 +5,5 @@
     "module": "ESNext",
     "outDir": "./dist/esm"
   },
-  "exclude": ["./src/tests/*"]
+  "exclude": ["./src/tests/*", "./src/pages/*"]
 }

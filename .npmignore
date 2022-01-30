@@ -2,9 +2,11 @@
 .env
 .github/
 .husky/
+.next/
 .volumes/
 **/*.test.ts
 coverage/
+cypress/
 next-env.d.ts
 src/
 tsconfig.*

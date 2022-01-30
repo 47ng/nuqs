@@ -3,6 +3,12 @@
   "compilerOptions": {
     "target": "ES2017", // Transpile optional chaining operator
     "module": "ESNext", // allow top-level await
-    "noEmit": true
+    "noEmit": true,
+    "allowJs": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "incremental": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true
   }
 }

@@ -32,6 +32,8 @@ jobs:
         name: Install dependencies
       - run: yarn ci
         name: Run integration tests
+      - run: yarn test:e2e
+        name: Run end-to-end tests
       # - uses: coverallsapp/github-action@8cbef1dea373ebce56de0a14c68d6267baa10b44
       #   name: Report code coverage
       #   with:
