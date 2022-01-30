@@ -1,9 +1,18 @@
-import React from 'react'
 import { useRouter } from 'next/router'
-import { HistoryOptions, Serializers } from './defs'
+import React from 'react'
+import type {
+  HistoryOptions,
+  Nullable,
+  Serializers,
+  TransitionOptions
+} from './defs'
 
-export type UseQueryStatesKeysMap<T> = {
-  [K in keyof T]: Serializers<T[K]>
+type KeyMapValue<Type> = Serializers<Type> & {
+  defaultValue?: Type
+}
+
+export type UseQueryStatesKeysMap<Map = any> = {
+  [Key in keyof Map]: KeyMapValue<Map[Key]>
 }
 
 export interface UseQueryStatesOptions {
@@ -13,15 +22,27 @@ export interface UseQueryStatesOptions {
   history: HistoryOptions
 }
 
-export type Values<T> = {
-  [K in keyof T]: T[K] | null
+export type Values<T extends UseQueryStatesKeysMap> = {
+  [K in keyof T]: T[K]['defaultValue'] extends NonNullable<
+    ReturnType<T[K]['parse']>
+  >
+    ? NonNullable<ReturnType<T[K]['parse']>>
+    : ReturnType<T[K]['parse']> | null
 }
 
-export type SetValues<T> = React.Dispatch<
-  React.SetStateAction<Partial<Values<T>>>
->
+type UpdaterFn<T extends UseQueryStatesKeysMap> = (
+  old: Values<T>
+) => Partial<Nullable<Values<T>>>
 
-export type UseQueryStatesReturn<T> = [Values<T>, SetValues<T>]
+export type SetValues<T extends UseQueryStatesKeysMap> = (
+  values: Partial<Nullable<Values<T>>> | UpdaterFn<T>,
+  transitionOptions?: TransitionOptions
+) => Promise<boolean>
+
+export type UseQueryStatesReturn<T extends UseQueryStatesKeysMap> = [
+  Values<T>,
+  SetValues<T>
+]
 
 /**
  * Synchronise multiple query string arguments to React state in Next.js
@@ -30,11 +51,13 @@ export type UseQueryStatesReturn<T> = [Values<T>, SetValues<T>]
  *               serialise and parse them.
  *               Use `queryTypes.(string|integer|float)` for quick shorthands.
  */
-export function useQueryStates<T extends object>(
-  keys: UseQueryStatesKeysMap<T>,
+export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
+  keys: KeyMap,
   { history = 'replace' }: Partial<UseQueryStatesOptions> = {}
-): UseQueryStatesReturn<T> {
+): UseQueryStatesReturn<KeyMap> {
   const router = useRouter()
+
+  type V = Values<KeyMap>
 
   // Memoizing the update function has the advantage of making it
   // immutable as long as `history` stays the same.
@@ -44,23 +67,29 @@ export function useQueryStates<T extends object>(
     [history]
   )
 
-  const getValues = React.useCallback((): Values<T> => {
+  const getValues = React.useCallback((): V => {
     if (typeof window === 'undefined') {
-      // Not available in an SSR context, return all null
-      return Object.keys(keys).reduce(
-        (obj, key) => ({ ...obj, [key]: null }),
-        {} as Values<T>
-      )
+      // Not available in an SSR context, return all null (or default if available)
+      return Object.keys(keys).reduce((obj, key) => {
+        const { defaultValue } = keys[key as keyof KeyMap]
+        return {
+          ...obj,
+          [key]: defaultValue ?? null
+        }
+      }, {} as V)
     }
     const query = new URLSearchParams(window.location.search)
     return Object.keys(keys).reduce((values, key) => {
-      const { parse } = keys[key as keyof T]
+      const { parse, defaultValue } = keys[key as keyof KeyMap]
       const value = query.get(key)
+      const parsed = value
+        ? parse(value) ?? defaultValue ?? null
+        : defaultValue ?? null
       return {
         ...values,
-        [key]: value ? parse(value) : null
+        [key]: parsed
       }
-    }, {} as Values<T>)
+    }, {} as V)
   }, [keys])
 
   // Update the state values only when the relevant keys change.
@@ -72,11 +101,9 @@ export function useQueryStates<T extends object>(
     Object.keys(keys).map(key => router.query[key])
   )
 
-  const update = React.useCallback(
-    (stateUpdater: React.SetStateAction<Partial<Values<T>>>) => {
-      const isUpdaterFunction = (
-        input: any
-      ): input is (prevState: Partial<Values<T>>) => Partial<Values<T>> => {
+  const update = React.useCallback<SetValues<KeyMap>>(
+    stateUpdater => {
+      const isUpdaterFunction = (input: any): input is UpdaterFn<KeyMap> => {
         return typeof input === 'function'
       }
 
@@ -91,12 +118,12 @@ export function useQueryStates<T extends object>(
       const query = new URLSearchParams(window.location.search)
 
       Object.keys(newValues).forEach(key => {
-        const newValue = newValues[key as keyof T]
+        const newValue = newValues[key]
         if (newValue === null) {
           query.delete(key)
         } else if (newValue !== undefined) {
-          const { serialize } = keys[key as keyof T]
-          query.set(key, serialize(newValue as T[keyof T]))
+          const { serialize = String } = keys[key]
+          query.set(key, serialize(newValue))
         }
       })
 
@@ -106,7 +133,7 @@ export function useQueryStates<T extends object>(
       const [asPath] = router.asPath.split(/\?|#/, 1)
       const search = query.toString()
       const hash = window.location.hash
-      updateUrl?.call(
+      return updateUrl?.call(
         router,
         {
           pathname: router.pathname,

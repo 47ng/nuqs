@@ -4,5 +4,6 @@
     "target": "ES2016", // Transpile optional chaining operator
     "module": "CommonJS",
     "outDir": "./dist/cjs"
-  }
+  },
+  "exclude": ["./src/tests/*"]
 }

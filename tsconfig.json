@@ -1,8 +1,8 @@
 {
   "extends": "./tsconfig.base.json",
   "compilerOptions": {
-    "target": "ES2016", // Transpile optional chaining operator
-    "module": "CommonJS",
+    "target": "ES2017", // Transpile optional chaining operator
+    "module": "ESNext", // allow top-level await
     "noEmit": true
   }
 }

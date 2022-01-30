@@ -1,14 +1,24 @@
+import type { Router } from 'next/router'
+
+// Next.js does not export the TransitionsOption interface,
+// but we can get it from where it's used:
+export type TransitionOptions = Parameters<Router['push']>[2]
+
 export type HistoryOptions = 'replace' | 'push'
+
+export type Nullable<T> = {
+  [K in keyof T]: T[K] | null
+}
 
 export type Serializers<T> = {
   parse: (value: string) => T | null
-  serialize: (value: T) => string
+  serialize?: (value: T) => string
 }
 
 export type SerializersWithDefaultFactory<T> = Serializers<T> & {
   withDefault: (defaultValue: T) => Serializers<T> & {
     readonly defaultValue: T
-}
+  }
 }
 
 export type QueryTypeMap = Readonly<{

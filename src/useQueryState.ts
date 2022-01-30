@@ -1,40 +1,38 @@
-import type { Router } from 'next/router'
 import { useRouter } from 'next/router'
 import React from 'react'
-import { HistoryOptions, Serializers } from './defs'
+import { HistoryOptions, Serializers, TransitionOptions } from './defs'
 
 export interface UseQueryStateOptions<T> extends Serializers<T> {
   /**
    * The operation to use on state updates. Defaults to `replace`.
    */
-  history: HistoryOptions
-  defaultValue: T
+  history?: HistoryOptions
 }
 
-// Next.js does not export the TransitionsOption interface,
-// but we can get it from where it's used:
-type TransitionOptions = Parameters<Router['push']>[2]
-
-export type UseQueryStateReturn<T> = [
-  T,
+export type UseQueryStateReturn<Parsed, Default> = [
+  Default extends undefined
+    ? Parsed | null // value can't be null if default is specified
+    : Parsed,
   (
-    value: React.SetStateAction<T>,
+    value:
+      | null
+      | Parsed
+      | ((
+          old: Default extends Parsed ? Parsed : Parsed | null
+        ) => Parsed | null),
     transitionOptions?: TransitionOptions
   ) => Promise<boolean>
 ]
 
-export type UseQueryStateOptionsWithDefault<T> = Pick<
-  UseQueryStateOptions<T>,
-  'parse' | 'serialize' | 'defaultValue'
-> &
-  Partial<Omit<UseQueryStateOptions<T>, 'parse' | 'serialize' | 'defaultValue'>>
-
 // Overload type signatures ----------------------------------------------------
+// Note: the order of declaration matters (from the most specific to the least).
 
 /**
  * React state hook synchronized with a URL query string in Next.js
  *
- * This variant is used when a `defaultValue` is supplied in the options.
+ * This variant is used when providing a default value. This will make
+ * the returned state non-nullable when the query is not present in the URL.
+ * (the default value will be returned instead).
  *
  * _Note: the URL will **not** be updated with the default value if the query
  * is missing._
@@ -44,41 +42,30 @@ export type UseQueryStateOptionsWithDefault<T> = Pick<
  *
  * Example usage:
  * ```ts
- *   const [count, setCount] = useQueryState('count', {
- *    ...queryTypes.integer,
- *    defaultValue: 0
- *   })
+ *   const [count, setCount] = useQueryState(
+ *     'count',
+ *     queryTypes.integer.defaultValue(0)
+ *   )
  *
  *   const increment = () => setCount(oldCount => oldCount + 1)
  *   const decrement = () => setCount(oldCount => oldCount - 1)
  *   const clearCountQuery = () => setCount(null)
- *
- *   // --
- *
- *   const [date, setDate] = useQueryState('date', {
- *     ...queryTypes.isoDateTime,
- *     default: new Date('2021-01-01')
- *   })
- *
- *   const setToNow = () => setDate(new Date())
- *   const addOneHour = () => {
- *     setDate(oldDate => new Date(oldDate.valueOf() + 3600_000))
- *   }
  * ```
- *
- * @param key - The URL query string key to bind to
- * @param options - Serializers (define the state data type), default value and optional history mode.
+ * @param key The URL query string key to bind to
+ * @param options - Serializers (defines the state data type), default value and optional history mode.
  */
-export function useQueryState<T = string>(
+export function useQueryState<T>(
   key: string,
-  options: UseQueryStateOptionsWithDefault<T>
-): UseQueryStateReturn<T>
+  options: UseQueryStateOptions<T> & { defaultValue: T }
+): UseQueryStateReturn<
+  NonNullable<ReturnType<typeof options.parse>>,
+  typeof options.defaultValue
+>
 
 /**
  * React state hook synchronized with a URL query string in Next.js
  *
- * This variant is used without a `defaultValue` supplied in the options. If
- * the query is missing in the URL, the state will be `null`.
+ * If the query is missing in the URL, the state will be `null`.
  *
  * Example usage:
  * ```ts
@@ -87,25 +74,135 @@ export function useQueryState<T = string>(
  *   const filteredPosts = posts.filter(post => tag ? post.tag === tag : true)
  *   const clearTag = () => selectTag(null)
  * ```
- *
- * @param key - The URL query string key to bind to
- * @param options - Serializers (define the state data type), optional history mode.
+ * @param key The URL query string key to bind to
+ * @param options - Serializers (defines the state data type), and optional history mode.
  */
-export function useQueryState<T = string>(
+export function useQueryState<T>(
   key: string,
-  options?: Partial<UseQueryStateOptions<T>>
-): UseQueryStateReturn<T | null>
+  options: UseQueryStateOptions<T>
+): UseQueryStateReturn<NonNullable<ReturnType<typeof options.parse>>, undefined>
 
-// Implementation --------------------------------------------------------------
+/**
+ * Default type string, limited options & default value
+ */
+export function useQueryState(
+  key: string,
+  options: {
+    history?: HistoryOptions
+    defaultValue: string
+  }
+): UseQueryStateReturn<string, typeof options.defaultValue>
 
+/**
+ * React state hook synchronized with a URL query string in Next.js
+ *
+ * If the query is missing in the URL, the state will be `null`.
+ *
+ * Note: by default the state type is a `string`. To use different types,
+ * check out the `queryTypes` helpers:
+ * ```ts
+ *   const [date, setDate] = useQueryState(
+ *     'date',
+ *     queryTypes.isoDateTime.withDefault(new Date('2021-01-01'))
+ *   )
+ *
+ *   const setToNow = () => setDate(new Date())
+ *   const addOneHour = () => {
+ *     setDate(oldDate => new Date(oldDate.valueOf() + 3600_000))
+ *   }
+ * ```
+ * @param key The URL query string key to bind to
+ * @param options - Serializers (defines the state data type), and optional history mode.
+ */
+export function useQueryState(
+  key: string,
+  options: Pick<UseQueryStateOptions<string>, 'history'>
+): UseQueryStateReturn<string, undefined>
+
+/**
+ * React state hook synchronized with a URL query string in Next.js
+ *
+ * If the query is missing in the URL, the state will be `null`.
+ *
+ * Note: by default the state type is a `string`. To use different types,
+ * check out the `queryTypes` helpers:
+ * ```ts
+ *   const [date, setDate] = useQueryState(
+ *     'date',
+ *     queryTypes.isoDateTime.withDefault(new Date('2021-01-01'))
+ *   )
+ *
+ *   const setToNow = () => setDate(new Date())
+ *   const addOneHour = () => {
+ *     setDate(oldDate => new Date(oldDate.valueOf() + 3600_000))
+ *   }
+ * ```
+ * @param key The URL query string key to bind to
+ */
+export function useQueryState(
+  key: string
+): UseQueryStateReturn<string, undefined>
+
+/**
+ * React state hook synchronized with a URL query string in Next.js
+ *
+ * If used without a `defaultValue` supplied in the options, and the query is
+ * missing in the URL, the state will be `null`.
+ *
+ * ### Behaviour with default values:
+ *
+ * _Note: the URL will **not** be updated with the default value if the query
+ * is missing._
+ *
+ * Setting the value to `null` will clear the query in the URL, and return
+ * the default value as state.
+ *
+ * Example usage:
+ * ```ts
+ *   // Blog posts filtering by tag
+ *   const [tag, selectTag] = useQueryState('tag')
+ *   const filteredPosts = posts.filter(post => tag ? post.tag === tag : true)
+ *   const clearTag = () => selectTag(null)
+ *
+ *   // With default values
+ *
+ *   const [count, setCount] = useQueryState(
+ *     'count',
+ *     queryTypes.integer.defaultValue(0)
+ *   )
+ *
+ *   const increment = () => setCount(oldCount => oldCount + 1)
+ *   const decrement = () => setCount(oldCount => oldCount - 1)
+ *   const clearCountQuery = () => setCount(null)
+ *
+ *   // --
+ *
+ *   const [date, setDate] = useQueryState(
+ *     'date',
+ *     queryTypes.isoDateTime.withDefault(new Date('2021-01-01'))
+ *   )
+ *
+ *   const setToNow = () => setDate(new Date())
+ *   const addOneHour = () => {
+ *     setDate(oldDate => new Date(oldDate.valueOf() + 3600_000))
+ *   }
+ * ```
+ * @param key The URL query string key to bind to
+ * @param options - Serializers (defines the state data type), optional default value and history mode.
+ */
 export function useQueryState<T = string>(
   key: string,
   {
     history = 'replace',
     parse = x => x as unknown as T,
-    serialize = x => `${x}`,
-    defaultValue
-  }: Partial<UseQueryStateOptions<T>> = {}
+    serialize = String,
+    defaultValue = undefined
+  }: Partial<UseQueryStateOptions<T>> & { defaultValue?: T } = {
+    history: 'replace',
+    parse: x => x as unknown as T,
+    serialize: String,
+    defaultValue: undefined
+  }
 ) {
   const router = useRouter()
 
@@ -135,7 +232,7 @@ export function useQueryState<T = string>(
 
   const update = React.useCallback(
     (
-      stateUpdater: React.SetStateAction<T | null>,
+      stateUpdater: React.SetStateAction<T | null>, // todo: This is wrong now
       transitionOptions?: TransitionOptions
     ) => {
       const isUpdaterFunction = (
