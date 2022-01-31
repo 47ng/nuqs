@@ -51,7 +51,7 @@
   "devDependencies": {
     "@commitlint/config-conventional": "^16.0.0",
     "@types/jest": "^27.4.0",
-    "@types/node": "^17.0.12",
+    "@types/node": "^17.0.13",
     "@types/react": "^17.0.38",
     "@types/react-dom": "^17.0.11",
     "@types/webpack": "^5.28.0",
