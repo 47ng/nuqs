@@ -268,17 +268,19 @@ export function useQueryState<T = string>(
         {
           pathname: router.pathname,
           hash,
-          search
+          search,
+          query: router.query // Maintain URL parameters for dynamic routes
         },
         {
           pathname: asPath,
           hash,
-          search
+          search,
+          query: router.query
         },
         transitionOptions
       )
     },
-    [key, updateUrl]
+    [key, updateUrl, router.query]
   )
   return [value ?? defaultValue ?? null, update]
 }
