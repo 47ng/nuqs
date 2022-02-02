@@ -138,16 +138,18 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
         {
           pathname: router.pathname,
           hash,
-          search
+          search,
+          query: router.query // Maintain URL parameters for dynamic routes
         },
         {
           pathname: asPath,
           hash,
-          search
+          search,
+          query: router.query
         }
       )
     },
-    [keys, updateUrl]
+    [keys, updateUrl, router.query]
   )
   return [values, update]
 }
