@@ -63,7 +63,7 @@ Example outputs for our hello world example:
 If your state type is not a string, you must pass a parsing function in the
 second argument object.
 
-We provide helpers for common object types:
+We provide helpers for common and more advanced object types:
 
 ```ts
 import { queryTypes } from 'next-usequerystate'
@@ -74,6 +74,23 @@ useQueryState('brightness', queryTypes.float)
 useQueryState('darkMode', queryTypes.boolean)
 useQueryState('after', queryTypes.timestamp) // state is a Date
 useQueryState('date', queryTypes.isoDateTime) // state is a Date
+useQueryState('array', queryTypes.array(queryTypes.integer)) // state is number[]
+useQueryState('json', queryTypes.json<Point>()) // state is a Point
+
+// Enums (string-based only)
+enum Direction {
+  up = 'UP',
+  down = 'DOWN',
+  left = 'LEFT',
+  right = 'RIGHT'
+}
+
+const [direction, setDirection] = useQueryState(
+  'direction',
+  queryTypes
+    .stringEnum<Direction>(Object.values(Direction)) // pass a list of allowed values
+    .withDefault(Direction.up)
+)
 ```
 
 You may pass a custom set of `parse` and `serialize` functions:
