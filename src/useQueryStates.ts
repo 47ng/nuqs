@@ -82,9 +82,10 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
     return Object.keys(keys).reduce((values, key) => {
       const { parse, defaultValue } = keys[key as keyof KeyMap]
       const value = query.get(key)
-      const parsed = value
-        ? parse(value) ?? defaultValue ?? null
-        : defaultValue ?? null
+      const parsed =
+        value !== null
+          ? parse(value) ?? defaultValue ?? null
+          : defaultValue ?? null
       return {
         ...values,
         [key]: parsed
