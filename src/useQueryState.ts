@@ -242,7 +242,7 @@ export function useQueryState<T = string>(
       }
 
       // Resolve the new value based on old value & updater
-      const oldValue = getValue()
+      const oldValue = getValue() ?? defaultValue ?? null
       const newValue = isUpdaterFunction(stateUpdater)
         ? stateUpdater(oldValue)
         : stateUpdater
