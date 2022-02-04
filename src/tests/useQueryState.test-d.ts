@@ -245,3 +245,13 @@ import { queryTypes, useQueryState } from '../index'
     useQueryState<number>('foo')
   })
 }
+
+// Set state to undefined
+{
+  const [, setFoo] = useQueryState('foo')
+  const [, setBar] = useQueryState('bar', queryTypes.string.withDefault('egg'))
+  expectError(() => setFoo(undefined))
+  expectError(() => setBar(undefined))
+  expectError(() => setFoo(() => undefined))
+  expectError(() => setBar(() => undefined))
+}
