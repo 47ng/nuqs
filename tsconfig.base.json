@@ -31,12 +31,10 @@
   },
   "include": ["./src/**/*.ts", "./src/**/*.tsx"],
   "exclude": [
-    "./src/**/*.test.ts",
-    "./src/**/*.test.tsx",
+    "./.next",
     "./dist",
+    "./src/pages",
+    "./src/tests",
     "node_modules",
-    "./test",
-    "./pages",
-    "./.next"
   ]
 }
