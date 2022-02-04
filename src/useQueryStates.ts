@@ -6,6 +6,7 @@ import type {
   Serializers,
   TransitionOptions
 } from './defs'
+import { getPathname } from './internal'
 
 type KeyMapValue<Type> = Serializers<Type> & {
   defaultValue?: Type
@@ -131,7 +132,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
       // Remove fragment and query from asPath
       // router.pathname includes dynamic route keys, rather than the route itself,
       // e.g. /views/[view] rather than /views/my-view
-      const [asPath] = router.asPath.split(/\?|#/, 1)
+      const asPath = getPathname(router.asPath)
       const search = query.toString()
       const hash = window.location.hash
       return updateUrl?.call(
@@ -139,18 +140,23 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
         {
           pathname: router.pathname,
           hash,
-          search,
-          query: router.query // Maintain URL parameters for dynamic routes
+          search
         },
         {
           pathname: asPath,
           hash,
-          search,
-          query: router.query
+          search
         }
       )
     },
-    [keys, updateUrl, router.query]
+    [
+      keys,
+      updateUrl,
+      // Add `asPath` to the dependencies, but only for the path part,
+      // otherwise as it contains the querystring, this would regenerate
+      // the state updater function on every query update.
+      getPathname(router.asPath)
+    ]
   )
   return [values, update]
 }
