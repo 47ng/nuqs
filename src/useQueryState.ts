@@ -1,7 +1,6 @@
 import { useRouter } from 'next/router'
 import React from 'react'
 import { HistoryOptions, Serializers, TransitionOptions } from './defs'
-import { getPathname } from './internal'
 
 export interface UseQueryStateOptions<T> extends Serializers<T> {
   /**
@@ -257,11 +256,6 @@ export function useQueryState<T = string>(
       } else {
         query.set(key, serialize(newValue))
       }
-
-      // Remove fragment and query from asPath
-      // router.pathname includes dynamic route keys, rather than the route itself,
-      // e.g. /views/[view] rather than /views/my-view
-      const asPath = getPathname(router.asPath)
       const search = query.toString()
       const hash = window.location.hash
       return updateUrl?.call(
@@ -272,21 +266,14 @@ export function useQueryState<T = string>(
           search
         },
         {
-          pathname: asPath,
+          pathname: window.location.pathname,
           hash,
           search
         },
         transitionOptions
       )
     },
-    [
-      key,
-      updateUrl,
-      // Add `asPath` to the dependencies, but only for the path part,
-      // otherwise as it contains the querystring, this would regenerate
-      // the state updater function on every query update.
-      getPathname(router.asPath)
-    ]
+    [key, updateUrl]
   )
   return [value ?? defaultValue ?? null, update]
 }
