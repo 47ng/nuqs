@@ -103,7 +103,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
   )
 
   const update = React.useCallback<SetValues<KeyMap>>(
-    stateUpdater => {
+    (stateUpdater, transitionOptions) => {
       const isUpdaterFunction = (input: any): input is UpdaterFn<KeyMap> => {
         return typeof input === 'function'
       }
@@ -140,7 +140,8 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
           pathname: window.location.pathname,
           hash,
           search
-        }
+        },
+        transitionOptions
       )
     },
     [keys, updateUrl]
