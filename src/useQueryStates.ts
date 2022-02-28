@@ -1,5 +1,6 @@
 import { useRouter } from 'next/router'
 import React from 'react'
+import { useDeferredRouter } from './deferredRouter'
 import type {
   HistoryOptions,
   Nullable,
@@ -56,6 +57,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
   { history = 'replace' }: Partial<UseQueryStatesOptions> = {}
 ): UseQueryStatesReturn<KeyMap> {
   const router = useRouter()
+  const deferredRouter = useDeferredRouter()
 
   type V = Values<KeyMap>
 
@@ -102,49 +104,94 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
     Object.keys(keys).map(key => router.query[key])
   )
 
-  const update = React.useCallback<SetValues<KeyMap>>(
-    (stateUpdater, transitionOptions) => {
-      const isUpdaterFunction = (input: any): input is UpdaterFn<KeyMap> => {
-        return typeof input === 'function'
+  const directUpdater: SetValues<KeyMap> = (
+    stateUpdater,
+    transitionOptions
+  ) => {
+    const isUpdaterFunction = (input: any): input is UpdaterFn<KeyMap> => {
+      return typeof input === 'function'
+    }
+
+    // Resolve the new values based on old values & updater
+    const oldValues = getValues()
+    const newValues = isUpdaterFunction(stateUpdater)
+      ? stateUpdater(oldValues)
+      : stateUpdater
+    // We can't rely on router.query here to avoid causing
+    // unnecessary renders when other query parameters change.
+    // URLSearchParams is already polyfilled by Next.js
+    const query = new URLSearchParams(window.location.search)
+
+    Object.keys(newValues).forEach(key => {
+      const newValue = newValues[key]
+      if (newValue === null) {
+        query.delete(key)
+      } else if (newValue !== undefined) {
+        const { serialize = String } = keys[key]
+        query.set(key, serialize(newValue))
       }
+    })
+    const search = query.toString()
+    const hash = window.location.hash
+    return updateUrl?.call(
+      router,
+      {
+        pathname: router.pathname,
+        hash,
+        search
+      },
+      {
+        pathname: window.location.pathname,
+        hash,
+        search
+      },
+      transitionOptions
+    )
+  }
 
-      // Resolve the new values based on old values & updater
-      const oldValues = getValues()
-      const newValues = isUpdaterFunction(stateUpdater)
-        ? stateUpdater(oldValues)
-        : stateUpdater
-      // We can't rely on router.query here to avoid causing
-      // unnecessary renders when other query parameters change.
-      // URLSearchParams is already polyfilled by Next.js
-      const query = new URLSearchParams(window.location.search)
-
-      Object.keys(newValues).forEach(key => {
-        const newValue = newValues[key]
-        if (newValue === null) {
-          query.delete(key)
-        } else if (newValue !== undefined) {
-          const { serialize = String } = keys[key]
-          query.set(key, serialize(newValue))
-        }
-      })
-      const search = query.toString()
-      const hash = window.location.hash
-      return updateUrl?.call(
-        router,
-        {
-          pathname: router.pathname,
-          hash,
-          search
-        },
-        {
-          pathname: window.location.pathname,
-          hash,
-          search
-        },
-        transitionOptions
+  const deferredUpdater: SetValues<KeyMap> = stateUpdater => {
+    function parse(payload: Record<string, string | null>) {
+      return Object.fromEntries(
+        Object.entries(payload).map(([key, val]) => {
+          const { parse = x => x, defaultValue } = keys[key]
+          const parsed = val !== null ? parse(val) : val
+          const defaulted = parsed !== null ? parsed : defaultValue
+          return [key, defaulted]
+        })
       )
-    },
-    [keys, updateUrl]
+    }
+    function serialize(payload: Partial<Values<KeyMap>>) {
+      return Object.fromEntries(
+        Object.entries(payload).map(([key, val]) => {
+          const { serialize = x => x } = keys[key]
+          return [key, val !== undefined ? serialize(val) : val]
+        })
+      )
+    }
+
+    // Resolve the new values based on old values & updater
+    const queryPayload = isUpdaterFunction<KeyMap>(stateUpdater)
+      ? (prev: Record<string, string | null>) => {
+          const parsed = parse(prev) as Values<KeyMap>
+          return serialize(stateUpdater(parsed) as Partial<Values<KeyMap>>)
+        }
+      : serialize(stateUpdater as Partial<Values<KeyMap>>)
+
+    deferredRouter?.change(history, queryPayload)
+    return new Promise(resolve => resolve(true))
+  }
+
+  const update = React.useCallback<SetValues<KeyMap>>(
+    deferredRouter ? deferredUpdater : directUpdater,
+    deferredRouter
+      ? [keys, history, deferredRouter, router.pathname]
+      : [keys, updateUrl]
   )
   return [values, update]
+}
+
+function isUpdaterFunction<KeyMap extends UseQueryStatesKeysMap>(
+  input: any
+): input is UpdaterFn<KeyMap> {
+  return typeof input === 'function'
 }

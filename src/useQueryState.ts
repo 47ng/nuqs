@@ -1,6 +1,7 @@
 import { useRouter } from 'next/router'
 import React from 'react'
 import { HistoryOptions, Serializers, TransitionOptions } from './defs'
+import { useDeferredRouter } from './deferredRouter'
 
 export interface UseQueryStateOptions<T> extends Serializers<T> {
   /**
@@ -205,6 +206,7 @@ export function useQueryState<T = string>(
   }
 ) {
   const router = useRouter()
+  const deferredRouter = useDeferredRouter()
 
   // Memoizing the update function has the advantage of making it
   // immutable as long as `history` stays the same.
@@ -230,50 +232,79 @@ export function useQueryState<T = string>(
   // there is no need to pass it in the dependency array.
   const value = React.useMemo(getValue, [router.query[key]])
 
-  const update = React.useCallback(
-    (
-      stateUpdater: React.SetStateAction<T | null>, // todo: This is wrong now
-      transitionOptions?: TransitionOptions
-    ) => {
-      const isUpdaterFunction = (
-        input: any
-      ): input is (prevState: T | null) => T | null => {
-        return typeof input === 'function'
-      }
+  const directUpdater = (
+    stateUpdater: React.SetStateAction<T | null>, // todo: This is wrong now
+    transitionOptions?: TransitionOptions
+  ) => {
+    const isUpdaterFunction = (
+      input: any
+    ): input is (prevState: T | null) => T | null => {
+      return typeof input === 'function'
+    }
 
-      // Resolve the new value based on old value & updater
-      const oldValue = getValue() ?? defaultValue ?? null
-      const newValue = isUpdaterFunction(stateUpdater)
-        ? stateUpdater(oldValue)
-        : stateUpdater
-      // We can't rely on router.query here to avoid causing
-      // unnecessary renders when other query parameters change.
-      // URLSearchParams is already polyfilled by Next.js
-      const query = new URLSearchParams(window.location.search)
-      if (newValue === null) {
-        // Don't leave value-less keys hanging
-        query.delete(key)
-      } else {
-        query.set(key, serialize(newValue))
-      }
-      const search = query.toString()
-      const hash = window.location.hash
-      return updateUrl?.call(
-        router,
-        {
-          pathname: router.pathname,
-          hash,
-          search
-        },
-        {
-          pathname: window.location.pathname,
-          hash,
-          search
-        },
-        transitionOptions
-      )
-    },
-    [key, updateUrl]
+    // Resolve the new value based on old value & updater
+    const oldValue = getValue() ?? defaultValue ?? null
+    const newValue = isUpdaterFunction(stateUpdater)
+      ? stateUpdater(oldValue)
+      : stateUpdater
+    // We can't rely on router.query here to avoid causing
+    // unnecessary renders when other query parameters change.
+    // URLSearchParams is already polyfilled by Next.js
+    const query = new URLSearchParams(window.location.search)
+    if (newValue === null) {
+      // Don't leave value-less keys hanging
+      query.delete(key)
+    } else {
+      query.set(key, serialize(newValue))
+    }
+    const search = query.toString()
+    const hash = window.location.hash
+    return updateUrl?.call(
+      router,
+      {
+        pathname: router.pathname,
+        hash,
+        search
+      },
+      {
+        pathname: window.location.pathname,
+        hash,
+        search
+      },
+      transitionOptions
+    )
+  }
+
+  const deferredUpdater = (
+    stateUpdater: React.SetStateAction<T | null>
+    // transitionOptions?: Havedn't figured out how TransitionOptions should be merged.
+  ) => {
+    const serializeIfNotNull = (val: T | null) =>
+      val !== null ? serialize(val) : null
+    // Resolve the new value based on old value & updater
+    const queryPayload = isUpdaterFunction(stateUpdater)
+      ? (prev: Record<string, string | null>) => {
+          const prevVal = prev[key]
+          const parsed = prevVal !== null ? parse(prevVal) : null
+          const defaulted = parsed !== null ? parsed : defaultValue
+          return { [key]: serializeIfNotNull(stateUpdater(defaulted ?? null)) }
+        }
+      : { [key]: serializeIfNotNull(stateUpdater) }
+
+    deferredRouter!.change(history, queryPayload)
+  }
+
+  const update = React.useCallback(
+    deferredRouter ? deferredUpdater : directUpdater,
+    deferredRouter
+      ? [key, history, parse, serialize, deferredRouter, router.pathname]
+      : [key, updateUrl]
   )
   return [value ?? defaultValue ?? null, update]
+}
+
+export function isUpdaterFunction<T>(
+  input: T | null | ((prevState: T | null) => T | null)
+): input is (prevState: T | null) => T | null {
+  return typeof input === 'function'
 }
