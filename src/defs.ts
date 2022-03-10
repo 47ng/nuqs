@@ -203,7 +203,7 @@ export const queryTypes: QueryTypeMap = {
         values
           .map<string>(value => {
             if (itemSerializers.serialize) {
-              itemSerializers.serialize(value)
+              return itemSerializers.serialize(value)
             }
             return `${value}`
           })
