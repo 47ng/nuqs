@@ -197,7 +197,7 @@ export const queryTypes: QueryTypeMap = {
           .split(separator)
           .map(item => decodeURIComponent(item))
           .map(itemSerializers.parse)
-          .filter(Boolean) as ItemType[]
+          .filter(value => value !== null && value !== undefined) as ItemType[]
       },
       serialize: values =>
         values
