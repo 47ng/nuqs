@@ -880,12 +880,12 @@
   dependencies:
     "@types/istanbul-lib-report" "*"
 
-"@types/jest@^27.4.0":
-  version "27.4.0"
-  resolved "https://registry.yarnpkg.com/@types/jest/-/jest-27.4.0.tgz#037ab8b872067cae842a320841693080f9cb84ed"
-  integrity sha512-gHl8XuC1RZ8H2j5sHv/JqsaxXkDDM9iDOgu0Wp8sjs4u/snb2PVehyWXJPr+ORA0RPpgw231mnutWI1+0hgjIQ==
+"@types/jest@^27.4.1":
+  version "27.4.1"
+  resolved "https://registry.yarnpkg.com/@types/jest/-/jest-27.4.1.tgz#185cbe2926eaaf9662d340cc02e548ce9e11ab6d"
+  integrity sha512-23iPJADSmicDVrWk+HT58LMJtzLAnB2AgIzplQuq/bSrGaxCrlvRFjGbXmamnnk/mAmCdLStiGqggu28ocUyiw==
   dependencies:
-    jest-diff "^27.0.0"
+    jest-matcher-utils "^27.0.0"
     pretty-format "^27.0.0"
 
 "@types/json-schema@*", "@types/json-schema@^7.0.8":
@@ -1789,10 +1789,10 @@ csstype@^3.0.2:
   resolved "https://registry.yarnpkg.com/csstype/-/csstype-3.0.4.tgz#b156d7be03b84ff425c9a0a4b1e5f4da9c5ca888"
   integrity sha512-xc8DUsCLmjvCfoD7LTGE0ou2MIWLx0K9RCZwSHMOdynqRsP4MtUcLeqh1HcQ2dInwDTqn+3CE0/FZh1et+p4jA==
 
-cypress@^9.4.1:
-  version "9.4.1"
-  resolved "https://registry.yarnpkg.com/cypress/-/cypress-9.4.1.tgz#1a4ba706435829c24b7edf350c2b059e05da9084"
-  integrity sha512-+JgMG9uT+QFx97JU9kOHE3jO3+0UdkQ9H1oCBiC7A74qme7Jkdy2sYDBCPjjGczutnWnGUTMRlwiNMP/Uq6LrQ==
+cypress@^9.5.0:
+  version "9.5.0"
+  resolved "https://registry.yarnpkg.com/cypress/-/cypress-9.5.0.tgz#704a79f0d3d4e775f433334eb8f5ae065e3bea31"
+  integrity sha512-rC5QPolKsVjJ8QJZ7IeZ6HlKM4gswBGZc0XvoAJNL8urQCSL8zTX0A/ai/h35WfF47NQ0iSZnwIXBlHX3MOUIQ==
   dependencies:
     "@cypress/request" "^2.88.10"
     "@cypress/xvfb" "^1.2.4"
@@ -2925,7 +2925,7 @@ jest-config@^27.5.1:
     slash "^3.0.0"
     strip-json-comments "^3.1.1"
 
-jest-diff@^27.0.0, jest-diff@^27.5.1:
+jest-diff@^27.5.1:
   version "27.5.1"
   resolved "https://registry.yarnpkg.com/jest-diff/-/jest-diff-27.5.1.tgz#a07f5011ac9e6643cf8a95a462b7b1ecf6680def"
   integrity sha512-m0NvkX55LDt9T4mctTEgnZk3fmEg3NRYutvMPWM/0iPnkFj2wIeF45O1718cMSOFO1vINkqmxqD8vE37uTEbqw==
@@ -3034,7 +3034,7 @@ jest-leak-detector@^27.5.1:
     jest-get-type "^27.5.1"
     pretty-format "^27.5.1"
 
-jest-matcher-utils@^27.5.1:
+jest-matcher-utils@^27.0.0, jest-matcher-utils@^27.5.1:
   version "27.5.1"
   resolved "https://registry.yarnpkg.com/jest-matcher-utils/-/jest-matcher-utils-27.5.1.tgz#9c0cdbda8245bc22d2331729d1091308b40cf8ab"
   integrity sha512-z2uTx/T6LBaCoNWNFWwChLBKYxTMcGBRjAt+2SbP929/Fflb9aa5LGma654Rz8z9HLxsrUaYzxE9T/EFIL/PAw==
