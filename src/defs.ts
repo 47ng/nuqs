@@ -104,8 +104,11 @@ export const queryTypes: QueryTypeMap = {
     }
   },
   integer: {
-    parse: v => parseInt(v),
-    serialize: v => Math.round(v).toFixed(),
+    parse: v => parseInt(v) || null,
+    serialize: v => { 
+      if (isNaN(v)) return null;
+      return Math.round(v).toFixed();
+    },
     withDefault(defaultValue) {
       return {
         ...this,
@@ -114,8 +117,11 @@ export const queryTypes: QueryTypeMap = {
     }
   },
   float: {
-    parse: v => parseFloat(v),
-    serialize: v => v.toString(),
+    parse: v => parseFloat(v) || null,
+    serialize: v => { 
+      if (isNaN(v)) { return null }
+      return v.toString()
+    }
     withDefault(defaultValue) {
       return {
         ...this,
