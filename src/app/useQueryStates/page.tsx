@@ -1,8 +1,9 @@
-import { NextPage } from 'next'
+'use client'
+
 import React from 'react'
 import { queryTypes, useQueryStates } from '../../../'
 
-const IntegrationPage: NextPage = () => {
+const IntegrationPage = () => {
   const [state, setState] = useQueryStates({
     string: queryTypes.string,
     int: queryTypes.integer,

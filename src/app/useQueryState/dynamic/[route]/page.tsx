@@ -1,8 +1,9 @@
-import { NextPage } from 'next'
-import React from 'react'
-import { queryTypes, useQueryState } from '../../../'
+'use client'
 
-const IntegrationPage: NextPage = () => {
+import React from 'react'
+import { queryTypes, useQueryState } from './../../../../../'
+
+const IntegrationPage = () => {
   const [string, setString] = useQueryState('string')
   const [int, setInt] = useQueryState('int', queryTypes.integer)
   const [float, setFloat] = useQueryState('float', queryTypes.float)

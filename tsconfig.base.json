@@ -33,7 +33,7 @@
   "exclude": [
     "./.next",
     "./dist",
-    "./src/pages",
+    "./src/app",
     "./src/tests",
     "node_modules",
   ]

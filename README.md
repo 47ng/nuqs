@@ -8,6 +8,12 @@
 
 useQueryState hook for Next.js - Like React.useState, but stored in the URL query string
 
+## Migration from v1
+
+In order to use this hook in the new app directory of Next.js 13.4, you need to upgrade to v2.x.
+
+To use this hook in the old pages directory, you need v1.x.
+
 ## Features
 
 - 🧘‍♀️ Simple: the URL is the source of truth.
@@ -176,7 +182,7 @@ useQueryState('foo', { history: 'push' })
 
 Any other value for the `history` option will fallback to the default.
 
-## Multiple Queries
+## Multiple Queries (only for v1.x)
 
 Because the Next.js router has asynchronous methods, if you want to do multiple
 query updates in one go, you'll have to `await` them, otherwise the latter will
@@ -192,6 +198,8 @@ const MultipleQueriesDemo = () => {
   }, [])
 }
 ```
+
+> Note: In version 2.x, you don't need to await the state updates.
 
 For query keys that should always move together, you can use `useQueryStates`
 with an object containing each key's type:
@@ -218,9 +226,9 @@ await setCoordinates({
 })
 ```
 
-## Transition Options
+## Transition Options (only for v1.x)
 
-By default Next.js will scroll to the top of the page when changing things in the URL.
+By default, Next.js will scroll to the top of the page when changing things in the URL.
 
 To prevent this, `router.push()` and `router.replace()` have a third optional
 parameter to control transitions, which can be passed on the state setter here:

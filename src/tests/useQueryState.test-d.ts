@@ -7,8 +7,6 @@ import { queryTypes, useQueryState } from '../index'
   expectType<string | null>(state)
   setState('bar')
   setState(old => old?.toUpperCase() ?? null)
-  const out = await setState('bar')
-  expectType<boolean>(out)
 }
 
 // Accept only a single `history` option
@@ -17,8 +15,6 @@ import { queryTypes, useQueryState } from '../index'
   expectType<string | null>(state)
   setState('bar')
   setState(old => old?.toUpperCase() ?? null)
-  const out = await setState('bar')
-  expectType<boolean>(out)
 }
 
 // Supported query types
