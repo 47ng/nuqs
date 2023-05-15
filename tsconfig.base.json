@@ -35,6 +35,7 @@
     "./dist",
     "./src/app",
     "./src/tests",
+    "./src/legacy/tests",
     "node_modules",
   ]
 }
