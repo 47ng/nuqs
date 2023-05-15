@@ -5,5 +5,5 @@
     "module": "CommonJS",
     "outDir": "./dist/cjs"
   },
-  "exclude": ["./src/tests/*", "./src/pages/*"]
+  "exclude": ["./src/tests/*", "./src/app/*"]
 }

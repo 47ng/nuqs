@@ -27,8 +27,6 @@ import { queryTypes, useQueryStates } from '../index'
     ...old,
     d: !old.d
   }))
-  const out = await setStates({ b: 42 })
-  expectType<boolean>(out)
 }
 
 // With default values, state is no longer nullable

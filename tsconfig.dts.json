@@ -5,5 +5,5 @@
     "emitDeclarationOnly": true,
     "declarationDir": "./dist/types",
   },
-  "exclude": ["./src/tests/*", "./src/pages/*"]
+  "exclude": ["./src/tests/*", "./src/app/*"]
 }

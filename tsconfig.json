@@ -9,6 +9,17 @@
     "forceConsistentCasingInFileNames": true,
     "incremental": true,
     "resolveJsonModule": true,
-    "isolatedModules": true
-  }
+    "isolatedModules": true,
+    "strictNullChecks": true,
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ]
+  },
+  "include": [
+    "./src/**/*.ts",
+    "./src/**/*.tsx",
+    ".next/types/**/*.ts"
+  ]
 }
