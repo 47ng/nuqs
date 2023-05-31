@@ -195,10 +195,9 @@ export const queryTypes: QueryTypeMap = {
         type ItemType = NonNullable<ReturnType<typeof itemSerializers.parse>>
         return query
           .split(separator)
-          .filter(item => item !== '') // ignore empty items
           .map(item => decodeURIComponent(item))
           .map(itemSerializers.parse)
-          .filter(value => value !== null && value !== undefined) as ItemType[]
+          .filter(value => !value) as ItemType[]
       },
       serialize: values =>
         values
