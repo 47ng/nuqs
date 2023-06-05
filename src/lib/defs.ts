@@ -190,7 +190,7 @@ export const queryTypes: QueryTypeMap = {
         if (query === '') {
           // Empty query should not go through the split/map/filter logic,
           // see https://github.com/47ng/next-usequerystate/issues/329
-          return []
+          return [] as ItemType[]
         }
         return query
           .split(separator)
