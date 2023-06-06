@@ -6,6 +6,7 @@ import type {
   Serializers,
   TransitionOptions
 } from './defs'
+import { isEmpty } from './utils'
 
 type KeyMapValue<Type> = Serializers<Type> & {
   defaultValue?: Type
@@ -120,7 +121,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
 
       Object.keys(newValues).forEach(key => {
         const newValue = newValues[key]
-        if (newValue === null) {
+        if (isEmpty(newValue)) {
           query.delete(key)
         } else if (newValue !== undefined) {
           const { serialize = String } = keys[key]

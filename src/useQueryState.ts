@@ -1,6 +1,7 @@
 import { useRouter } from 'next/router'
 import React from 'react'
 import { HistoryOptions, Serializers, TransitionOptions } from './defs'
+import { isEmpty } from './utils'
 
 export interface UseQueryStateOptions<T> extends Serializers<T> {
   /**
@@ -250,11 +251,12 @@ export function useQueryState<T = string>(
       // unnecessary renders when other query parameters change.
       // URLSearchParams is already polyfilled by Next.js
       const query = new URLSearchParams(window.location.search)
-      if (newValue === null) {
+
+      if (isEmpty(newValue)) {
         // Don't leave value-less keys hanging
         query.delete(key)
       } else {
-        query.set(key, serialize(newValue))
+        query.set(key, serialize(newValue as T))
       }
       const search = query.toString()
       const hash = window.location.hash
