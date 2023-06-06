@@ -193,7 +193,12 @@ export const queryTypes: QueryTypeMap = {
     return {
       parse: query => {
         type ItemType = NonNullable<ReturnType<typeof itemSerializers.parse>>
-        if (query === '') return [] as ItemType[] // empty string should return empty array
+
+        if (query === '') {
+          // Empty query should not go through the split/map/filter logic,
+          // see https://github.com/47ng/next-usequerystate/issues/329
+          return []
+        }
         return query
           .split(separator)
           .map(item => decodeURIComponent(item))
