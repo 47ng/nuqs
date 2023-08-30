@@ -25,7 +25,7 @@
   },
   "files": [
     "dist/",
-    "./useQueryState.gif"
+    "useQueryState.gif"
   ],
   "type": "module",
   "sideEffects": false,
