@@ -25,7 +25,9 @@
   },
   "files": [
     "dist/",
-    "useQueryState.gif"
+    "useQueryState.gif",
+    "app.d.ts",
+    "pages.d.ts"
   ],
   "type": "module",
   "sideEffects": false,
@@ -34,7 +36,7 @@
   "types": "dist/index.d.ts",
   "exports": {
     ".": {
-      "imports": "./dist/index.js",
+      "import": "./dist/index.js",
       "require": "./dist/index.cjs",
       "types": "./dist/index.d.ts"
     },
@@ -72,7 +74,8 @@
     "cypress:run": "cypress run --headless",
     "ci": "run-s build test:types",
     "e2e": "run-s cypress:install test:e2e:next:build test:e2e:ci",
-    "prepare": "husky install"
+    "prepare": "husky install",
+    "prepack": "ln -s ./dist/app.d.ts app.d.ts && ln -s ./dist/pages.d.ts pages.d.ts"
   },
   "peerDependencies": {
     "next": "^13",
