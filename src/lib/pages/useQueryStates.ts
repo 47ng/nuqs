@@ -1,7 +1,7 @@
 import { useRouter } from 'next/router'
 import React from 'react'
-import type { HistoryOptions, Nullable, Serializers } from '../commonDefs'
-import type { TransitionOptions } from './defs'
+import type { HistoryOptions, Nullable, Serializers } from '../defs'
+import type { TransitionOptions } from './pagesRouterDefs'
 
 type KeyMapValue<Type> = Serializers<Type> & {
   defaultValue?: Type

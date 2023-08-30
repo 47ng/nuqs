@@ -1,7 +1,7 @@
 import { useRouter } from 'next/router'
 import React from 'react'
-import type { HistoryOptions, Serializers } from '../commonDefs'
-import type { TransitionOptions } from './defs'
+import type { HistoryOptions, Serializers } from '../defs'
+import type { TransitionOptions } from './pagesRouterDefs'
 
 export interface UseQueryStateOptions<T> extends Serializers<T> {
   /**
