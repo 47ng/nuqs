@@ -32,20 +32,39 @@
   "main": "dist/index.cjs",
   "module": "dist/index.js",
   "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "imports": "./dist/index.js",
+      "require": "./dist/index.cjs",
+      "types": "./dist/index.d.ts"
+    },
+    "./app": {
+      "import": "./dist/app.js",
+      "require": "./dist/app.cjs",
+      "types": "./dist/app.d.ts"
+    },
+    "./pages": {
+      "import": "./dist/pages.js",
+      "require": "./dist/pages.cjs",
+      "types": "./dist/pages.d.ts"
+    }
+  },
   "tsup": {
-    "entry": [
-      "src/index.ts"
-    ],
-    "treeshake": true
+    "entry": {
+      "index": "src/lib/index.ts",
+      "pages": "src/lib/index.pages.ts",
+      "app": "src/lib/index.app.ts"
+    }
   },
   "scripts": {
-    "dev": "tsup --format esm --dts --watch",
+    "dev": "run-p dev:*",
+    "dev:build": "tsup --format esm --dts --watch",
+    "dev:next": "next dev",
     "build": "tsup --clean --format esm,cjs --dts",
     "test": "run-p test:types test:e2e:ci",
     "test:types": "tsd",
     "test:e2e:ci": "run-p --race test:e2e:next:start cypress:run",
-    "test:e2e:dev": "run-p --race test:e2e:next:dev cypress:open",
-    "test:e2e:next:dev": "next dev",
+    "test:e2e:dev": "run-p --race dev:next cypress:open",
     "test:e2e:next:build": "next build",
     "test:e2e:next:start": "next start",
     "cypress:install": "cypress install",

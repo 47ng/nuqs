@@ -1,5 +1,5 @@
 import { expectError, expectNotAssignable, expectType } from 'tsd'
-import { queryTypes, useQueryState } from '../index'
+import { queryTypes, useQueryState } from '../../../dist/app'
 
 // By default, queries have a `string` state, nullable (when no query parameter is present)
 {

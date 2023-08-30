@@ -1,5 +1,5 @@
 import { expectError, expectNotAssignable, expectType } from 'tsd'
-import { queryTypes, useQueryStates } from '../index'
+import { queryTypes, useQueryStates } from '../../lib/index.pages'
 
 {
   const [states, setStates] = useQueryStates(
@@ -27,6 +27,8 @@ import { queryTypes, useQueryStates } from '../index'
     ...old,
     d: !old.d
   }))
+  const out = await setStates({ b: 42 })
+  expectType<boolean>(out)
 }
 
 // With default values, state is no longer nullable

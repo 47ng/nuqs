@@ -74,14 +74,26 @@ function runTest() {
   cy.location('search').should('be.empty')
 }
 
-describe('useQueryStates', () => {
+describe('useQueryStates (app router)', () => {
   it('uses string by default', () => {
-    cy.visit('/useQueryStates')
+    cy.visit('/app/useQueryStates')
     runTest()
   })
 
   it('should work with dynamic routes', () => {
-    cy.visit('/useQueryStates/dynamic/route')
+    cy.visit('/app/useQueryStates/dynamic/route')
+    runTest()
+  })
+})
+
+describe('useQueryStates (pages router)', () => {
+  it('uses string by default', () => {
+    cy.visit('/pages/useQueryStates')
+    runTest()
+  })
+
+  it('should work with dynamic routes', () => {
+    cy.visit('/pages/useQueryStates/dynamic/route')
     runTest()
   })
 })
