@@ -181,7 +181,9 @@ useQueryState('foo', { history: 'push' })
 
 Any other value for the `history` option will fallback to the default.
 
-## Multiple Queries (only for v1.x)
+## Multiple Queries
+
+> Note: If using the app router, you don't need to await the state updates.
 
 Because the Next.js router has asynchronous methods, if you want to do multiple
 query updates in one go, you'll have to `await` them, otherwise the latter will
@@ -197,8 +199,6 @@ const MultipleQueriesDemo = () => {
   }, [])
 }
 ```
-
-> Note: In version 2.x, you don't need to await the state updates.
 
 For query keys that should always move together, you can use `useQueryStates`
 with an object containing each key's type:
@@ -225,7 +225,9 @@ await setCoordinates({
 })
 ```
 
-## Transition Options (only for v1.x)
+## Transition Options
+
+> Note: this feature is only available for the pages router.
 
 By default, Next.js will scroll to the top of the page when changing things in the URL.
 
