@@ -74,10 +74,7 @@
     "cypress:run": "cypress run --headless",
     "ci": "run-s build test:types",
     "e2e": "run-s cypress:install test:e2e:next:build test:e2e:ci",
-    "prepare": "husky install",
-    "prepack": "run-p link:*",
-    "link:app": "echo \"export * from './dist/app'\" > app.d.ts",
-    "link:pages": "echo \"export * from './dist/pages'\" > pages.d.ts"
+    "prepare": "husky install"
   },
   "peerDependencies": {
     "next": "^13",

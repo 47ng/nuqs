@@ -7,7 +7,3 @@ yarn-error.log
 .volumes/
 package-lock.json
 .next/
-
-# Symbolic links for moduleResolution: node projects
-app.d.ts
-pages.d.ts
