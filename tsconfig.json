@@ -1,25 +1,32 @@
 {
-  "extends": "./tsconfig.base.json",
+  "$schema": "https://json.schemastore.org/tsconfig",
   "compilerOptions": {
-    "target": "ES2017", // Transpile optional chaining operator
-    "module": "ESNext", // allow top-level await
-    "noEmit": true,
-    "allowJs": true,
-    "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true,
-    "incremental": true,
+    // Type checking
+    "strict": true,
+
+    // Modules
+    "module": "ESNext",
+    "moduleResolution": "node",
     "resolveJsonModule": true,
+    // Language & Environment
+    "target": "ESNext",
+    "lib": ["DOM", "DOM.Iterable", "ESNext"],
+
+    // Emit
+    "noEmit": true,
+    "declaration": false,
+    "downlevelIteration": true,
+
+    // Interop
+    "allowJs": true,
     "isolatedModules": true,
-    "strictNullChecks": true,
-    "plugins": [
-      {
-        "name": "next"
-      }
-    ]
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+
+    // Misc
+    "skipLibCheck": true,
+    "skipDefaultLibCheck": true
   },
-  "include": [
-    "./src/**/*.ts",
-    "./src/**/*.tsx",
-    ".next/types/**/*.ts"
-  ]
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx"],
+  "exclude": ["node_modules"]
 }

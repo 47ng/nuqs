@@ -1,9 +1,0 @@
-{
-  "extends": "./tsconfig.base.json",
-  "compilerOptions": {
-    "target": "ES2016",
-    "module": "ESNext",
-    "outDir": "./dist/esm"
-  },
-  "exclude": ["./src/tests/*", "./src/legacy/tests/*", "./src/app/*"]
-}

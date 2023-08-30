@@ -2,9 +2,6 @@
   "name": "next-usequerystate",
   "version": "0.0.0-semantically-released",
   "description": "useQueryState hook for Next.js - Like React.useState, but stored in the URL query string",
-  "main": "dist/cjs/index.js",
-  "module": "dist/esm/index.js",
-  "types": "dist/types/index.d.ts",
   "license": "MIT",
   "author": {
     "name": "François Best",
@@ -26,15 +23,24 @@
   "publishConfig": {
     "access": "public"
   },
+  "files": [
+    "dist/",
+    "./useQueryState.gif"
+  ],
+  "type": "module",
+  "sideEffects": false,
+  "main": "dist/index.cjs",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "tsup": {
+    "entry": [
+      "src/index.ts"
+    ],
+    "treeshake": true
+  },
   "scripts": {
-    "prebuild": "rm -rf ./dist",
-    "build": "run-p build:*",
-    "build:cjs": "tsc --project ./tsconfig.cjs.json",
-    "build:esm": "tsc --project ./tsconfig.esm.json",
-    "build:dts": "tsc --project ./tsconfig.dts.json",
-    "postbuild:cjs": "copyfiles -u 2 \"dist/cjs/*.js\" \"dist/cjs/app\" && copyfiles -u 3 \"dist/cjs/legacy/*.js\" \"dist/cjs\" && copyfiles -u 3 \"dist/cjs/legacy/*.js\" \"dist/cjs/pages\" && rm -rf ./dist/cjs/legacy",
-    "postbuild:esm": "copyfiles -u 2 \"dist/esm/*.js\" \"dist/esm/app\" && copyfiles -u 3 \"dist/esm/legacy/*.js\" \"dist/esm\" && copyfiles -u 3 \"dist/esm/legacy/*.js\" \"dist/esm/pages\" && rm -rf ./dist/esm/legacy",
-    "postbuild:dts": "copyfiles -u 2 \"dist/types/*.d.ts\" \"dist/types/app\" && copyfiles -u 3 \"dist/types/legacy/*.d.ts\" \"dist/types\" && copyfiles -u 3 \"dist/types/legacy/*.d.ts\" \"dist/types/pages\" && rm -rf ./dist/types/legacy",
+    "dev": "tsup --format esm --dts --watch",
+    "build": "tsup --clean --format esm,cjs --dts",
     "test": "run-p test:types test:e2e:ci",
     "test:types": "tsd",
     "test:e2e:ci": "run-p --race test:e2e:next:start cypress:run",
@@ -50,7 +56,7 @@
     "prepare": "husky install"
   },
   "peerDependencies": {
-    "next": "*",
+    "next": "^13",
     "react": "*",
     "react-dom": "*"
   },
@@ -74,6 +80,7 @@
     "ts-jest": "^27.1.3",
     "ts-node": "^10.5.0",
     "tsd": "^0.19.1",
+    "tsup": "^7.2.0",
     "typescript": "^4.5.5"
   },
   "jest": {

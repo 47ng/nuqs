@@ -1,9 +1,0 @@
-{
-  "extends": "./tsconfig.base.json",
-  "compilerOptions": {
-    "declaration": true,
-    "emitDeclarationOnly": true,
-    "declarationDir": "./dist/types",
-  },
-  "exclude": ["./src/tests/*", "./src/legacy/tests/*", "./src/app/*"]
-}
