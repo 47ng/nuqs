@@ -1,7 +1,7 @@
 'use client'
 
-export * from './commonDefs'
-export * from './pages/defs'
+export * from './defs'
+export * from './pages/pagesRouterDefs'
 export * from './pages/useQueryState'
 export * from './pages/useQueryStates'
 export const __useQueryStateRouter = 'pages'

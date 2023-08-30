@@ -1,6 +1,6 @@
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import React from 'react'
-import type { HistoryOptions, Nullable, Serializers } from '../commonDefs'
+import type { HistoryOptions, Nullable, Serializers } from '../defs'
 
 type KeyMapValue<Type> = Serializers<Type> & {
   defaultValue?: Type

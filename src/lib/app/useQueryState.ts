@@ -1,6 +1,6 @@
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import React from 'react'
-import type { HistoryOptions, Serializers } from '../commonDefs'
+import type { HistoryOptions, Serializers } from '../defs'
 
 export interface UseQueryStateOptions<T> extends Serializers<T> {
   /**
