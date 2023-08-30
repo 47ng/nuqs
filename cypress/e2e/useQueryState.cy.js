@@ -138,14 +138,26 @@ function runTest() {
   // Array of integers
 }
 
-describe('useQueryState', () => {
+describe('useQueryState (app router)', () => {
   it('works in standard routes', () => {
-    cy.visit('/useQueryState')
+    cy.visit('/app/useQueryState')
     runTest()
   })
 
   it('works in dynamic routes', () => {
-    cy.visit('/useQueryState/dynamic/route')
+    cy.visit('/app/useQueryState/dynamic/route')
+    runTest()
+  })
+})
+
+describe('useQueryState (pages router)', () => {
+  it('works in standard routes', () => {
+    cy.visit('/pages/useQueryState')
+    runTest()
+  })
+
+  it('works in dynamic routes', () => {
+    cy.visit('/pages/useQueryState/dynamic/route')
     runTest()
   })
 })

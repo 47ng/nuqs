@@ -1,6 +1,7 @@
-import { usePathname, useRouter, useSearchParams } from 'next/navigation'
+import { useRouter } from 'next/router'
 import React from 'react'
-import type { HistoryOptions, Nullable, Serializers } from './defs'
+import type { HistoryOptions, Nullable, Serializers } from '../commonDefs'
+import type { TransitionOptions } from './defs'
 
 type KeyMapValue<Type> = Serializers<Type> & {
   defaultValue?: Type
@@ -30,8 +31,9 @@ type UpdaterFn<T extends UseQueryStatesKeysMap> = (
 ) => Partial<Nullable<Values<T>>>
 
 export type SetValues<T extends UseQueryStatesKeysMap> = (
-  values: Partial<Nullable<Values<T>>> | UpdaterFn<T>
-) => void
+  values: Partial<Nullable<Values<T>>> | UpdaterFn<T>,
+  transitionOptions?: TransitionOptions
+) => Promise<boolean>
 
 export type UseQueryStatesReturn<T extends UseQueryStatesKeysMap> = [
   Values<T>,
@@ -44,15 +46,12 @@ export type UseQueryStatesReturn<T extends UseQueryStatesKeysMap> = [
  * @param keys - An object describing the keys to synchronise and how to
  *               serialise and parse them.
  *               Use `queryTypes.(string|integer|float)` for quick shorthands.
- * @param options - Optional history mode.
  */
 export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
   keys: KeyMap,
   { history = 'replace' }: Partial<UseQueryStatesOptions> = {}
 ): UseQueryStatesReturn<KeyMap> {
   const router = useRouter()
-  const pathname = usePathname()
-  const searchParams = useSearchParams()
 
   type V = Values<KeyMap>
 
@@ -64,7 +63,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
     [history]
   )
 
-  const getValues = (mode: 'current' | 'previous' = 'current'): V => {
+  const getValues = React.useCallback((): V => {
     if (typeof window === 'undefined') {
       // Not available in an SSR context, return all null (or default if available)
       return Object.keys(keys).reduce((obj, key) => {
@@ -75,15 +74,12 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
         }
       }, {} as V)
     }
-    const query =
-      mode === 'current'
-        ? searchParams
-        : new URLSearchParams(window.location.search)
+    const query = new URLSearchParams(window.location.search)
     return Object.keys(keys).reduce((values, key) => {
       const { parse, defaultValue } = keys[key as keyof KeyMap]
-      const value = query?.get(key)
+      const value = query.get(key)
       const parsed =
-        value != null
+        value !== null
           ? parse(value) ?? defaultValue ?? null
           : defaultValue ?? null
       return {
@@ -91,25 +87,32 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
         [key]: parsed
       }
     }, {} as V)
-  }
+  }, [keys])
 
-  const getOldValues = React.useCallback((): V => getValues('previous'), [])
-
-  const values = getValues()
+  // Update the state values only when the relevant keys change.
+  // Because we're not calling getValues in the function argument
+  // of React.useMemo, but instead using it as the function to call,
+  // there is no need to pass it in the dependency array.
+  const values = React.useMemo(
+    getValues,
+    Object.keys(keys).map(key => router.query[key])
+  )
 
   const update = React.useCallback<SetValues<KeyMap>>(
-    stateUpdater => {
+    (stateUpdater, transitionOptions) => {
       const isUpdaterFunction = (input: any): input is UpdaterFn<KeyMap> => {
         return typeof input === 'function'
       }
 
       // Resolve the new values based on old values & updater
-      const oldValues = getOldValues()
+      const oldValues = getValues()
       const newValues = isUpdaterFunction(stateUpdater)
         ? stateUpdater(oldValues)
         : stateUpdater
+      // We can't rely on router.query here to avoid causing
+      // unnecessary renders when other query parameters change.
       // URLSearchParams is already polyfilled by Next.js
-      const query = new URLSearchParams(searchParams?.toString())
+      const query = new URLSearchParams(window.location.search)
 
       Object.keys(newValues).forEach(key => {
         const newValue = newValues[key]
@@ -122,9 +125,22 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
       })
       const search = query.toString()
       const hash = window.location.hash
-      updateUrl?.call(router, `${pathname}${search ? '?' + search : ''}${hash}`)
+      return updateUrl?.call(
+        router,
+        {
+          pathname: router.pathname,
+          hash,
+          search
+        },
+        {
+          pathname: window.location.pathname,
+          hash,
+          search
+        },
+        transitionOptions
+      )
     },
-    [keys, searchParams, updateUrl]
+    [keys, updateUrl]
   )
   return [values, update]
 }

@@ -1,7 +1,6 @@
 'use client'
 
-import React from 'react'
-import { queryTypes, useQueryStates } from './../../../../'
+import { queryTypes, useQueryStates } from '../../../../dist/pages'
 
 const IntegrationPage = () => {
   const [state, setState] = useQueryStates({

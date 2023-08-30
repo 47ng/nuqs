@@ -1,6 +1,7 @@
+import { useRouter } from 'next/router'
 import React from 'react'
-import { HistoryOptions, Serializers } from './defs'
-import { usePathname, useRouter, useSearchParams } from 'next/navigation'
+import type { HistoryOptions, Serializers } from '../commonDefs'
+import type { TransitionOptions } from './defs'
 
 export interface UseQueryStateOptions<T> extends Serializers<T> {
   /**
@@ -19,8 +20,9 @@ export type UseQueryStateReturn<Parsed, Default> = [
       | Parsed
       | ((
           old: Default extends Parsed ? Parsed : Parsed | null
-        ) => Parsed | null)
-  ) => void
+        ) => Parsed | null),
+    transitionOptions?: TransitionOptions
+  ) => Promise<boolean>
 ]
 
 // Overload type signatures ----------------------------------------------------
@@ -204,8 +206,6 @@ export function useQueryState<T = string>(
   }
 ) {
   const router = useRouter()
-  const pathname = usePathname()
-  const searchParams = useSearchParams()
 
   // Memoizing the update function has the advantage of making it
   // immutable as long as `history` stays the same.
@@ -215,29 +215,26 @@ export function useQueryState<T = string>(
     [history]
   )
 
-  function getValue(mode: 'current' | 'previous' = 'current'): T | null {
+  const getValue = React.useCallback((): T | null => {
     if (typeof window === 'undefined') {
       // Not available in an SSR context
       return null
     }
-    const query =
-      mode === 'current'
-        ? searchParams
-        : new URLSearchParams(window.location.search)
-    const value = query?.get(key)
-    return value != null ? parse(value) : null
-  }
+    const query = new URLSearchParams(window.location.search)
+    const value = query.get(key)
+    return value !== null ? parse(value) : null
+  }, [])
 
-  const getOldValue = React.useCallback(
-    (): T | null => getValue('previous'),
-    []
-  )
-
-  const value = getValue()
+  // Update the state value only when the relevant key changes.
+  // Because we're not calling getValue in the function argument
+  // of React.useMemo, but instead using it as the function to call,
+  // there is no need to pass it in the dependency array.
+  const value = React.useMemo(getValue, [router.query[key]])
 
   const update = React.useCallback(
     (
-      stateUpdater: React.SetStateAction<T | null> // todo: This is wrong now
+      stateUpdater: React.SetStateAction<T | null>, // todo: This is wrong now
+      transitionOptions?: TransitionOptions
     ) => {
       const isUpdaterFunction = (
         input: any
@@ -246,25 +243,38 @@ export function useQueryState<T = string>(
       }
 
       // Resolve the new value based on old value & updater
-      const oldValue = getOldValue() ?? defaultValue ?? null
+      const oldValue = getValue() ?? defaultValue ?? null
       const newValue = isUpdaterFunction(stateUpdater)
         ? stateUpdater(oldValue)
         : stateUpdater
+      // We can't rely on router.query here to avoid causing
+      // unnecessary renders when other query parameters change.
       // URLSearchParams is already polyfilled by Next.js
-      const query = new URLSearchParams(searchParams?.toString())
+      const query = new URLSearchParams(window.location.search)
       if (newValue === null) {
         // Don't leave value-less keys hanging
         query.delete(key)
-      } else if (newValue !== undefined) {
+      } else {
         query.set(key, serialize(newValue))
       }
       const search = query.toString()
       const hash = window.location.hash
-
-      updateUrl?.call(router, `${pathname}${search ? '?' + search : ''}${hash}`)
+      return updateUrl?.call(
+        router,
+        {
+          pathname: router.pathname,
+          hash,
+          search
+        },
+        {
+          pathname: window.location.pathname,
+          hash,
+          search
+        },
+        transitionOptions
+      )
     },
-    [key, searchParams, updateUrl]
+    [key, updateUrl]
   )
-
   return [value ?? defaultValue ?? null, update]
 }
