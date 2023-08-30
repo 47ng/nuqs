@@ -8,18 +8,13 @@
 
 useQueryState hook for Next.js - Like React.useState, but stored in the URL query string
 
-## Migration from v1
-
-In order to use this hook in the new app directory of Next.js 13.4, you need to upgrade to v2.x.
-
-To use this hook in the old pages directory, you need v1.x.
-
 ## Features
 
 - 🧘‍♀️ Simple: the URL is the source of truth.
 - 🕰 Replace history or append to use the Back button to navigate state updates
 - ⚡️ Built-in converters for common object types (number, float, boolean, Date)
 - ♊️ Linked querystrings with `useQueryStates`
+- 🔀 Supports both the app router (in client components only) and pages router
 
 ## Installation
 
@@ -30,6 +25,10 @@ $ npm install next-usequerystate
 ```
 
 ## Usage
+
+> Note: all code samples assume you're using the pages router.
+>
+> Jump to the [app router documentation](#app-router).
 
 ```tsx
 import { useQueryState } from 'next-usequerystate'
@@ -240,6 +239,34 @@ setName('Foo', {
   scroll: false,
   shallow: true // Don't run getStaticProps / getServerSideProps / getInitialProps
 })
+```
+
+## App router
+
+This hook can be used with the app router in Next.js 13+, but
+**only in client components**.
+
+Next.js doesn't allow obtaining querystring parameters from server components.
+
+The API is the same for both hooks, but you'll need to change your imports to:
+
+```ts
+import {
+  useQueryState,
+  useQueryStates,
+  queryTypes
+} from 'next-usequerystate/app' // <- note the /app here
+```
+
+In an later major version, the default import will stop pointing to the pages
+router implementation and switch to the app router (probably when Next.js
+starts marking the pages router as deprecated).
+
+In order to lock your usage of the hook to the pages router, you can change your
+imports to the following:
+
+```ts
+import { useQueryState } from 'next-usequerystate/pages'
 ```
 
 ## Caveats
