@@ -70,8 +70,10 @@ export type QueryTypeMap = Readonly<{
    * Value is URI-encoded for safety, so it may not look nice in the URL.
    * Note: you may want to use `useQueryStates` for finer control over
    * multiple related query keys.
+   *
+   * @param parser optional parser (eg: Zod schema) to validate after JSON.parse
    */
-  json<T>(): SerializersWithDefaultFactory<T>
+  json<T>(parser?: (value: unknown) => T): SerializersWithDefaultFactory<T>
 
   /**
    * A comma-separated list of items.
@@ -177,11 +179,16 @@ export const queryTypes: QueryTypeMap = {
       }
     }
   },
-  json<T>() {
+  json<T>(parser?: (value: unknown) => T) {
     return {
       parse: query => {
         try {
-          return JSON.parse(decodeURIComponent(query)) as T
+          const obj = JSON.parse(decodeURIComponent(query))
+          if (typeof parser === 'function') {
+            return parser(obj)
+          } else {
+            return obj as T
+          }
         } catch {
           return null
         }
