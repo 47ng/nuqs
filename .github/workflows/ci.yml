@@ -3,6 +3,9 @@ name: Continuous Integration
 on:
   push:
 
+env:
+  FORCE_COLOR: 3
+
 jobs:
   ci:
     name: Continuous Integration
