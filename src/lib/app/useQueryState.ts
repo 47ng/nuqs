@@ -1,6 +1,8 @@
-import { usePathname, useRouter, useSearchParams } from 'next/navigation'
+import { useSearchParams } from 'next/navigation'
 import React from 'react'
 import type { HistoryOptions, Serializers } from '../defs'
+import { SYNC_EVENT_KEY, emitter, usePatchedHistory } from '../sync'
+import { enqueueQueryStringUpdate, flushToURL } from '../update-queue'
 
 export interface UseQueryStateOptions<T> extends Serializers<T> {
   /**
@@ -20,7 +22,7 @@ export type UseQueryStateReturn<Parsed, Default> = [
       | ((
           old: Default extends Parsed ? Parsed : Parsed | null
         ) => Parsed | null)
-  ) => void
+  ) => Promise<URLSearchParams>
 ]
 
 // Overload type signatures ----------------------------------------------------
@@ -48,6 +50,7 @@ export type UseQueryStateReturn<Parsed, Default> = [
  *
  *   const increment = () => setCount(oldCount => oldCount + 1)
  *   const decrement = () => setCount(oldCount => oldCount - 1)
+ *   // Clears the query key from the URL and `count` equals 0
  *   const clearCountQuery = () => setCount(null)
  * ```
  * @param key The URL query string key to bind to
@@ -203,42 +206,39 @@ export function useQueryState<T = string>(
     defaultValue: undefined
   }
 ) {
-  const router = useRouter()
-  const pathname = usePathname()
-  const searchParams = useSearchParams()
-
-  // Memoizing the update function has the advantage of making it
-  // immutable as long as `history` stays the same.
-  // It reduces the amount of reactivity needed to update the state.
-  const updateUrl = React.useMemo(
-    () => (history === 'push' ? router.push : router.replace),
-    [history]
-  )
-
-  function getValue(mode: 'current' | 'previous' = 'current'): T | null {
-    if (typeof window === 'undefined') {
-      // Not available in an SSR context
-      return null
+  usePatchedHistory()
+  // Not reactive, but available on the server and on page load
+  const initialSearchParams = useSearchParams()
+  const [internalState, setInternalState] = React.useState(() => {
+    if (typeof window !== 'object') {
+      // SSR
+      const value = initialSearchParams?.get(key) ?? null
+      return value === null ? null : parse(value)
     }
-    const query =
-      mode === 'current'
-        ? searchParams
-        : new URLSearchParams(window.location.search)
-    const value = query?.get(key)
-    return value != null ? parse(value) : null
-  }
+    // Components mounted way after page load must use the current URL value
+    const value = new URLSearchParams(window.location.search).get(key) ?? null
+    return value === null ? null : parse(value)
+  })
+  // console.debug(`render ${key}: ${internalState}`)
 
-  const getOldValue = React.useCallback(
-    (): T | null => getValue('previous'),
-    []
-  )
-
-  const value = getValue()
+  // Sync all hooks together & with external URL changes
+  React.useEffect(() => {
+    function syncFromURL(search: URLSearchParams) {
+      const value = search.get(key) ?? null
+      const v = value === null ? null : parse(value)
+      // console.debug(`sync   ${key}: ${v}`)
+      setInternalState(v)
+    }
+    emitter.on(key, setInternalState)
+    emitter.on(SYNC_EVENT_KEY, syncFromURL)
+    return () => {
+      emitter.off(key, setInternalState)
+      emitter.off(SYNC_EVENT_KEY, syncFromURL)
+    }
+  }, [key])
 
   const update = React.useCallback(
-    (
-      stateUpdater: React.SetStateAction<T | null> // todo: This is wrong now
-    ) => {
+    (stateUpdater: React.SetStateAction<T | null>) => {
       const isUpdaterFunction = (
         input: any
       ): input is (prevState: T | null) => T | null => {
@@ -246,25 +246,26 @@ export function useQueryState<T = string>(
       }
 
       // Resolve the new value based on old value & updater
-      const oldValue = getOldValue() ?? defaultValue ?? null
-      const newValue = isUpdaterFunction(stateUpdater)
-        ? stateUpdater(oldValue)
-        : stateUpdater
-      // URLSearchParams is already polyfilled by Next.js
-      const query = new URLSearchParams(searchParams?.toString())
-      if (newValue === null) {
-        // Don't leave value-less keys hanging
-        query.delete(key)
-      } else if (newValue !== undefined) {
-        query.set(key, serialize(newValue))
+      const search = new URLSearchParams(window.location.search)
+      let newValue: T | null = null
+      if (isUpdaterFunction(stateUpdater)) {
+        const serialized = search.get(key) ?? null
+        const oldValue =
+          serialized === null
+            ? defaultValue ?? null
+            : parse(serialized) ?? defaultValue ?? null
+        newValue = stateUpdater(oldValue)
+      } else {
+        newValue = stateUpdater
       }
-      const search = query.toString()
-      const hash = window.location.hash
 
-      updateUrl?.call(router, `${pathname}${search ? '?' + search : ''}${hash}`)
+      // Sync all hooks state (including this one)
+      emitter.emit(key, newValue)
+
+      enqueueQueryStringUpdate(key, newValue, serialize, history)
+      return flushToURL()
     },
-    [key, searchParams, updateUrl]
+    [key, history]
   )
-
-  return [value ?? defaultValue ?? null, update]
+  return [internalState ?? defaultValue ?? null, update]
 }

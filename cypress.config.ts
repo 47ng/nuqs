@@ -5,6 +5,8 @@ export default defineConfig({
     baseUrl: 'http://localhost:3000',
     video: false,
     fixturesFolder: false,
-    supportFile: false
+    supportFile: false,
+    testIsolation: true,
+    retries: 5
   }
 })

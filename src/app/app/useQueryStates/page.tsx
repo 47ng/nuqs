@@ -17,21 +17,18 @@ const IntegrationPage = () => {
       <button onClick={() => setState(old => ({ bool: !old.bool }))}>
         Toggle bool
       </button>
-      <button
-        id="clear-string"
-        onClick={() => setState(() => ({ string: null }))}
-      >
+      <button id="clear-string" onClick={() => setState({ string: null })}>
         Clear string
       </button>
       <button
         id="clear"
         onClick={() =>
-          setState(() => ({
+          setState({
             string: null,
             int: null,
             float: null,
             bool: null
-          }))
+          })
         }
       >
         Clear
