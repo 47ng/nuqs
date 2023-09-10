@@ -1,9 +1,26 @@
 import Link from 'next/link'
 
+const demos = ['builder-pattern', 'subscribeToQueryUpdates', 'batching']
+
 export default function IndexPage() {
   return (
     <main>
-      <h2>App router</h2>
+      <h1>next-usequerystate playground</h1>
+      <h2>Demos</h2>
+      <ul>
+        {demos.map(path => (
+          <li key={path}>
+            <Link href={`/demos/${path}`}>{path}</Link>
+          </li>
+        ))}
+      </ul>
+      <p>
+        <em>All demos use the app router.</em>
+      </p>
+      <hr />
+      <h2>End-to-end integration tests</h2>
+      <p>⚠️ Don't change these routes without updating integration tests.</p>
+      <h3>App router</h3>
       <ul>
         <li>
           <Link href="/app/useQueryState">[static] useQueryState</Link>
@@ -22,7 +39,7 @@ export default function IndexPage() {
           </Link>
         </li>
       </ul>
-      <h2>Pages router</h2>
+      <h3>Pages router</h3>
       <ul>
         <li>
           <Link href="/pages/useQueryState">[static] useQueryState</Link>

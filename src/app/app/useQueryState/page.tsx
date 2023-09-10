@@ -3,13 +3,20 @@
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import React from 'react'
-import { queryTypes, useQueryState } from '../../../../dist/app'
+import {
+  parseAsBoolean,
+  parseAsFloat,
+  parseAsInteger,
+  parseAsString,
+  useQueryState
+} from '../../../../dist'
 
 export default function IntegrationPage() {
   const [numPanes, setNumPanes] = React.useState(1)
   return (
     <main>
-      <h1>useQueryState</h1>
+      <Link href="/">⬅️ Home</Link>
+      <h1>useQueryState integration test</h1>
       <nav>
         <button onClick={() => setNumPanes(n => n + 1)}>+</button>
         <button onClick={() => setNumPanes(n => n - 1)}>-</button>
@@ -77,7 +84,7 @@ const StringSection = () => {
 }
 
 const IntSection = () => {
-  const [int, setInt] = useQueryState('int', queryTypes.integer)
+  const [int, setInt] = useQueryState('int', parseAsInteger)
   return (
     <section>
       <h2>Integer</h2>
@@ -96,7 +103,7 @@ const IntSection = () => {
 }
 
 const FloatSection = () => {
-  const [float, setFloat] = useQueryState('float', queryTypes.float)
+  const [float, setFloat] = useQueryState('float', parseAsFloat)
   return (
     <section>
       <h2>Float</h2>
@@ -130,7 +137,7 @@ const FloatSection = () => {
 }
 
 const BoolSection = () => {
-  const [bool, setBool] = useQueryState('bool', queryTypes.boolean)
+  const [bool, setBool] = useQueryState('bool', parseAsBoolean)
   return (
     <section>
       <h2>Boolean</h2>
@@ -148,7 +155,7 @@ const BoolSection = () => {
 const TextSection = () => {
   const [text, setText] = useQueryState(
     'text',
-    queryTypes.string.withDefault('Hello, world!')
+    parseAsString.withDefault('Hello, world!')
   )
   return (
     <section>

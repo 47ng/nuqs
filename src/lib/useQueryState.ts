@@ -1,15 +1,10 @@
-import { useSearchParams } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import React from 'react'
-import type { HistoryOptions, Serializers } from '../defs'
-import { SYNC_EVENT_KEY, emitter, usePatchedHistory } from '../sync'
-import { enqueueQueryStringUpdate, flushToURL } from '../update-queue'
+import type { Options, Parser } from './defs'
+import { SYNC_EVENT_KEY, emitter, usePatchedHistory } from './sync'
+import { enqueueQueryStringUpdate, flushToURL } from './update-queue'
 
-export interface UseQueryStateOptions<T> extends Serializers<T> {
-  /**
-   * The operation to use on state updates. Defaults to `replace`.
-   */
-  history?: HistoryOptions
-}
+export interface UseQueryStateOptions<T> extends Parser<T>, Options {}
 
 export type UseQueryStateReturn<Parsed, Default> = [
   Default extends undefined
@@ -21,7 +16,8 @@ export type UseQueryStateReturn<Parsed, Default> = [
       | Parsed
       | ((
           old: Default extends Parsed ? Parsed : Parsed | null
-        ) => Parsed | null)
+        ) => Parsed | null),
+    options?: Options
   ) => Promise<URLSearchParams>
 ]
 
@@ -54,7 +50,7 @@ export type UseQueryStateReturn<Parsed, Default> = [
  *   const clearCountQuery = () => setCount(null)
  * ```
  * @param key The URL query string key to bind to
- * @param options - Serializers (defines the state data type), default value and optional history mode.
+ * @param options - Parser (defines the state data type), default value and optional history mode.
  */
 export function useQueryState<T>(
   key: string,
@@ -77,7 +73,7 @@ export function useQueryState<T>(
  *   const clearTag = () => selectTag(null)
  * ```
  * @param key The URL query string key to bind to
- * @param options - Serializers (defines the state data type), and optional history mode.
+ * @param options - Parser (defines the state data type), and optional history mode.
  */
 export function useQueryState<T>(
   key: string,
@@ -89,8 +85,7 @@ export function useQueryState<T>(
  */
 export function useQueryState(
   key: string,
-  options: {
-    history?: HistoryOptions
+  options: Options & {
     defaultValue: string
   }
 ): UseQueryStateReturn<string, typeof options.defaultValue>
@@ -114,11 +109,11 @@ export function useQueryState(
  *   }
  * ```
  * @param key The URL query string key to bind to
- * @param options - Serializers (defines the state data type), and optional history mode.
+ * @param options - Parser (defines the state data type), and optional history mode.
  */
 export function useQueryState(
   key: string,
-  options: Pick<UseQueryStateOptions<string>, 'history'>
+  options: Pick<UseQueryStateOptions<string>, keyof Options>
 ): UseQueryStateReturn<string, undefined>
 
 /**
@@ -190,33 +185,37 @@ export function useQueryState(
  *   }
  * ```
  * @param key The URL query string key to bind to
- * @param options - Serializers (defines the state data type), optional default value and history mode.
+ * @param options - Parser (defines the state data type), optional default value and history mode.
  */
 export function useQueryState<T = string>(
   key: string,
   {
     history = 'replace',
+    shallow = true,
+    scroll = false,
     parse = x => x as unknown as T,
     serialize = String,
     defaultValue = undefined
   }: Partial<UseQueryStateOptions<T>> & { defaultValue?: T } = {
     history: 'replace',
+    scroll: false,
+    shallow: true,
     parse: x => x as unknown as T,
     serialize: String,
     defaultValue: undefined
   }
 ) {
   usePatchedHistory()
+  const router = useRouter()
   // Not reactive, but available on the server and on page load
   const initialSearchParams = useSearchParams()
-  const [internalState, setInternalState] = React.useState(() => {
-    if (typeof window !== 'object') {
-      // SSR
-      const value = initialSearchParams?.get(key) ?? null
-      return value === null ? null : parse(value)
-    }
-    // Components mounted way after page load must use the current URL value
-    const value = new URLSearchParams(window.location.search).get(key) ?? null
+  const [internalState, setInternalState] = React.useState<T | null>(() => {
+    const value =
+      typeof window !== 'object'
+        ? // SSR
+          initialSearchParams?.get(key) ?? null
+        : // Components mounted after page load must use the current URL value
+          new URLSearchParams(window.location.search).get(key) ?? null
     return value === null ? null : parse(value)
   })
   // console.debug(`render ${key}: ${internalState}`)
@@ -238,17 +237,17 @@ export function useQueryState<T = string>(
   }, [key])
 
   const update = React.useCallback(
-    (stateUpdater: React.SetStateAction<T | null>) => {
+    (stateUpdater: React.SetStateAction<T | null>, options: Options = {}) => {
       const isUpdaterFunction = (
         input: any
       ): input is (prevState: T | null) => T | null => {
         return typeof input === 'function'
       }
 
-      // Resolve the new value based on old value & updater
-      const search = new URLSearchParams(window.location.search)
       let newValue: T | null = null
       if (isUpdaterFunction(stateUpdater)) {
+        // Resolve the new value based on old value & updater
+        const search = new URLSearchParams(window.location.search)
         const serialized = search.get(key) ?? null
         const oldValue =
           serialized === null
@@ -261,11 +260,15 @@ export function useQueryState<T = string>(
 
       // Sync all hooks state (including this one)
       emitter.emit(key, newValue)
-
-      enqueueQueryStringUpdate(key, newValue, serialize, history)
-      return flushToURL()
+      enqueueQueryStringUpdate(key, newValue, serialize, {
+        // Call-level options take precedence over hook declaration options.
+        history: options.history ?? history,
+        shallow: options.shallow ?? shallow,
+        scroll: options.scroll ?? scroll
+      })
+      return flushToURL(router)
     },
-    [key, history]
+    [key, history, shallow, scroll]
   )
   return [internalState ?? defaultValue ?? null, update]
 }

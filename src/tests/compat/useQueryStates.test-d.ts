@@ -1,5 +1,5 @@
 import { expectError, expectNotAssignable, expectType } from 'tsd'
-import { queryTypes, useQueryStates } from '../../../dist/app'
+import { queryTypes, useQueryStates } from '../../../dist'
 
 {
   const [states, setStates] = useQueryStates(

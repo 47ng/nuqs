@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import React from 'react'
-import { queryTypes, useQueryState } from '../../../../dist/app'
+import { queryTypes, useQueryState } from '../../../../dist'
 
 const IntegrationPage = () => {
   const [string, setString] = useQueryState('string')

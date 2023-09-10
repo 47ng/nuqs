@@ -1,10 +1,14 @@
-import { ReadonlyURLSearchParams, useSearchParams } from 'next/navigation'
+import {
+  ReadonlyURLSearchParams,
+  useRouter,
+  useSearchParams
+} from 'next/navigation'
 import React from 'react'
-import type { HistoryOptions, Nullable, Serializers } from '../defs'
-import { SYNC_EVENT_KEY, emitter, usePatchedHistory } from '../sync'
-import { enqueueQueryStringUpdate, flushToURL } from '../update-queue'
+import type { Nullable, Options, Parser } from './defs'
+import { SYNC_EVENT_KEY, emitter, usePatchedHistory } from './sync'
+import { enqueueQueryStringUpdate, flushToURL } from './update-queue'
 
-type KeyMapValue<Type> = Serializers<Type> & {
+type KeyMapValue<Type> = Parser<Type> & {
   defaultValue?: Type
 }
 
@@ -12,12 +16,7 @@ export type UseQueryStatesKeysMap<Map = any> = {
   [Key in keyof Map]: KeyMapValue<Map[Key]>
 }
 
-export interface UseQueryStatesOptions {
-  /**
-   * The operation to use on state updates. Defaults to `replace`.
-   */
-  history: HistoryOptions
-}
+export interface UseQueryStatesOptions extends Options {}
 
 export type Values<T extends UseQueryStatesKeysMap> = {
   [K in keyof T]: T[K]['defaultValue'] extends NonNullable<
@@ -32,8 +31,9 @@ type UpdaterFn<T extends UseQueryStatesKeysMap> = (
 ) => Partial<Nullable<Values<T>>>
 
 export type SetValues<T extends UseQueryStatesKeysMap> = (
-  values: Partial<Nullable<Values<T>>> | UpdaterFn<T>
-) => void
+  values: Partial<Nullable<Values<T>>> | UpdaterFn<T>,
+  options?: Options
+) => Promise<URLSearchParams>
 
 export type UseQueryStatesReturn<T extends UseQueryStatesKeysMap> = [
   Values<T>,
@@ -46,14 +46,19 @@ export type UseQueryStatesReturn<T extends UseQueryStatesKeysMap> = [
  * @param keys - An object describing the keys to synchronise and how to
  *               serialise and parse them.
  *               Use `queryTypes.(string|integer|float)` for quick shorthands.
- * @param options - Optional history mode.
+ * @param options - Optional history mode, shallow routing and scroll restoration options.
  */
 export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
   keyMap: KeyMap,
-  { history = 'replace' }: Partial<UseQueryStatesOptions> = {}
+  {
+    history = 'replace',
+    scroll = false,
+    shallow = true
+  }: Partial<UseQueryStatesOptions> = {}
 ): UseQueryStatesReturn<KeyMap> {
   type V = Values<KeyMap>
   usePatchedHistory()
+  const router = useRouter()
   // Not reactive, but available on the server and on page load
   const initialSearchParams = useSearchParams()
   const [internalState, setInternalState] = React.useState<V>(() => {
@@ -61,7 +66,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
       // SSR
       return parseMap(keyMap, initialSearchParams ?? new URLSearchParams())
     }
-    // Components mounted way after page load must use the current URL value
+    // Components mounted after page load must use the current URL value
     return parseMap(keyMap, new URLSearchParams(window.location.search))
   })
 
@@ -95,7 +100,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
   }, [keyMap])
 
   const update = React.useCallback<SetValues<KeyMap>>(
-    stateUpdater => {
+    (stateUpdater, options = {}) => {
       const isUpdaterFunction = (input: any): input is UpdaterFn<KeyMap> => {
         return typeof input === 'function'
       }
@@ -113,11 +118,16 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
       for (const [key, value] of Object.entries(newState)) {
         const { serialize } = keyMap[key]
         emitter.emit(key, value)
-        enqueueQueryStringUpdate(key, value, serialize ?? String, history)
+        enqueueQueryStringUpdate(key, value, serialize ?? String, {
+          // Call-level options take precedence over hook declaration options.
+          history: options.history ?? history,
+          shallow: options.shallow ?? shallow,
+          scroll: options.scroll ?? scroll
+        })
       }
-      return flushToURL()
+      return flushToURL(router)
     },
-    [keyMap, history]
+    [keyMap, history, shallow, scroll]
   )
   return [internalState, update]
 }

@@ -10,27 +10,25 @@ useQueryState hook for Next.js - Like React.useState, but stored in the URL quer
 
 ## Features
 
-- 🧘‍♀️ Simple: the URL is the source of truth.
+- 🧘‍♀️ Simple: the URL is the source of truth
 - 🕰 Replace history or append to use the Back button to navigate state updates
-- ⚡️ Built-in converters for common object types (number, float, boolean, Date)
+- ⚡️ Built-in parsers for common object types (number, float, boolean, Date, and [more](#parsing))
 - ♊️ Linked querystrings with `useQueryStates`
-- 🔀 Supports both the app router (in client components only) and pages router
+- 🔀 _(beta)_ Supports both the app router (in client components only) and pages router
 
 ## Installation
 
 ```shell
+$ pnpm add next-usequerystate
 $ yarn add next-usequerystate
-or
 $ npm install next-usequerystate
 ```
 
 ## Usage
 
-> Note: all code samples assume you're using the pages router.
->
-> Jump to the [app router documentation](#app-router).
-
 ```tsx
+'use client' // app router: only works in client components
+
 import { useQueryState } from 'next-usequerystate'
 
 export default () => {
@@ -68,19 +66,29 @@ Example outputs for our hello world example:
 If your state type is not a string, you must pass a parsing function in the
 second argument object.
 
-We provide helpers for common and more advanced object types:
+We provide parsers for common and more advanced object types:
 
 ```ts
-import { queryTypes } from 'next-usequerystate'
+import {
+  parseAsString,
+  parseAsInteger,
+  parseAsFloat,
+  parseAsBoolean,
+  parseAsTimestamp,
+  parseAsIsoDateTime,
+  parseAsArrayOf,
+  parseAsJson,
+  parseAsStringEnum
+} from 'next-usequerystate'
 
 useQueryState('tag') // defaults to string
-useQueryState('count', queryTypes.integer)
-useQueryState('brightness', queryTypes.float)
-useQueryState('darkMode', queryTypes.boolean)
-useQueryState('after', queryTypes.timestamp) // state is a Date
-useQueryState('date', queryTypes.isoDateTime) // state is a Date
-useQueryState('array', queryTypes.array(queryTypes.integer)) // state is number[]
-useQueryState('json', queryTypes.json<Point>()) // state is a Point
+useQueryState('count', parseAsInteger)
+useQueryState('brightness', parseAsFloat)
+useQueryState('darkMode', parseAsBoolean)
+useQueryState('after', parseAsTimestamp) // state is a Date
+useQueryState('date', parseAsIsoDateTime) // state is a Date
+useQueryState('array', parseAsArrayOf(parseAsInteger)) // state is number[]
+useQueryState('json', parseAsJson<Point>()) // state is a Point
 
 // Enums (string-based only)
 enum Direction {
@@ -92,8 +100,7 @@ enum Direction {
 
 const [direction, setDirection] = useQueryState(
   'direction',
-  queryTypes
-    .stringEnum<Direction>(Object.values(Direction)) // pass a list of allowed values
+  parseAsStringEnum<Direction>(Object.values(Direction)) // pass a list of allowed values
     .withDefault(Direction.up)
 )
 ```
@@ -116,10 +123,10 @@ export default () => {
 Example: simple counter stored in the URL:
 
 ```tsx
-import { useQueryState, queryTypes } from 'next-usequerystate'
+import { useQueryState, parseAsInteger } from 'next-usequerystate'
 
 export default () => {
-  const [count, setCount] = useQueryState('count', queryTypes.integer)
+  const [count, setCount] = useQueryState('count', parseAsInteger)
   return (
     <>
       <pre>count: {count}</pre>
@@ -143,10 +150,7 @@ tedious.
 You can specify a default value to be returned in this case:
 
 ```ts
-const [count, setCount] = useQueryState(
-  'count',
-  queryTypes.integer.withDefault(0)
-)
+const [count, setCount] = useQueryState('count', parseAsInteger.withDefault(0))
 
 const increment = () => setCount(c => c + 1) // c will never be null
 const decrement = () => setCount(c => c - 1) // c will never be null
@@ -159,7 +163,9 @@ URL.
 Setting the state to `null` will remove the key in the query string and set the
 state to the default value.
 
-## History options
+## Options
+
+### History
 
 By default, state updates are done by replacing the current history entry with
 the updated query when state changes.
@@ -181,35 +187,114 @@ useQueryState('foo', { history: 'push' })
 
 Any other value for the `history` option will fallback to the default.
 
-## Multiple Queries
+You can also override the history mode when calling the state updater function:
 
-> Note: If using the app router, you don't need to await the state updates.
+```ts
+const [query, setQuery] = useQueryState('q', { history: 'push' })
 
-Because the Next.js router has asynchronous methods, if you want to do multiple
-query updates in one go, you'll have to `await` them, otherwise the latter will
-overwrite the updates of the former:
+// This overrides the hook declaration setting:
+setQuery(null, { history: 'replace' })
+```
+
+### Shallow
+
+By default, query state updates are done in a _client-first_ manner: there are
+no network calls to the server.
+
+This uses the `shallow` option of the Next.js router set to `true`.
+
+To opt-in to query updates notifying the server (to re-run `getServerSideProps`
+in the pages router and re-render Server Components on the pages router),
+you can set `shallow` to `false`:
+
+```ts
+const [state, setState] = useQueryState('foo', { shallow: false })
+
+// You can also pass the option on calls to setState:
+setState('bar', { shallow: false })
+```
+
+### Scroll
+
+The Next.js router scrolls to the top of the page on navigation updates,
+which may not be desirable when updating the query string with local state.
+
+Query state updates won't scroll to the top of the page by default, but you
+can opt-in to this behaviour (which was the default up to 1.8.0):
+
+```ts
+const [state, setState] = useQueryState('foo', { scroll: true })
+
+// You can also pass the option on calls to setState:
+setState('bar', { scroll: true })
+```
+
+## Composing parsers, default value & options
+
+You can use a builder pattern to facilitate specifying all of those things:
+
+```ts
+useQueryState(
+  'counter',
+  parseAsInteger
+    .withOptions({
+      history: 'push',
+      shallow: false
+    })
+    .withDefault(0)
+)
+```
+
+Note: `withDefault` must always come **after** `withOptions` to ensure proper
+type safety (providing a non-nullable state type).
+
+## Multiple Queries (batching)
+
+You can call as many state update function as needed in a single event loop
+tick, and they will be applied to the URL asynchronously:
 
 ```ts
 const MultipleQueriesDemo = () => {
-  const [lat, setLat] = useQueryState('lat', queryTypes.float)
-  const [lng, setLng] = useQueryState('lng', queryTypes.float)
-  const randomCoordinates = React.useCallback(async () => {
-    await setLat(Math.random() * 180 - 90)
-    await setLng(Math.random() * 360 - 180)
+  const [lat, setLat] = useQueryState('lat', parseAsFloat)
+  const [lng, setLng] = useQueryState('lng', parseAsFloat)
+  const randomCoordinates = React.useCallback(() => {
+    setLat(Math.random() * 180 - 90)
+    setLng(Math.random() * 360 - 180)
   }, [])
 }
 ```
 
-For query keys that should always move together, you can use `useQueryStates`
-with an object containing each key's type:
+<!-- todo: All promises of a single update should be the same reference.
+
+If you wish to know when the URL has been updated, you can await the
+first returned Promise, which gives you the updated URLSearchParameters
+object:
 
 ```ts
-import { useQueryStates, queryTypes } from 'next-usequerystate'
+const randomCoordinates = React.useCallback(() => {
+  // Always return the first promise
+  const promise = setLat(42)
+  // Queue up more state updates **synchronously**
+  setLng(12)
+  return promise
+}, [])
+
+randomCoordinates().then((search: URLSearchParams) => {
+  search.get('lat') // 42
+  search.get('lng') // 12, has been queued and batch-updated
+})
+``` -->
+
+For query keys that should always move together, you can use `useQueryStates`
+with an object containing each key's type, for a better DX:
+
+```ts
+import { useQueryStates, parseAsFloat } from 'next-usequerystate'
 
 const [coordinates, setCoordinates] = useQueryStates(
   {
-    lat: queryTypes.float.withDefault(45.18),
-    lng: queryTypes.float.withDefault(5.72)
+    lat: parseAsFloat.withDefault(45.18),
+    lng: parseAsFloat.withDefault(5.72)
   },
   {
     history: 'push'
@@ -219,62 +304,41 @@ const [coordinates, setCoordinates] = useQueryStates(
 const { lat, lng } = coordinates
 
 // Set all (or a subset of) the keys in one go:
-await setCoordinates({
+const search = await setCoordinates({
   lat: Math.random() * 180 - 90,
   lng: Math.random() * 360 - 180
 })
 ```
 
-## Transition Options
-
-> Note: this feature is only available for the pages router.
-
-By default, Next.js will scroll to the top of the page when changing things in the URL.
-
-To prevent this, `router.push()` and `router.replace()` have a third optional
-parameter to control transitions, which can be passed on the state setter here:
-
-```ts
-const [name, setName] = useQueryState('name')
-
-setName('Foo', {
-  scroll: false,
-  shallow: true // Don't run getStaticProps / getServerSideProps / getInitialProps
-})
-```
-
-## App router
-
-This hook can be used with the app router in Next.js 13+, but
-**only in client components**.
-
-Next.js doesn't allow obtaining querystring parameters from server components.
-
-The API is the same for both hooks, but you'll need to change your imports to:
-
-```ts
-import {
-  useQueryState,
-  useQueryStates,
-  queryTypes
-} from 'next-usequerystate/app' // <- note the /app here
-```
-
-In an later major version, the default import will stop pointing to the pages
-router implementation and switch to the app router (probably when Next.js
-starts marking the pages router as deprecated).
-
-In order to lock your usage of the hook to the pages router, you can change your
-imports to the following:
-
-```ts
-import { useQueryState } from 'next-usequerystate/pages'
-```
-
 ## Caveats
 
-Because the Next.js router is not available in an SSR context, this
+Because the Next.js pages router is not available in an SSR context, this
 hook will always return `null` (or the default value if supplied) on SSR/SSG.
+
+This limitation doesn't apply to the app router.
+
+### Lossy serialization
+
+If your serializer loses precision or doesn't accurately represent
+the underlying state value, you will lose this precision when
+reloading the page or restoring state from the URL (eg: on navigation).
+
+Example:
+
+```ts
+const geoCoordParser = {
+  parse: parseFloat,
+  serialize: v => v.toFixed(4) // Loses precision
+}
+
+const [lat, setLat] = useQueryState('lat', geoCoordParser)
+```
+
+Here, setting a latitude of 1.23456789 will render a URL query string
+of `lat=1.2345`, while the internal `lat` state will be correctly
+set to 1.23456789.
+
+Upon reloading the page, the state will be incorrectly set to 1.2345.
 
 ## License
 

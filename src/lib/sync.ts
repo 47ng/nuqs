@@ -3,13 +3,22 @@ import React from 'react'
 
 export const SYNC_EVENT_KEY = Symbol('__nextUseQueryState__SYNC__')
 export const NOSYNC_MARKER = '__nextUseQueryState__NO_SYNC__'
+export const NOTIFY_EVENT_KEY = Symbol('__nextUseQueryState__NOTIFY__')
 
 type EventMap = {
   [SYNC_EVENT_KEY]: URLSearchParams
+  [NOTIFY_EVENT_KEY]: URLSearchParams
   [key: string]: any
 }
 
 export const emitter = Mitt<EventMap>()
+
+export function subscribeToQueryUpdates(
+  callback: (search: URLSearchParams) => void
+) {
+  emitter.on(NOTIFY_EVENT_KEY, callback)
+  return () => emitter.off(NOTIFY_EVENT_KEY, callback)
+}
 
 let patched = false
 

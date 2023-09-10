@@ -1,5 +1,5 @@
 import { expectError, expectNotAssignable, expectType } from 'tsd'
-import { queryTypes, useQueryState } from '../../../dist/app'
+import { queryTypes, useQueryState } from '../../../dist'
 
 // By default, queries have a `string` state, nullable (when no query parameter is present)
 {
@@ -7,6 +7,8 @@ import { queryTypes, useQueryState } from '../../../dist/app'
   expectType<string | null>(state)
   setState('bar')
   setState(old => old?.toUpperCase() ?? null)
+  const search = await setState('bar')
+  expectType<URLSearchParams>(search)
 }
 
 // Accept only a single `history` option
@@ -15,6 +17,8 @@ import { queryTypes, useQueryState } from '../../../dist/app'
   expectType<string | null>(state)
   setState('bar')
   setState(old => old?.toUpperCase() ?? null)
+  const search = await setState('bar')
+  expectType<URLSearchParams>(search)
 }
 
 // Supported query types

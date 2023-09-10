@@ -1,5 +1,13 @@
 import { expectError, expectNotAssignable, expectType } from 'tsd'
-import { queryTypes, useQueryState } from '../../../dist/pages'
+import {
+  parseAsBoolean,
+  parseAsFloat,
+  parseAsInteger,
+  parseAsIsoDateTime,
+  parseAsString,
+  parseAsTimestamp,
+  useQueryState
+} from '../../dist'
 
 // By default, queries have a `string` state, nullable (when no query parameter is present)
 {
@@ -7,8 +15,8 @@ import { queryTypes, useQueryState } from '../../../dist/pages'
   expectType<string | null>(state)
   setState('bar')
   setState(old => old?.toUpperCase() ?? null)
-  const out = await setState('bar')
-  expectType<boolean>(out)
+  const search = await setState('bar')
+  expectType<URLSearchParams>(search)
 }
 
 // Accept only a single `history` option
@@ -17,64 +25,61 @@ import { queryTypes, useQueryState } from '../../../dist/pages'
   expectType<string | null>(state)
   setState('bar')
   setState(old => old?.toUpperCase() ?? null)
-  const out = await setState('bar')
-  expectType<boolean>(out)
+  const search = await setState('bar')
+  expectType<URLSearchParams>(search)
 }
 
 // Supported query types
 {
-  const [state] = useQueryState('string', queryTypes.string)
+  const [state] = useQueryState('string', parseAsString)
   expectType<string | null>(state)
 }
 {
-  const [state] = useQueryState('integer', queryTypes.integer)
+  const [state] = useQueryState('integer', parseAsInteger)
   expectType<number | null>(state)
 }
 {
-  const [state] = useQueryState('float', queryTypes.float)
+  const [state] = useQueryState('float', parseAsFloat)
   expectType<number | null>(state)
 }
 {
-  const [state] = useQueryState('boolean', queryTypes.boolean)
+  const [state] = useQueryState('boolean', parseAsBoolean)
   expectType<boolean | null>(state)
 }
 {
-  const [state] = useQueryState('boolean', queryTypes.timestamp)
+  const [state] = useQueryState('boolean', parseAsTimestamp)
   expectType<Date | null>(state)
 }
 {
-  const [state] = useQueryState('boolean', queryTypes.isoDateTime)
+  const [state] = useQueryState('boolean', parseAsIsoDateTime)
   expectType<Date | null>(state)
 }
 
 // With default values, state is no longer nullable
 {
-  const [state] = useQueryState('string', queryTypes.string.withDefault('foo'))
+  const [state] = useQueryState('string', parseAsString.withDefault('foo'))
   expectType<string>(state)
   expectNotAssignable<null>(state)
 }
 {
-  const [state] = useQueryState('integer', queryTypes.integer.withDefault(0))
+  const [state] = useQueryState('integer', parseAsInteger.withDefault(0))
   expectType<number>(state)
   expectNotAssignable<null>(state)
 }
 {
-  const [state] = useQueryState('float', queryTypes.float.withDefault(0))
+  const [state] = useQueryState('float', parseAsFloat.withDefault(0))
   expectType<number>(state)
   expectNotAssignable<null>(state)
 }
 {
-  const [state] = useQueryState(
-    'boolean',
-    queryTypes.boolean.withDefault(false)
-  )
+  const [state] = useQueryState('boolean', parseAsBoolean.withDefault(false))
   expectType<boolean>(state)
   expectNotAssignable<null>(state)
 }
 {
   const [state] = useQueryState(
     'boolean',
-    queryTypes.timestamp.withDefault(new Date())
+    parseAsTimestamp.withDefault(new Date())
   )
   expectType<Date>(state)
   expectNotAssignable<null>(state)
@@ -82,7 +87,7 @@ import { queryTypes, useQueryState } from '../../../dist/pages'
 {
   const [state] = useQueryState(
     'boolean',
-    queryTypes.isoDateTime.withDefault(new Date())
+    parseAsIsoDateTime.withDefault(new Date())
   )
   expectType<Date>(state)
   expectNotAssignable<null>(state)
@@ -91,7 +96,7 @@ import { queryTypes, useQueryState } from '../../../dist/pages'
 // Default value can be spread in:
 {
   const [state] = useQueryState('string', {
-    ...queryTypes.string,
+    ...parseAsString,
     defaultValue: 'foo'
   })
   expectType<string>(state)
@@ -99,7 +104,7 @@ import { queryTypes, useQueryState } from '../../../dist/pages'
 }
 {
   const [state] = useQueryState('integer', {
-    ...queryTypes.integer,
+    ...parseAsInteger,
     defaultValue: 0
   })
   expectType<number>(state)
@@ -107,7 +112,7 @@ import { queryTypes, useQueryState } from '../../../dist/pages'
 }
 {
   const [state] = useQueryState('float', {
-    ...queryTypes.float,
+    ...parseAsFloat,
     defaultValue: 0
   })
   expectType<number>(state)
@@ -115,7 +120,7 @@ import { queryTypes, useQueryState } from '../../../dist/pages'
 }
 {
   const [state] = useQueryState('boolean', {
-    ...queryTypes.boolean,
+    ...parseAsBoolean,
     defaultValue: false
   })
   expectType<boolean>(state)
@@ -123,7 +128,7 @@ import { queryTypes, useQueryState } from '../../../dist/pages'
 }
 {
   const [state] = useQueryState('boolean', {
-    ...queryTypes.timestamp,
+    ...parseAsTimestamp,
     defaultValue: new Date()
   })
   expectType<Date>(state)
@@ -131,14 +136,14 @@ import { queryTypes, useQueryState } from '../../../dist/pages'
 }
 {
   const [state] = useQueryState('boolean', {
-    ...queryTypes.isoDateTime,
+    ...parseAsIsoDateTime,
     defaultValue: new Date()
   })
   expectType<Date>(state)
   expectNotAssignable<null>(state)
 }
 
-// Custom serializers --
+// Custom parsers --
 {
   const [hex] = useQueryState('foo', {
     parse: input => parseInt(input, 16)
@@ -192,7 +197,7 @@ import { queryTypes, useQueryState } from '../../../dist/pages'
   })
 }
 {
-  const [, set] = useQueryState('foo', queryTypes.integer)
+  const [, set] = useQueryState('foo', parseAsInteger)
   set(null)
   set(old => {
     expectType<number | null>(old)
@@ -200,7 +205,7 @@ import { queryTypes, useQueryState } from '../../../dist/pages'
   })
 }
 {
-  const [, set] = useQueryState('foo', queryTypes.float.withDefault(0.2))
+  const [, set] = useQueryState('foo', parseAsFloat.withDefault(0.2))
   set(null)
   set(old => {
     expectType<number>(old) // We know it's not null here
@@ -230,7 +235,39 @@ import { queryTypes, useQueryState } from '../../../dist/pages'
   })
 }
 
-// Expect errors on misuse
+// Extend the parser with a builder pattern
+{
+  expectType<number | null>(useQueryState('foo', parseAsInteger)[0])
+  expectType<number | null>(
+    useQueryState('foo', parseAsInteger.withOptions({}))[0]
+  )
+  expectType<number>(useQueryState('foo', parseAsInteger.withDefault(0))[0])
+  expectNotAssignable<null>(
+    useQueryState('foo', parseAsInteger.withDefault(0))[0]
+  )
+  expectType<number>(
+    useQueryState(
+      'foo',
+      parseAsInteger.withOptions({ scroll: true }).withDefault(1)
+    )[0]
+  )
+  expectNotAssignable<null>(
+    useQueryState(
+      'foo',
+      parseAsInteger.withOptions({ scroll: true }).withDefault(1)
+    )[0]
+  )
+
+  expectError(() => {
+    // Can't set withOptions after withDefault
+    useQueryState(
+      'foo',
+      parseAsInteger.withDefault(1).withOptions({ scroll: true })
+    )
+  })
+}
+
+// Expect errors on misuse -----------------------------------------------------
 {
   expectError(() => {
     useQueryState('foo', {
@@ -249,7 +286,7 @@ import { queryTypes, useQueryState } from '../../../dist/pages'
 // Set state to undefined
 {
   const [, setFoo] = useQueryState('foo')
-  const [, setBar] = useQueryState('bar', queryTypes.string.withDefault('egg'))
+  const [, setBar] = useQueryState('bar', parseAsString.withDefault('egg'))
   expectError(() => setFoo(undefined))
   expectError(() => setBar(undefined))
   expectError(() => setFoo(() => undefined))

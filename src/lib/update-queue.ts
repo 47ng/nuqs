@@ -1,5 +1,5 @@
-import { HistoryOptions } from './defs'
-import { NOSYNC_MARKER } from './sync'
+import { Options, Router } from './defs'
+import { NOSYNC_MARKER, NOTIFY_EVENT_KEY, emitter } from './sync'
 
 // 50ms between calls to the history API seems to satisfy Chrome and Firefox.
 // Safari remains annoying with at most 100 calls in 30 seconds. #wontfix
@@ -8,7 +8,7 @@ const FLUSH_RATE_LIMIT_MS = 50
 type UpdateQueueItem = {
   key: string
   value: string | null
-  history: HistoryOptions
+  options: Options
 }
 
 let updateQueue: UpdateQueueItem[] = []
@@ -18,12 +18,12 @@ export function enqueueQueryStringUpdate<Value>(
   key: string,
   value: Value | null,
   serialize: (value: Value) => string,
-  history: HistoryOptions
+  options: Options
 ) {
   const queueItem: UpdateQueueItem = {
     key,
     value: value === null ? null : serialize(value),
-    history
+    options
   }
   // console.debug('Pushing to queue %O', queueItem)
   updateQueue.push(queueItem)
@@ -39,7 +39,7 @@ export function enqueueQueryStringUpdate<Value>(
  *
  * @returns a Promise to the URLSearchParams that have been applied.
  */
-export function flushToURL() {
+export function flushToURL(router: Router) {
   return new Promise<URLSearchParams>((resolve, reject) => {
     const now = performance.now()
     const timeSinceLastFlush = now - lastFlushTimestamp
@@ -50,7 +50,7 @@ export function flushToURL() {
     // console.debug('Scheduling flush in %f ms', flushInMs)
     setTimeout(() => {
       lastFlushTimestamp = performance.now()
-      const search = flushUpdateQueue()
+      const search = flushUpdateQueue(router)
       if (!search) {
         reject()
       } else {
@@ -60,7 +60,7 @@ export function flushToURL() {
   })
 }
 
-function flushUpdateQueue() {
+function flushUpdateQueue(router: Router) {
   const search = new URLSearchParams(window.location.search)
   if (updateQueue.length === 0) {
     return search
@@ -70,40 +70,62 @@ function flushUpdateQueue() {
   updateQueue = []
   // console.debug('Flushing queue %O', items)
 
-  // By default, history mode is set to 'replace',
-  // unless at least one item is set to 'push',
-  // in which case push takes precedence.
-  let history: HistoryOptions = 'replace'
+  const options: Required<Options> = {
+    history: 'replace',
+    scroll: false,
+    shallow: true
+  }
   for (const item of items) {
     if (item.value === null) {
       search.delete(item.key)
     } else {
       search.set(item.key, item.value)
     }
-    if (item.history === 'push') {
-      history = 'push'
+    // Any item can override an option for the whole batch of updates
+    if (item.options.history === 'push') {
+      options.history = 'push'
+    }
+    if (item.options.scroll) {
+      options.scroll = true
+    }
+    if (item.options.shallow === false) {
+      options.shallow = false
     }
   }
   const query = search.toString()
   const path = window.location.pathname
   const hash = window.location.hash
-  const updateUrl =
-    history === 'push' ? window.history.pushState : window.history.replaceState
 
   // If the querystring is empty, add the pathname to clear it out,
   // otherwise using a relative URL works just fine.
+  // todo: Does it when using the router with `shallow: false` on dynamic paths?
   const url = query ? `?${query}${hash}` : `${path}${hash}`
   try {
-    updateUrl.call(
-      window.history,
-      window.history.state,
-      // Our own updates have a marker to prevent syncing
-      // when the URL changes (we've already sync'd them up
-      // via `emitter.emit(key, newValue)` above, without
-      // going through the parsers).
-      NOSYNC_MARKER,
-      url
-    )
+    if (options.shallow) {
+      const updateUrl =
+        options.history === 'push'
+          ? window.history.pushState
+          : window.history.replaceState
+      updateUrl.call(
+        window.history,
+        window.history.state,
+        // Our own updates have a marker to prevent syncing
+        // when the URL changes (we've already sync'd them up
+        // via `emitter.emit(key, newValue)` above, without
+        // going through the parsers).
+        NOSYNC_MARKER,
+        url
+      )
+      if (options.scroll) {
+        window.scrollTo(0, 0)
+      }
+    } else {
+      // Call the Next.js router to perform a network request
+      const updateUrl =
+        options.history === 'push' ? router.push : router.replace
+      updateUrl.call(router, url, { scroll: options.scroll })
+    }
+    emitter.emit(NOTIFY_EVENT_KEY, search)
     return search
   } catch (error) {
     console.error(
