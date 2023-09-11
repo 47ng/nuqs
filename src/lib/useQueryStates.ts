@@ -4,7 +4,8 @@ import {
   useSearchParams
 } from 'next/navigation'
 import React from 'react'
-import type { Nullable, Options, Parser } from './defs'
+import type { Nullable, Options } from './defs'
+import type { Parser } from './parsers'
 import { SYNC_EVENT_KEY, emitter, usePatchedHistory } from './sync'
 import { enqueueQueryStringUpdate, flushToURL } from './update-queue'
 

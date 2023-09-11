@@ -139,6 +139,15 @@ export default () => {
 }
 ```
 
+### Using parsers in Server Components
+
+If you wish to parse the searchParams in server components, you'll need to
+import the parsers from `next-usequerystate/parsers`, which doesn't include
+the `"use client"` directive.
+
+See the [server-side parsing demo](./src/app/demos/server-side-parsing/) for
+an example.
+
 ## Default value
 
 When the query string is not present in the URL, the default behaviour is to

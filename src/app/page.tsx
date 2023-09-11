@@ -1,6 +1,11 @@
 import Link from 'next/link'
 
-const demos = ['builder-pattern', 'subscribeToQueryUpdates', 'batching']
+const demos = [
+  'builder-pattern',
+  'subscribeToQueryUpdates',
+  'batching',
+  'server-side-parsing'
+]
 
 export default function IndexPage() {
   return (

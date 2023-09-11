@@ -25,6 +25,7 @@
   },
   "files": [
     "dist/",
+    "parsers.d.ts",
     "useQueryState.gif"
   ],
   "type": "module",
@@ -37,11 +38,17 @@
       "import": "./dist/index.js",
       "require": "./dist/index.cjs",
       "types": "./dist/index.d.ts"
+    },
+    "./parsers": {
+      "import": "./dist/parsers.js",
+      "require": "./dist/parsers.cjs",
+      "types": "./dist/parsers.d.ts"
     }
   },
   "tsup": {
     "entry": [
-      "src/lib/index.ts"
+      "src/lib/index.ts",
+      "src/lib/parsers.ts"
     ]
   },
   "scripts": {
