@@ -33,9 +33,9 @@ export default function BuilderPatternDemoPage() {
       <pre>
         <code>
           {/* Aligning the decimals */}
-          Lat {latStr[0].padStart(4) + '.' + latStr[1]}
+          Lat {latStr[0].padStart(4) + '.' + (latStr[1] ?? '00')}
           {'\n'}
-          Lng {lngStr[0].padStart(4) + '.' + lngStr[1]}
+          Lng {lngStr[0].padStart(4) + '.' + (lngStr[1] ?? '00')}
         </code>
       </pre>
     </main>
