@@ -1,5 +1,3 @@
 import { parseAsInteger } from '../../../../dist/parsers'
 
-export const counterParser = parseAsInteger
-  .withOptions({ shallow: false })
-  .withDefault(0)
+export const counterParser = parseAsInteger.withDefault(0)
