@@ -29,11 +29,11 @@ export function usePatchedHistory() {
     }
     for (const method of ['pushState', 'replaceState'] as const) {
       const original = window.history[method].bind(window.history)
-      window.history[method] = (
+      window.history[method] = function nextUseQueryState_patchedHistory(
         state: any,
         marker: string,
         url?: string | URL | null
-      ) => {
+      ) {
         // If someone else than our hooks have updated the URL,
         // send out a signal for them to sync their internal state.
         if (marker !== NOSYNC_MARKER && url) {
