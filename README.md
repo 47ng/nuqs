@@ -264,29 +264,43 @@ const MultipleQueriesDemo = () => {
 }
 ```
 
-<!-- todo: All promises of a single update should be the same reference.
-
-If you wish to know when the URL has been updated, you can await the
-first returned Promise, which gives you the updated URLSearchParameters
-object:
+If you wish to know when the URL has been updated, and what it contains, you can
+await the Promise returned by the state updater function, which gives you the
+updated URLSearchParameters object:
 
 ```ts
 const randomCoordinates = React.useCallback(() => {
-  // Always return the first promise
-  const promise = setLat(42)
-  // Queue up more state updates **synchronously**
-  setLng(12)
-  return promise
+  setLat(42)
+  return setLng(12)
 }, [])
 
 randomCoordinates().then((search: URLSearchParams) => {
   search.get('lat') // 42
   search.get('lng') // 12, has been queued and batch-updated
 })
-``` -->
+```
+
+<details>
+<summary><em>Implementation details (Promise caching)</em></summary>
+
+The returned Promise is cached until the next flush to the URL occurs,
+so all calls to a setState (of any hook) in the same event loop tick will
+return the same Promise reference.
+
+Due to throttling of calls to the Web History API, the Promise may be cached
+for several ticks. Batched updates will be merged and flushed once to the URL.
+This means not every setState will reflect to the URL, if another one comes
+overriding it before flush occurs.
+
+The returned React state will reflect all set values instantly,
+to keep UI responsive.
+
+---
+
+</details>
 
 For query keys that should always move together, you can use `useQueryStates`
-with an object containing each key's type, for a better DX:
+with an object containing each key's type:
 
 ```ts
 import { useQueryStates, parseAsFloat } from 'next-usequerystate'

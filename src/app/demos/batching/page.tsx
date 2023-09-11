@@ -21,8 +21,11 @@ export default function BuilderPatternDemoPage() {
         onClick={async () => {
           // Call as many state updates as needed in the same event loop tick,
           // and they will be asynchronously batched into one update.
-          setLat(Math.random() * 180 - 90)
-          setLng(Math.random() * 360 - 180)
+          const p1 = setLat(Math.random() * 180 - 90)
+          const p2 = setLng(Math.random() * 360 - 180)
+          // The returned promise is cached until next flush to the URL occurs
+          console.log('Ref eq: ', p1 === p2)
+          p1.then(search => console.log('Awaited: %s', search.toString()))
         }}
       >
         Random coordinate

@@ -13,6 +13,7 @@ type UpdateQueueItem = {
 
 let updateQueue: UpdateQueueItem[] = []
 let lastFlushTimestamp = 0
+let flushPromiseCache: Promise<URLSearchParams> | null = null
 
 export function enqueueQueryStringUpdate<Value>(
   key: string,
@@ -40,24 +41,28 @@ export function enqueueQueryStringUpdate<Value>(
  * @returns a Promise to the URLSearchParams that have been applied.
  */
 export function flushToURL(router: Router) {
-  return new Promise<URLSearchParams>((resolve, reject) => {
-    const now = performance.now()
-    const timeSinceLastFlush = now - lastFlushTimestamp
-    const flushInMs = Math.max(
-      0,
-      Math.min(FLUSH_RATE_LIMIT_MS, FLUSH_RATE_LIMIT_MS - timeSinceLastFlush)
-    )
-    // console.debug('Scheduling flush in %f ms', flushInMs)
-    setTimeout(() => {
-      lastFlushTimestamp = performance.now()
-      const search = flushUpdateQueue(router)
-      if (!search) {
-        reject()
-      } else {
-        resolve(search)
-      }
-    }, flushInMs)
-  })
+  if (flushPromiseCache === null) {
+    flushPromiseCache = new Promise<URLSearchParams>((resolve, reject) => {
+      const now = performance.now()
+      const timeSinceLastFlush = now - lastFlushTimestamp
+      const flushInMs = Math.max(
+        0,
+        Math.min(FLUSH_RATE_LIMIT_MS, FLUSH_RATE_LIMIT_MS - timeSinceLastFlush)
+      )
+      // console.debug('Scheduling flush in %f ms', flushInMs)
+      setTimeout(() => {
+        lastFlushTimestamp = performance.now()
+        const search = flushUpdateQueue(router)
+        if (!search) {
+          reject()
+        } else {
+          resolve(search)
+        }
+        flushPromiseCache = null
+      }, flushInMs)
+    })
+  }
+  return flushPromiseCache
 }
 
 function flushUpdateQueue(router: Router) {
