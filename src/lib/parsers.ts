@@ -30,7 +30,39 @@ export type ParserBuilder<T> = Parser<T> &
     withDefault(defaultValue: NonNullable<T>): Parser<T> &
       Options & {
         readonly defaultValue: NonNullable<T>
+
+        /**
+         * Use the parser in Server Components
+         *
+         * `parse` is intended to be used only by the hook, but you can use this
+         * method to hydrate query values on server-side rendered pages.
+         * See the `server-side-parsing` demo for an example.
+         *
+         * Note that when multiple queries are presented to the parser
+         * (eg: `/?a=1&a=2`), only the **first** will be parsed, to mimic the
+         * behaviour of URLSearchParams:
+         * https://url.spec.whatwg.org/#dom-urlsearchparams-get
+         *
+         * @param value as coming from page props
+         */
+        parseServerSide(value: string | string[] | undefined): NonNullable<T>
       }
+
+    /**
+     * Use the parser in Server Components
+     *
+     * `parse` is intended to be used only by the hook, but you can use this
+     * method to hydrate query values on server-side rendered pages.
+     * See the `server-side-parsing` demo for an example.
+     *
+     * Note that when multiple queries are presented to the parser
+     * (eg: `/?a=1&a=2`), only the **first** will be parsed, to mimic the
+     * behaviour of URLSearchParams:
+     * https://url.spec.whatwg.org/#dom-urlsearchparams-get
+     *
+     * @param value as coming from page props
+     */
+    parseServerSide(value: string | string[] | undefined): T | null
   }
 
 /**
@@ -40,10 +72,26 @@ export type ParserBuilder<T> = Parser<T> &
 export function createParser<T>(parser: Parser<T>): ParserBuilder<T> {
   return {
     ...parser,
+    parseServerSide(value = '') {
+      let str = ''
+      if (Array.isArray(value)) {
+        // Follow the spec:
+        // https://url.spec.whatwg.org/#dom-urlsearchparams-get
+        str = value[0]
+      }
+      if (typeof value === 'string') {
+        str = value
+      }
+      return this.parse(str)
+    },
     withDefault(defaultValue) {
+      const nullableParse = this.parseServerSide.bind(this)
       return {
         ...this,
-        defaultValue
+        defaultValue,
+        parseServerSide(value = '') {
+          return nullableParse(value) ?? defaultValue
+        }
       }
     },
     withOptions(options: Options) {

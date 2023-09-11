@@ -4,14 +4,12 @@ import { counterParser } from './parser'
 
 type PageProps = {
   searchParams: {
-    counter?: string
+    counter?: string | string[]
   }
 }
 
 export default function ServerSideParsingDemo({ searchParams }: PageProps) {
-  const counter =
-    counterParser.parse(searchParams.counter ?? '') ??
-    counterParser.defaultValue
+  const counter = counterParser.parseServerSide(searchParams.counter)
   console.log('Server side counter: %d', counter)
   return (
     <>
