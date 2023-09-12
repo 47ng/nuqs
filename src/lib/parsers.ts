@@ -5,7 +5,7 @@ export type Parser<T> = {
   serialize?: (value: T) => string
 }
 
-export type ParserBuilder<T> = Parser<T> &
+export type ParserBuilder<T> = Required<Parser<T>> &
   Options & {
     /**
      * Set history type, shallow routing and scroll restoration options
@@ -16,7 +16,9 @@ export type ParserBuilder<T> = Parser<T> &
      */
     withOptions(
       options: Options
-    ): Parser<T> & Readonly<Options> & Pick<ParserBuilder<T>, 'withDefault'>
+    ): Required<Parser<T>> &
+      Readonly<Options> &
+      Pick<ParserBuilder<T>, 'withDefault'>
 
     /**
      * Specifying a default value makes the hook state non-nullable when the
@@ -27,7 +29,7 @@ export type ParserBuilder<T> = Parser<T> &
      *
      * @param defaultValue
      */
-    withDefault(defaultValue: NonNullable<T>): Parser<T> &
+    withDefault(defaultValue: NonNullable<T>): Required<Parser<T>> &
       Options & {
         readonly defaultValue: NonNullable<T>
 
@@ -69,7 +71,7 @@ export type ParserBuilder<T> = Parser<T> &
  * Wrap a set of parse/serialize functions into a builder pattern parser
  * you can pass to one of the hooks, making its default value type safe.
  */
-export function createParser<T>(parser: Parser<T>): ParserBuilder<T> {
+export function createParser<T>(parser: Required<Parser<T>>): ParserBuilder<T> {
   return {
     ...parser,
     parseServerSide(value = '') {
