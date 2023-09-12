@@ -13,6 +13,7 @@ export default function ServerSideParsingDemo({ searchParams }: PageProps) {
   console.log('Server side counter: %d', counter)
   return (
     <>
+      <h1>Server-side parsing</h1>
       <Suspense>
         <ServerSideParsingDemoClient serverSideCounter={counter}>
           <p>Server rendered counter: {counter}</p>

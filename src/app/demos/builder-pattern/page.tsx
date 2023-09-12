@@ -1,6 +1,5 @@
 'use client'
 
-import Link from 'next/link'
 import { parseAsInteger, useQueryState } from '../../../../dist'
 
 export default function BuilderPatternDemoPage() {
@@ -16,8 +15,7 @@ export default function BuilderPatternDemoPage() {
   )
 
   return (
-    <main>
-      <Link href="/">⬅️ Home</Link>
+    <>
       <h1>Builder pattern</h1>
       <button onClick={() => setCounter(x => x - 1)}>-</button>
       <button onClick={() => setCounter(x => x + 1)}>+</button>
@@ -29,6 +27,6 @@ export default function BuilderPatternDemoPage() {
           enabled.
         </em>
       </p>
-    </main>
+    </>
   )
 }

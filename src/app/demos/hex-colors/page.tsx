@@ -34,6 +34,7 @@ export default function HexColorsDemo() {
   const asHex = '#' + hexColorSchema.serialize(color)
   return (
     <>
+      <h1>Hex colors</h1>
       <section>
         <div>
           <label>Color</label>

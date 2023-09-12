@@ -1,6 +1,5 @@
 'use client'
 
-import Link from 'next/link'
 import React from 'react'
 import {
   parseAsInteger,
@@ -22,9 +21,8 @@ export default function BuilderPatternDemoPage() {
   }, [])
 
   return (
-    <main>
-      <Link href="/">⬅️ Home</Link>
-      <h1>subscribeToQueryUpdates</h1>
+    <>
+      <h1>Subscribing to query updates</h1>
       <button onClick={() => setCounter(x => x - 1)}>-</button>
       <button onClick={() => setCounter(x => x + 1)}>+</button>
       <button onClick={() => setCounter(null)}>Reset</button>
@@ -32,6 +30,6 @@ export default function BuilderPatternDemoPage() {
       <p>
         <em>Check the console</em>
       </p>
-    </main>
+    </>
   )
 }

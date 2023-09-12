@@ -1,6 +1,5 @@
 'use client'
 
-import Link from 'next/link'
 import { useQueryState } from '../../../../dist'
 import { parseAsFloat } from '../../../lib'
 
@@ -14,8 +13,7 @@ export default function BuilderPatternDemoPage() {
   const lngStr = lng.toString().split('.')
 
   return (
-    <main>
-      <Link href="/">⬅️ Home</Link>
+    <>
       <h1>Batching</h1>
       <button
         onClick={async () => {
@@ -38,6 +36,6 @@ export default function BuilderPatternDemoPage() {
           Lng {lngStr[0].padStart(4) + '.' + (lngStr[1] ?? '00')}
         </code>
       </pre>
-    </main>
+    </>
   )
 }
