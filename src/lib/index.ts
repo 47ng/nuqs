@@ -1,6 +1,6 @@
 'use client'
 
-export * from './defs'
+export type { HistoryOptions, Options } from './defs'
 export * from './deprecated'
 export * from './parsers'
 export { subscribeToQueryUpdates } from './sync'

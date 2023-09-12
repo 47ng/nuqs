@@ -2,7 +2,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import React from 'react'
 import type { Options } from './defs'
 import type { Parser } from './parsers'
-import { SYNC_EVENT_KEY, emitter, usePatchedHistory } from './sync'
+import { SYNC_EVENT_KEY, emitter } from './sync'
 import { enqueueQueryStringUpdate, flushToURL } from './update-queue'
 
 export interface UseQueryStateOptions<T> extends Parser<T>, Options {}
@@ -206,7 +206,6 @@ export function useQueryState<T = string>(
     defaultValue: undefined
   }
 ) {
-  usePatchedHistory()
   const router = useRouter()
   // Not reactive, but available on the server and on page load
   const initialSearchParams = useSearchParams()

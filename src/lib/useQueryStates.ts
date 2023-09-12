@@ -6,7 +6,7 @@ import {
 import React from 'react'
 import type { Nullable, Options } from './defs'
 import type { Parser } from './parsers'
-import { SYNC_EVENT_KEY, emitter, usePatchedHistory } from './sync'
+import { SYNC_EVENT_KEY, emitter } from './sync'
 import { enqueueQueryStringUpdate, flushToURL } from './update-queue'
 
 type KeyMapValue<Type> = Parser<Type> & {
@@ -58,7 +58,6 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
   }: Partial<UseQueryStatesOptions> = {}
 ): UseQueryStatesReturn<KeyMap> {
   type V = Values<KeyMap>
-  usePatchedHistory()
   const router = useRouter()
   // Not reactive, but available on the server and on page load
   const initialSearchParams = useSearchParams()
