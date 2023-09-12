@@ -145,8 +145,35 @@ If you wish to parse the searchParams in server components, you'll need to
 import the parsers from `next-usequerystate/parsers`, which doesn't include
 the `"use client"` directive.
 
-See the [server-side parsing demo](./src/app/demos/server-side-parsing/) for
-an example.
+You can then use the `parseServerSide` method:
+
+```tsx
+import { parseAsInteger } from 'next-usequerystate/parsers'
+
+type PageProps = {
+  searchParams: {
+    counter?: string | string[]
+  }
+}
+
+const counterParser = parseAsInteger.withDefault(1)
+
+export default function ServerPage({ searchParams }: PageProps) {
+  const counter = counterParser.parseServerSide(searchParams.counter)
+  console.log('Server side counter: %d', counter)
+  return (
+    ...
+  )
+}
+```
+
+See the [server-side parsing demo](./src/app/demos/server-side-parsing/)
+for a live example showing how to reuse parser configurations between
+client and server code.
+
+> Note: parsers **don't validate** your data. If you expect positive integers
+> or JSON-encoded objects of a particular shape, you'll need to feed the result
+> of the parser to a schema validation library, like [Zod](https://zod.dev).
 
 ## Default value
 
