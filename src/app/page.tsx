@@ -4,7 +4,8 @@ const demos = [
   'builder-pattern',
   'subscribeToQueryUpdates',
   'batching',
-  'server-side-parsing'
+  'server-side-parsing',
+  'hex-colors'
 ]
 
 export default function IndexPage() {
