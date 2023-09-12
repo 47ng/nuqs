@@ -3,18 +3,20 @@
 [![NPM](https://img.shields.io/npm/v/next-usequerystate?color=red)](https://www.npmjs.com/package/next-usequerystate)
 [![MIT License](https://img.shields.io/github/license/47ng/next-usequerystate.svg?color=blue)](https://github.com/47ng/next-usequerystate/blob/next/LICENSE)
 [![Continuous Integration](https://github.com/47ng/next-usequerystate/workflows/Continuous%20Integration/badge.svg?branch=next)](https://github.com/47ng/next-usequerystate/actions)
-[![Coverage Status](https://coveralls.io/repos/github/47ng/next-usequerystate/badge.svg?branch=next)](https://coveralls.io/github/47ng/next-usequerystate?branch=next)
 [![Depfu](https://badges.depfu.com/badges/acad53fa2b09b1e435a19d6d18f29af4/count.svg)](https://depfu.com/github/47ng/next-usequerystate?project_id=22104)
+
+<!-- [![Coverage Status](https://coveralls.io/repos/github/47ng/next-usequerystate/badge.svg?branch=next)](https://coveralls.io/github/47ng/next-usequerystate?branch=next) -->
 
 useQueryState hook for Next.js - Like React.useState, but stored in the URL query string
 
 ## Features
 
+- 🔀 _**new:**_ Supports both the `app` and `pages` routers
 - 🧘‍♀️ Simple: the URL is the source of truth
-- 🕰 Replace history or append to use the Back button to navigate state updates
-- ⚡️ Built-in parsers for common object types (number, float, boolean, Date, and [more](#parsing))
-- ♊️ Linked querystrings with `useQueryStates`
-- 🔀 _(beta)_ Supports both the app router (in client components only) and pages router
+- 🕰 Replace history or [append](#history) to use the Back button to navigate state updates
+- ⚡️ Built-in [parsers](#parsing) for common object types (number, float, boolean, Date, and more)
+- ♊️ Linked querystrings with [`useQueryStates`](#usequerystates)
+- 📡 [Shallow mode](#shallow) by default for URL query updates, opt-in to notify server components
 
 ## Installation
 
@@ -23,6 +25,8 @@ $ pnpm add next-usequerystate
 $ yarn add next-usequerystate
 $ npm install next-usequerystate
 ```
+
+> Note: version 1.8.0 requires Next.js 13.4+.
 
 ## Usage
 
@@ -120,25 +124,6 @@ export default () => {
 }
 ```
 
-Example: simple counter stored in the URL:
-
-```tsx
-import { useQueryState, parseAsInteger } from 'next-usequerystate'
-
-export default () => {
-  const [count, setCount] = useQueryState('count', parseAsInteger)
-  return (
-    <>
-      <pre>count: {count}</pre>
-      <button onClick={() => setCount(0)}>Reset</button>
-      <button onClick={() => setCount(c => c ?? 0 + 1)}>+</button>
-      <button onClick={() => setCount(c => c ?? 0 - 1)}>-</button>
-      <button onClick={() => setCount(null)}>Clear</button>
-    </>
-  )
-}
-```
-
 ### Using parsers in Server Components
 
 If you wish to parse the searchParams in server components, you'll need to
@@ -180,8 +165,25 @@ client and server code.
 When the query string is not present in the URL, the default behaviour is to
 return `null` as state.
 
-As you saw in the previous example, it makes state updating and UI rendering
-tedious.
+It can make state updating and UI rendering tedious. Take this example of a simple counter stored in the URL:
+
+```tsx
+import { useQueryState, parseAsInteger } from 'next-usequerystate'
+
+export default () => {
+  const [count, setCount] = useQueryState('count', parseAsInteger)
+  return (
+    <>
+      <pre>count: {count}</pre>
+      <button onClick={() => setCount(0)}>Reset</button>
+      {/* handling null values in setCount is annoying: */}
+      <button onClick={() => setCount(c => c ?? 0 + 1)}>+</button>
+      <button onClick={() => setCount(c => c ?? 0 - 1)}>-</button>
+      <button onClick={() => setCount(null)}>Clear</button>
+    </>
+  )
+}
+```
 
 You can specify a default value to be returned in this case:
 
@@ -265,7 +267,7 @@ const [state, setState] = useQueryState('foo', { scroll: true })
 setState('bar', { scroll: true })
 ```
 
-## Composing parsers, default value & options
+## Configuring parsers, default value & options
 
 You can use a builder pattern to facilitate specifying all of those things:
 
@@ -283,6 +285,51 @@ useQueryState(
 
 Note: `withDefault` must always come **after** `withOptions` to ensure proper
 type safety (providing a non-nullable state type).
+
+You can get this pattern for your custom parsers too, and compose them
+with others:
+
+```ts
+import { createParser, parseAsHex } from 'next-usequerystate/parsers'
+
+// Wrapping your parser/serializer in `createParser`
+// gives it access to the builder pattern & server-side
+// parsing capabilities:
+const hexColorSchema = createParser({
+  parse(query) {
+    if (query.length !== 6) {
+      return null // always return null for invalid inputs
+    }
+    return {
+      // When composing other parsers, they may return null too.
+      r: parseAsHex.parse(query.slice(0, 2)) ?? 0x00,
+      g: parseAsHex.parse(query.slice(2, 4)) ?? 0x00,
+      b: parseAsHex.parse(query.slice(4)) ?? 0x00
+    }
+  },
+  serialize({ r, g, b }) {
+    return (
+      parseAsHex.serialize(r) +
+      parseAsHex.serialize(g) +
+      parseAsHex.serialize(b)
+    )
+  }
+})
+  // Eg: set common options directly
+  .withOptions({ history: 'push' })
+
+// Or on usage:
+useQueryState(
+  'ISeeARedDoorAndIWantItPainted',
+  hexColorSchema.withDefault({
+    r: 0x00,
+    g: 0x00,
+    b: 0x00
+  })
+)
+```
+
+Note: see this example running in the [hex-colors demo](./src/app/demos/hex-colors/page.tsx).
 
 ## Multiple Queries (batching)
 
@@ -335,6 +382,8 @@ to keep UI responsive.
 
 </details>
 
+## `useQueryStates`
+
 For query keys that should always move together, you can use `useQueryStates`
 with an object containing each key's type:
 
@@ -362,7 +411,7 @@ const search = await setCoordinates({
 
 ## Caveats
 
-Because the Next.js pages router is not available in an SSR context, this
+Because the Next.js **pages router** is not available in an SSR context, this
 hook will always return `null` (or the default value if supplied) on SSR/SSG.
 
 This limitation doesn't apply to the app router.
