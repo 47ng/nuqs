@@ -1,19 +1,11 @@
-'use client'
-
-import {
-  parseAsBoolean,
-  parseAsFloat,
-  parseAsInteger,
-  parseAsString,
-  useQueryStates
-} from '../../../../dist'
+import { queryTypes, useQueryStates } from '../../../../../dist'
 
 const IntegrationPage = () => {
   const [state, setState] = useQueryStates({
-    string: parseAsString,
-    int: parseAsInteger,
-    float: parseAsFloat,
-    bool: parseAsBoolean
+    string: queryTypes.string,
+    int: queryTypes.integer,
+    float: queryTypes.float,
+    bool: queryTypes.boolean
   })
   return (
     <>
@@ -23,18 +15,21 @@ const IntegrationPage = () => {
       <button onClick={() => setState(old => ({ bool: !old.bool }))}>
         Toggle bool
       </button>
-      <button id="clear-string" onClick={() => setState({ string: null })}>
+      <button
+        id="clear-string"
+        onClick={() => setState(() => ({ string: null }))}
+      >
         Clear string
       </button>
       <button
         id="clear"
         onClick={() =>
-          setState({
+          setState(() => ({
             string: null,
             int: null,
             float: null,
             bool: null
-          })
+          }))
         }
       >
         Clear

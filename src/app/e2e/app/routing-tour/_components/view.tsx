@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useQueryState } from '../../../../../dist'
+import { useQueryState } from '../../../../../../dist'
 import { counterParser, fromParser } from './parsers'
 
 type RoutingTourViewProps = {
@@ -18,7 +18,7 @@ export const RoutingTourView: React.FC<RoutingTourViewProps> = ({
   return (
     <>
       <Link
-        href={`/app/routing-tour/${nextPage}?from=${thisPage}&counter=${
+        href={`/e2e/app/routing-tour/${nextPage}?from=${thisPage}&counter=${
           counter + 1
         }`}
       >

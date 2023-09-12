@@ -28,37 +28,52 @@ export default function IndexPage() {
       <h3>App router</h3>
       <ul>
         <li>
-          <Link href="/app/useQueryState">[static] useQueryState</Link>
+          <Link href="/e2e/app/useQueryState">[static] useQueryState</Link>
         </li>
         <li>
-          <Link href="/app/useQueryState/dynamic/foo">
+          <Link href="/e2e/app/useQueryState/dynamic/foo">
             [dynamic] useQueryState
           </Link>
         </li>
         <li>
-          <Link href="/app/useQueryStates">[static] useQueryStates</Link>
+          <Link href="/e2e/app/useQueryStates">[static] useQueryStates</Link>
         </li>
         <li>
-          <Link href="/app/useQueryStates/dynamic/foo">
+          <Link href="/e2e/app/useQueryStates/dynamic/foo">
             [dynamic] useQueryStates
+          </Link>
+        </li>
+        <li>
+          <Link href="/e2e/app/useQueryStates/dynamic/foo">
+            [dynamic] useQueryStates
+          </Link>
+        </li>
+        <li>
+          <Link href="/e2e/app/routing-tour/start/server">
+            Routing tour starting with server index
+          </Link>
+        </li>
+        <li>
+          <Link href="/e2e/app/routing-tour/start/client">
+            Routing tour starting with client index
           </Link>
         </li>
       </ul>
       <h3>Pages router</h3>
       <ul>
         <li>
-          <Link href="/pages/useQueryState">[static] useQueryState</Link>
+          <Link href="/e2e/pages/useQueryState">[static] useQueryState</Link>
         </li>
         <li>
-          <Link href="/pages/useQueryState/dynamic/foo">
+          <Link href="/e2e/pages/useQueryState/dynamic/foo">
             [dynamic] useQueryState
           </Link>
         </li>
         <li>
-          <Link href="/pages/useQueryStates">[static] useQueryStates</Link>
+          <Link href="/e2e/pages/useQueryStates">[static] useQueryStates</Link>
         </li>
         <li>
-          <Link href="/pages/useQueryStates/dynamic/foo">
+          <Link href="/e2e/pages/useQueryStates/dynamic/foo">
             [dynamic] useQueryStates
           </Link>
         </li>

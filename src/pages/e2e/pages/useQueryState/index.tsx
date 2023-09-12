@@ -1,9 +1,7 @@
-'use client'
-
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import React from 'react'
-import { queryTypes, useQueryState } from '../../../../dist'
+import { queryTypes, useQueryState } from '../../../../../dist'
 
 const IntegrationPage = () => {
   const [string, setString] = useQueryState('string')

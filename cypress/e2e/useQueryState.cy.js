@@ -87,24 +87,24 @@ function runTest() {
 
 describe('useQueryState (app router)', () => {
   it('works in standard routes', () => {
-    cy.visit('/app/useQueryState')
+    cy.visit('/e2e/app/useQueryState')
     runTest()
   })
 
   it('works in dynamic routes', () => {
-    cy.visit('/app/useQueryState/dynamic/route')
+    cy.visit('/e2e/app/useQueryState/dynamic/route')
     runTest()
   })
 })
 
 describe('useQueryState (pages router)', () => {
   it('works in standard routes', () => {
-    cy.visit('/pages/useQueryState')
+    cy.visit('/e2e/pages/useQueryState')
     runTest()
   })
 
   it('works in dynamic routes', () => {
-    cy.visit('/pages/useQueryState/dynamic/route')
+    cy.visit('/e2e/pages/useQueryState/dynamic/route')
     runTest()
   })
 })

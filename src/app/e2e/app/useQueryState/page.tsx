@@ -9,7 +9,7 @@ import {
   parseAsInteger,
   parseAsString,
   useQueryState
-} from '../../../../dist'
+} from '../../../../../dist'
 
 export default function IntegrationPage() {
   const [numPanes, setNumPanes] = React.useState(1)
