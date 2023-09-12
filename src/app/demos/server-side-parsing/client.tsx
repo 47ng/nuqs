@@ -1,6 +1,5 @@
 'use client'
 
-import Link from 'next/link'
 import { parseAsBoolean, useQueryState } from '../../../../dist'
 import { counterParser } from './parser'
 
@@ -26,9 +25,7 @@ export function ServerSideParsingDemoClient({
   })
 
   return (
-    <main>
-      <Link href="/">⬅️ Home</Link>
-      <h1>Server side parsing</h1>
+    <>
       <div style={{ marginBottom: '1rem' }}>
         <input
           type="checkbox"
@@ -52,6 +49,6 @@ export function ServerSideParsingDemoClient({
           refreshing the page.
         </em>
       </p>
-    </main>
+    </>
   )
 }
