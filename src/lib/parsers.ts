@@ -123,6 +123,20 @@ export const parseAsInteger = createParser({
   serialize: v => Math.round(v).toFixed()
 })
 
+export const parseAsHex = createParser({
+  parse: v => {
+    const int = parseInt(v, 16)
+    if (Number.isNaN(int)) {
+      return null
+    }
+    return int
+  },
+  serialize: v => {
+    const hex = Math.round(v).toString(16)
+    return hex.padStart(hex.length + (hex.length % 2), '0')
+  }
+})
+
 export const parseAsFloat = createParser({
   parse: v => {
     const float = parseFloat(v)
