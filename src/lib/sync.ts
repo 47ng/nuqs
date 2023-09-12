@@ -27,6 +27,7 @@ export function usePatchedHistory() {
     if (patched) {
       return
     }
+    // console.debug('Patching history')
     for (const method of ['pushState', 'replaceState'] as const) {
       const original = window.history[method].bind(window.history)
       window.history[method] = function nextUseQueryState_patchedHistory(
@@ -34,10 +35,12 @@ export function usePatchedHistory() {
         title: string,
         url?: string | URL | null
       ) {
+        // console.debug(`history.${method}(${url}) ${title} %O`, state)
         // If someone else than our hooks have updated the URL,
         // send out a signal for them to sync their internal state.
         if (title !== NOSYNC_MARKER && url) {
           const search = new URL(url, location.origin).searchParams
+          // console.debug(`Triggering sync with ${search.toString()}`)
           // Here we're delaying application to next tick to avoid:
           // `Warning: useInsertionEffect must not schedule updates.`
           //

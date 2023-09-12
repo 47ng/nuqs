@@ -222,16 +222,18 @@ export function useQueryState<T = string>(
   // console.debug(`render ${key}: ${internalState}`)
 
   // Sync all hooks together & with external URL changes
-  React.useEffect(() => {
+  React.useInsertionEffect(() => {
     function syncFromURL(search: URLSearchParams) {
       const value = search.get(key) ?? null
       const v = value === null ? null : parse(value)
       // console.debug(`sync   ${key}: ${v}`)
       setInternalState(v)
     }
+    // console.debug(`Subscribing to sync for \`${key}\``)
     emitter.on(key, setInternalState)
     emitter.on(SYNC_EVENT_KEY, syncFromURL)
     return () => {
+      // console.debug(`Unsubscribing from sync for \`${key}\``)
       emitter.off(key, setInternalState)
       emitter.off(SYNC_EVENT_KEY, syncFromURL)
     }
