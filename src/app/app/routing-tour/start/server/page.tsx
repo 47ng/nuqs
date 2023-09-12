@@ -4,16 +4,16 @@ export default function ServerStartPage() {
   return (
     <ul>
       <li>
-        <Link href="/app/routing-tour/a?from=start.client">a (server)</Link>
+        <Link href="/app/routing-tour/a?from=start.server">a (server)</Link>
       </li>
       <li>
-        <Link href="/app/routing-tour/b?from=start.client">b (server)</Link>
+        <Link href="/app/routing-tour/b?from=start.server">b (server)</Link>
       </li>
       <li>
-        <Link href="/app/routing-tour/c?from=start.client">c (client)</Link>
+        <Link href="/app/routing-tour/c?from=start.server">c (client)</Link>
       </li>
       <li>
-        <Link href="/app/routing-tour/d?from=start.client">d (client)</Link>
+        <Link href="/app/routing-tour/d?from=start.server">d (client)</Link>
       </li>
     </ul>
   )
