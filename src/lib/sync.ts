@@ -2,18 +2,24 @@ import Mitt from 'mitt'
 
 export const SYNC_EVENT_KEY = Symbol('__nextUseQueryState__SYNC__')
 export const NOSYNC_MARKER = '__nextUseQueryState__NO_SYNC__'
-export const NOTIFY_EVENT_KEY = Symbol('__nextUseQueryState__NOTIFY__')
+const NOTIFY_EVENT_KEY = Symbol('__nextUseQueryState__NOTIFY__')
+
+export type QueryUpdateSource = 'internal' | 'external'
+export type QueryUpdateNotificationArgs = {
+  search: URLSearchParams
+  source: QueryUpdateSource
+}
 
 type EventMap = {
   [SYNC_EVENT_KEY]: URLSearchParams
-  [NOTIFY_EVENT_KEY]: URLSearchParams
+  [NOTIFY_EVENT_KEY]: QueryUpdateNotificationArgs
   [key: string]: any
 }
 
 export const emitter = Mitt<EventMap>()
 
 export function subscribeToQueryUpdates(
-  callback: (search: URLSearchParams) => void
+  callback: (args: QueryUpdateNotificationArgs) => void
 ) {
   emitter.on(NOTIFY_EVENT_KEY, callback)
   return () => emitter.off(NOTIFY_EVENT_KEY, callback)
@@ -30,17 +36,20 @@ if (!patched && typeof window === 'object') {
       title: string,
       url?: string | URL | null
     ) {
+      if (!url) {
+        // Null URL is only used for state changes,
+        // we're not interested in reacting to those.
+        __DEBUG__ &&
+          console.debug(`history.${method}(null) (${title}) %O`, state)
+        return original(state, title, url)
+      }
+      const source = title === NOSYNC_MARKER ? 'internal' : 'external'
+      const search = new URL(url, location.origin).searchParams
       __DEBUG__ &&
-        console.debug(
-          `history.${method}(${url}) (${
-            title === NOSYNC_MARKER ? 'internal' : 'external'
-          }) %O`,
-          state
-        )
+        console.debug(`history.${method}(${url}) (${source}) %O`, state)
       // If someone else than our hooks have updated the URL,
       // send out a signal for them to sync their internal state.
-      if (title !== NOSYNC_MARKER && url) {
-        const search = new URL(url, location.origin).searchParams
+      if (source === 'external') {
         __DEBUG__ && console.debug(`Triggering sync with ${search.toString()}`)
         // Here we're delaying application to next tick to avoid:
         // `Warning: useInsertionEffect must not schedule updates.`
@@ -52,8 +61,16 @@ if (!patched && typeof window === 'object') {
         // have been applied by then, we're also sending the
         // parsed query string to the hooks so they don't need
         // to rely on the URL being up to date.
-        setTimeout(() => emitter.emit(SYNC_EVENT_KEY, search), 0)
+        setTimeout(() => {
+          emitter.emit(SYNC_EVENT_KEY, search)
+          emitter.emit(NOTIFY_EVENT_KEY, { search, source })
+        }, 0)
+      } else {
+        setTimeout(() => {
+          emitter.emit(NOTIFY_EVENT_KEY, { search, source })
+        }, 0)
       }
+
       return original(state, title === NOSYNC_MARKER ? '' : title, url)
     }
   }

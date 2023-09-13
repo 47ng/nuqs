@@ -14,7 +14,7 @@ export default function BuilderPatternDemoPage() {
   )
 
   React.useEffect(() => {
-    const off = subscribeToQueryUpdates(search =>
+    const off = subscribeToQueryUpdates(({ search }) =>
       console.log(search.toString())
     )
     return off

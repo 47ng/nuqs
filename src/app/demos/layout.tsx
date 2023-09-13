@@ -1,4 +1,4 @@
-import { DemoPageLayout } from '../../layouts/demo-page'
+import { DemoPageLayout } from '../../components/demo-page-layout'
 
 export const metadata = {
   title: 'next-usequerystate demos'

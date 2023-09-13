@@ -1,5 +1,5 @@
 import { Options, Router } from './defs'
-import { NOSYNC_MARKER, NOTIFY_EVENT_KEY, emitter } from './sync'
+import { NOSYNC_MARKER } from './sync'
 
 // 50ms between calls to the history API seems to satisfy Chrome and Firefox.
 // Safari remains annoying with at most 100 calls in 30 seconds. #wontfix
@@ -131,7 +131,6 @@ function flushUpdateQueue(router: Router) {
         options.history === 'push' ? router.push : router.replace
       updateUrl.call(router, url, { scroll: options.scroll })
     }
-    emitter.emit(NOTIFY_EVENT_KEY, search)
     return search
   } catch (error) {
     console.error(

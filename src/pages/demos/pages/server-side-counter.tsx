@@ -1,6 +1,6 @@
 import type { GetServerSideProps, InferGetServerSidePropsType } from 'next'
 import { parseAsInteger, useQueryState } from '../../../../dist'
-import { DemoPageLayout } from '../../../layouts/demo-page'
+import { DemoPageLayout } from '../../../components/demo-page-layout'
 
 export default function ServerSideCounterPage({
   counter: serverSideCounter
