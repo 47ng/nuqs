@@ -45,17 +45,11 @@
       "types": "./dist/parsers.d.ts"
     }
   },
-  "tsup": {
-    "entry": [
-      "src/lib/index.ts",
-      "src/lib/parsers.ts"
-    ]
-  },
   "scripts": {
     "dev": "run-p dev:*",
     "dev:build": "tsup --format esm --dts --watch",
     "dev:next": "next dev",
-    "build": "tsup --clean --dts --format esm,cjs",
+    "build": "NODE_ENV=production tsup --clean --dts --format esm,cjs",
     "test": "run-p test:types test:e2e:ci",
     "test:types": "tsd",
     "test:e2e:ci": "run-p --race test:e2e:next:start cypress:run",

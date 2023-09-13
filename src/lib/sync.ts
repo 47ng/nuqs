@@ -22,7 +22,7 @@ export function subscribeToQueryUpdates(
 let patched = false
 
 if (!patched && typeof window === 'object') {
-  // console.debug('Patching history')
+  __DEBUG__ && console.debug('Patching history')
   for (const method of ['pushState', 'replaceState'] as const) {
     const original = window.history[method].bind(window.history)
     window.history[method] = function nextUseQueryState_patchedHistory(
@@ -30,12 +30,18 @@ if (!patched && typeof window === 'object') {
       title: string,
       url?: string | URL | null
     ) {
-      // console.debug(`history.${method}(${url}) ${title} %O`, state)
+      __DEBUG__ &&
+        console.debug(
+          `history.${method}(${url}) (${
+            title === NOSYNC_MARKER ? 'internal' : 'external'
+          }) %O`,
+          state
+        )
       // If someone else than our hooks have updated the URL,
       // send out a signal for them to sync their internal state.
       if (title !== NOSYNC_MARKER && url) {
         const search = new URL(url, location.origin).searchParams
-        // console.debug(`Triggering sync with ${search.toString()}`)
+        __DEBUG__ && console.debug(`Triggering sync with ${search.toString()}`)
         // Here we're delaying application to next tick to avoid:
         // `Warning: useInsertionEffect must not schedule updates.`
         //

@@ -209,6 +209,12 @@ export function useQueryState<T = string>(
   const router = useRouter()
   // Not reactive, but available on the server and on page load
   const initialSearchParams = useSearchParams()
+  __DEBUG__ &&
+    console.debug(
+      `initialSearchParams: ${
+        initialSearchParams === null ? 'null' : initialSearchParams.toString()
+      }`
+    )
   const [internalState, setInternalState] = React.useState<T | null>(() => {
     const value =
       typeof window !== 'object'
@@ -218,21 +224,21 @@ export function useQueryState<T = string>(
           new URLSearchParams(window.location.search).get(key) ?? null
     return value === null ? null : parse(value)
   })
-  // console.debug(`render ${key}: ${internalState}`)
+  __DEBUG__ && console.debug(`render \`${key}\`: ${internalState}`)
 
   // Sync all hooks together & with external URL changes
   React.useInsertionEffect(() => {
     function syncFromURL(search: URLSearchParams) {
       const value = search.get(key) ?? null
       const v = value === null ? null : parse(value)
-      // console.debug(`sync   ${key}: ${v}`)
+      __DEBUG__ && console.debug(`sync \`${key}\`: ${v}`)
       setInternalState(v)
     }
-    // console.debug(`Subscribing to sync for \`${key}\``)
+    __DEBUG__ && console.debug(`Subscribing to sync for \`${key}\``)
     emitter.on(key, setInternalState)
     emitter.on(SYNC_EVENT_KEY, syncFromURL)
     return () => {
-      // console.debug(`Unsubscribing from sync for \`${key}\``)
+      __DEBUG__ && console.debug(`Unsubscribing from sync for \`${key}\``)
       emitter.off(key, setInternalState)
       emitter.off(SYNC_EVENT_KEY, syncFromURL)
     }
