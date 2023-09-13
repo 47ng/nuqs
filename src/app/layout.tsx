@@ -1,7 +1,9 @@
 import React from 'react'
 
 export const metadata = {
-  title: 'next-usequerystate playground'
+  title: 'next-usequerystate playground',
+  description:
+    'useQueryState hook for Next.js - Like React.useState, but stored in the URL query string'
 }
 
 export default function RootLayout({
@@ -11,7 +13,17 @@ export default function RootLayout({
 }) {
   return (
     <html>
-      <body>{children}</body>
+      <body>
+        <header>
+          <strong>
+            <code>next-usequerystate</code>
+          </strong>{' '}
+          • <a href="https://github.com/47ng/next-usequerystate">GitHub</a> •{' '}
+          <a href="https://www.npmjs.com/package/next-usequerystate">NPM</a>
+        </header>
+        <hr />
+        {children}
+      </body>
     </html>
   )
 }

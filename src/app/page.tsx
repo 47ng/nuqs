@@ -15,7 +15,7 @@ const demos = [
 export default function IndexPage() {
   return (
     <main>
-      <h1>next-usequerystate playground</h1>
+      <h1>Playground</h1>
       <h2>Demos</h2>
       <h3>App router</h3>
       <ul>
@@ -95,6 +95,13 @@ export default function IndexPage() {
           </Link>
         </li>
       </ul>
+      <hr />
+      <footer>
+        Made by <a href="https://francoisbest.com">François Best</a> • Follow my
+        work on <a href="https://github.com/franky47">GitHub</a> and{' '}
+        <a href="https://mamot.fr/@Franky47">Mastodon</a> •{' '}
+        <a href="mailto:freelance@francoisbest.com">Hire me!</a>
+      </footer>
     </main>
   )
 }
