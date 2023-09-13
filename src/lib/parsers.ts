@@ -224,7 +224,7 @@ export function parseAsJson<T>(parser?: (value: unknown) => T) {
   return createParser({
     parse: query => {
       try {
-        const obj = JSON.parse(decodeURIComponent(query))
+        const obj = JSON.parse(query)
         if (typeof parser === 'function') {
           return parser(obj)
         } else {
@@ -234,7 +234,7 @@ export function parseAsJson<T>(parser?: (value: unknown) => T) {
         return null
       }
     },
-    serialize: value => encodeURIComponent(JSON.stringify(value))
+    serialize: value => JSON.stringify(value)
   })
 }
 
