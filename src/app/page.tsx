@@ -1,12 +1,15 @@
 import Link from 'next/link'
 
 const demos = [
-  'builder-pattern',
-  'subscribeToQueryUpdates',
-  'batching',
-  'server-side-parsing',
-  'hex-colors',
-  'compound-parsers'
+  // App router demos
+  'app/builder-pattern',
+  'app/subscribeToQueryUpdates',
+  'app/batching',
+  'app/server-side-parsing',
+  'app/hex-colors',
+  'app/compound-parsers',
+  // Pages router demos
+  'pages/server-side-counter'
 ]
 
 export default function IndexPage() {
@@ -14,16 +17,28 @@ export default function IndexPage() {
     <main>
       <h1>next-usequerystate playground</h1>
       <h2>Demos</h2>
+      <h3>App router</h3>
       <ul>
-        {demos.map(path => (
-          <li key={path}>
-            <Link href={`/demos/${path}`}>{path}</Link>
-          </li>
-        ))}
+        {demos
+          .filter(p => p.startsWith('app/'))
+          .map(path => (
+            <li key={path}>
+              <Link href={`/demos/${path.slice(4)}`}>{path.slice(4)}</Link>
+            </li>
+          ))}
       </ul>
-      <p>
-        <em>All demos use the app router.</em>
-      </p>
+      <h3>Pages router</h3>
+      <ul>
+        {demos
+          .filter(p => p.startsWith('pages/'))
+          .map(path => (
+            <li key={path}>
+              <Link href={`/demos/pages/${path.slice(6)}`}>
+                {path.slice(6)}
+              </Link>
+            </li>
+          ))}
+      </ul>
       <hr />
       <h2>End-to-end integration tests</h2>
       <p>⚠️ Don't change these routes without updating integration tests.</p>
