@@ -1,7 +1,6 @@
 'use client'
 
-import { useQueryState } from '../../../../dist'
-import { parseAsFloat } from '../../../lib'
+import { parseAsFloat, useQueryState } from '../../../../dist'
 
 const parser = parseAsFloat.withDefault(0)
 

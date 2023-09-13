@@ -1,7 +1,6 @@
 'use client'
 
-import { parseAsJson, useQueryState } from '../../../../dist'
-import { parseAsArrayOf } from '../../../lib'
+import { parseAsArrayOf, parseAsJson, useQueryState } from '../../../../dist'
 
 const escaped = '-_.!~*\'()?#/&,"`<>{}[]@$£%+=:;'
 
