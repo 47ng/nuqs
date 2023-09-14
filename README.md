@@ -239,10 +239,12 @@ setQuery(null, { history: 'replace' })
 By default, query state updates are done in a _client-first_ manner: there are
 no network calls to the server.
 
-This uses the `shallow` option of the Next.js router set to `true`.
+This is equivalent to the `shallow` option of the Next.js router set to `true`.
+
+> Note: the app router doesn't yet have this capabily natively, but `next-usequerystate` does by bypassing the router on shallow updates.
 
 To opt-in to query updates notifying the server (to re-run `getServerSideProps`
-in the pages router and re-render Server Components on the pages router),
+in the pages router and re-render Server Components on the app router),
 you can set `shallow` to `false`:
 
 ```ts
