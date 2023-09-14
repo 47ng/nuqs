@@ -25,8 +25,7 @@
   },
   "files": [
     "dist/",
-    "parsers.d.ts",
-    "useQueryState.gif"
+    "parsers.d.ts"
   ],
   "type": "module",
   "sideEffects": true,

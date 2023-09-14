@@ -47,7 +47,7 @@ export default () => {
 }
 ```
 
-![](./useQueryState.gif)
+![](https://raw.githubusercontent.com/47ng/next-usequerystate/next/useQueryState.gif)
 
 ## Documentation
 
