@@ -322,11 +322,11 @@ const hexColorSchema = createParser({
 
 // Or on usage:
 useQueryState(
-  'ISeeARedDoorAndIWantItPainted',
+  'tribute',
   hexColorSchema.withDefault({
-    r: 0x00,
-    g: 0x00,
-    b: 0x00
+    r: 0x66,
+    g: 0x33,
+    b: 0x99
   })
 )
 ```
