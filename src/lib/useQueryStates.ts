@@ -2,7 +2,7 @@ import {
   ReadonlyURLSearchParams,
   useRouter,
   useSearchParams
-} from 'next/navigation'
+} from 'next/navigation.js' // https://github.com/47ng/next-usequerystate/discussions/352
 import React from 'react'
 import type { Nullable, Options } from './defs'
 import type { Parser } from './parsers'

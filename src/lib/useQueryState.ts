@@ -1,4 +1,4 @@
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation.js' // https://github.com/47ng/next-usequerystate/discussions/352
 import React from 'react'
 import type { Options } from './defs'
 import type { Parser } from './parsers'
