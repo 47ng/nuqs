@@ -241,7 +241,7 @@ no network calls to the server.
 
 This is equivalent to the `shallow` option of the Next.js router set to `true`.
 
-> Note: the app router doesn't yet have this capabily natively, but `next-usequerystate` does by bypassing the router on shallow updates.
+> Note: the app router doesn't [yet](https://github.com/vercel/next.js/discussions/48110#discussioncomment-6957637) have this capabily natively, but `next-usequerystate` does by bypassing the router on shallow updates.
 
 To opt-in to query updates notifying the server (to re-run `getServerSideProps`
 in the pages router and re-render Server Components on the app router),
