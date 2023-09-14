@@ -14,8 +14,8 @@ useQueryState hook for Next.js - Like React.useState, but stored in the URL quer
 - 🔀 _**new:**_ Supports both the `app` and `pages` routers
 - 🧘‍♀️ Simple: the URL is the source of truth
 - 🕰 Replace history or [append](#history) to use the Back button to navigate state updates
-- ⚡️ Built-in [parsers](#parsing) for common object types (number, float, boolean, Date, and more)
-- ♊️ Linked querystrings with [`useQueryStates`](#usequerystates)
+- ⚡️ Built-in [parsers](#parsing) for common state types (integer, float, boolean, Date, and more)
+- ♊️ Related querystrings with [`useQueryStates`](#usequerystates)
 - 📡 [Shallow mode](#shallow) by default for URL query updates, opt-in to notify server components
 
 ## Installation
@@ -241,7 +241,10 @@ no network calls to the server.
 
 This is equivalent to the `shallow` option of the Next.js router set to `true`.
 
-> Note: the app router doesn't [yet](https://github.com/vercel/next.js/discussions/48110#discussioncomment-6957637) have this capabily natively, but `next-usequerystate` does by bypassing the router on shallow updates.
+> Note: the app router doesn't
+> [yet](https://github.com/vercel/next.js/discussions/48110)
+> have this capabily natively, but `next-usequerystate` does,
+> by bypassing the router on shallow updates.
 
 To opt-in to query updates notifying the server (to re-run `getServerSideProps`
 in the pages router and re-render Server Components on the app router),
