@@ -1,3 +1,4 @@
+import { Suspense } from 'react'
 import { QuerySpy } from '../../../components/query-spy'
 
 export default function E2EPageLayout({
@@ -7,7 +8,9 @@ export default function E2EPageLayout({
 }) {
   return (
     <>
-      <QuerySpy />
+      <Suspense>
+        <QuerySpy />
+      </Suspense>
       {children}
     </>
   )
