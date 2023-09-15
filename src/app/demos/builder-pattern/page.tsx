@@ -27,6 +27,11 @@ export default function BuilderPatternDemoPage() {
           enabled.
         </em>
       </p>
+      <p>
+        <a href="https://github.com/47ng/next-usequerystate/blob/next/src/app/demos/builder-pattern/page.tsx">
+          Source on GitHub
+        </a>
+      </p>
     </>
   )
 }

@@ -48,6 +48,11 @@ export default function CompoundParsersDemo() {
           <code>{JSON.stringify(array, null, 2)}</code>
         </pre>
       </section>
+      <p>
+        <a href="https://github.com/47ng/next-usequerystate/blob/next/src/app/demos/compound-parsers/page.tsx">
+          Source on GitHub
+        </a>
+      </p>
     </>
   )
 }

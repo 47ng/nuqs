@@ -19,6 +19,11 @@ export default function ServerSideParsingDemo({ searchParams }: PageProps) {
           <p>Server rendered counter: {counter}</p>
         </ServerSideParsingDemoClient>
       </Suspense>
+      <p>
+        <a href="https://github.com/47ng/next-usequerystate/blob/next/src/app/demos/server-side-parsing/page.tsx">
+          Source on GitHub
+        </a>
+      </p>
     </>
   )
 }

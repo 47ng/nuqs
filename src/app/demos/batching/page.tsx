@@ -35,6 +35,11 @@ export default function BuilderPatternDemoPage() {
           Lng {lngStr[0].padStart(4) + '.' + (lngStr[1] ?? '00')}
         </code>
       </pre>
+      <p>
+        <a href="https://github.com/47ng/next-usequerystate/blob/next/src/app/demos/batching/page.tsx">
+          Source on GitHub
+        </a>
+      </p>
     </>
   )
 }

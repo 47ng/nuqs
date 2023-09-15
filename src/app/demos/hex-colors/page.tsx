@@ -89,6 +89,11 @@ export default function HexColorsDemo() {
           backgroundColor: `rgb(${color.r} ${color.g} ${color.b})`
         }}
       ></div>
+      <p>
+        <a href="https://github.com/47ng/next-usequerystate/blob/next/src/app/demos/hex-colors/page.tsx">
+          Source on GitHub
+        </a>
+      </p>
     </>
   )
 }

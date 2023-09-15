@@ -32,6 +32,11 @@ export default function BasicCounterDemoPage() {
         </button>
       </nav>
       <p>Counter: {counter}</p>
+      <p>
+        <a href="https://github.com/47ng/next-usequerystate/blob/next/src/app/demos/basic-counter/page.tsx">
+          Source on GitHub
+        </a>
+      </p>
     </>
   )
 }
