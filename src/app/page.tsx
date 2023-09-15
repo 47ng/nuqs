@@ -2,6 +2,7 @@ import Link from 'next/link'
 
 const demos = [
   // App router demos
+  'app/basic-counter',
   'app/builder-pattern',
   'app/subscribeToQueryUpdates',
   'app/batching',
