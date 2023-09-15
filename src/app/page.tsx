@@ -61,11 +61,6 @@ export default function IndexPage() {
           </Link>
         </li>
         <li>
-          <Link href="/e2e/app/useQueryStates/dynamic/foo">
-            [dynamic] useQueryStates
-          </Link>
-        </li>
-        <li>
           <Link href="/e2e/app/routing-tour/start/server">
             Routing tour starting with server index
           </Link>
