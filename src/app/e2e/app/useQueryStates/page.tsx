@@ -7,6 +7,7 @@ import {
   parseAsString,
   useQueryStates
 } from '../../../../../dist'
+import { HydrationMarker } from '../../../../components/hydration-marker'
 
 const IntegrationPage = () => {
   const [state, setState] = useQueryStates({
@@ -17,7 +18,7 @@ const IntegrationPage = () => {
   })
   return (
     <>
-      <button onClick={() => setState({ string: 'Hello' })}>Set string</button>
+      <HydrationMarker />
       <button onClick={() => setState({ int: 42 })}>Set int</button>
       <button onClick={() => setState({ float: 3.14159 })}>Set float</button>
       <button onClick={() => setState(old => ({ bool: !old.bool }))}>

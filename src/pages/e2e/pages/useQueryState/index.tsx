@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import React from 'react'
 import { queryTypes, useQueryState } from '../../../../../dist'
+import { HydrationMarker } from '../../../../components/hydration-marker'
 
 const IntegrationPage = () => {
   const [string, setString] = useQueryState('string')
@@ -12,14 +12,10 @@ const IntegrationPage = () => {
     'text',
     queryTypes.string.withDefault('Hello, world!')
   )
-  const [hydrated, setHydrated] = React.useState(false)
-  React.useEffect(() => setHydrated(true), [])
   const pathname = usePathname()
-  if (!hydrated) {
-    return null
-  }
   return (
     <main>
+      <HydrationMarker />
       <h1>useQueryState</h1>
       <nav>
         Links&nbsp;

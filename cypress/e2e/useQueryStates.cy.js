@@ -1,6 +1,7 @@
 /// <reference types="cypress" />
 
 function runTest() {
+  cy.contains('#hydration-marker', 'hydrated').should('be.hidden')
   cy.get('#json').should(
     'have.text',
     '{"string":null,"int":null,"float":null,"bool":null}'

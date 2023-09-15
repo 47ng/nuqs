@@ -1,7 +1,7 @@
 /// <reference types="cypress" />
 
 function runTest() {
-  cy.wait(100)
+  cy.contains('#hydration-marker', 'hydrated').should('be.hidden')
   // String
   {
     cy.get('#string_value').should('be.empty')

@@ -10,11 +10,13 @@ import {
   parseAsString,
   useQueryState
 } from '../../../../../dist'
+import { HydrationMarker } from '../../../../components/hydration-marker'
 
 export default function IntegrationPage() {
   const [numPanes, setNumPanes] = React.useState(1)
   return (
     <main>
+      <HydrationMarker />
       <Link href="/">⬅️ Home</Link>
       <h1>useQueryState integration test</h1>
       <nav>
