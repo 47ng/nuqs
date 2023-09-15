@@ -211,7 +211,7 @@ export function useQueryState<T = string>(
   const initialSearchParams = useSearchParams()
   __DEBUG__ &&
     console.debug(
-      `initialSearchParams: ${
+      `[nuqs \`${key}\`] initialSearchParams: ${
         initialSearchParams === null ? 'null' : initialSearchParams.toString()
       }`
     )
@@ -224,48 +224,42 @@ export function useQueryState<T = string>(
           new URLSearchParams(window.location.search).get(key) ?? null
     return value === null ? null : parse(value)
   })
-  __DEBUG__ && console.debug(`render \`${key}\`: ${internalState}`)
+  const stateRef = React.useRef(internalState)
+  __DEBUG__ && console.debug(`[nuqs \`${key}\`] render: ${internalState}`)
 
   // Sync all hooks together & with external URL changes
   React.useInsertionEffect(() => {
+    function updateInternalState(state: T | null) {
+      __DEBUG__ &&
+        console.debug(`[nuqs \`${key}\`] updateInternalState %O`, state)
+      stateRef.current = state
+      setInternalState(state)
+    }
     function syncFromURL(search: URLSearchParams) {
       const value = search.get(key) ?? null
-      const v = value === null ? null : parse(value)
-      __DEBUG__ && console.debug(`sync \`${key}\`: ${v}`)
-      setInternalState(v)
+      const state = value === null ? null : parse(value)
+      __DEBUG__ && console.debug(`[nuqs \`${key}\`] syncFromURL: %O`, state)
+      updateInternalState(state)
     }
-    __DEBUG__ && console.debug(`Subscribing to sync for \`${key}\``)
-    emitter.on(key, setInternalState)
+    __DEBUG__ && console.debug(`[nuqs \`${key}\`] Subscribing to sync`)
+
     emitter.on(SYNC_EVENT_KEY, syncFromURL)
+    emitter.on(key, updateInternalState)
     return () => {
-      __DEBUG__ && console.debug(`Unsubscribing from sync for \`${key}\``)
-      emitter.off(key, setInternalState)
+      __DEBUG__ && console.debug(`[nuqs \`${key}\`] Unsubscribing from sync`)
       emitter.off(SYNC_EVENT_KEY, syncFromURL)
+      emitter.off(key, updateInternalState)
     }
   }, [key])
 
   const update = React.useCallback(
     (stateUpdater: React.SetStateAction<T | null>, options: Options = {}) => {
-      const isUpdaterFunction = (
-        input: any
-      ): input is (prevState: T | null) => T | null => {
-        return typeof input === 'function'
-      }
+      const newValue: T | null = isUpdaterFunction(stateUpdater)
+        ? stateUpdater(stateRef.current ?? defaultValue ?? null)
+        : stateUpdater
 
-      let newValue: T | null = null
-      if (isUpdaterFunction(stateUpdater)) {
-        // Resolve the new value based on old value & updater
-        const search = new URLSearchParams(window.location.search)
-        const serialized = search.get(key) ?? null
-        const oldValue =
-          serialized === null
-            ? defaultValue ?? null
-            : parse(serialized) ?? defaultValue ?? null
-        newValue = stateUpdater(oldValue)
-      } else {
-        newValue = stateUpdater
-      }
-
+      __DEBUG__ &&
+        console.debug(`[nuqs \`${key}\`] Emitting and queueing: %O`, newValue)
       // Sync all hooks state (including this one)
       emitter.emit(key, newValue)
       enqueueQueryStringUpdate(key, newValue, serialize, {
@@ -276,7 +270,19 @@ export function useQueryState<T = string>(
       })
       return flushToURL(router)
     },
-    [key, history, shallow, scroll]
+    [
+      key,
+      history,
+      shallow,
+      scroll
+      //  internalState, defaultValue
+    ]
   )
   return [internalState ?? defaultValue ?? null, update]
+}
+
+function isUpdaterFunction<T>(
+  stateUpdater: React.SetStateAction<T>
+): stateUpdater is (prevState: T) => T {
+  return typeof stateUpdater === 'function'
 }

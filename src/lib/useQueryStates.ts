@@ -63,7 +63,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
   const initialSearchParams = useSearchParams()
   __DEBUG__ &&
     console.debug(
-      `initialSearchParams: ${
+      `[nuq+ \`${Object.keys(keyMap).join(',')}\`] initialSearchParams: ${
         initialSearchParams === null ? 'null' : initialSearchParams.toString()
       }`
     )
@@ -75,71 +75,101 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
     // Components mounted after page load must use the current URL value
     return parseMap(keyMap, new URLSearchParams(window.location.search))
   })
+  const stateRef = React.useRef(internalState)
   __DEBUG__ &&
     console.debug(
-      `render \`${Object.keys(keyMap).join(',')}\`: %O`,
+      `[nuq+ \`${Object.keys(keyMap).join(',')}\`] render : %O`,
       internalState
     )
 
   // Sync all hooks together & with external URL changes
   React.useInsertionEffect(() => {
+    function updateInternalState(state: V) {
+      __DEBUG__ &&
+        console.debug(
+          `[nuq+ \`${Object.keys(keyMap).join(',')}\`] updateInternalState %O`,
+          state
+        )
+      stateRef.current = state
+      setInternalState(state)
+    }
     function syncFromURL(search: URLSearchParams) {
       const state = parseMap(keyMap, search)
       __DEBUG__ &&
-        console.debug(`sync \`${Object.keys(keyMap).join(',')}\`: %O`, state)
-      setInternalState(state)
+        console.debug(
+          `[nuq+ \`${Object.keys(keyMap).join(',')}\`] syncFromURL: %O`,
+          state
+        )
+      updateInternalState(state)
     }
     const handlers = Object.keys(keyMap).reduce((handlers, key) => {
       handlers[key as keyof V] = (value: any) => {
         const { defaultValue } = keyMap[key]
+        // Note: cannot mutate in-place, the object ref must change
+        // for the subsequent setState to pick it up.
+        stateRef.current = {
+          ...stateRef.current,
+          [key as keyof V]: value ?? defaultValue ?? null
+        }
         __DEBUG__ &&
           console.debug(
-            `Cross-hook syncing \`${key}\`: %O (default: %O)`,
+            `[nuq+ \`${Object.keys(keyMap).join(
+              ','
+            )}\`] Cross-hook key sync \`${key}\`: %O (default: %O). Resolved state: %O`,
             value,
-            defaultValue
+            defaultValue,
+            stateRef.current
           )
-        setInternalState(state => ({
-          ...state,
-          [key]: value ?? defaultValue ?? null
-        }))
+        updateInternalState(stateRef.current)
       }
       return handlers
     }, {} as Record<keyof V, any>)
 
+    emitter.on(SYNC_EVENT_KEY, syncFromURL)
     for (const key of Object.keys(keyMap)) {
-      __DEBUG__ && console.debug(`Subscribing to sync for \`${key}\``)
+      __DEBUG__ &&
+        console.debug(
+          `[nuq+ \`${Object.keys(keyMap).join(
+            ','
+          )}\`] Subscribing to sync for \`${key}\``
+        )
       emitter.on(key, handlers[key])
     }
-    emitter.on(SYNC_EVENT_KEY, syncFromURL)
     return () => {
+      emitter.off(SYNC_EVENT_KEY, syncFromURL)
       for (const key of Object.keys(keyMap)) {
-        __DEBUG__ && console.debug(`Unsubscribing from sync for \`${key}\``)
+        __DEBUG__ &&
+          console.debug(
+            `[nuq+ \`${Object.keys(keyMap).join(
+              ','
+            )}\`] Unsubscribing to sync for \`${key}\``
+          )
         emitter.off(key, handlers[key])
       }
-      emitter.off(SYNC_EVENT_KEY, syncFromURL)
     }
   }, [keyMap])
 
   const update = React.useCallback<SetValues<KeyMap>>(
     (stateUpdater, options = {}) => {
-      const isUpdaterFunction = (input: any): input is UpdaterFn<KeyMap> => {
-        return typeof input === 'function'
-      }
-
-      // Resolve the new values based on old values & updater
-      const search = new URLSearchParams(window.location.search)
-      let newState: Partial<Nullable<KeyMap>> = {}
-      if (isUpdaterFunction(stateUpdater)) {
-        // todo: Should oldState contain null/undefined queries if not set?
-        const oldState = parseMap(keyMap, search)
-        newState = stateUpdater(oldState)
-      } else {
-        newState = stateUpdater
-      }
-      __DEBUG__ && console.debug(`Setting state: %O`, newState)
+      const newState: Partial<Nullable<KeyMap>> =
+        typeof stateUpdater === 'function'
+          ? stateUpdater(stateRef.current)
+          : stateUpdater
+      __DEBUG__ &&
+        console.debug(
+          `[nuq+ \`${Object.keys(keyMap).join(',')}\`] setState: %O`,
+          newState
+        )
       for (const [key, value] of Object.entries(newState)) {
         const { serialize } = keyMap[key]
         emitter.emit(key, value)
+        __DEBUG__ &&
+          console.debug(
+            `[nuq+ \`${Object.keys(keyMap).join(
+              ','
+            )}\`] Emitting and queueing: \`${key}\`: %O`,
+            value
+          )
         enqueueQueryStringUpdate(key, value, serialize ?? String, {
           // Call-level options take precedence over hook declaration options.
           history: options.history ?? history,

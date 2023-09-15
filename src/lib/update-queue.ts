@@ -26,7 +26,7 @@ export function enqueueQueryStringUpdate<Value>(
     value: value === null ? null : serialize(value),
     options
   }
-  __DEBUG__ && console.debug('Pushing to queue %O', queueItem)
+  __DEBUG__ && console.debug('[nuqs queue] Pushing to queue %O', queueItem)
   updateQueue.push(queueItem)
 }
 
@@ -49,7 +49,8 @@ export function flushToURL(router: Router) {
         0,
         Math.min(FLUSH_RATE_LIMIT_MS, FLUSH_RATE_LIMIT_MS - timeSinceLastFlush)
       )
-      __DEBUG__ && console.debug('Scheduling flush in %f ms', flushInMs)
+      __DEBUG__ &&
+        console.debug('[nuqs queue] Scheduling flush in %f ms', flushInMs)
       setTimeout(() => {
         lastFlushTimestamp = performance.now()
         const search = flushUpdateQueue(router)
@@ -73,7 +74,7 @@ function flushUpdateQueue(router: Router) {
   // Work on a copy and clear the queue immediately
   const items = updateQueue.slice()
   updateQueue = []
-  __DEBUG__ && console.debug('Flushing queue %O', items)
+  __DEBUG__ && console.debug('[nuqs queue] Flushing queue %O', items)
 
   const options: Required<Options> = {
     history: 'replace',
@@ -105,7 +106,7 @@ function flushUpdateQueue(router: Router) {
   // otherwise using a relative URL works just fine.
   // todo: Does it when using the router with `shallow: false` on dynamic paths?
   const url = query ? `?${query}${hash}` : `${path}${hash}`
-  __DEBUG__ && console.debug('Updating url %s', url)
+  __DEBUG__ && console.debug('[nuqs queue] Updating url: %s', url)
   try {
     if (options.shallow) {
       const updateUrl =

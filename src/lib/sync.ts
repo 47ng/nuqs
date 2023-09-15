@@ -40,17 +40,16 @@ if (!patched && typeof window === 'object') {
         // Null URL is only used for state changes,
         // we're not interested in reacting to those.
         __DEBUG__ &&
-          console.debug(`history.${method}(null) (${title}) %O`, state)
+          console.debug(`[nuqs] history.${method}(null) (${title}) %O`, state)
         return original(state, title, url)
       }
       const source = title === NOSYNC_MARKER ? 'internal' : 'external'
       const search = new URL(url, location.origin).searchParams
       __DEBUG__ &&
-        console.debug(`history.${method}(${url}) (${source}) %O`, state)
+        console.debug(`[nuqs] history.${method}(${url}) (${source}) %O`, state)
       // If someone else than our hooks have updated the URL,
       // send out a signal for them to sync their internal state.
       if (source === 'external') {
-        __DEBUG__ && console.debug(`Triggering sync with ${search.toString()}`)
         // Here we're delaying application to next tick to avoid:
         // `Warning: useInsertionEffect must not schedule updates.`
         //
@@ -62,6 +61,10 @@ if (!patched && typeof window === 'object') {
         // parsed query string to the hooks so they don't need
         // to rely on the URL being up to date.
         setTimeout(() => {
+          __DEBUG__ &&
+            console.debug(
+              `[nuqs] External history.${method} call: triggering sync with ${search.toString()}`
+            )
           emitter.emit(SYNC_EVENT_KEY, search)
           emitter.emit(NOTIFY_EVENT_KEY, { search, source })
         }, 0)
