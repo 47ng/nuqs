@@ -61,6 +61,12 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
   const router = useRouter()
   // Not reactive, but available on the server and on page load
   const initialSearchParams = useSearchParams()
+  __DEBUG__ &&
+    console.debug(
+      `initialSearchParams: ${
+        initialSearchParams === null ? 'null' : initialSearchParams.toString()
+      }`
+    )
   const [internalState, setInternalState] = React.useState<V>(() => {
     if (typeof window !== 'object') {
       // SSR
@@ -69,16 +75,29 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
     // Components mounted after page load must use the current URL value
     return parseMap(keyMap, new URLSearchParams(window.location.search))
   })
+  __DEBUG__ &&
+    console.debug(
+      `render \`${Object.keys(keyMap).join(',')}\`: %O`,
+      internalState
+    )
 
   // Sync all hooks together & with external URL changes
   React.useInsertionEffect(() => {
     function syncFromURL(search: URLSearchParams) {
       const state = parseMap(keyMap, search)
+      __DEBUG__ &&
+        console.debug(`sync \`${Object.keys(keyMap).join(',')}\`: %O`, state)
       setInternalState(state)
     }
     const handlers = Object.keys(keyMap).reduce((handlers, key) => {
       handlers[key as keyof V] = (value: any) => {
         const { defaultValue } = keyMap[key]
+        __DEBUG__ &&
+          console.debug(
+            `Cross-hook syncing \`${key}\`: %O (default: %O)`,
+            value,
+            defaultValue
+          )
         setInternalState(state => ({
           ...state,
           [key]: value ?? defaultValue ?? null
@@ -88,11 +107,13 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
     }, {} as Record<keyof V, any>)
 
     for (const key of Object.keys(keyMap)) {
+      __DEBUG__ && console.debug(`Subscribing to sync for \`${key}\``)
       emitter.on(key, handlers[key])
     }
     emitter.on(SYNC_EVENT_KEY, syncFromURL)
     return () => {
       for (const key of Object.keys(keyMap)) {
+        __DEBUG__ && console.debug(`Unsubscribing from sync for \`${key}\``)
         emitter.off(key, handlers[key])
       }
       emitter.off(SYNC_EVENT_KEY, syncFromURL)
@@ -115,6 +136,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
       } else {
         newState = stateUpdater
       }
+      __DEBUG__ && console.debug(`Setting state: %O`, newState)
       for (const [key, value] of Object.entries(newState)) {
         const { serialize } = keyMap[key]
         emitter.emit(key, value)
