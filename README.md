@@ -414,6 +414,34 @@ const search = await setCoordinates({
 })
 ```
 
+## Testing
+
+Currently, the best way to test the behaviour of your components using
+`useQueryState(s)` is end-to-end testing, with tools like Playwright or Cypress.
+
+Running components that use the Next.js router in isolation requires mocking it,
+which is being [worked on](https://github.com/scottrippey/next-router-mock/pull/103)
+for the app router.
+
+If you wish to spy on changes in the URL query string, you can use
+`subscribeToQueryUpdates`:
+
+```ts
+import { subscribeToQueryUpdates } from 'next-usequerystate'
+
+React.useEffect(
+  () =>
+    subscribeToQueryUpdates(({ search, source }) => {
+      console.log(search.toString()) // URLSearchParams
+      console.log(source) // 'internal' | 'external'
+    }),
+  // This returns an unsubscribe function
+  []
+)
+```
+
+See issue #259 for more testing-related discussions.
+
 ## Caveats
 
 Because the Next.js **pages router** is not available in an SSR context, this
