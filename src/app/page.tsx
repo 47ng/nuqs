@@ -8,6 +8,7 @@ const demos = [
   'app/server-side-parsing',
   'app/hex-colors',
   'app/compound-parsers',
+  'app/crosslink',
   // Pages router demos
   'pages/server-side-counter'
 ]
