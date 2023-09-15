@@ -19,6 +19,7 @@ const IntegrationPage = () => {
   return (
     <>
       <HydrationMarker />
+      <button onClick={() => setState({ string: 'Hello' })}>Set string</button>
       <button onClick={() => setState({ int: 42 })}>Set int</button>
       <button onClick={() => setState({ float: 3.14159 })}>Set float</button>
       <button onClick={() => setState(old => ({ bool: !old.bool }))}>
