@@ -5,13 +5,14 @@ import { NOSYNC_MARKER } from './sync'
 // Safari remains annoying with at most 100 calls in 30 seconds. #wontfix
 const FLUSH_RATE_LIMIT_MS = 50
 
-type UpdateQueueItem = {
-  key: string
-  value: string | null
-  options: Options
+type UpdateMap = Map<string, string | null>
+const updateQueue: UpdateMap = new Map()
+const queueOptions: Required<Options> = {
+  history: 'replace',
+  scroll: false,
+  shallow: true
 }
 
-let updateQueue: UpdateQueueItem[] = []
 let lastFlushTimestamp = 0
 let flushPromiseCache: Promise<URLSearchParams> | null = null
 
@@ -21,13 +22,17 @@ export function enqueueQueryStringUpdate<Value>(
   serialize: (value: Value) => string,
   options: Options
 ) {
-  const queueItem: UpdateQueueItem = {
-    key,
-    value: value === null ? null : serialize(value),
-    options
+  updateQueue.set(key, value === null ? null : serialize(value))
+  // Any item can override an option for the whole batch of updates
+  if (options.history === 'push') {
+    queueOptions.history = 'push'
   }
-  __DEBUG__ && console.debug('[nuqs queue] Pushing to queue %O', queueItem)
-  updateQueue.push(queueItem)
+  if (options.scroll) {
+    queueOptions.scroll = true
+  }
+  if (options.shallow === false) {
+    queueOptions.shallow = false
+  }
 }
 
 /**
@@ -68,36 +73,27 @@ export function flushToURL(router: Router) {
 
 function flushUpdateQueue(router: Router) {
   const search = new URLSearchParams(window.location.search)
-  if (updateQueue.length === 0) {
+  if (updateQueue.size === 0) {
     return search
   }
   // Work on a copy and clear the queue immediately
-  const items = updateQueue.slice()
-  updateQueue = []
+  const items = Array.from(updateQueue.entries())
+  const options = { ...queueOptions }
+  // Restore defaults
+  queueOptions.history = 'replace'
+  queueOptions.scroll = false
+  queueOptions.shallow = true
+  updateQueue.clear()
   __DEBUG__ && console.debug('[nuqs queue] Flushing queue %O', items)
 
-  const options: Required<Options> = {
-    history: 'replace',
-    scroll: false,
-    shallow: true
-  }
-  for (const item of items) {
-    if (item.value === null) {
-      search.delete(item.key)
+  for (const [key, value] of items) {
+    if (value === null) {
+      search.delete(key)
     } else {
-      search.set(item.key, item.value)
-    }
-    // Any item can override an option for the whole batch of updates
-    if (item.options.history === 'push') {
-      options.history = 'push'
-    }
-    if (item.options.scroll) {
-      options.scroll = true
-    }
-    if (item.options.shallow === false) {
-      options.shallow = false
+      search.set(key, value)
     }
   }
+
   const query = search.toString()
   const path = window.location.pathname
   const hash = window.location.hash

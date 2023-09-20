@@ -45,7 +45,16 @@ export function ServerSideParsingDemoClient({
           }
         }}
       >
-        Burst of 10
+        Burst of 10 (async)
+      </button>
+      <button
+        onClick={() => {
+          for (let i = 0; i < 10; ++i) {
+            setCounter(x => x + 1)
+          }
+        }}
+      >
+        Burst of 10 (sync)
       </button>
       <button onClick={() => setCounter(null)}>Reset</button>
       <p>Client side counter: {counter}</p>
