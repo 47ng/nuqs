@@ -34,14 +34,14 @@
   "types": "dist/index.d.ts",
   "exports": {
     ".": {
+      "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
-      "require": "./dist/index.cjs",
-      "types": "./dist/index.d.ts"
+      "require": "./dist/index.cjs"
     },
     "./parsers": {
+      "types": "./dist/parsers.d.ts",
       "import": "./dist/parsers.js",
-      "require": "./dist/parsers.cjs",
-      "types": "./dist/parsers.d.ts"
+      "require": "./dist/parsers.cjs"
     }
   },
   "scripts": {
