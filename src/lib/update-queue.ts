@@ -35,6 +35,10 @@ export function enqueueQueryStringUpdate<Value>(
   }
 }
 
+export function getInitialStateFromQueue(key: string) {
+  return updateQueue.get(key) ?? null
+}
+
 /**
  * Eventually flush the update queue to the URL query string.
  *
