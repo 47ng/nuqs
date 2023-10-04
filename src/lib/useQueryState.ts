@@ -3,7 +3,11 @@ import React from 'react'
 import type { Options } from './defs'
 import type { Parser } from './parsers'
 import { SYNC_EVENT_KEY, emitter } from './sync'
-import { enqueueQueryStringUpdate, flushToURL } from './update-queue'
+import {
+  enqueueQueryStringUpdate,
+  flushToURL,
+  getInitialStateFromQueue
+} from './update-queue'
 
 export interface UseQueryStateOptions<T> extends Parser<T>, Options {}
 
@@ -216,12 +220,14 @@ export function useQueryState<T = string>(
       }`
     )
   const [internalState, setInternalState] = React.useState<T | null>(() => {
-    const value =
+    const queueValue = getInitialStateFromQueue(key)
+    const urlValue =
       typeof window !== 'object'
         ? // SSR
           initialSearchParams?.get(key) ?? null
         : // Components mounted after page load must use the current URL value
           new URLSearchParams(window.location.search).get(key) ?? null
+    const value = queueValue ?? urlValue
     return value === null ? null : parse(value)
   })
   const stateRef = React.useRef(internalState)

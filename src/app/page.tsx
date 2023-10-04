@@ -10,6 +10,7 @@ const demos = [
   'app/hex-colors',
   'app/compound-parsers',
   'app/crosslink',
+  'app/repro-359',
   // Pages router demos
   'pages/server-side-counter'
 ]
