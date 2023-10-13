@@ -53,7 +53,7 @@ jobs:
       - name: Build package
         run: pnpm build
       - name: Semantic Release
-        run: semantic-release
+        run: ../../node_modules/.bin/semantic-release
         working-directory: packages/next-usequerystate
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
