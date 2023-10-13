@@ -23,9 +23,9 @@ jobs:
         run: pnpm install
       - name: Run integration tests
         run: pnpm run ci
-      - uses: coverallsapp/github-action@3dfc5567390f6fa9267c0ee9c251e4c8c3f18949
-        name: Report code coverage
-        continue-on-error: true
+      # - uses: coverallsapp/github-action@3dfc5567390f6fa9267c0ee9c251e4c8c3f18949
+      #   name: Report code coverage
+      #   continue-on-error: true
       - uses: 47ng/actions-slack-notify@main
         name: Notify on Slack
         if: always()
