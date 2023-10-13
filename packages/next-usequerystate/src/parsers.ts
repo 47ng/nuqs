@@ -161,7 +161,13 @@ export const parseAsBoolean = createParser({
  * and returned as a Date object.
  */
 export const parseAsTimestamp = createParser({
-  parse: v => new Date(parseInt(v)),
+  parse: v => {
+    const ms = parseInt(v)
+    if (Number.isNaN(ms)) {
+      return null
+    }
+    return new Date(ms)
+  },
   serialize: (v: Date) => v.valueOf().toString()
 })
 
@@ -170,7 +176,13 @@ export const parseAsTimestamp = createParser({
  * and returned as a Date object.
  */
 export const parseAsIsoDateTime = createParser({
-  parse: v => new Date(v),
+  parse: v => {
+    const date = new Date(v)
+    if (Number.isNaN(date.valueOf())) {
+      return null
+    }
+    return date
+  },
   serialize: (v: Date) => v.toISOString()
 })
 

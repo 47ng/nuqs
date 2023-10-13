@@ -48,7 +48,9 @@
   "scripts": {
     "dev": "tsup --format esm --watch --external=react",
     "build": "NODE_ENV=production tsup --clean --format esm,cjs --external=react",
-    "test": "tsd",
+    "test": "run-p test:*",
+    "test:types": "tsd",
+    "test:unit": "vitest run",
     "prepack": "cp -f ../../README.md ../../LICENSE ."
   },
   "peerDependencies": {
@@ -71,12 +73,9 @@
     "ts-node": "^10.9.1",
     "tsd": "^0.29.0",
     "tsup": "^7.2.0",
-    "typescript": "^5.2.2"
-  },
-  "jest": {
-    "verbose": true,
-    "preset": "ts-jest/presets/js-with-ts",
-    "testEnvironment": "jsdom"
+    "typescript": "^5.2.2",
+    "vite": "^4.4.11",
+    "vitest": "^0.34.6"
   },
   "tsd": {
     "directory": "src/tests"
