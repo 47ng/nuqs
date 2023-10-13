@@ -48,7 +48,8 @@
   "scripts": {
     "dev": "tsup --format esm --watch --external=react",
     "build": "NODE_ENV=production tsup --clean --format esm,cjs --external=react",
-    "test": "tsd"
+    "test": "tsd",
+    "prepack": "cp -f ../../README.md ../../LICENSE ."
   },
   "peerDependencies": {
     "next": "^13.4"
