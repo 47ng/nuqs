@@ -58,7 +58,7 @@ jobs:
       - name: Install dependencies
         run: pnpm install --ignore-scripts --frozen-lockfile
       - name: Build package
-        run: pnpm build
+        run: pnpm build --filter next-usequerystate
       - name: Semantic Release
         run: ../../node_modules/.bin/semantic-release
         working-directory: packages/next-usequerystate
