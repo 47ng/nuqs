@@ -19,6 +19,11 @@ jobs:
         with:
           node-version: lts/*
           cache: pnpm
+      - uses: actions/cache@704facf57e6136b1bc63b828d79edcd491f0ee84
+        name: Turbo Cache
+        with:
+          path: node_modules/.cache/turbo
+          key: turbo-${{ github.sha }}
       - name: Install dependencies
         run: pnpm install
       - name: Run integration tests
@@ -48,6 +53,8 @@ jobs:
         with:
           node-version: lts/*
           cache: pnpm
+      # Note: we do not use an external Turbo cache for publishing
+      # to prevent against possible cache collision attacks.
       - name: Install dependencies
         run: pnpm install --ignore-scripts --frozen-lockfile
       - name: Build package
