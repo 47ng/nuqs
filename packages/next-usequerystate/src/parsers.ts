@@ -79,9 +79,9 @@ export function createParser<T>(parser: Required<Parser<T>>): ParserBuilder<T> {
       if (Array.isArray(value)) {
         // Follow the spec:
         // https://url.spec.whatwg.org/#dom-urlsearchparams-get
-        // if (value[0] === undefined) {
-        //   return null
-        // }
+        if (value[0] === undefined) {
+          return null
+        }
         str = value[0]
       }
       if (typeof value === 'string') {
