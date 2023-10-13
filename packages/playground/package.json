@@ -1,0 +1,37 @@
+{
+  "name": "next-usequerystate-playground",
+  "version": "0.0.0-internal",
+  "description": "Examples and demos for next-usequerystate",
+  "license": "MIT",
+  "private": true,
+  "author": {
+    "name": "François Best",
+    "email": "contact@francoisbest.com",
+    "url": "https://francoisbest.com"
+  },
+  "type": "module",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "pretest": "cypress install",
+    "test": "run-p --race start cypress:run",
+    "cypress:open": "cypress open",
+    "cypress:run": "cypress run --headless"
+  },
+  "dependencies": {
+    "next": "^13.5",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "next-usequerystate": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^20.6.3",
+    "@types/react": "^18.2.22",
+    "@types/react-dom": "^18.2.8",
+    "@types/webpack": "^5.28.3",
+    "cypress": "^13.2.0",
+    "npm-run-all": "^4.1.5",
+    "typescript": "^5.2.2"
+  }
+}

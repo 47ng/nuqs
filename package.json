@@ -1,7 +1,7 @@
 {
-  "name": "next-usequerystate",
-  "version": "0.0.0-semantically-released",
-  "description": "useQueryState hook for Next.js - Like React.useState, but stored in the URL query string",
+  "name": "next-usequerystate-monorepo",
+  "version": "0.0.0",
+  "private": true,
   "license": "MIT",
   "author": {
     "name": "François Best",
@@ -12,93 +12,21 @@
     "type": "git",
     "url": "https://github.com/47ng/next-usequerystate"
   },
-  "keywords": [
-    "nextjs",
-    "router",
-    "url",
-    "query-string",
-    "react-hook",
-    "useState"
-  ],
-  "publishConfig": {
-    "access": "public"
-  },
-  "files": [
-    "dist/",
-    "parsers.d.ts"
-  ],
-  "type": "module",
-  "sideEffects": true,
-  "main": "dist/index.cjs",
-  "module": "dist/index.js",
-  "types": "dist/index.d.ts",
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js",
-      "require": "./dist/index.cjs"
-    },
-    "./parsers": {
-      "types": "./dist/parsers.d.ts",
-      "import": "./dist/parsers.js",
-      "require": "./dist/parsers.cjs"
-    }
-  },
   "scripts": {
-    "dev": "run-p dev:*",
-    "dev:build": "tsup --format esm --dts --watch",
-    "dev:next": "next dev",
-    "build": "NODE_ENV=production tsup --clean --dts --format esm,cjs",
-    "test": "run-p test:types test:e2e:ci",
-    "test:types": "tsd",
-    "test:e2e:ci": "run-p --race test:e2e:next:start cypress:run",
-    "test:e2e:dev": "run-p --race dev:next cypress:open",
-    "test:e2e:next:build": "next build",
-    "test:e2e:next:start": "next start",
-    "cypress:install": "cypress install",
-    "cypress:open": "cypress open",
-    "cypress:run": "cypress run --headless",
-    "ci": "run-s build test:types",
-    "e2e": "run-s cypress:install test:e2e:next:build test:e2e:ci",
+    "dev": "FORCE_COLOR=3 turbo run dev",
+    "build": "FORCE_COLOR=3 turbo run build",
+    "test": "FORCE_COLOR=3 turbo run test",
+    "ci": "FORCE_COLOR=3 turbo run build test",
     "prepare": "husky install"
-  },
-  "peerDependencies": {
-    "next": "^13.4",
-    "react": "*",
-    "react-dom": "*"
-  },
-  "dependencies": {
-    "mitt": "^3.0.1"
   },
   "devDependencies": {
     "@commitlint/config-conventional": "^17.7.0",
-    "@types/jest": "^29.5.5",
-    "@types/node": "^20.6.3",
-    "@types/react": "^18.2.22",
-    "@types/react-dom": "^18.2.8",
-    "@types/webpack": "^5.28.3",
     "commitlint": "^17.7.2",
-    "copyfiles": "2.4.1",
-    "cypress": "^13.2.0",
     "husky": "8.x",
-    "jest": "^29.7.0",
-    "next": "^13.5",
     "npm-run-all": "^4.1.5",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "ts-jest": "^29.1.1",
-    "ts-node": "^10.9.1",
-    "tsd": "^0.29.0",
-    "tsup": "^7.2.0",
+    "semantic-release": "^22.0.5",
+    "turbo": "^1.10.15",
     "typescript": "^5.2.2"
-  },
-  "jest": {
-    "verbose": true,
-    "preset": "ts-jest/presets/js-with-ts",
-    "testEnvironment": "jsdom"
-  },
-  "tsd": {
-    "directory": "src/tests"
   },
   "prettier": {
     "arrowParens": "avoid",
