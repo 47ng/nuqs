@@ -19,15 +19,13 @@ jobs:
         with:
           node-version: lts/*
           cache: pnpm
-      - uses: actions/cache@704facf57e6136b1bc63b828d79edcd491f0ee84
-        name: Turbo Cache
-        with:
-          path: node_modules/.cache/turbo
-          key: turbo-${{ github.sha }}
       - name: Install dependencies
         run: pnpm install
       - name: Run integration tests
         run: pnpm run ci
+        env:
+          TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+          TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
       # - uses: coverallsapp/github-action@3dfc5567390f6fa9267c0ee9c251e4c8c3f18949
       #   name: Report code coverage
       #   continue-on-error: true
