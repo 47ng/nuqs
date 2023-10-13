@@ -166,9 +166,9 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
         )
       for (const [key, value] of Object.entries(newState)) {
         const config = keyMap[key]
-        if (!config) {
-          continue
-        }
+        // if (!config) {
+        //   continue
+        // }
         emitter.emit(key, value)
         __DEBUG__ &&
           console.debug(
