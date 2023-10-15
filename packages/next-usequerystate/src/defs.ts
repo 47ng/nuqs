@@ -1,4 +1,4 @@
-import { useRouter } from 'next/navigation'
+import { useRouter } from 'next/navigation.js' // https://github.com/47ng/next-usequerystate/discussions/352
 
 export type Router = ReturnType<typeof useRouter>
 
