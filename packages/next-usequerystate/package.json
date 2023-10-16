@@ -13,6 +13,7 @@
     "url": "git+https://github.com/47ng/next-usequerystate.git",
     "directory": "packages/next-usequerystate"
   },
+  "homepage": "https://next-usequerystate.vercel.app",
   "keywords": [
     "nextjs",
     "router",
