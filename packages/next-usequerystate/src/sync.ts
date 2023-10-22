@@ -40,12 +40,14 @@ if (!patched && typeof window === 'object') {
         // Null URL is only used for state changes,
         // we're not interested in reacting to those.
         __DEBUG__ &&
+          performance.mark(`[nuqs] history.${method}(null) (${title})`) &&
           console.debug(`[nuqs] history.${method}(null) (${title}) %O`, state)
         return original(state, title, url)
       }
       const source = title === NOSYNC_MARKER ? 'internal' : 'external'
       const search = new URL(url, location.origin).searchParams
       __DEBUG__ &&
+        performance.mark(`[nuqs] history.${method}(${url}) (${source})`) &&
         console.debug(`[nuqs] history.${method}(${url}) (${source}) %O`, state)
       // If someone else than our hooks have updated the URL,
       // send out a signal for them to sync their internal state.
@@ -62,6 +64,9 @@ if (!patched && typeof window === 'object') {
         // to rely on the URL being up to date.
         setTimeout(() => {
           __DEBUG__ &&
+            performance.mark(
+              `[nuqs] External history.${method} call: triggering sync with ${search.toString()}`
+            ) &&
             console.debug(
               `[nuqs] External history.${method} call: triggering sync with ${search.toString()}`
             )

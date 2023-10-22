@@ -442,6 +442,24 @@ React.useEffect(
 
 See issue #259 for more testing-related discussions.
 
+## Debugging
+
+You can enable debug logs by importing from `next-usequerystate/debug`:
+
+```ts
+import { useQueryState } from 'next-usequerystate/debug'
+
+// API is unchanged.
+// Parsers can still be imported server-side from `next-usequerystate/parsers`
+// as they don't print out logs.
+```
+
+Log lines will be prefixed with `[nuqs]` for `useQueryState` and `[nuq+]` for
+`useQueryStates`.
+
+User timings markers are also recorded, for advanced performance analysis using
+your browser's devtools.
+
 ## Caveats
 
 Because the Next.js **pages router** is not available in an SSR context, this

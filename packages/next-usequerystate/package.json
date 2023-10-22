@@ -44,11 +44,18 @@
       "types": "./dist/parsers.d.ts",
       "import": "./dist/parsers.js",
       "require": "./dist/parsers.cjs"
+    },
+    "./debug": {
+      "types": "./dist/debug/index.d.ts",
+      "import": "./dist/debug/index.js",
+      "require": "./dist/debug/index.cjs"
     }
   },
   "scripts": {
     "dev": "tsup --format esm --watch --external=react",
-    "build": "NODE_ENV=production tsup --clean --format esm,cjs --external=react",
+    "build": "run-p build:*",
+    "build:prod": "NODE_ENV=production tsup --clean --external=react",
+    "build:debug": "NODE_ENV=development tsup --clean --external=react",
     "test": "run-p test:*",
     "test:types": "tsd",
     "test:unit": "vitest run",
