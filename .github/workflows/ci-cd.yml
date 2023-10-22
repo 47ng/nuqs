@@ -2,6 +2,8 @@ name: CI/CD
 
 on:
   push:
+  pull_request:
+    types: [opened, synchronize, reopened]
 
 env:
   FORCE_COLOR: 3 # Diplay chalk colors
