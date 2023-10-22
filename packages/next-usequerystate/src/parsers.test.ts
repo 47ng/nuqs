@@ -1,9 +1,11 @@
 import { describe, expect, test } from 'vitest'
 import {
+  parseAsArrayOf,
   parseAsFloat,
   parseAsHex,
   parseAsInteger,
   parseAsIsoDateTime,
+  parseAsString,
   parseAsTimestamp
 } from './parsers'
 
@@ -45,5 +47,11 @@ describe('parsers', () => {
     expect(parseAsIsoDateTime.parse(moment.slice(0, 16) + 'Z')).toStrictEqual(
       ref
     )
+  })
+  test('parseAsArrayOf', () => {
+    const parser = parseAsArrayOf(parseAsString)
+    expect(parser.serialize([])).toBe('')
+    // It encodes its separator
+    expect(parser.serialize(['a', ',', 'b'])).toBe('a,%2C,b')
   })
 })

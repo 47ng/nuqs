@@ -1,5 +1,6 @@
 import type { Options, Router } from './defs'
 import { NOSYNC_MARKER } from './sync'
+import { renderQueryString } from './url-encoding'
 
 // 50ms between calls to the history API seems to satisfy Chrome and Firefox.
 // Safari remains annoying with at most 100 calls in 30 seconds. #wontfix
@@ -110,7 +111,7 @@ function flushUpdateQueue(router: Router) {
     }
   }
 
-  const query = search.toString()
+  const query = renderQueryString(search)
   const path = window.location.pathname
   const hash = window.location.hash
 

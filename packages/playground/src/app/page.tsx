@@ -9,6 +9,7 @@ const demos = [
   'app/server-side-parsing',
   'app/hex-colors',
   'app/compound-parsers',
+  'app/custom-parser',
   'app/crosslink',
   'app/repro-359',
   // Pages router demos

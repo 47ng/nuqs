@@ -264,6 +264,7 @@ export function parseAsArrayOf<ItemType>(
   itemParser: Parser<ItemType>,
   separator = ','
 ) {
+  const encodedSeparator = encodeURIComponent(separator)
   // todo: Handle default item values and make return type non-nullable
   return createParser({
     parse: query => {
@@ -274,19 +275,19 @@ export function parseAsArrayOf<ItemType>(
       }
       return query
         .split(separator)
-        .map(item => decodeURIComponent(item))
-        .map(itemParser.parse)
+        .map(item =>
+          itemParser.parse(item.replaceAll(encodedSeparator, separator))
+        )
         .filter(value => value !== null && value !== undefined) as ItemType[]
     },
     serialize: values =>
       values
         .map<string>(value => {
-          if (itemParser.serialize) {
-            return itemParser.serialize(value)
-          }
-          return `${value}`
+          const str = itemParser.serialize
+            ? itemParser.serialize(value)
+            : String(value)
+          return str.replaceAll(separator, encodedSeparator)
         })
-        .map(encodeURIComponent)
         .join(separator)
   })
 }

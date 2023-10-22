@@ -2,7 +2,7 @@
 
 import { parseAsArrayOf, parseAsJson, useQueryState } from 'next-usequerystate'
 
-const escaped = '-_.!~*\'()?#/&,"`<>{}[]@$£%+=:;'
+const escaped = '-_.!~*\'()?#/&,"`<>{}[]|•@$£%+=:;'
 
 export default function CompoundParsersDemo() {
   const [code, setCode] = useQueryState(
@@ -11,7 +11,7 @@ export default function CompoundParsersDemo() {
   )
   const [array, setArray] = useQueryState(
     'array',
-    parseAsArrayOf(parseAsJson<any>()).withDefault([])
+    parseAsArrayOf(parseAsJson<any>(), ';').withDefault([])
   )
   return (
     <>
