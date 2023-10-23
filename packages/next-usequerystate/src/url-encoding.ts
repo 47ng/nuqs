@@ -20,5 +20,12 @@ export function encodeQueryValue(input: string) {
       // Encode other URI-reserved characters
       .replace(/#/g, '%23')
       .replace(/&/g, '%26')
+      // Encode characters that break URL detection on some platforms
+      // and would drop the tail end of the querystring:
+      .replace(/"/g, '%22')
+      .replace(/'/g, '%27')
+      .replace(/`/g, '%60')
+      .replace(/</g, '%3C')
+      .replace(/>/g, '%3E')
   )
 }

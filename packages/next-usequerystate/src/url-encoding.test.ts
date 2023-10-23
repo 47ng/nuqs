@@ -17,12 +17,19 @@ describe('url-encoding/encodeQueryValue', () => {
   test('Percent signs are encoded', () => {
     expect(encodeQueryValue('%')).toBe(encodeURIComponent('%'))
   })
+  test('Characters that break URLs are encoded', () => {
+    expect(encodeQueryValue('"')).toEqual(encodeURIComponent('"'))
+    expect(encodeQueryValue("'")).toEqual('%27') // encodeURIComponent does not encode single quotes
+    expect(encodeQueryValue('`')).toEqual(encodeURIComponent('`'))
+    expect(encodeQueryValue('<')).toEqual(encodeURIComponent('<'))
+    expect(encodeQueryValue('>')).toEqual(encodeURIComponent('>'))
+  })
   test('Alphanumericals are passed through', () => {
     const input = 'abcdefghijklmnopqrstuvwxyz0123456789'
     expect(encodeQueryValue(input)).toBe(input)
   })
   test('Other special characters are passed through', () => {
-    const input = '-._~!$\'()*,;=:@"/?`[]{}\\|<>^'
+    const input = '-._~!$()*,;=:@/?[]{}\\|^'
     expect(encodeQueryValue(input)).toBe(input)
   })
   test('practical use-cases', () => {
@@ -47,14 +54,12 @@ describe('url-encoding/renderQueryString', () => {
   })
   test('encoding', () => {
     const search = new URLSearchParams()
-    search.set('test', '-._~!$\'()*,;=:@"/?`[]{}\\|<>^')
-    expect(renderQueryString(search)).toBe(
-      'test=-._~!$\'()*,;=:@"/?`[]{}\\|<>^'
-    )
+    search.set('test', '-._~!$()*,;=:@/?[]{}\\|^')
+    expect(renderQueryString(search)).toBe('test=-._~!$()*,;=:@/?[]{}\\|^')
   })
   test('decoding', () => {
     const search = new URLSearchParams()
-    const value = '-._~!$\'()*,;=:@"/?`[]{}\\|<>^'
+    const value = '!"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~'
     search.set('test', value)
     const url = new URL('http://example.com/?' + renderQueryString(search))
     expect(url.searchParams.get('test')).toBe(value)
@@ -94,4 +99,15 @@ describe('url-encoding/renderQueryString', () => {
       'name=John+Doe&email=foo.bar%2Begg-spam@example.com&message=Hello,+world!+%23greeting'
     )
   })
+})
+
+test.skip('encodeURI vs encodeURIComponent vs custom encoding', () => {
+  const chars = '!"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~'.split('')
+  const table = chars.map(char => ({
+    char,
+    encodeQueryValue: encodeQueryValue(char),
+    encodeURI: encodeURI(char),
+    encodeURIComponent: encodeURIComponent(char)
+  }))
+  console.table(table)
 })
