@@ -99,6 +99,24 @@ describe('url-encoding/renderQueryString', () => {
       'name=John+Doe&email=foo.bar%2Begg-spam@example.com&message=Hello,+world!+%23greeting'
     )
   })
+  test('practical use-cases', () => {
+    // https://github.com/47ng/next-usequerystate/issues/355
+    {
+      const value =
+        'leftOfBicycleLane:car_lanes,curb|pavementHasShops:true|pavementWidth:narrow'
+      const search = new URLSearchParams()
+      search.set('filter', value)
+      const query = renderQueryString(search)
+      expect(query.slice('filter='.length)).toBe(value)
+    }
+    {
+      const url = new URL(
+        'https://radverkehrsatlas.de/regionen/trto?lat=53.6774&lng=13.267&zoom=10.6&theme=fromTo&bg=default&config=!(i~fromTo~topics~!(i~shops~s~!(i~hidden~a~_F)(i~default~a))(i~education~s~!(i~hidden~a)(i~default~a~_F))(i~places~s~!(i~hidden~a~_F)(i~default~a)(i~circle~a~_F))(i~buildings~s~!(i~hidden~a)(i~default~a~_F))(i~landuse~s~!(i~hidden~a~_F)(i~default~a))(i~barriers~s~!(i~hidden~a~_F)(i~default~a))(i~boundaries~s~!(i~hidden~a)(i~default~a~_F)(i~level-8~a~_F)(i~level-9-10~a~_F)))(i~bikelanes~topics~!(i~bikelanes~s~!(i~hidden~a~_F)(i~default~a)(i~verification~a~_F)(i~completeness~a~_F))(i~bikelanesPresence*_legacy~s~!(i~hidden~a)(i~default~a~_F))(i~places~s~!(i~hidden~a~_F)(i~default~a)(i~circle~a~_F))(i~landuse~s~!(i~hidden~a)(i~default~a~_F)))(i~roadClassification~topics~!(i~roadClassification*_legacy~s~!(i~hidden~a~_F)(i~default~a)(i~oneway~a~_F))(i~bikelanes~s~!(i~hidden~a)(i~default~a~_F)(i~verification~a~_F)(i~completeness~a~_F))(i~maxspeed*_legacy~s~!(i~hidden~a)(i~default~a~_F)(i~details~a~_F))(i~surfaceQuality*_legacy~s~!(i~hidden~a)(i~default~a~_F)(i~bad~a~_F)(i~completeness~a~_F)(i~freshness~a~_F))(i~places~s~!(i~hidden~a~_F)(i~default~a)(i~circle~a~_F))(i~landuse~s~!(i~hidden~a)(i~default~a~_F)))(i~lit~topics~!(i~lit*_legacy~s~!(i~hidden~a~_F)(i~default~a)(i~completeness~a~_F)(i~verification~a~_F)(i~freshness~a~_F))(i~places~s~!(i~hidden~a)(i~default~a~_F)(i~circle~a~_F))(i~landuse~s~!(i~hidden~a)(i~default~a~_F)))~'
+      )
+      const search = renderQueryString(url.searchParams)
+      expect(search).toBe(url.search.slice(1)) // drop the leading ?
+    }
+  })
 })
 
 test.skip('encodeURI vs encodeURIComponent vs custom encoding', () => {
