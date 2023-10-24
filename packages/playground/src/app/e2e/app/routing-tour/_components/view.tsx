@@ -1,7 +1,7 @@
 'use client'
 
-import { useQueryState } from 'next-usequerystate'
 import Link from 'next/link'
+import { useQueryState } from 'src/nuqs'
 import { counterParser, fromParser } from './parsers'
 
 type RoutingTourViewProps = {

@@ -1,8 +1,8 @@
 'use client'
 
-import { subscribeToQueryUpdates } from 'next-usequerystate'
 import { useSearchParams } from 'next/navigation'
 import React from 'react'
+import { subscribeToQueryUpdates } from 'src/nuqs'
 
 export const QuerySpy: React.FC = () => {
   const initialSearchParams = useSearchParams()

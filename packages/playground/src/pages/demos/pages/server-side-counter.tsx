@@ -1,5 +1,5 @@
 import type { GetServerSideProps, InferGetServerSidePropsType } from 'next'
-import { parseAsInteger, useQueryState } from 'next-usequerystate'
+import { parseAsInteger, useQueryState } from 'src/nuqs'
 import { DemoPageLayout } from '../../../components/demo-page-layout'
 
 export default function ServerSideCounterPage({

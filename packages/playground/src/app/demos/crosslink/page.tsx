@@ -1,11 +1,7 @@
 'use client'
 
-import {
-  parseAsString,
-  useQueryState,
-  useQueryStates
-} from 'next-usequerystate'
 import Link from 'next/link'
+import { parseAsString, useQueryState, useQueryStates } from 'src/nuqs'
 
 const parser = parseAsString.withDefault('')
 

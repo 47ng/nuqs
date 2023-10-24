@@ -1,15 +1,15 @@
 'use client'
 
+import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import React from 'react'
 import {
   parseAsBoolean,
   parseAsFloat,
   parseAsInteger,
   parseAsString,
   useQueryState
-} from 'next-usequerystate'
-import Link from 'next/link'
-import { useRouter } from 'next/navigation'
-import React from 'react'
+} from 'src/nuqs'
 
 export default function IntegrationPage() {
   const [numPanes, setNumPanes] = React.useState(1)

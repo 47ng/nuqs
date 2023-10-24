@@ -6,7 +6,7 @@ import {
   parseAsInteger,
   parseAsString,
   useQueryStates
-} from 'next-usequerystate'
+} from 'src/nuqs'
 
 const IntegrationPage = () => {
   const [state, setState] = useQueryStates({
