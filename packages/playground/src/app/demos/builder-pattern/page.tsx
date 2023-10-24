@@ -1,6 +1,6 @@
 'use client'
 
-import { parseAsInteger, useQueryState } from 'next-usequerystate'
+import { parseAsInteger, useQueryState } from 'src/nuqs'
 
 export default function BuilderPatternDemoPage() {
   const [counter, setCounter] = useQueryState(

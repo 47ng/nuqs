@@ -1,11 +1,11 @@
 'use client'
 
+import React from 'react'
 import {
   parseAsInteger,
   subscribeToQueryUpdates,
   useQueryState
-} from 'next-usequerystate'
-import React from 'react'
+} from 'src/nuqs'
 
 export default function BuilderPatternDemoPage() {
   const [counter, setCounter] = useQueryState(
