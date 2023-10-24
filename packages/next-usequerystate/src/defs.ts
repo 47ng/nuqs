@@ -30,6 +30,17 @@ export type Options = {
    * the updated querystring.
    */
   shallow?: boolean
+
+  /**
+   * Maximum amount of time (ms) to wait between updates of the URL query string.
+   *
+   * This is to alleviate rate-limiting of the Web History API in browsers,
+   * and defaults to 50ms. Safari requires a much higher value of around 340ms.
+   *
+   * Note: the value will be limited to a minimum of 50ms, anything lower
+   * will not have any effect.
+   */
+  throttleMs?: number
 }
 
 export type Nullable<T> = {

@@ -5,14 +5,15 @@ import { renderQueryString } from './url-encoding'
 
 // 50ms between calls to the history API seems to satisfy Chrome and Firefox.
 // Safari remains annoying with at most 100 calls in 30 seconds. #wontfix
-const FLUSH_RATE_LIMIT_MS = 50
+export const FLUSH_RATE_LIMIT_MS = 50
 
 type UpdateMap = Map<string, string | null>
 const updateQueue: UpdateMap = new Map()
 const queueOptions: Required<Options> = {
   history: 'replace',
   scroll: false,
-  shallow: true
+  shallow: true,
+  throttleMs: FLUSH_RATE_LIMIT_MS
 }
 
 let lastFlushTimestamp = 0
@@ -37,6 +38,10 @@ export function enqueueQueryStringUpdate<Value>(
   if (options.shallow === false) {
     queueOptions.shallow = false
   }
+  queueOptions.throttleMs = Math.max(
+    options.throttleMs ?? FLUSH_RATE_LIMIT_MS,
+    queueOptions.throttleMs
+  )
 }
 
 export function getInitialStateFromQueue(key: string) {
@@ -56,14 +61,7 @@ export function getInitialStateFromQueue(key: string) {
 export function flushToURL(router: Router) {
   if (flushPromiseCache === null) {
     flushPromiseCache = new Promise<URLSearchParams>((resolve, reject) => {
-      const now = performance.now()
-      const timeSinceLastFlush = now - lastFlushTimestamp
-      const flushInMs = Math.max(
-        0,
-        Math.min(FLUSH_RATE_LIMIT_MS, FLUSH_RATE_LIMIT_MS - timeSinceLastFlush)
-      )
-      debug('[nuqs queue] Scheduling flush in %f ms', flushInMs)
-      setTimeout(() => {
+      function flushNow() {
         lastFlushTimestamp = performance.now()
         const search = flushUpdateQueue(router)
         if (!search) {
@@ -72,7 +70,31 @@ export function flushToURL(router: Router) {
           resolve(search)
         }
         flushPromiseCache = null
-      }, flushInMs)
+      }
+      // We run the logic on the next event loop tick to allow
+      // multiple query updates to set their own throttleMs value.
+      function runOnNextTick() {
+        const now = performance.now()
+        const timeSinceLastFlush = now - lastFlushTimestamp
+        const throttleMs = queueOptions.throttleMs
+        const flushInMs = Math.max(
+          0,
+          Math.min(throttleMs, throttleMs - timeSinceLastFlush)
+        )
+        debug(
+          '[nuqs queue] Scheduling flush in %f ms. Throttled at %f ms',
+          flushInMs,
+          throttleMs
+        )
+        if (flushInMs === 0) {
+          // Since we're already in the "next tick" from queued updates,
+          // no need to do setTimeout(0) here.
+          flushNow()
+        } else {
+          setTimeout(flushNow, flushInMs)
+        }
+      }
+      setTimeout(runOnNextTick, 0)
     })
   }
   return flushPromiseCache
@@ -87,10 +109,11 @@ function flushUpdateQueue(router: Router) {
   const items = Array.from(updateQueue.entries())
   const options = { ...queueOptions }
   // Restore defaults
+  updateQueue.clear()
   queueOptions.history = 'replace'
   queueOptions.scroll = false
   queueOptions.shallow = true
-  updateQueue.clear()
+  queueOptions.throttleMs = FLUSH_RATE_LIMIT_MS
   debug('[nuqs queue] Flushing queue %O', items)
   for (const [key, value] of items) {
     if (value === null) {
