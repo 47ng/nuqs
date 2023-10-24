@@ -9,6 +9,7 @@ import type { Nullable, Options } from './defs'
 import type { Parser } from './parsers'
 import { SYNC_EVENT_KEY, emitter } from './sync'
 import {
+  FLUSH_RATE_LIMIT_MS,
   enqueueQueryStringUpdate,
   flushToURL,
   getInitialStateFromQueue
@@ -59,7 +60,8 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
   {
     history = 'replace',
     scroll = false,
-    shallow = true
+    shallow = true,
+    throttleMs = FLUSH_RATE_LIMIT_MS
   }: Partial<UseQueryStatesOptions> = {}
 ): UseQueryStatesReturn<KeyMap> {
   type V = Values<KeyMap>
@@ -196,7 +198,8 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
           // Call-level options take precedence over hook declaration options.
           history: options.history ?? history,
           shallow: options.shallow ?? shallow,
-          scroll: options.scroll ?? scroll
+          scroll: options.scroll ?? scroll,
+          throttleMs: options.throttleMs ?? throttleMs
         })
       }
       return flushToURL(router)

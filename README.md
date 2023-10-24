@@ -272,6 +272,35 @@ const [state, setState] = useQueryState('foo', { scroll: true })
 setState('bar', { scroll: true })
 ```
 
+### Throttling URL updates
+
+Because of browsers rate-limiting the History API, internal updates to the
+URL are queued and throttled to a default of 50ms, which seems to satisfy
+most browsers even when sending high-frequency query updates, like binding
+to a text input or a slider.
+
+Safari's rate limits are much higher and would require a throttle of around 340ms.
+If you end up needing a longer time between updates, you can specify it in the
+options:
+
+```ts
+useQueryState('foo', {
+  // Send updates to the server maximum once every second
+  shallow: false,
+  throttleMs: 1000
+})
+
+// You can also pass the option on calls to setState:
+setState('bar', { throttleMs: 1000 })
+```
+
+> Note: the state returned by the hook is always updated instantly, to keep UI responsive.
+> Only changes to the URL, and server requests when using `shallow: false`, are throttled.
+
+If multiple hooks set different throttle values on the same event loop tick,
+the highest value will be used. Also, values lower than 50ms will be ignored,
+to avoid rate-limiting issues. [Read more](https://francoisbest.com/posts/2023/storing-react-state-in-the-url-with-nextjs#batching--throttling).
+
 ## Configuring parsers, default value & options
 
 You can use a builder pattern to facilitate specifying all of those things:
