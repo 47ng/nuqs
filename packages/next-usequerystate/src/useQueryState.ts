@@ -5,6 +5,7 @@ import type { Options } from './defs'
 import type { Parser } from './parsers'
 import { SYNC_EVENT_KEY, emitter } from './sync'
 import {
+  FLUSH_RATE_LIMIT_MS,
   enqueueQueryStringUpdate,
   flushToURL,
   getInitialStateFromQueue
@@ -199,6 +200,7 @@ export function useQueryState<T = string>(
     history = 'replace',
     shallow = true,
     scroll = false,
+    throttleMs = FLUSH_RATE_LIMIT_MS,
     parse = x => x as unknown as T,
     serialize = String,
     defaultValue = undefined
@@ -206,6 +208,7 @@ export function useQueryState<T = string>(
     history: 'replace',
     scroll: false,
     shallow: true,
+    throttleMs: FLUSH_RATE_LIMIT_MS,
     parse: x => x as unknown as T,
     serialize: String,
     defaultValue: undefined
@@ -268,11 +271,12 @@ export function useQueryState<T = string>(
         // Call-level options take precedence over hook declaration options.
         history: options.history ?? history,
         shallow: options.shallow ?? shallow,
-        scroll: options.scroll ?? scroll
+        scroll: options.scroll ?? scroll,
+        throttleMs: options.throttleMs ?? throttleMs
       })
       return flushToURL(router)
     },
-    [key, history, shallow, scroll]
+    [key, history, shallow, scroll, throttleMs]
   )
   return [internalState ?? defaultValue ?? null, update]
 }
