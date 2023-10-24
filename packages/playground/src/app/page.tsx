@@ -13,6 +13,7 @@ const demos = [
   'app/pretty-urls',
   'app/server-side-parsing',
   'app/subscribeToQueryUpdates',
+  'app/throttling',
   'app/repro-359',
   'app/repro-376',
   // Pages router demos
