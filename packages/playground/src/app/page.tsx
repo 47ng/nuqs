@@ -3,15 +3,16 @@ import Link from 'next/link'
 const demos = [
   // App router demos
   'app/basic-counter',
-  'app/builder-pattern',
-  'app/subscribeToQueryUpdates',
   'app/batching',
-  'app/server-side-parsing',
+  'app/builder-pattern',
+  'app/compound-parsers',
+  'app/crosslink',
+  'app/custom-parser',
+  'app/debug-release-interop',
   'app/hex-colors',
   'app/pretty-urls',
-  'app/compound-parsers',
-  'app/custom-parser',
-  'app/crosslink',
+  'app/server-side-parsing',
+  'app/subscribeToQueryUpdates',
   'app/repro-359',
   'app/repro-376',
   // Pages router demos

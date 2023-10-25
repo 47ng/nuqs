@@ -1,8 +1,8 @@
 import Mitt from 'mitt'
 
-export const SYNC_EVENT_KEY = Symbol('__nextUseQueryState__SYNC__')
+export const SYNC_EVENT_KEY = '__nextUseQueryState__SYNC__'
 export const NOSYNC_MARKER = '__nextUseQueryState__NO_SYNC__'
-const NOTIFY_EVENT_KEY = Symbol('__nextUseQueryState__NOTIFY__')
+const NOTIFY_EVENT_KEY = '__nextUseQueryState__NOTIFY__'
 
 export type QueryUpdateSource = 'internal' | 'external'
 export type QueryUpdateNotificationArgs = {
@@ -16,22 +16,20 @@ type EventMap = {
   [key: string]: any
 }
 
-export const emitter = Mitt<EventMap>()
+type Emitter = ReturnType<typeof Mitt<EventMap>>
 
-export function subscribeToQueryUpdates(
-  callback: (args: QueryUpdateNotificationArgs) => void
-) {
-  emitter.on(NOTIFY_EVENT_KEY, callback)
-  return () => emitter.off(NOTIFY_EVENT_KEY, callback)
+declare global {
+  interface History {
+    __nextUseQueryState_emitter?: Emitter
+  }
 }
 
-let patched = false
-
-if (!patched && typeof window === 'object') {
+if (typeof history === 'object' && !history.__nextUseQueryState_emitter) {
   __DEBUG__ && console.debug('Patching history')
+  const emitter = Mitt<EventMap>()
   for (const method of ['pushState', 'replaceState'] as const) {
-    const original = window.history[method].bind(window.history)
-    window.history[method] = function nextUseQueryState_patchedHistory(
+    const original = history[method].bind(history)
+    history[method] = function nextUseQueryState_patchedHistory(
       state: any,
       title: string,
       url?: string | URL | null
@@ -82,5 +80,22 @@ if (!patched && typeof window === 'object') {
       return original(state, title === NOSYNC_MARKER ? '' : title, url)
     }
   }
-  patched = true
+  Object.defineProperty(history, '__nextUseQueryState_emitter', {
+    value: emitter,
+    writable: false,
+    enumerable: false,
+    configurable: false
+  })
+}
+
+export const emitter: Emitter =
+  typeof history === 'object'
+    ? history.__nextUseQueryState_emitter ?? Mitt<EventMap>()
+    : Mitt<EventMap>()
+
+export function subscribeToQueryUpdates(
+  callback: (args: QueryUpdateNotificationArgs) => void
+) {
+  emitter.on(NOTIFY_EVENT_KEY, callback)
+  return () => emitter.off(NOTIFY_EVENT_KEY, callback)
 }
