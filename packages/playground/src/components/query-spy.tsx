@@ -39,11 +39,13 @@ export const QuerySpy: React.FC = () => {
         overflow: 'auto'
       }}
     >
-      {qs ? (
-        '?' + qs
-      ) : (
-        <span style={{ fontStyle: 'italic' }}>{'<empty query>'}</span>
+      {Boolean(qs) && (
+        <>
+          ?{qs}
+          <br />?{decodeURIComponent(qs).replace(/\+/g, ' ')}
+        </>
       )}
+      {!qs && <span style={{ fontStyle: 'italic' }}>{'<empty query>'}</span>}
     </pre>
   )
 }
