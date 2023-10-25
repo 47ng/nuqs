@@ -1,3 +1,4 @@
+import type { Emitter as MittEmitter } from 'mitt'
 import Mitt from 'mitt'
 
 export const SYNC_EVENT_KEY = '__nextUseQueryState__SYNC__'
@@ -16,7 +17,7 @@ type EventMap = {
   [key: string]: any
 }
 
-type Emitter = ReturnType<typeof Mitt<EventMap>>
+type Emitter = MittEmitter<EventMap>
 
 declare global {
   interface History {
