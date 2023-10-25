@@ -12,6 +12,7 @@ const demos = [
   'app/custom-parser',
   'app/crosslink',
   'app/repro-359',
+  'app/repro-376',
   // Pages router demos
   'pages/server-side-counter'
 ]
