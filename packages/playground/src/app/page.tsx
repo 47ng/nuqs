@@ -9,6 +9,7 @@ const demos = [
   'app/crosslink',
   'app/custom-parser',
   'app/hex-colors',
+  'app/parsers',
   'app/pretty-urls',
   'app/server-side-parsing',
   'app/subscribeToQueryUpdates',
