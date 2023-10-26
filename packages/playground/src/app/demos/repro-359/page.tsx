@@ -7,7 +7,7 @@ import {
   parseAsStringEnum,
   useQueryState,
   useQueryStates
-} from 'src/nuqs'
+} from 'next-usequerystate'
 
 const Component1 = () => {
   const [param] = useQueryState('param', parseAsString)

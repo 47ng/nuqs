@@ -1,6 +1,6 @@
 'use client'
 
-import { parseAsString, useQueryState } from 'src/nuqs'
+import { parseAsString, useQueryState } from 'next-usequerystate'
 
 export function Client() {
   const [q, setQ] = useQueryState(
