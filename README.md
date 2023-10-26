@@ -444,21 +444,25 @@ See issue #259 for more testing-related discussions.
 
 ## Debugging
 
-You can enable debug logs by importing from `next-usequerystate/debug`:
+You can enable debug logs in the browser by setting the `debug` item in localStorage
+to `next-usequerystate` (or any string containing it), and reload the page.
 
-```ts
-import { useQueryState } from 'next-usequerystate/debug'
-
-// API is unchanged.
-// Parsers can still be imported server-side from `next-usequerystate/parsers`
-// as they don't print out logs.
+```js
+// In your devtools:
+localStorage.setItem('debug', 'next-usequerystate')
 ```
 
+> Note: unlike the `debug` package, this will not work with wildcards, but
+> you can combine it: `localStorage.setItem('debug', '*,next-usequerystate')`
+
 Log lines will be prefixed with `[nuqs]` for `useQueryState` and `[nuq+]` for
-`useQueryStates`.
+`useQueryStates`, along with other internal debug logs.
 
 User timings markers are also recorded, for advanced performance analysis using
 your browser's devtools.
+
+Providing debug logs when opening an [issue](https://github.com/47ng/next-usequerystate/issues)
+is always appreciated. 🙏
 
 ## Caveats
 

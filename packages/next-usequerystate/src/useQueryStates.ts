@@ -4,6 +4,7 @@ import {
   useSearchParams
 } from 'next/navigation.js' // https://github.com/47ng/next-usequerystate/discussions/352
 import React from 'react'
+import { debug } from './debug'
 import type { Nullable, Options } from './defs'
 import type { Parser } from './parsers'
 import { SYNC_EVENT_KEY, emitter } from './sync'
@@ -62,6 +63,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
   }: Partial<UseQueryStatesOptions> = {}
 ): UseQueryStatesReturn<KeyMap> {
   type V = Values<KeyMap>
+  const keys = Object.keys(keyMap).join(',')
   const router = useRouter()
   // Not reactive, but available on the server and on page load
   const initialSearchParams = useSearchParams()
@@ -74,48 +76,23 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
     return parseMap(keyMap, new URLSearchParams(window.location.search))
   })
   const stateRef = React.useRef(internalState)
-  __DEBUG__ &&
-    performance.mark(
-      `[nuq+ \`${Object.keys(keyMap).join(',')}\`] render ${JSON.stringify(
-        internalState
-      )}`
-    ) &&
-    console.debug(
-      `[nuq+ \`${Object.keys(keyMap).join(
-        ','
-      )}\`] render - state: %O, initialSearchParams: %O`,
-      internalState,
-      initialSearchParams
-    )
+  debug(
+    '[nuq+ `%s`] render - state: %O, iSP: %s',
+    keys,
+    internalState,
+    initialSearchParams
+  )
 
   // Sync all hooks together & with external URL changes
   React.useInsertionEffect(() => {
     function updateInternalState(state: V) {
-      __DEBUG__ &&
-        performance.mark(
-          `[nuq+ \`${Object.keys(keyMap).join(
-            ','
-          )}\`] updateInternalState ${JSON.stringify(state)}`
-        ) &&
-        console.debug(
-          `[nuq+ \`${Object.keys(keyMap).join(',')}\`] updateInternalState %O`,
-          state
-        )
+      debug('[nuq+ `%s`] updateInternalState %O', keys, state)
       stateRef.current = state
       setInternalState(state)
     }
     function syncFromURL(search: URLSearchParams) {
       const state = parseMap(keyMap, search)
-      __DEBUG__ &&
-        performance.mark(
-          `[nuq+ \`${Object.keys(keyMap).join(
-            ','
-          )}\`] syncFromURL: ${JSON.stringify(state)}`
-        ) &&
-        console.debug(
-          `[nuq+ \`${Object.keys(keyMap).join(',')}\`] syncFromURL: %O`,
-          state
-        )
+      debug('[nuq+ `%s`] syncFromURL %O', keys, state)
       updateInternalState(state)
     }
     const handlers = Object.keys(keyMap).reduce((handlers, key) => {
@@ -127,22 +104,30 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
           ...stateRef.current,
           [key as keyof V]: value ?? defaultValue ?? null
         }
-        __DEBUG__ &&
-          performance.mark(
-            `[nuq+ \`${Object.keys(keyMap).join(
-              ','
-            )}\`] Cross-hook key sync \`${key}\`: ${value} (default: ${defaultValue}). Resolved state: ${JSON.stringify(
-              stateRef.current
-            )}`
-          ) &&
-          console.debug(
-            `[nuq+ \`${Object.keys(keyMap).join(
-              ','
-            )}\`] Cross-hook key sync \`${key}\`: %O (default: %O). Resolved state: %O`,
-            value,
-            defaultValue,
-            stateRef.current
-          )
+        debug(
+          '[nuq+ `%s`] Cross-hook key sync %s: %O (default: %O). Resolved: %O',
+          keys,
+          key,
+          value,
+          defaultValue,
+          stateRef.current
+        )
+        // __DEBUG__ &&
+        //   performance.mark(
+        //     `[nuq+ \`${Object.keys(keyMap).join(
+        //       ','
+        //     )}\`] Cross-hook key sync \`${key}\`: ${value} (default: ${defaultValue}). Resolved state: ${JSON.stringify(
+        //       stateRef.current
+        //     )}`
+        //   ) &&
+        //   console.debug(
+        //     `[nuq+ \`${Object.keys(keyMap).join(
+        //       ','
+        //     )}\`] Cross-hook key sync \`${key}\`: %O (default: %O). Resolved state: %O`,
+        //     value,
+        //     defaultValue,
+        //     stateRef.current
+        //   )
         updateInternalState(stateRef.current)
       }
       return handlers
@@ -150,33 +135,35 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
 
     emitter.on(SYNC_EVENT_KEY, syncFromURL)
     for (const key of Object.keys(keyMap)) {
-      __DEBUG__ &&
-        performance.mark(
-          `[nuq+ \`${Object.keys(keyMap).join(
-            ','
-          )}\`] Subscribing to sync for \`${key}\``
-        ) &&
-        console.debug(
-          `[nuq+ \`${Object.keys(keyMap).join(
-            ','
-          )}\`] Subscribing to sync for \`${key}\``
-        )
+      debug('[nuq+ `%s`] Subscribing to sync for `%s`', keys, key)
+      // __DEBUG__ &&
+      //   performance.mark(
+      //     `[nuq+ \`${Object.keys(keyMap).join(
+      //       ','
+      //     )}\`] Subscribing to sync for \`${key}\``
+      //   ) &&
+      //   console.debug(
+      //     `[nuq+ \`${Object.keys(keyMap).join(
+      //       ','
+      //     )}\`] Subscribing to sync for \`${key}\``
+      //   )
       emitter.on(key, handlers[key])
     }
     return () => {
       emitter.off(SYNC_EVENT_KEY, syncFromURL)
       for (const key of Object.keys(keyMap)) {
-        __DEBUG__ &&
-          performance.mark(
-            `[nuq+ \`${Object.keys(keyMap).join(
-              ','
-            )}\`] Unsubscribing to sync for \`${key}\``
-          ) &&
-          console.debug(
-            `[nuq+ \`${Object.keys(keyMap).join(
-              ','
-            )}\`] Unsubscribing to sync for \`${key}\``
-          )
+        debug('[nuq+ `%s`] Unsubscribing to sync for `%s`', keys, key)
+        // __DEBUG__ &&
+        //   performance.mark(
+        //     `[nuq+ \`${Object.keys(keyMap).join(
+        //       ','
+        //     )}\`] Unsubscribing to sync for \`${key}\``
+        //   ) &&
+        //   console.debug(
+        //     `[nuq+ \`${Object.keys(keyMap).join(
+        //       ','
+        //     )}\`] Unsubscribing to sync for \`${key}\``
+        //   )
         emitter.off(key, handlers[key])
       }
     }
@@ -188,16 +175,17 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
         typeof stateUpdater === 'function'
           ? stateUpdater(stateRef.current)
           : stateUpdater
-      __DEBUG__ &&
-        performance.mark(
-          `[nuq+ \`${Object.keys(keyMap).join(
-            ','
-          )}\`] setState: ${JSON.stringify(newState)}`
-        ) &&
-        console.debug(
-          `[nuq+ \`${Object.keys(keyMap).join(',')}\`] setState: %O`,
-          newState
-        )
+      debug('[nuq+ `%s`] setState: %O', keys, newState)
+      // __DEBUG__ &&
+      //   performance.mark(
+      //     `[nuq+ \`${Object.keys(keyMap).join(
+      //       ','
+      //     )}\`] setState: ${JSON.stringify(newState)}`
+      //   ) &&
+      //   console.debug(
+      //     `[nuq+ \`${Object.keys(keyMap).join(',')}\`] setState: %O`,
+      //     newState
+      //   )
       for (const [key, value] of Object.entries(newState)) {
         const config = keyMap[key]
         if (!config) {

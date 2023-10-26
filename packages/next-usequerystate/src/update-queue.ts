@@ -1,3 +1,4 @@
+import { debug } from './debug'
 import type { Options, Router } from './defs'
 import { NOSYNC_MARKER } from './sync'
 import { renderQueryString } from './url-encoding'
@@ -24,14 +25,7 @@ export function enqueueQueryStringUpdate<Value>(
   options: Options
 ) {
   const serializedOrNull = value === null ? null : serialize(value)
-  __DEBUG__ &&
-    performance.mark(`[nuqs queue] Enqueueing ${key}=${serializedOrNull}`) &&
-    console.debug(
-      '[nuqs queue] Enqueueing %s=%s %O',
-      key,
-      serializedOrNull,
-      options
-    )
+  debug('[nuqs queue] Enqueueing %s=%s %O', key, serializedOrNull, options)
   updateQueue.set(key, serializedOrNull)
   // Any item can override an option for the whole batch of updates
   if (options.history === 'push') {
@@ -68,9 +62,7 @@ export function flushToURL(router: Router) {
         0,
         Math.min(FLUSH_RATE_LIMIT_MS, FLUSH_RATE_LIMIT_MS - timeSinceLastFlush)
       )
-      __DEBUG__ &&
-        performance.mark(`[nuqs queue] Scheduling flush in ${flushInMs} ms`) &&
-        console.debug('[nuqs queue] Scheduling flush in %f ms', flushInMs)
+      debug('[nuqs queue] Scheduling flush in %f ms', flushInMs)
       setTimeout(() => {
         lastFlushTimestamp = performance.now()
         const search = flushUpdateQueue(router)
@@ -99,10 +91,7 @@ function flushUpdateQueue(router: Router) {
   queueOptions.scroll = false
   queueOptions.shallow = true
   updateQueue.clear()
-  __DEBUG__ &&
-    performance.mark('[nuqs queue] Flushing queue') &&
-    console.debug('[nuqs queue] Flushing queue %O', items)
-
+  debug('[nuqs queue] Flushing queue %O', items)
   for (const [key, value] of items) {
     if (value === null) {
       search.delete(key)
@@ -119,9 +108,7 @@ function flushUpdateQueue(router: Router) {
   // otherwise using a relative URL works just fine.
   // todo: Does it when using the router with `shallow: false` on dynamic paths?
   const url = query ? `?${query}${hash}` : `${path}${hash}`
-  __DEBUG__ &&
-    performance.mark(`[nuqs queue] Updating url: ${url}`) &&
-    console.debug('[nuqs queue] Updating url: %s', url)
+  debug('[nuqs queue] Updating url: %s', url)
   try {
     if (options.shallow) {
       const updateUrl =

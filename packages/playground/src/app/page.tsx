@@ -8,7 +8,6 @@ const demos = [
   'app/compound-parsers',
   'app/crosslink',
   'app/custom-parser',
-  'app/debug-release-interop',
   'app/hex-colors',
   'app/pretty-urls',
   'app/server-side-parsing',

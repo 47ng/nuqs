@@ -1,5 +1,6 @@
 import { useRouter, useSearchParams } from 'next/navigation.js' // https://github.com/47ng/next-usequerystate/discussions/352
 import React from 'react'
+import { debug } from './debug'
 import type { Options } from './defs'
 import type { Parser } from './parsers'
 import { SYNC_EVENT_KEY, emitter } from './sync'
@@ -225,42 +226,31 @@ export function useQueryState<T = string>(
     return value === null ? null : parse(value)
   })
   const stateRef = React.useRef(internalState)
-  __DEBUG__ &&
-    performance.mark(`[nuqs \`${key}\`] render - state: ${internalState}`) &&
-    console.debug(
-      `[nuqs \`${key}\`] render - state: \`%O\` - initialSearchParams: \`${
-        initialSearchParams === null ? 'null' : initialSearchParams.toString()
-      }\``,
-      internalState
-    )
+  debug(
+    '[nuqs `%s`] render - state: %O, iSP: %s',
+    key,
+    internalState,
+    initialSearchParams
+  )
 
   // Sync all hooks together & with external URL changes
   React.useInsertionEffect(() => {
     function updateInternalState(state: T | null) {
-      __DEBUG__ &&
-        performance.mark(`[nuqs \`${key}\`] updateInternalState ${state}`) &&
-        console.debug(`[nuqs \`${key}\`] updateInternalState %O`, state)
+      debug(`[nuqs \`%s\`] updateInternalState %O`, key, state)
       stateRef.current = state
       setInternalState(state)
     }
     function syncFromURL(search: URLSearchParams) {
       const value = search.get(key) ?? null
       const state = value === null ? null : parse(value)
-      __DEBUG__ &&
-        performance.mark(`[nuqs \`${key}\`] syncFromURL: ${state}`) &&
-        console.debug(`[nuqs \`${key}\`] syncFromURL: %O`, state)
+      debug(`[nuqs \`%s\`] syncFromURL %O`, key, state)
       updateInternalState(state)
     }
-    __DEBUG__ &&
-      performance.mark(`[nuqs \`${key}\`] Subscribing to sync`) &&
-      console.debug(`[nuqs \`${key}\`] Subscribing to sync`)
-
+    debug(`[nuqs \`%s\`] subscribing to sync`, key)
     emitter.on(SYNC_EVENT_KEY, syncFromURL)
     emitter.on(key, updateInternalState)
     return () => {
-      __DEBUG__ &&
-        performance.mark(`[nuqs \`${key}\`] Unsubscribing from sync`) &&
-        console.debug(`[nuqs \`${key}\`] Unsubscribing from sync`)
+      debug(`[nuqs \`%s\`] unsubscribing from sync`, key)
       emitter.off(SYNC_EVENT_KEY, syncFromURL)
       emitter.off(key, updateInternalState)
     }
@@ -282,13 +272,7 @@ export function useQueryState<T = string>(
       })
       return flushToURL(router)
     },
-    [
-      key,
-      history,
-      shallow,
-      scroll
-      //  internalState, defaultValue
-    ]
+    [key, history, shallow, scroll]
   )
   return [internalState ?? defaultValue ?? null, update]
 }
