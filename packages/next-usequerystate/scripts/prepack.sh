@@ -10,4 +10,11 @@ cp -f ../../README.md ../../LICENSE ./
 
 # Patch the version from package.json
 VERSION=$(node -p "require('./package.json').version")
-sed -i '' "s/0.0.0-inject-version-here/${VERSION}/g" dist/index.{js,cjs}
+
+if [[ "$(uname)" == "Darwin" ]]; then
+  # macOS requires an empty string as the backup extension
+  sed -i '' "s/0.0.0-inject-version-here/${VERSION}/g" dist/index.{js,cjs}
+else
+  # Ubuntu (CI/CD) doesn't
+  sed -i "s/0.0.0-inject-version-here/${VERSION}/g" dist/index.{js,cjs}
+fi
