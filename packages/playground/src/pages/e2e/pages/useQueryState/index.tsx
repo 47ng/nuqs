@@ -1,6 +1,6 @@
+import { queryTypes, useQueryState } from 'next-usequerystate'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { queryTypes, useQueryState } from 'src/nuqs'
 import { HydrationMarker } from '../../../../components/hydration-marker'
 
 const IntegrationPage = () => {

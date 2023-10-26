@@ -1,6 +1,6 @@
 'use client'
 
-import { parseAsArrayOf, parseAsJson, useQueryState } from 'src/nuqs'
+import { parseAsArrayOf, parseAsJson, useQueryState } from 'next-usequerystate'
 
 const escaped = '-_.!~*\'()?#/&,"`<>{}[]|•@$£%+=:;'
 
