@@ -5,23 +5,32 @@ First off, thanks for your help!
 ## Getting started
 
 1. Fork and clone the repository
-2. Install dependencies with `yarn install`
-3. Start the development environment with `yarn dev`
+2. Install dependencies with `pnpm install`
+3. Start the development environment with `pnpm dev`
 
 ## Project structure
 
-This repository contains a combination of several things:
+This monorepo contains:
 
-- The source code for the `next-usequerystate` NPM package, in [`src/lib`](./src/lib).
-- A Next.js app that serves as:
+- The source code for the `next-usequerystate` NPM package, in [`packages/next-usequerystate`](./packages/next-usequerystate).
+- A Next.js app under [`packages/playground`](./packages/playground) that serves as:
   - A playground deployed at <https://next-usequerystate.vercel.app>
-  - A host for [end-to-end tests](./cypress//e2e) driven by Cypress
-- Typings tests using [`tsd`](https://github.com/SamVerschueren/tsd), in [`./src/tests/**.test-d.ts`](./src/tests/)
+  - A host for [end-to-end tests](./packages/playground/cypress//e2e) driven by Cypress
 
 When running `next dev`, this will:
 
-- Start the Next.js app and the playground will be available at <http://localhost:3000>.
 - Build the library and watch for changes using [`tsup`](https://tsup.egoist.dev/)
+- Start the playground, which will be available at <http://localhost:3000>.
+
+## Testing
+
+You can run the complete integration test suite with `pnpm run ci`.
+
+It will build the library, run unit tests and typing tests against it, and then
+run the end-to-end tests against the playground (which uses the built library).
+
+When proposing changes or showcasing a bug, adding a minimal reproduction in the
+playground can be very helpful.
 
 ## Proposing changes
 
