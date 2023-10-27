@@ -121,10 +121,7 @@ export default function BasicCounterDemoPage() {
           <button onClick={() => setArr(null)}>Clear</button>
           <br />
           {arr.map((d, i) => (
-            <>
-              <span key={i}>{d.toISOString()}</span>
-              <br />
-            </>
+            <div key={i}>{d.toISOString()}</div>
           ))}
         </li>
         <li>
