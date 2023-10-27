@@ -112,22 +112,6 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
           defaultValue,
           stateRef.current
         )
-        // __DEBUG__ &&
-        //   performance.mark(
-        //     `[nuq+ \`${Object.keys(keyMap).join(
-        //       ','
-        //     )}\`] Cross-hook key sync \`${key}\`: ${value} (default: ${defaultValue}). Resolved state: ${JSON.stringify(
-        //       stateRef.current
-        //     )}`
-        //   ) &&
-        //   console.debug(
-        //     `[nuq+ \`${Object.keys(keyMap).join(
-        //       ','
-        //     )}\`] Cross-hook key sync \`${key}\`: %O (default: %O). Resolved state: %O`,
-        //     value,
-        //     defaultValue,
-        //     stateRef.current
-        //   )
         updateInternalState(stateRef.current)
       }
       return handlers
@@ -136,34 +120,12 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
     emitter.on(SYNC_EVENT_KEY, syncFromURL)
     for (const key of Object.keys(keyMap)) {
       debug('[nuq+ `%s`] Subscribing to sync for `%s`', keys, key)
-      // __DEBUG__ &&
-      //   performance.mark(
-      //     `[nuq+ \`${Object.keys(keyMap).join(
-      //       ','
-      //     )}\`] Subscribing to sync for \`${key}\``
-      //   ) &&
-      //   console.debug(
-      //     `[nuq+ \`${Object.keys(keyMap).join(
-      //       ','
-      //     )}\`] Subscribing to sync for \`${key}\``
-      //   )
       emitter.on(key, handlers[key])
     }
     return () => {
       emitter.off(SYNC_EVENT_KEY, syncFromURL)
       for (const key of Object.keys(keyMap)) {
         debug('[nuq+ `%s`] Unsubscribing to sync for `%s`', keys, key)
-        // __DEBUG__ &&
-        //   performance.mark(
-        //     `[nuq+ \`${Object.keys(keyMap).join(
-        //       ','
-        //     )}\`] Unsubscribing to sync for \`${key}\``
-        //   ) &&
-        //   console.debug(
-        //     `[nuq+ \`${Object.keys(keyMap).join(
-        //       ','
-        //     )}\`] Unsubscribing to sync for \`${key}\``
-        //   )
         emitter.off(key, handlers[key])
       }
     }
@@ -176,16 +138,6 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
           ? stateUpdater(stateRef.current)
           : stateUpdater
       debug('[nuq+ `%s`] setState: %O', keys, newState)
-      // __DEBUG__ &&
-      //   performance.mark(
-      //     `[nuq+ \`${Object.keys(keyMap).join(
-      //       ','
-      //     )}\`] setState: ${JSON.stringify(newState)}`
-      //   ) &&
-      //   console.debug(
-      //     `[nuq+ \`${Object.keys(keyMap).join(',')}\`] setState: %O`,
-      //     newState
-      //   )
       for (const [key, value] of Object.entries(newState)) {
         const config = keyMap[key]
         if (!config) {
