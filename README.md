@@ -471,6 +471,51 @@ hook will always return `null` (or the default value if supplied) on SSR/SSG.
 
 This limitation doesn't apply to the app router.
 
+### SEO
+
+If your page uses query strings for local-only state, you should add a
+canonical URL to your page, to tell SEO crawlers to ignore the query string
+and index the page without it.
+
+In the app router, this is done via the metadata object:
+
+```ts
+import type { Metadata } from 'next'
+
+export const metadata: Metadata = {
+  alternates: {
+    canonical: '/url/path/without/querystring'
+  }
+}
+```
+
+If however the query string is defining what content the page is displaying
+(eg: YouTube's watch URLs, like `https://www.youtube.com/watch?v=dQw4w9WgXcQ`),
+your canonical URL should contain relevant query strings, and you can still
+use `useQueryState` to read it:
+
+```ts
+// page.tsx
+import type { Metadata, ResolvingMetadata } from 'next'
+import { useQueryState } from 'next-usequerystate'
+import { parseAsString } from 'next-usequerystate/parsers'
+
+type Props = {
+  searchParams: { [key: string]: string | string[] | undefined }
+}
+
+export async function generateMetadata({
+  searchParams
+}: Props): Promise<Metadata> {
+  const videoId = parseAsString.parseServerSide(searchParams.v)
+  return {
+    alternates: {
+      canonical: `/watch?v=${videoId}`
+    }
+  }
+}
+```
+
 ### Lossy serialization
 
 If your serializer loses precision or doesn't accurately represent
