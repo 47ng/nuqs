@@ -140,29 +140,27 @@ function flushUpdateQueue(router: Router) {
   const url = query ? `?${query}${hash}` : `${path}${hash}`
   debug('[nuqs queue] Updating url: %s', url)
   try {
-    if (options.shallow) {
-      const updateUrl =
-        options.history === 'push'
-          ? window.history.pushState
-          : window.history.replaceState
-      updateUrl.call(
-        window.history,
-        window.history.state,
-        // Our own updates have a marker to prevent syncing
-        // when the URL changes (we've already sync'd them up
-        // via `emitter.emit(key, newValue)` above, without
-        // going through the parsers).
-        NOSYNC_MARKER,
-        url
-      )
-      if (options.scroll) {
-        window.scrollTo(0, 0)
-      }
-    } else {
+    // First, update the URL locally without triggering a network request,
+    // this allows keeping a reactive URL if the network is slow.
+    const updateMethod =
+      options.history === 'push' ? history.pushState : history.replaceState
+    updateMethod.call(
+      history,
+      history.state,
+      // Our own updates have a marker to prevent syncing
+      // when the URL changes (we've already sync'd them up
+      // via `emitter.emit(key, newValue)` above, without
+      // going through the parsers).
+      NOSYNC_MARKER,
+      url
+    )
+    if (options.scroll) {
+      window.scrollTo(0, 0)
+    }
+    if (!options.shallow) {
       // Call the Next.js router to perform a network request
-      const updateUrl =
-        options.history === 'push' ? router.push : router.replace
-      updateUrl.call(router, url, { scroll: options.scroll })
+      // and re-render server components.
+      router.replace(url, { scroll: false })
     }
     return search
   } catch (error) {
