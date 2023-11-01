@@ -1,5 +1,6 @@
 import Mitt from 'mitt'
 import { debug } from './debug'
+import { getQueuedValue } from './update-queue'
 
 export const SYNC_EVENT_KEY = Symbol('__nextUseQueryState__SYNC__')
 export const NOSYNC_MARKER = '__nextUseQueryState__NO_SYNC__'
@@ -72,6 +73,18 @@ function patchHistory() {
       // If someone else than our hooks have updated the URL,
       // send out a signal for them to sync their internal state.
       if (source === 'external') {
+        for (const [key, value] of search.entries()) {
+          const queueValue = getQueuedValue(key)
+          if (queueValue !== null && queueValue !== value) {
+            debug(
+              '[nuqs] Overwrite detected for key: %s, Server: %s, queue: %s',
+              key,
+              value,
+              queueValue
+            )
+            search.set(key, queueValue)
+          }
+        }
         // Here we're delaying application to next tick to avoid:
         // `Warning: useInsertionEffect must not schedule updates.`
         //
