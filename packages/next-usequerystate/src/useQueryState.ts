@@ -233,7 +233,7 @@ export function useQueryState<T = string>(
     '[nuqs `%s`] render - state: %O, iSP: %s',
     key,
     internalState,
-    initialSearchParams
+    initialSearchParams?.get(key) ?? null
   )
 
   // Sync all hooks together & with external URL changes

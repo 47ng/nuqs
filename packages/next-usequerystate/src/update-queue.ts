@@ -40,7 +40,7 @@ export function enqueueQueryStringUpdate<Value>(
   }
   queueOptions.throttleMs = Math.max(
     options.throttleMs ?? FLUSH_RATE_LIMIT_MS,
-    queueOptions.throttleMs
+    Number.isFinite(queueOptions.throttleMs) ? queueOptions.throttleMs : 0
   )
 }
 
@@ -61,6 +61,15 @@ export function getQueuedValue(key: string) {
 export function scheduleFlushToURL(router: Router) {
   if (flushPromiseCache === null) {
     flushPromiseCache = new Promise<URLSearchParams>((resolve, reject) => {
+      if (!Number.isFinite(queueOptions.throttleMs)) {
+        debug('[nuqs queue] Skipping flush due to throttleMs=Infinity')
+        resolve(new URLSearchParams(location.search))
+        // Let the promise be returned before clearing the cached value
+        setTimeout(() => {
+          flushPromiseCache = null
+        }, 0)
+        return
+      }
       function flushNow() {
         lastFlushTimestamp = performance.now()
         const search = flushUpdateQueue(router)
@@ -114,7 +123,7 @@ function flushUpdateQueue(router: Router) {
   queueOptions.scroll = false
   queueOptions.shallow = true
   queueOptions.throttleMs = FLUSH_RATE_LIMIT_MS
-  debug('[nuqs queue] Flushing queue %O', items)
+  debug('[nuqs queue] Flushing queue %O with options %O', items, options)
   for (const [key, value] of items) {
     if (value === null) {
       search.delete(key)
