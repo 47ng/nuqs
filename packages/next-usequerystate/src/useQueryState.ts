@@ -7,8 +7,8 @@ import { SYNC_EVENT_KEY, emitter } from './sync'
 import {
   FLUSH_RATE_LIMIT_MS,
   enqueueQueryStringUpdate,
-  flushToURL,
-  getInitialStateFromQueue
+  getQueuedValue,
+  scheduleFlushToURL
 } from './update-queue'
 
 export interface UseQueryStateOptions<T> extends Parser<T>, Options {}
@@ -218,7 +218,7 @@ export function useQueryState<T = string>(
   // Not reactive, but available on the server and on page load
   const initialSearchParams = useSearchParams()
   const [internalState, setInternalState] = React.useState<T | null>(() => {
-    const queueValue = getInitialStateFromQueue(key)
+    const queueValue = getQueuedValue(key)
     const urlValue =
       typeof location !== 'object'
         ? // SSR
@@ -274,7 +274,7 @@ export function useQueryState<T = string>(
         scroll: options.scroll ?? scroll,
         throttleMs: options.throttleMs ?? throttleMs
       })
-      return flushToURL(router)
+      return scheduleFlushToURL(router)
     },
     [key, history, shallow, scroll, throttleMs]
   )
