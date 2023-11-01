@@ -101,7 +101,7 @@ export function flushToURL(router: Router) {
 }
 
 function flushUpdateQueue(router: Router) {
-  const search = new URLSearchParams(window.location.search)
+  const search = new URLSearchParams(location.search)
   if (updateQueue.size === 0) {
     return search
   }
@@ -122,11 +122,9 @@ function flushUpdateQueue(router: Router) {
       search.set(key, value)
     }
   }
-
   const query = renderQueryString(search)
-  const path = window.location.pathname
-  const hash = window.location.hash
-
+  const path = location.pathname
+  const hash = location.hash
   // If the querystring is empty, add the pathname to clear it out,
   // otherwise using a relative URL works just fine.
   // todo: Does it when using the router with `shallow: false` on dynamic paths?
