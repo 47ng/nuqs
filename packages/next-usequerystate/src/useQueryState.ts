@@ -220,11 +220,11 @@ export function useQueryState<T = string>(
   const [internalState, setInternalState] = React.useState<T | null>(() => {
     const queueValue = getInitialStateFromQueue(key)
     const urlValue =
-      typeof window !== 'object'
+      typeof location !== 'object'
         ? // SSR
           initialSearchParams?.get(key) ?? null
         : // Components mounted after page load must use the current URL value
-          new URLSearchParams(window.location.search).get(key) ?? null
+          new URLSearchParams(location.search).get(key) ?? null
     const value = queueValue ?? urlValue
     return value === null ? null : parse(value)
   })

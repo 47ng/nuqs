@@ -70,12 +70,12 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
   // Not reactive, but available on the server and on page load
   const initialSearchParams = useSearchParams()
   const [internalState, setInternalState] = React.useState<V>(() => {
-    if (typeof window !== 'object') {
+    if (typeof location !== 'object') {
       // SSR
       return parseMap(keyMap, initialSearchParams ?? new URLSearchParams())
     }
     // Components mounted after page load must use the current URL value
-    return parseMap(keyMap, new URLSearchParams(window.location.search))
+    return parseMap(keyMap, new URLSearchParams(location.search))
   })
   const stateRef = React.useRef(internalState)
   debug(

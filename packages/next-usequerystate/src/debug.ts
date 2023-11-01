@@ -1,5 +1,5 @@
 const enabled =
-  (typeof window === 'object' &&
+  (typeof localStorage === 'object' &&
     localStorage.getItem('debug')?.includes('next-usequerystate')) ??
   false
 
