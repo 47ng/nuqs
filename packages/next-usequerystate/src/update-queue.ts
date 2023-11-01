@@ -44,7 +44,7 @@ export function enqueueQueryStringUpdate<Value>(
   )
 }
 
-export function getInitialStateFromQueue(key: string) {
+export function getQueuedValue(key: string) {
   return updateQueue.get(key) ?? null
 }
 
@@ -58,7 +58,7 @@ export function getInitialStateFromQueue(key: string) {
  *
  * @returns a Promise to the URLSearchParams that have been applied.
  */
-export function flushToURL(router: Router) {
+export function scheduleFlushToURL(router: Router) {
   if (flushPromiseCache === null) {
     flushPromiseCache = new Promise<URLSearchParams>((resolve, reject) => {
       function flushNow() {

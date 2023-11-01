@@ -11,8 +11,8 @@ import { SYNC_EVENT_KEY, emitter } from './sync'
 import {
   FLUSH_RATE_LIMIT_MS,
   enqueueQueryStringUpdate,
-  flushToURL,
-  getInitialStateFromQueue
+  getQueuedValue,
+  scheduleFlushToURL
 } from './update-queue'
 
 type KeyMapValue<Type> = Parser<Type> & {
@@ -154,7 +154,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
           throttleMs: options.throttleMs ?? throttleMs
         })
       }
-      return flushToURL(router)
+      return scheduleFlushToURL(router)
     },
     [keyMap, history, shallow, scroll]
   )
@@ -170,7 +170,7 @@ function parseMap<KeyMap extends UseQueryStatesKeysMap>(
   return Object.keys(keyMap).reduce((obj, key) => {
     const { defaultValue, parse } = keyMap[key]!
     const urlQuery = searchParams?.get(key) ?? null
-    const queueQuery = getInitialStateFromQueue(key)
+    const queueQuery = getQueuedValue(key)
     const query = queueQuery ?? urlQuery
     const value = query === null ? null : parse(query)
     obj[key as keyof KeyMap] = value ?? defaultValue ?? null
