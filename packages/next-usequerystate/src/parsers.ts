@@ -74,7 +74,10 @@ export type ParserBuilder<T> = Required<Parser<T>> &
 export function createParser<T>(parser: Required<Parser<T>>): ParserBuilder<T> {
   return {
     ...parser,
-    parseServerSide(value = '') {
+    parseServerSide(value) {
+      if (typeof value === 'undefined') {
+        return null
+      }
       let str = ''
       if (Array.isArray(value)) {
         // Follow the spec:
@@ -94,7 +97,7 @@ export function createParser<T>(parser: Required<Parser<T>>): ParserBuilder<T> {
       return {
         ...this,
         defaultValue,
-        parseServerSide(value = '') {
+        parseServerSide(value) {
           return nullableParse(value) ?? defaultValue
         }
       }

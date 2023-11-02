@@ -54,4 +54,18 @@ describe('parsers', () => {
     // It encodes its separator
     expect(parser.serialize(['a', ',', 'b'])).toBe('a,%2C,b')
   })
+
+  test('parseServerSide with default (#384)', () => {
+    const p = parseAsString.withDefault('default')
+    const searchParams = {
+      string: 'foo',
+      stringArray: ['bar', 'egg'],
+      undef: undefined
+    }
+    expect(p.parseServerSide(searchParams.undef)).toBe('default')
+    expect(p.parseServerSide(searchParams.string)).toBe('foo')
+    expect(p.parseServerSide(searchParams.stringArray)).toBe('bar')
+    // @ts-expect-error - Implicitly undefined
+    expect(p.parseServerSide(searchParams.nope)).toBe('default')
+  })
 })
