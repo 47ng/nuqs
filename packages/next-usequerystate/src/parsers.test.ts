@@ -68,4 +68,31 @@ describe('parsers', () => {
     // @ts-expect-error - Implicitly undefined
     expect(p.parseServerSide(searchParams.nope)).toBe('default')
   })
+
+  test('chaining options does not reset them', () => {
+    const p = parseAsString.withOptions({ scroll: true }).withOptions({})
+    expect(p.scroll).toBe(true)
+  })
+  test('chaining options merges them', () => {
+    const p = parseAsString
+      .withOptions({ scroll: true })
+      .withOptions({ history: 'push' })
+    expect(p.scroll).toBe(true)
+    expect(p.history).toBe('push')
+  })
+  test('chaining options & default value', () => {
+    const p = parseAsString
+      .withOptions({ scroll: true })
+      .withDefault('default')
+      .withOptions({ history: 'push' })
+    expect(p.scroll).toBe(true)
+    expect(p.history).toBe('push')
+    expect(p.defaultValue).toBe('default')
+    expect(p.parseServerSide(undefined)).toBe('default')
+  })
+  test('changing default value', () => {
+    const p = parseAsString.withDefault('foo').withDefault('bar')
+    expect(p.defaultValue).toBe('bar')
+    expect(p.parseServerSide(undefined)).toBe('bar')
+  })
 })
