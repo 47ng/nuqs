@@ -16,13 +16,10 @@ export function ServerSideParsingDemoClient({
     'shallow',
     parseAsBoolean.withDefault(true)
   )
-  const [counter, setCounter] = useQueryState('counter', {
-    // Note that since the default value already has been specified,
-    // we can't use the .withOptions builder pattern here.
-    // However, we can spread and override the shallow option:
-    ...counterParser,
-    shallow
-  })
+  const [counter, setCounter] = useQueryState(
+    'counter',
+    counterParser.withOptions({ shallow })
+  )
 
   return (
     <>
