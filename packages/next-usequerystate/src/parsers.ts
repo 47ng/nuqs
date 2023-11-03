@@ -14,11 +14,7 @@ export type ParserBuilder<T> = Required<Parser<T>> &
      * Note that you can override those options in individual calls to the
      * state updater function.
      */
-    withOptions(
-      options: Options
-    ): Required<Parser<T>> &
-      Readonly<Options> &
-      Pick<ParserBuilder<T>, 'withDefault'>
+    withOptions<This>(this: This, options: Options): This
 
     /**
      * Specifying a default value makes the hook state non-nullable when the
@@ -29,26 +25,28 @@ export type ParserBuilder<T> = Required<Parser<T>> &
      *
      * @param defaultValue
      */
-    withDefault(defaultValue: NonNullable<T>): Required<Parser<T>> &
-      Options & {
-        readonly defaultValue: NonNullable<T>
+    withDefault(
+      this: ParserBuilder<T>,
+      defaultValue: NonNullable<T>
+    ): Omit<ParserBuilder<T>, 'parseServerSide'> & {
+      readonly defaultValue: NonNullable<T>
 
-        /**
-         * Use the parser in Server Components
-         *
-         * `parse` is intended to be used only by the hook, but you can use this
-         * method to hydrate query values on server-side rendered pages.
-         * See the `server-side-parsing` demo for an example.
-         *
-         * Note that when multiple queries are presented to the parser
-         * (eg: `/?a=1&a=2`), only the **first** will be parsed, to mimic the
-         * behaviour of URLSearchParams:
-         * https://url.spec.whatwg.org/#dom-urlsearchparams-get
-         *
-         * @param value as coming from page props
-         */
-        parseServerSide(value: string | string[] | undefined): NonNullable<T>
-      }
+      /**
+       * Use the parser in Server Components
+       *
+       * `parse` is intended to be used only by the hook, but you can use this
+       * method to hydrate query values on server-side rendered pages.
+       * See the `server-side-parsing` demo for an example.
+       *
+       * Note that when multiple queries are presented to the parser
+       * (eg: `/?a=1&a=2`), only the **first** will be parsed, to mimic the
+       * behaviour of URLSearchParams:
+       * https://url.spec.whatwg.org/#dom-urlsearchparams-get
+       *
+       * @param value as coming from page props
+       */
+      parseServerSide(value: string | string[] | undefined): NonNullable<T>
+    }
 
     /**
      * Use the parser in Server Components
@@ -72,33 +70,34 @@ export type ParserBuilder<T> = Required<Parser<T>> &
  * you can pass to one of the hooks, making its default value type safe.
  */
 export function createParser<T>(parser: Required<Parser<T>>): ParserBuilder<T> {
-  return {
-    ...parser,
-    parseServerSide(value) {
-      if (typeof value === 'undefined') {
+  function parseServerSideNullable(value: string | string[] | undefined) {
+    if (typeof value === 'undefined') {
+      return null
+    }
+    let str = ''
+    if (Array.isArray(value)) {
+      // Follow the spec:
+      // https://url.spec.whatwg.org/#dom-urlsearchparams-get
+      if (value[0] === undefined) {
         return null
       }
-      let str = ''
-      if (Array.isArray(value)) {
-        // Follow the spec:
-        // https://url.spec.whatwg.org/#dom-urlsearchparams-get
-        if (value[0] === undefined) {
-          return null
-        }
-        str = value[0]
-      }
-      if (typeof value === 'string') {
-        str = value
-      }
-      return this.parse(str)
-    },
+      str = value[0]
+    }
+    if (typeof value === 'string') {
+      str = value
+    }
+    return parser.parse(str)
+  }
+
+  return {
+    ...parser,
+    parseServerSide: parseServerSideNullable,
     withDefault(defaultValue) {
-      const nullableParse = this.parseServerSide.bind(this)
       return {
         ...this,
         defaultValue,
         parseServerSide(value) {
-          return nullableParse(value) ?? defaultValue
+          return parseServerSideNullable(value) ?? defaultValue
         }
       }
     },

@@ -279,17 +279,12 @@ You can use a builder pattern to facilitate specifying all of those things:
 ```ts
 useQueryState(
   'counter',
-  parseAsInteger
-    .withOptions({
-      history: 'push',
-      shallow: false
-    })
-    .withDefault(0)
+  parseAsInteger.withDefault(0).withOptions({
+    history: 'push',
+    shallow: false
+  })
 )
 ```
-
-Note: `withDefault` must always come **after** `withOptions` to ensure proper
-type safety (providing a non-nullable state type).
 
 You can get this pattern for your custom parsers too, and compose them
 with others:

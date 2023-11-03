@@ -257,14 +257,12 @@ import {
       parseAsInteger.withOptions({ scroll: true }).withDefault(1)
     )[0]
   )
-
-  expectError(() => {
-    // Can't set withOptions after withDefault
+  expectNotAssignable<null>(
     useQueryState(
       'foo',
       parseAsInteger.withDefault(1).withOptions({ scroll: true })
-    )
-  })
+    )[0]
+  )
 }
 
 // Expect errors on misuse -----------------------------------------------------
