@@ -8,6 +8,9 @@ on:
         required: true
         type: string
 
+env:
+  FORCE_COLOR: 3 # Diplay chalk colors
+
 jobs:
   test_against_nextjs_release:
     name: Integration
