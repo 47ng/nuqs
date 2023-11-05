@@ -1,5 +1,5 @@
 name: 'Test against Next.js release'
-run-name: ${{ inputs.version }}
+run-name: 'Test against Next.js ${{ inputs.version }}'
 
 on:
   workflow_dispatch:
@@ -14,7 +14,7 @@ env:
 
 jobs:
   test_against_nextjs_release:
-    name: ${{ inputs.version }}
+    name: Integration
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
