@@ -1,3 +1,5 @@
+name: 'Test against Next.js release'
+
 on:
   workflow_dispatch:
     inputs:
