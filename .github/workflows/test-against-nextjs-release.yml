@@ -13,7 +13,7 @@ env:
 
 jobs:
   test_against_nextjs_release:
-    name: Integration
+    name: ${{ inputs.version }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
