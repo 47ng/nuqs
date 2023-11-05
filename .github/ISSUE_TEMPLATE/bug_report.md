@@ -8,11 +8,11 @@ assignees: ''
 
 ## Description
 
-A clear and concise description of what the bug is.
+<!-- A clear and concise description of what the bug is. -->
 
 ## Reproduction
 
-Please provide a minimal reproduction in a CodeSandbox playground or dedicated repository, along with the steps to take to encounter the issue.
+<!-- Please provide a minimal reproduction in a CodeSandbox playground or dedicated repository, along with the steps to take to encounter the issue.
 
 Example: Steps to reproduce the behavior:
 
@@ -21,9 +21,11 @@ Example: Steps to reproduce the behavior:
 3. Scroll down to '....'
 4. See error
 
+ -->
+
 ## Expected behavior
 
-A clear and concise description of what you expected to happen, and what happened instead.
+<!-- A clear and concise description of what you expected to happen, and what happened instead. -->
 
 ## Context
 
@@ -39,4 +41,4 @@ Next.js information (obtained by running `next info`):
 -> Paste result from `next info` here
 ```
 
-Anything else to add?
+<!-- Anything else to add? -->
