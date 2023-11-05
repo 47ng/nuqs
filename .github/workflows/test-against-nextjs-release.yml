@@ -1,0 +1,37 @@
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Next.js version to test against'
+        required: true
+        type: string
+
+jobs:
+  test_against_nextjs_release:
+    name: Integration
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
+      - uses: pnpm/action-setup@d882d12c64e032187b2edb46d3a0d003b7a43598
+        with:
+          version: 8
+      - uses: actions/setup-node@8f152de45cc393bb48ce5d89d36b731f54556e65
+        with:
+          node-version: lts/*
+          cache: pnpm
+      - name: Install dependencies
+        run: pnpm install
+      - name: Install Next.js version ${{ inputs.version }}
+        run: pnpm add --filter next-usequerystate-playground next@${{ inputs.version }}
+      - name: Run integration tests
+        run: pnpm run ci
+        env:
+          TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+          TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
+      - uses: 47ng/actions-slack-notify@main
+        name: Notify on Slack
+        if: always()
+        with:
+          status: ${{ job.status }}
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
