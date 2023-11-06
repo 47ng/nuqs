@@ -39,5 +39,6 @@ jobs:
         if: always()
         with:
           status: ${{ job.status }}
+          jobName: ${{ inputs.version }}
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
