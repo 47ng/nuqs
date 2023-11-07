@@ -32,8 +32,27 @@ export function subscribeToQueryUpdates(
   return () => emitter.off(NOTIFY_EVENT_KEY, callback)
 }
 
-if (typeof history === 'object' && !history.__nextUseQueryState_patched) {
-  debug('Patching history')
+if (typeof history === 'object') {
+  patchHistory()
+}
+
+function patchHistory() {
+  // This is replaced with the package.json version by scripts/prepack.sh
+  // after semantic-release has done updating the version number.
+  const version = '0.0.0-inject-version-here'
+  const patched = history.__nextUseQueryState_patched
+  if (patched) {
+    if (patched !== version) {
+      // todo: Make this a URL error with more details and resolution instructions
+      console.warn(
+        '[next-usequerystate] Multiple versions of the library are loaded. This may lead to unexpected behavior. Currently using %s, but %s was about to load on top.',
+        patched,
+        version
+      )
+    }
+    return
+  }
+  debug('[nuqs] Patching history with %s', version)
   for (const method of ['pushState', 'replaceState'] as const) {
     const original = history[method].bind(history)
     history[method] = function nextUseQueryState_patchedHistory(
@@ -80,10 +99,8 @@ if (typeof history === 'object' && !history.__nextUseQueryState_patched) {
       return original(state, title === NOSYNC_MARKER ? '' : title, url)
     }
   }
-  // This is replaced by the package.json version in the prepack script
-  // after semantic-release has done updating the version number.
   Object.defineProperty(history, '__nextUseQueryState_patched', {
-    value: '0.0.0-inject-version-here',
+    value: version,
     writable: false,
     enumerable: false,
     configurable: false
