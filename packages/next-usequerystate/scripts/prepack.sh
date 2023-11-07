@@ -8,8 +8,8 @@ cd "$(dirname "$0")/.."
 # Copy the README & License from the root of the repository
 cp -f ../../README.md ../../LICENSE ./
 
-# Patch the version from package.json
-VERSION=$(node -p "require('./package.json').version")
+# Read the version from package.json
+VERSION=$(cat package.json | jq -r '.version')
 
 if [[ "$(uname)" == "Darwin" ]]; then
   # macOS requires an empty string as the backup extension
