@@ -1,7 +1,7 @@
 {
-  "name": "playground",
+  "name": "e2e",
   "version": "0.0.0-internal",
-  "description": "Examples and demos for next-usequerystate",
+  "description": "End-to-end test bench for next-usequerystate",
   "license": "MIT",
   "private": true,
   "author": {
@@ -11,9 +11,13 @@
   },
   "type": "module",
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev --port 3001",
     "build": "next build",
-    "start": "next start"
+    "start": "next start --port 3001",
+    "pretest": "cypress install",
+    "test": "run-p --race start cypress:run",
+    "cypress:open": "cypress open",
+    "cypress:run": "cypress run --headless"
   },
   "dependencies": {
     "next": "^14",
@@ -26,6 +30,8 @@
     "@types/react": "^18.2.33",
     "@types/react-dom": "^18.2.14",
     "@types/webpack": "^5.28.4",
+    "cypress": "^13.3.3",
+    "npm-run-all": "^4.1.5",
     "typescript": "^5.2.2"
   }
 }

@@ -28,9 +28,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install
       - name: Install Next.js version ${{ inputs.version }}
-        run: pnpm add --filter next-usequerystate-playground next@${{ inputs.version }}
+        run: pnpm add --filter e2e next@${{ inputs.version }}
       - name: Run integration tests
-        run: pnpm run ci
+        run: pnpm run test
         env:
           TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
           TURBO_TEAM: ${{ secrets.TURBO_TEAM }}

@@ -24,13 +24,10 @@ jobs:
       - name: Install dependencies
         run: pnpm install
       - name: Run integration tests
-        run: pnpm run ci
+        run: pnpm run test
         env:
           TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
           TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
-      # - uses: coverallsapp/github-action@3dfc5567390f6fa9267c0ee9c251e4c8c3f18949
-      #   name: Report code coverage
-      #   continue-on-error: true
       - uses: 47ng/actions-slack-notify@main
         name: Notify on Slack
         if: always()
@@ -65,4 +62,3 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-          SCEAU_PRIVATE_KEY: ${{ secrets.SCEAU_PRIVATE_KEY }}

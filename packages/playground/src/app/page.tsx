@@ -48,57 +48,6 @@ export default function IndexPage() {
           ))}
       </ul>
       <hr />
-      <h2>End-to-end integration tests</h2>
-      <p>⚠️ Don't change these routes without updating integration tests.</p>
-      <h3>App router</h3>
-      <ul>
-        <li>
-          <Link href="/e2e/app/useQueryState">[static] useQueryState</Link>
-        </li>
-        <li>
-          <Link href="/e2e/app/useQueryState/dynamic/foo">
-            [dynamic] useQueryState
-          </Link>
-        </li>
-        <li>
-          <Link href="/e2e/app/useQueryStates">[static] useQueryStates</Link>
-        </li>
-        <li>
-          <Link href="/e2e/app/useQueryStates/dynamic/foo">
-            [dynamic] useQueryStates
-          </Link>
-        </li>
-        <li>
-          <Link href="/e2e/app/routing-tour/start/server">
-            Routing tour starting with server index
-          </Link>
-        </li>
-        <li>
-          <Link href="/e2e/app/routing-tour/start/client">
-            Routing tour starting with client index
-          </Link>
-        </li>
-      </ul>
-      <h3>Pages router</h3>
-      <ul>
-        <li>
-          <Link href="/e2e/pages/useQueryState">[static] useQueryState</Link>
-        </li>
-        <li>
-          <Link href="/e2e/pages/useQueryState/dynamic/foo">
-            [dynamic] useQueryState
-          </Link>
-        </li>
-        <li>
-          <Link href="/e2e/pages/useQueryStates">[static] useQueryStates</Link>
-        </li>
-        <li>
-          <Link href="/e2e/pages/useQueryStates/dynamic/foo">
-            [dynamic] useQueryStates
-          </Link>
-        </li>
-      </ul>
-      <hr />
       <footer>
         Made by <a href="https://francoisbest.com">François Best</a> • Follow my
         work on <a href="https://github.com/franky47">GitHub</a> and{' '}
