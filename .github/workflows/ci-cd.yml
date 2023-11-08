@@ -42,7 +42,7 @@ jobs:
         if: always()
         with:
           status: ${{ job.status }}
-          jobName: Next.js ${{ matrix.next-version }}
+          jobName: next@${{ matrix.next-version }}
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
