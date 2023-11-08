@@ -19,6 +19,8 @@ jobs:
           - '13.5'
           - '14'
           - latest
+          - canary
+    continue-on-error: true
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
       - uses: pnpm/action-setup@d882d12c64e032187b2edb46d3a0d003b7a43598
@@ -42,6 +44,7 @@ jobs:
         if: always()
         with:
           status: ${{ job.status }}
+          jobName: Next.js ${{ matrix.next-version }}
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
