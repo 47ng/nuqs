@@ -12,6 +12,13 @@ jobs:
   ci:
     name: Integration
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        next-version:
+          - '13.4'
+          - '13.5'
+          - '14'
+          - latest
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
       - uses: pnpm/action-setup@d882d12c64e032187b2edb46d3a0d003b7a43598
@@ -23,6 +30,8 @@ jobs:
           cache: pnpm
       - name: Install dependencies
         run: pnpm install
+      - name: Install Next.js version ${{ matrix.next-version }}
+        run: pnpm add --filter e2e next@${{ matrix.next-version }}
       - name: Run integration tests
         run: pnpm run test
         env:
