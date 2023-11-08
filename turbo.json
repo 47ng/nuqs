@@ -5,12 +5,24 @@
       "cache": false,
       "persistent": true
     },
-    "build": {
-      "outputs": [".next/**", "!.next/cache/**", "dist/**"],
+    "next-usequerystate#build": {
+      "outputs": ["dist/**"]
+    },
+    "e2e#build": {
+      "outputs": [".next/**", "!.next/cache/**"],
       "dependsOn": ["^build"]
     },
-    "test": {
+    "playground#build": {
+      "outputs": [".next/**", "!.next/cache/**"],
+      "dependsOn": ["^build"]
+    },
+    "next-usequerystate#test": {
+      "outputs": ["dist/**", "coverage/**"],
       "dependsOn": ["build"]
+    },
+    "e2e#test": {
+      "dependsOn": ["build"],
+      "outputs": ["cypress/**"]
     }
   }
 }
