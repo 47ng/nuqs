@@ -5,6 +5,9 @@
       "cache": false,
       "persistent": true
     },
+    "build": {
+      "dependsOn": ["^build"]
+    },
     "next-usequerystate#build": {
       "outputs": ["dist/**"]
     },
