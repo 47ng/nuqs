@@ -10,7 +10,7 @@ env:
 
 jobs:
   ci:
-    name: Integration
+    name: Integration (Next.js ${{ matrix.next-version }})
     runs-on: ubuntu-latest
     strategy:
       matrix:
