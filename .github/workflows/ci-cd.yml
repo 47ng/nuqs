@@ -10,7 +10,7 @@ env:
 
 jobs:
   ci:
-    name: Integration (Next.js ${{ matrix.next-version }}${{ matrix.base-path == '/' && '' || ' with basePath' }})
+    name: Integration (Next.js ${{ matrix.next-version }}${{ matrix.base-path != '/' && ' with basePath' }})
     runs-on: ubuntu-latest
     strategy:
       matrix:
