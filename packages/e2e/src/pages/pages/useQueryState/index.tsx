@@ -1,7 +1,7 @@
 import { queryTypes, useQueryState } from 'next-usequerystate'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { HydrationMarker } from '../../../../components/hydration-marker'
+import { HydrationMarker } from '../../../components/hydration-marker'
 
 const IntegrationPage = () => {
   const [string, setString] = useQueryState('string')

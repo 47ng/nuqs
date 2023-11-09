@@ -18,7 +18,7 @@ export const RoutingTourView: React.FC<RoutingTourViewProps> = ({
   return (
     <>
       <Link
-        href={`/e2e/app/routing-tour/${nextPage}?from=${thisPage}&counter=${
+        href={`/app/routing-tour/${nextPage}?from=${thisPage}&counter=${
           counter + 1
         }`}
       >

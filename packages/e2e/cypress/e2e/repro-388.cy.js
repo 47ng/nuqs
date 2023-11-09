@@ -2,7 +2,7 @@
 
 it('Reproduction for issue #388', () => {
   cy.config('retries', 0)
-  cy.visit('/e2e/app/repro-388')
+  cy.visit('/app/repro-388')
   cy.contains('#hydration-marker', 'hydrated').should('be.hidden')
 
   cy.get('#start').click()
@@ -18,7 +18,7 @@ it('Reproduction for issue #388', () => {
   cy.get('#counter').should('have.text', 'Counter: 1')
 
   // Reset the page
-  cy.visit('/e2e/app/repro-388')
+  cy.visit('/app/repro-388')
   cy.get('#start').click()
   // The URL should have a ?counter=1 query string
   cy.location('search').should('eq', '?counter=1')
