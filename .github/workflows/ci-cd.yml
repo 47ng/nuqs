@@ -18,10 +18,10 @@ jobs:
         next-version:
           - '13.4'
           - '13.5'
-          - '14'
-          - latest
+          - '14.0.1'
+          # - latest
         include:
-          - next-version: 'latest'
+          - next-version: '14.0.1'
             base-path: '/base'
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
