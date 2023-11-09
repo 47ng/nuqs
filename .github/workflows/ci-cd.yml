@@ -10,15 +10,19 @@ env:
 
 jobs:
   ci:
-    name: Integration (Next.js ${{ matrix.next-version }})
+    name: Integration (Next.js ${{ matrix.next-version }}${{ matrix.base-path == '/' && '' || ' with basePath' }})
     runs-on: ubuntu-latest
     strategy:
       matrix:
+        base-path: ['/']
         next-version:
           - '13.4'
           - '13.5'
           - '14'
           - latest
+        include:
+          - base-path: ['/base']
+            next-version: 'latest'
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
       - uses: pnpm/action-setup@d882d12c64e032187b2edb46d3a0d003b7a43598
@@ -35,6 +39,7 @@ jobs:
       - name: Run integration tests
         run: pnpm run test
         env:
+          BASE_PATH: ${{ matrix.base-path }}
           TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
           TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
       - uses: 47ng/actions-slack-notify@main
