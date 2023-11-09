@@ -2,14 +2,30 @@
   "$schema": "https://turbo.build/schema.json",
   "pipeline": {
     "dev": {
-      "cache": false
-    },
-    "test": {
-      "dependsOn": ["build"]
+      "cache": false,
+      "persistent": true
     },
     "build": {
-      "outputs": [".next/**", "!.next/cache/**", "dist/**"],
       "dependsOn": ["^build"]
+    },
+    "next-usequerystate#build": {
+      "outputs": ["dist/**"]
+    },
+    "e2e#build": {
+      "outputs": [".next/**", "!.next/cache/**"],
+      "dependsOn": ["^build"]
+    },
+    "playground#build": {
+      "outputs": [".next/**", "!.next/cache/**"],
+      "dependsOn": ["^build"]
+    },
+    "next-usequerystate#test": {
+      "outputs": ["dist/**", "coverage/**"],
+      "dependsOn": ["build"]
+    },
+    "e2e#test": {
+      "dependsOn": ["build"],
+      "outputs": ["cypress/**"]
     }
   }
 }

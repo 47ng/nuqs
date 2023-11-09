@@ -1,5 +1,5 @@
 import { queryTypes, useQueryStates } from 'next-usequerystate'
-import { HydrationMarker } from '../../../../components/hydration-marker'
+import { HydrationMarker } from '../../../components/hydration-marker'
 
 const IntegrationPage = () => {
   const [state, setState] = useQueryStates({

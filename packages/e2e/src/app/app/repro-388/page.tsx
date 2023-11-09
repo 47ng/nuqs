@@ -1,20 +1,29 @@
 'use client'
 
 import { parseAsInteger, useQueryState } from 'next-usequerystate'
+import { PrefetchKind } from 'next/dist/client/components/router-reducer/router-reducer-types'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import React from 'react'
 
 export default function Page() {
+  const router = useRouter()
   const [counter, setCounter] = useQueryState(
     'counter',
     parseAsInteger.withDefault(0)
   )
   const [mounted, setMounted] = React.useState(false)
+  const manualPrefetch = React.useCallback(() => {
+    router.prefetch('/', { kind: PrefetchKind.FULL })
+  }, [router])
 
   return (
     <>
       <button id="start" onClick={() => setCounter(1)}>
         Start
+      </button>
+      <button id="start" onClick={() => manualPrefetch()}>
+        Manual prefetch
       </button>
       <>
         <p>
@@ -42,7 +51,7 @@ export default function Page() {
         </Link>
         {mounted && (
           <Link
-            href="/e2e/app/useQueryState"
+            href="/app/useQueryState"
             style={{
               display: 'inline-block',
               paddingInline: '1rem',

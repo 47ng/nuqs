@@ -1,6 +1,5 @@
 import dynamic from 'next/dynamic'
 import React, { Suspense } from 'react'
-import { HydrationMarker } from '../components/hydration-marker'
 
 export const metadata = {
   title: 'next-usequerystate playground',
@@ -28,9 +27,6 @@ export default function RootLayout({
   return (
     <html>
       <body>
-        <Suspense>
-          <HydrationMarker />
-        </Suspense>
         <header>
           <strong>
             <code>next-usequerystate</code>

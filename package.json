@@ -16,7 +16,6 @@
     "dev": "FORCE_COLOR=3 turbo run dev",
     "build": "FORCE_COLOR=3 turbo run build",
     "test": "FORCE_COLOR=3 turbo run test",
-    "ci": "FORCE_COLOR=3 turbo run build test",
     "prepare": "husky install"
   },
   "devDependencies": {

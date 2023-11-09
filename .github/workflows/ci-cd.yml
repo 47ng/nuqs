@@ -10,8 +10,19 @@ env:
 
 jobs:
   ci:
-    name: Integration
+    name: Integration (Next.js ${{ matrix.next-version }}${{ matrix.base-path != '/' && ' with basePath' || ''}})
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        base-path: ['/']
+        next-version:
+          - '13.4'
+          - '13.5'
+          - '14'
+          - latest
+        include:
+          - next-version: 'latest'
+            base-path: '/base'
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
       - uses: pnpm/action-setup@d882d12c64e032187b2edb46d3a0d003b7a43598
@@ -23,19 +34,20 @@ jobs:
           cache: pnpm
       - name: Install dependencies
         run: pnpm install
+      - name: Install Next.js version ${{ matrix.next-version }}
+        run: pnpm add --filter e2e next@${{ matrix.next-version }}
       - name: Run integration tests
-        run: pnpm run ci
+        run: pnpm run test
         env:
+          BASE_PATH: ${{ matrix.base-path }}
           TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
           TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
-      # - uses: coverallsapp/github-action@3dfc5567390f6fa9267c0ee9c251e4c8c3f18949
-      #   name: Report code coverage
-      #   continue-on-error: true
       - uses: 47ng/actions-slack-notify@main
         name: Notify on Slack
         if: always()
         with:
           status: ${{ job.status }}
+          jobName: next@${{ matrix.next-version }}
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
@@ -65,4 +77,3 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-          SCEAU_PRIVATE_KEY: ${{ secrets.SCEAU_PRIVATE_KEY }}
