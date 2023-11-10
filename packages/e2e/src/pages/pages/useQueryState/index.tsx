@@ -35,7 +35,10 @@ const IntegrationPage = () => {
       </nav>
       <section>
         <h2>String</h2>
-        <button id="string_set_a" onClick={() => setString('a')}>
+        <button
+          id="string_set_a"
+          onClick={() => setString('a', { shallow: false })}
+        >
           Set A
         </button>
         <button id="string_set_b" onClick={() => setString('b')}>

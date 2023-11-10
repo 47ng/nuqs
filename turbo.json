@@ -13,7 +13,8 @@
     },
     "e2e#build": {
       "outputs": [".next/**", "!.next/cache/**"],
-      "dependsOn": ["^build"]
+      "dependsOn": ["^build"],
+      "env": ["BASE_PATH"]
     },
     "playground#build": {
       "outputs": [".next/**", "!.next/cache/**"],
