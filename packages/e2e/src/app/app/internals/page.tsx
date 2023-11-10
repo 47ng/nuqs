@@ -11,12 +11,6 @@ export default function Page() {
     <>
       <p id="__N">{String(history.state.__N)}</p>
       <p id="__NA">{String(history.state.__NA)}</p>
-      <p id="basePath">
-        {String(
-          // @ts-expect-error
-          window?.next?.router?.basePath ?? ''
-        )}
-      </p>
     </>
   )
 }
