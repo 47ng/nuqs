@@ -28,6 +28,14 @@ $ npm install next-usequerystate
 
 > Note: version 1.8.0 requires Next.js 13.4+.
 
+> [!WARNING]
+> Due to a bug introduced in `next@14.0.2-canary.7`, this library is currently
+> **not** compatible with `next@^14.0.2`.
+>
+> Follow PR [#58297](https://github.com/vercel/next.js/pull/58297)
+> and issue [#388](https://github.com/47ng/next-usequerystate/issues/388)
+> for updates.
+
 ## Usage
 
 ```tsx
