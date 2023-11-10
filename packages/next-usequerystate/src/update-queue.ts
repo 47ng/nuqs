@@ -131,14 +131,9 @@ function flushUpdateQueue(router: Router) {
       search.set(key, value)
     }
   }
-  const query = renderQueryString(search)
-  const path = location.pathname
-  const hash = location.hash
-  // If the querystring is empty, add the pathname to clear it out,
-  // otherwise using a relative URL works just fine.
-  // todo: Does it when using the router with `shallow: false` on dynamic paths?
-  const url = query ? `?${query}${hash}` : `${path}${hash}`
+  const url = renderURL(search)
   debug('[nuqs queue] Updating url: %s', url)
+
   try {
     // First, update the URL locally without triggering a network request,
     // this allows keeping a reactive URL if the network is slow.
@@ -160,7 +155,11 @@ function flushUpdateQueue(router: Router) {
     if (!options.shallow) {
       // Call the Next.js router to perform a network request
       // and re-render server components.
-      router.replace(url, { scroll: false })
+      router.replace(url, {
+        scroll: false,
+        // @ts-expect-error - pages router fix, but not exposed in navigation types
+        shallow: false
+      })
     }
     return search
   } catch (error) {
@@ -170,5 +169,20 @@ function flushUpdateQueue(router: Router) {
       `useQueryState error updating URL: ${error}`
     )
     return null
+  }
+}
+
+function renderURL(search: URLSearchParams) {
+  const query = renderQueryString(search)
+  const path = location.pathname
+  const hash = location.hash
+  if (history.state.__N === true) {
+    // Pages router: always use a full path to handle dynamic routes
+    return query ? `${path}?${query}${hash}` : `${path}${hash}`
+  } else {
+    // App router
+    // If the querystring is empty, add the pathname to clear it out,
+    // otherwise using a relative URL works just fine.
+    return query ? `?${query}${hash}` : `${path}${hash}`
   }
 }
