@@ -174,7 +174,9 @@ function flushUpdateQueue(router: Router) {
 
 function renderURL(search: URLSearchParams) {
   const query = renderQueryString(search)
-  const path = location.pathname
+  // @ts-expect-error - Not exposed in types
+  const basePath = window?.next?.router?.basePath ?? ''
+  const path = location.pathname.slice(basePath.length)
   const hash = location.hash
   if (history.state.__N === true) {
     // Pages router: always use a full path to handle dynamic routes
