@@ -10,6 +10,9 @@ export default defineConfig({
     fixturesFolder: false,
     supportFile: false,
     testIsolation: true,
-    retries: 5
+    retries: 5,
+    env: {
+      basePath
+    }
   }
 })
