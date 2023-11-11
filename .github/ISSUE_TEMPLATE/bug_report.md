@@ -6,6 +6,29 @@ labels: bug
 assignees: ''
 ---
 
+<!-- Please read and follow the issue template. Issues submitted without a reproduction and context will take longer to resolve. -->
+
+## Context
+
+What's your version of `next-usequerystate`?
+
+```
+-> Paste result from `cat package.json | grep next-usequerystate` here
+```
+
+Next.js information (obtained by running `next info`):
+
+```
+-> Paste result from `next info` here
+```
+
+Does this concern:
+
+<!-- Replace the space with an x between the square brackets to tick the relevant box(es) -->
+
+- [ ] The app router
+- [ ] The pages router
+
 ## Description
 
 <!-- A clear and concise description of what the bug is. -->
@@ -26,19 +49,3 @@ Example: Steps to reproduce the behavior:
 ## Expected behavior
 
 <!-- A clear and concise description of what you expected to happen, and what happened instead. -->
-
-## Context
-
-What's your version of `next-usequerystate`?
-
-```
--> Paste result from `cat package.json | grep next-usequerystate` here
-```
-
-Next.js information (obtained by running `next info`):
-
-```
--> Paste result from `next info` here
-```
-
-<!-- Anything else to add? -->

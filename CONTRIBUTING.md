@@ -32,6 +32,13 @@ run the end-to-end tests against the test bench Next.js app (which uses the buil
 When proposing changes or showcasing a bug, adding a minimal reproduction in the
 playground can be very helpful.
 
+## Opening issues
+
+Please follow the [issue template](.github/ISSUE_TEMPLATE/bug_report.md) when opening a new issue.
+
+A minimal reproduction example is very helpful to understand the issue and
+inspect it locally.
+
 ## Proposing changes
 
 This repository uses [`semantic-release`](https://semantic-release.gitbook.io/semantic-release/)
