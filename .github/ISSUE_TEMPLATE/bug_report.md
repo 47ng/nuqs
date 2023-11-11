@@ -24,7 +24,7 @@ Next.js information (obtained by running `next info`):
 
 Does this concern:
 
-<!-- Replace the space with an x between the square brackets to tick the relevant box(es) -->
+<!-- Replace the space between the square brackets with an x to tick the relevant box(es) -->
 
 - [ ] The app router
 - [ ] The pages router
