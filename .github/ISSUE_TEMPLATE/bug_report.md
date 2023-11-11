@@ -22,7 +22,7 @@ Next.js information (obtained by running `next info`):
 -> Paste result from `next info` here
 ```
 
-Does this concern:
+Are you using:
 
 <!-- Replace the space between the square brackets with an x to tick the relevant box(es) -->
 
@@ -31,7 +31,7 @@ Does this concern:
 
 ## Description
 
-<!-- A clear and concise description of what the bug is. -->
+<!-- A clear and concise description of what the bug is, and what you expected to happen instead. -->
 
 ## Reproduction
 
@@ -45,7 +45,3 @@ Example: Steps to reproduce the behavior:
 4. See error
 
  -->
-
-## Expected behavior
-
-<!-- A clear and concise description of what you expected to happen, and what happened instead. -->
