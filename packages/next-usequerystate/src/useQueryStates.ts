@@ -14,6 +14,7 @@ import {
   getQueuedValue,
   scheduleFlushToURL
 } from './update-queue'
+import { safeParse } from './utils'
 
 type KeyMapValue<Type> = Parser<Type> & {
   defaultValue?: Type
@@ -172,7 +173,7 @@ function parseMap<KeyMap extends UseQueryStatesKeysMap>(
     const urlQuery = searchParams?.get(key) ?? null
     const queueQuery = getQueuedValue(key)
     const query = queueQuery ?? urlQuery
-    const value = query === null ? null : parse(query)
+    const value = query === null ? null : safeParse(parse, query)
     obj[key as keyof KeyMap] = value ?? defaultValue ?? null
     return obj
   }, {} as Values<KeyMap>)

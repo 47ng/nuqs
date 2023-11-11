@@ -1,4 +1,5 @@
 import type { Options } from './defs'
+import { safeParse } from './utils'
 
 export type Parser<T> = {
   parse: (value: string) => T | null
@@ -86,7 +87,7 @@ export function createParser<T>(parser: Required<Parser<T>>): ParserBuilder<T> {
     if (typeof value === 'string') {
       str = value
     }
-    return parser.parse(str)
+    return safeParse(parser.parse, str)
   }
 
   return {
@@ -278,7 +279,10 @@ export function parseAsArrayOf<ItemType>(
       return query
         .split(separator)
         .map(item =>
-          itemParser.parse(item.replaceAll(encodedSeparator, separator))
+          safeParse(
+            itemParser.parse,
+            item.replaceAll(encodedSeparator, separator)
+          )
         )
         .filter(value => value !== null && value !== undefined) as ItemType[]
     },

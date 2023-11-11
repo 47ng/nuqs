@@ -10,6 +10,7 @@ import {
   getQueuedValue,
   scheduleFlushToURL
 } from './update-queue'
+import { safeParse } from './utils'
 
 export interface UseQueryStateOptions<T> extends Parser<T>, Options {}
 
@@ -226,7 +227,7 @@ export function useQueryState<T = string>(
         : // Components mounted after page load must use the current URL value
           new URLSearchParams(location.search).get(key) ?? null
     const value = queueValue ?? urlValue
-    return value === null ? null : parse(value)
+    return value === null ? null : safeParse(parse, value)
   })
   const stateRef = React.useRef(internalState)
   debug(
