@@ -5,6 +5,6 @@ export const errors = {
 
 export function error(code: keyof typeof errors, ...args: any[]) {
   const message = `[next-usequerystate] ${errors[code]}
-  See https://err.sh/47ng/next-usequerystate/NUQS-${code}`
+  See https://err.47ng.com/NUQS-${code}`
   console.error(message, ...args)
 }
