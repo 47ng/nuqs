@@ -2,10 +2,9 @@ import { debug } from './debug'
 import type { Options, Router } from './defs'
 import { NOSYNC_MARKER } from './sync'
 import { renderQueryString } from './url-encoding'
+import { getDefaultThrottle } from './utils'
 
-// 50ms between calls to the history API seems to satisfy Chrome and Firefox.
-// Safari remains annoying with at most 100 calls in 30 seconds. #wontfix
-export const FLUSH_RATE_LIMIT_MS = 50
+export const FLUSH_RATE_LIMIT_MS = getDefaultThrottle()
 
 type UpdateMap = Map<string, string | null>
 const updateQueue: UpdateMap = new Map()
