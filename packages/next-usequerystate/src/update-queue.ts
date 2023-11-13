@@ -71,11 +71,11 @@ export function scheduleFlushToURL(router: Router) {
       }
       function flushNow() {
         lastFlushTimestamp = performance.now()
-        const search = flushUpdateQueue(router)
-        if (!search) {
-          reject()
-        } else {
+        const [search, error] = flushUpdateQueue(router)
+        if (error === null) {
           resolve(search)
+        } else {
+          reject(search)
         }
         flushPromiseCache = null
       }
@@ -108,10 +108,10 @@ export function scheduleFlushToURL(router: Router) {
   return flushPromiseCache
 }
 
-function flushUpdateQueue(router: Router) {
+function flushUpdateQueue(router: Router): [URLSearchParams, null | unknown] {
   const search = new URLSearchParams(location.search)
   if (updateQueue.size === 0) {
-    return search
+    return [search, null]
   }
   // Work on a copy and clear the queue immediately
   const items = Array.from(updateQueue.entries())
@@ -160,14 +160,14 @@ function flushUpdateQueue(router: Router) {
         shallow: false
       })
     }
-    return search
+    return [search, null]
   } catch (error) {
     console.error(
       // This may fail due to rate-limiting of history methods,
       // for example Safari only allows 100 updates in a 30s window.
       `useQueryState error updating URL: ${error}`
     )
-    return null
+    return [search, error]
   }
 }
 
