@@ -1,5 +1,6 @@
 import Mitt from 'mitt'
 import { debug } from './debug'
+import { error } from './errors'
 import { getQueuedValue } from './update-queue'
 
 export const SYNC_EVENT_KEY = Symbol('__nextUseQueryState__SYNC__')
@@ -44,12 +45,7 @@ function patchHistory() {
   const patched = history.__nextUseQueryState_patched
   if (patched) {
     if (patched !== version) {
-      // todo: Make this a URL error with more details and resolution instructions
-      console.warn(
-        '[next-usequerystate] Multiple versions of the library are loaded. This may lead to unexpected behavior. Currently using %s, but %s was about to load on top.',
-        patched,
-        version
-      )
+      error(409, patched, version)
     }
     return
   }

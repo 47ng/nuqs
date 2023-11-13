@@ -1,5 +1,6 @@
 import { debug } from './debug'
 import type { Options, Router } from './defs'
+import { error } from './errors'
 import { NOSYNC_MARKER } from './sync'
 import { renderQueryString } from './url-encoding'
 import { getDefaultThrottle } from './utils'
@@ -161,12 +162,10 @@ function flushUpdateQueue(router: Router): [URLSearchParams, null | unknown] {
       })
     }
     return [search, null]
-  } catch (error) {
-    console.error(
-      // This may fail due to rate-limiting of history methods,
-      // for example Safari only allows 100 updates in a 30s window.
-      `useQueryState error updating URL: ${error}`
-    )
+  } catch (err) {
+    // This may fail due to rate-limiting of history methods,
+    // for example Safari only allows 100 updates in a 30s window.
+    error(429, items.map(([key]) => key).join(), err)
     return [search, error]
   }
 }
