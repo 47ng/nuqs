@@ -5,10 +5,18 @@ const experimental =
       }
     : undefined
 
+const basePath =
+  process.env.BASE_PATH === '/' ? undefined : process.env.BASE_PATH
+
 /** @type {import('next').NextConfig } */
 const config = {
-  basePath: process.env.BASE_PATH === '/' ? undefined : process.env.BASE_PATH,
+  basePath,
   experimental
 }
+
+console.info(`Next.js config:
+  basePath:             ${basePath}
+  windowHistorySupport: ${experimental?.windowHistorySupport ?? false}
+`)
 
 export default config
