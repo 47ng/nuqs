@@ -32,6 +32,7 @@ jobs:
       - name: Run integration tests
         run: pnpm run test
         env:
+          WINDOW_HISTORY_SUPPORT: 'true'
           TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
           TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
       - uses: 47ng/actions-slack-notify@main

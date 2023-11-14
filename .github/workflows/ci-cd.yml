@@ -10,19 +10,24 @@ env:
 
 jobs:
   ci:
-    name: Integration (Next.js ${{ matrix.next-version }}${{ matrix.base-path != '/' && ' with basePath' || ''}})
+    name: Integration (Next.js ${{ matrix.next-version }}${{ matrix.base-path != '/' && ' basePath' || ''}}${{ matrix.window-history-support == 'true' && ' WHS' || ''}})
     runs-on: ubuntu-latest
     strategy:
       matrix:
         base-path: ['/']
+        window-history-support: []
         next-version:
           - '13.4'
           - '13.5'
           - '14.0.1'
-          # - latest
         include:
           - next-version: '14.0.1'
             base-path: '/base'
+          - next-version: canary
+            window-history-support: 'true'
+          - next-version: canary
+            base-path: '/base'
+            window-history-support: 'true'
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
       - uses: pnpm/action-setup@d882d12c64e032187b2edb46d3a0d003b7a43598
@@ -40,6 +45,7 @@ jobs:
         run: pnpm run test
         env:
           BASE_PATH: ${{ matrix.base-path }}
+          WINDOW_HISTORY_SUPPORT: ${{ matrix.window-history-support }}
           TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
           TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
       - uses: 47ng/actions-slack-notify@main
@@ -47,7 +53,7 @@ jobs:
         if: always()
         with:
           status: ${{ job.status }}
-          jobName: next@${{ matrix.next-version }}
+          jobName: next@${{ matrix.next-version }}${{ matrix.base-path != '/' && ' basePath' || ''}}${{ matrix.window-history-support == 'true' && ' WHS' || ''}}
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
