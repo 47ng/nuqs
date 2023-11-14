@@ -10,10 +10,16 @@ env:
 
 jobs:
   ci:
-    name: Integration (Next.js ${{ matrix.next-version }}${{ matrix.base-path != '/' && ' basePath' || ''}}${{ matrix.window-history-support && ' WHS' || ''}})
+    # Watch out! When changing the job name,
+    # update the required checks in GitHub
+    # branch protection settings for `next`.
+    name: CI (${{ matrix.next-version }}${{ matrix.base-path != '/' && ' basePath' || ''}}${{ matrix.window-history-support && ' WHS' || ''}})
     runs-on: ubuntu-latest
     strategy:
       matrix:
+        # Watch out! When changing the compat grid,
+        # update the required checks in GitHub
+        # branch protection settings for `next`.
         base-path: ['/']
         window-history-support: [false]
         next-version:
