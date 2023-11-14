@@ -1,10 +1,14 @@
+const experimental =
+  process.env.WINDOW_HISTORY_SUPPORT === 'true'
+    ? {
+        windowHistorySupport: true
+      }
+    : undefined
+
 /** @type {import('next').NextConfig } */
 const config = {
   basePath: process.env.BASE_PATH === '/' ? undefined : process.env.BASE_PATH,
-  experimental: {
-    windowHistorySupport:
-      process.env.WINDOW_HISTORY_SUPPORT === 'true' || undefined
-  }
+  experimental
 }
 
 export default config
