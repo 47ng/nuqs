@@ -15,7 +15,9 @@ jobs:
     # branch protection settings for `next`.
     name: CI (${{ matrix.next-version }}${{ matrix.base-path && ' basePath' || ''}}${{ matrix.window-history-support && ' WHS' || ''}})
     runs-on: ubuntu-latest
+    continue-on-error: ${{ matrix.continue-on-error }}
     strategy:
+      fail-fast: false
       matrix:
         # Watch out! When changing the compat grid,
         # update the required checks in GitHub
@@ -37,7 +39,7 @@ jobs:
           - next-version: canary
             base-path: '/base'
             window-history-support: true
-    continue-on-error: ${{ matrix.continue-on-error }}
+
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
       - uses: pnpm/action-setup@d882d12c64e032187b2edb46d3a0d003b7a43598
