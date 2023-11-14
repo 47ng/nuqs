@@ -22,6 +22,7 @@ jobs:
         # branch protection settings for `next`.
         base-path: [false]
         window-history-support: [false]
+        continue-on-error: [false]
         next-version:
           - '13.4'
           - '13.5'
@@ -30,10 +31,13 @@ jobs:
           - next-version: '14.0.1'
             base-path: '/base'
           - next-version: canary
+            continue-on-error: true
+          - next-version: canary
             window-history-support: true
           - next-version: canary
             base-path: '/base'
             window-history-support: true
+    continue-on-error: ${{ matrix.continue-on-error }}
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
       - uses: pnpm/action-setup@d882d12c64e032187b2edb46d3a0d003b7a43598
