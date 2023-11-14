@@ -27,10 +27,12 @@ jobs:
           - '13.4'
           - '13.5'
           - '14.0.1'
+          # 14.0.2 is not compatible due to a prefetch issue
+          - latest
         include:
-          - next-version: canary
+          - next-version: latest
             window-history-support: true
-          - next-version: canary
+          - next-version: latest
             window-history-support: true
             base-path: '/base'
 

@@ -34,7 +34,7 @@ Depending on your Next.js version:
 - Next.js <= 13.1: `next-usequerystate@1.7.2`
 - Next.js >= 13.4 && <= 14.0.1: `next-usequerystate@latest`
 - Next.js 14.0.2: Unfortunately not compatible due to a bug introduced in `next@14.0.2-canary.7`, see issue [#388](https://github.com/47ng/next-usequerystate/issues/388) and Next.js PR [#58297](https://github.com/vercel/next.js/pull/58297).
-- Next.js >= 14.0.3-canary-6: `next-usequerystate@latest` with the experimental flag [`windowHistorySupport`](https://github.com/vercel/next.js/pull/58335) set to `true`.
+- Next.js >= 14.0.3: `next-usequerystate@latest`
 
 </details>
 
