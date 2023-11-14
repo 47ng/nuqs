@@ -22,23 +22,19 @@ jobs:
         # Watch out! When changing the compat grid,
         # update the required checks in GitHub
         # branch protection settings for `next`.
-        base-path: [false]
+        base-path: [false, '/base']
         window-history-support: [false]
         next-version:
           - '13.4'
           - '13.5'
           - '14.0.1'
+          - canary
         include:
-          - next-version: '14.0.1'
-            base-path: '/base'
-          - next-version: canary
-          - next-version: canary
-            base-path: '/base'
           - next-version: canary
             window-history-support: true
           - next-version: canary
-            base-path: '/base'
             window-history-support: true
+            base-path: '/base'
 
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
