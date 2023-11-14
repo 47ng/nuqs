@@ -12,6 +12,7 @@ it('Reproduction for issue #388', () => {
   cy.get('#counter').should('have.text', 'Counter: 1')
   // Hover the "Hover me" link
   cy.get('#hover-me').trigger('mouseover')
+  cy.wait(100)
   // The URL should have a ?counter=1 query string
   cy.location('search').should('eq', '?counter=1')
   // The counter should be rendered as 1 on the page
@@ -26,6 +27,7 @@ it('Reproduction for issue #388', () => {
   cy.get('#counter').should('have.text', 'Counter: 1')
   // Mount the other link
   cy.get('#toggle').click()
+  cy.wait(100)
   // The URL should have a ?counter=1 query string
   cy.location('search').should('eq', '?counter=1')
   // The counter should be rendered as 1 on the page

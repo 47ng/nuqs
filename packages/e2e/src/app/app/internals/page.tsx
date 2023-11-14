@@ -11,6 +11,9 @@ export default function Page() {
     <>
       <p id="__N">{String(history.state.__N)}</p>
       <p id="__NA">{String(history.state.__NA)}</p>
+      <p id="windowHistorySupport">
+        {String(process.env.__NEXT_WINDOW_HISTORY_SUPPORT)}
+      </p>
     </>
   )
 }

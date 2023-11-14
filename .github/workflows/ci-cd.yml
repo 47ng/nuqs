@@ -10,19 +10,32 @@ env:
 
 jobs:
   ci:
-    name: Integration (Next.js ${{ matrix.next-version }}${{ matrix.base-path != '/' && ' with basePath' || ''}})
+    # Watch out! When changing the job name,
+    # update the required checks in GitHub
+    # branch protection settings for `next`.
+    name: CI (${{ matrix.next-version }}${{ matrix.base-path && ' basePath' || ''}}${{ matrix.window-history-support && ' WHS' || ''}})
     runs-on: ubuntu-latest
+    continue-on-error: ${{ matrix.next-version == 'canary' }}
     strategy:
+      fail-fast: false
       matrix:
-        base-path: ['/']
+        # Watch out! When changing the compat grid,
+        # update the required checks in GitHub
+        # branch protection settings for `next`.
+        base-path: [false, '/base']
+        window-history-support: [false]
         next-version:
           - '13.4'
           - '13.5'
           - '14.0.1'
-          # - latest
+          - canary
         include:
-          - next-version: '14.0.1'
+          - next-version: canary
+            window-history-support: true
+          - next-version: canary
+            window-history-support: true
             base-path: '/base'
+
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
       - uses: pnpm/action-setup@d882d12c64e032187b2edb46d3a0d003b7a43598
@@ -39,15 +52,22 @@ jobs:
       - name: Run integration tests
         run: pnpm run test
         env:
-          BASE_PATH: ${{ matrix.base-path }}
+          BASE_PATH: ${{ matrix.base-path && matrix.base-path || '/' }}
+          WINDOW_HISTORY_SUPPORT: ${{ matrix.window-history-support }}
           TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
           TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
+      - name: Save Cypress artifacts
+        uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32
+        if: failure()
+        with:
+          path: packages/e2e/cypress/screenshots
+          name: ci-${{ matrix.next-version }}${{ matrix.base-path && '-basePath' || ''}}${{ matrix.window-history-support && '-whs' || ''}}
       - uses: 47ng/actions-slack-notify@main
         name: Notify on Slack
         if: always()
         with:
           status: ${{ job.status }}
-          jobName: next@${{ matrix.next-version }}
+          jobName: next@${{ matrix.next-version }}${{ matrix.base-path && ' basePath' || ''}}${{ matrix.window-history-support && ' WHS' || ''}}
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 

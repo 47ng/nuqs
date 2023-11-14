@@ -172,17 +172,20 @@ function flushUpdateQueue(router: Router): [URLSearchParams, null | unknown] {
 
 function renderURL(search: URLSearchParams) {
   const query = renderQueryString(search)
-  // @ts-expect-error - Not exposed in types
-  const basePath = window?.next?.router?.basePath ?? ''
-  const path = location.pathname.slice(basePath.length)
+  const href = location.href.split('?')[0]
   const hash = location.hash
   if (history.state.__N === true) {
-    // Pages router: always use a full path to handle dynamic routes
-    return query ? `${path}?${query}${hash}` : `${path}${hash}`
+    // Pages router: always use a full path to handle dynamic routes,
+    // but strip the basePath to avoid recursively applying it.
+    // @ts-expect-error - Not exposed in types
+    const basePath = window?.next?.router?.basePath ?? ''
+    const path = location.pathname.slice(basePath.length)
+    const base = process.env.__NEXT_WINDOW_HISTORY_SUPPORT ? href : path
+    return query ? `${base}?${query}${hash}` : `${base}${hash}`
   } else {
     // App router
-    // If the querystring is empty, add the pathname to clear it out,
-    // otherwise using a relative URL works just fine.
-    return query ? `?${query}${hash}` : `${path}${hash}`
+    // From 12.0.3-canary.6, with the experimental windowHistorySupport flag,
+    // a valid URL is required, so prepend the href (but without the query string)
+    return query ? `${href}?${query}${hash}` : `${href}${hash}`
   }
 }

@@ -14,7 +14,7 @@
     "e2e#build": {
       "outputs": [".next/**", "!.next/cache/**"],
       "dependsOn": ["^build"],
-      "env": ["BASE_PATH"]
+      "env": ["BASE_PATH", "WINDOW_HISTORY_SUPPORT"]
     },
     "playground#build": {
       "outputs": [".next/**", "!.next/cache/**"],
@@ -26,7 +26,7 @@
     },
     "e2e#test": {
       "dependsOn": ["build"],
-      "outputs": ["cypress/**"]
+      "outputs": ["cypress/**", "cypress.config.ts"]
     }
   }
 }
