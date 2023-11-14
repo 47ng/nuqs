@@ -13,14 +13,14 @@ jobs:
     # Watch out! When changing the job name,
     # update the required checks in GitHub
     # branch protection settings for `next`.
-    name: CI (${{ matrix.next-version }}${{ matrix.base-path != '/' && ' basePath' || ''}}${{ matrix.window-history-support && ' WHS' || ''}})
+    name: CI (${{ matrix.next-version }}${{ matrix.base-path && ' basePath' || ''}}${{ matrix.window-history-support && ' WHS' || ''}})
     runs-on: ubuntu-latest
     strategy:
       matrix:
         # Watch out! When changing the compat grid,
         # update the required checks in GitHub
         # branch protection settings for `next`.
-        base-path: ['/']
+        base-path: [false]
         window-history-support: [false]
         next-version:
           - '13.4'
@@ -50,7 +50,7 @@ jobs:
       - name: Run integration tests
         run: pnpm run test
         env:
-          BASE_PATH: ${{ matrix.base-path }}
+          BASE_PATH: ${{ matrix.base-path && matrix.base-path || '/' }}
           WINDOW_HISTORY_SUPPORT: ${{ matrix.window-history-support }}
           TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
           TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
@@ -59,7 +59,7 @@ jobs:
         if: always()
         with:
           status: ${{ job.status }}
-          jobName: next@${{ matrix.next-version }}${{ matrix.base-path != '/' && ' basePath' || ''}}${{ matrix.window-history-support && ' WHS' || ''}}
+          jobName: next@${{ matrix.next-version }}${{ matrix.base-path && ' basePath' || ''}}${{ matrix.window-history-support && ' WHS' || ''}}
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
