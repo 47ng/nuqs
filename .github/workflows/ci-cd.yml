@@ -15,7 +15,7 @@ jobs:
     # branch protection settings for `next`.
     name: CI (${{ matrix.next-version }}${{ matrix.base-path && ' basePath' || ''}}${{ matrix.window-history-support && ' WHS' || ''}})
     runs-on: ubuntu-latest
-    continue-on-error: ${{ matrix.continue-on-error }}
+    continue-on-error: ${{ matrix.next-version == 'canary' }}
     strategy:
       fail-fast: false
       matrix:
@@ -24,7 +24,6 @@ jobs:
         # branch protection settings for `next`.
         base-path: [false]
         window-history-support: [false]
-        continue-on-error: [false]
         next-version:
           - '13.4'
           - '13.5'
@@ -33,7 +32,6 @@ jobs:
           - next-version: '14.0.1'
             base-path: '/base'
           - next-version: canary
-            continue-on-error: true
           - next-version: canary
             window-history-support: true
           - next-version: canary
