@@ -33,6 +33,8 @@ jobs:
             base-path: '/base'
           - next-version: canary
           - next-version: canary
+            base-path: '/base'
+          - next-version: canary
             window-history-support: true
           - next-version: canary
             base-path: '/base'
