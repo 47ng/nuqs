@@ -14,8 +14,14 @@ env:
 
 jobs:
   test_against_nextjs_release:
-    name: Integration
+    name: CI (${{ inputs.version }}${{ matrix.base-path && ' basePath' || ''}}${{ matrix.window-history-support && ' WHS' || ''}})
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        base-path: [false, '/base']
+        window-history-support: [true, false]
+
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
       - uses: pnpm/action-setup@d882d12c64e032187b2edb46d3a0d003b7a43598
@@ -32,7 +38,8 @@ jobs:
       - name: Run integration tests
         run: pnpm run test
         env:
-          WINDOW_HISTORY_SUPPORT: 'true'
+          BASE_PATH: ${{ matrix.base-path && matrix.base-path || '/' }}
+          WINDOW_HISTORY_SUPPORT: ${{ matrix.window-history-support }}
           TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
           TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
       - uses: 47ng/actions-slack-notify@main
@@ -40,6 +47,6 @@ jobs:
         if: always()
         with:
           status: ${{ job.status }}
-          jobName: ${{ inputs.version }}
+          jobName: next@${{ inputs.version }}${{ matrix.base-path && ' basePath' || ''}}${{ matrix.window-history-support && ' WHS' || ''}}
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
