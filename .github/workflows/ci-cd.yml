@@ -10,7 +10,7 @@ env:
 
 jobs:
   ci:
-    name: Integration (Next.js ${{ matrix.next-version }}${{ matrix.base-path != '/' && ' basePath' || ''}}${{ matrix.window-history-support == 'true' && ' WHS' || ''}})
+    name: Integration (Next.js ${{ matrix.next-version }}${{ matrix.base-path != '/' && ' basePath' || ''}}${{ matrix.window-history-support && ' WHS' || ''}})
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -53,7 +53,7 @@ jobs:
         if: always()
         with:
           status: ${{ job.status }}
-          jobName: next@${{ matrix.next-version }}${{ matrix.base-path != '/' && ' basePath' || ''}}${{ matrix.window-history-support == 'true' && ' WHS' || ''}}
+          jobName: next@${{ matrix.next-version }}${{ matrix.base-path != '/' && ' basePath' || ''}}${{ matrix.window-history-support && ' WHS' || ''}}
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
