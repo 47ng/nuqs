@@ -1,25 +1,28 @@
 import { expectError, expectNotAssignable, expectType } from 'tsd'
 import {
-  createSearchParamCache,
+  createSearchParamsCache,
   parseAsBoolean,
   parseAsInteger,
   parseAsString
 } from '../../dist/parsers'
 
 {
-  const { getSearchParam } = createSearchParamCache({
+  const cache = createSearchParamsCache({
     foo: parseAsString,
     bar: parseAsInteger,
     egg: parseAsBoolean.withDefault(false)
   })
   // Values are type-safe
-  expectType<string | null>(getSearchParam('foo'))
-  expectType<number | null>(getSearchParam('bar'))
+  expectType<string | null>(cache.get('foo'))
+  expectType<number | null>(cache.get('bar'))
   // Default values are taken into account
-  expectType<boolean>(getSearchParam('egg'))
-  expectNotAssignable<null>(getSearchParam('egg'))
+  expectType<boolean>(cache.get('egg'))
+  expectNotAssignable<null>(cache.get('egg'))
   // Keys are type safe
   expectError(() => {
-    getSearchParam('spam')
+    cache.get('spam')
   })
+  expectType<
+    Readonly<{ foo: string | null; bar: number | null; egg: boolean }>
+  >(cache.all())
 }

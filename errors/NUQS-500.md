@@ -1,7 +1,7 @@
 # Empty Search Params Cache
 
 This error shows up on the server when trying to access a searchParam from
-a cache created with `createSearchParamCache`, but when the cache was not
+a cache created with `createSearchParamsCache`, but when the cache was not
 properly populated at the top of the page.
 
 ## Solution
@@ -11,12 +11,12 @@ Run the `parseSearchParam` function on the page's `searchParams`:
 ```tsx
 // page.tsx
 import {
-  createSearchParamCache,
+  createSearchParamsCache,
   parseAsInteger,
   parseAsString
 } from 'next-usequerystate/parsers'
 
-const { parseSearchParams, getSearchParam } = createSearchParamCache({
+const { parseSearchParams, getSearchParam } = createSearchParamsCache({
   q: parseAsString,
   maxResults: parseAsInteger.withDefault(10)
 })
