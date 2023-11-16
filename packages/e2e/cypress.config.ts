@@ -30,8 +30,5 @@ function supportsWHS() {
   const pkgPath = new URL('./package.json', import.meta.url)
   const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf-8'))
   const nextVersion: string = pkg.dependencies.next
-  // Technically >= 14.0.3-canary.6, but semver can't match on prereleases
-  // and at the time of writing we're at 14.0.3-canary.10 and not going back,
-  // so this is a good enough approximation to avoid lexicographic comparisons.
-  return semver.satisfies(nextVersion, '^14.0.3')
+  return semver.satisfies(nextVersion, '^14.0.3-canary.6')
 }
