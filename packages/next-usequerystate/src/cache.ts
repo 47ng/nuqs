@@ -1,4 +1,5 @@
 import { cache } from 'react'
+import { error } from './errors'
 import type { ParserBuilder } from './parsers'
 
 export type SearchParams = Record<string, string | string[] | undefined>
@@ -28,7 +29,11 @@ export function createSearchParamCache<
     const c = getCache()
     const entry = c[key]
     if (typeof entry === 'undefined') {
-      throw new Error('Forgot to parse searchParams?')
+      throw new Error(
+        error(500) +
+          `
+  in getSearchParam(${String(key)})`
+      )
     }
     return entry
   }
