@@ -165,7 +165,7 @@ function flushUpdateQueue(router: Router): [URLSearchParams, null | unknown] {
   } catch (err) {
     // This may fail due to rate-limiting of history methods,
     // for example Safari only allows 100 updates in a 30s window.
-    error(429, items.map(([key]) => key).join(), err)
+    console.error(error(429), items.map(([key]) => key).join(), err)
     return [search, error]
   }
 }
