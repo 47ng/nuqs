@@ -20,8 +20,9 @@ export function createSearchParamCache<
     const c = getCache()
     for (const key in parsers) {
       const parser = parsers[key]!
-      c[key as Keys] = parser.parseServerSide(searchParams[key])
+      c[key] = parser.parseServerSide(searchParams[key])
     }
+    return Object.freeze(c)
   }
   function getSearchParam<Key extends keyof Parsers>(
     key: Key
