@@ -9,7 +9,7 @@ export function debug(message: string, ...args: any[]) {
   }
   const msg = sprintf(message, ...args)
   performance.mark(msg)
-  console.debug(message, ...args)
+  console.log(message, ...args)
 }
 
 export function warn(message: string, ...args: any[]) {
