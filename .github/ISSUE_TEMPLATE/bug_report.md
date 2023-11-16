@@ -24,10 +24,10 @@ Next.js information (obtained by running `next info`):
 
 Are you using:
 
-<!-- Remove the ✅ (is used) or the ✖️ (is not used): -->
+<!-- Keep whichever is relevant (✅: used, ❌ not used) -->
 
-- ✅/✖️ The app router
-- ✅/✖️ The pages router
+- ✅/❌ The app router
+- ✅/❌ The pages router
 
 ## Description
 
