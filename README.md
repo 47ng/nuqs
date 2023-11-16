@@ -479,7 +479,7 @@ See issue #259 for more testing-related discussions.
 ## Debugging
 
 You can enable debug logs in the browser by setting the `debug` item in localStorage
-to `next-usequerystate` (or any string containing it), and reload the page.
+to `next-usequerystate`, and reload the page.
 
 ```js
 // In your devtools:
