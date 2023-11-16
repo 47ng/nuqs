@@ -24,10 +24,10 @@ Next.js information (obtained by running `next info`):
 
 Are you using:
 
-<!-- Replace the space between the square brackets with an x to tick the relevant box(es) -->
+<!-- Keep whichever is relevant (✅: used, ❌ not used) -->
 
-- [ ] The app router
-- [ ] The pages router
+- ✅/❌ The app router
+- ✅/❌ The pages router
 
 ## Description
 
