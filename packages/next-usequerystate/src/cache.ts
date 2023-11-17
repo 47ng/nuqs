@@ -25,11 +25,11 @@ export function createSearchParamsCache<
       const parser = parsers[key]!
       c[key] = parser.parseServerSide(searchParams[key])
     }
-    return Object.freeze(c)
+    return Object.freeze(c) as Readonly<ParsedSearchParams>
   }
   function all() {
     const c = getCache()
-    if (Object.keys(c) !== Object.keys(parsers)) {
+    if (Object.keys(c).length === 0) {
       throw new Error(error(500))
     }
     return c as Readonly<ParsedSearchParams>

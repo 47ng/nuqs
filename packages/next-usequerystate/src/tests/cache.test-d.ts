@@ -12,17 +12,21 @@ import {
     bar: parseAsInteger,
     egg: parseAsBoolean.withDefault(false)
   })
+
   // Values are type-safe
   expectType<string | null>(cache.get('foo'))
   expectType<number | null>(cache.get('bar'))
   // Default values are taken into account
   expectType<boolean>(cache.get('egg'))
   expectNotAssignable<null>(cache.get('egg'))
+  expectNotAssignable<undefined>(cache.get('foo'))
+  expectNotAssignable<undefined>(cache.get('bar'))
+  expectNotAssignable<undefined>(cache.get('egg'))
   // Keys are type safe
   expectError(() => {
     cache.get('spam')
   })
-  expectType<
-    Readonly<{ foo: string | null; bar: number | null; egg: boolean }>
-  >(cache.all())
+  type All = Readonly<{ foo: string | null; bar: number | null; egg: boolean }>
+  expectType<All>(cache.parse({}))
+  expectType<All>(cache.all())
 }
