@@ -11,7 +11,7 @@ useQueryState hook for Next.js - Like React.useState, but stored in the URL quer
 
 ## Features
 
-- 🔀 _**new:**_ Supports both the `app` and `pages` routers
+- 🔀 Supports both the `app` and `pages` routers
 - 🧘‍♀️ Simple: the URL is the source of truth
 - 🕰 Replace history or [append](#history) to use the Back button to navigate state updates
 - ⚡️ Built-in [parsers](#parsing) for common state types (integer, float, boolean, Date, and more)
