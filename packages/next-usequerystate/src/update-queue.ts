@@ -9,12 +9,13 @@ export const FLUSH_RATE_LIMIT_MS = getDefaultThrottle()
 
 type UpdateMap = Map<string, string | null>
 const updateQueue: UpdateMap = new Map()
-const queueOptions: Required<Options> = {
+const queueOptions: Required<Omit<Options, 'startTransition'>> = {
   history: 'replace',
   scroll: false,
   shallow: true,
   throttleMs: FLUSH_RATE_LIMIT_MS
 }
+const transitionsQueue: Set<React.TransitionStartFunction> = new Set()
 
 let lastFlushTimestamp = 0
 let flushPromiseCache: Promise<URLSearchParams> | null = null
@@ -36,6 +37,12 @@ export function enqueueQueryStringUpdate<Value>(
     queueOptions.scroll = true
   }
   if (options.shallow === false) {
+    queueOptions.shallow = false
+  }
+  if (options.startTransition) {
+    // Providing a startTransition function will
+    // cause the update to be non-shallow.
+    transitionsQueue.add(options.startTransition)
     queueOptions.shallow = false
   }
   queueOptions.throttleMs = Math.max(
@@ -117,8 +124,10 @@ function flushUpdateQueue(router: Router): [URLSearchParams, null | unknown] {
   // Work on a copy and clear the queue immediately
   const items = Array.from(updateQueue.entries())
   const options = { ...queueOptions }
+  const transitions = Array.from(transitionsQueue)
   // Restore defaults
   updateQueue.clear()
+  transitionsQueue.clear()
   queueOptions.history = 'replace'
   queueOptions.scroll = false
   queueOptions.shallow = true
@@ -153,12 +162,14 @@ function flushUpdateQueue(router: Router): [URLSearchParams, null | unknown] {
       window.scrollTo(0, 0)
     }
     if (!options.shallow) {
-      // Call the Next.js router to perform a network request
-      // and re-render server components.
-      router.replace(url, {
-        scroll: false,
-        // @ts-expect-error - pages router fix, but not exposed in navigation types
-        shallow: false
+      compose(transitions, () => {
+        // Call the Next.js router to perform a network request
+        // and re-render server components.
+        router.replace(url, {
+          scroll: false,
+          // @ts-expect-error - pages router fix, but not exposed in navigation types
+          shallow: false
+        })
       })
     }
     return [search, null]
@@ -188,4 +199,21 @@ function renderURL(search: URLSearchParams) {
     // a valid URL is required, so prepend the href (but without the query string)
     return query ? `${href}?${query}${hash}` : `${href}${hash}`
   }
+}
+
+export function compose(
+  fns: React.TransitionStartFunction[],
+  final: () => void
+) {
+  const recursiveCompose = (index: number) => {
+    if (index === fns.length) {
+      return final()
+    }
+    const fn = fns[index]
+    if (!fn) {
+      throw new Error('Invalid transition function')
+    }
+    fn(() => recursiveCompose(index + 1))
+  }
+  recursiveCompose(0)
 }
