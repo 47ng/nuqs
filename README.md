@@ -17,6 +17,7 @@ useQueryState hook for Next.js - Like React.useState, but stored in the URL quer
 - ⚡️ Built-in [parsers](#parsing) for common state types (integer, float, boolean, Date, and more)
 - ♊️ Related querystrings with [`useQueryStates`](#usequerystates)
 - 📡 [Shallow mode](#shallow) by default for URL query updates, opt-in to notify server components
+- 🗃 _**new:**_ [Server cache](#accessing-searchparams-in-server-components) for type-safe searchParams access in nested server components
 
 ## Installation
 
