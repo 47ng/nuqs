@@ -41,6 +41,15 @@ export type Options = {
    * will not have any effect.
    */
   throttleMs?: number
+
+  /**
+   * Opt-in to observing Server Component loading states when doing
+   * non-shallow updates by passing a `startTransition` from the
+   * `React.useTransition()` hook.
+   *
+   * Using this will set the `shallow` setting to `false` automatically.
+   */
+  startTransition?: React.TransitionStartFunction
 }
 
 export type Nullable<T> = {
