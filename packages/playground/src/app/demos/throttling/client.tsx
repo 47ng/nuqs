@@ -8,19 +8,25 @@ import { delayParser, queryParser } from './parsers'
 const autoFillMessage = `Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec a diam lectus. Sed sit amet ipsum mauris. Maecenas congue ligula ac quam viverra nec consectetur ante hendrerit. Donec et mollis dolor.`
 
 export function Client() {
-  const [serverDelay, setServerDelay] = useQueryState('serverDelay', {
-    ...delayParser,
-    shallow: false
-  })
+  const [isQueryLoading, startQueryTransition] = React.useTransition()
+  const [isDelayLoading, startDelayTransition] = React.useTransition()
+  const [serverDelay, setServerDelay] = useQueryState(
+    'serverDelay',
+    delayParser.withOptions({
+      startTransition: startDelayTransition
+    })
+  )
   const [clientDelay, setClientDelay] = useQueryState(
     'clientDelay',
     delayParser
   )
-  const [q, setQ] = useQueryState('q', {
-    ...queryParser,
-    throttleMs: clientDelay,
-    shallow: false
-  })
+  const [q, setQ] = useQueryState(
+    'q',
+    queryParser.withOptions({
+      throttleMs: clientDelay,
+      startTransition: startQueryTransition
+    })
+  )
   const router = useRouter()
 
   const timeoutRef = React.useRef<number>()
@@ -95,7 +101,17 @@ export function Client() {
         ) : (
           <button onClick={() => setIndex(1)}>Simulate typing</button>
         )}
+        <button
+          onClick={() => {
+            setQ('foo')
+            setServerDelay(500)
+          }}
+        >
+          Set both
+        </button>
         <p>Client state: {q || <em>empty</em>}</p>
+        <p>Query status: {isQueryLoading ? 'loading' : 'idle'}</p>
+        <p>Delay status: {isDelayLoading ? 'loading' : 'idle'}</p>
       </div>
     </>
   )
