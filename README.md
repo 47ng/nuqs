@@ -462,7 +462,7 @@ If you wish to access the searchParams in a deeply nested Server Component
 to do so in a type-safe manner:
 
 ```tsx
-// page.tsx
+// searchParams.ts
 import {
   createSearchParamsCache,
   parseAsInteger,
@@ -474,6 +474,9 @@ export const searchParamsCache = createSearchParamsCache({
   q: parseAsString.withDefault(''),
   maxResults: parseAsInteger.withDefault(10)
 })
+
+// page.tsx
+import { searchParamsCache } from './searchParams'
 
 export default function Page({
   searchParams
