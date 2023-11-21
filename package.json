@@ -74,5 +74,13 @@
         true
       ]
     }
+  },
+  "pnpm": {
+    "overrides": {
+      "hasown": "npm:@nolyfill/hasown@latest",
+      "isarray": "npm:@nolyfill/isarray@latest",
+      "side-channel": "npm:@nolyfill/side-channel@latest",
+      "string.prototype.padend": "npm:@nolyfill/string.prototype.padend@latest"
+    }
   }
 }
