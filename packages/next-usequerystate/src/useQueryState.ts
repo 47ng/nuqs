@@ -199,8 +199,8 @@ export function useQueryState<T = string, B = boolean>(
   key: string,
   {
     history = 'replace',
-    scroll = true,
     shallow = true,
+    scroll = false,
     throttleMs = FLUSH_RATE_LIMIT_MS,
     parse = x => x as unknown as T,
     serialize = String,
@@ -210,7 +210,6 @@ export function useQueryState<T = string, B = boolean>(
     history: 'replace',
     scroll: false,
     shallow: true,
-    startTransition: undefined,
     throttleMs: FLUSH_RATE_LIMIT_MS,
     parse: x => x as unknown as T,
     serialize: String,
