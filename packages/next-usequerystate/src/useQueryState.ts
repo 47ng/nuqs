@@ -12,22 +12,22 @@ import {
 } from './update-queue'
 import { safeParse } from './utils'
 
-export interface UseQueryStateOptions<T, Transition>
+export interface UseQueryStateOptions<T, ShallowState>
   extends Parser<T>,
-    Options<Transition> {}
+    Options<ShallowState> {}
 
 export type UseQueryStateReturn<Parsed, Default> = [
   Default extends undefined
     ? Parsed | null // value can't be null if default is specified
     : Parsed,
-  <Transition>(
+  <ShallowState>(
     value:
       | null
       | Parsed
       | ((
           old: Default extends Parsed ? Parsed : Parsed | null
         ) => Parsed | null),
-    options?: Options<Transition>
+    options?: Options<ShallowState>
   ) => Promise<URLSearchParams>
 ]
 
@@ -62,9 +62,9 @@ export type UseQueryStateReturn<Parsed, Default> = [
  * @param key The URL query string key to bind to
  * @param options - Parser (defines the state data type), default value and optional history mode.
  */
-export function useQueryState<T, Transition>(
+export function useQueryState<T, ShallowState>(
   key: string,
-  options: UseQueryStateOptions<T, Transition> & { defaultValue: T }
+  options: UseQueryStateOptions<T, ShallowState> & { defaultValue: T }
 ): UseQueryStateReturn<
   NonNullable<ReturnType<typeof options.parse>>,
   typeof options.defaultValue
@@ -85,9 +85,9 @@ export function useQueryState<T, Transition>(
  * @param key The URL query string key to bind to
  * @param options - Parser (defines the state data type), and optional history mode.
  */
-export function useQueryState<T, Transition>(
+export function useQueryState<T, ShallowState>(
   key: string,
-  options: UseQueryStateOptions<T, Transition>
+  options: UseQueryStateOptions<T, ShallowState>
 ): UseQueryStateReturn<NonNullable<ReturnType<typeof options.parse>>, undefined>
 
 /**
@@ -121,9 +121,9 @@ export function useQueryState(
  * @param key The URL query string key to bind to
  * @param options - Parser (defines the state data type), and optional history mode.
  */
-export function useQueryState<Transition>(
+export function useQueryState<ShallowState>(
   key: string,
-  options: Pick<UseQueryStateOptions<string, Transition>, keyof Options>
+  options: Pick<UseQueryStateOptions<string, ShallowState>, keyof Options>
 ): UseQueryStateReturn<string, undefined>
 
 /**
@@ -197,7 +197,7 @@ export function useQueryState(
  * @param key The URL query string key to bind to
  * @param options - Parser (defines the state data type), optional default value and history mode.
  */
-export function useQueryState<T = string, Transition = boolean>(
+export function useQueryState<T = string, ShallowState = boolean>(
   key: string,
   {
     history = 'replace',
@@ -208,7 +208,7 @@ export function useQueryState<T = string, Transition = boolean>(
     serialize = String,
     defaultValue = undefined,
     startTransition
-  }: Partial<UseQueryStateOptions<T, Transition>> & { defaultValue?: T } = {
+  }: Partial<UseQueryStateOptions<T, ShallowState>> & { defaultValue?: T } = {
     history: 'replace',
     scroll: false,
     shallow: true,
