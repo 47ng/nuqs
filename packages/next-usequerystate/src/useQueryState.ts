@@ -282,7 +282,7 @@ export function useQueryState<T = string, B = boolean>(
       enqueueQueryStringUpdate(key, newValue, serialize, {
         // Call-level options take precedence over hook declaration options.
         history: options.history ?? history,
-        shallow: options.shallow ?? shallow,
+        shallow: options.shallow ?? (shallow as any),
         scroll: options.scroll ?? scroll,
         throttleMs: options.throttleMs ?? throttleMs,
         startTransition: options.startTransition ?? startTransition
