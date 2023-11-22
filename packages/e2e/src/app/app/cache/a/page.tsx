@@ -1,9 +1,9 @@
 import Link from 'next/link'
 import { Suspense } from 'react'
-import { All } from './all'
-import { Get } from './get'
-import { cache } from './searchParams'
-import { Set } from './set'
+import { All } from '../all'
+import { Get } from '../get'
+import { cache } from '../searchParams'
+import { Set } from '../set'
 
 export default function Page({
   searchParams
@@ -13,7 +13,7 @@ export default function Page({
   const { str, bool, num, def, nope } = cache.parse(searchParams)
   return (
     <>
-      <h1>Root page</h1>
+      <h1>Page A</h1>
       <h2>From parse:</h2>
       <p style={{ display: 'flex', gap: '1rem' }}>
         <span id="parse-str">{str}</span>
@@ -29,10 +29,10 @@ export default function Page({
       </Suspense>
       <ul>
         <li>
-          <Link href="/app/cache/a?str=from-root">To page A</Link>
+          <Link href="/app/cache?str=from-a">To root page</Link>
         </li>
         <li>
-          <Link href="/app/cache/b?str=from-root">To page B</Link>
+          <Link href="/app/cache/b?str=from-a">To page B</Link>
         </li>
       </ul>
     </>

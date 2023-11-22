@@ -9,11 +9,13 @@ export function Get() {
   return (
     <>
       <h2>From get:</h2>
-      <p id="get-str">{str}</p>
-      <p id="get-num">{num}</p>
-      <p id="get-bool">{String(bool)}</p>
-      <p id="get-def">{def}</p>
-      <p id="get-nope">{String(nope)}</p>
+      <p style={{ display: 'flex', gap: '1rem' }}>
+        <span id="get-str">{str}</span>
+        <span id="get-num">{num}</span>
+        <span id="get-bool">{String(bool)}</span>
+        <span id="get-def">{def}</span>
+        <span id="get-nope">{String(nope)}</span>
+      </p>
     </>
   )
 }

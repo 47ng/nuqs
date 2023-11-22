@@ -5,11 +5,13 @@ export function All() {
   return (
     <>
       <h2>From all:</h2>
-      <p id="all-str">{str}</p>
-      <p id="all-num">{num}</p>
-      <p id="all-bool">{String(bool)}</p>
-      <p id="all-def">{def}</p>
-      <p id="all-nope">{String(nope)}</p>
+      <p style={{ display: 'flex', gap: '1rem' }}>
+        <span id="all-str">{str}</span>
+        <span id="all-num">{num}</span>
+        <span id="all-bool">{String(bool)}</span>
+        <span id="all-def">{def}</span>
+        <span id="all-nope">{String(nope)}</span>
+      </p>
     </>
   )
 }
