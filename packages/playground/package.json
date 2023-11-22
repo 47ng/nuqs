@@ -16,13 +16,13 @@
     "start": "next start"
   },
   "dependencies": {
-    "next": "14.0.1",
+    "next": "14.0.3",
     "next-usequerystate": "workspace:*",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },
   "devDependencies": {
-    "@types/node": "^20.9.0",
+    "@types/node": "^20.9.2",
     "@types/react": "^18.2.37",
     "@types/react-dom": "^18.2.15",
     "@types/webpack": "^5.28.5",
