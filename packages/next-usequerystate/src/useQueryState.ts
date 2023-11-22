@@ -273,7 +273,7 @@ export function useQueryState<T = string, B = boolean>(
   }, [key])
 
   const update = React.useCallback(
-    (stateUpdater: React.SetStateAction<T | null>, options: Options) => {
+    (stateUpdater: React.SetStateAction<T | null>, options: Options = {}) => {
       const newValue: T | null = isUpdaterFunction(stateUpdater)
         ? stateUpdater(stateRef.current ?? defaultValue ?? null)
         : stateUpdater
@@ -294,8 +294,6 @@ export function useQueryState<T = string, B = boolean>(
   )
   return [internalState ?? defaultValue ?? null, update]
 }
-
-const [isLoading, startTransition] = React.useTransition()
 
 function isUpdaterFunction<T>(
   stateUpdater: React.SetStateAction<T>
