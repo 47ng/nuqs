@@ -15,6 +15,11 @@ export function createSearchParamsCache<
   type ParsedSearchParams = {
     [K in Keys]: ExtractParserType<Parsers[K]>
   }
+  // Why not use a good old object here ?
+  // React's `cache` is bound to the render lifecycle of a page,
+  // whereas a simple object would be bound to the lifecycle of the process,
+  // which may be reused between requests in a serverless environment
+  // (warm lambdas on Vercel or AWS).
   const getCache = cache<() => Partial<ParsedSearchParams>>(() => ({}))
   function parse(searchParams: SearchParams) {
     const c = getCache()
