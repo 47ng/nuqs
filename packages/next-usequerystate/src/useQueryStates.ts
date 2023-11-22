@@ -24,7 +24,8 @@ export type UseQueryStatesKeysMap<Map = any> = {
   [Key in keyof Map]: KeyMapValue<Map[Key]>
 }
 
-export interface UseQueryStatesOptions<B> extends Options<B> {}
+export interface UseQueryStatesOptions<Transition>
+  extends Options<Transition> {}
 
 export type Values<T extends UseQueryStatesKeysMap> = {
   [K in keyof T]: T[K]['defaultValue'] extends NonNullable<
