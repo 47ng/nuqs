@@ -5,7 +5,7 @@ export type Router = ReturnType<typeof useRouter>
 export type HistoryOptions = 'replace' | 'push'
 
 export type Options<
-  ShallowState = boolean | unknown,
+  AgnosticShallowState = boolean | unknown,
   ShallowFlag = boolean | undefined
 > = {
   /**
@@ -33,7 +33,7 @@ export type Options<
    * the updated querystring.
    */
   shallow?: Extract<
-    ShallowFlag extends boolean ? ShallowState : boolean,
+    ShallowFlag extends boolean ? AgnosticShallowState : boolean,
     boolean
   >
 
@@ -55,11 +55,11 @@ export type Options<
    *
    * Using this will set the `shallow` setting to `false` automatically.
    */
-  startTransition?: ShallowState extends false
+  startTransition?: AgnosticShallowState extends false
     ? React.TransitionStartFunction
-    : ShallowState extends true
+    : AgnosticShallowState extends true
     ? never
-    : ShallowState extends unknown
+    : AgnosticShallowState extends unknown
     ? React.TransitionStartFunction
     : never
 }

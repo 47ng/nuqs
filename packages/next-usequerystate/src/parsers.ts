@@ -15,9 +15,9 @@ export type ParserBuilder<T> = Required<Parser<T>> &
      * Note that you can override those options in individual calls to the
      * state updater function.
      */
-    withOptions<This, ShallowState>(
+    withOptions<This, AgnosticShallowState>(
       this: This,
-      options: Options<ShallowState>
+      options: Options<AgnosticShallowState>
     ): This
 
     /**
