@@ -18,14 +18,14 @@ export type UseQueryStateReturn<Parsed, Default> = [
   Default extends undefined
     ? Parsed | null // value can't be null if default is specified
     : Parsed,
-  (
+  <A>(
     value:
       | null
       | Parsed
       | ((
           old: Default extends Parsed ? Parsed : Parsed | null
         ) => Parsed | null),
-    options?: Options
+    options?: Options<A>
   ) => Promise<URLSearchParams>
 ]
 
