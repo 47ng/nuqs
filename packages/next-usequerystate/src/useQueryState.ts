@@ -199,8 +199,8 @@ export function useQueryState<T = string, B = boolean>(
   key: string,
   {
     history = 'replace',
-    scroll = false,
-    shallow,
+    scroll = true,
+    shallow = true,
     throttleMs = FLUSH_RATE_LIMIT_MS,
     parse = x => x as unknown as T,
     serialize = String,
@@ -209,6 +209,8 @@ export function useQueryState<T = string, B = boolean>(
   }: Partial<UseQueryStateOptions<T, B>> & { defaultValue?: T } = {
     history: 'replace',
     scroll: false,
+    shallow: true,
+    startTransition: undefined,
     throttleMs: FLUSH_RATE_LIMIT_MS,
     parse: x => x as unknown as T,
     serialize: String,
@@ -281,7 +283,7 @@ export function useQueryState<T = string, B = boolean>(
       enqueueQueryStringUpdate(key, newValue, serialize, {
         // Call-level options take precedence over hook declaration options.
         history: options.history ?? history,
-        shallow: options.shallow ?? true,
+        shallow: options.shallow ?? shallow,
         scroll: options.scroll ?? scroll,
         throttleMs: options.throttleMs ?? throttleMs,
         startTransition: options.startTransition ?? startTransition
@@ -292,6 +294,8 @@ export function useQueryState<T = string, B = boolean>(
   )
   return [internalState ?? defaultValue ?? null, update]
 }
+
+const [isLoading, startTransition] = React.useTransition()
 
 function isUpdaterFunction<T>(
   stateUpdater: React.SetStateAction<T>
