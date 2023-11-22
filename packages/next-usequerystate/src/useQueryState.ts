@@ -12,7 +12,7 @@ import {
 } from './update-queue'
 import { safeParse } from './utils'
 
-export interface UseQueryStateOptions<T> extends Parser<T>, Options {}
+export interface UseQueryStateOptions<T, B> extends Parser<T>, Options<B> {}
 
 export type UseQueryStateReturn<Parsed, Default> = [
   Default extends undefined
@@ -60,9 +60,9 @@ export type UseQueryStateReturn<Parsed, Default> = [
  * @param key The URL query string key to bind to
  * @param options - Parser (defines the state data type), default value and optional history mode.
  */
-export function useQueryState<T>(
+export function useQueryState<T, B>(
   key: string,
-  options: UseQueryStateOptions<T> & { defaultValue: T }
+  options: UseQueryStateOptions<T, B> & { defaultValue: T }
 ): UseQueryStateReturn<
   NonNullable<ReturnType<typeof options.parse>>,
   typeof options.defaultValue
@@ -83,9 +83,9 @@ export function useQueryState<T>(
  * @param key The URL query string key to bind to
  * @param options - Parser (defines the state data type), and optional history mode.
  */
-export function useQueryState<T>(
+export function useQueryState<T, B>(
   key: string,
-  options: UseQueryStateOptions<T>
+  options: UseQueryStateOptions<T, B>
 ): UseQueryStateReturn<NonNullable<ReturnType<typeof options.parse>>, undefined>
 
 /**
@@ -119,9 +119,9 @@ export function useQueryState(
  * @param key The URL query string key to bind to
  * @param options - Parser (defines the state data type), and optional history mode.
  */
-export function useQueryState(
+export function useQueryState<B>(
   key: string,
-  options: Pick<UseQueryStateOptions<string>, keyof Options>
+  options: Pick<UseQueryStateOptions<string, B>, keyof Options>
 ): UseQueryStateReturn<string, undefined>
 
 /**
@@ -195,21 +195,20 @@ export function useQueryState(
  * @param key The URL query string key to bind to
  * @param options - Parser (defines the state data type), optional default value and history mode.
  */
-export function useQueryState<T = string>(
+export function useQueryState<T = string, B = boolean>(
   key: string,
   {
     history = 'replace',
-    shallow = true,
     scroll = false,
+    shallow,
     throttleMs = FLUSH_RATE_LIMIT_MS,
     parse = x => x as unknown as T,
     serialize = String,
     defaultValue = undefined,
     startTransition
-  }: Partial<UseQueryStateOptions<T>> & { defaultValue?: T } = {
+  }: Partial<UseQueryStateOptions<T, B>> & { defaultValue?: T } = {
     history: 'replace',
     scroll: false,
-    shallow: true,
     throttleMs: FLUSH_RATE_LIMIT_MS,
     parse: x => x as unknown as T,
     serialize: String,
@@ -272,7 +271,7 @@ export function useQueryState<T = string>(
   }, [key])
 
   const update = React.useCallback(
-    (stateUpdater: React.SetStateAction<T | null>, options: Options = {}) => {
+    (stateUpdater: React.SetStateAction<T | null>, options: Options) => {
       const newValue: T | null = isUpdaterFunction(stateUpdater)
         ? stateUpdater(stateRef.current ?? defaultValue ?? null)
         : stateUpdater
@@ -282,7 +281,7 @@ export function useQueryState<T = string>(
       enqueueQueryStringUpdate(key, newValue, serialize, {
         // Call-level options take precedence over hook declaration options.
         history: options.history ?? history,
-        shallow: options.shallow ?? shallow,
+        shallow: options.shallow ?? true,
         scroll: options.scroll ?? scroll,
         throttleMs: options.throttleMs ?? throttleMs,
         startTransition: options.startTransition ?? startTransition

@@ -4,7 +4,7 @@ export type Router = ReturnType<typeof useRouter>
 
 export type HistoryOptions = 'replace' | 'push'
 
-export type Options = {
+export type Options<B = boolean, S = any> = {
   /**
    * How the query update affects page history
    *
@@ -29,7 +29,7 @@ export type Options = {
    * Setting it to `false` will trigger a network request to the server with
    * the updated querystring.
    */
-  shallow?: boolean
+  shallow?: S extends React.TransitionStartFunction ? false : B
 
   /**
    * Maximum amount of time (ms) to wait between updates of the URL query string.
@@ -49,7 +49,13 @@ export type Options = {
    *
    * Using this will set the `shallow` setting to `false` automatically.
    */
-  startTransition?: React.TransitionStartFunction
+  startTransition?: B extends false
+    ? React.TransitionStartFunction
+    : B extends true
+    ? never
+    : B extends unknown
+    ? React.TransitionStartFunction
+    : never
 }
 
 export type Nullable<T> = {
