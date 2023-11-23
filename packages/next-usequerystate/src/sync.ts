@@ -45,7 +45,7 @@ function patchHistory() {
   const patched = history.__nextUseQueryState_patched
   if (patched) {
     if (patched !== version) {
-      error(409, patched, version)
+      console.error(error(409), patched, version)
     }
     return
   }

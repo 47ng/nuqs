@@ -91,7 +91,10 @@
     {
       "name": "Parsers (ESM)",
       "path": "dist/parsers.js",
-      "limit": "1 kB"
+      "limit": "2 kB",
+      "ignore": [
+        "react"
+      ]
     }
   ]
 }

@@ -11,12 +11,13 @@ useQueryState hook for Next.js - Like React.useState, but stored in the URL quer
 
 ## Features
 
-- 🔀 _**new:**_ Supports both the `app` and `pages` routers
+- 🔀 Supports both the `app` and `pages` routers
 - 🧘‍♀️ Simple: the URL is the source of truth
 - 🕰 Replace history or [append](#history) to use the Back button to navigate state updates
 - ⚡️ Built-in [parsers](#parsing) for common state types (integer, float, boolean, Date, and more)
 - ♊️ Related querystrings with [`useQueryStates`](#usequerystates)
 - 📡 [Shallow mode](#shallow) by default for URL query updates, opt-in to notify server components
+- 🗃 _**new:**_ [Server cache](#accessing-searchparams-in-server-components) for type-safe searchParams access in nested server components
 
 ## Installation
 
@@ -452,6 +453,116 @@ const search = await setCoordinates({
   lat: Math.random() * 180 - 90,
   lng: Math.random() * 360 - 180
 })
+```
+
+## Accessing searchParams in Server Components
+
+If you wish to access the searchParams in a deeply nested Server Component
+(ie: not in the Page component), you can use `createSearchParamsCache`
+to do so in a type-safe manner:
+
+```tsx
+// searchParams.ts
+import {
+  createSearchParamsCache,
+  parseAsInteger,
+  parseAsString
+} from 'next-usequerystate/parsers'
+
+export const searchParamsCache = createSearchParamsCache({
+  // List your search param keys and associated parsers here:
+  q: parseAsString.withDefault(''),
+  maxResults: parseAsInteger.withDefault(10)
+})
+
+// page.tsx
+import { searchParamsCache } from './searchParams'
+
+export default function Page({
+  searchParams
+}: {
+  searchParams: Record<string, string | string[] | undefined>
+}) {
+  // ⚠️ Don't forget to call `parse` here.
+  // You can access type-safe values from the returned object:
+  const { q: query } = searchParamsCache.parse(searchParams)
+  return (
+    <div>
+      <h1>Search Results for {query}</h1>
+      <Results />
+    </div>
+  )
+}
+
+function Results() {
+  // Access type-safe search params in children server components:
+  const maxResults = searchParamsCache.get('maxResults')
+  return <span>Showing up to {maxResults} results</span>
+}
+```
+
+The cache will only be valid for the current page render
+(see React's [`cache`](https://react.dev/reference/react/cache) function).
+
+Note: the cache only works for **server components**, but you may share your
+parser declaration with `useQueryStates` for type-safety in client components:
+
+```tsx
+// searchParams.ts
+import {
+  parseAsFloat,
+  createSearchParamsCache
+} from 'next-usequerystate/parsers'
+
+export const coordinatesParsers = {
+  lat: parseAsFloat.withDefault(45.18),
+  lng: parseAsFloat.withDefault(5.72)
+}
+export const coordinatesCache = createSearchParamsCache(coordinatesParsers)
+
+// page.tsx
+import { coordinatesCache } from './searchParams'
+import { Server } from './server'
+import { Client } from './client'
+
+export default function Page({ searchParams }) {
+  coordinatesCache.parse(searchParams)
+  return (
+    <>
+      <Server />
+      <Suspense>
+        <Client />
+      </Suspense>
+    </>
+  )
+}
+
+// server.tsx
+import { coordinatesCache } from './searchParams'
+
+export function Server() {
+  const { lat, lng } = coordinatesCache.all()
+  // or access keys individually:
+  const lat = coordinatesCache.get('lat')
+  const lng = coordinatesCache.get('lng')
+  return (
+    <span>
+      Latitude: {lat} - Longitude: {lng}
+    </span>
+  )
+}
+
+// client.tsx
+// prettier-ignore
+'use client'
+
+import { useQueryStates } from 'next-usequerystate'
+import { coordinatesParsers } from './searchParams'
+
+export function Client() {
+  const [{ lat, lng }, setCoordinates] = useQueryStates(coordinatesParsers)
+  // ...
+}
 ```
 
 ## Testing
