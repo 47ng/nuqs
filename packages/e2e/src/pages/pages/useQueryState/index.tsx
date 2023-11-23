@@ -1,7 +1,20 @@
-import { queryTypes, useQueryState } from 'next-usequerystate'
+import { GetServerSideProps } from 'next'
+import { parseAsString, queryTypes, useQueryState } from 'next-usequerystate'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { HydrationMarker } from '../../../components/hydration-marker'
+
+export const getServerSideProps = (async ctx => {
+  const string = parseAsString.parseServerSide(ctx.query.string)
+  console.dir({ string })
+  return {
+    props: {
+      string
+    }
+  }
+}) satisfies GetServerSideProps<{
+  string: string | null
+}>
 
 const IntegrationPage = () => {
   const [string, setString] = useQueryState('string')
