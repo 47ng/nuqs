@@ -18,6 +18,7 @@ useQueryState hook for Next.js - Like React.useState, but stored in the URL quer
 - ♊️ Related querystrings with [`useQueryStates`](#usequerystates)
 - 📡 [Shallow mode](#shallow) by default for URL query updates, opt-in to notify server components
 - 🗃 _**new:**_ [Server cache](#accessing-searchparams-in-server-components) for type-safe searchParams access in nested server components
+- ⌛️ **new:** Support for [`useTransition`](#transitions) to get loading states on server updates
 
 ## Installation
 
@@ -317,6 +318,40 @@ setState('bar', { throttleMs: 1000 })
 If multiple hooks set different throttle values on the same event loop tick,
 the highest value will be used. Also, values lower than 50ms will be ignored,
 to avoid rate-limiting issues. [Read more](https://francoisbest.com/posts/2023/storing-react-state-in-the-url-with-nextjs#batching--throttling).
+
+### Transitions
+
+When combined with `shallow: false`, you can use the `useTransition` hook to get
+loading states while the server is re-rendering server components with the
+updated URL.
+
+Pass in the `startTransition` function from `useTransition` to the options
+to enable this behaviour _(this will set `shallow: false` automatically for you)_:
+
+```tsx
+'use client'
+
+import React from 'react'
+import { useQueryState, parseAsString } from 'next-usequerystate'
+
+function ClientComponent({ data }) {
+  // 1. Provide your own useTransition hook:
+  const [isLoading, startTransition] = React.useTransition()
+  const [query, setQuery] = useQueryState(
+    'query',
+    // 2. Pass the `startTransition` as an option:
+    parseAsString().withOptions({ startTransition })
+  )
+  // 3. `isLoading` will be true while the server is re-rendering
+  // and streaming RSC payloads, when the query is updated via `setQuery`.
+
+  // Indicate loading state
+  if (isLoading) return <div>Loading...</div>
+
+  // Normal rendering with data
+  return <div>{/*...*/}</div>
+}
+```
 
 ## Configuring parsers, default value & options
 

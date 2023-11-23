@@ -290,3 +290,17 @@ import {
   expectError(() => setFoo(() => undefined))
   expectError(() => setBar(() => undefined))
 }
+
+// Shallow & startTransition interaction
+{
+  const [, set] = useQueryState('foo')
+  set('ok', { shallow: true })
+  set('ok', { shallow: false })
+  set('ok', { startTransition: () => {} })
+  expectError(() => {
+    set('nope', {
+      shallow: true,
+      startTransition: () => {}
+    })
+  })
+}

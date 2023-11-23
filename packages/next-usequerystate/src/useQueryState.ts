@@ -18,14 +18,14 @@ export type UseQueryStateReturn<Parsed, Default> = [
   Default extends undefined
     ? Parsed | null // value can't be null if default is specified
     : Parsed,
-  (
+  <Shallow>(
     value:
       | null
       | Parsed
       | ((
           old: Default extends Parsed ? Parsed : Parsed | null
         ) => Parsed | null),
-    options?: Options
+    options?: Options<Shallow>
   ) => Promise<URLSearchParams>
 ]
 
@@ -204,8 +204,11 @@ export function useQueryState<T = string>(
     throttleMs = FLUSH_RATE_LIMIT_MS,
     parse = x => x as unknown as T,
     serialize = String,
-    defaultValue = undefined
-  }: Partial<UseQueryStateOptions<T>> & { defaultValue?: T } = {
+    defaultValue = undefined,
+    startTransition
+  }: Partial<UseQueryStateOptions<T>> & {
+    defaultValue?: T
+  } = {
     history: 'replace',
     scroll: false,
     shallow: true,
@@ -283,11 +286,12 @@ export function useQueryState<T = string>(
         history: options.history ?? history,
         shallow: options.shallow ?? shallow,
         scroll: options.scroll ?? scroll,
-        throttleMs: options.throttleMs ?? throttleMs
+        throttleMs: options.throttleMs ?? throttleMs,
+        startTransition: options.startTransition ?? startTransition
       })
       return scheduleFlushToURL(router)
     },
-    [key, history, shallow, scroll, throttleMs]
+    [key, history, shallow, scroll, throttleMs, startTransition]
   )
   return [internalState ?? defaultValue ?? null, update]
 }

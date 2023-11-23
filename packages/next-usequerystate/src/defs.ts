@@ -1,10 +1,18 @@
 import { useRouter } from 'next/navigation.js' // https://github.com/47ng/next-usequerystate/discussions/352
+import type { TransitionStartFunction } from 'react'
 
 export type Router = ReturnType<typeof useRouter>
 
 export type HistoryOptions = 'replace' | 'push'
 
-export type Options = {
+// prettier-ignore
+type StartTransition<T> = T extends false
+  ? TransitionStartFunction
+  : T extends true
+    ? never
+    : TransitionStartFunction
+
+export type Options<Shallow = unknown> = {
   /**
    * How the query update affects page history
    *
@@ -29,7 +37,7 @@ export type Options = {
    * Setting it to `false` will trigger a network request to the server with
    * the updated querystring.
    */
-  shallow?: boolean
+  shallow?: Extract<Shallow | boolean, boolean>
 
   /**
    * Maximum amount of time (ms) to wait between updates of the URL query string.
@@ -41,6 +49,17 @@ export type Options = {
    * will not have any effect.
    */
   throttleMs?: number
+
+  /**
+   * Opt-in to observing Server Component loading states when doing
+   * non-shallow updates by passing a `startTransition` from the
+   * `React.useTransition()` hook.
+   *
+   * Using this will set the `shallow` setting to `false` automatically.
+   * As a result, you can't set both `shallow: true` and `startTransition`
+   * in the same Options object.
+   */
+  startTransition?: StartTransition<Shallow>
 }
 
 export type Nullable<T> = {

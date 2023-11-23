@@ -62,7 +62,8 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
     history = 'replace',
     scroll = false,
     shallow = true,
-    throttleMs = FLUSH_RATE_LIMIT_MS
+    throttleMs = FLUSH_RATE_LIMIT_MS,
+    startTransition
   }: Partial<UseQueryStatesOptions> = {}
 ): UseQueryStatesReturn<KeyMap> {
   type V = Values<KeyMap>
@@ -152,12 +153,13 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
           history: options.history ?? history,
           shallow: options.shallow ?? shallow,
           scroll: options.scroll ?? scroll,
-          throttleMs: options.throttleMs ?? throttleMs
+          throttleMs: options.throttleMs ?? throttleMs,
+          startTransition: options.startTransition ?? startTransition
         })
       }
       return scheduleFlushToURL(router)
     },
-    [keyMap, history, shallow, scroll]
+    [keyMap, history, shallow, scroll, throttleMs, startTransition]
   )
   return [internalState, update]
 }
