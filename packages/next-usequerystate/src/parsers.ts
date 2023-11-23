@@ -15,10 +15,7 @@ export type ParserBuilder<T> = Required<Parser<T>> &
      * Note that you can override those options in individual calls to the
      * state updater function.
      */
-    withOptions<This, AgnosticShallowOption>(
-      this: This,
-      options: Options<AgnosticShallowOption>
-    ): This
+    withOptions<This, Shallow>(this: This, options: Options<Shallow>): This
 
     /**
      * Specifying a default value makes the hook state non-nullable when the

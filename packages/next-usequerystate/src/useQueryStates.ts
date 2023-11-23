@@ -24,8 +24,7 @@ export type UseQueryStatesKeysMap<Map = any> = {
   [Key in keyof Map]: KeyMapValue<Map[Key]>
 }
 
-export interface UseQueryStatesOptions<AgnosticShallowOption>
-  extends Options<AgnosticShallowOption> {}
+export interface UseQueryStatesOptions<Shallow> extends Options<Shallow> {}
 
 export type Values<T extends UseQueryStatesKeysMap> = {
   [K in keyof T]: T[K]['defaultValue'] extends NonNullable<
