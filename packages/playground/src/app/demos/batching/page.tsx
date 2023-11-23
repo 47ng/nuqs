@@ -36,7 +36,7 @@ export default function BuilderPatternDemoPage() {
         </code>
       </pre>
       <p>
-        <a href="https://github.com/47ng/next-usequerystate/blob/next/src/app/demos/batching/page.tsx">
+        <a href="https://github.com/47ng/next-usequerystate/blob/next/packages/playground/src/app/demos/batching/page.tsx">
           Source on GitHub
         </a>
       </p>

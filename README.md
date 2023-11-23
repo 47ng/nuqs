@@ -22,7 +22,13 @@ useQueryState hook for Next.js - Like React.useState, but stored in the URL quer
 
 ```shell
 $ pnpm add next-usequerystate
+```
+
+```shell
 $ yarn add next-usequerystate
+```
+
+```shell
 $ npm install next-usequerystate
 ```
 
