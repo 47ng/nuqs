@@ -49,7 +49,7 @@ export default function CompoundParsersDemo() {
         </pre>
       </section>
       <p>
-        <a href="https://github.com/47ng/next-usequerystate/blob/next/src/app/demos/compound-parsers/page.tsx">
+        <a href="https://github.com/47ng/next-usequerystate/blob/next/packages/playground/src/app/demos/compound-parsers/page.tsx">
           Source on GitHub
         </a>
       </p>

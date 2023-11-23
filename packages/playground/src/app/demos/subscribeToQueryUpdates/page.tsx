@@ -31,7 +31,7 @@ export default function BuilderPatternDemoPage() {
         <em>Check the console</em>
       </p>
       <p>
-        <a href="https://github.com/47ng/next-usequerystate/blob/next/src/app/demos/subscribeToQueryUpdates/page.tsx">
+        <a href="https://github.com/47ng/next-usequerystate/blob/next/packages/playground/src/app/demos/subscribeToQueryUpdates/page.tsx">
           Source on GitHub
         </a>
       </p>
