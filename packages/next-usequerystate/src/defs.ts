@@ -5,13 +5,12 @@ export type Router = ReturnType<typeof useRouter>
 
 export type HistoryOptions = 'replace' | 'push'
 
+// prettier-ignore
 type StartTransition<T> = T extends false
   ? TransitionStartFunction
   : T extends true
-  ? never
-  : T extends unknown
-  ? TransitionStartFunction
-  : never
+    ? never
+    : TransitionStartFunction
 
 export type Options<Shallow = unknown> = {
   /**
