@@ -4,10 +4,7 @@ export type Router = ReturnType<typeof useRouter>
 
 export type HistoryOptions = 'replace' | 'push'
 
-export type Options<
-  AgnosticShallowOption = boolean | unknown,
-  ShallowOption = boolean | undefined
-> = {
+export type Options<AgnosticShallowOption = boolean | unknown> = {
   /**
    * How the query update affects page history
    *
@@ -32,10 +29,7 @@ export type Options<
    * Setting it to `false` will trigger a network request to the server with
    * the updated querystring.
    */
-  shallow?: Extract<
-    ShallowOption extends boolean ? AgnosticShallowOption : boolean,
-    boolean
-  >
+  shallow?: Extract<AgnosticShallowOption | boolean, boolean>
 
   /**
    * Maximum amount of time (ms) to wait between updates of the URL query string.
