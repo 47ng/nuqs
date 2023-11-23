@@ -18,14 +18,14 @@ export type UseQueryStateReturn<Parsed, Default> = [
   Default extends undefined
     ? Parsed | null // value can't be null if default is specified
     : Parsed,
-  (
+  <Shallow>(
     value:
       | null
       | Parsed
       | ((
           old: Default extends Parsed ? Parsed : Parsed | null
         ) => Parsed | null),
-    options?: Options
+    options?: Options<Shallow>
   ) => Promise<URLSearchParams>
 ]
 
@@ -206,7 +206,9 @@ export function useQueryState<T = string>(
     serialize = String,
     defaultValue = undefined,
     startTransition
-  }: Partial<UseQueryStateOptions<T>> & { defaultValue?: T } = {
+  }: Partial<UseQueryStateOptions<T>> & {
+    defaultValue?: T
+  } = {
     history: 'replace',
     scroll: false,
     shallow: true,
