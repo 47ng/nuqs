@@ -335,11 +335,15 @@ import React from 'react'
 import { useQueryState, parseAsString } from 'next-usequerystate'
 
 function ClientComponent({ data }) {
+  // 1. Provide your own useTransition hook:
   const [isLoading, startTransition] = React.useTransition()
   const [query, setQuery] = useQueryState(
     'query',
+    // 2. Pass the `startTransition` as an option:
     parseAsString().withOptions({ startTransition })
   )
+  // 3. `isLoading` will be true while the server is re-rendering
+  // and streaming RSC payloads, when the query is updated via `setQuery`.
 
   // Indicate loading state
   if (isLoading) return <div>Loading...</div>
