@@ -30,16 +30,25 @@ import { parseAsString } from '../../dist'
 
 // Shallow / startTransition interaction
 {
-  expectType<boolean | undefined>(parseAsString.withOptions({}).shallow)
-  expectType<boolean | undefined>(
-    parseAsString.withOptions({ shallow: true }).shallow
+  type RSTF = React.TransitionStartFunction
+  type MaybeBool = boolean | undefined
+  type MaybeRSTF = RSTF | undefined
+
+  expectType<MaybeBool>(parseAsString.withOptions({}).shallow)
+  expectType<MaybeRSTF>(parseAsString.withOptions({}).startTransition)
+  expectType<MaybeBool>(parseAsString.withOptions({ shallow: true }).shallow)
+  expectType<MaybeRSTF>(
+    parseAsString.withOptions({ shallow: true }).startTransition
   )
-  expectType<boolean | undefined>(
-    parseAsString.withOptions({ shallow: false }).shallow
+  expectType<MaybeBool>(parseAsString.withOptions({ shallow: false }).shallow)
+  expectType<MaybeRSTF>(
+    parseAsString.withOptions({ shallow: false }).startTransition
   )
-  // Should probably be `false` here, but it's not worth the complexity
-  expectType<boolean | undefined>(
+  expectType<MaybeBool>(
     parseAsString.withOptions({ startTransition: () => {} }).shallow
+  )
+  expectType<MaybeRSTF>(
+    parseAsString.withOptions({ startTransition: () => {} }).startTransition
   )
   // Allowed
   parseAsString.withOptions({
@@ -53,16 +62,15 @@ import { parseAsString } from '../../dist'
       startTransition: () => {}
     })
   })
+  expectError(() => {
+    parseAsString.withOptions({
+      shallow: {}
+    })
+  })
+
+  expectError(() => {
+    parseAsString.withOptions({
+      startTransition: {}
+    })
+  })
 }
-
-expectError(() => {
-  parseAsString.withOptions({
-    shallow: {}
-  })
-})
-
-expectError(() => {
-  parseAsString.withOptions({
-    startTransition: {}
-  })
-})

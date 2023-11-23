@@ -57,6 +57,8 @@ export type Options<Shallow = unknown> = {
    * `React.useTransition()` hook.
    *
    * Using this will set the `shallow` setting to `false` automatically.
+   * As a result, you can't set both `shallow: true` and `startTransition`
+   * in the same Options object.
    */
   startTransition?: StartTransition<Shallow>
 }
