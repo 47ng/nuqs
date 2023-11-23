@@ -9,7 +9,7 @@ export const FLUSH_RATE_LIMIT_MS = getDefaultThrottle()
 
 type UpdateMap = Map<string, string | null>
 const updateQueue: UpdateMap = new Map()
-const queueOptions: Required<Omit<Options<boolean>, 'startTransition'>> = {
+const queueOptions: Required<Omit<Options, 'startTransition'>> = {
   history: 'replace',
   scroll: false,
   shallow: true,
@@ -24,7 +24,7 @@ export function enqueueQueryStringUpdate<Value>(
   key: string,
   value: Value | null,
   serialize: (value: Value) => string,
-  options: Options<boolean>
+  options: Options
 ) {
   const serializedOrNull = value === null ? null : serialize(value)
   debug('[nuqs queue] Enqueueing %s=%s %O', key, serializedOrNull, options)

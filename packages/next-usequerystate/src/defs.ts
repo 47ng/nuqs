@@ -4,7 +4,7 @@ export type Router = ReturnType<typeof useRouter>
 
 export type HistoryOptions = 'replace' | 'push'
 
-type StartTransition<T extends unknown> = T extends false
+type StartTransition<T> = T extends false
   ? React.TransitionStartFunction
   : T extends true
   ? never
