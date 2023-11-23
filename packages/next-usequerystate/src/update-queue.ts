@@ -157,7 +157,6 @@ function flushUpdateQueue(router: Router): [URLSearchParams, null | unknown] {
       // and re-render server components.
       router.replace(url, {
         scroll: false,
-        // @ts-expect-error - pages router fix, but not exposed in navigation types
         shallow: false
       })
     }
