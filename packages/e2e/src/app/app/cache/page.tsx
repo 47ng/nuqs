@@ -1,4 +1,3 @@
-import Link from 'next/link'
 import { Suspense } from 'react'
 import { All } from './all'
 import { Get } from './get'
@@ -27,14 +26,6 @@ export default function Page({
       <Suspense>
         <Set />
       </Suspense>
-      <ul>
-        <li>
-          <Link href="/app/cache/a?str=from-root">To page A</Link>
-        </li>
-        <li>
-          <Link href="/app/cache/b?str=from-root">To page B</Link>
-        </li>
-      </ul>
     </>
   )
 }
