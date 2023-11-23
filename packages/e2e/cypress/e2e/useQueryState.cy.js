@@ -1,17 +1,20 @@
 /// <reference types="cypress" />
 
-function runTest() {
+function runTest(pathname) {
   cy.contains('#hydration-marker', 'hydrated').should('be.hidden')
   // String
   {
     cy.get('#string_value').should('be.empty')
     cy.get('#string_set_a').click()
+    cy.location('pathname').should('eq', pathname)
     cy.location('search').should('eq', '?string=a')
     cy.get('#string_value').should('have.text', 'a')
     cy.get('#string_set_b').click()
+    cy.location('pathname').should('eq', pathname)
     cy.location('search').should('eq', '?string=b')
     cy.get('#string_value').should('have.text', 'b')
     cy.get('#string_clear').click()
+    cy.location('pathname').should('eq', pathname)
     cy.location('search').should('be.empty')
     cy.get('#string_value').should('be.empty')
   }
@@ -88,23 +91,23 @@ function runTest() {
 describe('useQueryState (app router)', () => {
   it('works in standard routes', () => {
     cy.visit('/app/useQueryState')
-    runTest()
+    runTest(`${Cypress.env('basePath')}/app/useQueryState`)
   })
 
   it('works in dynamic routes', () => {
     cy.visit('/app/useQueryState/dynamic/route')
-    runTest()
+    runTest(`${Cypress.env('basePath')}/app/useQueryState/dynamic/route`)
   })
 })
 
 describe('useQueryState (pages router)', () => {
   it('works in standard routes', () => {
     cy.visit('/pages/useQueryState')
-    runTest()
+    runTest(`${Cypress.env('basePath')}/pages/useQueryState`)
   })
 
   it('works in dynamic routes', () => {
     cy.visit('/pages/useQueryState/dynamic/route')
-    runTest()
+    runTest(`${Cypress.env('basePath')}/pages/useQueryState/dynamic/route`)
   })
 })

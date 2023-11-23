@@ -1,9 +1,12 @@
 export function renderQueryString(search: URLSearchParams) {
+  if (search.size === 0) {
+    return ''
+  }
   const query: string[] = []
   for (const [key, value] of search.entries()) {
     query.push(`${key}=${encodeQueryValue(value)}`)
   }
-  return query.join('&')
+  return '?' + query.join('&')
 }
 
 export function encodeQueryValue(input: string) {

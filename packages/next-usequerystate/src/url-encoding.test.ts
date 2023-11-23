@@ -50,25 +50,25 @@ describe('url-encoding/renderQueryString', () => {
   test('simple key-value pair', () => {
     const search = new URLSearchParams()
     search.set('foo', 'bar')
-    expect(renderQueryString(search)).toBe('foo=bar')
+    expect(renderQueryString(search)).toBe('?foo=bar')
   })
   test('encoding', () => {
     const search = new URLSearchParams()
     search.set('test', '-._~!$()*,;=:@/?[]{}\\|^')
-    expect(renderQueryString(search)).toBe('test=-._~!$()*,;=:@/?[]{}\\|^')
+    expect(renderQueryString(search)).toBe('?test=-._~!$()*,;=:@/?[]{}\\|^')
   })
   test('decoding', () => {
     const search = new URLSearchParams()
     const value = '!"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~'
     search.set('test', value)
-    const url = new URL('http://example.com/?' + renderQueryString(search))
+    const url = new URL('http://example.com' + renderQueryString(search))
     expect(url.searchParams.get('test')).toBe(value)
   })
   test('decoding plus and spaces', () => {
     const search = new URLSearchParams()
     const value = 'a b+c'
     search.set('test', value)
-    const url = new URL('http://example.com/?' + renderQueryString(search))
+    const url = new URL('http://example.com' + renderQueryString(search))
     expect(url.searchParams.get('test')).toBe(value)
   })
   test('decoding hashes and fragment', () => {
@@ -76,7 +76,7 @@ describe('url-encoding/renderQueryString', () => {
     const value = 'foo#bar'
     search.set('test', value)
     const url = new URL(
-      'http://example.com/?' + renderQueryString(search) + '#egg'
+      'http://example.com' + renderQueryString(search) + '#egg'
     )
     expect(url.searchParams.get('test')).toBe(value)
   })
@@ -85,7 +85,7 @@ describe('url-encoding/renderQueryString', () => {
     const value = 'a&b=c'
     search.set('test', value)
     const url = new URL(
-      'http://example.com/?' + renderQueryString(search) + '&egg=spam'
+      'http://example.com' + renderQueryString(search) + '&egg=spam'
     )
     expect(url.searchParams.get('test')).toBe(value)
   })
@@ -96,7 +96,7 @@ describe('url-encoding/renderQueryString', () => {
     search.set('message', 'Hello, world! #greeting')
     const query = renderQueryString(search)
     expect(query).toBe(
-      'name=John+Doe&email=foo.bar%2Begg-spam@example.com&message=Hello,+world!+%23greeting'
+      '?name=John+Doe&email=foo.bar%2Begg-spam@example.com&message=Hello,+world!+%23greeting'
     )
   })
   test('practical use-cases', () => {
@@ -107,14 +107,14 @@ describe('url-encoding/renderQueryString', () => {
       const search = new URLSearchParams()
       search.set('filter', value)
       const query = renderQueryString(search)
-      expect(query.slice('filter='.length)).toBe(value)
+      expect(query.slice('?filter='.length)).toBe(value)
     }
     {
       const url = new URL(
         'https://radverkehrsatlas.de/regionen/trto?lat=53.6774&lng=13.267&zoom=10.6&theme=fromTo&bg=default&config=!(i~fromTo~topics~!(i~shops~s~!(i~hidden~a~_F)(i~default~a))(i~education~s~!(i~hidden~a)(i~default~a~_F))(i~places~s~!(i~hidden~a~_F)(i~default~a)(i~circle~a~_F))(i~buildings~s~!(i~hidden~a)(i~default~a~_F))(i~landuse~s~!(i~hidden~a~_F)(i~default~a))(i~barriers~s~!(i~hidden~a~_F)(i~default~a))(i~boundaries~s~!(i~hidden~a)(i~default~a~_F)(i~level-8~a~_F)(i~level-9-10~a~_F)))(i~bikelanes~topics~!(i~bikelanes~s~!(i~hidden~a~_F)(i~default~a)(i~verification~a~_F)(i~completeness~a~_F))(i~bikelanesPresence*_legacy~s~!(i~hidden~a)(i~default~a~_F))(i~places~s~!(i~hidden~a~_F)(i~default~a)(i~circle~a~_F))(i~landuse~s~!(i~hidden~a)(i~default~a~_F)))(i~roadClassification~topics~!(i~roadClassification*_legacy~s~!(i~hidden~a~_F)(i~default~a)(i~oneway~a~_F))(i~bikelanes~s~!(i~hidden~a)(i~default~a~_F)(i~verification~a~_F)(i~completeness~a~_F))(i~maxspeed*_legacy~s~!(i~hidden~a)(i~default~a~_F)(i~details~a~_F))(i~surfaceQuality*_legacy~s~!(i~hidden~a)(i~default~a~_F)(i~bad~a~_F)(i~completeness~a~_F)(i~freshness~a~_F))(i~places~s~!(i~hidden~a~_F)(i~default~a)(i~circle~a~_F))(i~landuse~s~!(i~hidden~a)(i~default~a~_F)))(i~lit~topics~!(i~lit*_legacy~s~!(i~hidden~a~_F)(i~default~a)(i~completeness~a~_F)(i~verification~a~_F)(i~freshness~a~_F))(i~places~s~!(i~hidden~a)(i~default~a~_F)(i~circle~a~_F))(i~landuse~s~!(i~hidden~a)(i~default~a~_F)))~'
       )
       const search = renderQueryString(url.searchParams)
-      expect(search).toBe(url.search.slice(1)) // drop the leading ?
+      expect(search).toBe(url.search)
     }
   })
 })

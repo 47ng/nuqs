@@ -18,7 +18,7 @@ export default defineConfig({
     fixturesFolder: false,
     supportFile: false,
     testIsolation: true,
-    retries: 5,
+    retries: 2,
     env: {
       basePath,
       windowHistorySupport
