@@ -4,7 +4,7 @@ export type Router = ReturnType<typeof useRouter>
 
 export type HistoryOptions = 'replace' | 'push'
 
-type StartTransition<T extends boolean | unknown> = T extends false
+type StartTransition<T extends unknown> = T extends false
   ? React.TransitionStartFunction
   : T extends true
   ? never
@@ -12,7 +12,7 @@ type StartTransition<T extends boolean | unknown> = T extends false
   ? React.TransitionStartFunction
   : never
 
-export type Options<Shallow = boolean | unknown> = {
+export type Options<Shallow = unknown> = {
   /**
    * How the query update affects page history
    *

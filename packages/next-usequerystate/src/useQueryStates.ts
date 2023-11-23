@@ -24,7 +24,7 @@ export type UseQueryStatesKeysMap<Map = any> = {
   [Key in keyof Map]: KeyMapValue<Map[Key]>
 }
 
-export interface UseQueryStatesOptions<Shallow> extends Options<Shallow> {}
+export interface UseQueryStatesOptions extends Options {}
 
 export type Values<T extends UseQueryStatesKeysMap> = {
   [K in keyof T]: T[K]['defaultValue'] extends NonNullable<
@@ -64,7 +64,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
     shallow = true,
     throttleMs = FLUSH_RATE_LIMIT_MS,
     startTransition
-  }: Partial<UseQueryStatesOptions<boolean>> = {}
+  }: Partial<UseQueryStatesOptions> = {}
 ): UseQueryStatesReturn<KeyMap> {
   type V = Values<KeyMap>
   const keys = Object.keys(keyMap).join(',')
