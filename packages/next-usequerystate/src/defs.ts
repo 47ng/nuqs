@@ -1,15 +1,16 @@
 import { useRouter } from 'next/navigation.js' // https://github.com/47ng/next-usequerystate/discussions/352
+import type { TransitionStartFunction } from 'react'
 
 export type Router = ReturnType<typeof useRouter>
 
 export type HistoryOptions = 'replace' | 'push'
 
 type StartTransition<T> = T extends false
-  ? React.TransitionStartFunction
+  ? TransitionStartFunction
   : T extends true
   ? never
   : T extends unknown
-  ? React.TransitionStartFunction
+  ? TransitionStartFunction
   : never
 
 export type Options<Shallow = unknown> = {

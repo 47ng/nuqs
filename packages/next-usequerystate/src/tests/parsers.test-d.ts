@@ -60,3 +60,9 @@ expectError(() => {
     shallow: {}
   })
 })
+
+expectError(() => {
+  parseAsString.withOptions({
+    startTransition: {}
+  })
+})
