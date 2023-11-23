@@ -54,3 +54,9 @@ import { parseAsString } from '../../dist'
     })
   })
 }
+
+expectError(() => {
+  parseAsString.withOptions({
+    shallow: {}
+  })
+})
