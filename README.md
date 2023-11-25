@@ -34,17 +34,14 @@ yarn add next-usequerystate
 npm install next-usequerystate
 ```
 
-<details>
-<summary>Which version should I use?</summary>
+### Which version should I use?
 
-Depending on your Next.js version:
-
-- Next.js <= 13.1: `next-usequerystate@1.7.2`
-- Next.js >= 13.4 && <= 14.0.1: `next-usequerystate@latest`
-- Next.js 14.0.2: Unfortunately not compatible due to a bug introduced in `next@14.0.2-canary.7`, see issue [#388](https://github.com/47ng/next-usequerystate/issues/388) and Next.js PR [#58297](https://github.com/vercel/next.js/pull/58297).
-- Next.js >= 14.0.3: `next-usequerystate@latest`
-
-</details>
+| Next.js Version Range | Supported next-usequerystate Version                                                                                                                          |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| <= 13.1               | next-usequerystate@1.7.2                                                                                                                                      |
+| >= 13.4 && <= 14.0.1  | next-usequerystate@latest                                                                                                                                     |
+| 14.0.2                | Not compatible, see issue [#388](https://github.com/47ng/next-usequerystate/issues/388) and Next.js PR [#58297](https://github.com/vercel/next.js/pull/58297) |
+| >= 14.0.3             | next-usequerystate@latest                                                                                                                                     |
 
 ## Usage
 
