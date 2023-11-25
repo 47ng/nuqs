@@ -34,7 +34,7 @@ yarn add next-usequerystate
 npm install next-usequerystate
 ```
 
-## Which version should I use?
+### Which version should I use?
 
 | Next.js Version Range   | Recommended next-usequerystate Version                                                                                                                       |
 | ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
