@@ -36,12 +36,12 @@ npm install next-usequerystate
 
 ### Which version should I use?
 
-| Next.js Version Range | Supported next-usequerystate Version                                                                                                                          |
-| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| <= 13.1               | next-usequerystate@1.7.2                                                                                                                                      |
-| >= 13.4 && <= 14.0.1  | next-usequerystate@latest                                                                                                                                     |
+| Next.js version range | Supported next-usequerystate version                                                                                                                          |
+| --------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| < 13.1                | `next-usequerystate@1.7.3`                                                                                                                                    |
+| >= 13.1 && <= 14.0.1  | `next-usequerystate@latest`                                                                                                                                   |
 | 14.0.2                | Not compatible, see issue [#388](https://github.com/47ng/next-usequerystate/issues/388) and Next.js PR [#58297](https://github.com/vercel/next.js/pull/58297) |
-| >= 14.0.3             | next-usequerystate@latest                                                                                                                                     |
+| >= 14.0.3             | `next-usequerystate@latest`                                                                                                                                   |
 
 ## Usage
 
