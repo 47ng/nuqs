@@ -36,7 +36,7 @@ npm install next-usequerystate
 
 ### Which version should I use?
 
-| Next.js Version Range   | Recommended next-usequerystate Version                                                                                                                       |
+| Next.js Version Range   | Supported next-usequerystate Version                                                                                                                       |
 | ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | <= 13.1                 | next-usequerystate@1.7.2                                                                                                                                     |
 | >= 13.4 && <= 14.0.1    | next-usequerystate@latest                                                                                                                                    |
