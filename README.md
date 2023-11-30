@@ -18,7 +18,7 @@ useQueryState hook for Next.js - Like React.useState, but stored in the URL quer
 - ♊️ Related querystrings with [`useQueryStates`](#usequerystates)
 - 📡 [Shallow mode](#shallow) by default for URL query updates, opt-in to notify server components
 - 🗃 _**new:**_ [Server cache](#accessing-searchparams-in-server-components) for type-safe searchParams access in nested server components
-- ⌛️ **new:** Support for [`useTransition`](#transitions) to get loading states on server updates
+- ⌛️ _**new:**_ Support for [`useTransition`](#transitions) to get loading states on server updates
 
 ## Installation
 
@@ -140,6 +140,9 @@ export default () => {
 ```
 
 ### Using parsers in Server Components
+
+> Note: see the [Accessing searchParams in server components](#accessing-searchparams-in-server-components)
+> section for a more user-friendly way to achieve type-safety.
 
 If you wish to parse the searchParams in server components, you'll need to
 import the parsers from `next-usequerystate/parsers`, which doesn't include
@@ -491,7 +494,11 @@ const search = await setCoordinates({
 
 If you wish to access the searchParams in a deeply nested Server Component
 (ie: not in the Page component), you can use `createSearchParamsCache`
-to do so in a type-safe manner:
+to do so in a type-safe manner.
+
+> Note: parsers **don't validate** your data. If you expect positive integers
+> or JSON-encoded objects of a particular shape, you'll need to feed the result
+> of the parser to a schema validation library, like [Zod](https://zod.dev).
 
 ```tsx
 // searchParams.ts
@@ -500,6 +507,7 @@ import {
   parseAsInteger,
   parseAsString
 } from 'next-usequerystate/parsers'
+// Note: import from '…/parsers' to avoid the "use client" directive
 
 export const searchParamsCache = createSearchParamsCache({
   // List your search param keys and associated parsers here:
