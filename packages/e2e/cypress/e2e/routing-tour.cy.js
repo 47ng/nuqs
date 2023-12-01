@@ -5,6 +5,10 @@ function waitForHydration() {
   cy.wait(50)
 }
 
+function expectPathname(pathname) {
+  cy.location('pathname').should('eq', Cypress.env('basePath') + pathname)
+}
+
 describe('routing-tour', () => {
   it('server -> a', () => {
     cy.visit('/app/routing-tour/start/server')
@@ -12,7 +16,7 @@ describe('routing-tour', () => {
 
     cy.get('a').contains('a (server, prefetch)').click()
     waitForHydration()
-    cy.location('pathname').should('eq', '/app/routing-tour/a')
+    expectPathname('/app/routing-tour/a')
     cy.location('search').should('eq', '?from=start.server')
     cy.get('#from').should('have.text', 'start.server')
     cy.get('#this').should('have.text', 'a')
@@ -21,7 +25,7 @@ describe('routing-tour', () => {
 
     cy.get('a').contains('Next').click()
     waitForHydration()
-    cy.location('pathname').should('eq', '/app/routing-tour/b')
+    expectPathname('/app/routing-tour/b')
     cy.location('search').should('eq', '?from=a&counter=1')
     cy.get('#from').should('have.text', 'a')
     cy.get('#this').should('have.text', 'b')
@@ -30,7 +34,7 @@ describe('routing-tour', () => {
 
     cy.get('a').contains('Next').click()
     waitForHydration()
-    cy.location('pathname').should('eq', '/app/routing-tour/c')
+    expectPathname('/app/routing-tour/c')
     cy.location('search').should('eq', '?from=b&counter=2')
     cy.get('#from').should('have.text', 'b')
     cy.get('#this').should('have.text', 'c')
@@ -39,7 +43,7 @@ describe('routing-tour', () => {
 
     cy.get('a').contains('Next').click()
     waitForHydration()
-    cy.location('pathname').should('eq', '/app/routing-tour/d')
+    expectPathname('/app/routing-tour/d')
     cy.location('search').should('eq', '?from=c&counter=3')
     cy.get('#from').should('have.text', 'c')
     cy.get('#this').should('have.text', 'd')
@@ -48,7 +52,7 @@ describe('routing-tour', () => {
 
     cy.get('a').contains('Next').click()
     waitForHydration()
-    cy.location('pathname').should('eq', '/app/routing-tour/a')
+    expectPathname('/app/routing-tour/a')
     cy.location('search').should('eq', '?from=d&counter=4')
     cy.get('#from').should('have.text', 'd')
     cy.get('#this').should('have.text', 'a')
@@ -62,7 +66,7 @@ describe('routing-tour', () => {
 
     cy.get('a').contains('b (server, no prefetch)').click()
     waitForHydration()
-    cy.location('pathname').should('eq', '/app/routing-tour/b')
+    expectPathname('/app/routing-tour/b')
     cy.location('search').should('eq', '?from=start.server')
     cy.get('#from').should('have.text', 'start.server')
     cy.get('#this').should('have.text', 'b')
@@ -71,7 +75,7 @@ describe('routing-tour', () => {
 
     cy.get('a').contains('Next').click()
     waitForHydration()
-    cy.location('pathname').should('eq', '/app/routing-tour/c')
+    expectPathname('/app/routing-tour/c')
     cy.location('search').should('eq', '?from=b&counter=1')
     cy.get('#from').should('have.text', 'b')
     cy.get('#this').should('have.text', 'c')
@@ -80,7 +84,7 @@ describe('routing-tour', () => {
 
     cy.get('a').contains('Next').click()
     waitForHydration()
-    cy.location('pathname').should('eq', '/app/routing-tour/d')
+    expectPathname('/app/routing-tour/d')
     cy.location('search').should('eq', '?from=c&counter=2')
     cy.get('#from').should('have.text', 'c')
     cy.get('#this').should('have.text', 'd')
@@ -89,7 +93,7 @@ describe('routing-tour', () => {
 
     cy.get('a').contains('Next').click()
     waitForHydration()
-    cy.location('pathname').should('eq', '/app/routing-tour/a')
+    expectPathname('/app/routing-tour/a')
     cy.location('search').should('eq', '?from=d&counter=3')
     cy.get('#from').should('have.text', 'd')
     cy.get('#this').should('have.text', 'a')
@@ -98,7 +102,7 @@ describe('routing-tour', () => {
 
     cy.get('a').contains('Next').click()
     waitForHydration()
-    cy.location('pathname').should('eq', '/app/routing-tour/b')
+    expectPathname('/app/routing-tour/b')
     cy.location('search').should('eq', '?from=a&counter=4')
     cy.get('#from').should('have.text', 'a')
     cy.get('#this').should('have.text', 'b')
@@ -112,7 +116,7 @@ describe('routing-tour', () => {
 
     cy.get('a').contains('c (client, prefetch)').click()
     waitForHydration()
-    cy.location('pathname').should('eq', '/app/routing-tour/c')
+    expectPathname('/app/routing-tour/c')
     cy.location('search').should('eq', '?from=start.server')
     cy.get('#from').should('have.text', 'start.server')
     cy.get('#this').should('have.text', 'c')
@@ -121,7 +125,7 @@ describe('routing-tour', () => {
 
     cy.get('a').contains('Next').click()
     waitForHydration()
-    cy.location('pathname').should('eq', '/app/routing-tour/d')
+    expectPathname('/app/routing-tour/d')
     cy.location('search').should('eq', '?from=c&counter=1')
     cy.get('#from').should('have.text', 'c')
     cy.get('#this').should('have.text', 'd')
@@ -130,7 +134,7 @@ describe('routing-tour', () => {
 
     cy.get('a').contains('Next').click()
     waitForHydration()
-    cy.location('pathname').should('eq', '/app/routing-tour/a')
+    expectPathname('/app/routing-tour/a')
     cy.location('search').should('eq', '?from=d&counter=2')
     cy.get('#from').should('have.text', 'd')
     cy.get('#this').should('have.text', 'a')
@@ -139,7 +143,7 @@ describe('routing-tour', () => {
 
     cy.get('a').contains('Next').click()
     waitForHydration()
-    cy.location('pathname').should('eq', '/app/routing-tour/b')
+    expectPathname('/app/routing-tour/b')
     cy.location('search').should('eq', '?from=a&counter=3')
     cy.get('#from').should('have.text', 'a')
     cy.get('#this').should('have.text', 'b')
@@ -148,7 +152,7 @@ describe('routing-tour', () => {
 
     cy.get('a').contains('Next').click()
     waitForHydration()
-    cy.location('pathname').should('eq', '/app/routing-tour/c')
+    expectPathname('/app/routing-tour/c')
     cy.location('search').should('eq', '?from=b&counter=4')
     cy.get('#from').should('have.text', 'b')
     cy.get('#this').should('have.text', 'c')
@@ -162,7 +166,7 @@ describe('routing-tour', () => {
 
     cy.get('a').contains('d (client, no prefetch)').click()
     waitForHydration()
-    cy.location('pathname').should('eq', '/app/routing-tour/d')
+    expectPathname('/app/routing-tour/d')
     cy.location('search').should('eq', '?from=start.server')
     cy.get('#from').should('have.text', 'start.server')
     cy.get('#this').should('have.text', 'd')
@@ -171,7 +175,7 @@ describe('routing-tour', () => {
 
     cy.get('a').contains('Next').click()
     waitForHydration()
-    cy.location('pathname').should('eq', '/app/routing-tour/a')
+    expectPathname('/app/routing-tour/a')
     cy.location('search').should('eq', '?from=d&counter=1')
     cy.get('#from').should('have.text', 'd')
     cy.get('#this').should('have.text', 'a')
@@ -180,7 +184,7 @@ describe('routing-tour', () => {
 
     cy.get('a').contains('Next').click()
     waitForHydration()
-    cy.location('pathname').should('eq', '/app/routing-tour/b')
+    expectPathname('/app/routing-tour/b')
     cy.location('search').should('eq', '?from=a&counter=2')
     cy.get('#from').should('have.text', 'a')
     cy.get('#this').should('have.text', 'b')
@@ -189,7 +193,7 @@ describe('routing-tour', () => {
 
     cy.get('a').contains('Next').click()
     waitForHydration()
-    cy.location('pathname').should('eq', '/app/routing-tour/c')
+    expectPathname('/app/routing-tour/c')
     cy.location('search').should('eq', '?from=b&counter=3')
     cy.get('#from').should('have.text', 'b')
     cy.get('#this').should('have.text', 'c')
@@ -198,7 +202,7 @@ describe('routing-tour', () => {
 
     cy.get('a').contains('Next').click()
     waitForHydration()
-    cy.location('pathname').should('eq', '/app/routing-tour/d')
+    expectPathname('/app/routing-tour/d')
     cy.location('search').should('eq', '?from=c&counter=4')
     cy.get('#from').should('have.text', 'c')
     cy.get('#this').should('have.text', 'd')
@@ -212,7 +216,7 @@ describe('routing-tour', () => {
 
     cy.get('a').contains('a (server, prefetch)').click()
     waitForHydration()
-    cy.location('pathname').should('eq', '/app/routing-tour/a')
+    expectPathname('/app/routing-tour/a')
     cy.location('search').should('eq', '?from=start.client')
     cy.get('#from').should('have.text', 'start.client')
     cy.get('#this').should('have.text', 'a')
@@ -221,7 +225,7 @@ describe('routing-tour', () => {
 
     cy.get('a').contains('Next').click()
     waitForHydration()
-    cy.location('pathname').should('eq', '/app/routing-tour/b')
+    expectPathname('/app/routing-tour/b')
     cy.location('search').should('eq', '?from=a&counter=1')
     cy.get('#from').should('have.text', 'a')
     cy.get('#this').should('have.text', 'b')
@@ -230,7 +234,7 @@ describe('routing-tour', () => {
 
     cy.get('a').contains('Next').click()
     waitForHydration()
-    cy.location('pathname').should('eq', '/app/routing-tour/c')
+    expectPathname('/app/routing-tour/c')
     cy.location('search').should('eq', '?from=b&counter=2')
     cy.get('#from').should('have.text', 'b')
     cy.get('#this').should('have.text', 'c')
@@ -239,7 +243,7 @@ describe('routing-tour', () => {
 
     cy.get('a').contains('Next').click()
     waitForHydration()
-    cy.location('pathname').should('eq', '/app/routing-tour/d')
+    expectPathname('/app/routing-tour/d')
     cy.location('search').should('eq', '?from=c&counter=3')
     cy.get('#from').should('have.text', 'c')
     cy.get('#this').should('have.text', 'd')
@@ -248,7 +252,7 @@ describe('routing-tour', () => {
 
     cy.get('a').contains('Next').click()
     waitForHydration()
-    cy.location('pathname').should('eq', '/app/routing-tour/a')
+    expectPathname('/app/routing-tour/a')
     cy.location('search').should('eq', '?from=d&counter=4')
     cy.get('#from').should('have.text', 'd')
     cy.get('#this').should('have.text', 'a')
@@ -262,7 +266,7 @@ describe('routing-tour', () => {
 
     cy.get('a').contains('b (server, no prefetch)').click()
     waitForHydration()
-    cy.location('pathname').should('eq', '/app/routing-tour/b')
+    expectPathname('/app/routing-tour/b')
     cy.location('search').should('eq', '?from=start.client')
     cy.get('#from').should('have.text', 'start.client')
     cy.get('#this').should('have.text', 'b')
@@ -271,7 +275,7 @@ describe('routing-tour', () => {
 
     cy.get('a').contains('Next').click()
     waitForHydration()
-    cy.location('pathname').should('eq', '/app/routing-tour/c')
+    expectPathname('/app/routing-tour/c')
     cy.location('search').should('eq', '?from=b&counter=1')
     cy.get('#from').should('have.text', 'b')
     cy.get('#this').should('have.text', 'c')
@@ -280,7 +284,7 @@ describe('routing-tour', () => {
 
     cy.get('a').contains('Next').click()
     waitForHydration()
-    cy.location('pathname').should('eq', '/app/routing-tour/d')
+    expectPathname('/app/routing-tour/d')
     cy.location('search').should('eq', '?from=c&counter=2')
     cy.get('#from').should('have.text', 'c')
     cy.get('#this').should('have.text', 'd')
@@ -289,7 +293,7 @@ describe('routing-tour', () => {
 
     cy.get('a').contains('Next').click()
     waitForHydration()
-    cy.location('pathname').should('eq', '/app/routing-tour/a')
+    expectPathname('/app/routing-tour/a')
     cy.location('search').should('eq', '?from=d&counter=3')
     cy.get('#from').should('have.text', 'd')
     cy.get('#this').should('have.text', 'a')
@@ -298,7 +302,7 @@ describe('routing-tour', () => {
 
     cy.get('a').contains('Next').click()
     waitForHydration()
-    cy.location('pathname').should('eq', '/app/routing-tour/b')
+    expectPathname('/app/routing-tour/b')
     cy.location('search').should('eq', '?from=a&counter=4')
     cy.get('#from').should('have.text', 'a')
     cy.get('#this').should('have.text', 'b')
@@ -312,7 +316,7 @@ describe('routing-tour', () => {
 
     cy.get('a').contains('c (client, prefetch)').click()
     waitForHydration()
-    cy.location('pathname').should('eq', '/app/routing-tour/c')
+    expectPathname('/app/routing-tour/c')
     cy.location('search').should('eq', '?from=start.client')
     cy.get('#from').should('have.text', 'start.client')
     cy.get('#this').should('have.text', 'c')
@@ -321,7 +325,7 @@ describe('routing-tour', () => {
 
     cy.get('a').contains('Next').click()
     waitForHydration()
-    cy.location('pathname').should('eq', '/app/routing-tour/d')
+    expectPathname('/app/routing-tour/d')
     cy.location('search').should('eq', '?from=c&counter=1')
     cy.get('#from').should('have.text', 'c')
     cy.get('#this').should('have.text', 'd')
@@ -330,7 +334,7 @@ describe('routing-tour', () => {
 
     cy.get('a').contains('Next').click()
     waitForHydration()
-    cy.location('pathname').should('eq', '/app/routing-tour/a')
+    expectPathname('/app/routing-tour/a')
     cy.location('search').should('eq', '?from=d&counter=2')
     cy.get('#from').should('have.text', 'd')
     cy.get('#this').should('have.text', 'a')
@@ -339,7 +343,7 @@ describe('routing-tour', () => {
 
     cy.get('a').contains('Next').click()
     waitForHydration()
-    cy.location('pathname').should('eq', '/app/routing-tour/b')
+    expectPathname('/app/routing-tour/b')
     cy.location('search').should('eq', '?from=a&counter=3')
     cy.get('#from').should('have.text', 'a')
     cy.get('#this').should('have.text', 'b')
@@ -348,7 +352,7 @@ describe('routing-tour', () => {
 
     cy.get('a').contains('Next').click()
     waitForHydration()
-    cy.location('pathname').should('eq', '/app/routing-tour/c')
+    expectPathname('/app/routing-tour/c')
     cy.location('search').should('eq', '?from=b&counter=4')
     cy.get('#from').should('have.text', 'b')
     cy.get('#this').should('have.text', 'c')
@@ -362,7 +366,7 @@ describe('routing-tour', () => {
 
     cy.get('a').contains('d (client, no prefetch)').click()
     waitForHydration()
-    cy.location('pathname').should('eq', '/app/routing-tour/d')
+    expectPathname('/app/routing-tour/d')
     cy.location('search').should('eq', '?from=start.client')
     cy.get('#from').should('have.text', 'start.client')
     cy.get('#this').should('have.text', 'd')
@@ -371,7 +375,7 @@ describe('routing-tour', () => {
 
     cy.get('a').contains('Next').click()
     waitForHydration()
-    cy.location('pathname').should('eq', '/app/routing-tour/a')
+    expectPathname('/app/routing-tour/a')
     cy.location('search').should('eq', '?from=d&counter=1')
     cy.get('#from').should('have.text', 'd')
     cy.get('#this').should('have.text', 'a')
@@ -380,7 +384,7 @@ describe('routing-tour', () => {
 
     cy.get('a').contains('Next').click()
     waitForHydration()
-    cy.location('pathname').should('eq', '/app/routing-tour/b')
+    expectPathname('/app/routing-tour/b')
     cy.location('search').should('eq', '?from=a&counter=2')
     cy.get('#from').should('have.text', 'a')
     cy.get('#this').should('have.text', 'b')
@@ -389,7 +393,7 @@ describe('routing-tour', () => {
 
     cy.get('a').contains('Next').click()
     waitForHydration()
-    cy.location('pathname').should('eq', '/app/routing-tour/c')
+    expectPathname('/app/routing-tour/c')
     cy.location('search').should('eq', '?from=b&counter=3')
     cy.get('#from').should('have.text', 'b')
     cy.get('#this').should('have.text', 'c')
@@ -398,7 +402,7 @@ describe('routing-tour', () => {
 
     cy.get('a').contains('Next').click()
     waitForHydration()
-    cy.location('pathname').should('eq', '/app/routing-tour/d')
+    expectPathname('/app/routing-tour/d')
     cy.location('search').should('eq', '?from=c&counter=4')
     cy.get('#from').should('have.text', 'c')
     cy.get('#this').should('have.text', 'd')
