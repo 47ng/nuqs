@@ -1,3 +1,4 @@
+import type { NextRouter } from 'next/router'
 import { debug } from './debug'
 import type { Options, Router } from './defs'
 import { error } from './errors'
@@ -140,37 +141,56 @@ function flushUpdateQueue(router: Router): [URLSearchParams, null | unknown] {
       search.set(key, value)
     }
   }
-  const url = renderURL(search)
-  debug('[nuqs queue] Updating url: %s', url)
-
   try {
-    // First, update the URL locally without triggering a network request,
-    // this allows keeping a reactive URL if the network is slow.
-    const updateMethod =
-      options.history === 'push' ? history.pushState : history.replaceState
-    updateMethod.call(
-      history,
-      history.state,
-      // Our own updates have a marker to prevent syncing
-      // when the URL changes (we've already sync'd them up
-      // via `emitter.emit(key, newValue)` above, without
-      // going through the parsers).
-      NOSYNC_MARKER,
-      url
-    )
-    if (options.scroll) {
-      window.scrollTo(0, 0)
-    }
-    if (!options.shallow) {
-      compose(transitions, () => {
-        // Call the Next.js router to perform a network request
-        // and re-render server components.
-        router.replace(url, {
-          scroll: false,
-          // @ts-expect-error - pages router fix, but not exposed in navigation types
-          shallow: false
-        })
+    // @ts-expect-error
+    const isPagesRouter = typeof window.next.router?.state === 'object'
+    if (isPagesRouter) {
+      // @ts-expect-error
+      const pagesRouter: NextRouter = window.next.router
+      const url = renderURL(
+        // @ts-expect-error
+        pagesRouter.state.asPath.split('?')[0] ?? '',
+        search
+      )
+      debug('[nuqs queue (pages)] Updating url: %s', url)
+      const method =
+        options.history === 'push' ? pagesRouter.push : pagesRouter.replace
+      method.call(pagesRouter, url, url, {
+        scroll: options.scroll,
+        shallow: options.shallow
       })
+    } else {
+      // App router
+      const url = renderURL(location.href.split('?')[0] ?? '', search)
+      debug('[nuqs queue (app)] Updating url: %s', url)
+      // First, update the URL locally without triggering a network request,
+      // this allows keeping a reactive URL if the network is slow.
+      const updateMethod =
+        options.history === 'push' ? history.pushState : history.replaceState
+      updateMethod.call(
+        history,
+        history.state,
+        // Our own updates have a marker to prevent syncing
+        // when the URL changes (we've already sync'd them up
+        // via `emitter.emit(key, newValue)` above, without
+        // going through the parsers).
+        NOSYNC_MARKER,
+        url
+      )
+      if (options.scroll) {
+        window.scrollTo(0, 0)
+      }
+      if (!options.shallow) {
+        compose(transitions, () => {
+          // Call the Next.js router to perform a network request
+          // and re-render server components.
+          router.replace(url, {
+            scroll: false,
+            // @ts-expect-error - pages router fix, but not exposed in navigation types
+            shallow: false
+          })
+        })
+      }
     }
     return [search, null]
   } catch (err) {
@@ -181,11 +201,10 @@ function flushUpdateQueue(router: Router): [URLSearchParams, null | unknown] {
   }
 }
 
-function renderURL(search: URLSearchParams) {
+function renderURL(base: string, search: URLSearchParams) {
   const query = renderQueryString(search)
-  const href = location.href.split('?')[0]
   const hash = location.hash
-  return href + query + hash
+  return base + query + hash
 }
 
 export function compose(
