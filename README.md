@@ -41,7 +41,8 @@ npm install next-usequerystate
 | < 13.1                | `next-usequerystate@1.7.3`                                                                                                                                    |
 | >= 13.1 && <= 14.0.1  | `next-usequerystate@latest`                                                                                                                                   |
 | 14.0.2                | Not compatible, see issue [#388](https://github.com/47ng/next-usequerystate/issues/388) and Next.js PR [#58297](https://github.com/vercel/next.js/pull/58297) |
-| >= 14.0.3             | `next-usequerystate@latest`                                                                                                                                   |
+| 14.0.3                | `next-usequerystate@latest`, with the `windowHistorySupport` experimental flag, see [#417](https://github.com/47ng/next-usequerystate/issues/417)             |
+| >=14.0.4              | `next-usequerystate@latest`                                                                                                                                   |
 
 ## Usage
 
