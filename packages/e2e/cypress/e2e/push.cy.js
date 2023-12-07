@@ -2,7 +2,7 @@
 
 describe('push', () => {
   const appRouterTest = Cypress.env('nextVersion') === '14.0.3' ? it.skip : it
-  appRouterTest('works in app router', () => {
+  it('works in app router', () => {
     cy.visit('/app/push')
     cy.contains('#hydration-marker', 'hydrated').should('be.hidden')
     cy.get('#server-side').should('have.text', '0')
