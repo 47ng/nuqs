@@ -12,7 +12,7 @@
       "outputs": ["dist/**"]
     },
     "e2e#build": {
-      "outputs": [".next/**", "!.next/cache/**"],
+      "outputs": [".next/**", "!.next/cache/**", "cypress/**"],
       "dependsOn": ["^build"],
       "env": ["BASE_PATH", "WINDOW_HISTORY_SUPPORT"]
     },
@@ -25,8 +25,7 @@
       "dependsOn": ["build"]
     },
     "e2e#test": {
-      "dependsOn": ["build"],
-      "outputs": ["cypress/**", "cypress.config.ts"]
+      "dependsOn": ["build"]
     }
   }
 }

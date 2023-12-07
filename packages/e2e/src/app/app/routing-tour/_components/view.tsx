@@ -24,10 +24,18 @@ export const RoutingTourView: React.FC<RoutingTourViewProps> = ({
       >
         Next
       </Link>
-      <p>Came from: {from}</p>
-      <p>This page: {thisPage}</p>
-      <p>Next page: {nextPage}</p>
-      <p>Counter: {counter}</p>
+      <p>
+        Came from: <span id="from">{from}</span>
+      </p>
+      <p>
+        This page: <span id="this">{thisPage}</span>
+      </p>
+      <p>
+        Next page: <span id="next">{nextPage}</span>
+      </p>
+      <p>
+        Counter: <span id="counter">{counter}</span>
+      </p>
     </>
   )
 }
