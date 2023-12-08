@@ -615,23 +615,6 @@ Running components that use the Next.js router in isolation requires mocking it,
 which is being [worked on](https://github.com/scottrippey/next-router-mock/pull/103)
 for the app router.
 
-If you wish to spy on changes in the URL query string, you can use
-`subscribeToQueryUpdates`:
-
-```ts
-import { subscribeToQueryUpdates } from 'next-usequerystate'
-
-React.useEffect(
-  () =>
-    subscribeToQueryUpdates(({ search, source }) => {
-      console.log(search.toString()) // URLSearchParams
-      console.log(source) // 'internal' | 'external'
-    }),
-  // This returns an unsubscribe function
-  []
-)
-```
-
 See issue #259 for more testing-related discussions.
 
 ## Debugging
