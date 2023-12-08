@@ -62,18 +62,18 @@
     "mitt": "^3.0.1"
   },
   "devDependencies": {
-    "@size-limit/preset-small-lib": "^11.0.0",
-    "@types/node": "^20.9.5",
-    "@types/react": "^18.2.38",
+    "@size-limit/preset-small-lib": "^11.0.1",
+    "@types/node": "^20.10.4",
+    "@types/react": "^18.2.42",
     "@types/react-dom": "^18.2.17",
     "next": "14.0.1",
     "npm-run-all": "^4.1.5",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "size-limit": "^11.0.0",
+    "size-limit": "^11.0.1",
     "tsd": "^0.29.0",
     "tsup": "^7.2.0",
-    "typescript": "^5.3.2",
+    "typescript": "^5.3.3",
     "vitest": "^0.34.6"
   },
   "tsd": {
