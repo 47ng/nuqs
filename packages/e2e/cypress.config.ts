@@ -5,9 +5,7 @@ import semver from 'semver'
 const basePath =
   process.env.BASE_PATH === '/' ? '' : process.env.BASE_PATH ?? ''
 
-const nextVersion = getNextVersion()
-
-const windowHistorySupport = semver.gte(nextVersion, '14.0.3-canary.6')
+const windowHistorySupport = supportsWHS()
   ? process.env.WINDOW_HISTORY_SUPPORT === 'true'
     ? 'true'
     : 'false'
@@ -23,14 +21,14 @@ export default defineConfig({
     retries: 2,
     env: {
       basePath,
-      windowHistorySupport,
-      nextVersion
+      windowHistorySupport
     }
   }
 })
 
-function getNextVersion(): string {
+function supportsWHS() {
   const pkgPath = new URL('./package.json', import.meta.url)
   const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf-8'))
-  return pkg.dependencies.next
+  const nextVersion: string = pkg.dependencies.next
+  return semver.gte(nextVersion, '14.0.3-canary.6')
 }
