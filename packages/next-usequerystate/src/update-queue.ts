@@ -1,3 +1,4 @@
+import type { NextRouter } from 'next/router'
 import { debug } from './debug'
 import type { Options, Router } from './defs'
 import { error } from './errors'
@@ -116,6 +117,18 @@ export function scheduleFlushToURL(router: Router) {
   return flushPromiseCache
 }
 
+declare global {
+  interface Window {
+    next: {
+      router?: NextRouter & {
+        state: {
+          asPath: string
+        }
+      }
+    }
+  }
+}
+
 function flushUpdateQueue(router: Router): [URLSearchParams, null | unknown] {
   const search = new URLSearchParams(location.search)
   if (updateQueue.size === 0) {
@@ -140,37 +153,56 @@ function flushUpdateQueue(router: Router): [URLSearchParams, null | unknown] {
       search.set(key, value)
     }
   }
-  const url = renderURL(search)
-  debug('[nuqs queue] Updating url: %s', url)
-
   try {
-    // First, update the URL locally without triggering a network request,
-    // this allows keeping a reactive URL if the network is slow.
-    const updateMethod =
-      options.history === 'push' ? history.pushState : history.replaceState
-    updateMethod.call(
-      history,
-      history.state,
-      // Our own updates have a marker to prevent syncing
-      // when the URL changes (we've already sync'd them up
-      // via `emitter.emit(key, newValue)` above, without
-      // going through the parsers).
-      NOSYNC_MARKER,
-      url
-    )
-    if (options.scroll) {
-      window.scrollTo(0, 0)
-    }
-    if (!options.shallow) {
-      compose(transitions, () => {
-        // Call the Next.js router to perform a network request
-        // and re-render server components.
-        router.replace(url, {
-          scroll: false,
-          // @ts-expect-error - pages router fix, but not exposed in navigation types
-          shallow: false
-        })
+    // While the Next.js team doesn't recommend using internals like this,
+    // we need access to the pages router here to let it know about non-shallow
+    // updates, as going through the window.history API directly will make it
+    // miss pushed history updates.
+    // The router adapter imported from next/navigation also doesn't support
+    // passing an asPath, causing issues in dynamic routes in the pages router.
+    const nextRouter = window.next.router
+    const isPagesRouter = typeof nextRouter?.state?.asPath === 'string'
+    if (isPagesRouter) {
+      const url = renderURL(nextRouter.state.asPath.split('?')[0] ?? '', search)
+      debug('[nuqs queue (pages)] Updating url: %s', url)
+      const method =
+        options.history === 'push' ? nextRouter.push : nextRouter.replace
+      method.call(nextRouter, url, url, {
+        scroll: options.scroll,
+        shallow: options.shallow
       })
+    } else {
+      // App router
+      const url = renderURL(location.href.split('?')[0] ?? '', search)
+      debug('[nuqs queue (app)] Updating url: %s', url)
+      // First, update the URL locally without triggering a network request,
+      // this allows keeping a reactive URL if the network is slow.
+      const updateMethod =
+        options.history === 'push' ? history.pushState : history.replaceState
+      updateMethod.call(
+        history,
+        history.state,
+        // Our own updates have a marker to prevent syncing
+        // when the URL changes (we've already sync'd them up
+        // via `emitter.emit(key, newValue)` above, without
+        // going through the parsers).
+        NOSYNC_MARKER,
+        url
+      )
+      if (options.scroll) {
+        window.scrollTo(0, 0)
+      }
+      if (!options.shallow) {
+        compose(transitions, () => {
+          // Call the Next.js router to perform a network request
+          // and re-render server components.
+          router.replace(url, {
+            scroll: false,
+            // @ts-expect-error - pages router fix, but not exposed in navigation types
+            shallow: false
+          })
+        })
+      }
     }
     return [search, null]
   } catch (err) {
@@ -181,11 +213,10 @@ function flushUpdateQueue(router: Router): [URLSearchParams, null | unknown] {
   }
 }
 
-function renderURL(search: URLSearchParams) {
+function renderURL(base: string, search: URLSearchParams) {
   const query = renderQueryString(search)
-  const href = location.href.split('?')[0]
   const hash = location.hash
-  return href + query + hash
+  return base + query + hash
 }
 
 export function compose(
