@@ -117,6 +117,18 @@ export function scheduleFlushToURL(router: Router) {
   return flushPromiseCache
 }
 
+declare global {
+  interface Window {
+    next: {
+      router?: NextRouter & {
+        state: {
+          asPath: string
+        }
+      }
+    }
+  }
+}
+
 function flushUpdateQueue(router: Router): [URLSearchParams, null | unknown] {
   const search = new URLSearchParams(location.search)
   if (updateQueue.size === 0) {
@@ -142,20 +154,20 @@ function flushUpdateQueue(router: Router): [URLSearchParams, null | unknown] {
     }
   }
   try {
-    // @ts-expect-error
-    const isPagesRouter = typeof window.next.router?.state === 'object'
+    // While the Next.js team doesn't recommend using internals like this,
+    // we need access to the pages router here to let it know about non-shallow
+    // updates, as going through the window.history API directly will make it
+    // miss pushed history updates.
+    // The router adapter imported from next/navigation also doesn't support
+    // passing an asPath, causing issues in dynamic routes in the pages router.
+    const nextRouter = window.next.router
+    const isPagesRouter = typeof nextRouter?.state?.asPath === 'string'
     if (isPagesRouter) {
-      // @ts-expect-error
-      const pagesRouter: NextRouter = window.next.router
-      const url = renderURL(
-        // @ts-expect-error
-        pagesRouter.state.asPath.split('?')[0] ?? '',
-        search
-      )
+      const url = renderURL(nextRouter.state.asPath.split('?')[0] ?? '', search)
       debug('[nuqs queue (pages)] Updating url: %s', url)
       const method =
-        options.history === 'push' ? pagesRouter.push : pagesRouter.replace
-      method.call(pagesRouter, url, url, {
+        options.history === 'push' ? nextRouter.push : nextRouter.replace
+      method.call(nextRouter, url, url, {
         scroll: options.scroll,
         shallow: options.shallow
       })
