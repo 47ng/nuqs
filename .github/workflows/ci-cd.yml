@@ -15,7 +15,6 @@ jobs:
     # branch protection settings for `next`.
     name: CI (${{ matrix.next-version }}${{ matrix.base-path && ' basePath' || ''}}${{ matrix.window-history-support && ' WHS' || ''}})
     runs-on: ubuntu-latest
-    continue-on-error: ${{ matrix.base-path && true || false }}
     strategy:
       fail-fast: false
       matrix:
