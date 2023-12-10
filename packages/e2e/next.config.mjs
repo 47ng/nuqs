@@ -1,9 +1,12 @@
 const experimental =
   process.env.WINDOW_HISTORY_SUPPORT === 'true'
     ? {
-        windowHistorySupport: true
+        windowHistorySupport: true,
+        clientRouterFilter: false
       }
-    : undefined
+    : {
+        clientRouterFilter: false
+      }
 
 const basePath =
   process.env.BASE_PATH === '/' ? undefined : process.env.BASE_PATH
