@@ -251,7 +251,7 @@ export function useQueryState<T = string>(
   }
 
   // Sync all hooks together & with external URL changes
-  React.useInsertionEffect(() => {
+  React.useEffect(() => {
     function updateInternalState(state: T | null) {
       debug('[nuqs `%s`] updateInternalState %O', key, state)
       stateRef.current = state

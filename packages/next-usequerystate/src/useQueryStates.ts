@@ -88,7 +88,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
   )
 
   // Sync all hooks together & with external URL changes
-  React.useInsertionEffect(() => {
+  React.useEffect(() => {
     function updateInternalState(state: V) {
       debug('[nuq+ `%s`] updateInternalState %O', keys, state)
       stateRef.current = state
