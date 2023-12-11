@@ -156,7 +156,7 @@ export const parseAsFloat = createParser({
 
 export const parseAsBoolean = createParser({
   parse: v => v === 'true',
-  serialize: v => (Boolean(v) ? 'true' : 'false')
+  serialize: v => (v ? 'true' : 'false')
 })
 
 /**
@@ -245,9 +245,8 @@ export function parseAsJson<T>(parser?: (value: unknown) => T) {
         const obj = JSON.parse(query)
         if (typeof parser === 'function') {
           return parser(obj)
-        } else {
-          return obj as T
         }
+        return obj as T
       } catch {
         return null
       }

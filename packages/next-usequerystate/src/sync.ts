@@ -73,7 +73,7 @@ function patchHistory() {
       }
       const source = title === NOSYNC_MARKER ? 'internal' : 'external'
       const search = new URL(url, location.origin).searchParams
-      debug(`[nuqs] history.%s(%s) (%s) %O`, method, url, source, state)
+      debug('[nuqs] history.%s(%s) (%s) %O', method, url, source, state)
       // If someone else than our hooks have updated the URL,
       // send out a signal for them to sync their internal state.
       if (source === 'external') {

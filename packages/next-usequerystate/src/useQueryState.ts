@@ -244,7 +244,7 @@ export function useQueryState<T = string>(
     React.useEffect(() => {
       const value = initialSearchParams.get(key) ?? null
       const state = value === null ? null : parse(value)
-      debug(`[nuqs \`%s\`] syncFromUseSearchParams %O`, key, state)
+      debug('[nuqs `%s`] syncFromUseSearchParams %O', key, state)
       stateRef.current = state
       setInternalState(state)
     }, [initialSearchParams?.get(key), key])
@@ -253,21 +253,21 @@ export function useQueryState<T = string>(
   // Sync all hooks together & with external URL changes
   React.useInsertionEffect(() => {
     function updateInternalState(state: T | null) {
-      debug(`[nuqs \`%s\`] updateInternalState %O`, key, state)
+      debug('[nuqs `%s`] updateInternalState %O', key, state)
       stateRef.current = state
       setInternalState(state)
     }
     function syncFromURL(search: URLSearchParams) {
       const value = search.get(key) ?? null
       const state = value === null ? null : parse(value)
-      debug(`[nuqs \`%s\`] syncFromURL %O`, key, state)
+      debug('[nuqs `%s`] syncFromURL %O', key, state)
       updateInternalState(state)
     }
-    debug(`[nuqs \`%s\`] subscribing to sync`, key)
+    debug('[nuqs `%s`] subscribing to sync', key)
     emitter.on(SYNC_EVENT_KEY, syncFromURL)
     emitter.on(key, updateInternalState)
     return () => {
-      debug(`[nuqs \`%s\`] unsubscribing from sync`, key)
+      debug('[nuqs `%s`] unsubscribing from sync', key)
       emitter.off(SYNC_EVENT_KEY, syncFromURL)
       emitter.off(key, updateInternalState)
     }
