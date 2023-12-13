@@ -2,12 +2,14 @@
   "name": "docs",
   "version": "0.0.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "next dev --port 3003",
     "build": "next build",
-    "start": "next start"
+    "start": "next start --port 3003"
   },
   "dependencies": {
+    "geist": "^1.2.0",
     "next": "14.0.4",
     "next-docs-mdx": "^6.0.2",
     "next-docs-ui": "^6.0.2",
@@ -20,6 +22,14 @@
     "@types/mdx": "^2.0.10",
     "@types/react": "^18.2.45",
     "@types/react-dom": "^18.2.17",
+    "autoprefixer": "^10.4.16",
+    "postcss": "^8.4.32",
     "typescript": "^5.3.3"
+  },
+  "postcss": {
+    "plugins": {
+      "tailwindcss": {},
+      "autoprefixer": {}
+    }
   }
 }
