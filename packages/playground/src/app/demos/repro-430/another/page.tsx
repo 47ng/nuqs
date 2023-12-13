@@ -8,7 +8,7 @@ export default function AnotherPage() {
   return (
     <main>
       <h1>Another Page</h1>
-      <Link href="/">Go to Home page</Link>
+      <Link href="/demos/repro-430">Go to Home page</Link>
       <h4>Search Query: {search}</h4>
       <input
         type="text"

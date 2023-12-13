@@ -16,6 +16,7 @@ const demos = [
   'app/throttling',
   'app/repro-359',
   'app/repro-376',
+  'app/repro-430',
   // Pages router demos
   'pages/server-side-counter'
 ]
