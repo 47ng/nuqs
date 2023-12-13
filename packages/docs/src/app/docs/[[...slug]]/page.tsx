@@ -19,7 +19,14 @@ export default async function Page({
   return (
     <DocsPage url={page.url} toc={page.data.toc}>
       <DocsBody>
-        <h1>{page.matter.title}</h1>
+        <div className="not-prose mb-12">
+          <h1 className="mb-4 text-3xl font-bold text-foreground sm:text-4xl">
+            {page.matter.title}
+          </h1>
+          <p className="text-lg text-muted-foreground">
+            {page.matter.description}
+          </p>
+        </div>
         <MDX />
       </DocsBody>
     </DocsPage>

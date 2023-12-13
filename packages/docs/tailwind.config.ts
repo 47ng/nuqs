@@ -4,17 +4,13 @@ import type { Config } from 'tailwindcss'
 const tailwindConfig: Config = {
   darkMode: 'class',
   content: [
-    './node_modules/next-docs-ui/dist/**/*.js',
-    './app/**/*.tsx',
+    './src/app/**/*.tsx',
     './content/**/*.mdx',
-    './mdx-components.tsx'
+    './mdx-components.tsx',
+    './node_modules/next-docs-ui/dist/**/*.js'
   ],
   theme: {
-    extend: {
-      fontFamily: {
-        body: ['Geist Sans', 'Inter', 'sans-serif']
-      }
-    }
+    extend: {}
   },
   plugins: [...docsUiPlugins, docsUi]
 }
