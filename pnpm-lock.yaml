@@ -38,9 +38,6 @@ importers:
 
   packages/docs:
     dependencies:
-      geist:
-        specifier: ^1.2.0
-        version: 1.2.0(next@14.0.4)
       next:
         specifier: 14.0.4
         version: 14.0.4(react-dom@18.2.0)(react@18.2.0)
@@ -4133,14 +4130,6 @@ packages:
     os: [darwin]
     requiresBuild: true
     optional: true
-
-  /geist@1.2.0(next@14.0.4):
-    resolution: {integrity: sha512-RZsgCkGnSi1IV1Ozg3s6Ou4r/jzLff9+47ChjpJ5yX8ncEC/RwdStGwhdFzDcnSv0xU0+9J/fTX5Kht0NajTXA==}
-    peerDependencies:
-      next: ^13.2 || ^14
-    dependencies:
-      next: 14.0.4(react-dom@18.2.0)(react@18.2.0)
-    dev: false
 
   /get-caller-file@2.0.5:
     resolution: {integrity: sha512-DyFP3BM/3YHTQOCUL/w0OZHR0lpKeGrxotcHWcqNEdnltqFwXVfhEBQ94eIo34AfQpo0rGki4cyIiftY06h2Fg==}
