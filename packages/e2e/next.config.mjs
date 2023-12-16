@@ -14,7 +14,13 @@ const basePath =
 /** @type {import('next').NextConfig } */
 const config = {
   basePath,
-  experimental
+  experimental,
+  rewrites: async () => [
+    {
+      source: '/app/rewrites/source',
+      destination: '/app/rewrites/destination?injected=by+rewrites'
+    }
+  ]
 }
 
 console.info(`Next.js config:
