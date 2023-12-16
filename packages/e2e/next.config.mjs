@@ -14,7 +14,18 @@ const basePath =
 /** @type {import('next').NextConfig } */
 const config = {
   basePath,
-  experimental
+  experimental,
+  rewrites: async () => [
+    {
+      source: '/app/rewrites/source',
+      destination: '/app/rewrites/destination?injected=by+rewrites'
+    },
+    {
+      source: '/app/rewrites/source/match-query',
+      destination: '/app/rewrites/destination?injected=disallowed',
+      has: [{ type: 'query', key: 'injected', value: 'blocked' }]
+    }
+  ]
 }
 
 console.info(`Next.js config:
