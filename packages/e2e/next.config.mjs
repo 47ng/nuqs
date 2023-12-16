@@ -19,6 +19,11 @@ const config = {
     {
       source: '/app/rewrites/source',
       destination: '/app/rewrites/destination?injected=by+rewrites'
+    },
+    {
+      source: '/app/rewrites/source/match-query',
+      destination: '/app/rewrites/destination?injected=disallowed',
+      has: [{ type: 'query', key: 'injected', value: 'blocked' }]
     }
   ]
 }
