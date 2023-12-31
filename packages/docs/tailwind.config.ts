@@ -4,7 +4,7 @@ import type { Config } from 'tailwindcss'
 const tailwindConfig: Config = {
   darkMode: 'class',
   content: [
-    './src/app/**/*.tsx',
+    './src/**/*.tsx',
     './content/**/*.mdx',
     './mdx-components.tsx',
     './node_modules/next-docs-ui/dist/**/*.js'
