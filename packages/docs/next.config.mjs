@@ -9,7 +9,14 @@ const withFumaMDX = createNextDocsMDX({
 
 /** @type {import('next').NextConfig} */
 const config = {
-  reactStrictMode: true
+  reactStrictMode: true,
+  redirects: async () => [
+    {
+      source: '/demos/:slug*',
+      destination: '/playground/:slug*',
+      permanent: true
+    }
+  ]
 }
 
 export default withFumaMDX(config)
