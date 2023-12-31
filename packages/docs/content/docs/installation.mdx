@@ -1,0 +1,41 @@
+---
+title: Installation
+description: Getting started
+---
+
+Install the `nuqs` package with your favourite package manager:
+
+```shell
+pnpm add nuqs
+```
+
+```shell
+npm install nuqs
+```
+
+```shell
+yarn add nuqs
+```
+
+```shell
+bun add nuqs
+```
+
+## Which version should I use?
+
+| Next.js version range | Supported `nuqs` / `next-usequerystate` version                                                                                                                          |
+| --------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| >=14.0.4              | `nuqs@latest`                                                                                                                                   |
+| 14.0.3                | `nuqs@latest`, with the `windowHistorySupport` experimental flag, see [#417](https://github.com/47ng/next-usequerystate/issues/417)             |
+| 14.0.2                | Not compatible, see issue [#388](https://github.com/47ng/next-usequerystate/issues/388) and Next.js PR [#58297](https://github.com/vercel/next.js/pull/58297) |
+| >= 13.1 && \<\= 14.0.1  | `nuqs@latest`                                                                                                                                   |
+| < 13.1                | `next-usequerystate@1.7.3`                                                                                                                                    |
+
+## What happened to `next-usequerystate`?
+
+
+It was a mouthful to type, so I decided to abbreviate it to `nuqs`
+(pronounced however you like, I say "nukes").
+
+`next-usequerystate` will follow the same versioning as `nuqs` until the
+next major release.
