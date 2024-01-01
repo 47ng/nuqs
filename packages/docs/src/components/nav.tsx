@@ -4,11 +4,11 @@ import type { NavItemProps, NavLinkProps } from 'next-docs-ui/nav'
 export const navItems: NavItemProps[] = [
   {
     href: '/docs',
-    children: <span className="ml-6 px-3">Docs</span>
+    children: <span className="flex w-32 justify-center">Documentation</span>
   },
   {
     href: '/playground',
-    children: <span className="px-3">Playground</span>
+    children: <span className="flex w-28 justify-center">Playground</span>
   }
 ]
 

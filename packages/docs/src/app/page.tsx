@@ -10,7 +10,7 @@ export default function HomePage() {
   return (
     <>
       <Nav
-        title={<NuqsWordmark />}
+        title={<NuqsWordmark className="px-3" />}
         enableSidebar={false}
         items={navItems}
         links={navLinks}
