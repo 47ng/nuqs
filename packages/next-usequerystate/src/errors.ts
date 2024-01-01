@@ -6,6 +6,6 @@ export const errors = {
 } as const
 
 export function error(code: keyof typeof errors) {
-  return `[next-usequerystate] ${errors[code]}
+  return `[nuqs] ${errors[code]}
   See https://err.47ng.com/NUQS-${code}`
 }

@@ -1,7 +1,7 @@
 {
   "name": "e2e",
   "version": "0.0.0-internal",
-  "description": "End-to-end test bench for next-usequerystate",
+  "description": "End-to-end test bench for nuqs",
   "license": "MIT",
   "private": true,
   "author": {

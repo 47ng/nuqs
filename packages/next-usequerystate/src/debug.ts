@@ -1,3 +1,4 @@
+// todo: Remove check for `next-usequerystate` in v2
 const enabled =
   (typeof localStorage === 'object' &&
     (localStorage.getItem('debug')?.includes('next-usequerystate') ??

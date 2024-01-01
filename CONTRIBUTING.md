@@ -12,7 +12,7 @@ First off, thanks for your help!
 
 This monorepo contains:
 
-- The source code for the `next-usequerystate` NPM package, in [`packages/next-usequerystate`](./packages/next-usequerystate).
+- The source code for the `nuqs` NPM package, in [`packages/next-usequerystate`](./packages/next-usequerystate).
 - A Next.js app under [`packages/playground`](./packages/playground) that serves as a playground deployed at <https://next-usequerystate.vercel.app>
 - A test bench for [end-to-end tests](./packages/e2e) driven by Cypress
 

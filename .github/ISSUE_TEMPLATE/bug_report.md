@@ -10,10 +10,10 @@ assignees: ''
 
 ## Context
 
-What's your version of `next-usequerystate`?
+What's your version of `nuqs`?
 
 ```
--> Paste result from `cat package.json | grep next-usequerystate` here
+-> Paste result from `cat package.json | grep -e nuqs -e next-usequerystate` here
 ```
 
 Next.js information (obtained by running `next info`):

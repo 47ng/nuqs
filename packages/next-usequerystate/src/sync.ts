@@ -3,9 +3,9 @@ import { debug } from './debug'
 import { error } from './errors'
 import { getQueuedValue } from './update-queue'
 
-export const SYNC_EVENT_KEY = Symbol('__nextUseQueryState__SYNC__')
-export const NOSYNC_MARKER = '__nextUseQueryState__NO_SYNC__'
-const NOTIFY_EVENT_KEY = Symbol('__nextUseQueryState__NOTIFY__')
+export const SYNC_EVENT_KEY = Symbol('__nuqs__SYNC__')
+export const NOSYNC_MARKER = '__nuqs__NO_SYNC__'
+const NOTIFY_EVENT_KEY = Symbol('__nuqs__NOTIFY__')
 
 export type QueryUpdateSource = 'internal' | 'external'
 export type QueryUpdateNotificationArgs = {
@@ -23,7 +23,7 @@ export const emitter = Mitt<EventMap>()
 
 declare global {
   interface History {
-    __nextUseQueryState_patched?: string
+    __nuqs_patched?: string
   }
 }
 
@@ -32,7 +32,7 @@ declare global {
  * method is no longer needed as you can use `useSearchParams`, which will
  * react to changes in the URL when the `windowHistorySupport` experimental flag
  * is set.
- * This method will be removed in `next-usequerystate@2.0.0`, when Next.js
+ * This method will be removed in `nuqs@2.0.0`, when Next.js
  * decides to land the `windowHistorySupport` flag in GA.
  */
 export function subscribeToQueryUpdates(
@@ -50,7 +50,7 @@ function patchHistory() {
   // This is replaced with the package.json version by scripts/prepack.sh
   // after semantic-release has done updating the version number.
   const version = '0.0.0-inject-version-here'
-  const patched = history.__nextUseQueryState_patched
+  const patched = history.__nuqs_patched
   if (patched) {
     if (patched !== version) {
       console.error(error(409), patched, version)
@@ -60,7 +60,7 @@ function patchHistory() {
   debug('[nuqs] Patching history with %s', version)
   for (const method of ['pushState', 'replaceState'] as const) {
     const original = history[method].bind(history)
-    history[method] = function nextUseQueryState_patchedHistory(
+    history[method] = function nuqs_patchedHistory(
       state: any,
       title: string,
       url?: string | URL | null
@@ -116,7 +116,7 @@ function patchHistory() {
       return original(state, title === NOSYNC_MARKER ? '' : title, url)
     }
   }
-  Object.defineProperty(history, '__nextUseQueryState_patched', {
+  Object.defineProperty(history, '__nuqs_patched', {
     value: version,
     writable: false,
     enumerable: false,
