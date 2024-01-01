@@ -9,7 +9,7 @@ export default function RootDocsLayout({ children }: { children: ReactNode }) {
     <DocsLayout
       tree={tree}
       nav={{
-        title: <NuqsWordmark />,
+        title: <NuqsWordmark className="px-3" />,
         items: navItems,
         githubUrl: 'https://github.com/47ng/next-usequerystate'
       }}
