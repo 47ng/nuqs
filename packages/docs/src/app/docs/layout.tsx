@@ -1,15 +1,10 @@
 import { NuqsWordmark } from '@/src/components/logo'
 import { navItems } from '@/src/components/nav'
 import { DocsLayout } from 'next-docs-ui/layout'
-import type { ReactNode } from 'react'
+import { Suspense, type ReactNode } from 'react'
 import { tree } from '../source'
 
-export default async function RootDocsLayout({
-  children
-}: {
-  children: ReactNode
-}) {
-  const version = await getLatestVersion()
+export default function RootDocsLayout({ children }: { children: ReactNode }) {
   return (
     <DocsLayout
       tree={tree}
@@ -21,20 +16,29 @@ export default async function RootDocsLayout({
       sidebar={{
         collapsible: false,
         footer: (
-          <footer className="flex w-full items-baseline gap-2 text-gray-600 dark:text-gray-400">
-            <a
-              href={`https://npmjs.com/package/next-usequerystate/v/${version}`}
-              className="hover:underline"
-              tabIndex={-1}
-            >
-              <pre className="text-xs">nuqs@{version}</pre>
-            </a>
-          </footer>
+          <Suspense>
+            <SidebarFooter />
+          </Suspense>
         )
       }}
     >
       {children}
     </DocsLayout>
+  )
+}
+
+async function SidebarFooter() {
+  const version = await getLatestVersion()
+  return (
+    <footer className="flex w-full items-baseline gap-2 text-gray-600 dark:text-gray-400">
+      <a
+        href={`https://npmjs.com/package/next-usequerystate/v/${version}`}
+        className="hover:underline"
+        tabIndex={-1}
+      >
+        <pre className="text-xs">nuqs@{version}</pre>
+      </a>
+    </footer>
   )
 }
 
