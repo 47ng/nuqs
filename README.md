@@ -34,6 +34,11 @@ yarn add next-usequerystate
 npm install next-usequerystate
 ```
 
+> Note: the package is moving to a new name: `nuqs` :tada:
+>
+> The 1.x versions will be available under both names, but 2.x onwards will
+> only be published under `nuqs`.
+
 ### Which version should I use?
 
 | Next.js version range | Supported next-usequerystate version                                                                                                                          |
@@ -595,7 +600,7 @@ export function Server() {
 
 // client.tsx
 // prettier-ignore
-'use client'
+;'use client'
 
 import { useQueryStates } from 'next-usequerystate'
 import { coordinatesParsers } from './searchParams'
@@ -723,4 +728,4 @@ Made with ❤️ by [François Best](https://francoisbest.com)
 Using this package at work ? [Sponsor me](https://github.com/sponsors/franky47)
 to help with support and maintenance.
 
-![Project analytics and stats](https://repobeats.axiom.co/api/embed/042323b03b6ae1e039c89ac77e3cf0b0032c512e.svg "Repobeats analytics image")
+![Project analytics and stats](https://repobeats.axiom.co/api/embed/042323b03b6ae1e039c89ac77e3cf0b0032c512e.svg 'Repobeats analytics image')
