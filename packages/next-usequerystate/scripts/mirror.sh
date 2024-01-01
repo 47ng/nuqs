@@ -17,7 +17,7 @@ echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > .npmrc
 
 # Rename & publish the package
 pnpm pkg set name=nuqs
-pnpm publish
+pnpm publish --no-git-checks
 
 # Cleanup
 rm -f .npmrc
