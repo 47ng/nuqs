@@ -23,21 +23,21 @@ useQueryState hook for Next.js - Like React.useState, but stored in the URL quer
 ## Installation
 
 ```shell
-pnpm add next-usequerystate
+pnpm add nuqs
 ```
 
 ```shell
-yarn add next-usequerystate
+yarn add nuqs
 ```
 
 ```shell
-npm install next-usequerystate
+npm install nuqs
 ```
 
 > Note: the package is moving to a new name: `nuqs` :tada:
 >
-> The 1.x versions will be available under both names, but 2.x onwards will
-> only be published under `nuqs`.
+> The 1.x versions will also be available under `next-usequerystate`,
+> but 2.x onwards will only be published under `nuqs`.
 
 ### Which version should I use?
 
