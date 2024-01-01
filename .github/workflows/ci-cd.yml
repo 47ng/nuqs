@@ -98,7 +98,9 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
       - name: Mirror to nuqs
-        run: ./packages/next-usequerystate/scripts/mirror.sh
+        run: |
+          cat package.json | jq '.version'
+          ./scripts/mirror.sh
         working-directory: packages/next-usequerystate
         continue-on-error: true
         env:
