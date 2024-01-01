@@ -41,20 +41,20 @@ npm install nuqs
 
 ### Which version should I use?
 
-| Next.js version range | Supported next-usequerystate version                                                                                                                          |
+| Next.js version range | Supported `nuqs` / `next-usequerystate` version                                                                                                               |
 | --------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| < 13.1                | `next-usequerystate@1.7.3`                                                                                                                                    |
-| >= 13.1 && <= 14.0.1  | `next-usequerystate@latest`                                                                                                                                   |
+| >=14.0.4              | `nuqs@latest`                                                                                                                                                 |
+| 14.0.3                | `nuqs@latest`, with the `windowHistorySupport` experimental flag, see [#417](https://github.com/47ng/next-usequerystate/issues/417)                           |
 | 14.0.2                | Not compatible, see issue [#388](https://github.com/47ng/next-usequerystate/issues/388) and Next.js PR [#58297](https://github.com/vercel/next.js/pull/58297) |
-| 14.0.3                | `next-usequerystate@latest`, with the `windowHistorySupport` experimental flag, see [#417](https://github.com/47ng/next-usequerystate/issues/417)             |
-| >=14.0.4              | `next-usequerystate@latest`                                                                                                                                   |
+| >= 13.1 && <= 14.0.1  | `nuqs@latest`                                                                                                                                                 |
+| < 13.1                | `next-usequerystate@1.7.3`                                                                                                                                    |
 
 ## Usage
 
 ```tsx
 'use client' // app router: only works in client components
 
-import { useQueryState } from 'next-usequerystate'
+import { useQueryState } from 'nuqs'
 
 export default () => {
   const [name, setName] = useQueryState('name')
@@ -104,7 +104,7 @@ import {
   parseAsArrayOf,
   parseAsJson,
   parseAsStringEnum
-} from 'next-usequerystate'
+} from 'nuqs'
 
 useQueryState('tag') // defaults to string
 useQueryState('count', parseAsInteger)
@@ -133,7 +133,7 @@ const [direction, setDirection] = useQueryState(
 You may pass a custom set of `parse` and `serialize` functions:
 
 ```tsx
-import { useQueryState } from 'next-usequerystate'
+import { useQueryState } from 'nuqs'
 
 export default () => {
   const [hex, setHex] = useQueryState('hex', {
@@ -151,13 +151,13 @@ export default () => {
 > section for a more user-friendly way to achieve type-safety.
 
 If you wish to parse the searchParams in server components, you'll need to
-import the parsers from `next-usequerystate/parsers`, which doesn't include
+import the parsers from `nuqs/parsers`, which doesn't include
 the `"use client"` directive.
 
 You can then use the `parseServerSide` method:
 
 ```tsx
-import { parseAsInteger } from 'next-usequerystate/parsers'
+import { parseAsInteger } from 'nuqs/parsers'
 
 type PageProps = {
   searchParams: {
@@ -192,7 +192,7 @@ return `null` as state.
 It can make state updating and UI rendering tedious. Take this example of a simple counter stored in the URL:
 
 ```tsx
-import { useQueryState, parseAsInteger } from 'next-usequerystate'
+import { useQueryState, parseAsInteger } from 'nuqs'
 
 export default () => {
   const [count, setCount] = useQueryState('count', parseAsInteger)
@@ -263,12 +263,9 @@ setQuery(null, { history: 'replace' })
 By default, query state updates are done in a _client-first_ manner: there are
 no network calls to the server.
 
-This is equivalent to the `shallow` option of the Next.js router set to `true`.
-
-> Note: the app router doesn't
-> [yet](https://github.com/vercel/next.js/discussions/48110)
-> have this capabily natively, but `next-usequerystate` does,
-> by bypassing the router on shallow updates.
+This is equivalent to the `shallow` option of the Next.js pages router set to `true`,
+or going through the experimental [`windowHistorySupport`](https://github.com/vercel/next.js/discussions/48110)
+flag in the app router.
 
 To opt-in to query updates notifying the server (to re-run `getServerSideProps`
 in the pages router and re-render Server Components on the app router),
@@ -338,7 +335,7 @@ to enable this behaviour _(this will set `shallow: false` automatically for you)
 'use client'
 
 import React from 'react'
-import { useQueryState, parseAsString } from 'next-usequerystate'
+import { useQueryState, parseAsString } from 'nuqs'
 
 function ClientComponent({ data }) {
   // 1. Provide your own useTransition hook:
@@ -377,7 +374,7 @@ You can get this pattern for your custom parsers too, and compose them
 with others:
 
 ```ts
-import { createParser, parseAsHex } from 'next-usequerystate/parsers'
+import { createParser, parseAsHex } from 'nuqs/parsers'
 
 // Wrapping your parser/serializer in `createParser`
 // gives it access to the builder pattern & server-side
@@ -475,7 +472,7 @@ For query keys that should always move together, you can use `useQueryStates`
 with an object containing each key's type:
 
 ```ts
-import { useQueryStates, parseAsFloat } from 'next-usequerystate'
+import { useQueryStates, parseAsFloat } from 'nuqs'
 
 const [coordinates, setCoordinates] = useQueryStates(
   {
@@ -512,7 +509,7 @@ import {
   createSearchParamsCache,
   parseAsInteger,
   parseAsString
-} from 'next-usequerystate/parsers'
+} from 'nuqs/parsers'
 // Note: import from '…/parsers' to avoid the "use client" directive
 
 export const searchParamsCache = createSearchParamsCache({
@@ -555,10 +552,7 @@ parser declaration with `useQueryStates` for type-safety in client components:
 
 ```tsx
 // searchParams.ts
-import {
-  parseAsFloat,
-  createSearchParamsCache
-} from 'next-usequerystate/parsers'
+import { parseAsFloat, createSearchParamsCache } from 'nuqs/parsers'
 
 export const coordinatesParsers = {
   lat: parseAsFloat.withDefault(45.18),
@@ -602,7 +596,7 @@ export function Server() {
 // prettier-ignore
 ;'use client'
 
-import { useQueryStates } from 'next-usequerystate'
+import { useQueryStates } from 'nuqs'
 import { coordinatesParsers } from './searchParams'
 
 export function Client() {
@@ -625,15 +619,15 @@ See issue #259 for more testing-related discussions.
 ## Debugging
 
 You can enable debug logs in the browser by setting the `debug` item in localStorage
-to `next-usequerystate`, and reload the page.
+to `nuqs`, and reload the page.
 
 ```js
 // In your devtools:
-localStorage.setItem('debug', 'next-usequerystate')
+localStorage.setItem('debug', 'nuqs')
 ```
 
 > Note: unlike the `debug` package, this will not work with wildcards, but
-> you can combine it: `localStorage.setItem('debug', '*,next-usequerystate')`
+> you can combine it: `localStorage.setItem('debug', '*,nuqs')`
 
 Log lines will be prefixed with `[nuqs]` for `useQueryState` and `[nuq+]` for
 `useQueryStates`, along with other internal debug logs.
@@ -677,8 +671,8 @@ use `useQueryState` to read it:
 ```ts
 // page.tsx
 import type { Metadata, ResolvingMetadata } from 'next'
-import { useQueryState } from 'next-usequerystate'
-import { parseAsString } from 'next-usequerystate/parsers'
+import { useQueryState } from 'nuqs'
+import { parseAsString } from 'nuqs/parsers'
 
 type Props = {
   searchParams: { [key: string]: string | string[] | undefined }
