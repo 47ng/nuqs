@@ -1,4 +1,4 @@
-import { PlaygroundPageLayout } from '@/src/app/playground/_components/playground-page-layout'
+import { PlaygroundPageLayout } from '@/src/app/(pages)/playground/_components/playground-page-layout'
 import type { GetServerSideProps, InferGetServerSidePropsType } from 'next'
 import { parseAsInteger, useQueryState } from 'next-usequerystate'
 

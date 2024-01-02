@@ -17,7 +17,7 @@ export default async function Page({
   const MDX = page.data.default
 
   return (
-    <DocsPage url={page.url} toc={page.data.toc} >
+    <DocsPage url={page.url} toc={page.data.toc}>
       <DocsBody>
         <div className="not-prose mb-12">
           <h1 className="mb-4 text-3xl font-bold text-foreground sm:text-4xl">

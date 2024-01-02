@@ -3,9 +3,7 @@ import React, { Suspense } from 'react'
 import { PlaygroundPageLayout } from './_components/playground-page-layout'
 
 export const metadata = {
-  title: 'next-usequerystate playground',
-  description:
-    'useQueryState hook for Next.js - Like React.useState, but stored in the URL query string'
+  title: 'Playground'
 }
 
 const DebugControlsSkeleton = () => (
@@ -28,15 +26,6 @@ export default function PlaygroundLayout({
   return (
     <>
       <header>
-        <strong>
-          <code>next-usequerystate</code>
-        </strong>{' '}
-        • <a href="https://github.com/47ng/next-usequerystate">GitHub</a> •{' '}
-        <a href="https://www.npmjs.com/package/next-usequerystate">NPM</a> •{' '}
-        <a href="https://francoisbest.com/posts/2023/storing-react-state-in-the-url-with-nextjs">
-          How it works
-        </a>
-        {' • '}
         <Suspense fallback={<DebugControlsSkeleton />}>
           <DebugControl />
         </Suspense>
