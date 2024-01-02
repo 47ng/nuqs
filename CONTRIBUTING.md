@@ -13,13 +13,13 @@ First off, thanks for your help!
 This monorepo contains:
 
 - The source code for the `nuqs` NPM package, in [`packages/next-usequerystate`](./packages/next-usequerystate).
-- A Next.js app under [`packages/playground`](./packages/playground) that serves as a playground deployed at <https://next-usequerystate.vercel.app>
+- A Next.js app under [`packages/docs`](./packages/docs) that serves the documentation and as a playground deployed at <https://nuqs.47ng.com>
 - A test bench for [end-to-end tests](./packages/e2e) driven by Cypress
 
 When running `next dev`, this will:
 
 - Build the library and watch for changes using [`tsup`](https://tsup.egoist.dev/)
-- Start the playground, which will be available at <http://localhost:3000>.
+- Start the docs/playground, which will be available at <http://localhost:3000>.
 - Start the end-to-end test bench, which will be available at <http://localhost:3001>.
 
 ## Testing
