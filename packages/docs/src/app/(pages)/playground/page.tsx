@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url'
 export default async function PlaygroundIndexPage() {
   const appRouterLinks = await getDemoLinks()
   return (
-    <main>
+    <>
       <h1>Playground</h1>
       <h2>Demos</h2>
       <h3>App router</h3>
@@ -32,7 +32,7 @@ export default async function PlaygroundIndexPage() {
         <a href="https://mamot.fr/@Franky47">Mastodon</a> •{' '}
         <a href="mailto:freelance@francoisbest.com">Hire me!</a>
       </footer>
-    </main>
+    </>
   )
 }
 
