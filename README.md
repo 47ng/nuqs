@@ -176,7 +176,7 @@ export default function ServerPage({ searchParams }: PageProps) {
 }
 ```
 
-See the [server-side parsing demo](./packages/playground/src/app/demos/server-side-parsing/)
+See the [server-side parsing demo](<./packages/docs/src/app/(pages)/playground/server-side-parsing/>)
 for a live example showing how to reuse parser configurations between
 client and server code.
 
@@ -413,7 +413,7 @@ useQueryState(
 )
 ```
 
-Note: see this example running in the [hex-colors demo](./packages/playground/src/app/demos/hex-colors/page.tsx).
+Note: see this example running in the [hex-colors demo](<./packages/docs/src/app/(pages)/playground/hex-colors/page.tsx>).
 
 ## Multiple Queries (batching)
 

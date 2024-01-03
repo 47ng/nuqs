@@ -28,7 +28,7 @@ export default function BuilderPatternDemoPage() {
         </em>
       </p>
       <p>
-        <a href="https://github.com/47ng/next-usequerystate/blob/next/packages/playground/src/app/demos/builder-pattern/page.tsx">
+        <a href="https://github.com/47ng/next-usequerystate/tree/next/packages/docs/src/app/(pages)/playground/builder-pattern/page.tsx">
           Source on GitHub
         </a>
       </p>

@@ -90,7 +90,7 @@ export default function HexColorsDemo() {
         }}
       ></div>
       <p>
-        <a href="https://github.com/47ng/next-usequerystate/blob/next/packages/playground/src/app/demos/hex-colors/page.tsx">
+        <a href="https://github.com/47ng/next-usequerystate/tree/next/packages/docs/src/app/(pages)/playground/hex-colors/page.tsx">
           Source on GitHub
         </a>
       </p>

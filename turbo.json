@@ -16,7 +16,7 @@
       "dependsOn": ["^build"],
       "env": ["BASE_PATH", "WINDOW_HISTORY_SUPPORT"]
     },
-    "playground#build": {
+    "docs#build": {
       "outputs": [".next/**", "!.next/cache/**"],
       "dependsOn": ["^build"]
     },

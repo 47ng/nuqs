@@ -201,37 +201,6 @@ importers:
         specifier: ^0.34.6
         version: 0.34.6
 
-  packages/playground:
-    dependencies:
-      next:
-        specifier: 14.0.4
-        version: 14.0.4(react-dom@18.2.0)(react@18.2.0)
-      next-usequerystate:
-        specifier: workspace:*
-        version: link:../next-usequerystate
-      react:
-        specifier: ^18.2.0
-        version: 18.2.0
-      react-dom:
-        specifier: ^18.2.0
-        version: 18.2.0(react@18.2.0)
-    devDependencies:
-      '@types/node':
-        specifier: ^20.10.4
-        version: 20.10.4
-      '@types/react':
-        specifier: ^18.2.45
-        version: 18.2.45
-      '@types/react-dom':
-        specifier: ^18.2.17
-        version: 18.2.17
-      '@types/webpack':
-        specifier: ^5.28.5
-        version: 5.28.5
-      typescript:
-        specifier: ^5.3.3
-        version: 5.3.3
-
 packages:
 
   /@alloc/quick-lru@5.2.0:

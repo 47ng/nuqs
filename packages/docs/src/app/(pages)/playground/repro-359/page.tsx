@@ -43,7 +43,7 @@ export default function Home() {
         Repro for issue{' '}
         <a href="https://github.com/47ng/next-usequerystate/issues/359">#359</a>
       </h1>
-      <div className="p-5 border">
+      <div className="border p-5">
         {component === TargetComponent.Comp1 ? <Component1 /> : null}
         {component === TargetComponent.Comp2 ? <Component2 /> : null}
       </div>
@@ -92,7 +92,7 @@ export default function Home() {
         </button>
       </div>
       <p>
-        <a href="https://github.com/47ng/next-usequerystate/blob/next/packages/playground/src/app/demos/repro-359/page.tsx">
+        <a href="https://github.com/47ng/next-usequerystate/tree/next/packages/docs/src/app/(pages)/playground/repro-359/page.tsx">
           Source on GitHub
         </a>
       </p>

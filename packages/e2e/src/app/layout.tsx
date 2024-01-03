@@ -2,9 +2,7 @@ import React, { Suspense } from 'react'
 import { HydrationMarker } from '../components/hydration-marker'
 
 export const metadata = {
-  title: 'nuqs playground',
-  description:
-    'useQueryState hook for Next.js - Like React.useState, but stored in the URL query string'
+  title: 'nuqs e2e test bench'
 }
 
 export default function RootLayout({
