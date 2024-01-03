@@ -1,6 +1,4 @@
-import { ChevronDown } from 'lucide-react'
-import Link from 'next/link'
-import { NuqsWordmark } from '../../components/logo'
+import { HeroSection } from './_landing/hero'
 
 export const metadata = {
   title: {
@@ -11,31 +9,7 @@ export const metadata = {
 export default function HomePage() {
   return (
     <main>
-      <section
-        className="relative flex flex-col items-center justify-center"
-        style={{
-          height: 'calc(100vh - 4rem)'
-        }}
-      >
-        <h1 className="text-6xl md:text-8xl">
-          <NuqsWordmark />
-        </h1>
-        <p className="my-8 text-center text-2xl md:text-4xl">
-          Type-safe search params state management for Next.js
-        </p>
-        <Link
-          href="/docs"
-          className="flex h-12 items-center rounded-full bg-indigo-500 px-6 text-white dark:bg-indigo-600"
-        >
-          Documentation
-        </Link>
-        <div
-          className="absolute bottom-2 left-0 right-0 flex h-12 items-center justify-center"
-          aria-hidden
-        >
-          <ChevronDown />
-        </div>
-      </section>
+      <HeroSection />
       <section className="container relative grid grid-cols-1 gap-x-12 gap-y-24 px-4 py-24 md:grid-cols-2 xl:grid-cols-3">
         <h2 className="sr-only">Features</h2>
         <Feature
@@ -127,6 +101,8 @@ export default function HomePage() {
     </main>
   )
 }
+
+// --
 
 type FeatureProps = {
   title: React.ReactNode
