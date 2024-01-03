@@ -1,6 +1,5 @@
-import { ChevronDown } from 'lucide-react'
-import Link from 'next/link'
-import { NuqsWordmark } from '../../components/logo'
+import { Feature, FeatureGrid } from './_landing/features'
+import { HeroSection } from './_landing/hero'
 
 export const metadata = {
   title: {
@@ -11,32 +10,8 @@ export const metadata = {
 export default function HomePage() {
   return (
     <main>
-      <section
-        className="relative flex flex-col items-center justify-center"
-        style={{
-          height: 'calc(100vh - 4rem)'
-        }}
-      >
-        <h1 className="text-6xl md:text-8xl">
-          <NuqsWordmark />
-        </h1>
-        <p className="my-8 text-center text-2xl md:text-4xl">
-          Type-safe search params state management for Next.js
-        </p>
-        <Link
-          href="/docs"
-          className="flex h-12 items-center rounded-full bg-indigo-500 px-6 text-white dark:bg-indigo-600"
-        >
-          Documentation
-        </Link>
-        <div
-          className="absolute bottom-2 left-0 right-0 flex h-12 items-center justify-center"
-          aria-hidden
-        >
-          <ChevronDown />
-        </div>
-      </section>
-      <section className="container relative grid grid-cols-1 gap-x-12 gap-y-24 px-4 py-24 md:grid-cols-2 xl:grid-cols-3">
+      <HeroSection />
+      <FeatureGrid>
         <h2 className="sr-only">Features</h2>
         <Feature
           icon={
@@ -74,7 +49,12 @@ export default function HomePage() {
         <Feature
           icon="🧘‍♀️"
           title="Simple"
-          description="The URL is the source of truth."
+          description={
+            <>
+              A familiar <code>React.useState</code>-like API, that syncs with
+              the URL.
+            </>
+          }
         />
         <Feature
           icon="🔋"
@@ -98,7 +78,7 @@ export default function HomePage() {
         <Feature
           icon="📡"
           title="Client-first"
-          description="Shallow updates by default, opt-in to notify the server."
+          description="Shallow updates by default, opt-in to notify the server to re-render RSCs (with throttle control)."
         />
         <Feature
           icon="🗃"
@@ -123,40 +103,7 @@ export default function HomePage() {
           title="Tested"
           description="Tested against every Next.js release."
         />
-      </section>
+      </FeatureGrid>
     </main>
-  )
-}
-
-type FeatureProps = {
-  title: React.ReactNode
-  description: React.ReactNode
-  icon: React.ReactNode
-  isNew?: boolean
-}
-
-function Feature({ title, description, icon, isNew }: FeatureProps) {
-  // https://v0.dev/t/xXdcvuFkW1d
-  return (
-    <>
-      <div className="space-y-4 xl:space-y-8">
-        <div className="flex items-center gap-2">
-          <span className="text-3xl" aria-hidden role="presentation">
-            {icon}
-          </span>
-          <h3 className="text-2xl font-bold tracking-tighter dark:text-white md:text-3xl xl:text-4xl">
-            {title}
-            {isNew && (
-              <sup className="ml-2" aria-label="New feature">
-                ✨
-              </sup>
-            )}
-          </h3>
-        </div>
-        <p className="text-gray-500 dark:text-gray-300 md:text-lg/relaxed xl:text-xl/relaxed">
-          {description}
-        </p>
-      </div>
-    </>
   )
 }
