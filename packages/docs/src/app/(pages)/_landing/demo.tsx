@@ -32,12 +32,12 @@ export async function LandingDemo() {
           <div className="mb-4 h-10 animate-pulse rounded bg-gray-50 dark:bg-gray-900" />
         }
       >
-        <div className="mb-4 flex items-center gap-4">
+        <div className="mb-4 flex flex-col gap-4 sm:flex-row sm:items-center">
           <Demo />
         </div>
       </Suspense>
       <div
-        className="rounded-lg border bg-white p-3 text-sm shadow-inner dark:bg-[#1e1e1e]"
+        className="overflow-x-auto rounded-lg border bg-white p-3 text-xs shadow-inner dark:bg-[#1e1e1e] sm:text-sm"
         dangerouslySetInnerHTML={{ __html: demoCode }}
       />
     </>

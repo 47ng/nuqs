@@ -38,6 +38,9 @@ importers:
 
   packages/docs:
     dependencies:
+      '@radix-ui/react-slot':
+        specifier: ^1.0.2
+        version: 1.0.2(@types/react@18.2.45)(react@18.2.0)
       class-variance-authority:
         specifier: ^0.7.0
         version: 0.7.0
