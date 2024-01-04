@@ -1,7 +1,7 @@
-import type { SearchParams } from 'next-usequerystate/parsers'
-import { cache } from './searchParams'
+import type { SearchParams } from 'nuqs/parsers'
 import { Suspense } from 'react'
 import { RewriteDestinationClient } from './client'
+import { cache } from './searchParams'
 
 export default function RewriteDestinationPage({
   searchParams

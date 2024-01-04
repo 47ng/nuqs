@@ -1,6 +1,6 @@
 import { PlaygroundPageLayout } from '@/src/app/(pages)/playground/_components/playground-page-layout'
 import type { GetServerSideProps, InferGetServerSidePropsType } from 'next'
-import { parseAsInteger, useQueryState } from 'next-usequerystate'
+import { parseAsInteger, useQueryState } from 'nuqs'
 
 export default function ServerSideCounterPage({
   counter: serverSideCounter

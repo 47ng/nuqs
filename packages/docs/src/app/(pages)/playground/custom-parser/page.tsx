@@ -1,6 +1,6 @@
 'use client'
 
-import { createParser, useQueryState } from 'next-usequerystate'
+import { createParser, useQueryState } from 'nuqs'
 
 type SortingState = Record<string, 'asc' | 'desc'>
 

@@ -12,7 +12,7 @@ First off, thanks for your help!
 
 This monorepo contains:
 
-- The source code for the `nuqs` NPM package, in [`packages/next-usequerystate`](./packages/next-usequerystate).
+- The source code for the `nuqs` NPM package, in [`packages/nuqs`](./packages/nuqs).
 - A Next.js app under [`packages/docs`](./packages/docs) that serves the documentation and as a playground deployed at <https://nuqs.47ng.com>
 - A test bench for [end-to-end tests](./packages/e2e) driven by Cypress
 

@@ -1,6 +1,6 @@
 'use client'
 
-import { useQueryState } from 'next-usequerystate'
+import { useQueryState } from 'nuqs'
 
 export default function ReproPage() {
   const [searchQueryUrl, setSearchQueryUrl] = useQueryState('search', {

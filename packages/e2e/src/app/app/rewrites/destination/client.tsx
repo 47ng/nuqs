@@ -1,6 +1,6 @@
 'use client'
 
-import { useQueryStates } from 'next-usequerystate'
+import { useQueryStates } from 'nuqs'
 import { searchParams } from './searchParams'
 
 export function RewriteDestinationClient() {

@@ -1,6 +1,6 @@
 'use client'
 
-import { useQueryState } from 'next-usequerystate'
+import { useQueryState } from 'nuqs'
 
 const testValues = [
   '/home/user/.ssh/id.pub',

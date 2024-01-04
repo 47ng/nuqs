@@ -1,6 +1,6 @@
 'use client'
 
-import { createParser, parseAsHex, useQueryState } from 'next-usequerystate'
+import { createParser, parseAsHex, useQueryState } from 'nuqs'
 
 const hexColorSchema = createParser({
   parse(query) {

@@ -1,10 +1,6 @@
 'use client'
 
-import {
-  parseAsInteger,
-  subscribeToQueryUpdates,
-  useQueryState
-} from 'next-usequerystate'
+import { parseAsInteger, subscribeToQueryUpdates, useQueryState } from 'nuqs'
 import React from 'react'
 
 export default function BuilderPatternDemoPage() {

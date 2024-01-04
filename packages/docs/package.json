@@ -18,7 +18,7 @@
     "next-docs-mdx": "^6.0.2",
     "next-docs-ui": "^6.0.2",
     "next-docs-zeta": "^6.0.2",
-    "next-usequerystate": "workspace:*",
+    "nuqs": "workspace:*",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "recharts": "^2.10.3",

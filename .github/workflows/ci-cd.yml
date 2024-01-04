@@ -90,18 +90,16 @@ jobs:
       - name: Install dependencies
         run: pnpm install --ignore-scripts --frozen-lockfile
       - name: Build package
-        run: pnpm build --filter next-usequerystate
+        run: pnpm build --filter nuqs
       - name: Semantic Release
         run: ../../node_modules/.bin/semantic-release
-        working-directory: packages/next-usequerystate
+        working-directory: packages/nuqs
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-      - name: Mirror to nuqs
-        run: |
-          cat package.json | jq '.version'
-          ./scripts/mirror.sh
-        working-directory: packages/next-usequerystate
+      - name: Mirror to next-usequerystate
+        run: ./scripts/mirror.sh
+        working-directory: packages/nuqs
         continue-on-error: true
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}

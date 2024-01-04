@@ -1,14 +1,14 @@
 'use client'
 
+import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import {
   parseAsBoolean,
   parseAsFloat,
   parseAsInteger,
   parseAsString,
   useQueryState
-} from 'next-usequerystate'
-import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+} from 'nuqs'
 import React from 'react'
 
 export default function IntegrationPage() {

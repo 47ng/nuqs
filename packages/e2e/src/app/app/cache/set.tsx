@@ -1,6 +1,6 @@
 'use client'
 
-import { useQueryStates } from 'next-usequerystate'
+import { useQueryStates } from 'nuqs'
 import { parsers } from './searchParams'
 
 export function Set() {

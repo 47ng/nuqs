@@ -1,6 +1,6 @@
 'use client'
 
-import { parseAsInteger, useQueryState } from 'next-usequerystate'
+import { parseAsInteger, useQueryState } from 'nuqs'
 
 export function Demo() {
   const [hello, setHello] = useQueryState('hello', { defaultValue: '' })

@@ -1,7 +1,7 @@
 import { GetServerSideProps } from 'next'
-import { parseAsString, queryTypes, useQueryState } from 'next-usequerystate'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { parseAsString, queryTypes, useQueryState } from 'nuqs'
 import { HydrationMarker } from '../../../components/hydration-marker'
 
 export const getServerSideProps = (async ctx => {

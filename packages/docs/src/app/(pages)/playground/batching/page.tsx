@@ -1,6 +1,6 @@
 'use client'
 
-import { parseAsFloat, useQueryState } from 'next-usequerystate'
+import { parseAsFloat, useQueryState } from 'nuqs'
 
 const parser = parseAsFloat.withDefault(0)
 

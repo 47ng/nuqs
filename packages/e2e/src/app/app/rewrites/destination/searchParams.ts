@@ -1,7 +1,4 @@
-import {
-  createSearchParamsCache,
-  parseAsString
-} from 'next-usequerystate/parsers'
+import { createSearchParamsCache, parseAsString } from 'nuqs/parsers'
 
 export const searchParams = {
   injected: parseAsString.withDefault('null'),

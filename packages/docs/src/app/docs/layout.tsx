@@ -32,7 +32,7 @@ async function SidebarFooter() {
   return (
     <footer className="flex w-full items-baseline gap-2 text-gray-600 dark:text-gray-400">
       <a
-        href={`https://npmjs.com/package/next-usequerystate/v/${version}`}
+        href={`https://npmjs.com/package/nuqs/v/${version}`}
         className="hover:underline"
         tabIndex={-1}
       >
@@ -43,8 +43,6 @@ async function SidebarFooter() {
 }
 
 async function getLatestVersion() {
-  const res = await fetch('https://registry.npmjs.org/next-usequerystate').then(
-    r => r.json()
-  )
+  const res = await fetch('https://registry.npmjs.org/nuqs').then(r => r.json())
   return res['dist-tags'].latest
 }

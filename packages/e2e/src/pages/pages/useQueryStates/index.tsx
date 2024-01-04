@@ -1,4 +1,4 @@
-import { queryTypes, useQueryStates } from 'next-usequerystate'
+import { queryTypes, useQueryStates } from 'nuqs'
 import { HydrationMarker } from '../../../components/hydration-marker'
 
 const IntegrationPage = () => {

@@ -65,9 +65,9 @@ importers:
       next-docs-zeta:
         specifier: ^6.0.2
         version: 6.0.2(@types/react@18.2.45)(next@14.0.4)(react-dom@18.2.0)(react@18.2.0)
-      next-usequerystate:
+      nuqs:
         specifier: workspace:*
-        version: link:../next-usequerystate
+        version: link:../nuqs
       react:
         specifier: ^18.2.0
         version: 18.2.0
@@ -132,9 +132,9 @@ importers:
       next:
         specifier: 14.0.4
         version: 14.0.4(react-dom@18.2.0)(react@18.2.0)
-      next-usequerystate:
+      nuqs:
         specifier: workspace:*
-        version: link:../next-usequerystate
+        version: link:../nuqs
       react:
         specifier: ^18.2.0
         version: 18.2.0
@@ -170,7 +170,7 @@ importers:
         specifier: ^5.3.3
         version: 5.3.3
 
-  packages/next-usequerystate:
+  packages/nuqs:
     dependencies:
       mitt:
         specifier: ^3.0.1
