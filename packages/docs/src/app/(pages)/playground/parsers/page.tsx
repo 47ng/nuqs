@@ -132,7 +132,7 @@ export default function BasicCounterDemoPage() {
         </li>
       </ul>
       <p>
-        <a href="https://github.com/47ng/next-usequerystate/tree/next/packages/docs/src/app/(pages)/playground/parsers/page.tsx">
+        <a href="https://github.com/47ng/nuqs/tree/next/packages/docs/src/app/(pages)/playground/parsers/page.tsx">
           Source on GitHub
         </a>
       </p>

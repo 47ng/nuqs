@@ -1,6 +1,6 @@
 # Search params cache already populated
 
-This error occurs when a [search params cache](https://github.com/47ng/next-usequerystate#accessing-searchparams-in-server-components)
+This error occurs when a [search params cache](https://github.com/47ng/nuqs#accessing-searchparams-in-server-components)
 is being fed searchParams more than once.
 
 Internally, the cache object will be frozen for the duration of the page render

@@ -12,7 +12,7 @@ they are not re-rendered when the page renders.
 
 In this case, your only option is to turn the server component into a client
 component, and read the search params with `useQueryStates`. You can
-[feed it the same parser object](https://github.com/47ng/next-usequerystate#accessing-searchparams-in-server-components)
+[feed it the same parser object](https://github.com/47ng/nuqs#accessing-searchparams-in-server-components)
 you used to create the cache, and it you'll get the same
 type safety.
 

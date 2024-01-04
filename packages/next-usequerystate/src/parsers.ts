@@ -272,7 +272,7 @@ export function parseAsArrayOf<ItemType>(
     parse: query => {
       if (query === '') {
         // Empty query should not go through the split/map/filter logic,
-        // see https://github.com/47ng/next-usequerystate/issues/329
+        // see https://github.com/47ng/nuqs/issues/329
         return [] as ItemType[]
       }
       return query

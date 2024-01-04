@@ -1,8 +1,8 @@
 blank_issues_enabled: true
 contact_links:
   - name: Feature idea
-    url: https://github.com/47ng/next-usequerystate/discussions/new?category=ideas
+    url: https://github.com/47ng/nuqs/discussions/new?category=ideas
     about: Please share ideas for new features as discussion
   - name: Question
-    url: https://github.com/47ng/next-usequerystate/discussions/new?category=q-a
+    url: https://github.com/47ng/nuqs/discussions/new?category=q-a
     about: Please use the discussions to ask the community for help

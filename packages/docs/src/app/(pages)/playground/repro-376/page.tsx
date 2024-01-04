@@ -38,7 +38,7 @@ export default function ReproPage() {
       </nav>
       <p>Query: {searchQueryUrl}</p>
       <p>
-        <a href="https://github.com/47ng/next-usequerystate/tree/next/packages/docs/src/app/(pages)/playground/repro-376/page.tsx">
+        <a href="https://github.com/47ng/nuqs/tree/next/packages/docs/src/app/(pages)/playground/repro-376/page.tsx">
           Source on GitHub
         </a>
       </p>

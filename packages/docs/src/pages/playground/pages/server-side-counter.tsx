@@ -23,7 +23,7 @@ export default function ServerSideCounterPage({
       <p>Client counter: {counter}</p>
       <p>Server counter: {serverSideCounter}</p>
       <p>
-        <a href="https://github.com/47ng/next-usequerystate/blob/next/src/pages/demos/pages/server-side-counter.tsx">
+        <a href="https://github.com/47ng/nuqs/blob/next/src/pages/demos/pages/server-side-counter.tsx">
           Source on GitHub
         </a>
       </p>

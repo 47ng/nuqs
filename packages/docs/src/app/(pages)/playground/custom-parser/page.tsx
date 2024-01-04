@@ -101,7 +101,7 @@ export default function BasicCounterDemoPage() {
         <span>{sort.bar}</span>
       </nav>
       <p>
-        <a href="https://github.com/47ng/next-usequerystate/tree/next/packages/docs/src/app/(pages)/playground/custom-parser/page.tsx">
+        <a href="https://github.com/47ng/nuqs/tree/next/packages/docs/src/app/(pages)/playground/custom-parser/page.tsx">
           Source on GitHub
         </a>
       </p>

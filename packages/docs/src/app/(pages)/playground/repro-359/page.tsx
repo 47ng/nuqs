@@ -1,4 +1,4 @@
-// https://github.com/47ng/next-usequerystate/issues/359
+// https://github.com/47ng/nuqs/issues/359
 
 'use client'
 
@@ -41,7 +41,7 @@ export default function Home() {
     <>
       <h1>
         Repro for issue{' '}
-        <a href="https://github.com/47ng/next-usequerystate/issues/359">#359</a>
+        <a href="https://github.com/47ng/nuqs/issues/359">#359</a>
       </h1>
       <div className="border p-5">
         {component === TargetComponent.Comp1 ? <Component1 /> : null}
@@ -92,7 +92,7 @@ export default function Home() {
         </button>
       </div>
       <p>
-        <a href="https://github.com/47ng/next-usequerystate/tree/next/packages/docs/src/app/(pages)/playground/repro-359/page.tsx">
+        <a href="https://github.com/47ng/nuqs/tree/next/packages/docs/src/app/(pages)/playground/repro-359/page.tsx">
           Source on GitHub
         </a>
       </p>

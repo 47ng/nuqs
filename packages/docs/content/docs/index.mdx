@@ -36,8 +36,8 @@ npm install next-usequerystate
 | --------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | < 13.1                | `next-usequerystate@1.7.3`                                                                                                                                    |
 | >= 13.1 && \<\= 14.0.1  | `next-usequerystate@latest`                                                                                                                                   |
-| 14.0.2                | Not compatible, see issue [#388](https://github.com/47ng/next-usequerystate/issues/388) and Next.js PR [#58297](https://github.com/vercel/next.js/pull/58297) |
-| 14.0.3                | `next-usequerystate@latest`, with the `windowHistorySupport` experimental flag, see [#417](https://github.com/47ng/next-usequerystate/issues/417)             |
+| 14.0.2                | Not compatible, see issue [#388](https://github.com/47ng/nuqs/issues/388) and Next.js PR [#58297](https://github.com/vercel/next.js/pull/58297) |
+| 14.0.3                | `next-usequerystate@latest`, with the `windowHistorySupport` experimental flag, see [#417](https://github.com/47ng/nuqs/issues/417)             |
 | >=14.0.4              | `next-usequerystate@latest`                                                                                                                                   |
 
 ## Usage
@@ -167,7 +167,7 @@ export default function ServerPage({ searchParams }: PageProps) {
 }
 ```
 
-See the [server-side parsing demo](https://github.com/47ng/next-usequerystate/tree/next/packages/docs/src/app/(pages)/playground/server-side-parsing/)
+See the [server-side parsing demo](https://github.com/47ng/nuqs/tree/next/packages/docs/src/app/(pages)/playground/server-side-parsing/)
 for a live example showing how to reuse parser configurations between
 client and server code.
 
@@ -407,7 +407,7 @@ useQueryState(
 )
 ```
 
-Note: see this example running in the [hex-colors demo](https://github.com/47ng/next-usequerystate/blob/next/packages/docs/src/app/(pages)/playground/hex-colors/page.tsx).
+Note: see this example running in the [hex-colors demo](https://github.com/47ng/nuqs/blob/next/packages/docs/src/app/(pages)/playground/hex-colors/page.tsx).
 
 ## Multiple Queries (batching)
 
@@ -632,7 +632,7 @@ Log lines will be prefixed with `[nuqs]` for `useQueryState` and `[nuq+]` for
 User timings markers are also recorded, for advanced performance analysis using
 your browser's devtools.
 
-Providing debug logs when opening an [issue](https://github.com/47ng/next-usequerystate/issues)
+Providing debug logs when opening an [issue](https://github.com/47ng/nuqs/issues)
 is always appreciated. 🙏
 
 ## Caveats
@@ -712,7 +712,7 @@ Upon reloading the page, the state will be incorrectly set to 1.2345.
 
 ## License
 
-[MIT](https://github.com/47ng/next-usequerystate/blob/next/LICENSE)
+[MIT](https://github.com/47ng/nuqs/blob/next/LICENSE)
 
 Made with ❤️ by [François Best](https://francoisbest.com)
 

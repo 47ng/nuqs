@@ -7,7 +7,7 @@ every keypress, or a slider (`<input type="range">`).
 ## Possible Solutions
 
 The library has a built-in throttling mechanism, that can be configured per
-instance. See the [throttling](https://github.com/47ng/next-usequerystate#throttling)
+instance. See the [throttling](https://github.com/47ng/nuqs#throttling)
 docs for more information.
 
 ## Safari

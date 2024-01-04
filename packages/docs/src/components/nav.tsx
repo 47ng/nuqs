@@ -16,7 +16,7 @@ export const navLinks: NavLinkProps[] = [
   {
     label: 'GitHub',
     icon: <GithubIcon className="h-5 w-5" />,
-    href: 'https://github.com/47ng/next-usequerystate',
+    href: 'https://github.com/47ng/nuqs',
     external: true
   }
 ]

@@ -1,11 +1,11 @@
 # useQueryState for Next.js
 
 [![NPM](https://img.shields.io/npm/v/next-usequerystate?color=red)](https://www.npmjs.com/package/next-usequerystate)
-[![MIT License](https://img.shields.io/github/license/47ng/next-usequerystate.svg?color=blue)](https://github.com/47ng/next-usequerystate/blob/next/LICENSE)
-[![Continuous Integration](https://github.com/47ng/next-usequerystate/workflows/Continuous%20Integration/badge.svg?branch=next)](https://github.com/47ng/next-usequerystate/actions)
-[![Depfu](https://badges.depfu.com/badges/acad53fa2b09b1e435a19d6d18f29af4/count.svg)](https://depfu.com/github/47ng/next-usequerystate?project_id=22104)
+[![MIT License](https://img.shields.io/github/license/47ng/nuqs.svg?color=blue)](https://github.com/47ng/nuqs/blob/next/LICENSE)
+[![Continuous Integration](https://github.com/47ng/nuqs/workflows/Continuous%20Integration/badge.svg?branch=next)](https://github.com/47ng/nuqs/actions)
+[![Depfu](https://badges.depfu.com/badges/acad53fa2b09b1e435a19d6d18f29af4/count.svg)](https://depfu.com/github/47ng/nuqs?project_id=22104)
 
-<!-- [![Coverage Status](https://coveralls.io/repos/github/47ng/next-usequerystate/badge.svg?branch=next)](https://coveralls.io/github/47ng/next-usequerystate?branch=next) -->
+<!-- [![Coverage Status](https://coveralls.io/repos/github/47ng/nuqs/badge.svg?branch=next)](https://coveralls.io/github/47ng/nuqs?branch=next) -->
 
 useQueryState hook for Next.js - Like React.useState, but stored in the URL query string
 
@@ -41,13 +41,13 @@ npm install nuqs
 
 ### Which version should I use?
 
-| Next.js version range | Supported `nuqs` / `next-usequerystate` version                                                                                                               |
-| --------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| >=14.0.4              | `nuqs@latest`                                                                                                                                                 |
-| 14.0.3                | `nuqs@latest`, with the `windowHistorySupport` experimental flag, see [#417](https://github.com/47ng/next-usequerystate/issues/417)                           |
-| 14.0.2                | Not compatible, see issue [#388](https://github.com/47ng/next-usequerystate/issues/388) and Next.js PR [#58297](https://github.com/vercel/next.js/pull/58297) |
-| >= 13.1 && <= 14.0.1  | `nuqs@latest`                                                                                                                                                 |
-| < 13.1                | `next-usequerystate@1.7.3`                                                                                                                                    |
+| Next.js version range | Supported `nuqs` / `next-usequerystate` version                                                                                                 |
+| --------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------- |
+| >=14.0.4              | `nuqs@latest`                                                                                                                                   |
+| 14.0.3                | `nuqs@latest`, with the `windowHistorySupport` experimental flag, see [#417](https://github.com/47ng/nuqs/issues/417)                           |
+| 14.0.2                | Not compatible, see issue [#388](https://github.com/47ng/nuqs/issues/388) and Next.js PR [#58297](https://github.com/vercel/next.js/pull/58297) |
+| >= 13.1 && <= 14.0.1  | `nuqs@latest`                                                                                                                                   |
+| < 13.1                | `next-usequerystate@1.7.3`                                                                                                                      |
 
 ## Usage
 
@@ -68,7 +68,7 @@ export default () => {
 }
 ```
 
-![](https://raw.githubusercontent.com/47ng/next-usequerystate/next/useQueryState.gif)
+![](https://raw.githubusercontent.com/47ng/nuqs/next/useQueryState.gif)
 
 ## Documentation
 
@@ -635,7 +635,7 @@ Log lines will be prefixed with `[nuqs]` for `useQueryState` and `[nuq+]` for
 User timings markers are also recorded, for advanced performance analysis using
 your browser's devtools.
 
-Providing debug logs when opening an [issue](https://github.com/47ng/next-usequerystate/issues)
+Providing debug logs when opening an [issue](https://github.com/47ng/nuqs/issues)
 is always appreciated. 🙏
 
 ## Caveats
@@ -715,7 +715,7 @@ Upon reloading the page, the state will be incorrectly set to 1.2345.
 
 ## License
 
-[MIT](https://github.com/47ng/next-usequerystate/blob/next/LICENSE)
+[MIT](https://github.com/47ng/nuqs/blob/next/LICENSE)
 
 Made with ❤️ by [François Best](https://francoisbest.com)
 

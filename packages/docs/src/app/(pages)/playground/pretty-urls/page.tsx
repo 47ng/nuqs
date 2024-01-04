@@ -34,7 +34,7 @@ export default function PrettyURLsDemoPage() {
         </li>
       </ul>
       <p>
-        <a href="https://github.com/47ng/next-usequerystate/tree/next/packages/docs/src/app/(pages)/playground/pretty-urls/page.tsx">
+        <a href="https://github.com/47ng/nuqs/tree/next/packages/docs/src/app/(pages)/playground/pretty-urls/page.tsx">
           Source on GitHub
         </a>
       </p>
