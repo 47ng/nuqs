@@ -1,9 +1,13 @@
+import type { Metadata } from 'next'
 import { Feature, FeatureGrid } from './_landing/features'
 import { HeroSection } from './_landing/hero'
 
-export const metadata = {
+export const metadata: Metadata = {
   title: {
     absolute: 'nuqs | Type-safe search params state management for Next.js'
+  },
+  alternates: {
+    canonical: 'https://nuqs.47ng.com'
   }
 }
 

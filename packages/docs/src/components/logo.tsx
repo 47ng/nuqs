@@ -10,13 +10,13 @@ export function NuqsWordmark({
       className={cn('whitespace-nowrap', className)}
       {...props}
     >
-      <span className="font-light text-gray-300 dark:text-gray-600">?</span>
+      <span className="font-light text-gray-300 dark:text-gray-700">?</span>
       <span className="font-bold">n</span>
-      <span className="font-light text-gray-300 dark:text-gray-600">=</span>
+      <span className="font-light text-gray-300 dark:text-gray-700">=</span>
       <span className="font-bold">u</span>
-      <span className="font-light text-gray-300 dark:text-gray-600">&</span>
+      <span className="font-light text-gray-300 dark:text-gray-700">&</span>
       <span className="font-bold">q</span>
-      <span className="font-light text-gray-300 dark:text-gray-600">=</span>
+      <span className="font-light text-gray-300 dark:text-gray-700">=</span>
       <span className="font-bold">s</span>
     </span>
   )

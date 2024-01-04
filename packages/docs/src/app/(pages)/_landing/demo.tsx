@@ -20,9 +20,28 @@ export async function LandingDemo() {
     {
       lang: 'tsx',
       themes: {
-        dark: 'dark-plus',
-        light: 'light-plus'
-      }
+        dark: 'github-dark',
+        light: 'github-light'
+      },
+      transformers: [
+        {
+          name: 'transparent background',
+          pre(node) {
+            if (typeof node.properties.style !== 'string') {
+              return node
+            }
+            node.properties.style = node.properties.style
+              .split(';')
+              .filter(style => !style.includes('-bg:'))
+              .concat([
+                '--shiki-dark-bg:transparent',
+                '--shiki-light-bg:transparent'
+              ])
+              .join(';')
+            return node
+          }
+        }
+      ]
     }
   )
   return (
@@ -37,7 +56,7 @@ export async function LandingDemo() {
         </div>
       </Suspense>
       <div
-        className="overflow-x-auto rounded-lg border bg-white p-3 text-xs shadow-inner dark:bg-[#1e1e1e] sm:text-sm"
+        className="overflow-x-auto rounded-lg border bg-background p-3 text-xs shadow-inner dark:bg-zinc-900 sm:text-sm"
         dangerouslySetInnerHTML={{ __html: demoCode }}
       />
     </>
