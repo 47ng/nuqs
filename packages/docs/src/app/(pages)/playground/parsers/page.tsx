@@ -11,7 +11,7 @@ import {
   parseAsString,
   parseAsTimestamp,
   useQueryState
-} from 'next-usequerystate'
+} from 'nuqs'
 
 export default function BasicCounterDemoPage() {
   const [str, setStr] = useQueryState('string', parseAsString.withDefault(''))

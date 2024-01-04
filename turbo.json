@@ -8,7 +8,7 @@
     "build": {
       "dependsOn": ["^build"]
     },
-    "next-usequerystate#build": {
+    "nuqs#build": {
       "outputs": ["dist/**"]
     },
     "e2e#build": {
@@ -20,7 +20,7 @@
       "outputs": [".next/**", "!.next/cache/**"],
       "dependsOn": ["^build"]
     },
-    "next-usequerystate#test": {
+    "nuqs#test": {
       "outputs": ["dist/**", "coverage/**"],
       "dependsOn": ["build"]
     },

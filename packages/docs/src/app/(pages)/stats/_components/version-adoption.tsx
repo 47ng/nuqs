@@ -1,10 +1,6 @@
 'use client'
 
-import {
-  parseAsBoolean,
-  parseAsInteger,
-  useQueryState
-} from 'next-usequerystate'
+import { parseAsBoolean, parseAsInteger, useQueryState } from 'nuqs'
 import {
   Legend,
   Line,

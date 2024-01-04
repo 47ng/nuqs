@@ -3,7 +3,7 @@ import {
   parseAsBoolean,
   parseAsInteger,
   parseAsString
-} from 'next-usequerystate/parsers'
+} from 'nuqs/parsers'
 
 export const parsers = {
   str: parseAsString,

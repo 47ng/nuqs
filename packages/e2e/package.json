@@ -21,7 +21,7 @@
   },
   "dependencies": {
     "next": "14.0.4",
-    "next-usequerystate": "workspace:*",
+    "nuqs": "workspace:*",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },

@@ -1,6 +1,6 @@
 'use client'
 
-import { parseAsInteger, useQueryState } from 'next-usequerystate'
+import { parseAsInteger, useQueryState } from 'nuqs'
 import React from 'react'
 import { HydrationMarker } from '../../../components/hydration-marker'
 

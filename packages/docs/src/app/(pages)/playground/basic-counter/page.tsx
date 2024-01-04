@@ -1,6 +1,6 @@
 'use client'
 
-import { parseAsInteger, useQueryState } from 'next-usequerystate'
+import { parseAsInteger, useQueryState } from 'nuqs'
 
 export default function BasicCounterDemoPage() {
   const [counter, setCounter] = useQueryState(

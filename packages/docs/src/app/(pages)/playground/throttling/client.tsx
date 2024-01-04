@@ -1,7 +1,7 @@
 'use client'
 
-import { useQueryState } from 'next-usequerystate'
 import { useRouter } from 'next/navigation'
+import { useQueryState } from 'nuqs'
 import React from 'react'
 import { delayParser, queryParser } from './parsers'
 

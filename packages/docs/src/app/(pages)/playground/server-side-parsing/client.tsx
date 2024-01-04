@@ -1,6 +1,6 @@
 'use client'
 
-import { parseAsBoolean, useQueryState } from 'next-usequerystate'
+import { parseAsBoolean, useQueryState } from 'nuqs'
 import { counterParser } from './parser'
 
 type Props = {

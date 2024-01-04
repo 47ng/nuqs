@@ -1,9 +1,9 @@
 'use client'
 
-import { parseAsInteger, useQueryState } from 'next-usequerystate'
 import { PrefetchKind } from 'next/dist/client/components/router-reducer/router-reducer-types'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { parseAsInteger, useQueryState } from 'nuqs'
 import React from 'react'
 
 export default function Page() {
