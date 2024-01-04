@@ -20,7 +20,7 @@ export default function ServerSideParsingDemo({ searchParams }: PageProps) {
         </ServerSideParsingDemoClient>
       </Suspense>
       <p>
-        <a href="https://github.com/47ng/next-usequerystate/tree/next/packages/docs/src/app/(pages)/playground/server-side-parsing/page.tsx">
+        <a href="https://github.com/47ng/nuqs/tree/next/packages/docs/src/app/(pages)/playground/server-side-parsing/page.tsx">
           Source on GitHub
         </a>
       </p>

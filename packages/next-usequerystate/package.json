@@ -1,7 +1,7 @@
 {
   "name": "next-usequerystate",
   "version": "0.0.0-semantically-released",
-  "description": "useQueryState hook for Next.js - Like React.useState, but stored in the URL query string",
+  "description": "Type-safe search params state manager for Next.js - Like React.useState, but stored in the URL query string",
   "license": "MIT",
   "author": {
     "name": "François Best",
@@ -10,17 +10,18 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/47ng/next-usequerystate.git",
+    "url": "git+https://github.com/47ng/nuqs.git",
     "directory": "packages/next-usequerystate"
   },
-  "homepage": "https://next-usequerystate.vercel.app",
+  "homepage": "https://nuqs.47ng.com",
   "keywords": [
     "nextjs",
     "router",
     "url",
     "query-string",
     "react-hook",
-    "useState"
+    "useState",
+    "next-usequerystate"
   ],
   "publishConfig": {
     "access": "public"

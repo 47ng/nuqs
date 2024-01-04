@@ -2,7 +2,7 @@ import {
   ReadonlyURLSearchParams,
   useRouter,
   useSearchParams
-} from 'next/navigation.js' // https://github.com/47ng/next-usequerystate/discussions/352
+} from 'next/navigation.js' // https://github.com/47ng/nuqs/discussions/352
 import React from 'react'
 import { debug } from './debug'
 import type { Nullable, Options } from './defs'
@@ -99,27 +99,30 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
       debug('[nuq+ `%s`] syncFromURL %O', keys, state)
       updateInternalState(state)
     }
-    const handlers = Object.keys(keyMap).reduce((handlers, key) => {
-      handlers[key as keyof V] = (value: any) => {
-        const { defaultValue } = keyMap[key]!
-        // Note: cannot mutate in-place, the object ref must change
-        // for the subsequent setState to pick it up.
-        stateRef.current = {
-          ...stateRef.current,
-          [key as keyof V]: value ?? defaultValue ?? null
+    const handlers = Object.keys(keyMap).reduce(
+      (handlers, key) => {
+        handlers[key as keyof V] = (value: any) => {
+          const { defaultValue } = keyMap[key]!
+          // Note: cannot mutate in-place, the object ref must change
+          // for the subsequent setState to pick it up.
+          stateRef.current = {
+            ...stateRef.current,
+            [key as keyof V]: value ?? defaultValue ?? null
+          }
+          debug(
+            '[nuq+ `%s`] Cross-hook key sync %s: %O (default: %O). Resolved: %O',
+            keys,
+            key,
+            value,
+            defaultValue,
+            stateRef.current
+          )
+          updateInternalState(stateRef.current)
         }
-        debug(
-          '[nuq+ `%s`] Cross-hook key sync %s: %O (default: %O). Resolved: %O',
-          keys,
-          key,
-          value,
-          defaultValue,
-          stateRef.current
-        )
-        updateInternalState(stateRef.current)
-      }
-      return handlers
-    }, {} as Record<keyof V, any>)
+        return handlers
+      },
+      {} as Record<keyof V, any>
+    )
 
     emitter.on(SYNC_EVENT_KEY, syncFromURL)
     for (const key of Object.keys(keyMap)) {

@@ -64,7 +64,7 @@ export default function CrosslinkDemoPage() {
         </code>
       </pre>
       <p>
-        <a href="https://github.com/47ng/next-usequerystate/tree/next/packages/docs/src/app/(pages)/playground/crosslink/page.tsx">
+        <a href="https://github.com/47ng/nuqs/tree/next/packages/docs/src/app/(pages)/playground/crosslink/page.tsx">
           Source on GitHub
         </a>
       </p>

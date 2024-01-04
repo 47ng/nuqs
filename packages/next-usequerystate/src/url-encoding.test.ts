@@ -100,7 +100,7 @@ describe('url-encoding/renderQueryString', () => {
     )
   })
   test('practical use-cases', () => {
-    // https://github.com/47ng/next-usequerystate/issues/355
+    // https://github.com/47ng/nuqs/issues/355
     {
       const value =
         'leftOfBicycleLane:car_lanes,curb|pavementHasShops:true|pavementWidth:narrow'

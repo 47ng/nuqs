@@ -31,7 +31,7 @@ export function HeroSection() {
             Documentation
           </Link>
           <a
-            href="https://github.com/47ng/next-usequerystate"
+            href="https://github.com/47ng/nuqs"
             className={cn(
               buttonVariants({
                 size: 'lg',

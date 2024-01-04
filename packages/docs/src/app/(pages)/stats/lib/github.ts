@@ -29,7 +29,7 @@ const repositoryQuerySchema = z.object({
 })
 
 export async function fetchRepository(
-  slug = '47ng/next-usequerystate'
+  slug = '47ng/nuqs'
 ): Promise<GitHubRepositoryData> {
   const [owner, repo] = slug.split('/')
   const query = `query {
@@ -100,7 +100,7 @@ const starHistoryQuerySchema = z.object({
 })
 
 export async function getStarHistory(
-  slug = '47ng/next-usequerystate'
+  slug = '47ng/nuqs'
 ): Promise<GitHubStarHistory> {
   const [owner, repo] = slug.split('/')
   const query = `query {

@@ -11,7 +11,7 @@ export default function RootDocsLayout({ children }: { children: ReactNode }) {
       nav={{
         title: <NuqsWordmark className="px-3" />,
         items: navItems,
-        githubUrl: 'https://github.com/47ng/next-usequerystate'
+        githubUrl: 'https://github.com/47ng/nuqs'
       }}
       sidebar={{
         collapsible: false,
