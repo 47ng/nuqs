@@ -277,10 +277,11 @@ export function parseAsArrayOf<ItemType>(
       }
       return query
         .split(separator)
-        .map(item =>
+        .map((item, index) =>
           safeParse(
             itemParser.parse,
-            item.replaceAll(encodedSeparator, separator)
+            item.replaceAll(encodedSeparator, separator),
+            `[${index}]`
           )
         )
         .filter(value => value !== null && value !== undefined) as ItemType[]

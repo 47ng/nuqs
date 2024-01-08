@@ -230,7 +230,7 @@ export function useQueryState<T = string>(
         : // Components mounted after page load must use the current URL value
           new URLSearchParams(location.search).get(key) ?? null
     const value = queueValue ?? urlValue
-    return value === null ? null : safeParse(parse, value)
+    return value === null ? null : safeParse(parse, value, key)
   })
   const stateRef = React.useRef(internalState)
   debug(
@@ -243,7 +243,7 @@ export function useQueryState<T = string>(
   if (process.env.__NEXT_WINDOW_HISTORY_SUPPORT) {
     React.useEffect(() => {
       const value = initialSearchParams.get(key) ?? null
-      const state = value === null ? null : parse(value)
+      const state = value === null ? null : safeParse(parse, value, key)
       debug('[nuqs `%s`] syncFromUseSearchParams %O', key, state)
       stateRef.current = state
       setInternalState(state)
@@ -259,7 +259,7 @@ export function useQueryState<T = string>(
     }
     function syncFromURL(search: URLSearchParams) {
       const value = search.get(key) ?? null
-      const state = value === null ? null : parse(value)
+      const state = value === null ? null : safeParse(parse, value, key)
       debug('[nuqs `%s`] syncFromURL %O', key, state)
       updateInternalState(state)
     }

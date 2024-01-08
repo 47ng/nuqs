@@ -178,7 +178,7 @@ function parseMap<KeyMap extends UseQueryStatesKeysMap>(
     const urlQuery = searchParams?.get(key) ?? null
     const queueQuery = getQueuedValue(key)
     const query = queueQuery ?? urlQuery
-    const value = query === null ? null : safeParse(parse, query)
+    const value = query === null ? null : safeParse(parse, query, key)
     obj[key as keyof KeyMap] = value ?? defaultValue ?? null
     return obj
   }, {} as Values<KeyMap>)
