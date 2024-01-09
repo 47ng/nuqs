@@ -173,7 +173,7 @@ function flushUpdateQueue(router: Router): [URLSearchParams, null | unknown] {
       })
     } else {
       // App router
-      const url = renderURL(location.href.split('?')[0] ?? '', search)
+      const url = renderURL(location.origin + location.pathname, search)
       debug('[nuqs queue (app)] Updating url: %s', url)
       // First, update the URL locally without triggering a network request,
       // this allows keeping a reactive URL if the network is slow.
@@ -214,9 +214,10 @@ function flushUpdateQueue(router: Router): [URLSearchParams, null | unknown] {
 }
 
 function renderURL(base: string, search: URLSearchParams) {
+  const hashlessBase = base.split('#')[0] ?? ''
   const query = renderQueryString(search)
   const hash = location.hash
-  return base + query + hash
+  return hashlessBase + query + hash
 }
 
 export function compose(
