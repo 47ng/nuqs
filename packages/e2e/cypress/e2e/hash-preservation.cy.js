@@ -5,6 +5,9 @@ function runTest() {
   cy.get('#string_set_a').click()
   cy.location('search').should('eq', '?string=a')
   cy.location('hash').should('eq', '#hash')
+  cy.get('#string_set_b').click()
+  cy.location('search').should('eq', '?string=b')
+  cy.location('hash').should('eq', '#hash')
   cy.get('#string_clear').click()
   cy.location('hash').should('eq', '#hash')
 }
