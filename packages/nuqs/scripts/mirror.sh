@@ -12,12 +12,22 @@ if [[ $version == "0.0.0-semantically-released" ]]; then
   exit 0
 fi
 
+# Get the release channel (dist tag) from the version name.
+# If version contains a hyphen, it's a prerelease (beta),
+# otherwise it's a stable release (latest)
+distTag="latest"
+if [[ $version == *"-"* ]]; then
+  distTag="beta"
+fi
+
+echo "Publishing next-usequerystate@${version} to the ${distTag} channel"
+
 # Login to the npm registry
 echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > .npmrc
 
 # Rename & publish the package
 pnpm pkg set name=next-usequerystate
-pnpm publish --no-git-checks
+pnpm publish --no-git-checks --tag ${distTag}
 
 # Cleanup
 rm -f .npmrc
