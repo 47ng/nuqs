@@ -230,8 +230,8 @@ export function parseAsStringEnum<Enum extends string>(validValues: Enum[]) {
 }
 
 /**
- * String-based readonly lists provide better type-safety for known sets of values.
- * You will need to pass the parseAsStringConst function a list of your string values
+ * String- or number-based readonly lists provide better type-safety for known sets of values.
+ * You will need to pass the parseAsLiteral function a list of your string or number values
  * in order to validate the query string. Anything else will return `null`,
  * or your default value if specified.
  *
@@ -241,25 +241,25 @@ export function parseAsStringEnum<Enum extends string>(validValues: Enum[]) {
  *
  * const [color, setColor] = useQueryState(
  *   'color',
- *    parseAsStringConst(colors) // pass a readonly list of allowed values
+ *    parseAsLiteral(colors) // pass a readonly list of allowed values
  *      .withDefault("red")
  * )
  * ```
  *
  * @param validValues The values you want to accept
  */
-export function parseAsStringConst<Const extends string>(
-  validValues: readonly Const[]
+export function parseAsLiteral<Literal extends string | number>(
+  validValues: readonly Literal[]
 ) {
   return createParser({
     parse: (query: string) => {
-      const asConst = query as unknown as Const
+      const asConst = query as unknown as Literal
       if (validValues.includes(asConst)) {
         return asConst
       }
       return null
     },
-    serialize: (value: Const) => value.toString()
+    serialize: (value: Literal) => value.toString()
   })
 }
 

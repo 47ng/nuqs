@@ -104,7 +104,7 @@ import {
   parseAsArrayOf,
   parseAsJson,
   parseAsStringEnum,
-  parseAsStringConst
+  parseAsLiteral
 } from 'nuqs'
 
 useQueryState('tag') // defaults to string
@@ -130,12 +130,12 @@ const [direction, setDirection] = useQueryState(
     .withDefault(Direction.up)
 )
 
-// readonly Array (string-based only)
+// Literals (string- or number-based only)
 const colors = ['red', 'green', 'blue'] as const
 
 const [color, setColor] = useQueryState(
   'color',
-  parseAsStringConst(colors) // pass a readonly list of allowed values
+  parseAsLiteral(colors) // pass a readonly list of allowed values
     .withDefault('red')
 )
 ```
