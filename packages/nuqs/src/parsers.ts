@@ -191,7 +191,7 @@ export const parseAsIsoDateTime = createParser({
 
 /**
  * String-based enums provide better type-safety for known sets of values.
- * You will need to pass the stringEnum function a list of your enum values
+ * You will need to pass the parseAsStringEnum function a list of your enum values
  * in order to validate the query string. Anything else will return `null`,
  * or your default value if specified.
  *
@@ -206,9 +206,8 @@ export const parseAsIsoDateTime = createParser({
  *
  * const [direction, setDirection] = useQueryState(
  *   'direction',
- *   queryTypes
- *     .stringEnum<Direction>(Object.values(Direction))
- *     .withDefault(Direction.up)
+ *    parseAsStringEnum<Direction>(Object.values(Direction)) // pass a list of allowed values
+ *      .withDefault(Direction.up)
  * )
  * ```
  *
@@ -227,6 +226,40 @@ export function parseAsStringEnum<Enum extends string>(validValues: Enum[]) {
       return null
     },
     serialize: (value: Enum) => value.toString()
+  })
+}
+
+/**
+ * String-based readonly lists provide better type-safety for known sets of values.
+ * You will need to pass the parseAsStringConst function a list of your string values
+ * in order to validate the query string. Anything else will return `null`,
+ * or your default value if specified.
+ *
+ * Example:
+ * ```ts
+ * const colors = ["red", "green", "blue"] as const
+ *
+ * const [color, setColor] = useQueryState(
+ *   'color',
+ *    parseAsStringConst(colors) // pass a readonly list of allowed values
+ *      .withDefault("red")
+ * )
+ * ```
+ *
+ * @param validValues The values you want to accept
+ */
+export function parseAsStringConst<Const extends string>(
+  validValues: readonly Const[]
+) {
+  return createParser({
+    parse: (query: string) => {
+      const asConst = query as unknown as Const
+      if (validValues.includes(asConst)) {
+        return asConst
+      }
+      return null
+    },
+    serialize: (value: Const) => value.toString()
   })
 }
 

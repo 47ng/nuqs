@@ -103,7 +103,8 @@ import {
   parseAsIsoDateTime,
   parseAsArrayOf,
   parseAsJson,
-  parseAsStringEnum
+  parseAsStringEnum,
+  parseAsStringConst
 } from 'nuqs'
 
 useQueryState('tag') // defaults to string
@@ -127,6 +128,15 @@ const [direction, setDirection] = useQueryState(
   'direction',
   parseAsStringEnum<Direction>(Object.values(Direction)) // pass a list of allowed values
     .withDefault(Direction.up)
+)
+
+// readonly Array (string-based only)
+const colors = ['red', 'green', 'blue'] as const
+
+const [color, setColor] = useQueryState(
+  'color',
+  parseAsStringConst(colors) // pass a readonly list of allowed values
+    .withDefault('red')
 )
 ```
 
@@ -594,7 +604,7 @@ export function Server() {
 
 // client.tsx
 // prettier-ignore
-;'use client'
+'use client'
 
 import { useQueryStates } from 'nuqs'
 import { coordinatesParsers } from './searchParams'
