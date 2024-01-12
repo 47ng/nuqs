@@ -276,7 +276,7 @@ export function parseAsStringLiteral<Literal extends string>(
  * const [side, setSide] = useQueryState(
  *   'side',
  *    parseAsNumberLiteral(diceSides) // pass a readonly list of allowed values
- *      .withDefault("red")
+ *      .withDefault(4)
  * )
  * ```
  *

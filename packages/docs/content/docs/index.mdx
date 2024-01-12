@@ -137,7 +137,7 @@ const diceSides = [1, 2, 3, 4, 5, 6] as const
 const [side, setSide] = useQueryState(
   'side',
   parseAsNumberLiteral(diceSides) // pass a readonly list of allowed values
-    .withDefault('red')
+    .withDefault(4)
 )
 ```
 
