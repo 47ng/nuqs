@@ -103,7 +103,9 @@ import {
   parseAsIsoDateTime,
   parseAsArrayOf,
   parseAsJson,
-  parseAsStringEnum
+  parseAsStringEnum,
+  parseAsStringLiteral,
+  parseAsNumberLiteral
 } from 'nuqs'
 
 useQueryState('tag') // defaults to string
@@ -127,6 +129,24 @@ const [direction, setDirection] = useQueryState(
   'direction',
   parseAsStringEnum<Direction>(Object.values(Direction)) // pass a list of allowed values
     .withDefault(Direction.up)
+)
+
+// Literals (string-based only)
+const colors = ['red', 'green', 'blue'] as const
+
+const [color, setColor] = useQueryState(
+  'color',
+  parseAsStringLiteral(colors) // pass a readonly list of allowed values
+    .withDefault('red')
+)
+
+// Literals (number-based only)
+const diceSides = [1, 2, 3, 4, 5, 6] as const
+
+const [side, setSide] = useQueryState(
+  'side',
+  parseAsNumberLiteral(diceSides) // pass a readonly list of allowed values
+    .withDefault(4)
 )
 ```
 
@@ -594,7 +614,7 @@ export function Server() {
 
 // client.tsx
 // prettier-ignore
-;'use client'
+'use client'
 
 import { useQueryStates } from 'nuqs'
 import { coordinatesParsers } from './searchParams'

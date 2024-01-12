@@ -191,7 +191,7 @@ export const parseAsIsoDateTime = createParser({
 
 /**
  * String-based enums provide better type-safety for known sets of values.
- * You will need to pass the stringEnum function a list of your enum values
+ * You will need to pass the parseAsStringEnum function a list of your enum values
  * in order to validate the query string. Anything else will return `null`,
  * or your default value if specified.
  *
@@ -206,9 +206,8 @@ export const parseAsIsoDateTime = createParser({
  *
  * const [direction, setDirection] = useQueryState(
  *   'direction',
- *   queryTypes
- *     .stringEnum<Direction>(Object.values(Direction))
- *     .withDefault(Direction.up)
+ *    parseAsStringEnum<Direction>(Object.values(Direction)) // pass a list of allowed values
+ *      .withDefault(Direction.up)
  * )
  * ```
  *
@@ -227,6 +226,74 @@ export function parseAsStringEnum<Enum extends string>(validValues: Enum[]) {
       return null
     },
     serialize: (value: Enum) => value.toString()
+  })
+}
+
+/**
+ * String-based literals provide better type-safety for known sets of values.
+ * You will need to pass the parseAsStringLiteral function a list of your string values
+ * in order to validate the query string. Anything else will return `null`,
+ * or your default value if specified.
+ *
+ * Example:
+ * ```ts
+ * const colors = ["red", "green", "blue"] as const
+ *
+ * const [color, setColor] = useQueryState(
+ *   'color',
+ *    parseAsStringLiteral(colors) // pass a readonly list of allowed values
+ *      .withDefault("red")
+ * )
+ * ```
+ *
+ * @param validValues The values you want to accept
+ */
+export function parseAsStringLiteral<Literal extends string>(
+  validValues: readonly Literal[]
+) {
+  return createParser({
+    parse: (query: string) => {
+      const asConst = query as unknown as Literal
+      if (validValues.includes(asConst)) {
+        return asConst
+      }
+      return null
+    },
+    serialize: (value: Literal) => value.toString()
+  })
+}
+
+/**
+ * Number-based literals provide better type-safety for known sets of values.
+ * You will need to pass the parseAsNumberLiteral function a list of your number values
+ * in order to validate the query string. Anything else will return `null`,
+ * or your default value if specified.
+ *
+ * Example:
+ * ```ts
+ * const diceSides = [1, 2, 3, 4, 5, 6] as const
+ *
+ * const [side, setSide] = useQueryState(
+ *   'side',
+ *    parseAsNumberLiteral(diceSides) // pass a readonly list of allowed values
+ *      .withDefault(4)
+ * )
+ * ```
+ *
+ * @param validValues The values you want to accept
+ */
+export function parseAsNumberLiteral<Literal extends number>(
+  validValues: readonly Literal[]
+) {
+  return createParser({
+    parse: (query: string) => {
+      const asConst = parseFloat(query) as unknown as Literal
+      if (validValues.includes(asConst)) {
+        return asConst
+      }
+      return null
+    },
+    serialize: (value: Literal) => value.toString()
   })
 }
 
