@@ -104,7 +104,8 @@ import {
   parseAsArrayOf,
   parseAsJson,
   parseAsStringEnum,
-  parseAsLiteral
+  parseAsStringLiteral,
+  parseAsNumberLiteral
 } from 'nuqs'
 
 useQueryState('tag') // defaults to string
@@ -130,12 +131,21 @@ const [direction, setDirection] = useQueryState(
     .withDefault(Direction.up)
 )
 
-// Literals (string- or number-based only)
+// Literals (string-based only)
 const colors = ['red', 'green', 'blue'] as const
 
 const [color, setColor] = useQueryState(
   'color',
-  parseAsLiteral(colors) // pass a readonly list of allowed values
+  parseAsStringLiteral(colors) // pass a readonly list of allowed values
+    .withDefault('red')
+)
+
+// Literals (number-based only)
+const diceSides = [1, 2, 3, 4, 5, 6] as const
+
+const [side, setSide] = useQueryState(
+  'side',
+  parseAsNumberLiteral(diceSides) // pass a readonly list of allowed values
     .withDefault('red')
 )
 ```

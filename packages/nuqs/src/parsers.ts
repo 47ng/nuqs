@@ -230,8 +230,8 @@ export function parseAsStringEnum<Enum extends string>(validValues: Enum[]) {
 }
 
 /**
- * String- or number-based readonly lists provide better type-safety for known sets of values.
- * You will need to pass the parseAsLiteral function a list of your string or number values
+ * String-based literals provide better type-safety for known sets of values.
+ * You will need to pass the parseAsStringLiteral function a list of your string values
  * in order to validate the query string. Anything else will return `null`,
  * or your default value if specified.
  *
@@ -241,19 +241,53 @@ export function parseAsStringEnum<Enum extends string>(validValues: Enum[]) {
  *
  * const [color, setColor] = useQueryState(
  *   'color',
- *    parseAsLiteral(colors) // pass a readonly list of allowed values
+ *    parseAsStringLiteral(colors) // pass a readonly list of allowed values
  *      .withDefault("red")
  * )
  * ```
  *
  * @param validValues The values you want to accept
  */
-export function parseAsLiteral<Literal extends string | number>(
+export function parseAsStringLiteral<Literal extends string>(
   validValues: readonly Literal[]
 ) {
   return createParser({
     parse: (query: string) => {
       const asConst = query as unknown as Literal
+      if (validValues.includes(asConst)) {
+        return asConst
+      }
+      return null
+    },
+    serialize: (value: Literal) => value.toString()
+  })
+}
+
+/**
+ * Number-based literals provide better type-safety for known sets of values.
+ * You will need to pass the parseAsNumberLiteral function a list of your number values
+ * in order to validate the query string. Anything else will return `null`,
+ * or your default value if specified.
+ *
+ * Example:
+ * ```ts
+ * const diceSides = [1, 2, 3, 4, 5, 6] as const
+ *
+ * const [side, setSide] = useQueryState(
+ *   'side',
+ *    parseAsNumberLiteral(diceSides) // pass a readonly list of allowed values
+ *      .withDefault("red")
+ * )
+ * ```
+ *
+ * @param validValues The values you want to accept
+ */
+export function parseAsNumberLiteral<Literal extends number>(
+  validValues: readonly Literal[]
+) {
+  return createParser({
+    parse: (query: string) => {
+      const asConst = parseFloat(query) as unknown as Literal
       if (validValues.includes(asConst)) {
         return asConst
       }
