@@ -1,8 +1,8 @@
 // todo: Remove check for `next-usequerystate` in v2
 const enabled =
   (typeof localStorage === 'object' &&
-    (localStorage.getItem('debug')?.includes('next-usequerystate') ??
-      localStorage.getItem('debug')?.includes('nuqs'))) ??
+    (localStorage.getItem('debug')?.includes('next-usequerystate') ||
+      localStorage.getItem('debug')?.includes('nuqs'))) ||
   false
 
 export function debug(message: string, ...args: any[]) {
