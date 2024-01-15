@@ -42,12 +42,7 @@
     },
     "./server": {
       "types": "./dist/server.d.ts",
-      "import": "./dist/server.js",
-      "require": "./dist/server.cjs"
-    },
-    "./parsers": {
-      "types": "./dist/parsers.d.ts",
-      "import": "./dist/parsers.js"
+      "import": "./dist/server.js"
     }
   },
   "scripts": {
