@@ -6,7 +6,7 @@ export default defineConfig({
     parsers: 'src/index.parsers.ts',
     server: 'src/index.server.ts'
   },
-  format: ['esm', 'cjs'],
+  format: ['esm'],
   dts: true,
   outDir: 'dist',
   splitting: true,
