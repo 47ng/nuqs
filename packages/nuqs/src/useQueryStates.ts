@@ -59,7 +59,7 @@ const defaultUrlKeys = {}
  *
  * @param keys - An object describing the keys to synchronise and how to
  *               serialise and parse them.
- *               Use `queryTypes.(string|integer|float)` for quick shorthands.
+ *               Use `parseAs(String|Integer|Float|...)` for quick shorthands.
  * @param options - Optional history mode, shallow routing and scroll restoration options.
  */
 export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
