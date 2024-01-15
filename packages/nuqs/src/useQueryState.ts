@@ -49,7 +49,7 @@ export type UseQueryStateReturn<Parsed, Default> = [
  * ```ts
  *   const [count, setCount] = useQueryState(
  *     'count',
- *     queryTypes.integer.defaultValue(0)
+ *     parseAsInteger.defaultValue(0)
  *   )
  *
  *   const increment = () => setCount(oldCount => oldCount + 1)
@@ -104,11 +104,11 @@ export function useQueryState(
  * If the query is missing in the URL, the state will be `null`.
  *
  * Note: by default the state type is a `string`. To use different types,
- * check out the `queryTypes` helpers:
+ * check out the `parseAsXYZ` helpers:
  * ```ts
  *   const [date, setDate] = useQueryState(
  *     'date',
- *     queryTypes.isoDateTime.withDefault(new Date('2021-01-01'))
+ *     parseAsIsoDateTime.withDefault(new Date('2021-01-01'))
  *   )
  *
  *   const setToNow = () => setDate(new Date())
@@ -130,11 +130,11 @@ export function useQueryState(
  * If the query is missing in the URL, the state will be `null`.
  *
  * Note: by default the state type is a `string`. To use different types,
- * check out the `queryTypes` helpers:
+ * check out the `parseAsXYZ` helpers:
  * ```ts
  *   const [date, setDate] = useQueryState(
  *     'date',
- *     queryTypes.isoDateTime.withDefault(new Date('2021-01-01'))
+ *     parseAsIsoDateTime.withDefault(new Date('2021-01-01'))
  *   )
  *
  *   const setToNow = () => setDate(new Date())
@@ -173,7 +173,7 @@ export function useQueryState(
  *
  *   const [count, setCount] = useQueryState(
  *     'count',
- *     queryTypes.integer.defaultValue(0)
+ *     parseAsInteger.defaultValue(0)
  *   )
  *
  *   const increment = () => setCount(oldCount => oldCount + 1)
@@ -184,7 +184,7 @@ export function useQueryState(
  *
  *   const [date, setDate] = useQueryState(
  *     'date',
- *     queryTypes.isoDateTime.withDefault(new Date('2021-01-01'))
+ *     parseAsIsoDateTime.withDefault(new Date('2021-01-01'))
  *   )
  *
  *   const setToNow = () => setDate(new Date())
