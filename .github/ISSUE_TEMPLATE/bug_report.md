@@ -29,7 +29,7 @@ Are you using:
 - ✅/❌ The app router
 - ✅/❌ The pages router
 - ✅/❌ The `basePath` option in your Next.js config
-- ✅/❌ The experimental `windowHistorySupport` flag in your Next.js config
+- ✅/❌ The experimental `windowHistorySupport` flag in your Next.js config _(only relevant for Next.js 14.0.3 or 14.0.4)_
 
 ## Description
 
