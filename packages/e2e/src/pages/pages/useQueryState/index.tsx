@@ -1,7 +1,13 @@
 import { GetServerSideProps } from 'next'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { parseAsString, queryTypes, useQueryState } from 'nuqs'
+import {
+  parseAsBoolean,
+  parseAsFloat,
+  parseAsInteger,
+  parseAsString,
+  useQueryState
+} from 'nuqs'
 import { HydrationMarker } from '../../../components/hydration-marker'
 
 export const getServerSideProps = (async ctx => {
@@ -18,12 +24,12 @@ export const getServerSideProps = (async ctx => {
 
 const IntegrationPage = () => {
   const [string, setString] = useQueryState('string')
-  const [int, setInt] = useQueryState('int', queryTypes.integer)
-  const [float, setFloat] = useQueryState('float', queryTypes.float)
-  const [bool, setBool] = useQueryState('bool', queryTypes.boolean)
+  const [int, setInt] = useQueryState('int', parseAsInteger)
+  const [float, setFloat] = useQueryState('float', parseAsFloat)
+  const [bool, setBool] = useQueryState('bool', parseAsBoolean)
   const [text, setText] = useQueryState(
     'text',
-    queryTypes.string.withDefault('Hello, world!')
+    parseAsString.withDefault('Hello, world!')
   )
   const pathname = usePathname()
   return (
