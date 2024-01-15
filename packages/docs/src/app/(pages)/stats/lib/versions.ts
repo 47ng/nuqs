@@ -126,9 +126,7 @@ export async function getVersions() {
 }
 
 export async function getVersionsPublicationDates() {
-  const res = await fetch(`https://registry.npmjs.org/next-usequerystate`).then(
-    r => r.json()
-  )
+  const res = await fetch(`https://registry.npmjs.org/nuqs`).then(r => r.json())
   let latest = '0.0.0'
   const versionToDate = creationDateSchema.parse(res.time)
   const dates = Object.entries(versionToDate)
