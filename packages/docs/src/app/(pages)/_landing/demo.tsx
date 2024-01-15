@@ -14,7 +14,6 @@ export async function LandingDemo() {
         !line.includes('className="') && !line.includes('data-interacted=')
     )
     .join('\n')
-    .replaceAll('next-usequerystate', 'nuqs')
   return (
     <>
       <Suspense

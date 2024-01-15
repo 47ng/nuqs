@@ -125,11 +125,5 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-      - name: Mirror to next-usequerystate
-        run: ./scripts/mirror.sh
-        working-directory: packages/nuqs
-        continue-on-error: true
-        env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
       - name: Invalidate ISR cache for NPM in the docs
         run: curl -s "https://nuqs.47ng.com/api/isr?tag=npm&token=${{ secrets.ISR_TOKEN }}"
