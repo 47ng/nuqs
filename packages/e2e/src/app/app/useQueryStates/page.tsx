@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import {
   parseAsBoolean,
   parseAsFloat,
@@ -39,6 +40,10 @@ const IntegrationPage = () => {
       >
         Clear
       </button>
+      <nav>
+        <Link href="?string=Hello&int=42">Link A</Link>
+        <Link href="?string=World&int=47">Link B</Link>
+      </nav>
       <p id="json">{JSON.stringify(state)}</p>
       <p id="string">{state.string}</p>
       <p id="int">{state.int}</p>
