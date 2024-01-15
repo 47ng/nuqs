@@ -30,6 +30,10 @@ jobs:
           # 14.0.2 is not compatible due to a prefetch issue
           - latest
         include:
+          # 14.0.3 requires the WHS flag
+          - next-version: '14.0.3'
+            window-history-support: true
+          # Current latest is 14.0.4
           - next-version: latest
             window-history-support: true
           - next-version: latest
