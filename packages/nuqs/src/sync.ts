@@ -31,21 +31,6 @@ declare global {
   }
 }
 
-/**
- * @deprecated Since Next.js introduced shallow routing in 14.0.3, this
- * method is no longer needed as you can use `useSearchParams`, which will
- * react to changes in the URL when the `windowHistorySupport` experimental flag
- * is set.
- * This method will be removed in `nuqs@2.0.0`, when Next.js
- * decides to land the `windowHistorySupport` flag in GA.
- */
-export function subscribeToQueryUpdates(
-  callback: (args: QueryUpdateNotificationArgs) => void
-) {
-  emitter.on(NOTIFY_EVENT_KEY, callback)
-  return () => emitter.off(NOTIFY_EVENT_KEY, callback)
-}
-
 if (typeof history === 'object') {
   patchHistory()
 }
