@@ -32,19 +32,16 @@
   ],
   "type": "module",
   "sideEffects": true,
-  "main": "dist/index.cjs",
   "module": "dist/index.js",
   "types": "dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "import": "./dist/index.js",
-      "require": "./dist/index.cjs"
+      "import": "./dist/index.js"
     },
     "./parsers": {
       "types": "./dist/parsers.d.ts",
-      "import": "./dist/parsers.js",
-      "require": "./dist/parsers.cjs"
+      "import": "./dist/parsers.js"
     }
   },
   "scripts": {
@@ -82,7 +79,7 @@
   },
   "size-limit": [
     {
-      "name": "Client (ESM)",
+      "name": "Client",
       "path": "dist/index.js",
       "limit": "4 kB",
       "ignore": [
@@ -90,7 +87,7 @@
       ]
     },
     {
-      "name": "Parsers (ESM)",
+      "name": "Parsers",
       "path": "dist/parsers.js",
       "limit": "2 kB",
       "ignore": [
