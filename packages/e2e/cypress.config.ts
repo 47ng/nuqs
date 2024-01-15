@@ -30,5 +30,8 @@ function supportsWHS() {
   const pkgPath = new URL('./package.json', import.meta.url)
   const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf-8'))
   const nextVersion: string = pkg.dependencies.next
-  return semver.gte(nextVersion, '14.0.3-canary.6')
+  return (
+    semver.gte(nextVersion, '14.0.3-canary.6') &&
+    semver.lt(nextVersion, '14.0.5-canary.54')
+  )
 }
