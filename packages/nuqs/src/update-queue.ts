@@ -160,7 +160,7 @@ function flushUpdateQueue(router: Router): [URLSearchParams, null | unknown] {
     // miss pushed history updates.
     // The router adapter imported from next/navigation also doesn't support
     // passing an asPath, causing issues in dynamic routes in the pages router.
-    const nextRouter = window.next.router
+    const nextRouter = window.next?.router
     const isPagesRouter = typeof nextRouter?.state?.asPath === 'string'
     if (isPagesRouter) {
       const url = renderURL(nextRouter.state.asPath.split('?')[0] ?? '', search)
