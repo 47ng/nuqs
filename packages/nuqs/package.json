@@ -56,7 +56,8 @@
     "prepack": "./scripts/prepack.sh"
   },
   "peerDependencies": {
-    "next": ">=13.4 <14.0.2 || ^14.0.3"
+    "next": ">=13.4 <14.0.2 || ^14.0.3",
+    "react": "^18.2.0"
   },
   "dependencies": {
     "mitt": "^3.0.1"
