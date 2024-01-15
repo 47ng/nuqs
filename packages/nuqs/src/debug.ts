@@ -6,12 +6,11 @@ let enabled = false
 try {
   enabled =
     (isLocalStorageAvailable() &&
-      (localStorage.getItem('debug')?.includes('next-usequerystate') ||
-        localStorage.getItem('debug')?.includes('nuqs'))) ||
+      localStorage.getItem('debug')?.includes('nuqs')) ||
     false
 } catch (error) {
   console.error(
-    '[nuqs]: debug mode is disabled (localStorage unavailable).',
+    '[nuqs] debug mode is disabled (localStorage unavailable).',
     error
   )
 }
