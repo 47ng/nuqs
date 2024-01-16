@@ -1,0 +1,66 @@
+---
+title: Migration guide to v2
+description: How to update your code to use nuqs@2.0.0
+---
+
+## ESM only
+
+`nuqs@2.0.0` is now an [ESM-only](https://gist.github.com/sindresorhus/a39789f98801d908bbc7ff3ecc99d99c)
+package. This should not be much of an issue since
+Next.js supports ESM in app code since version 12, but if you are bundling
+`nuqs` code into an intermediate CJS library to be consumed in Next.js,
+you'll run into import issues:
+
+```txt
+[ERR_REQUIRE_ESM]: require() of ES Module from not supported
+```
+
+If converting your library to ESM is not possible, your main option is to
+dynamically import `nuqs`:
+
+```ts
+const { useQueryState } = await import('nuqs')
+```
+
+## Deprecated exports
+
+Some of the v1 API was marked as deprecated back in September 2023, and has been removed in `nuqs@2.0.0`.
+
+### `queryTypes` parsers object
+
+Replace with `parseAsXYZ` to match, for better tree-shakeability:
+
+```diff
+- import { queryTypes } from 'nuqs'
++ import { parseAsString, parseAsInteger, ... } from 'nuqs'
+
+- useQueryState('q',    queryTypes.string.withOptions({ ... }))
+- useQueryState('page', queryTypes.integer.withDefault(1))
++ useQueryState('q',    parseAsString.withOptions({ ... }))
++ useQueryState('page', parseAsInteger.withDefault(1))
+```
+
+### `subscribeToQueryUpdates`
+
+Next.js 14.0.5 makes `useSearchParams` reactive to shallow search params updates, which makes this internal helper function redundant. See #425 for context.
+
+## Renamed `nuqs/parsers` to `nuqs/server`
+
+When introducing the server cache in #387, the dedicated export for parsers was reused as it didn't include the `"use client"` directive. Since it now contains more than parsers and probably will be extended with server-only code in the future, it has been renamed to a clearer export name.
+
+Find and replace all occurrences of `'nuqs/parsers'` to `'nuqs/server'` in your code:
+
+```diff
+- import { parseAsInteger, createSearchParamsCache } from 'nuqs/parsers'
++ import { parseAsInteger, createSearchParamsCache } from 'nuqs/server'
+```
+
+## Debug printout detection
+
+After the rename to `nuqs`, the debugging printout detection logic handled either `next-usequerystate` or `nuqs` being present in the `localStorage.debug` variable. In `nuqs@2.0.0` it only checks for the presence of the `nuqs` substring to enable logs. Update your local dev environments to match by running this once in the devtools console:
+
+```ts
+if (localStorage.debug) {
+  localStorage.debug = localStorage.debug.replace('next-usequerystate', 'nuqs')
+}
+```
