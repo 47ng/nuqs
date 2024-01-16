@@ -24,11 +24,15 @@ const { useQueryState } = await import('nuqs')
 
 ## Deprecated exports
 
-Some of the v1 API was marked as deprecated back in September 2023, and has been removed in `nuqs@2.0.0`.
+Some of the v1 API was marked as deprecated back in September 2023, and has been
+removed in `nuqs@2.0.0`.
 
 ### `queryTypes` parsers object
 
-Replace with `parseAsXYZ` to match, for better tree-shakeability:
+The `queryTypes` object has been removed in favor of individual parser exports,
+for better tree-shaking.
+
+Replace with `parseAsXYZ` to match:
 
 ```diff
 - import { queryTypes } from 'nuqs'
@@ -42,13 +46,17 @@ Replace with `parseAsXYZ` to match, for better tree-shakeability:
 
 ### `subscribeToQueryUpdates`
 
-Next.js 14.0.5 makes `useSearchParams` reactive to shallow search params updates, which makes this internal helper function redundant. See #425 for context.
+Next.js 14.0.5 makes `useSearchParams` reactive to shallow search params updates,
+which makes this internal helper function redundant. See #425 for context.
 
 ## Renamed `nuqs/parsers` to `nuqs/server`
 
-When introducing the server cache in #387, the dedicated export for parsers was reused as it didn't include the `"use client"` directive. Since it now contains more than parsers and probably will be extended with server-only code in the future, it has been renamed to a clearer export name.
+When introducing the server cache in #387, the dedicated export for parsers was
+reused as it didn't include the `"use client"` directive. Since it now contains
+more than parsers and probably will be extended with server-only code in the future,
+it has been renamed to a clearer export name.
 
-Find and replace all occurrences of `'nuqs/parsers'` to `'nuqs/server'` in your code:
+Find and replace all occurrences of `nuqs/parsers` to `nuqs/server` in your code:
 
 ```diff
 - import { parseAsInteger, createSearchParamsCache } from 'nuqs/parsers'
@@ -57,7 +65,11 @@ Find and replace all occurrences of `'nuqs/parsers'` to `'nuqs/server'` in your 
 
 ## Debug printout detection
 
-After the rename to `nuqs`, the debugging printout detection logic handled either `next-usequerystate` or `nuqs` being present in the `localStorage.debug` variable. In `nuqs@2.0.0` it only checks for the presence of the `nuqs` substring to enable logs. Update your local dev environments to match by running this once in the devtools console:
+After the rename to `nuqs`, the debugging printout detection logic handled either
+`next-usequerystate` or `nuqs` being present in the `localStorage.debug` variable.
+`nuqs@2.0.0` only checks for the presence of the `nuqs` substring to enable logs.
+
+Update your local dev environments to match by running this once in the devtools console:
 
 ```ts
 if (localStorage.debug) {
