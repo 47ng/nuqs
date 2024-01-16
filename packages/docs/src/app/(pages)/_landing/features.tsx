@@ -144,7 +144,7 @@ export function Feature({ title, description, icon, isNew }: FeatureProps) {
             )}
           </h3>
         </div>
-        <p className="text-gray-500 dark:text-gray-300 md:text-lg/relaxed xl:text-xl/relaxed">
+        <p className="text-zinc-500 dark:text-zinc-300 md:text-lg/relaxed xl:text-xl/relaxed">
           {description}
         </p>
       </div>

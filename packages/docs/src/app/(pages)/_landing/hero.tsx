@@ -45,7 +45,7 @@ export function HeroSection() {
           </a>
         </nav>
       </aside>
-      <aside className="my-4 xl:my-8 xl:flex-1">
+      <aside className="relative my-4 xl:my-8 xl:flex-1">
         <LandingDemo />
       </aside>
       <div

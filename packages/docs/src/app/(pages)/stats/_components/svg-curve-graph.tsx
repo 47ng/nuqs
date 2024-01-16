@@ -114,7 +114,7 @@ export const SvgCurveGraph: React.FC<SvgCurveGraphProps> = ({
                 className={twJoin(
                   'opacity-0 transition-opacity ease-out group-hover/bar:opacity-100 group-hover/all:transition-none',
                   'stroke-current',
-                  'fill-white dark:fill-gray-900'
+                  'fill-white dark:fill-zinc-900'
                 )}
               />
               <text
@@ -136,7 +136,7 @@ export const SvgCurveGraph: React.FC<SvgCurveGraphProps> = ({
               </text>
               <text
                 className={twJoin(
-                  'select-none fill-gray-500 text-xs tabular-nums',
+                  'select-none fill-zinc-500 text-xs tabular-nums',
                   // Fade in and out when the whole graph is hovered, but
                   // don't fade between bars
                   'opacity-0 transition-opacity ease-out group-hover/bar:opacity-100 group-hover/all:transition-none'
@@ -170,7 +170,7 @@ export const SvgCurveGraph: React.FC<SvgCurveGraphProps> = ({
             {formatNumber(summaryValue)}
           </text>
           <text
-            className="fill-gray-500 text-xs tabular-nums"
+            className="fill-zinc-500 text-xs tabular-nums"
             strokeWidth={2.5}
             strokeLinejoin="round"
             x={w}

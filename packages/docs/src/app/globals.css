@@ -73,3 +73,10 @@
     text-decoration: var(--shiki-dark-text-decoration) !important;
   }
 }
+
+@layer base {
+  @font-face {
+    font-family: 'Virgil';
+    src: url(https://excalidraw.com/Virgil.woff2);
+  }
+}

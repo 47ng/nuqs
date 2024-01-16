@@ -30,7 +30,7 @@ export default function RootDocsLayout({ children }: { children: ReactNode }) {
 async function SidebarFooter() {
   const version = await getLatestVersion()
   return (
-    <footer className="flex w-full items-baseline gap-2 text-gray-600 dark:text-gray-400">
+    <footer className="flex w-full items-baseline gap-2 text-zinc-600 dark:text-zinc-400">
       <a
         href={`https://npmjs.com/package/nuqs/v/${version}`}
         className="hover:underline"
