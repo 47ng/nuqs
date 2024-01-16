@@ -3,6 +3,16 @@
   "version": "0.0.0-internal",
   "private": true,
   "type": "module",
+  "author": {
+    "name": "François Best",
+    "email": "contact@francoisbest.com",
+    "url": "https://francoisbest.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/47ng/nuqs.git",
+    "directory": "packages/docs"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -33,11 +43,12 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "recharts": "^2.11.0",
+    "remark-github": "^12.0.0",
     "remark-smartypants": "^2.1.0",
     "semver": "^7.6.0",
     "tailwind-merge": "^2.2.1",
-    "tailwindcss": "^3.4.1",
     "tailwindcss-animate": "^1.0.7",
+    "tailwindcss": "^3.4.1",
     "zod": "^3.22.4"
   },
   "devDependencies": {
