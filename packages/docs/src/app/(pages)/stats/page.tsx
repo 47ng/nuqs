@@ -26,7 +26,7 @@ export default async function StatsPage() {
         </Suspense>
         <img
           alt="Project analytics and stats"
-          src="https://repobeats.axiom.co/api/embed/042323b03b6ae1e039c89ac77e3cf0b0032c512e.svg"
+          src="https://repobeats.axiom.co/api/embed/3ee740e4729dce3992bfa8c74645cfebad8ba034.svg"
           className="mx-auto"
         />
         {widgetSkeleton}

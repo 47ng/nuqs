@@ -742,4 +742,4 @@ Made with ❤️ by [François Best](https://francoisbest.com)
 Using this package at work ? [Sponsor me](https://github.com/sponsors/franky47)
 to help with support and maintenance.
 
-![Project analytics and stats](https://repobeats.axiom.co/api/embed/042323b03b6ae1e039c89ac77e3cf0b0032c512e.svg 'Repobeats analytics image')
+![Project analytics and stats](https://repobeats.axiom.co/api/embed/3ee740e4729dce3992bfa8c74645cfebad8ba034.svg 'Repobeats analytics image')
