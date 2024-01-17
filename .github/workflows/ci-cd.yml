@@ -29,6 +29,7 @@ jobs:
           - '14.0.1'
           # 14.0.2 is not compatible due to a prefetch issue
           - latest
+          - '14.0.5-canary.54' # WHS stabilised
         include:
           # 14.0.3 requires the WHS flag
           - next-version: '14.0.3'
