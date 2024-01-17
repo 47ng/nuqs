@@ -46,7 +46,7 @@
     }
   },
   "scripts": {
-    "dev": "tsup --format esm --watch --external=react",
+    "dev": "tsup --watch --external=react",
     "build": "tsup --clean --external=react",
     "postbuild": "size-limit --json > size.json",
     "test": "pnpm run --parallel --stream '/^test:/'",
