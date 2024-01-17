@@ -241,23 +241,6 @@ export function useQueryState<T = string>(
     initialSearchParams?.get(key) ?? null
   )
 
-  React.useEffect(() => {
-    // This will be removed in v2 which will drop support for
-    // partially-functional shallow routing (14.0.2 and 14.0.3)
-    if (window.next?.version !== '14.0.3') {
-      return
-    }
-    const query = initialSearchParams.get(key) ?? null
-    if (query === queryRef.current) {
-      return
-    }
-    const state = query === null ? null : safeParse(parse, query, key)
-    debug('[nuqs `%s`] syncFromUseSearchParams %O', key, state)
-    stateRef.current = state
-    queryRef.current = query
-    setInternalState(state)
-  }, [initialSearchParams?.get(key), key])
-
   // Sync all hooks together & with external URL changes
   React.useInsertionEffect(() => {
     function updateInternalState({ state, query }: CrossHookSyncPayload) {
