@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { RootProvider } from 'next-docs-ui/provider'
 import { Inter } from 'next/font/google'
+import Script from 'next/script'
 import type { ReactNode } from 'react'
 import './globals.css'
 
@@ -28,6 +29,15 @@ export default function Layout({ children }: { children: ReactNode }) {
     <html lang="en" className={inter.className}>
       <body>
         <RootProvider>{children}</RootProvider>
+        <Script
+          async
+          id="chiffre:analytics"
+          src="https://chiffre.io/analytics.js"
+          data-chiffre-project-id="odWoaH0aUUwm42Wf"
+          data-chiffre-public-key="pk.3EPMj_faODyzisb0UNmZnzhIkG9sbj7zR5em6lf7Olk"
+          referrerPolicy="origin"
+          crossOrigin="anonymous"
+        />
       </body>
     </html>
   )
