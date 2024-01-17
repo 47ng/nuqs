@@ -11,6 +11,7 @@ it.only('repro-359', () => {
   cy.get('#nuqss-component').should('have.text', '')
 
   cy.contains('Component 1 (nuqs)').click()
+  cy.wait(100)
   cy.location('search').should('eq', '?param=comp1&component=comp1')
   cy.get('#comp1').should('have.text', 'comp1')
   cy.get('#comp2').should('not.exist')
@@ -20,6 +21,7 @@ it.only('repro-359', () => {
   cy.get('#nuqss-component').should('have.text', 'comp1')
 
   cy.contains('Component 2 (nuqs)').click()
+  cy.wait(100)
   cy.location('search').should('eq', '?param=comp2&component=comp2')
   cy.get('#comp1').should('not.exist')
   cy.get('#comp2').should('have.text', 'comp2')
@@ -29,6 +31,7 @@ it.only('repro-359', () => {
   cy.get('#nuqss-component').should('have.text', 'comp2')
 
   cy.contains('Component 1 (nuq+)').click()
+  cy.wait(100)
   cy.location('search').should('eq', '?param=comp1&component=comp1')
   cy.get('#comp1').should('have.text', 'comp1')
   cy.get('#comp2').should('not.exist')
@@ -38,6 +41,7 @@ it.only('repro-359', () => {
   cy.get('#nuqss-component').should('have.text', 'comp1')
 
   cy.contains('Component 2 (nuq+)').click()
+  cy.wait(100)
   cy.location('search').should('eq', '?param=comp2&component=comp2')
   cy.get('#comp1').should('not.exist')
   cy.get('#comp2').should('have.text', 'comp2')
