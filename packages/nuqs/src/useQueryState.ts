@@ -240,13 +240,16 @@ export function useQueryState<T = string>(
     initialSearchParams?.get(key) ?? null
   )
 
-  // React.useEffect(() => {
-  //   const value = initialSearchParams.get(key) ?? null
-  //   const state = value === null ? null : safeParse(parse, value, key)
-  //   debug('[nuqs `%s`] syncFromUseSearchParams %O', key, state)
-  //   stateRef.current = state
-  //   setInternalState(state)
-  // }, [initialSearchParams?.get(key), key])
+  React.useEffect(() => {
+    if (window.next.version !== '14.0.3') {
+      return
+    }
+    const value = initialSearchParams.get(key) ?? null
+    const state = value === null ? null : safeParse(parse, value, key)
+    debug('[nuqs `%s`] syncFromUseSearchParams %O', key, state)
+    stateRef.current = state
+    setInternalState(state)
+  }, [initialSearchParams?.get(key), key])
 
   // Sync all hooks together & with external URL changes
   React.useInsertionEffect(() => {
