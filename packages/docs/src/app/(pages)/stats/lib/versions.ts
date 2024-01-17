@@ -5,6 +5,7 @@ import { compareLoose as semverSort, valid as semverValid } from 'semver'
 import { z } from 'zod'
 
 const versionLineSchema = z.object({
+  package: z.union([z.literal('nuqs'), z.literal('next-usequerystate')]),
   date: z.string().length(10),
   downloads: z.record(z.number())
 })
@@ -44,6 +45,7 @@ export async function getVersions() {
         downloads: Object.fromEntries(
           Object.entries(parsed.downloads).sort(([, a], [, b]) => b - a)
         ),
+        package: parsed.package,
         relative: {}
       }
       record.relative = Object.fromEntries(

@@ -1,6 +1,11 @@
 'use client'
 
-import { parseAsBoolean, parseAsInteger, useQueryState } from 'nuqs'
+import {
+  parseAsBoolean,
+  parseAsInteger,
+  parseAsStringLiteral,
+  useQueryState
+} from 'nuqs'
 import {
   Legend,
   Line,
@@ -37,15 +42,22 @@ export default function VersionAdoptionGraph({
     'versionsLimit',
     parseAsInteger.withDefault(5)
   )
-  const versionsToShow = Object.entries(records.at(-1)?.relative ?? {})
+  const [packageName, setPackageName] = useQueryState(
+    'pkg',
+    parseAsStringLiteral(['nuqs', 'next-usequerystate'] as const).withDefault(
+      'nuqs'
+    )
+  )
+  const packageRecords = records.filter(r => r.package === packageName)
+  const versionsToShow = Object.entries(packageRecords.at(-1)?.relative ?? {})
     .slice(0, limit)
     .map(([key, _]) => key)
-  const latest = records.at(-1)?.latest ?? ''
+  const latest = packageRecords.at(-1)?.latest ?? ''
   return (
     <div className="relative row-span-2 min-h-[16rem] rounded border">
       <ResponsiveContainer className="absolute inset-0 z-0 text-xs">
         <LineChart
-          data={records.map(r => (relative ? r.relative : r.downloads))}
+          data={packageRecords.map(r => (relative ? r.relative : r.downloads))}
           margin={{ top: 20, bottom: 10 }}
           accessibilityLayer
         >
@@ -80,6 +92,17 @@ export default function VersionAdoptionGraph({
         </LineChart>
       </ResponsiveContainer>
       <nav className="absolute right-0 top-0 z-40 flex h-8 text-xs">
+        <label className="flex items-center px-2">
+          <span className="mr-2">Package</span>
+          <select
+            className="rounded border px-1"
+            value={packageName}
+            onChange={e => setPackageName(e.target.value as any)}
+          >
+            <option value="nuqs">nuqs</option>
+            <option value="next-usequerystate">next-usequerystate</option>
+          </select>
+        </label>
         <label className="flex items-center px-2">
           <input
             type="checkbox"
