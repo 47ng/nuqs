@@ -241,6 +241,11 @@ export function useQueryState<T = string>(
   )
 
   React.useEffect(() => {
+    // This will be removed in v2 which will drop support for
+    // partially-functional shallow routing (14.0.2 and 14.0.3)
+    if (window.next.version !== '14.0.3') {
+      return
+    }
     const value = initialSearchParams.get(key) ?? null
     const state = value === null ? null : safeParse(parse, value, key)
     debug('[nuqs `%s`] syncFromUseSearchParams %O', key, state)
