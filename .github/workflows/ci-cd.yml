@@ -24,16 +24,15 @@ jobs:
         base-path: [false, '/base']
         window-history-support: [false]
         next-version:
-          - '13.4'
+          - '13.4' # App router in GA
           - '13.5'
           - '14.0.1'
           # 14.0.2 is not compatible due to a prefetch issue
-          # 14.0.3 requires the WHS flag (see below)
+          # 14.0.3 is dropped due to a bug requiring WHS + syncing against uSP,
+          #        which creates other problems under other versions of Next.js
           - '14.0.4'
           - latest # Current latest is 14.1.0
         include:
-          - next-version: '14.0.3'
-            window-history-support: true
           # 14.0.4 doesn't require the WHS flag, but supports it
           - next-version: '14.0.4'
             window-history-support: true
