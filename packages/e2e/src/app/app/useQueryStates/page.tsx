@@ -8,8 +8,17 @@ import {
   parseAsString,
   useQueryStates
 } from 'nuqs'
+import { Suspense } from 'react'
 
-const IntegrationPage = () => {
+export default function Page() {
+  return (
+    <Suspense>
+      <IntegrationPage />
+    </Suspense>
+  )
+}
+
+function IntegrationPage() {
   const [state, setState] = useQueryStates({
     string: parseAsString,
     int: parseAsInteger,
@@ -54,5 +63,3 @@ const IntegrationPage = () => {
     </>
   )
 }
-
-export default IntegrationPage

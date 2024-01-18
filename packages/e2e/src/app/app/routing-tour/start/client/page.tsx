@@ -1,8 +1,17 @@
 'use client'
 
 import Link from 'next/link'
+import { Suspense } from 'react'
 
-export default function ServerStartPage() {
+export default function Page() {
+  return (
+    <Suspense>
+      <ClientStartPage />
+    </Suspense>
+  )
+}
+
+function ClientStartPage() {
   return (
     <ul>
       <li>

@@ -4,9 +4,17 @@ import { PrefetchKind } from 'next/dist/client/components/router-reducer/router-
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { parseAsInteger, useQueryState } from 'nuqs'
-import React from 'react'
+import React, { Suspense } from 'react'
 
 export default function Page() {
+  return (
+    <Suspense>
+      <Client />
+    </Suspense>
+  )
+}
+
+function Client() {
   const router = useRouter()
   const [counter, setCounter] = useQueryState(
     'counter',

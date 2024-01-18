@@ -9,6 +9,7 @@ import {
   useQueryState,
   useQueryStates
 } from 'nuqs'
+import { Suspense } from 'react'
 
 const paramParser = parseAsString.withDefault('null')
 const components = ['comp1', 'comp2'] as const
@@ -19,7 +20,15 @@ const Component = (props: React.ComponentProps<'span'>) => {
   return <span {...props}>{param}</span>
 }
 
-export default function Wolf359() {
+export default function Page() {
+  return (
+    <Suspense>
+      <Client />
+    </Suspense>
+  )
+}
+
+function Client() {
   const [param, setParam] = useQueryState('param', paramParser)
   const [component, seComponent] = useQueryState('component', componentParser)
   const [multiple, setMultiple] = useQueryStates({

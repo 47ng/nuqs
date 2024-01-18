@@ -9,9 +9,17 @@ import {
   parseAsString,
   useQueryState
 } from 'nuqs'
-import React from 'react'
+import React, { Suspense } from 'react'
 
-export default function IntegrationPage() {
+export default function Page() {
+  return (
+    <Suspense>
+      <IntegrationPage />
+    </Suspense>
+  )
+}
+
+function IntegrationPage() {
   const [numPanes, setNumPanes] = React.useState(1)
   return (
     <main>
