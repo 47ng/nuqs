@@ -119,7 +119,7 @@ export function scheduleFlushToURL(router: Router) {
 
 declare global {
   interface Window {
-    next: {
+    next?: {
       version: string
       router?: NextRouter & {
         state: {
