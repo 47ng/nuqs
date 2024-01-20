@@ -25,19 +25,22 @@ export const metadata = {
 } satisfies Metadata
 
 export default function Layout({ children }: { children: ReactNode }) {
+  const enableChiffreAnalytics = process.env.VERCEL_ENV === 'production'
   return (
     <html lang="en" className={inter.className}>
       <body>
         <RootProvider>{children}</RootProvider>
-        <Script
-          async
-          id="chiffre:analytics"
-          src="https://chiffre.io/analytics.js"
-          data-chiffre-project-id="odWoaH0aUUwm42Wf"
-          data-chiffre-public-key="pk.3EPMj_faODyzisb0UNmZnzhIkG9sbj7zR5em6lf7Olk"
-          referrerPolicy="origin"
-          crossOrigin="anonymous"
-        />
+        {enableChiffreAnalytics && (
+          <Script
+            async
+            id="chiffre:analytics"
+            src="https://chiffre.io/analytics.js"
+            data-chiffre-project-id="odWoaH0aUUwm42Wf"
+            data-chiffre-public-key="pk.3EPMj_faODyzisb0UNmZnzhIkG9sbj7zR5em6lf7Olk"
+            referrerPolicy="origin"
+            crossOrigin="anonymous"
+          />
+        )}
       </body>
     </html>
   )

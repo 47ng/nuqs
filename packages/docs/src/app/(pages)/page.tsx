@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { FeaturesSection } from './_landing/features'
 import { HeroSection } from './_landing/hero'
+import { QuotesSection } from './_landing/quotes/quotes-section'
 
 export const metadata: Metadata = {
   title: {
@@ -16,6 +17,7 @@ export default function HomePage() {
     <main>
       <HeroSection />
       <FeaturesSection />
+      <QuotesSection />
     </main>
   )
 }

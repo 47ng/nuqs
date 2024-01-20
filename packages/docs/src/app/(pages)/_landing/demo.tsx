@@ -80,8 +80,8 @@ function LookAtTheURL() {
       <text
         x="84.43988539137376"
         y="33.319640699669435"
-        font-family="Virgil, Segoe UI Emoji"
-        font-size="20px"
+        fontFamily="Virgil, Segoe UI Emoji"
+        fontSize="20px"
         fill="currentColor"
         direction="ltr"
         dominantBaseline="text-before-edge"

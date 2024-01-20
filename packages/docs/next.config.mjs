@@ -16,7 +16,25 @@ const config = {
       destination: '/playground/:slug*',
       permanent: true
     }
-  ]
+  ],
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'pbs.twimg.com',
+        pathname: '/profile_images/**'
+      },
+      {
+        protocol: 'https',
+        hostname: 'avatars.githubusercontent.com'
+      },
+      {
+        protocol: 'https',
+        hostname: 'media.licdn.com',
+        pathname: '/dms/image/**'
+      }
+    ]
+  }
 }
 
 export default withFumaMDX(config)
