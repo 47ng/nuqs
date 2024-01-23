@@ -1,13 +1,15 @@
 import { Suspense } from 'react'
 
-import dynamic from 'next/dynamic'
+import dynamicImport from 'next/dynamic'
 import { StarHistoryGraph } from './_components/star-history-graph'
 import { getVersions } from './lib/versions'
 
-const VersionAdoptionGraph = dynamic(
+const VersionAdoptionGraph = dynamicImport(
   () => import('./_components/version-adoption'),
   { ssr: false }
 )
+
+export const dynamic = 'force-dynamic'
 
 export default async function StatsPage() {
   const versions = await getVersions()
