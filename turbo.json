@@ -18,7 +18,8 @@
     },
     "docs#build": {
       "outputs": [".next/**", "!.next/cache/**"],
-      "dependsOn": ["^build"]
+      "dependsOn": ["^build"],
+      "env": ["VERCEL_ENV"]
     },
     "nuqs#test": {
       "outputs": ["dist/**", "coverage/**"],
