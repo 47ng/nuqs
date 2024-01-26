@@ -33,10 +33,15 @@ export default function HexColorsDemo() {
   )
   const asHex = '#' + hexColorSchema.serialize(color)
   return (
-    <>
-      <h1>Hex colors</h1>
-      <section>
-        <div>
+    <div className="flex flex-wrap-reverse items-center gap-4">
+      <div
+        className="h-64 w-64 rounded border"
+        style={{
+          backgroundColor: `rgb(${color.r} ${color.g} ${color.b})`
+        }}
+      />
+      <section className="space-y-2">
+        <div className="flex items-center">
           <label>Color</label>
           <input
             type="color"
@@ -82,19 +87,7 @@ export default function HexColorsDemo() {
           }
         />
       </section>
-      <div
-        style={{
-          height: '200px',
-          width: '200px',
-          backgroundColor: `rgb(${color.r} ${color.g} ${color.b})`
-        }}
-      ></div>
-      <p>
-        <a href="https://github.com/47ng/nuqs/tree/next/packages/docs/src/app/(pages)/playground/hex-colors/page.tsx">
-          Source on GitHub
-        </a>
-      </p>
-    </>
+    </div>
   )
 }
 
@@ -112,15 +105,7 @@ const ColorSlider = ({
   accentColor
 }: ColorSliderProps) => {
   return (
-    <div
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: '4px',
-        // @ts-ignore
-        accentColor
-      }}
-    >
+    <div className="flex items-center gap-4" style={{ accentColor }}>
       <label>{label}</label>
       <input
         type="range"

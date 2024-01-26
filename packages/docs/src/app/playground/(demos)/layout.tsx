@@ -12,7 +12,7 @@ export default function PlaygroundDemoLayout({
       <Suspense fallback={<QuerySpySkeleton>&nbsp;</QuerySpySkeleton>}>
         <QuerySpy />
       </Suspense>
-      <main className="py-2 md:py-10">{children}</main>
+      <main className="py-2 md:py-4">{children}</main>
     </>
   )
 }

@@ -11,16 +11,14 @@ export default function BasicCounterDemoPage() {
   )
   return (
     <>
-      <nav className="my-8 flex flex-wrap gap-4">
-        <Button size="sm" onClick={() => setCounter(x => x - 1)}>
+      <nav className="my-8 flex flex-wrap items-center gap-4">
+        <Button onClick={() => setCounter(x => x - 1)}>
           <Minus />
         </Button>
-        <Button size="sm" onClick={() => setCounter(x => x + 1)}>
+        <Button onClick={() => setCounter(x => x + 1)}>
           <Plus />
         </Button>
-        <Button size="sm" onClick={() => setCounter(null)}>
-          Reset
-        </Button>
+        <Button onClick={() => setCounter(null)}>Reset</Button>
         <span className="text-2xl font-semibold tabular-nums">
           Counter: {counter}
         </span>

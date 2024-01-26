@@ -14,6 +14,10 @@ export const demos = {
     title: 'Batching',
     description:
       'State updates are collected and batched into one update on the next tick.'
+  },
+  'hex-colors': {
+    title: 'Hex colors',
+    description: 'Parsing RGB values from a hex color'
   }
 } as const satisfies Record<string, DemoMetadata>
 
