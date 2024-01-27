@@ -614,7 +614,7 @@ export function Server() {
 
 // client.tsx
 // prettier-ignore
-'use client'
+;'use client'
 
 import { useQueryStates } from 'nuqs'
 import { coordinatesParsers } from './searchParams'
@@ -623,6 +623,65 @@ export function Client() {
   const [{ lat, lng }, setCoordinates] = useQueryStates(coordinatesParsers)
   // ...
 }
+```
+
+## Serializer helper
+
+To populate `<Link>` components with state values, you can use the `createSerializer`
+helper.
+
+Pass it an object describing your search params, and it will give you a function
+to call with values, that generates a query string serialized as the hooks would do.
+
+Example:
+
+```ts
+import {
+  createSerializer,
+  parseAsInteger,
+  parseAsIsoDateTime,
+  parseAsString,
+  parseAsStringLiteral
+} from 'nuqs/parsers'
+
+const searchParams = {
+  search: parseAsString,
+  limit: parseAsInteger,
+  from: parseAsIsoDateTime,
+  to: parseAsIsoDateTime,
+  sortBy: parseAsStringLiteral(['asc', 'desc'] as const)
+}
+
+// Create a serializer function by passing the description of the search params to accept
+const serialize = createSerializer(searchParams)
+
+// Then later, pass it some values (a subset) and render them to a query string
+serialize({
+  search: 'foo bar',
+  limit: 10,
+  from: new Date('2024-01-01'),
+  // here, we omit `to`, which won't be added
+  sortBy: null // null values are also not rendered
+})
+// ?search=foo+bar&limit=10&from=2024-01-01T00:00:00.000Z
+```
+
+### Base parameter
+
+The returned `serialize` function can take a base parameter over which to
+append/amend the search params:
+
+```ts
+serialize('/path?baz=qux', { foo: 'bar' }) // /path?baz=qux&foo=bar
+
+const search = new URLSearchParams('?baz=qux')
+serialize(search, { foo: 'bar' }) // ?baz=qux&foo=bar
+
+const url = new URL('https://example.com/path?baz=qux')
+serialize(url, { foo: 'bar' }) // https://example.com/path?baz=qux&foo=bar
+
+// Passing null removes existing values
+serialize('?remove=me', { foo: 'bar', remove: null }) // ?foo=bar
 ```
 
 ## Testing
