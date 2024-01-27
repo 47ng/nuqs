@@ -17,7 +17,7 @@ type QuoteProps = {
 
 export function Quote({ text, author, url }: QuoteProps) {
   return (
-    <div className="mx-auto flex max-w-md flex-col gap-4 rounded-lg bg-white p-6 shadow-md dark:bg-zinc-900">
+    <div className="mx-auto flex w-full max-w-md flex-col gap-4 rounded-lg bg-white p-6 shadow-md dark:bg-zinc-900">
       <div className="flex items-center gap-3">
         <Image
           src={author.avatar}
@@ -37,7 +37,7 @@ export function Quote({ text, author, url }: QuoteProps) {
           )}
           {author.handle && (
             <div className="text-zinc-500 dark:text-zinc-400">
-              @{author.handle}
+              {author.handle}
             </div>
           )}
         </div>
