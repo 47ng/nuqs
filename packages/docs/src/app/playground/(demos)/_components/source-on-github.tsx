@@ -37,9 +37,7 @@ function readSourceCode(demoPath: string) {
 }
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
-const indexOfDocs = __dirname.indexOf('/packages/docs')
-export const nextJsRootDir =
-  __dirname.substring(0, indexOfDocs) + '/packages/docs'
+const nextJsRootDir = path.resolve(__dirname, '../../../../..')
 
 function resolve(importMetaUrl: string, ...paths: string[]) {
   const filePath = fileURLToPath(importMetaUrl)
