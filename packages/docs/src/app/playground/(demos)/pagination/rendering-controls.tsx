@@ -10,7 +10,7 @@ import {
 } from './searchParams'
 
 export function RenderingControls() {
-  const [{ nav, delay }, setControls] = useQueryStates(searchParams, {
+  const [{ renderOn, delay }, setControls] = useQueryStates(searchParams, {
     shallow: false
   })
   return (
@@ -21,10 +21,10 @@ export function RenderingControls() {
           <ToggleGroup
             type="single"
             className="justify-start"
-            value={nav}
+            value={renderOn}
             onValueChange={value =>
               setControls({
-                nav: renderingOptions.includes(value as RenderingOptions)
+                renderOn: renderingOptions.includes(value as RenderingOptions)
                   ? (value as RenderingOptions)
                   : null
               })

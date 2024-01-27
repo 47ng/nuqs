@@ -9,7 +9,7 @@ export type RenderingOptions = (typeof renderingOptions)[number]
 
 export const searchParams = {
   page: parseAsInteger.withDefault(1),
-  nav: parseAsStringLiteral(renderingOptions).withDefault('server'),
+  renderOn: parseAsStringLiteral(renderingOptions).withDefault('server'),
   delay: parseAsInteger.withDefault(0)
 }
 

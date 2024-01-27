@@ -17,9 +17,9 @@ type PaginationControlsProps = {
 export function ServerPaginationControls({
   numPages
 }: PaginationControlsProps) {
-  const { page, delay, nav } = searchParamsCache.all()
+  const { page, delay, renderOn } = searchParamsCache.all()
   function pageURL(page: number) {
-    return `/playground/pagination?page=${page}&delay=${delay}&nav=${nav}`
+    return `/playground/pagination?page=${page}&delay=${delay}&renderOn=${renderOn}`
   }
   return (
     <Pagination className="not-prose items-center gap-2">

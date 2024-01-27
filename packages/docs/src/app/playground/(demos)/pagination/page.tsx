@@ -43,7 +43,7 @@ export default async function PaginationDemoPage({ searchParams }: PageProps) {
 
 function PaginationRenderer() {
   // Showcasing the use of search params cache in nested RSCs
-  const renderOn = searchParamsCache.get('nav')
+  const renderOn = searchParamsCache.get('renderOn')
   return (
     <>
       <h2>
