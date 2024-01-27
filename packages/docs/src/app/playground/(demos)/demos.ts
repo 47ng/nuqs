@@ -18,6 +18,10 @@ export const demos = {
   'hex-colors': {
     title: 'Hex colors',
     description: 'Parsing RGB values from a hex color'
+  },
+  pagination: {
+    title: 'Pagination',
+    description: 'Integer page index with server-side rendering'
   }
 } as const satisfies Record<string, DemoMetadata>
 
