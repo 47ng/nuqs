@@ -7,7 +7,7 @@ import {
   PaginationPreviousLink
 } from '@/src/components/ui/pagination'
 import { cn } from '@/src/lib/utils'
-import { searchParamsCache } from './searchParams'
+import { searchParamsCache, serialize } from './searchParams'
 
 type PaginationControlsProps = {
   numPages: number
@@ -19,7 +19,11 @@ export function ServerPaginationControls({
 }: PaginationControlsProps) {
   const { page, delay, renderOn } = searchParamsCache.all()
   function pageURL(page: number) {
-    return `/playground/pagination?page=${page}&delay=${delay}&renderOn=${renderOn}`
+    return serialize('/playground/pagination', {
+      page,
+      delay,
+      renderOn
+    })
   }
   return (
     <Pagination className="not-prose items-center gap-2">

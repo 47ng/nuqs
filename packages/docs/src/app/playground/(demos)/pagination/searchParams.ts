@@ -1,5 +1,6 @@
 import {
   createSearchParamsCache,
+  createSerializer,
   parseAsInteger,
   parseAsStringLiteral
 } from 'nuqs/parsers'
@@ -14,3 +15,4 @@ export const searchParams = {
 }
 
 export const searchParamsCache = createSearchParamsCache(searchParams)
+export const serialize = createSerializer(searchParams)
