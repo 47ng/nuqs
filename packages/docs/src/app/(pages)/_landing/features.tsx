@@ -101,7 +101,7 @@ export function FeaturesSection(props: React.ComponentProps<'section'>) {
       <Feature
         icon={<Feather size={32} />}
         title="Tiny"
-        description="Only 3.5kb gzipped."
+        description="Only 3.9kb gzipped."
       />
       <Feature
         icon={<TestTube2 size={32} />}
