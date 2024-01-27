@@ -31,6 +31,5 @@ export async function SourceOnGitHub({ path }: SourceOnGitHubProps) {
 
 function readSourceCode(demoPath: string) {
   const demoFilePath = process.cwd() + '/src/app/playground/(demos)/' + demoPath
-  console.log(demoFilePath)
   return fs.readFile(demoFilePath, 'utf8')
 }
