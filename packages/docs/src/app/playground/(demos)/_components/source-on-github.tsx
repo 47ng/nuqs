@@ -33,6 +33,7 @@ export async function SourceOnGitHub({ path }: SourceOnGitHubProps) {
 
 function readSourceCode(demoPath: string) {
   const demoFilePath = resolve(import.meta.url, '..', demoPath)
+  console.log(demoFilePath)
   return fs.readFile(demoFilePath, 'utf8')
 }
 
