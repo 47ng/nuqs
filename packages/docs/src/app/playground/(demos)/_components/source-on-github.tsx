@@ -32,7 +32,26 @@ export async function SourceOnGitHub({ path }: SourceOnGitHubProps) {
 }
 
 function readSourceCode(demoPath: string) {
-  const demosDir = path.resolve(fileURLToPath(import.meta.url), '../../')
-  const demoFilePath = path.resolve(demosDir, demoPath)
+  const demoFilePath = resolve(import.meta.url, '..', demoPath)
   return fs.readFile(demoFilePath, 'utf8')
+}
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
+const indexOfDocs = __dirname.indexOf('/packages/docs')
+export const nextJsRootDir =
+  __dirname.substring(0, indexOfDocs) + '/packages/docs'
+
+function resolve(importMetaUrl: string, ...paths: string[]) {
+  const filePath = fileURLToPath(importMetaUrl)
+  const dirname = path.dirname(filePath)
+  const fileName = path.basename(filePath)
+  const absPath = path.resolve(
+    dirname,
+    // This makes sure that if only the import.meta.url is passed,
+    // we resolve to the same file. Otherwise, allow relative paths.
+    ...(paths.length === 0 ? [fileName] : paths)
+  )
+  // Required for ISR serverless functions to pick up the file path
+  // as a dependency to bundle.
+  return path.resolve(process.cwd(), absPath.replace(nextJsRootDir, '.'))
 }
