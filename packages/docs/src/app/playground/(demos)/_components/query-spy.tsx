@@ -3,6 +3,7 @@
 import { useSearchParams } from 'next/navigation'
 import { subscribeToQueryUpdates } from 'nuqs'
 import React from 'react'
+import { QuerySpySkeleton } from './query-spy.skeleton'
 
 export const QuerySpy: React.FC = () => {
   const initialSearchParams = useSearchParams()
@@ -26,21 +27,26 @@ export const QuerySpy: React.FC = () => {
     () => subscribeToQueryUpdates(({ search }) => setSearch(search)),
     []
   )
-  const qs = search.toString()
 
   return (
-    <pre
-      aria-label="Querystring spy"
-      aria-description="For browsers where the query is hard to see (eg: on mobile)"
-      style={{
-        padding: '4px 6px',
-        border: 'solid 1px gray',
-        borderRadius: '4px',
-        overflow: 'auto'
-      }}
-    >
-      {Boolean(qs) && <>?{qs}</>}
-      {!qs && <span style={{ fontStyle: 'italic' }}>{'<empty query>'}</span>}
-    </pre>
+    <QuerySpySkeleton>
+      {search.size > 0 && (
+        <span className="text-zinc-500">
+          ?
+          {Array.from(search.entries()).map(([key, value], i) => (
+            <React.Fragment key={key + i}>
+              <span className="text-[#005CC5] dark:text-[#79B8FF]">{key}</span>=
+              <span className="text-[#D73A49] dark:text-[#F97583]">
+                {value}
+              </span>
+              <span className="text-zinc-500 last:hidden">&</span>
+            </React.Fragment>
+          ))}
+        </span>
+      )}
+      {search.size === 0 && (
+        <span className="italic text-zinc-500">{'<empty query>'}</span>
+      )}
+    </QuerySpySkeleton>
   )
 }

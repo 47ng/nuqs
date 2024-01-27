@@ -39,6 +39,7 @@ export default function Layout({ children }: { children: ReactNode }) {
             data-chiffre-public-key="pk.3EPMj_faODyzisb0UNmZnzhIkG9sbj7zR5em6lf7Olk"
             referrerPolicy="origin"
             crossOrigin="anonymous"
+            data-chiffre-ignore-paths="/stats"
           />
         )}
       </body>

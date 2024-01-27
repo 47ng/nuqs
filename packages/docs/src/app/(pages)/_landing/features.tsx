@@ -13,6 +13,7 @@ import {
   TestTube2
 } from 'lucide-react'
 import React from 'react'
+import { BundleSize } from './bundle-size'
 
 export function FeaturesSection(props: React.ComponentProps<'section'>) {
   return (
@@ -101,7 +102,11 @@ export function FeaturesSection(props: React.ComponentProps<'section'>) {
       <Feature
         icon={<Feather size={32} />}
         title="Tiny"
-        description="Only 3.9kb gzipped."
+        description={
+          <>
+            Only <BundleSize /> gzipped.
+          </>
+        }
       />
       <Feature
         icon={<TestTube2 size={32} />}

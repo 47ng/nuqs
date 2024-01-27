@@ -26,9 +26,9 @@ export default function DebugControl() {
   }, [])
 
   return (
-    <span>
+    <label className="mr-auto space-x-2 text-zinc-500">
       <input type="checkbox" checked={checked} onChange={update} />
-      <label>Console debugging</label>
-    </span>
+      <span className="select-none">Console debugging</span>
+    </label>
   )
 }
