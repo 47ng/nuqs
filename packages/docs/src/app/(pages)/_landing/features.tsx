@@ -14,6 +14,7 @@ import {
 } from 'lucide-react'
 import React from 'react'
 import { BundleSize } from './bundle-size'
+import { GitHubActionsStatus } from './gha-status'
 
 export function FeaturesSection(props: React.ComponentProps<'section'>) {
   return (
@@ -110,8 +111,18 @@ export function FeaturesSection(props: React.ComponentProps<'section'>) {
       />
       <Feature
         icon={<TestTube2 size={32} />}
-        title="Tested"
-        description="Tested against every Next.js release."
+        title={
+          <span className="flex items-center">
+            Tested
+            <GitHubActionsStatus className="ml-4 inline-flex" />
+          </span>
+        }
+        description={
+          <>
+            Tested against every Next.js release.
+            <br />
+          </>
+        }
       />
     </section>
   )
@@ -128,6 +139,7 @@ type FeatureProps = {
 
 export function Feature({ title, description, icon, isNew }: FeatureProps) {
   // https://v0.dev/t/xXdcvuFkW1d
+  const DescriptionContainer = typeof description === 'string' ? 'p' : 'div'
   return (
     <>
       <div className="space-y-4 xl:space-y-8">
@@ -149,9 +161,9 @@ export function Feature({ title, description, icon, isNew }: FeatureProps) {
             )}
           </h3>
         </div>
-        <p className="text-zinc-500 dark:text-zinc-300 md:text-lg/relaxed xl:text-xl/relaxed">
+        <DescriptionContainer className="text-zinc-500 dark:text-zinc-300 md:text-lg/relaxed xl:text-xl/relaxed">
           {description}
-        </p>
+        </DescriptionContainer>
       </div>
     </>
   )
