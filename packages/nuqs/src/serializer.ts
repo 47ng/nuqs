@@ -13,7 +13,18 @@ type Values<Parsers extends Record<string, ParserBuilder<any>>> = Partial<{
 export function createSerializer<
   Parsers extends Record<string, ParserBuilder<any>>
 >(parsers: Parsers) {
+  /**
+   * Generate a query string for the given values.
+   */
   function serialize(values: Values<Parsers>): string
+  /**
+   * Append/amend the query string of the given base with the given values.
+   *
+   * Existing search param values will kept, unless:
+   * - the value is null, in which case the search param will be deleted
+   * - another value is given for an existing key, in which case the
+   *  search param will be updated
+   */
   function serialize(base: Base, values: Values<Parsers>): string
   function serialize(
     baseOrValues: Base | Values<Parsers>,
