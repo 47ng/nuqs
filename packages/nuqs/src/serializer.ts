@@ -28,12 +28,12 @@ export function createSerializer<
   function serialize(base: Base, values: Values<Parsers>): string
   function serialize(
     baseOrValues: Base | Values<Parsers>,
-    values?: Values<Parsers>
+    values: Values<Parsers> = {}
   ) {
     const [base, search] = isBase(baseOrValues)
       ? splitBase(baseOrValues)
       : ['', new URLSearchParams()]
-    const vals = isBase(baseOrValues) ? values! : baseOrValues
+    const vals = isBase(baseOrValues) ? values : baseOrValues
     for (const key in parsers) {
       const parser = parsers[key]
       const value = vals[key]
