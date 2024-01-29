@@ -6,7 +6,7 @@ const ACCEPTED_TAGS = ['github', 'github-actions-status']
 export async function GET(req: NextRequest) {
   const token = req.nextUrl.searchParams.get('token')
   if (token !== process.env.ISR_TOKEN) {
-    console.log('Invalid token `%s`', token)
+    console.log('Invalid token `%s`', req.nextUrl.toString())
     return NextResponse.json({ error: 'Invalid token' }, { status: 400 })
   }
   const now = new Date()
