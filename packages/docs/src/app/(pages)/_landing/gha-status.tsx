@@ -7,6 +7,9 @@ export async function GitHubActionsStatus({
   ...props
 }: React.ComponentProps<'div'>) {
   const statuses = await getGitHubActionsStatus()
+  if (statuses.length === 0) {
+    return null
+  }
   return (
     <div
       className={cn(
@@ -76,15 +79,20 @@ async function getGitHubActionsStatus() {
       }
     }
   }`.replace(/\s+/g, ' ') // Minify
-  const json = await fetch(`https://api.github.com/graphql?repo=47ng/nuqs`, {
-    method: 'POST',
-    headers: {
-      Authorization: `bearer ${process.env.GITHUB_TOKEN}`
-    },
-    body: JSON.stringify({ query }),
-    next: {
-      tags: ['github-actions-status']
-    }
-  }).then(res => res.json())
-  return z.array(ghaStatusSchema).parse(json.data.node.runs.nodes)
+  try {
+    const json = await fetch(`https://api.github.com/graphql?repo=47ng/nuqs`, {
+      method: 'POST',
+      headers: {
+        Authorization: `bearer ${process.env.GITHUB_TOKEN}`
+      },
+      body: JSON.stringify({ query }),
+      next: {
+        tags: ['github-actions-status']
+      }
+    }).then(res => res.json())
+    return z.array(ghaStatusSchema).parse(json.data.node.runs.nodes)
+  } catch (error) {
+    console.error(error)
+    return []
+  }
 }
