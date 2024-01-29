@@ -9,7 +9,6 @@ export async function LandingDemo() {
     process.cwd(),
     'src/app/(pages)/_landing/demo.client.tsx'
   )
-  console.log(demoFilePath)
   const demoFile = await fs.readFile(demoFilePath, 'utf8')
   const demoCode = demoFile
     .split('\n')
