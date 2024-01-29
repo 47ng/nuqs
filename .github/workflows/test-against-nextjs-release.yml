@@ -57,5 +57,5 @@ jobs:
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
       - name: Invalidate ISR cache for GitHub Actions status on landing page
-        run: curl -s https://nuqs.47ng.com/api/isr?tag=github-actions-status&token=${{ secrets.ISR_TOKEN }}
+        run: curl -s "https://nuqs.47ng.com/api/isr?tag=github-actions-status&token=${{ secrets.ISR_TOKEN }}"
         if: always()
