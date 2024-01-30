@@ -56,6 +56,12 @@ jobs:
           jobName: next@${{ inputs.version }}${{ matrix.base-path && ' basePath' || ''}}${{ matrix.window-history-support && ' WHS' || ''}}
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+  invalidate-isr-cache:
+    name: Invalidate ISR cache
+    runs-on: ubuntu-latest
+    needs: test_against_nextjs_release
+    if: ${{ always() }}
+    steps:
       - name: Invalidate ISR cache for GitHub Actions status on landing page
         run: curl -s "https://nuqs.47ng.com/api/isr?tag=github-actions-status&token=${{ secrets.ISR_TOKEN }}"
-        if: always()
