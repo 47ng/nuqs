@@ -10,13 +10,6 @@ const withFumaMDX = createNextDocsMDX({
 /** @type {import('next').NextConfig} */
 const config = {
   reactStrictMode: true,
-  redirects: async () => [
-    {
-      source: '/demos/:slug*',
-      destination: '/playground/:slug*',
-      permanent: true
-    }
-  ],
   images: {
     remotePatterns: [
       {
