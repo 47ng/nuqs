@@ -12,7 +12,7 @@ import {
   Sparkles,
   TestTube2
 } from 'lucide-react'
-import React, { Suspense } from 'react'
+import React from 'react'
 import { BundleSize } from './bundle-size'
 import { GitHubActionsStatus } from './gha-status'
 
@@ -114,9 +114,7 @@ export function FeaturesSection(props: React.ComponentProps<'section'>) {
         title={
           <span className="flex items-center">
             Tested
-            <Suspense>
-              <GitHubActionsStatus className="ml-4 inline-flex" />
-            </Suspense>
+            <GitHubActionsStatus className="ml-4 inline-flex" />
           </span>
         }
         description="Tested against every Next.js release."
