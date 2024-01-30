@@ -14,7 +14,6 @@ import {
 } from 'lucide-react'
 import React from 'react'
 import { BundleSize } from './bundle-size'
-import { GitHubActionsStatus } from './gha-status'
 
 export function FeaturesSection(props: React.ComponentProps<'section'>) {
   return (
@@ -114,15 +113,10 @@ export function FeaturesSection(props: React.ComponentProps<'section'>) {
         title={
           <span className="flex items-center">
             Tested
-            <GitHubActionsStatus className="ml-4 inline-flex" />
+            {/* <GitHubActionsStatus className="ml-4 inline-flex" /> */}
           </span>
         }
-        description={
-          <>
-            Tested against every Next.js release.
-            <br />
-          </>
-        }
+        description="Tested against every Next.js release."
       />
     </section>
   )
