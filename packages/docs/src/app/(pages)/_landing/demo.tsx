@@ -1,14 +1,11 @@
 import { CodeBlock } from '@/src/components/code-block'
 import fs from 'node:fs/promises'
-import path from 'node:path'
 import { Suspense } from 'react'
 import { Demo } from './demo.client'
 
 export async function LandingDemo() {
-  const demoFilePath = path.resolve(
-    process.cwd(),
-    'src/app/(pages)/_landing/demo.client.tsx'
-  )
+  const demoFilePath =
+    process.cwd() + '/src/app/(pages)/_landing/demo.client.tsx'
   const demoFile = await fs.readFile(demoFilePath, 'utf8')
   const demoCode = demoFile
     .split('\n')

@@ -50,6 +50,7 @@
   "scripts": {
     "dev": "tsup --format esm --watch --external=react",
     "build": "tsup --clean --external=react",
+    "postbuild": "size-limit --json > size.json",
     "test": "run-p test:*",
     "test:types": "tsd",
     "test:unit": "vitest run",
