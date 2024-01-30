@@ -9,9 +9,6 @@ const withFumaMDX = createNextDocsMDX({
 
 /** @type {import('next').NextConfig} */
 const config = {
-  experimental: {
-    ppr: true
-  },
   reactStrictMode: true,
   redirects: async () => [
     {

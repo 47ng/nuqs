@@ -7,7 +7,7 @@ import { Demo } from './demo.client'
 export async function LandingDemo() {
   const demoFilePath = path.resolve(
     process.cwd(),
-    'src/app/(pages)/_landing/demo.client.tsx'
+    './src/app/(pages)/_landing/demo.client.tsx'
   )
   const demoFile = await fs.readFile(demoFilePath, 'utf8')
   const demoCode = demoFile
