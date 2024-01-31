@@ -182,7 +182,7 @@ function flushUpdateQueue(router: Router): [URLSearchParams, null | unknown] {
         options.history === 'push' ? history.pushState : history.replaceState
       updateMethod.call(
         history,
-        history.state,
+        null,
         // Our own updates have a marker to prevent syncing
         // when the URL changes (we've already sync'd them up
         // via `emitter.emit(key, newValue)` above, without
