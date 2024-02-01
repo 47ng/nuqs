@@ -180,9 +180,16 @@ function flushUpdateQueue(router: Router): [URLSearchParams, null | unknown] {
       // this allows keeping a reactive URL if the network is slow.
       const updateMethod =
         options.history === 'push' ? history.pushState : history.replaceState
+      // In 14.1.0, useSearchParams becomes reactive to shallow updates,
+      // but only if passing `null` as the history state.
+      // Older versions need to maintain the history state for push to work.
+      // This should theoretically be checking for >=14.0.5-canary.54 where WHS
+      // was stabilised, but we're not supporting canaries from previous GAs.
+      const state =
+        (window.next?.version ?? '') >= '14.1.0' ? null : history.state
       updateMethod.call(
         history,
-        history.state,
+        state,
         // Our own updates have a marker to prevent syncing
         // when the URL changes (we've already sync'd them up
         // via `emitter.emit(key, newValue)` above, without
@@ -198,9 +205,7 @@ function flushUpdateQueue(router: Router): [URLSearchParams, null | unknown] {
           // Call the Next.js router to perform a network request
           // and re-render server components.
           router.replace(url, {
-            scroll: false,
-            // @ts-expect-error - pages router fix, but not exposed in navigation types
-            shallow: false
+            scroll: false
           })
         })
       }
