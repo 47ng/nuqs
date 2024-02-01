@@ -180,9 +180,11 @@ function flushUpdateQueue(router: Router): [URLSearchParams, null | unknown] {
       // this allows keeping a reactive URL if the network is slow.
       const updateMethod =
         options.history === 'push' ? history.pushState : history.replaceState
+      const state =
+        (window.next?.version ?? '') >= '14.1.0' ? null : history.state
       updateMethod.call(
         history,
-        null,
+        state,
         // Our own updates have a marker to prevent syncing
         // when the URL changes (we've already sync'd them up
         // via `emitter.emit(key, newValue)` above, without
