@@ -43,7 +43,7 @@ jobs:
           TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
           TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
       - name: Save Cypress artifacts
-        uses: actions/upload-artifact@c7d193f32edcb7bfad88892161225aeda64e9392
+        uses: actions/upload-artifact@26f96dfa697d77e81fd5907df203aa23a56210a8
         if: failure()
         with:
           path: packages/e2e/cypress/screenshots
