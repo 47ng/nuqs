@@ -180,8 +180,11 @@ function flushUpdateQueue(router: Router): [URLSearchParams, null | unknown] {
       // this allows keeping a reactive URL if the network is slow.
       const updateMethod =
         options.history === 'push' ? history.pushState : history.replaceState
-      // This should theoretically be checking for >=14.0.5-canary.54, but
-      // we're not supporting canaries from previous GAs.
+      // In 14.1.0, useSearchParams becomes reactive to shallow updates,
+      // but only if passing `null` as the history state.
+      // Older versions need to maintain the history state for push to work.
+      // This should theoretically be checking for >=14.0.5-canary.54 where WHS
+      // was stabilised, but we're not supporting canaries from previous GAs.
       const state =
         (window.next?.version ?? '') >= '14.1.0' ? null : history.state
       updateMethod.call(
