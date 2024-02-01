@@ -28,18 +28,11 @@ jobs:
           - '13.5'
           - '14.0.1'
           # 14.0.2 is not compatible due to a prefetch issue
-          - latest
-          - '14.0.5-canary.54' # WHS stabilised
+          - latest # Current latest is 14.1.0
         include:
           # 14.0.3 requires the WHS flag
           - next-version: '14.0.3'
             window-history-support: true
-          # Current latest is 14.0.4
-          - next-version: latest
-            window-history-support: true
-          - next-version: latest
-            window-history-support: true
-            base-path: '/base'
 
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11

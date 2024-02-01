@@ -43,5 +43,5 @@ function supportsWHS(nextVersion: string) {
 }
 
 function supportsShallowRouting(nextVersion: string) {
-  return semver.gte(nextVersion, '14.0.5-canary.54')
+  return semver.gte(nextVersion, '14.1.0')
 }
