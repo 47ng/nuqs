@@ -26,7 +26,7 @@ import {
   createSearchParamsCache,
   parseAsInteger,
   parseAsString
-} from 'nuqs/parsers'
+} from 'nuqs/server'
 
 const cache = createSearchParamsCache({
   q: parseAsString,

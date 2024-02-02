@@ -171,13 +171,13 @@ export default () => {
 > section for a more user-friendly way to achieve type-safety.
 
 If you wish to parse the searchParams in server components, you'll need to
-import the parsers from `nuqs/parsers`, which doesn't include
+import the parsers from `nuqs/server`, which doesn't include
 the `"use client"` directive.
 
 You can then use the `parseServerSide` method:
 
 ```tsx
-import { parseAsInteger } from 'nuqs/parsers'
+import { parseAsInteger } from 'nuqs/server'
 
 type PageProps = {
   searchParams: {
@@ -394,7 +394,7 @@ You can get this pattern for your custom parsers too, and compose them
 with others:
 
 ```ts
-import { createParser, parseAsHex } from 'nuqs/parsers'
+import { createParser, parseAsHex } from 'nuqs'
 
 // Wrapping your parser/serializer in `createParser`
 // gives it access to the builder pattern & server-side
@@ -529,7 +529,7 @@ import {
   createSearchParamsCache,
   parseAsInteger,
   parseAsString
-} from 'nuqs/parsers'
+} from 'nuqs/server'
 // Note: import from '…/parsers' to avoid the "use client" directive
 
 export const searchParamsCache = createSearchParamsCache({
@@ -572,7 +572,7 @@ parser declaration with `useQueryStates` for type-safety in client components:
 
 ```tsx
 // searchParams.ts
-import { parseAsFloat, createSearchParamsCache } from 'nuqs/parsers'
+import { parseAsFloat, createSearchParamsCache } from 'nuqs/server'
 
 export const coordinatesParsers = {
   lat: parseAsFloat.withDefault(45.18),
@@ -642,7 +642,7 @@ import {
   parseAsIsoDateTime,
   parseAsString,
   parseAsStringLiteral
-} from 'nuqs/parsers'
+} from 'nuqs/server'
 
 const searchParams = {
   search: parseAsString,
@@ -751,7 +751,7 @@ use `useQueryState` to read it:
 // page.tsx
 import type { Metadata, ResolvingMetadata } from 'next'
 import { useQueryState } from 'nuqs'
-import { parseAsString } from 'nuqs/parsers'
+import { parseAsString } from 'nuqs/server'
 
 type Props = {
   searchParams: { [key: string]: string | string[] | undefined }
