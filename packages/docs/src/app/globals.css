@@ -76,16 +76,17 @@
 
 @layer components {
   .nd-codeblock [data-highlighted-chars] {
+    --highlight-color: var(--foreground);
+    --highlight-opacity: 5%;
     border: none;
-    box-shadow: 0 0 0 3px hsl(var(--foreground) / 5%);
+    box-shadow: 0 0 0 3px hsl(var(--highlight-color) / var(--highlight-opacity));
     padding-block: 1px;
-    background-color: hsl(var(--foreground) / 5%);
+    background-color: hsl(var(--highlight-color) / var(--highlight-opacity));
     border-radius: 2px;
   }
 
   .dark .nd-codeblock [data-highlighted-chars] {
-    box-shadow: 0 0 0 3px hsl(var(--foreground) / 10%);
-    background-color: hsl(var(--foreground) / 10%);
+    --highlight-opacity: 10%;
   }
 }
 

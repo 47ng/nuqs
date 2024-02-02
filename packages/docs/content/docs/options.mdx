@@ -133,7 +133,7 @@ the updated URL.
 Pass in the `startTransition` function from `useTransition` to the options
 to enable this behaviour _(this will set `shallow: false` automatically for you)_:
 
-```tsx /startTransition/1,3
+```tsx /startTransition/1,3#2
 'use client'
 
 import React from 'react'
@@ -154,6 +154,6 @@ function ClientComponent({ data }) {
   if (isLoading) return <div>Loading...</div>
 
   // Normal rendering with data
-  return <div>{/*...*/}</div>
+  return <div>...</div>
 }
 ```
