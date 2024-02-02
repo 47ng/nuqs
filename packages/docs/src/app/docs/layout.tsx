@@ -43,10 +43,14 @@ async function SidebarFooter() {
 }
 
 async function getLatestVersion() {
-  const res = await fetch('https://registry.npmjs.org/nuqs', {
-    next: {
-      tags: ['npm']
-    }
-  }).then(r => r.json())
-  return res['dist-tags'].latest
+  try {
+    const res = await fetch('https://registry.npmjs.org/nuqs', {
+      next: {
+        tags: ['npm']
+      }
+    }).then(r => r.json())
+    return res['dist-tags'].latest
+  } catch {
+    return 'latest'
+  }
 }

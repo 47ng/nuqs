@@ -1,9 +1,10 @@
 import createNextDocsMDX from 'next-docs-mdx/config'
 import remarkMdxImages from 'remark-mdx-images'
+import remarkSmartypants from 'remark-smartypants'
 
 const withFumaMDX = createNextDocsMDX({
   mdxOptions: {
-    remarkPlugins: [remarkMdxImages]
+    remarkPlugins: [remarkMdxImages, remarkSmartypants]
   }
 })
 

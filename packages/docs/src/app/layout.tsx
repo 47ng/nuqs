@@ -6,7 +6,8 @@ import type { ReactNode } from 'react'
 import './globals.css'
 
 const inter = Inter({
-  subsets: ['latin']
+  subsets: ['latin'],
+  fallback: ['sans-serif']
 })
 
 export const metadata = {

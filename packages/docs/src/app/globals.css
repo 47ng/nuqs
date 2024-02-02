@@ -74,6 +74,21 @@
   }
 }
 
+@layer components {
+  .nd-codeblock [data-highlighted-chars] {
+    border: none;
+    box-shadow: 0 0 0 3px hsl(var(--foreground) / 5%);
+    padding-block: 1px;
+    background-color: hsl(var(--foreground) / 5%);
+    border-radius: 2px;
+  }
+
+  .dark .nd-codeblock [data-highlighted-chars] {
+    box-shadow: 0 0 0 3px hsl(var(--foreground) / 10%);
+    background-color: hsl(var(--foreground) / 10%);
+  }
+}
+
 @layer base {
   @font-face {
     font-family: 'Virgil';
