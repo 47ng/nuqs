@@ -1,4 +1,4 @@
-import { createSearchParamsCache, parseAsString } from 'nuqs/parsers'
+import { createSearchParamsCache, parseAsString } from 'nuqs/server'
 
 export const searchParams = {
   injected: parseAsString.withDefault('null'),

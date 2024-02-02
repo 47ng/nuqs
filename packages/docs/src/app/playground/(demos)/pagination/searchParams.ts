@@ -3,7 +3,7 @@ import {
   createSerializer,
   parseAsInteger,
   parseAsStringLiteral
-} from 'nuqs/parsers'
+} from 'nuqs/server'
 
 export const renderingOptions = ['server', 'client'] as const
 export type RenderingOptions = (typeof renderingOptions)[number]

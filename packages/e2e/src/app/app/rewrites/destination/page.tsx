@@ -1,4 +1,4 @@
-import type { SearchParams } from 'nuqs/parsers'
+import type { SearchParams } from 'nuqs/server'
 import { Suspense } from 'react'
 import { RewriteDestinationClient } from './client'
 import { cache } from './searchParams'

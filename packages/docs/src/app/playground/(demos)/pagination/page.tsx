@@ -1,6 +1,6 @@
 import { Description } from '@/src/components/typography'
 import { Separator } from '@/src/components/ui/separator'
-import type { SearchParams } from 'nuqs/parsers'
+import type { SearchParams } from 'nuqs/server'
 import { Suspense } from 'react'
 import { SourceOnGitHub } from '../_components/source-on-github'
 import { getMetadata } from '../demos'
