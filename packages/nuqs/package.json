@@ -28,7 +28,8 @@
   },
   "files": [
     "dist/",
-    "parsers.d.ts"
+    "parsers.d.ts",
+    "server.d.ts"
   ],
   "type": "module",
   "sideEffects": true,
@@ -40,6 +41,11 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
       "require": "./dist/index.cjs"
+    },
+    "./server": {
+      "types": "./dist/server.d.ts",
+      "import": "./dist/server.js",
+      "require": "./dist/server.cjs"
     },
     "./parsers": {
       "types": "./dist/parsers.d.ts",
@@ -91,8 +97,8 @@
       ]
     },
     {
-      "name": "Parsers (ESM)",
-      "path": "dist/parsers.js",
+      "name": "Server (ESM)",
+      "path": "dist/server.js",
       "limit": "2 kB",
       "ignore": [
         "react"
