@@ -1,0 +1,437 @@
+---
+title: Advanced usage
+description: Slowly moving this to their own pages, sorry for the mess.
+---
+
+## Configuring parsers, default value & options
+
+You can use a builder pattern to facilitate specifying all of those things:
+
+```ts
+useQueryState(
+  'counter',
+  parseAsInteger.withDefault(0).withOptions({
+    history: 'push',
+    shallow: false
+  })
+)
+```
+
+You can get this pattern for your custom parsers too, and compose them
+with others:
+
+```ts
+import { createParser, parseAsHex } from 'nuqs/server'
+
+// Wrapping your parser/serializer in `createParser`
+// gives it access to the builder pattern & server-side
+// parsing capabilities:
+const hexColorSchema = createParser({
+  parse(query) {
+    if (query.length !== 6) {
+      return null // always return null for invalid inputs
+    }
+    return {
+      // When composing other parsers, they may return null too.
+      r: parseAsHex.parse(query.slice(0, 2)) ?? 0x00,
+      g: parseAsHex.parse(query.slice(2, 4)) ?? 0x00,
+      b: parseAsHex.parse(query.slice(4)) ?? 0x00
+    }
+  },
+  serialize({ r, g, b }) {
+    return (
+      parseAsHex.serialize(r) +
+      parseAsHex.serialize(g) +
+      parseAsHex.serialize(b)
+    )
+  }
+})
+  // Eg: set common options directly
+  .withOptions({ history: 'push' })
+
+// Or on usage:
+useQueryState(
+  'tribute',
+  hexColorSchema.withDefault({
+    r: 0x66,
+    g: 0x33,
+    b: 0x99
+  })
+)
+```
+
+Note: see this example running in the [hex-colors demo](https://github.com/47ng/nuqs/blob/next/packages/docs/src/app/(pages)/playground/hex-colors/page.tsx).
+
+## Multiple Queries (batching)
+
+You can call as many state update function as needed in a single event loop
+tick, and they will be applied to the URL asynchronously:
+
+```ts
+const MultipleQueriesDemo = () => {
+  const [lat, setLat] = useQueryState('lat', parseAsFloat)
+  const [lng, setLng] = useQueryState('lng', parseAsFloat)
+  const randomCoordinates = React.useCallback(() => {
+    setLat(Math.random() * 180 - 90)
+    setLng(Math.random() * 360 - 180)
+  }, [])
+}
+```
+
+If you wish to know when the URL has been updated, and what it contains, you can
+await the Promise returned by the state updater function, which gives you the
+updated URLSearchParameters object:
+
+```ts
+const randomCoordinates = React.useCallback(() => {
+  setLat(42)
+  return setLng(12)
+}, [])
+
+randomCoordinates().then((search: URLSearchParams) => {
+  search.get('lat') // 42
+  search.get('lng') // 12, has been queued and batch-updated
+})
+```
+
+<details>
+<summary><em>Implementation details (Promise caching)</em></summary>
+
+The returned Promise is cached until the next flush to the URL occurs,
+so all calls to a setState (of any hook) in the same event loop tick will
+return the same Promise reference.
+
+Due to throttling of calls to the Web History API, the Promise may be cached
+for several ticks. Batched updates will be merged and flushed once to the URL.
+This means not every setState will reflect to the URL, if another one comes
+overriding it before flush occurs.
+
+The returned React state will reflect all set values instantly,
+to keep UI responsive.
+
+---
+
+</details>
+
+## `useQueryStates`
+
+For query keys that should always move together, you can use `useQueryStates`
+with an object containing each key's type:
+
+```ts
+import { useQueryStates, parseAsFloat } from 'nuqs'
+
+const [coordinates, setCoordinates] = useQueryStates(
+  {
+    lat: parseAsFloat.withDefault(45.18),
+    lng: parseAsFloat.withDefault(5.72)
+  },
+  {
+    history: 'push'
+  }
+)
+
+const { lat, lng } = coordinates
+
+// Set all (or a subset of) the keys in one go:
+const search = await setCoordinates({
+  lat: Math.random() * 180 - 90,
+  lng: Math.random() * 360 - 180
+})
+```
+
+## Accessing searchParams in Server Components
+
+If you wish to access the searchParams in a deeply nested Server Component
+(ie: not in the Page component), you can use `createSearchParamsCache`
+to do so in a type-safe manner.
+
+> Note: parsers **don't validate** your data. If you expect positive integers
+> or JSON-encoded objects of a particular shape, you'll need to feed the result
+> of the parser to a schema validation library, like [Zod](https://zod.dev).
+
+```tsx
+// searchParams.ts
+import {
+  createSearchParamsCache,
+  parseAsInteger,
+  parseAsString
+} from 'nuqs/server'
+// Note: import from '…/parsers' to avoid the "use client" directive
+
+export const searchParamsCache = createSearchParamsCache({
+  // List your search param keys and associated parsers here:
+  q: parseAsString.withDefault(''),
+  maxResults: parseAsInteger.withDefault(10)
+})
+
+// page.tsx
+import { searchParamsCache } from './searchParams'
+
+export default function Page({
+  searchParams
+}: {
+  searchParams: Record<string, string | string[] | undefined>
+}) {
+  // ⚠️ Don't forget to call `parse` here.
+  // You can access type-safe values from the returned object:
+  const { q: query } = searchParamsCache.parse(searchParams)
+  return (
+    <div>
+      <h1>Search Results for {query}</h1>
+      <Results />
+    </div>
+  )
+}
+
+function Results() {
+  // Access type-safe search params in children server components:
+  const maxResults = searchParamsCache.get('maxResults')
+  return <span>Showing up to {maxResults} results</span>
+}
+```
+
+The cache will only be valid for the current page render
+(see React's [`cache`](https://react.dev/reference/react/cache) function).
+
+Note: the cache only works for **server components**, but you may share your
+parser declaration with `useQueryStates` for type-safety in client components:
+
+```tsx
+// searchParams.ts
+import {
+  parseAsFloat,
+  createSearchParamsCache
+} from 'nuqs/server'
+
+export const coordinatesParsers = {
+  lat: parseAsFloat.withDefault(45.18),
+  lng: parseAsFloat.withDefault(5.72)
+}
+export const coordinatesCache = createSearchParamsCache(coordinatesParsers)
+
+// page.tsx
+import { coordinatesCache } from './searchParams'
+import { Server } from './server'
+import { Client } from './client'
+
+export default function Page({ searchParams }) {
+  coordinatesCache.parse(searchParams)
+  return (
+    <>
+      <Server />
+      <Suspense>
+        <Client />
+      </Suspense>
+    </>
+  )
+}
+
+// server.tsx
+import { coordinatesCache } from './searchParams'
+
+export function Server() {
+  const { lat, lng } = coordinatesCache.all()
+  // or access keys individually:
+  const lat = coordinatesCache.get('lat')
+  const lng = coordinatesCache.get('lng')
+  return (
+    <span>
+      Latitude: {lat} - Longitude: {lng}
+    </span>
+  )
+}
+
+// client.tsx
+// prettier-ignore
+'use client'
+
+import { useQueryStates } from 'nuqs'
+import { coordinatesParsers } from './searchParams'
+
+export function Client() {
+  const [{ lat, lng }, setCoordinates] = useQueryStates(coordinatesParsers)
+  // ...
+}
+```
+
+## Serializer helper
+
+To populate `<Link>` components with state values, you can use the `createSerializer`
+helper.
+
+Pass it an object describing your search params, and it will give you a function
+to call with values, that generates a query string serialized as the hooks would do.
+
+Example:
+
+```ts
+import {
+  createSerializer,
+  parseAsInteger,
+  parseAsIsoDateTime,
+  parseAsString,
+  parseAsStringLiteral
+} from 'nuqs/server'
+
+const searchParams = {
+  search: parseAsString,
+  limit: parseAsInteger,
+  from: parseAsIsoDateTime,
+  to: parseAsIsoDateTime,
+  sortBy: parseAsStringLiteral(['asc', 'desc'] as const)
+}
+
+// Create a serializer function by passing the description of the search params to accept
+const serialize = createSerializer(searchParams)
+
+// Then later, pass it some values (a subset) and render them to a query string
+serialize({
+  search: 'foo bar',
+  limit: 10,
+  from: new Date('2024-01-01'),
+  // here, we omit `to`, which won't be added
+  sortBy: null // null values are also not rendered
+})
+// ?search=foo+bar&limit=10&from=2024-01-01T00:00:00.000Z
+```
+
+### Base parameter
+
+The returned `serialize` function can take a base parameter over which to
+append/amend the search params:
+
+```ts
+serialize('/path?baz=qux', { foo: 'bar' }) // /path?baz=qux&foo=bar
+
+const search = new URLSearchParams('?baz=qux')
+serialize(search, { foo: 'bar' }) // ?baz=qux&foo=bar
+
+const url = new URL('https://example.com/path?baz=qux')
+serialize(url, { foo: 'bar' }) // https://example.com/path?baz=qux&foo=bar
+
+// Passing null removes existing values
+serialize('?remove=me', { foo: 'bar', remove: null }) // ?foo=bar
+```
+
+## Testing
+
+Currently, the best way to test the behaviour of your components using
+`useQueryState(s)` is end-to-end testing, with tools like Playwright or Cypress.
+
+Running components that use the Next.js router in isolation requires mocking it,
+which is being [worked on](https://github.com/scottrippey/next-router-mock/pull/103)
+for the app router.
+
+See issue #259 for more testing-related discussions.
+
+## Debugging
+
+You can enable debug logs in the browser by setting the `debug` item in localStorage
+to `nuqs`, and reload the page.
+
+```js
+// In your devtools:
+localStorage.setItem('debug', 'nuqs')
+```
+
+> Note: unlike the `debug` package, this will not work with wildcards, but
+> you can combine it: `localStorage.setItem('debug', '*,nuqs')`
+
+Log lines will be prefixed with `[nuqs]` for `useQueryState` and `[nuq+]` for
+`useQueryStates`, along with other internal debug logs.
+
+User timings markers are also recorded, for advanced performance analysis using
+your browser's devtools.
+
+Providing debug logs when opening an [issue](https://github.com/47ng/nuqs/issues)
+is always appreciated. 🙏
+
+## Caveats
+
+Because the Next.js **pages router** is not available in an SSR context, this
+hook will always return `null` (or the default value if supplied) on SSR/SSG.
+
+This limitation doesn't apply to the app router.
+
+### SEO
+
+If your page uses query strings for local-only state, you should add a
+canonical URL to your page, to tell SEO crawlers to ignore the query string
+and index the page without it.
+
+In the app router, this is done via the metadata object:
+
+```ts
+import type { Metadata } from 'next'
+
+export const metadata: Metadata = {
+  alternates: {
+    canonical: '/url/path/without/querystring'
+  }
+}
+```
+
+If however the query string is defining what content the page is displaying
+(eg: YouTube's watch URLs, like `https://www.youtube.com/watch?v=dQw4w9WgXcQ`),
+your canonical URL should contain relevant query strings, and you can still
+use `useQueryState` to read it:
+
+```ts
+// page.tsx
+import type { Metadata, ResolvingMetadata } from 'next'
+import { useQueryState } from 'nuqs'
+import { parseAsString } from 'nuqs/server'
+
+type Props = {
+  searchParams: { [key: string]: string | string[] | undefined }
+}
+
+export async function generateMetadata({
+  searchParams
+}: Props): Promise<Metadata> {
+  const videoId = parseAsString.parseServerSide(searchParams.v)
+  return {
+    alternates: {
+      canonical: `/watch?v=${videoId}`
+    }
+  }
+}
+```
+
+### Lossy serialization
+
+If your serializer loses precision or doesn't accurately represent
+the underlying state value, you will lose this precision when
+reloading the page or restoring state from the URL (eg: on navigation).
+
+Example:
+
+```ts
+const geoCoordParser = {
+  parse: parseFloat,
+  serialize: v => v.toFixed(4) // Loses precision
+}
+
+const [lat, setLat] = useQueryState('lat', geoCoordParser)
+```
+
+Here, setting a latitude of 1.23456789 will render a URL query string
+of `lat=1.2345`, while the internal `lat` state will be correctly
+set to 1.23456789.
+
+Upon reloading the page, the state will be incorrectly set to 1.2345.
+
+## License
+
+[MIT](https://github.com/47ng/nuqs/blob/next/LICENSE)
+
+Made with ❤️ by [François Best](https://francoisbest.com)
+
+Using this package at work ? [Sponsor me](https://github.com/sponsors/franky47)
+to help with support and maintenance.
+
+<img
+  alt="Project analytics and stats"
+  src="https://repobeats.axiom.co/api/embed/3ee740e4729dce3992bfa8c74645cfebad8ba034.svg"
+/>

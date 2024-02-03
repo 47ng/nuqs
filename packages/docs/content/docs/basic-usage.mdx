@@ -3,7 +3,6 @@ title: Basic usage
 description: Replacing React.useState with useQueryState
 ---
 
-import { parseAsArrayOf } from 'nuqs'
 import {
   DemoFallback,
   StringParserDemo,
@@ -97,6 +96,11 @@ const increment = () => setCount(c => c + 1) // c will never be null
 const decrement = () => setCount(c => c - 1) // c will never be null
 const clearCount = () => setCount(null) // Remove query from the URL
 ```
+
+<Callout title="Note">
+  The default value is internal to React, it will **not** be written to the
+  URL.
+</Callout>
 
 <Callout title="Tip">
   The default value is also returned if the value is _invalid_ for the parser.

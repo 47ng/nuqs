@@ -1,5 +1,11 @@
 {
   "title": "Documentation",
   "root": true,
-  "pages": ["installation", "basic-usage", "parsers", "options"]
+  "pages": [
+    "installation",
+    "basic-usage",
+    "parsers",
+    "options",
+    "advanced-usage"
+  ]
 }
