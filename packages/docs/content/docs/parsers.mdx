@@ -9,7 +9,10 @@ import {
   FloatParserDemo,
   HexParserDemo,
   BooleanParserDemo,
-  StringLiteralParserDemo
+  StringLiteralParserDemo,
+  DateISOParserDemo,
+  DateTimestampParserDemo,
+  CustomParserDemo
 } from './parsers-demos'
 
 export function DemoFallback() {
@@ -178,18 +181,100 @@ The query string value will be the **value** of the enum, not its name
 ### Dates & timestamps
 
 There are two parsers that give you a `Date` object, their difference is
-on how they encode the value into the query string:
+on how they encode the value into the query string.
 
-`parseAsIsoDateTime` will encode using the `Date.toISOString()` method:
+#### ISO 8601
 
-`new Date(0)` \<-> `?date=1970-01-01T00:00:00.000Z`
+```ts
+import { parseAsIsoDateTime } from 'nuqs'
+```
 
+<Suspense>
+  <DateISOParserDemo/>
+</Suspense>
 
-### Objects
+#### Timestamp
+
+Miliseconds since the Unix epoch.
+
+```ts
+import { parseAsTimestamp } from 'nuqs'
+```
+
+<Suspense>
+  <DateTimestampParserDemo/>
+</Suspense>
 
 ### Arrays
 
+All of the parsers on this page can be used to parse arrays of their respective types.
+
+```ts
+import { parseAsArrayOf, parseAsInteger } from 'nuqs'
+
+parseAsArrayOf(parseAsInteger)
+
+// Optionally, customise the separator
+parseAsArrayOf(parseAsInteger, ';')
+```
+
+### JSON
+
+If primitive types are not enough, you can encode JSON in the query string.
+
+```ts /parseAsJson()/
+import { parseAsJson } from 'nuqs'
+
+// This one is a function, don't forget to call it:
+const [obj, setObj] = useQueryState('zod', parseAsJson())
+```
+
+#### Validation with Zod
+
+`parseAsJson` is a function that takes an optional callback argument to validate
+the parsed data. Using a Zod schema looks like this:
+
+```ts
+const zodSchema = z.object({
+  foo: z.string(),
+  bar: z.number()
+})
+
+const [obj, setObj] = useQueryState('zod', parseAsJson(zodSchema.parse))
+```
+
+Using other validation libraries is possible, as long as they throw an error
+when the data is invalid.
+
 ## Making your own parsers
+
+You may wish to customise the rendered query string for your data type.
+For this, `nuqs` exposes the `createParser` function to make your own parsers.
+
+You pass it two functions:
+1. `parse`: a function that takes a string and returns the parsed value, or `null{:ts}` if invalid.
+2. `serialize`: a function that takes the parsed value and returns a string.
+
+```ts
+import { createParser } from 'nuqs'
+
+const parseAsStarRating = createParser({
+  parse(queryValue) {
+    const inBetween = queryValue.split('★')
+    const isValid = inBetween.length > 1 && inBetween.every(s => s === '')
+    if (!isValid) return null
+    const numStars = inBetween.length - 1
+    return Math.min(5, numStars)
+  },
+  serialize(value) {
+    return Array.from({length: value}, () => '★').join('')
+  }
+})
+```
+
+<Suspense>
+  <CustomParserDemo/>
+</Suspense>
 
 ### Caveat: lossy serializers
 

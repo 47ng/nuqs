@@ -96,3 +96,16 @@
     src: url(https://excalidraw.com/Virgil.woff2);
   }
 }
+
+@layer components {
+  button:hover .star,
+  button:focus .star {
+    fill: currentColor;
+  }
+
+  /* Fill the left siblings of the hovered/focused star */
+  button:has(~ :hover) .star,
+  button:has(~ :focus) .star {
+    fill: currentColor;
+  }
+}
