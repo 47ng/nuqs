@@ -20,6 +20,14 @@ import {
 } from 'nuqs'
 import React from 'react'
 
+export function DemoFallback() {
+  return (
+    <section className="flex h-[100px] animate-pulse items-center justify-center rounded-xl border border-dashed text-zinc-500 sm:h-[104px]">
+      Demo loading...
+    </section>
+  )
+}
+
 function ParserDemoContainer({ children }: { children: React.ReactNode }) {
   return (
     <section className="not-prose flex flex-wrap items-center gap-2 rounded-xl border border-dashed p-2">
@@ -29,8 +37,22 @@ function ParserDemoContainer({ children }: { children: React.ReactNode }) {
   )
 }
 
-export function StringParserDemo() {
-  const [value, setValue] = useQueryState('string', { defaultValue: '' })
+export function GreetingsPrompt({ value }: { value: string | null }) {
+  return (
+    <span className="ml-2 mr-auto text-sm text-zinc-500 sm:flex-1 sm:text-medium">
+      {`Hello, ${value || 'anonymous visitor'}!`}
+    </span>
+  )
+}
+
+export function StringParserDemo({
+  queryKey = 'string',
+  prompt: Prompt
+}: {
+  queryKey?: string
+  prompt?: React.FC<{ value: string | null }>
+}) {
+  const [value, setValue] = useQueryState(queryKey, { defaultValue: '' })
   return (
     <ParserDemoContainer>
       <>
@@ -40,6 +62,7 @@ export function StringParserDemo() {
           placeholder="Type something here..."
           onChange={e => setValue(e.target.value || null)}
         />
+        {Prompt && <Prompt value={value} />}
         <Button variant="secondary" onClick={() => setValue(null)}>
           Clear
         </Button>

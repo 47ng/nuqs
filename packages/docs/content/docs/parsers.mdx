@@ -4,6 +4,7 @@ description: When using strings is not enough
 ---
 
 import {
+  DemoFallback,
   IntegerParserDemo,
   StringParserDemo,
   FloatParserDemo,
@@ -14,14 +15,6 @@ import {
   DateTimestampParserDemo,
   CustomParserDemo
 } from './parsers-demos'
-
-export function DemoFallback() {
-  return (
-    <section className="border rounded-xl h-[100px] sm:h-[104px] border-dashed animate-pulse flex items-center justify-center text-zinc-500">
-      Demo loading...
-    </section>
-  )
-}
 
 Search params are strings by default, but chances are your state is more complex than that.
 

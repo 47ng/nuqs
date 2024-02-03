@@ -1,0 +1,109 @@
+---
+title: Basic usage
+description: Replacing React.useState with useQueryState
+---
+
+import { parseAsArrayOf } from 'nuqs'
+import {
+  DemoFallback,
+  StringParserDemo,
+  GreetingsPrompt
+} from './parsers-demos'
+
+If you are using `React.useState` to manage your local UI state,
+you can replace it with `useQueryState` to sync it with the URL.
+
+```tsx
+'use client'
+
+import { useQueryState } from 'nuqs'
+
+export function Demo() {
+  const [name, setName] = useQueryState('name')
+  return (
+    <>
+      <h1>Hello, {name || 'anonymous visitor'}!</h1>
+      <input value={name || ''} onChange={e => setName(e.target.value)} />
+      <button onClick={() => setName(null)}>Clear</button>
+    </>
+  )
+}
+```
+
+<Suspense fallback={<DemoFallback/>}>
+  <StringParserDemo queryKey='name' prompt={GreetingsPrompt}/>
+</Suspense>
+
+
+`useQueryState` takes one required argument: the key to use in the query string.
+
+Like `React.useState`, it returns an array with the value present in the query
+string as a string (or `null{:ts}` if none was found), and a state updater function.
+
+Example outputs for our demo example:
+
+| URL          | name value   | Notes                                                             |
+| ------------ | ------------ | ----------------------------------------------------------------- |
+| `/`          | `null{:ts}`  | No `name` key in URL                                              |
+| `/?name=`    | `''{:ts}`    | Empty string                                                      |
+| `/?name=foo` | `'foo'{:ts}` ||
+| `/?name=2`   | `'2'{:ts}`   | Always returns a string by default, see [Parsers](/docs/parsers) |
+
+<Callout title="Tip">
+  Setting `null{:ts}` as a value will remove the key from the query string.
+</Callout>
+
+## Default values
+
+When the query string is not present in the URL, the default behaviour is to
+return `null` as state.
+
+It can make state updating and UI rendering tedious.
+Take this example of a simple counter stored in the URL:
+
+```tsx
+import { useQueryState, parseAsInteger } from 'nuqs'
+
+export default () => {
+  const [count, setCount] = useQueryState('count', parseAsInteger)
+  return (
+    <>
+      <pre>count: {count}</pre>
+      <button onClick={() => setCount(0)}>Reset</button>
+      {/* handling null values in setCount is annoying: */}
+      <button onClick={() => setCount(c => c ?? 0 + 1)}>+</button>
+      <button onClick={() => setCount(c => c ?? 0 - 1)}>-</button>
+      <button onClick={() => setCount(null)}>Clear</button>
+    </>
+  )
+}
+```
+
+You can provide a default value as the second argument to `useQueryState` (or
+via the `.withDefault{:ts}` builder method on parsers):
+
+```ts
+const [count] = useQueryState('count', parseAsInteger)
+//      ^? number | null
+
+const [count] = useQueryState('count', parseAsInteger.withDefault(0))
+//      ^? number
+```
+
+It makes it much easier to handle state updates:
+
+```tsx
+const increment = () => setCount(c => c + 1) // c will never be null
+const decrement = () => setCount(c => c - 1) // c will never be null
+const clearCount = () => setCount(null) // Remove query from the URL
+```
+
+<Callout title="Tip">
+  The default value is also returned if the value is _invalid_ for the parser.
+</Callout>
+
+<Callout title="Tip">
+  Setting the state to `null{:ts}` when a default value is specified:
+  1. Clears the query from the URL
+  2. Sets the state to the default value
+</Callout>
