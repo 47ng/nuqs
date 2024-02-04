@@ -1,0 +1,15 @@
+---
+title: Troubleshooting
+description: Common issues and solutions
+---
+
+<Callout title="Tip">
+  Check out the list of [known issues and solutions](https://github.com/47ng/nuqs/issues/423).
+</Callout>
+
+## Pages router
+
+Because the Next.js **pages router** is not available in an SSR context, this
+hook will always return `null` (or the default value if supplied) on SSR/SSG.
+
+This limitation doesn't apply to the app router.
