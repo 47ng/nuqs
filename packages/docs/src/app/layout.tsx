@@ -3,7 +3,7 @@ import { RootProvider } from 'next-docs-ui/provider'
 import { Inter } from 'next/font/google'
 import Script from 'next/script'
 import type { ReactNode } from 'react'
-import { ResponsiveHelper } from '../components/responsive-helper'
+import { ResponsiveHelper } from '../components/responsive-helpers'
 import './globals.css'
 
 const inter = Inter({

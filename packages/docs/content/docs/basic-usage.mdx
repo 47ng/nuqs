@@ -5,9 +5,9 @@ description: Replacing React.useState with useQueryState
 
 import {
   DemoFallback,
-  StringParserDemo,
+  BasicUsageDemo,
   GreetingsPrompt
-} from './parsers-demos'
+} from './demos'
 
 If you are using `React.useState` to manage your local UI state,
 you can replace it with `useQueryState` to sync it with the URL.
@@ -29,10 +29,29 @@ export function Demo() {
 }
 ```
 
+
 <Suspense fallback={<DemoFallback/>}>
-  <StringParserDemo queryKey='name' prompt={GreetingsPrompt}/>
+  <BasicUsageDemo />
 </Suspense>
 
+
+<div className="w-72">
+<Suspense fallback={<DemoFallback/>}>
+  <BasicUsageDemo />
+</Suspense>
+</div>
+
+<div className="w-[24rem]">
+<Suspense fallback={<DemoFallback/>}>
+  <BasicUsageDemo />
+</Suspense>
+</div>
+
+<div className="w-[32rem]">
+<Suspense fallback={<DemoFallback/>}>
+  <BasicUsageDemo />
+</Suspense>
+</div>
 
 `useQueryState` takes one required argument: the key to use in the query string.
 

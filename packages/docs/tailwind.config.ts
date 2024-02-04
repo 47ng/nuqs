@@ -1,3 +1,4 @@
+import containerQueries from '@tailwindcss/container-queries'
 import { docsUi, docsUiPlugins } from 'next-docs-ui/tailwind-plugin'
 import type { Config } from 'tailwindcss'
 import tailwindAnimate from 'tailwindcss-animate'
@@ -85,7 +86,7 @@ const tailwindConfig: Config = {
       ...shadcnThemeExtension
     }
   },
-  plugins: [tailwindAnimate, ...docsUiPlugins, docsUi]
+  plugins: [tailwindAnimate, containerQueries, ...docsUiPlugins, docsUi]
 }
 
 export default tailwindConfig

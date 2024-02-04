@@ -39,7 +39,7 @@ export function QuerySpy(props: React.ComponentProps<'pre'>) {
               <span className="text-[#D73A49] dark:text-[#F97583]">
                 {value}
               </span>
-              <span className="text-zinc-500 last:hidden">&</span>
+              {i < search.size - 1 && <span className="text-zinc-500">&</span>}
             </React.Fragment>
           ))}
         </span>
