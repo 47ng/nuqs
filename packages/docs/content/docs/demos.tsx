@@ -169,6 +169,7 @@ export function BooleanParserDemo() {
         id="boolean-demo"
         checked={value ?? false}
         onCheckedChange={e => setValue(Boolean(e))}
+        className="ml-3"
       />
       <label
         htmlFor="boolean-demo"
