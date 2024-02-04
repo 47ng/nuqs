@@ -21,37 +21,17 @@ export function Demo() {
   const [name, setName] = useQueryState('name')
   return (
     <>
-      <h1>Hello, {name || 'anonymous visitor'}!</h1>
       <input value={name || ''} onChange={e => setName(e.target.value)} />
       <button onClick={() => setName(null)}>Clear</button>
+      <p>Hello, {name || 'anonymous visitor'}!</p>
     </>
   )
 }
 ```
 
-
 <Suspense fallback={<DemoFallback/>}>
   <BasicUsageDemo />
 </Suspense>
-
-
-<div className="w-72">
-<Suspense fallback={<DemoFallback/>}>
-  <BasicUsageDemo />
-</Suspense>
-</div>
-
-<div className="w-[24rem]">
-<Suspense fallback={<DemoFallback/>}>
-  <BasicUsageDemo />
-</Suspense>
-</div>
-
-<div className="w-[32rem]">
-<Suspense fallback={<DemoFallback/>}>
-  <BasicUsageDemo />
-</Suspense>
-</div>
 
 `useQueryState` takes one required argument: the key to use in the query string.
 
