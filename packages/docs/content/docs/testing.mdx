@@ -1,0 +1,13 @@
+---
+title: Testing
+description: Some tips on testing components that use `nuqs`
+---
+
+Currently, the best way to test the behaviour of your components using
+`useQueryState(s)` is end-to-end testing, with tools like Playwright or Cypress.
+
+Running components that use the Next.js router in isolation requires mocking it,
+which is being [worked on](https://github.com/scottrippey/next-router-mock/pull/103)
+for the app router.
+
+See issue #259 for more testing-related discussions.

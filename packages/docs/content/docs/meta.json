@@ -6,6 +6,12 @@
     "basic-usage",
     "parsers",
     "options",
+    "batching",
+    "server-side",
+    "utilities",
+    "debugging",
+    "testing",
+    "seo",
     "advanced-usage",
     "about"
   ]

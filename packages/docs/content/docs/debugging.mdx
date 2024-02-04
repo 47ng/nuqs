@@ -1,0 +1,24 @@
+---
+title: Debugging
+description: Enabling debug logs and user timings markers
+---
+
+You can enable debug logs in the browser by setting the `debug` item in localStorage
+to `nuqs`, and reload the page.
+
+```js
+// In your devtools:
+localStorage.setItem('debug', 'nuqs')
+```
+
+> Note: unlike the `debug` package, this will not work with wildcards, but
+> you can combine it: `localStorage.setItem('debug', '*,nuqs')`
+
+Log lines will be prefixed with `[nuqs]` for `useQueryState` and `[nuq+]` for
+`useQueryStates`, along with other internal debug logs.
+
+User timings markers are also recorded, for advanced performance analysis using
+your browser's devtools.
+
+Providing debug logs when opening an [issue](https://github.com/47ng/nuqs/issues)
+is always appreciated. 🙏
