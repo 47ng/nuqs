@@ -1,0 +1,19 @@
+{
+  "title": "Documentation",
+  "root": true,
+  "pages": [
+    "installation",
+    "basic-usage",
+    "parsers",
+    "options",
+    "batching",
+    "server-side",
+    "utilities",
+    "debugging",
+    "testing",
+    "troubleshooting",
+    "seo",
+    "tips-tricks",
+    "about"
+  ]
+}

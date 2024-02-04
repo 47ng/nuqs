@@ -5,7 +5,7 @@ import { subscribeToQueryUpdates } from 'nuqs'
 import React from 'react'
 import { QuerySpySkeleton } from './query-spy.skeleton'
 
-export const QuerySpy: React.FC = () => {
+export function QuerySpy(props: React.ComponentProps<'pre'>) {
   const initialSearchParams = useSearchParams()
   const [search, setSearch] = React.useState<URLSearchParams>(() => {
     if (typeof location !== 'object') {
@@ -29,7 +29,7 @@ export const QuerySpy: React.FC = () => {
   )
 
   return (
-    <QuerySpySkeleton>
+    <QuerySpySkeleton {...props}>
       {search.size > 0 && (
         <span className="text-zinc-500">
           ?
@@ -39,7 +39,7 @@ export const QuerySpy: React.FC = () => {
               <span className="text-[#D73A49] dark:text-[#F97583]">
                 {value}
               </span>
-              <span className="text-zinc-500 last:hidden">&</span>
+              {i < search.size - 1 && <span className="text-zinc-500">&</span>}
             </React.Fragment>
           ))}
         </span>

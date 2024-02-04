@@ -1,0 +1,158 @@
+---
+title: Options
+description: Configuring nuqs
+---
+
+By default, `nuqs` will update search params:
+1. On the client only (not sending requests to the server),
+2. by replacing the current history entry,
+3. and without scrolling to the top of the page.
+
+These behaviours can be configured, along with a few additional options.
+
+
+## Providing options
+
+Options can be passed at the hook level via the builder pattern:
+
+```ts /withOptions/
+const [state, setState] = useQueryState(
+  'foo',
+  parseAsString.withOptions({ history: 'push' })
+)
+```
+
+Or when calling the state updater function, as a second parameter:
+
+```ts /{ scroll: true }/
+setState('foo', { scroll: true })
+```
+
+Call-level options will override hook level options.
+
+
+## History
+
+By default, state updates are done by replacing the current history entry with
+the updated query when state changes.
+
+You can see this as a sort of `git squash`, where all state-changing
+operations are merged into a single history value.
+
+You can also opt-in to push a new history item for each state change,
+per key, which will let you use the Back button to navigate state
+updates:
+
+```ts /history: 'replace'/ /history: 'push'/
+// Default: replace current history with new state
+useQueryState('foo', { history: 'replace' })
+
+// Append state changes to history:
+useQueryState('foo', { history: 'push' })
+```
+
+<Callout title="Watch out!" type="warn">
+Breaking the Back button can lead to a bad UX, make sure to use this option
+only if the search param(s) to update contribute to a navigation-like experience,
+where hacking the Back button is a UX enhancement rather than a nuisance.
+
+_-- "With great power comes great responsibility."_
+</Callout>
+
+## Shallow
+
+By default, query state updates are done in a _client-first_ manner: there are
+no network calls to the server.
+
+This is equivalent to the `shallow` option of the Next.js router set to `true`.
+
+To opt-in to query updates notifying the server (to re-run `getServerSideProps`
+in the pages router and re-render Server Components on the app router),
+you can set `shallow` to `false`:
+
+```ts /shallow: false/
+useQueryState('foo', { shallow: false })
+```
+
+
+## Scroll
+
+The Next.js router scrolls to the top of the page on navigation updates,
+which may not be desirable when updating the query string with local state.
+
+Query state updates won't scroll to the top of the page by default, but you
+can opt-in to this behaviour:
+
+```ts /scroll: true/
+useQueryState('foo', { scroll: true })
+```
+
+
+## Throttling URL updates
+
+Because of browsers rate-limiting the History API, updates **to the
+URL** are queued and throttled to a default of 50ms, which seems to satisfy
+most browsers even when sending high-frequency query updates, like binding
+to a text input or a slider.
+
+Safari's rate limits are much higher and require a throttle of 120ms (320ms for older
+versions of Safari).
+
+If you want to opt-in to a larger throttle time -- for example to reduce the amount
+of requests sent to the server when paired with `shallow: false` -- you can
+specify it under the `throttleMs` option:
+
+```ts /throttleMs: 1000/
+useQueryState('foo', {
+  // Send updates to the server maximum once every second
+  shallow: false,
+  throttleMs: 1000
+})
+```
+
+> Note: the state returned by the hook is always updated **instantly**, to keep UI responsive.
+> Only changes to the URL, and server requests when using `shallow: false`, are throttled.
+
+If multiple hooks set different throttle values on the same event loop tick,
+the highest value will be used. Also, values lower than 50ms will be ignored,
+to avoid rate-limiting issues.
+[Read more](https://francoisbest.com/posts/2023/storing-react-state-in-the-url-with-nextjs#batching--throttling).
+
+Specifying a `+Infinity` value for `throttleMs` will **disable** updates to the
+URL or the server, which means `useQueryState` will behave essentially like
+`React.useState`.
+
+
+## Transitions
+
+When combined with `shallow: false`, you can use React's `useTransition` hook
+to get loading states while the server is re-rendering server components with
+the updated URL.
+
+Pass in the `startTransition` function from `useTransition` to the options
+to enable this behaviour _(this will set `shallow: false` automatically for you)_:
+
+```tsx /startTransition/1,3#2
+'use client'
+
+import React from 'react'
+import { useQueryState, parseAsString } from 'nuqs'
+
+function ClientComponent({ data }) {
+  // 1. Provide your own useTransition hook:
+  const [isLoading, startTransition] = React.useTransition()
+  const [query, setQuery] = useQueryState(
+    'query',
+    // 2. Pass the `startTransition` as an option:
+    parseAsString().withOptions({ startTransition })
+  )
+  // 3. `isLoading` will be true while the server is re-rendering
+  // and streaming RSC payloads, when the query is updated via `setQuery`.
+
+  // Indicate loading state
+  if (isLoading) return <div>Loading...</div>
+
+  // Normal rendering with data
+  return <div>...</div>
+}
+```

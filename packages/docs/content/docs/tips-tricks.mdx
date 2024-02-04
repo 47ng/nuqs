@@ -1,0 +1,60 @@
+---
+title: Tips and tricks
+description: A collection of good practices and tips to help you get the most out of nuqs
+---
+
+## Reusing hooks
+
+If you find yourself reusing the same hooks in multiple components,
+you can create a custom hook to encapsulate the parser configuration.
+
+<Callout title="Tip">
+All query states bound to the same key will be synchronized across components.
+</Callout>
+
+```ts title="hooks/useCoordinates.ts"
+'use client'
+
+import { parseAsFloat } from 'nuqs'
+
+export function useCoordinates() {
+  return useQueryStates({
+    lat: parseAsFloat.withDefault(0),
+    lng: parseAsFloat.withDefault(0),
+  })
+}
+```
+
+```tsx title="components/Map.tsx"
+'use client'
+
+import { useCoordinates } from '../hooks/useCoordinates'
+
+function MapView() {
+  const [{ lat, lng }] = useCoordinates() // Read-only
+  return (
+    <div>
+      Latitude: {lat}
+      Longitude: {lng}
+    </div>
+  )
+}
+
+function MapControls() {
+  const [{ lat, lng }, setCoordinates] = useCoordinates()
+  return (
+    <div>
+      <input
+        type="number"
+        value={lat}
+        onChange={(e) => setCoordinates({ lat: e.target.valueAsNumber })}
+      />
+      <input
+        type="number"
+        value={lng}
+        onChange={(e) => setCoordinates({ lng: e.target.valueAsNumber })}
+      />
+    </div>
+  )
+}
+```

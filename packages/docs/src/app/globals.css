@@ -74,9 +74,38 @@
   }
 }
 
+@layer components {
+  .nd-codeblock [data-highlighted-chars] {
+    --highlight-color: var(--foreground);
+    --highlight-opacity: 5%;
+    border: none;
+    box-shadow: 0 0 0 3px hsl(var(--highlight-color) / var(--highlight-opacity));
+    padding-block: 1px;
+    background-color: hsl(var(--highlight-color) / var(--highlight-opacity));
+    border-radius: 2px;
+  }
+
+  .dark .nd-codeblock [data-highlighted-chars] {
+    --highlight-opacity: 10%;
+  }
+}
+
 @layer base {
   @font-face {
     font-family: 'Virgil';
     src: url(https://excalidraw.com/Virgil.woff2);
+  }
+}
+
+@layer components {
+  button:hover .star,
+  button:focus .star {
+    fill: currentColor;
+  }
+
+  /* Fill the left siblings of the hovered/focused star */
+  button:has(~ :hover) .star,
+  button:has(~ :focus) .star {
+    fill: currentColor;
   }
 }

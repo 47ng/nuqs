@@ -8,7 +8,7 @@ import Link from 'next/link'
 
 export default function Component() {
   return (
-    <footer className="w-full border-t bg-zinc-900/50 py-12 text-zinc-50">
+    <footer className="w-full border-t bg-zinc-50/50 py-12 dark:bg-zinc-900/50">
       <nav className="container px-4 md:px-6">
         <div className="grid gap-12 lg:grid-cols-3">
           <div className="space-y-6">

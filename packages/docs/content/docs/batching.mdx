@@ -1,0 +1,82 @@
+---
+title: useQueryStates
+description: How to read & update multiple search params at once
+---
+
+## Multiple Queries (batching)
+
+You can call as many state update function as needed in a single event loop
+tick, and they will be applied to the URL asynchronously:
+
+```ts
+const MultipleQueriesDemo = () => {
+  const [lat, setLat] = useQueryState('lat', parseAsFloat)
+  const [lng, setLng] = useQueryState('lng', parseAsFloat)
+  const randomCoordinates = React.useCallback(() => {
+    setLat(Math.random() * 180 - 90)
+    setLng(Math.random() * 360 - 180)
+  }, [])
+}
+```
+
+If you wish to know when the URL has been updated, and what it contains, you can
+await the Promise returned by the state updater function, which gives you the
+updated URLSearchParameters object:
+
+```ts
+const randomCoordinates = React.useCallback(() => {
+  setLat(42)
+  return setLng(12)
+}, [])
+
+randomCoordinates().then((search: URLSearchParams) => {
+  search.get('lat') // 42
+  search.get('lng') // 12, has been queued and batch-updated
+})
+```
+
+<details>
+<summary><em>Implementation details (Promise caching)</em></summary>
+
+The returned Promise is cached until the next flush to the URL occurs,
+so all calls to a setState (of any hook) in the same event loop tick will
+return the same Promise reference.
+
+Due to throttling of calls to the Web History API, the Promise may be cached
+for several ticks. Batched updates will be merged and flushed once to the URL.
+This means not every setState will reflect to the URL, if another one comes
+overriding it before flush occurs.
+
+The returned React state will reflect all set values instantly,
+to keep UI responsive.
+
+---
+
+</details>
+
+## `useQueryStates`
+
+For query keys that should always move together, you can use `useQueryStates`
+with an object containing each key's type:
+
+```ts
+import { useQueryStates, parseAsFloat } from 'nuqs'
+
+const [coordinates, setCoordinates] = useQueryStates(
+  {
+    lat: parseAsFloat.withDefault(45.18),
+    lng: parseAsFloat.withDefault(5.72)
+  },
+  {
+    history: 'push'
+  }
+)
+
+const { lat, lng } = coordinates
+
+// Set all (or a subset of) the keys in one go:
+const search = await setCoordinates({
+  lat: Math.random() * 180 - 90,
+  lng: Math.random() * 360 - 180
+})
+```

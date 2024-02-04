@@ -1,0 +1,125 @@
+---
+title: Server-Side usage
+description: Type-safe search params on the server
+---
+
+If you wish to access the searchParams in a deeply nested Server Component
+(ie: not in the Page component), you can use `createSearchParamsCache`
+to do so in a type-safe manner.
+
+<Callout type="warn" title="Note">
+  Parsers **don't validate** your data. If you expect positive integers
+  or JSON-encoded objects of a particular shape, you'll need to feed the result
+  of the parser to a schema validation library, like [Zod](https://zod.dev).
+
+  Built-in validation support is coming. [Read the RFC](https://github.com/47ng/nuqs/discussions/446)
+</Callout>
+
+```tsx title="searchParams.ts"
+import {
+  createSearchParamsCache,
+  parseAsInteger,
+  parseAsString
+} from 'nuqs/server'
+// Note: import from '…/parsers' to avoid the "use client" directive
+
+export const searchParamsCache = createSearchParamsCache({
+  // List your search param keys and associated parsers here:
+  q: parseAsString.withDefault(''),
+  maxResults: parseAsInteger.withDefault(10)
+})
+```
+
+```tsx title="page.tsx"
+import { searchParamsCache } from './searchParams'
+
+export default function Page({
+  searchParams
+}: {
+  searchParams: Record<string, string | string[] | undefined>
+}) {
+  // ⚠️ Don't forget to call `parse` here.
+  // You can access type-safe values from the returned object:
+  const { q: query } = searchParamsCache.parse(searchParams)
+  return (
+    <div>
+      <h1>Search Results for {query}</h1>
+      <Results />
+    </div>
+  )
+}
+
+function Results() {
+  // Access type-safe search params in children server components:
+  const maxResults = searchParamsCache.get('maxResults')
+  return <span>Showing up to {maxResults} results</span>
+}
+```
+
+The cache will only be valid for the current page render
+(see React's [`cache`](https://react.dev/reference/react/cache) function).
+
+Note: the cache only works for **server components**, but you may share your
+parser declaration with `useQueryStates` for type-safety in client components:
+
+```tsx title="searchParams.ts"
+import {
+  parseAsFloat,
+  createSearchParamsCache
+} from 'nuqs/server'
+
+export const coordinatesParsers = {
+  lat: parseAsFloat.withDefault(45.18),
+  lng: parseAsFloat.withDefault(5.72)
+}
+export const coordinatesCache = createSearchParamsCache(coordinatesParsers)
+
+```
+
+```tsx title="page.tsx"
+import { coordinatesCache } from './searchParams'
+import { Server } from './server'
+import { Client } from './client'
+
+export default function Page({ searchParams }) {
+  coordinatesCache.parse(searchParams)
+  return (
+    <>
+      <Server />
+      <Suspense>
+        <Client />
+      </Suspense>
+    </>
+  )
+}
+
+```
+
+```tsx title="server.tsx"
+import { coordinatesCache } from './searchParams'
+
+export function Server() {
+  const { lat, lng } = coordinatesCache.all()
+  // or access keys individually:
+  const lat = coordinatesCache.get('lat')
+  const lng = coordinatesCache.get('lng')
+  return (
+    <span>
+      Latitude: {lat} - Longitude: {lng}
+    </span>
+  )
+}
+
+```
+
+```tsx title="client.tsx"
+'use client'
+
+import { useQueryStates } from 'nuqs'
+import { coordinatesParsers } from './searchParams'
+
+export function Client() {
+  const [{ lat, lng }, setCoordinates] = useQueryStates(coordinatesParsers)
+  // ...
+}
+```
