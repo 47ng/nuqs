@@ -4,7 +4,6 @@ import { crawlDependents } from './crawler'
 
 export async function DependentsSection() {
   const dependents = await crawlDependents()
-  console.log(dependents.map(dep => dep.img))
   return (
     <section className="container">
       <h2 className="mb-8 text-center text-3xl font-bold tracking-tighter dark:text-white md:text-4xl xl:text-5xl">
