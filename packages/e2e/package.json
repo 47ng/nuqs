@@ -26,14 +26,14 @@
     "react-dom": "^18.2.0"
   },
   "devDependencies": {
-    "@types/node": "^20.11.5",
-    "@types/react": "^18.2.47",
+    "@types/node": "^20.11.16",
+    "@types/react": "^18.2.54",
     "@types/react-dom": "^18.2.18",
     "@types/semver": "^7.5.6",
     "@types/webpack": "^5.28.5",
-    "cypress": "^13.6.3",
+    "cypress": "^13.6.4",
     "npm-run-all": "^4.1.5",
-    "semver": "^7.5.4",
+    "semver": "^7.6.0",
     "typescript": "^5.3.3"
   }
 }
