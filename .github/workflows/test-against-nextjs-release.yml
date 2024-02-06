@@ -14,14 +14,12 @@ env:
 
 jobs:
   test_against_nextjs_release:
-    name: CI (${{ inputs.version }}${{ matrix.base-path && ' basePath' || ''}}${{ matrix.window-history-support && ' WHS' || ''}})
+    name: CI (${{ inputs.version }}${{ matrix.base-path && ' basePath' || ''}})
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         base-path: [false, '/base']
-        window-history-support: [true, false]
-
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
       - uses: pnpm/action-setup@d882d12c64e032187b2edb46d3a0d003b7a43598
@@ -39,7 +37,6 @@ jobs:
         run: pnpm run test
         env:
           BASE_PATH: ${{ matrix.base-path && matrix.base-path || '/' }}
-          WINDOW_HISTORY_SUPPORT: ${{ matrix.window-history-support }}
           TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
           TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
       - name: Save Cypress artifacts
@@ -47,13 +44,13 @@ jobs:
         if: failure()
         with:
           path: packages/e2e/cypress/screenshots
-          name: ci-${{ inputs.version }}${{ matrix.base-path && '-basePath' || ''}}${{ matrix.window-history-support && '-whs' || ''}}
+          name: ci-${{ inputs.version }}${{ matrix.base-path && '-basePath' || ''}}
       - uses: 47ng/actions-slack-notify@main
         name: Notify on Slack
         if: always()
         with:
           status: ${{ job.status }}
-          jobName: next@${{ inputs.version }}${{ matrix.base-path && ' basePath' || ''}}${{ matrix.window-history-support && ' WHS' || ''}}
+          jobName: next@${{ inputs.version }}${{ matrix.base-path && ' basePath' || ''}}
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
