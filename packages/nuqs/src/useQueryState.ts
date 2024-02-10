@@ -205,6 +205,7 @@ export function useQueryState<T = string>(
     parse = x => x as unknown as T,
     serialize = String,
     defaultValue = undefined,
+    clearOnDefault = false,
     startTransition
   }: Partial<UseQueryStateOptions<T>> & {
     defaultValue?: T
@@ -215,6 +216,7 @@ export function useQueryState<T = string>(
     throttleMs: FLUSH_RATE_LIMIT_MS,
     parse: x => x as unknown as T,
     serialize: String,
+    clearOnDefault: false,
     defaultValue: undefined
   }
 ) {
@@ -278,10 +280,15 @@ export function useQueryState<T = string>(
 
   const update = React.useCallback(
     (stateUpdater: React.SetStateAction<T | null>, options: Options = {}) => {
-      const newValue: T | null = isUpdaterFunction(stateUpdater)
+      let newValue: T | null = isUpdaterFunction(stateUpdater)
         ? stateUpdater(stateRef.current ?? defaultValue ?? null)
         : stateUpdater
-
+      if (
+        (options.clearOnDefault || clearOnDefault) &&
+        newValue === defaultValue
+      ) {
+        newValue = null
+      }
       // Sync all hooks state (including this one)
       emitter.emit(key, newValue)
       enqueueQueryStringUpdate(key, newValue, serialize, {
