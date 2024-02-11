@@ -17,7 +17,7 @@ export async function StarHistoryGraph({
         lastDate={stars.bins[0].date}
         height={200}
         summaryValue={stars.count}
-        className="text-blue-500"
+        className="text-yellow-500"
       />
       <p className="absolute left-2 top-2 flex items-center gap-2 text-2xl font-semibold tabular-nums md:text-6xl">
         <Star

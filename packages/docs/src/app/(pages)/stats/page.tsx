@@ -1,6 +1,7 @@
 import { Suspense } from 'react'
 
 import dynamicImport from 'next/dynamic'
+import { DownloadsGraph } from './_components/downloads'
 import { StarHistoryGraph } from './_components/star-history-graph'
 import { getVersions } from './lib/versions'
 
@@ -23,15 +24,17 @@ export default async function StatsPage() {
         <Suspense fallback={widgetSkeleton}>
           <StarHistoryGraph />
         </Suspense>
+        <Suspense>
+          <DownloadsGraph />
+        </Suspense>
         <Suspense fallback={widgetSkeleton}>
           <VersionAdoptionGraph records={versions} />
         </Suspense>
         <img
           alt="Project analytics and stats"
           src="https://repobeats.axiom.co/api/embed/3ee740e4729dce3992bfa8c74645cfebad8ba034.svg"
-          className="mx-auto"
+          className="mx-auto xl:h-[360px]"
         />
-        {widgetSkeleton}
       </section>
     </main>
   )
