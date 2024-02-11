@@ -10,7 +10,9 @@ export const FLUSH_RATE_LIMIT_MS = getDefaultThrottle()
 
 type UpdateMap = Map<string, string | null>
 const updateQueue: UpdateMap = new Map()
-const queueOptions: Required<Omit<Options, 'startTransition'>> = {
+const queueOptions: Required<
+  Omit<Options, 'startTransition' | 'clearOnDefault'>
+> = {
   history: 'replace',
   scroll: false,
   shallow: true,

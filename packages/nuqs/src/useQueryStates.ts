@@ -63,6 +63,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
     scroll = false,
     shallow = true,
     throttleMs = FLUSH_RATE_LIMIT_MS,
+    clearOnDefault = false,
     startTransition
   }: Partial<UseQueryStatesOptions> = {}
 ): UseQueryStatesReturn<KeyMap> {
@@ -145,10 +146,16 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
           ? stateUpdater(stateRef.current)
           : stateUpdater
       debug('[nuq+ `%s`] setState: %O', keys, newState)
-      for (const [key, value] of Object.entries(newState)) {
+      for (let [key, value] of Object.entries(newState)) {
         const config = keyMap[key]
         if (!config) {
           continue
+        }
+        if (
+          (options.clearOnDefault || clearOnDefault) &&
+          value === config.defaultValue
+        ) {
+          value = null
         }
         emitter.emit(key, value)
         enqueueQueryStringUpdate(key, value, config.serialize ?? String, {

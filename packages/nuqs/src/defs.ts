@@ -60,6 +60,15 @@ export type Options<Shallow = unknown> = {
    * in the same Options object.
    */
   startTransition?: StartTransition<Shallow>
+
+  /**
+   * Clear the key-value pair from the URL query string when setting the state
+   * to the default value.
+   *
+   * Defaults to `false` to keep backwards-compatiblity when the default value
+   * changes (prefer explicit URLs whose meaning don't change).
+   */
+  clearOnDefault?: boolean
 }
 
 export type Nullable<T> = {
