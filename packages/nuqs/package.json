@@ -71,8 +71,8 @@
   },
   "devDependencies": {
     "@size-limit/preset-small-lib": "^11.0.2",
-    "@types/node": "^20.11.16",
-    "@types/react": "^18.2.54",
+    "@types/node": "^20.11.17",
+    "@types/react": "^18.2.55",
     "@types/react-dom": "^18.2.18",
     "next": "14.0.1",
     "npm-run-all": "^4.1.5",
