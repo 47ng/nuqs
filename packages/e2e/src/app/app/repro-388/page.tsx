@@ -30,7 +30,7 @@ function Client() {
       <button id="start" onClick={() => setCounter(1)}>
         Start
       </button>
-      <button id="start" onClick={() => manualPrefetch()}>
+      <button id="manual-prefetch" onClick={() => manualPrefetch()}>
         Manual prefetch
       </button>
       <>
