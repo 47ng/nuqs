@@ -81,6 +81,9 @@
       "isarray": "npm:@nolyfill/isarray@latest",
       "side-channel": "npm:@nolyfill/side-channel@latest",
       "string.prototype.padend": "npm:@nolyfill/string.prototype.padend@latest"
+    },
+    "patchedDependencies": {
+      "next@14.1.1-canary.0": "patches/next@14.1.1-canary.0.patch"
     }
   }
 }
