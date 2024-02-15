@@ -1,6 +1,6 @@
 /// <reference types="cypress" />
 
-it.only('repro-359', () => {
+it('repro-359', () => {
   cy.visit('/app/repro-359')
   cy.contains('#hydration-marker', 'hydrated').should('be.hidden')
 
