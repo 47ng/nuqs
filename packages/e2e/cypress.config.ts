@@ -24,7 +24,8 @@ export default defineConfig({
     env: {
       basePath,
       windowHistorySupport,
-      supportsShallowRouting: supportsShallowRouting(nextJsVersion)
+      supportsShallowRouting: supportsShallowRouting(nextJsVersion),
+      nextJsVersion
     }
   }
 })
