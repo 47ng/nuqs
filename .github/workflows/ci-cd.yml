@@ -18,7 +18,7 @@ jobs:
     # Watch out! When changing the job name,
     # update the required checks in GitHub
     # branch protection settings for `next`.
-    name: CI (${{ matrix.next-version }}${{ matrix.base-path && ' basePath' || ''}}${{ matrix.window-history-support && ' WHS' || ''}})
+    name: CI (${{ matrix.next-version }}${{ matrix.base-path && ' basePath' || ''}})
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -27,7 +27,6 @@ jobs:
         # update the required checks in GitHub
         # branch protection settings for `next`.
         base-path: [false, '/base']
-        window-history-support: [false]
         next-version:
           - '13.4' # App router in GA
           - '13.5'
@@ -38,10 +37,6 @@ jobs:
           - '14.0.4'
           - latest # Current latest is 14.1.0
           - local # Use the local workspace version (don't override)
-        include:
-          # 14.0.4 doesn't require the WHS flag, but supports it
-          - next-version: '14.0.4'
-            window-history-support: true
 
     steps:
       - uses: actions/checkout@d632683dd7b4114ad314bca15554477dd762a938
@@ -59,7 +54,6 @@ jobs:
         run: pnpm run test ${{ github.ref_name == 'ci' && '--force' || '' }}
         env:
           BASE_PATH: ${{ matrix.base-path && matrix.base-path || '/' }}
-          WINDOW_HISTORY_SUPPORT: ${{ matrix.window-history-support }}
           TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
           TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
           E2E_NO_CACHE_ON_RERUN: ${{ github.run_attempt }}
@@ -68,13 +62,13 @@ jobs:
         if: failure()
         with:
           path: packages/e2e/cypress/screenshots
-          name: ci-${{ matrix.next-version }}${{ matrix.base-path && '-basePath' || ''}}${{ matrix.window-history-support && '-whs' || ''}}
+          name: ci-${{ matrix.next-version }}${{ matrix.base-path && '-basePath' || ''}}
       - uses: 47ng/actions-slack-notify@main
         name: Notify on Slack
         if: always()
         with:
           status: ${{ job.status }}
-          jobName: next@${{ matrix.next-version }}${{ matrix.base-path && ' basePath' || ''}}${{ matrix.window-history-support && ' WHS' || ''}}
+          jobName: next@${{ matrix.next-version }}${{ matrix.base-path && ' basePath' || ''}}
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
