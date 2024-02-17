@@ -1,7 +1,20 @@
+'use client'
+
+import React, { Suspense } from 'react'
+
 export default function Page() {
   return (
-    <p id="windowHistorySupport">
-      {String(process.env.__NEXT_WINDOW_HISTORY_SUPPORT)}
-    </p>
+    <Suspense>
+      <Client />
+    </Suspense>
   )
+}
+
+function Client() {
+  const [nextJsVersion, setNextJsVersion] = React.useState<string | null>(null)
+  React.useEffect(() => {
+    // @ts-expect-error
+    setNextJsVersion(window.next?.version)
+  }, [])
+  return <p id="nextJsVersion">{nextJsVersion}</p>
 }
