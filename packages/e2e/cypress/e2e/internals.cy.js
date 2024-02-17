@@ -4,9 +4,6 @@ describe('internals', () => {
   it('works in app router', () => {
     cy.visit('/app/internals')
     cy.contains('#hydration-marker', 'hydrated').should('be.hidden')
-    cy.get('#windowHistorySupport').should(
-      'have.text',
-      Cypress.env('windowHistorySupport')
-    )
+    cy.get('#nextJsVersion').should('have.text', Cypress.env('nextJsVersion'))
   })
 })
