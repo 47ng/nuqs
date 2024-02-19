@@ -86,24 +86,22 @@ async function sendNotificationEmail(thisVersion, appRouterFile) {
   const release = await fetch(
     `https://api.github.com/repos/vercel/next.js/releases/tags/v${thisVersion}`
   ).then(res => res.json())
-  const body = `Changes to the app router have been published in Next.js ${thisVersion}.
-
-Release: ${release.html_url}
+  const subject = `[nuqs] Next.js ${thisVersion} has app router changes`
+  const body = `Release: ${release.html_url}
 
 ${release.body}
-
 ---
 
 ${
   appRouterFile.patch
-    ? `The patch is:
+    ? `App router changes:
   \`\`\`diff
   ${appRouterFile.patch}
   \`\`\``
     : 'No patch available'
 }
 `
-  console.info('Sending email')
+  console.info('Sending email:', subject)
   console.info(body)
   if (!env.CI) {
     return
@@ -111,7 +109,7 @@ ${
   return client.sendEmail({
     from: env.EMAIL_ADDRESS_FROM,
     to: env.EMAIL_ADDRESS_TO,
-    subject: `[nuqs] Next.js ${thisVersion} has app router changes`,
+    subject,
     textbody: body,
     tags: ['nuqs']
   })
@@ -122,8 +120,9 @@ ${
  */
 function sendGAEmail(thisVersion) {
   const client = new MailPace.DomainClient(env.MAILPACE_API_TOKEN)
+  const subject = `[nuqs] Next.js ${thisVersion} was published to GA`
   const body = `https://github.com/vercel/next.js/releases/tag/v${thisVersion}`
-  console.info('Sending email')
+  console.info('Sending email:', subject)
   console.info(body)
   if (!env.CI) {
     return
@@ -131,7 +130,7 @@ function sendGAEmail(thisVersion) {
   return client.sendEmail({
     from: env.EMAIL_ADDRESS_FROM,
     to: env.EMAIL_ADDRESS_TO,
-    subject: `[nuqs] Next.js ${thisVersion} was published to GA`,
+    subject,
     textbody: body,
     tags: ['nuqs']
   })
