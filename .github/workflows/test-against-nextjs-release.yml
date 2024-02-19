@@ -78,7 +78,7 @@ jobs:
       - name: Install dependencies
         run: pnpm install
       - name: Check for changes in app router
-        run: ./next-release-analyser.mjs
+        run: ./next-release-analyser.mjs --version ${{ inputs.version }}
         working-directory: packages/scripts
         env:
           MAILPACE_API_TOKEN: ${{ secrets.MAILPACE_API_TOKEN }}

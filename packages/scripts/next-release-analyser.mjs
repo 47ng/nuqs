@@ -1,10 +1,10 @@
-#!/usr/bin/env zx
+#!/usr/bin/env node
 // @ts-check
 
 import MailPace from '@mailpace/mailpace.js'
 import { createEnv } from '@t3-oss/env-core'
+import minimist from 'minimist'
 import { z } from 'zod'
-import 'zx/globals'
 
 const canaryRegexp = /^(\d+)\.(\d+)\.(\d+)-canary\.(\d+)$/
 
@@ -26,6 +26,7 @@ const fileSchema = z.object({
 })
 
 async function main() {
+  const argv = minimist(process.argv.slice(2))
   const thisVersion = argv.version
   const previousVersion = getPreviousVersion(argv.version)
 
