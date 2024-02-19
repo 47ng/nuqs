@@ -1,0 +1,17 @@
+{
+  "name": "scripts",
+  "private": true,
+  "version": "0.0.0-internal",
+  "type": "module",
+  "dependencies": {
+    "@mailpace/mailpace.js": "^0.1.1",
+    "@t3-oss/env-core": "^0.9.2",
+    "minimist": "^1.2.8",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@types/minimist": "^1.2.5",
+    "@types/node": "^20.11.17",
+    "typescript": "^5.3.3"
+  }
+}
