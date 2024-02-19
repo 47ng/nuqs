@@ -6,10 +6,15 @@ import { createEnv } from '@t3-oss/env-core'
 import minimist from 'minimist'
 import { z } from 'zod'
 
+const gaRegexp = /^\d+\.\d+\.\d+$/
 const canaryRegexp = /^(\d+)\.(\d+)\.(\d+)-canary\.(\d+)$/
 
 const env = createEnv({
   server: {
+    CI: z
+      .string()
+      .optional()
+      .transform(v => v === 'true'),
     MAILPACE_API_TOKEN: z.string(),
     EMAIL_ADDRESS_FROM: z.string().email(),
     EMAIL_ADDRESS_TO: z.string().email()
@@ -28,6 +33,11 @@ const fileSchema = z.object({
 async function main() {
   const argv = minimist(process.argv.slice(2))
   const thisVersion = argv.version
+  if (gaRegexp.test(thisVersion)) {
+    await sendGAEmail(thisVersion)
+    return
+  }
+
   const previousVersion = getPreviousVersion(argv.version)
 
   if (!previousVersion) {
@@ -45,7 +55,7 @@ async function main() {
     console.log('No changes in app-router.tsx')
     process.exit(0)
   }
-  sendNotificationEmail(thisVersion, appRouterFile)
+  await sendNotificationEmail(thisVersion, appRouterFile)
 }
 
 // --
@@ -71,11 +81,18 @@ function getPreviousVersion(version) {
  * @param {z.infer<typeof fileSchema>} appRouterFile
  * @returns
  */
-function sendNotificationEmail(thisVersion, appRouterFile) {
+async function sendNotificationEmail(thisVersion, appRouterFile) {
   const client = new MailPace.DomainClient(env.MAILPACE_API_TOKEN)
+  const release = await fetch(
+    `https://api.github.com/repos/vercel/next.js/releases/tags/v${thisVersion}`
+  ).then(res => res.json())
   const body = `Changes to the app router have been published in Next.js ${thisVersion}.
 
-Release: https://github.com/vercel/next.js/releases/tag/v${thisVersion}
+Release: ${release.html_url}
+
+${release.body}
+
+---
 
 ${
   appRouterFile.patch
@@ -88,10 +105,33 @@ ${
 `
   console.info('Sending email')
   console.info(body)
+  if (!env.CI) {
+    return
+  }
   return client.sendEmail({
     from: env.EMAIL_ADDRESS_FROM,
     to: env.EMAIL_ADDRESS_TO,
     subject: `[nuqs] Next.js ${thisVersion} has app router changes`,
+    textbody: body,
+    tags: ['nuqs']
+  })
+}
+
+/**
+ * @param {string} thisVersion
+ */
+function sendGAEmail(thisVersion) {
+  const client = new MailPace.DomainClient(env.MAILPACE_API_TOKEN)
+  const body = `https://github.com/vercel/next.js/releases/tag/v${thisVersion}`
+  console.info('Sending email')
+  console.info(body)
+  if (!env.CI) {
+    return
+  }
+  return client.sendEmail({
+    from: env.EMAIL_ADDRESS_FROM,
+    to: env.EMAIL_ADDRESS_TO,
+    subject: `[nuqs] Next.js ${thisVersion} was published to GA`,
     textbody: body,
     tags: ['nuqs']
   })
