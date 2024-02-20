@@ -9,7 +9,7 @@ type Result = {
   repo: string
   stars: number
   pkg: string
-  img: string
+  avatarID: string
 }
 
 export async function crawlDependents() {
@@ -51,7 +51,8 @@ async function crawlDependentsPage(url: string) {
   const $ = cheerio.load(html)
   const results: Result[] = []
   $('[data-test-id="dg-repo-pkg-dependent"]').each((index, element) => {
-    const img = $(element).find('img').attr('src')?.replace('s=40', 's=64')
+    const img = $(element).find('img').attr('src') // ?.replace('s=40', 's=64')
+    const avatarID = getAvatarID(img ?? '')
     const repoLink = $(element).find('a[data-hovercard-type="repository"]')
     const starsStr = $(element)
       .find('a[data-hovercard-type="repository"]')
@@ -65,15 +66,28 @@ async function crawlDependentsPage(url: string) {
       .text()
       .trim()
     const stars = parseInt(starsStr.replace(/,/g, ''), 10)
-    if (!isNaN(stars) && repoLink.length > 0 && ownerStr.length > 0 && img) {
+    if (
+      !isNaN(stars) &&
+      repoLink.length > 0 &&
+      ownerStr.length > 0 &&
+      avatarID
+    ) {
       const repoName = repoLink.text()
       const repo = `${ownerStr}/${repoName}`
       if (!['franky47', '47ng'].includes(ownerStr)) {
-        results.push({ repo, stars, pkg, img })
+        results.push({ repo, stars, pkg, avatarID })
       }
     }
   })
   const nextButton = $('div.paginate-container a:contains(Next)')
   const nextPage = nextButton?.attr('href') ?? null
   return { results, nextPage }
+}
+
+const gitHubAvatarURLRegExp =
+  /^https:\/\/avatars\.githubusercontent\.com\/u\/(\d+)\?/
+
+function getAvatarID(src: string) {
+  const match = src.match(gitHubAvatarURLRegExp)
+  return match ? match[1] : undefined
 }

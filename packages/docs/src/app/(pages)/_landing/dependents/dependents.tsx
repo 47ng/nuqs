@@ -29,7 +29,7 @@ export async function DependentsSection() {
             className="relative h-8 w-8 rounded-full"
           >
             <Image
-              src={dep.img}
+              src={`https://avatars.githubusercontent.com/u/${dep.avatarID}?s=64&v=4`}
               alt={dep.repo}
               className="rounded-full"
               width={64}
