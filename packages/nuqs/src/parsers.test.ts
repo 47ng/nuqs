@@ -96,3 +96,14 @@ describe('parsers', () => {
     expect(p.parseServerSide(undefined)).toBe('bar')
   })
 })
+
+describe('parsers/equality', () => {
+  test('parseAsArrayOf', () => {
+    const eq = parseAsArrayOf(parseAsString).eq!
+    expect(eq([], [])).toBe(true)
+    expect(eq(['foo'], ['foo'])).toBe(true)
+    expect(eq(['foo', 'bar'], ['foo', 'bar'])).toBe(true)
+    expect(eq([], ['foo'])).toBe(false)
+    expect(eq(['foo'], ['bar'])).toBe(false)
+  })
+})

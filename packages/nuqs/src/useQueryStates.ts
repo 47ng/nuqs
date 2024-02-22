@@ -153,7 +153,9 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
         }
         if (
           (options.clearOnDefault || clearOnDefault) &&
-          value === config.defaultValue
+          value !== null &&
+          config.defaultValue !== undefined &&
+          (config.eq ?? ((a, b) => a === b))(value, config.defaultValue)
         ) {
           value = null
         }

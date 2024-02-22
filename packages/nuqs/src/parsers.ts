@@ -1,9 +1,12 @@
 import type { Options } from './defs'
 import { safeParse } from './utils'
 
+type Require<T, Keys extends keyof T> = Pick<Required<T>, Keys> & Omit<T, Keys>
+
 export type Parser<T> = {
   parse: (value: string) => T | null
   serialize?: (value: T) => string
+  eq?: (a: T, b: T) => boolean
 }
 
 export type ParserBuilder<T> = Required<Parser<T>> &
@@ -70,7 +73,9 @@ export type ParserBuilder<T> = Required<Parser<T>> &
  * Wrap a set of parse/serialize functions into a builder pattern parser
  * you can pass to one of the hooks, making its default value type safe.
  */
-export function createParser<T>(parser: Required<Parser<T>>): ParserBuilder<T> {
+export function createParser<T>(
+  parser: Require<Parser<T>, 'parse' | 'serialize'>
+): ParserBuilder<T> {
   function parseServerSideNullable(value: string | string[] | undefined) {
     if (typeof value === 'undefined') {
       return null
@@ -91,6 +96,7 @@ export function createParser<T>(parser: Required<Parser<T>>): ParserBuilder<T> {
   }
 
   return {
+    eq: (a, b) => a === b,
     ...parser,
     parseServerSide: parseServerSideNullable,
     withDefault(defaultValue) {
@@ -318,7 +324,11 @@ export function parseAsJson<T>(parser?: (value: unknown) => T) {
         return null
       }
     },
-    serialize: value => JSON.stringify(value)
+    serialize: value => JSON.stringify(value),
+    eq(a, b) {
+      // Check for referential equality first
+      return a === b || JSON.stringify(a) === JSON.stringify(b)
+    }
   })
 }
 
@@ -333,6 +343,7 @@ export function parseAsArrayOf<ItemType>(
   itemParser: Parser<ItemType>,
   separator = ','
 ) {
+  const itemEq = itemParser.eq ?? ((a: ItemType, b: ItemType) => a === b)
   const encodedSeparator = encodeURIComponent(separator)
   // todo: Handle default item values and make return type non-nullable
   return createParser({
@@ -361,6 +372,15 @@ export function parseAsArrayOf<ItemType>(
             : String(value)
           return str.replaceAll(separator, encodedSeparator)
         })
-        .join(separator)
+        .join(separator),
+    eq(a, b) {
+      if (a === b) {
+        return true // Referentially stable
+      }
+      if (a.length !== b.length) {
+        return false
+      }
+      return a.every((value, index) => itemEq(value, b[index]!))
+    }
   })
 }
