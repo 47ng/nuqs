@@ -1,9 +1,16 @@
 import { cn } from '@/src/lib/utils'
 import Image from 'next/image'
-import { crawlDependents } from './crawler'
+import type { Result } from './crawler'
 
 export async function DependentsSection() {
-  const dependents = await crawlDependents()
+  const dependents: Result[] = await fetch(
+    'https://nuqs.47ng.com/api/dependents',
+    {
+      next: {
+        revalidate: 86_400
+      }
+    }
+  ).then(res => res.json())
   return (
     <section className="container">
       <h2 className="mb-8 text-center text-3xl font-bold tracking-tighter dark:text-white md:text-4xl xl:text-5xl">

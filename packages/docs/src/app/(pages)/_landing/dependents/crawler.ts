@@ -5,7 +5,7 @@ enum PackageId {
   nextUseQueryState = 'UGFja2FnZS0xMTYwOTg5NDIx'
 }
 
-type Result = {
+export type Result = {
   repo: string
   stars: number
   pkg: string
@@ -47,7 +47,9 @@ async function crawlDependentsPage(url: string) {
     new URLSearchParams(url.split('?')[1]).get('package_id') === PackageId.nuqs
       ? 'nuqs'
       : 'next-usequerystate'
-  const html = await fetch(url).then(res => res.text())
+  const html = await fetch(url, {
+    cache: 'no-store'
+  }).then(res => res.text())
   const $ = cheerio.load(html)
   const results: Result[] = []
   $('[data-test-id="dg-repo-pkg-dependent"]').each((index, element) => {
