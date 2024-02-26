@@ -9,9 +9,9 @@
     "start": "next start"
   },
   "dependencies": {
-    "@faker-js/faker": "^8.4.0",
     "@headlessui/react": "^1.7.18",
     "@headlessui/tailwindcss": "^0.2.0",
+    "@faker-js/faker": "^8.4.1",
     "@radix-ui/react-checkbox": "^1.0.4",
     "@radix-ui/react-label": "^2.0.2",
     "@radix-ui/react-separator": "^1.0.3",
@@ -47,8 +47,8 @@
   "devDependencies": {
     "@types/mdx": "^2.0.11",
     "@types/react": "^18.2.55",
-    "@types/react-dom": "^18.2.18",
-    "@types/semver": "^7.5.6",
+    "@types/react-dom": "^18.2.19",
+    "@types/semver": "^7.5.7",
     "autoprefixer": "^10.4.17",
     "postcss": "^8.4.35",
     "prettier": "^3.2.5",
