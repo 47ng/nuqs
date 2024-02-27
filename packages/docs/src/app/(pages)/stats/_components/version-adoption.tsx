@@ -54,7 +54,7 @@ export default function VersionAdoptionGraph({
     .map(([key, _]) => key)
   const latest = packageRecords.at(-1)?.latest ?? ''
   return (
-    <div className="relative row-span-2 min-h-[16rem] rounded border">
+    <div className="relative col-span-2 h-80 rounded border">
       <ResponsiveContainer className="absolute inset-0 z-0 text-xs">
         <LineChart
           data={packageRecords.map(r => (relative ? r.relative : r.downloads))}
