@@ -1,8 +1,10 @@
 'use client'
 
-import { LineChart } from '@tremor/react'
+import { LineChart, Tab, TabGroup, TabList } from '@tremor/react'
 import { Boxes } from 'lucide-react'
+import { useQueryState } from 'nuqs'
 import { formatStatNumber } from '../lib/format'
+import { pkgOptions, pkgParser } from '../searchParams'
 import { Widget } from './widget'
 
 type VersionProps = {
@@ -25,6 +27,12 @@ type VersionProps = {
 // stroke-purple-500 fill-purple-500 bg-purple-500 text-purple-500
 
 export function Versions({ records, versions }: VersionProps) {
+  const [activeTab, setActiveTab] = useQueryState(
+    'pkg',
+    pkgParser.withOptions({
+      shallow: false
+    })
+  )
   return (
     <Widget
       className="lg:col-span-2"
@@ -32,6 +40,17 @@ export function Versions({ records, versions }: VersionProps) {
         <>
           <Boxes size={24} strokeWidth={1.5} />
           Version adoption
+          <TabGroup
+            className="ml-auto w-auto"
+            index={pkgOptions.indexOf(activeTab)}
+            onIndexChange={index => setActiveTab(pkgOptions[index])}
+          >
+            <TabList variant="solid">
+              <Tab>nuqs</Tab>
+              <Tab>next-usequerystate</Tab>
+              <Tab>combined</Tab>
+            </TabList>
+          </TabGroup>
         </>
       }
     >

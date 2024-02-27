@@ -17,7 +17,9 @@ export function Widget({
       className={cn('px-4 py-0 pb-2 pt-4 dark:bg-background', className)}
       {...props}
     >
-      <h3 className="flex items-center gap-2 text-lg font-bold">{title}</h3>
+      <h3 className="flex flex-wrap items-center gap-2 text-lg font-bold">
+        {title}
+      </h3>
       {children}
     </Card>
   )

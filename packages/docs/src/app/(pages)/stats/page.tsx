@@ -1,18 +1,25 @@
 import { Card } from '@tremor/react'
 import Image from 'next/image'
+import { SearchParams } from 'nuqs/server'
 import { Suspense } from 'react'
 import { NPMDownloads, NPMStats } from './_components/downloads'
 import { StarHistoryGraph } from './_components/stars'
 import { Versions } from './_components/versions'
-import { getVersions } from './lib/versions'
+import { getVersions, sumVersions } from './lib/versions'
+import { searchParamsCache } from './searchParams'
 
 export const dynamic = 'force-dynamic'
 
-export default async function StatsPage() {
-  const versions = await getVersions()
-  const versionsToShow = Object.entries(
-    versions.filter(v => v.package === 'nuqs').at(-1)?.relative ?? {}
-  )
+type StatsPageProps = {
+  searchParams: SearchParams
+}
+
+export default async function StatsPage({ searchParams }: StatsPageProps) {
+  const { pkg } = searchParamsCache.parse(searchParams)
+  const allVersions = await getVersions()
+  const pkgVersions = pkg === 'both' ? sumVersions(allVersions) : allVersions
+  // @ts-expect-error
+  const versionsToShow = Object.entries(pkgVersions.at(-1)?.[pkg] ?? {})
     .slice(0, 5)
     .map(([key, _]) => key)
   const widgetSkeleton = (
@@ -43,12 +50,11 @@ export default async function StatsPage() {
         </Suspense>
         <Suspense fallback={widgetSkeleton}>
           <Versions
-            records={versions
-              .filter(v => v.package === 'nuqs')
-              .map(v => ({
-                date: v.date,
-                ...v.downloads
-              }))}
+            records={pkgVersions.map(v => ({
+              date: v.date,
+              // @ts-ignore
+              ...v[pkg]
+            }))}
             versions={versionsToShow}
           />
         </Suspense>

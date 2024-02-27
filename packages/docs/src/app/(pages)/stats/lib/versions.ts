@@ -1,4 +1,3 @@
-import { compareLoose as semverSort, valid as semverValid } from 'semver'
 import 'server-only'
 import { z } from 'zod'
 
@@ -154,6 +153,8 @@ const versionsData = `
 {"date":"2024-02-24","package":"nuqs","downloads":{"1.16.0":2019,"0.0.0-reserved":3,"2.0.0-beta.1":83,"1.15.0":1,"1.16.1-beta.1":1,"1.15.2":906,"1.14.0-beta.5":1,"1.14.1":1565,"1.16.1":9157,"1.15.4":3211,"1.17.0":23536,"1.14.0-beta.4":1,"1.16.0-beta.1":2,"1.17.0-beta.1":5,"1.15.3":27963,"1.15.1":227,"1.14.0":1043,"1.14.1-beta.1":1}}
 {"date":"2024-02-25","package":"next-usequerystate","downloads":{"1.12.1":10,"1.13.2":4039,"1.14.1":317,"1.10.0":60,"1.17.0-beta.1":2,"1.15.4":606,"1.10.1":79,"1.17.0":4584,"1.12.0":198,"1.8.0-beta.11":21588,"1.9.1":378,"1.7.1":19,"1.8.2":655,"1.13.0":3045,"1.7.0":125,"1.15.1":15,"1.7.3":7709,"1.11.0":538,"1.8.0-beta.13":12,"1.8.1":390,"1.5.0":11,"1.14.0":397,"1.4.0-beta.5":3,"1.13.1":181,"1.7.2":3515,"1.8.4":1599,"1.16.1":2129,"1.16.0":1109,"1.15.3":318,"1.4.0-beta.4":7,"1.3.0":6,"1.6.0":1,"1.8.0-beta.5":1,"1.15.2":1496,"1.2.1":96,"1.8.3":2,"1.12.2":1227,"1.9.2":473,"1.9.0":2}}
 {"date":"2024-02-25","package":"nuqs","downloads":{"1.17.0":24904,"1.14.0":1085,"1.15.3":27807,"1.15.1":224,"1.16.1":8993,"1.15.4":3184,"1.16.0":2028,"0.0.0-reserved":2,"1.16.1-beta.1":1,"1.14.0-beta.4":1,"1.14.1":1544,"2.0.0-beta.1":81,"1.14.1-beta.1":1,"1.16.0-beta.1":1,"1.15.0":1,"1.15.2":922,"1.17.0-beta.1":4,"1.14.0-beta.5":1}}
+{"date":"2024-02-27","package":"next-usequerystate","downloads":{"1.15.2":1448,"1.2.1":126,"1.9.1":352,"1.8.2":731,"1.7.1":18,"1.10.1":91,"1.15.4":531,"1.17.0-beta.1":3,"1.10.0":115,"1.14.1":325,"1.3.0":4,"1.13.0":3127,"1.7.0":106,"1.7.2":3566,"1.13.1":180,"1.12.2":1237,"1.8.4":1880,"1.4.0-beta.4":7,"1.16.0":1054,"1.15.3":237,"1.16.1":2073,"1.11.0":497,"1.8.0-beta.13":8,"1.9.2":483,"1.10.2":5,"1.13.2":4088,"1.12.1":22,"1.7.3":8277,"1.5.0":12,"1.8.1":442,"1.15.1":26,"1.14.0":422,"1.17.0":4870,"1.12.0":145,"1.4.0-beta.5":2,"1.8.0-beta.11":25683,"1.6.0":1}}
+{"date":"2024-02-27","package":"nuqs","downloads":{"1.17.0":23979,"1.16.1":8327,"1.14.1":1727,"1.15.0":1,"1.16.1-beta.1":1,"0.0.0-reserved":2,"1.16.0-beta.1":1,"1.15.1":229,"1.15.3":30944,"1.14.0-beta.4":1,"1.14.0":1103,"1.16.0":1977,"1.15.4":3060,"1.17.0-beta.1":2,"1.15.2":1006,"1.14.1-beta.1":1,"1.14.0-beta.5":1,"2.0.0-beta.1":94}}
 `
 
 const versionLineSchema = z.object({
@@ -162,94 +163,126 @@ const versionLineSchema = z.object({
   downloads: z.record(z.number())
 })
 
-const creationDateSchema = z.record(
-  z
-    .string()
-    .datetime()
-    .transform(str => new Date(str).toISOString().slice(0, 10))
-)
+// const creationDateSchema = z.record(
+//   z
+//     .string()
+//     .datetime()
+//     .transform(str => new Date(str).toISOString().slice(0, 10))
+// )
 
-export type VersionRecord = z.infer<typeof versionLineSchema> & {
-  total: number
-  relative: Record<string, number>
-  published: string[]
-  latest: string
+export type VersionDatum = {
+  date: string
+  nuqs: Record<string, number>
+  'next-usequerystate': Record<string, number>
 }
 
 export async function getVersions() {
-  const dates = await getVersionsPublicationDates()
-  return versionsData
-    .split('\n')
-    .filter(line => line.trim().length > 0)
-    .map(line => {
-      const json = JSON.parse(line)
-      const parsed = versionLineSchema.parse(json)
-      const record: VersionRecord = {
-        date: parsed.date,
-        total: Object.values(parsed.downloads).reduce((a, b) => a + b, 0),
-        published: dates[parsed.date]?.published ?? [],
-        latest: getLatestForDate(parsed.date, dates),
-        downloads: Object.fromEntries(
-          Object.entries(parsed.downloads).sort(([, a], [, b]) => b - a)
-        ),
-        package: parsed.package,
-        relative: {}
-      }
-      record.relative = Object.fromEntries(
-        Object.entries(record.downloads).map(([key, value]) => [
-          key,
-          value / record.total
-        ])
-      )
-      return record
-    })
-}
-
-export async function getVersionsPublicationDates() {
-  const res = await fetch(`https://registry.npmjs.org/next-usequerystate`).then(
-    r => r.json()
-  )
-  let latest = '0.0.0'
-  const versionToDate = creationDateSchema.parse(res.time)
-  const dates = Object.entries(versionToDate)
-    .filter(([version]) => semverValid(version))
-    .sort(([a], [b]) => semverSort(a, b))
-    .reduce(
-      (acc, [version, date]) => {
-        latest = version
-        if (!acc[date]) {
-          acc[date] = {
-            published: [],
-            latest
+  // const dates = await getVersionsPublicationDates()
+  return Object.values(
+    versionsData
+      .split('\n')
+      .filter(line => line.trim().length > 0)
+      .map(line => {
+        const json = JSON.parse(line)
+        return versionLineSchema.parse(json)
+      })
+      .reduce(
+        (acc, line) => {
+          if (!acc[line.date]) {
+            acc[line.date] = {
+              date: line.date,
+              nuqs: {},
+              'next-usequerystate': {}
+            }
           }
-        }
-        acc[date].published.push(version)
-        acc[date].latest = latest
-        return acc
-      },
-      {} as Record<
-        string,
-        {
-          published: string[]
-          latest: string
-        }
-      >
-    )
-  return dates
+          acc[line.date][line.package] = Object.fromEntries(
+            Object.entries(line.downloads).sort(([, a], [, b]) => b - a)
+          )
+          return acc
+        },
+        {} as Record<string, VersionDatum>
+      )
+  )
+  //   const record: VersionRecord = {
+  //     date: parsed.date,
+  //     total: Object.values(parsed.downloads).reduce((a, b) => a + b, 0),
+  //     published: dates[parsed.date]?.published ?? [],
+  //     latest: getLatestForDate(parsed.date, dates),
+  //     downloads: Object.fromEntries(
+  //       Object.entries(parsed.downloads).sort(([, a], [, b]) => b - a)
+  //     ),
+  //     package: parsed.package,
+  //     relative: {}
+  //   }
+  //   record.relative = Object.fromEntries(
+  //     Object.entries(record.downloads).map(([key, value]) => [
+  //       key,
+  //       value / record.total
+  //     ])
+  //   )
+  //   return record
+  // })
 }
 
-function getLatestForDate(
-  date: string,
-  dates: Awaited<ReturnType<typeof getVersionsPublicationDates>>
-): string {
-  const datesArray = Object.keys(dates)
-  const index = datesArray.indexOf(date)
-  if (index !== -1) {
-    return datesArray[index]
-  }
-  // Get the latest date before the given date
-  const before = datesArray
-    .toSorted((a, b) => new Date(b).getTime() - new Date(a).getTime())
-    .filter(d => d < date)
-  return dates[before[0]]?.latest ?? 'N.A.'
+export function sumVersions(versions: VersionDatum[]) {
+  return versions.map(v => ({
+    date: v.date,
+    both: Object.fromEntries(
+      Object.entries(v['next-usequerystate'])
+        .map(
+          ([version, downloads]) =>
+            [version, downloads + (v.nuqs[version] ?? 0)] as const
+        )
+        .sort(([, a], [, b]) => b - a)
+    )
+  }))
 }
+
+// async function getVersionsPublicationDates() {
+//   const res = await fetch(`https://registry.npmjs.org/next-usequerystate`).then(
+//     r => r.json()
+//   )
+//   let latest = '0.0.0'
+//   const versionToDate = creationDateSchema.parse(res.time)
+//   const dates = Object.entries(versionToDate)
+//     .filter(([version]) => semverValid(version))
+//     .sort(([a], [b]) => semverSort(a, b))
+//     .reduce(
+//       (acc, [version, date]) => {
+//         latest = version
+//         if (!acc[date]) {
+//           acc[date] = {
+//             published: [],
+//             latest
+//           }
+//         }
+//         acc[date].published.push(version)
+//         acc[date].latest = latest
+//         return acc
+//       },
+//       {} as Record<
+//         string,
+//         {
+//           published: string[]
+//           latest: string
+//         }
+//       >
+//     )
+//   return dates
+// }
+
+// function getLatestForDate(
+//   date: string,
+//   dates: Awaited<ReturnType<typeof getVersionsPublicationDates>>
+// ): string {
+//   const datesArray = Object.keys(dates)
+//   const index = datesArray.indexOf(date)
+//   if (index !== -1) {
+//     return datesArray[index]
+//   }
+//   // Get the latest date before the given date
+//   const before = datesArray
+//     .toSorted((a, b) => new Date(b).getTime() - new Date(a).getTime())
+//     .filter(d => d < date)
+//   return dates[before[0]]?.latest ?? 'N.A.'
+// }
