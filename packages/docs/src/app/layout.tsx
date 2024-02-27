@@ -4,6 +4,7 @@ import { Inter } from 'next/font/google'
 import Script from 'next/script'
 import type { ReactNode } from 'react'
 import { ResponsiveHelper } from '../components/responsive-helpers'
+import { cn } from '../lib/utils'
 import './globals.css'
 
 const inter = Inter({
@@ -29,7 +30,7 @@ export const metadata = {
 export default function Layout({ children }: { children: ReactNode }) {
   const enableChiffreAnalytics = process.env.VERCEL_ENV === 'production'
   return (
-    <html lang="en" className={inter.className}>
+    <html lang="en" className={cn(inter.className, 'antialiased')}>
       <body>
         <RootProvider>{children}</RootProvider>
         {enableChiffreAnalytics && (

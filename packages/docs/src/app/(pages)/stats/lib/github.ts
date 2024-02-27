@@ -77,7 +77,14 @@ export type GitHubStarHistory = {
   bins: Array<{
     stars: number // Value at the end of the day
     diff: number // Stars earned during the day
-    date: Date
+    date: string
+    stargarzers: Array<{
+      login: string
+      name: string | null
+      avatarUrl: string
+      company: string | null
+      followers: number
+    }>
   }>
 }
 
@@ -91,13 +98,23 @@ const starHistoryQuerySchema = z.object({
             starredAt: z
               .string()
               .datetime()
-              .transform(d => new Date(d))
+              .transform(d => new Date(d)),
+            node: z.object({
+              login: z.string(),
+              name: z.string().nullish(),
+              avatarUrl: z.string(),
+              company: z.string().nullish(),
+              followers: z.object({
+                totalCount: z.number()
+              })
+            })
           })
         )
       })
     })
   })
 })
+type StarHistoryQuery = z.infer<typeof starHistoryQuerySchema>
 
 export async function getStarHistory(
   slug = '47ng/nuqs'
@@ -109,6 +126,15 @@ export async function getStarHistory(
       totalCount
       edges {
         starredAt
+        node {
+          login
+          name
+          avatarUrl
+          company
+          followers {
+            totalCount
+          }
+        }
       }
     }
   }
@@ -145,16 +171,27 @@ export async function getStarHistory(
 }
 
 function groupStarHistoryByDate(
-  edges: { starredAt: Date }[]
+  edges: StarHistoryQuery['data']['repository']['stargazers']['edges']
 ): GitHubStarHistory['bins'] {
-  const bins = new Map<string, number>()
-  for (const { starredAt } of edges) {
+  const bins = new Map<string, GitHubStarHistory['bins'][number]>()
+  for (const { starredAt, node } of edges) {
     const date = starredAt.toISOString().slice(0, 10)
-    bins.set(date, (bins.get(date) ?? 0) + 1)
+    const bin = bins.get(date) ?? {
+      stars: 0,
+      diff: 0,
+      date,
+      stargarzers: []
+    }
+    bin.stars++
+    bin.stargarzers.push({
+      login: node.login,
+      name: node.name ?? null,
+      avatarUrl: node.avatarUrl,
+      company: node.company ?? null,
+      followers: node.followers.totalCount
+    })
+
+    bins.set(date, bin)
   }
-  return Array.from(bins.entries()).map(([date, stars]) => ({
-    date: new Date(date),
-    stars,
-    diff: 0
-  }))
+  return Array.from(bins.values())
 }
