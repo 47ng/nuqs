@@ -1,17 +1,10 @@
-import { Suspense } from 'react'
-
 import { Card } from '@tremor/react'
-import dynamicImport from 'next/dynamic'
 import Image from 'next/image'
+import { Suspense } from 'react'
 import { NPMDownloads, NPMStats } from './_components/downloads'
 import { StarHistoryGraph } from './_components/stars'
 import { Versions } from './_components/versions'
 import { getVersions } from './lib/versions'
-
-const VersionAdoptionGraph = dynamicImport(
-  () => import('./_components/version-adoption'),
-  { ssr: false }
-)
 
 export const dynamic = 'force-dynamic'
 
@@ -26,7 +19,7 @@ export default async function StatsPage() {
     <div className="min-h-[16rem] w-full animate-pulse rounded border" />
   )
   return (
-    <main className="container py-2 md:py-4">
+    <main className="container px-2 py-2 sm:px-4 md:py-4">
       <h1 className="sr-only">Project Stats</h1>
       <section className="my-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
         <Suspense fallback={widgetSkeleton}>
@@ -58,7 +51,6 @@ export default async function StatsPage() {
               }))}
             versions={versionsToShow}
           />
-          {/* <VersionAdoptionGraph records={versions} /> */}
         </Suspense>
       </section>
     </main>
