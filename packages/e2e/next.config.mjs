@@ -25,8 +25,8 @@ const config = {
 
 console.info(`Next.js config:
   basePath:             ${basePath}
-  windowHistorySupport: ${experimental?.windowHistorySupport ?? false}
-  navigationRAF:        ${experimental?.navigationRAF ?? false}
+  windowHistorySupport: ${config.experimental?.windowHistorySupport ?? false}
+  navigationRAF:        ${config.experimental?.navigationRAF ?? false}
 `)
 
 export default config
