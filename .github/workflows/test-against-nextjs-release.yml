@@ -20,6 +20,7 @@ jobs:
       fail-fast: false
       matrix:
         base-path: [false, '/base']
+        nav-raf: [false, true]
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
       - uses: pnpm/action-setup@a3252b78c470c02df07e9d59298aecedc3ccdd6d
@@ -37,6 +38,7 @@ jobs:
         run: pnpm run test
         env:
           BASE_PATH: ${{ matrix.base-path && matrix.base-path || '/' }}
+          NAVIGATION_RAF: ${{ matrix.nav-raf && 'true' || 'false' }}
           TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
           TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
       - name: Save Cypress artifacts
