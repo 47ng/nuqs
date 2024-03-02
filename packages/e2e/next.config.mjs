@@ -7,7 +7,7 @@ const config = {
   experimental: {
     windowHistorySupport:
       process.env.WINDOW_HISTORY_SUPPORT === 'true' ? true : undefined,
-    navigationRAF: process.env.NAVIGATION_RAF === 'true',
+    navigationRAF: process.env.NAVIGATION_RAF === 'true' ? true : undefined,
     clientRouterFilter: false
   },
   rewrites: async () => [
