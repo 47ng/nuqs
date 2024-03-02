@@ -1,9 +1,32 @@
 import type { Options } from './defs'
 import { safeParse } from './utils'
 
+type Require<T, Keys extends keyof T> = Pick<Required<T>, Keys> & Omit<T, Keys>
+
 export type Parser<T> = {
+  /**
+   * Convert a query string value into a state value.
+   *
+   * If the string value does not represent a valid state value,
+   * the parser should return `null`. Throwing an error is also supported.
+   */
   parse: (value: string) => T | null
+
+  /**
+   * Render the state value into a query string value.
+   */
   serialize?: (value: T) => string
+
+  /**
+   * Check if two state values are equal.
+   *
+   * This is used when using the `clearOnDefault` value, to compare the default
+   * value with the set value.
+   *
+   * It makes sense to provide this function when the state value is an object
+   * or an array, as the default referential equality check will not work.
+   */
+  eq?: (a: T, b: T) => boolean
 }
 
 export type ParserBuilder<T> = Required<Parser<T>> &
@@ -70,7 +93,9 @@ export type ParserBuilder<T> = Required<Parser<T>> &
  * Wrap a set of parse/serialize functions into a builder pattern parser
  * you can pass to one of the hooks, making its default value type safe.
  */
-export function createParser<T>(parser: Required<Parser<T>>): ParserBuilder<T> {
+export function createParser<T>(
+  parser: Require<Parser<T>, 'parse' | 'serialize'>
+): ParserBuilder<T> {
   function parseServerSideNullable(value: string | string[] | undefined) {
     if (typeof value === 'undefined') {
       return null
@@ -91,6 +116,7 @@ export function createParser<T>(parser: Required<Parser<T>>): ParserBuilder<T> {
   }
 
   return {
+    eq: (a, b) => a === b,
     ...parser,
     parseServerSide: parseServerSideNullable,
     withDefault(defaultValue) {
@@ -318,7 +344,11 @@ export function parseAsJson<T>(parser?: (value: unknown) => T) {
         return null
       }
     },
-    serialize: value => JSON.stringify(value)
+    serialize: value => JSON.stringify(value),
+    eq(a, b) {
+      // Check for referential equality first
+      return a === b || JSON.stringify(a) === JSON.stringify(b)
+    }
   })
 }
 
@@ -333,6 +363,7 @@ export function parseAsArrayOf<ItemType>(
   itemParser: Parser<ItemType>,
   separator = ','
 ) {
+  const itemEq = itemParser.eq ?? ((a: ItemType, b: ItemType) => a === b)
   const encodedSeparator = encodeURIComponent(separator)
   // todo: Handle default item values and make return type non-nullable
   return createParser({
@@ -361,6 +392,15 @@ export function parseAsArrayOf<ItemType>(
             : String(value)
           return str.replaceAll(separator, encodedSeparator)
         })
-        .join(separator)
+        .join(separator),
+    eq(a, b) {
+      if (a === b) {
+        return true // Referentially stable
+      }
+      if (a.length !== b.length) {
+        return false
+      }
+      return a.every((value, index) => itemEq(value, b[index]!))
+    }
   })
 }

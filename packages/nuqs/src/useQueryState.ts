@@ -204,6 +204,7 @@ export function useQueryState<T = string>(
     throttleMs = FLUSH_RATE_LIMIT_MS,
     parse = x => x as unknown as T,
     serialize = String,
+    eq = (a, b) => a === b,
     defaultValue = undefined,
     clearOnDefault = false,
     startTransition
@@ -216,6 +217,7 @@ export function useQueryState<T = string>(
     throttleMs: FLUSH_RATE_LIMIT_MS,
     parse: x => x as unknown as T,
     serialize: String,
+    eq: (a, b) => a === b,
     clearOnDefault: false,
     defaultValue: undefined
   }
@@ -285,7 +287,9 @@ export function useQueryState<T = string>(
         : stateUpdater
       if (
         (options.clearOnDefault || clearOnDefault) &&
-        newValue === defaultValue
+        newValue !== null &&
+        defaultValue !== undefined &&
+        eq(newValue, defaultValue)
       ) {
         newValue = null
       }
