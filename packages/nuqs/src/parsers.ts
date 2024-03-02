@@ -4,8 +4,28 @@ import { safeParse } from './utils'
 type Require<T, Keys extends keyof T> = Pick<Required<T>, Keys> & Omit<T, Keys>
 
 export type Parser<T> = {
+  /**
+   * Convert a query string value into a state value.
+   *
+   * If the string value does not represent a valid state value,
+   * the parser should return `null`. Throwing an error is also supported.
+   */
   parse: (value: string) => T | null
+
+  /**
+   * Render the state value into a query string value.
+   */
   serialize?: (value: T) => string
+
+  /**
+   * Check if two state values are equal.
+   *
+   * This is used when using the `clearOnDefault` value, to compare the default
+   * value with the set value.
+   *
+   * It makes sense to provide this function when the state value is an object
+   * or an array, as the default referential equality check will not work.
+   */
   eq?: (a: T, b: T) => boolean
 }
 
