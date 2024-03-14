@@ -32,7 +32,7 @@ export async function SponsorsSection() {
       </div>
       <div className="mt-16 flex justify-center">
         <Button className="mx-auto" asChild variant="outline">
-          <a href="#">
+          <a href="https://github.com/sponsors/franky47">
             <Heart className="mr-2 text-pink-500" size={16} /> Sponsor my work
           </a>
         </Button>
