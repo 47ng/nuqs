@@ -46,16 +46,16 @@
   },
   "devDependencies": {
     "@types/mdx": "^2.0.11",
-    "@types/react": "^18.2.55",
-    "@types/react-dom": "^18.2.19",
+    "@types/react": "^18.2.65",
+    "@types/react-dom": "^18.2.22",
     "@types/semver": "^7.5.7",
     "autoprefixer": "^10.4.18",
     "postcss": "^8.4.35",
     "prettier": "^3.2.5",
-    "prettier-plugin-tailwindcss": "^0.5.11",
+    "prettier-plugin-tailwindcss": "^0.5.12",
     "remark-mdx-images": "^3.0.0",
     "shikiji": "^0.10.2",
-    "typescript": "^5.3.3"
+    "typescript": "^5.4.2"
   },
   "postcss": {
     "plugins": {
