@@ -4,9 +4,10 @@ import type { ParserBuilder } from './parsers'
 
 export type SearchParams = Record<string, string | string[] | undefined>
 
-type ExtractParserType<Parser> = Parser extends ParserBuilder<any>
-  ? ReturnType<Parser['parseServerSide']>
-  : never
+type ExtractParserType<Parser> =
+  Parser extends ParserBuilder<any>
+    ? ReturnType<Parser['parseServerSide']>
+    : never
 
 export function createSearchParamsCache<
   Parsers extends Record<string, ParserBuilder<any>>
@@ -39,7 +40,7 @@ export function createSearchParamsCache<
     }
     return c as Readonly<ParsedSearchParams>
   }
-  function get<Key extends keyof Parsers>(key: Key): ParsedSearchParams[Key] {
+  function get<Key extends Keys>(key: Key): ParsedSearchParams[Key] {
     const c = getCache()
     const entry = c[key]
     if (typeof entry === 'undefined') {
@@ -49,6 +50,7 @@ export function createSearchParamsCache<
   in get(${String(key)})`
       )
     }
+    // @ts-ignore
     return entry
   }
   return { parse, get, all }
