@@ -248,7 +248,9 @@ export async function getVersions() {
             }
           }
           acc[line.date][line.package] = Object.fromEntries(
-            Object.entries(line.downloads).sort(([, a], [, b]) => b - a)
+            Object.entries(line.downloads)
+              .sort(([, a], [, b]) => b - a)
+              .map(([key, value]) => [key, Math.round(value / 7)]) // Normalise to average daily downloads
           )
           return acc
         },
