@@ -31,12 +31,14 @@ jobs:
           - '13.4' # App router in GA
           - '13.5'
           - '14.0.1'
+          # 14.0.2 to 14.1.1 included are skipped as shallow routing
+          # implementation was experimental and unstable after GA release.
           # 14.0.2 is not compatible due to a prefetch issue
           # 14.0.3 is dropped due to a bug requiring WHS + syncing against uSP,
           #        which creates other problems under other versions of Next.js
-          - '14.0.4'
-          - latest # Current latest is 14.1.0
-          - local # Use the local workspace version (don't override)
+          - '14.1.2'
+          - latest
+          - local
 
     steps:
       - uses: actions/checkout@d632683dd7b4114ad314bca15554477dd762a938
