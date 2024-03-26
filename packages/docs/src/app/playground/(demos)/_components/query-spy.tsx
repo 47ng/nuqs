@@ -1,52 +1,52 @@
 'use client'
 
 import { useSearchParams } from 'next/navigation'
-import { subscribeToQueryUpdates } from 'nuqs'
+import { createSerializer } from 'nuqs/server'
 import React from 'react'
 import { QuerySpySkeleton } from './query-spy.skeleton'
 
-export function QuerySpy(props: React.ComponentProps<'pre'>) {
-  const initialSearchParams = useSearchParams()
-  const [search, setSearch] = React.useState<URLSearchParams>(() => {
-    if (typeof location !== 'object') {
-      // SSR
-      const out = new URLSearchParams()
-      if (!initialSearchParams) {
-        return out
-      }
-      for (const [key, value] of initialSearchParams) {
-        out.set(key, value)
-      }
-      return out
-    } else {
-      return new URLSearchParams(location.search)
-    }
-  })
+const serialize = createSerializer({})
 
-  React.useLayoutEffect(
-    () => subscribeToQueryUpdates(({ search }) => setSearch(search)),
-    []
+export function QuerySpy(props: React.ComponentProps<'pre'>) {
+  useSearchParams() // Just using it to trigger re-render on query change
+  const searchParams = parseQuery(
+    serialize(new URLSearchParams(location.search), {}).slice(1) // Remove leading '?'
   )
 
   return (
     <QuerySpySkeleton {...props}>
-      {search.size > 0 && (
+      {searchParams.length > 0 && (
         <span className="text-zinc-500">
           ?
-          {Array.from(search.entries()).map(([key, value], i) => (
+          {searchParams.map(([key, value], i) => (
             <React.Fragment key={key + i}>
               <span className="text-[#005CC5] dark:text-[#79B8FF]">{key}</span>=
               <span className="text-[#D73A49] dark:text-[#F97583]">
                 {value}
               </span>
-              {i < search.size - 1 && <span className="text-zinc-500">&</span>}
+              {i < searchParams.length - 1 && (
+                <span className="text-zinc-500">&</span>
+              )}
             </React.Fragment>
           ))}
         </span>
       )}
-      {search.size === 0 && (
+      {searchParams.length === 0 && (
         <span className="italic text-zinc-500">{'<empty query>'}</span>
       )}
     </QuerySpySkeleton>
+  )
+}
+
+function parseQuery(queryString: string): [string, string][] {
+  const elements = queryString.split('&')
+  if (elements.length === 0) return []
+  return elements.reduce(
+    (acc, element) => {
+      if (element === '') return acc
+      const [key, value] = element.split('=')
+      return [...acc, [key, value]]
+    },
+    [] as [string, string][]
   )
 }

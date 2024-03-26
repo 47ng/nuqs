@@ -4,7 +4,7 @@ import {
   parseAsBoolean,
   parseAsInteger,
   parseAsString
-} from '../../dist/parsers'
+} from '../../dist/server'
 
 {
   const cache = createSearchParamsCache({

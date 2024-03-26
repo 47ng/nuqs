@@ -33,28 +33,20 @@
   ],
   "type": "module",
   "sideEffects": true,
-  "main": "dist/index.cjs",
   "module": "dist/index.js",
   "types": "dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "import": "./dist/index.js",
-      "require": "./dist/index.cjs"
+      "import": "./dist/index.js"
     },
     "./server": {
       "types": "./dist/server.d.ts",
-      "import": "./dist/server.js",
-      "require": "./dist/server.cjs"
-    },
-    "./parsers": {
-      "types": "./dist/parsers.d.ts",
-      "import": "./dist/parsers.js",
-      "require": "./dist/parsers.cjs"
+      "import": "./dist/server.js"
     }
   },
   "scripts": {
-    "dev": "tsup --format esm --watch --external=react",
+    "dev": "tsup --watch --external=react",
     "build": "tsup --clean --external=react",
     "postbuild": "size-limit --json > size.json",
     "test": "run-p test:*",
@@ -64,7 +56,8 @@
     "prepack": "./scripts/prepack.sh"
   },
   "peerDependencies": {
-    "next": ">=13.4 <14.0.2 || ^14.0.3"
+    "next": ">=13.4 <14.0.2 || >=14.1.2",
+    "react": "^18.2.0"
   },
   "dependencies": {
     "mitt": "^3.0.1"
@@ -89,7 +82,7 @@
   },
   "size-limit": [
     {
-      "name": "Client (ESM)",
+      "name": "Client",
       "path": "dist/index.js",
       "limit": "5 kB",
       "ignore": [
@@ -97,7 +90,7 @@
       ]
     },
     {
-      "name": "Server (ESM)",
+      "name": "Server",
       "path": "dist/server.js",
       "limit": "2 kB",
       "ignore": [

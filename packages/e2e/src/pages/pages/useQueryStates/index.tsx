@@ -1,13 +1,19 @@
 import Link from 'next/link'
-import { queryTypes, useQueryStates } from 'nuqs'
+import {
+  parseAsBoolean,
+  parseAsFloat,
+  parseAsInteger,
+  parseAsString,
+  useQueryStates
+} from 'nuqs'
 import { HydrationMarker } from '../../../components/hydration-marker'
 
 const IntegrationPage = () => {
   const [state, setState] = useQueryStates({
-    string: queryTypes.string,
-    int: queryTypes.integer,
-    float: queryTypes.float,
-    bool: queryTypes.boolean
+    string: parseAsString,
+    int: parseAsInteger,
+    float: parseAsFloat,
+    bool: parseAsBoolean
   })
   return (
     <>
