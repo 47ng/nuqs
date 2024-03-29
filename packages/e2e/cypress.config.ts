@@ -33,7 +33,7 @@ export default defineConfig({
 function readNextJsVersion() {
   const pkgPath = new URL('./package.json', import.meta.url)
   const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf-8'))
-  return pkg.dependencies.next
+  return pkg.dependencies.next.replace('^', '')
 }
 
 function supportsWHS(nextVersion: string) {
