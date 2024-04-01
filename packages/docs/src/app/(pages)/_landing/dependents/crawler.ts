@@ -1,4 +1,5 @@
 import * as cheerio from 'cheerio'
+import { unstable_cache } from 'next/cache'
 
 enum PackageId {
   nuqs = 'UGFja2FnZS00MjczNzAxNTA5',
@@ -12,7 +13,15 @@ export type Result = {
   avatarID: string
 }
 
-export async function crawlDependents() {
+export const crawlDependents = unstable_cache(
+  _crawlDependents,
+  ['crawlDependents'],
+  {
+    revalidate: 86_400
+  }
+)
+
+async function _crawlDependents() {
   const allResults: Result[] = []
   let url = `https://github.com/47ng/nuqs/network/dependents?package_id=${PackageId.nuqs}`
   while (true) {

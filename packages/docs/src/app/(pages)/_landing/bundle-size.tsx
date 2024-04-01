@@ -10,6 +10,6 @@ export async function BundleSize() {
     return prettyBytes(size)
   } catch (error) {
     console.error(error)
-    return 'less than 4KB'
+    return 'less than 5KB'
   }
 }
