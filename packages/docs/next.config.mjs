@@ -34,11 +34,6 @@ const config = {
       },
       {
         protocol: 'https',
-        hostname: 'media.licdn.com',
-        pathname: '/dms/image/**'
-      },
-      {
-        protocol: 'https',
         hostname: 'i.redd.it',
         pathname: '/snoovatar/avatars/**'
       }

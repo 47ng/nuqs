@@ -36,17 +36,13 @@ export function QuotesSection() {
       />
       <Quote
         author={{
-          name: 'Hruthik Reddy',
+          name: 'Pontus Abrahamsson',
+          handle: '@pontusab',
           avatar:
-            'https://media.licdn.com/dms/image/C5103AQGJX_VlGqUQ1g/profile-displayphoto-shrink_400_400/0/1538894718740?e=1710979200&v=beta&t=XykS6uVm4z2KsyDs6IfqVzl0_X7dV6YV2MuSpATOAnQ'
+            'https://pbs.twimg.com/profile_images/1755611130368770048/JwLEqyeo_400x400.jpg'
         }}
-        text={
-          <>
-            Loved your blog post on Shallow routing and the nuqs package!
-            <br />
-            You saved me a lot of time!
-          </>
-        }
+        text={<>We use nuqs pretty much everywhere 🖤</>}
+        url="https://twitter.com/pontusab/status/1774434057469780028"
       />
       <Quote
         author={{
