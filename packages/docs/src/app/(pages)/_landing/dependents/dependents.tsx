@@ -1,9 +1,15 @@
 import { cn } from '@/src/lib/utils'
 import Image from 'next/image'
-import { crawlDependents } from './crawler'
+import { Result, crawlDependents } from './crawler'
 
 export async function DependentsSection() {
-  const dependents = await crawlDependents()
+  let dependents: Result[] = []
+  try {
+    dependents = await crawlDependents()
+  } catch (error) {
+    console.error(error)
+    return <section className="text-red-500">{String(error)}</section>
+  }
   return (
     <section className="container">
       <h2 className="mb-8 text-center text-3xl font-bold tracking-tighter dark:text-white md:text-4xl xl:text-5xl">
