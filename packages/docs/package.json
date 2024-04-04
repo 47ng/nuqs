@@ -9,9 +9,9 @@
     "start": "next start"
   },
   "dependencies": {
+    "@faker-js/faker": "^8.4.1",
     "@headlessui/react": "^1.7.18",
     "@headlessui/tailwindcss": "^0.2.0",
-    "@faker-js/faker": "^8.4.1",
     "@radix-ui/react-checkbox": "^1.0.4",
     "@radix-ui/react-label": "^2.0.2",
     "@radix-ui/react-separator": "^1.0.3",
@@ -20,6 +20,7 @@
     "@radix-ui/react-switch": "^1.0.3",
     "@radix-ui/react-toggle": "^1.0.3",
     "@radix-ui/react-toggle-group": "^1.0.4",
+    "@sentry/nextjs": "^7.105.0",
     "@tailwindcss/container-queries": "^0.1.1",
     "@tremor/react": "^3.14.1",
     "cheerio": "1.0.0-rc.12",
