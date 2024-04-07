@@ -43,6 +43,13 @@ export function HeroSection() {
             <Github className="-ml-1 mr-2 inline-block" size={20} />
             GitHub
           </a>
+          <a href="https://www.uneed.best/tool/nuqs" className="mx-auto">
+            <img
+              src="https://www.uneed.best/EMBED2.png"
+              alt="Uneed Embed Badge"
+              className="h-11"
+            />
+          </a>
         </nav>
       </aside>
       <aside className="relative my-4 xl:my-8 xl:flex-1">
