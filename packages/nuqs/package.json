@@ -81,7 +81,7 @@
     "size-limit": "^11.1.1",
     "tsd": "^0.30.7",
     "tsup": "^8.0.2",
-    "typescript": "^5.4.2",
+    "typescript": "^5.4.3",
     "vitest": "^1.4.0"
   },
   "tsd": {
