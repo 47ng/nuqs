@@ -18,7 +18,7 @@ type safety.
 
 ## Possible Solution
 
-Run the `parseSearchParam` function on the page's `searchParams`:
+Run the `parse` method and feed it the page's `searchParams`:
 
 ```tsx
 // page.tsx
