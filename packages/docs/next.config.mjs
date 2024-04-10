@@ -13,7 +13,12 @@ const withFumaMDX = createNextDocsMDX({
 const config = {
   experimental: {
     outputFileTracingIncludes: {
-      '/playground/pagination': ['./src/app/playground/(demos)/pagination/**']
+      '/playground/pagination': [
+        './src/app/playground/(demos)/pagination/searchParams.ts',
+        './src/app/playground/(demos)/pagination/page.tsx',
+        './src/app/playground/(demos)/pagination/pagination-controls.server.tsx',
+        './src/app/playground/(demos)/pagination/pagination-controls.client.tsx'
+      ]
     }
   },
   reactStrictMode: true,
