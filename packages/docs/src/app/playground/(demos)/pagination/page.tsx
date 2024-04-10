@@ -1,5 +1,6 @@
 import { Description } from '@/src/components/typography'
 import { Separator } from '@/src/components/ui/separator'
+import path from 'node:path'
 import type { SearchParams } from 'nuqs/server'
 import { Suspense } from 'react'
 import { SourceOnGitHub } from '../_components/source-on-github'
@@ -34,25 +35,28 @@ export default async function PaginationDemoPage({ searchParams }: PageProps) {
         <ProductSection />
       </Suspense>
       <SourceOnGitHub
-        path={
-          process.cwd() +
-          '/src/app/playground/(demos)/pagination/searchParams.ts'
-        }
+        path={path.resolve(
+          process.cwd(),
+          'src/app/playground/(demos)/pagination/searchParams.ts'
+        )}
       />
       <SourceOnGitHub
-        path={process.cwd() + '/src/app/playground/(demos)/pagination/page.tsx'}
+        path={path.resolve(
+          process.cwd(),
+          'src/app/playground/(demos)/pagination/page.tsx'
+        )}
       />
       <SourceOnGitHub
-        path={
-          process.cwd() +
-          '/src/app/playground/(demos)/pagination/pagination-controls.server.tsx'
-        }
+        path={path.resolve(
+          process.cwd(),
+          'src/app/playground/(demos)/pagination/pagination-controls.server.tsx'
+        )}
       />
       <SourceOnGitHub
-        path={
-          process.cwd() +
-          '/src/app/playground/(demos)/pagination/pagination-controls.client.tsx'
-        }
+        path={path.resolve(
+          process.cwd(),
+          'src/app/playground/(demos)/pagination/pagination-controls.client.tsx'
+        )}
       />
     </>
   )
