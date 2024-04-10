@@ -11,6 +11,14 @@ const withFumaMDX = createNextDocsMDX({
 
 /** @type {import('next').NextConfig} */
 const config = {
+  experimental: {
+    outputFileTracingIncludes: [
+      'src/app/playground/(demos)/pagination/page.tsx',
+      'src/app/playground/(demos)/pagination/searchParams.tsx',
+      'src/app/playground/(demos)/pagination/pagination-controls.client.tsx',
+      'src/app/playground/(demos)/pagination/pagination-controls.server.tsx'
+    ]
+  },
   reactStrictMode: true,
   redirects: async () => {
     return [
