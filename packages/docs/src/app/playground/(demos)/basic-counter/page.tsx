@@ -16,7 +16,11 @@ export default function BasicCounterDemoPage() {
       <Suspense>
         <Client />
       </Suspense>
-      <SourceOnGitHub path="basic-counter/client.tsx" />
+      <SourceOnGitHub
+        path={
+          process.cwd() + '/src/app/playground/(demos)/basic-counter/client.tsx'
+        }
+      />
     </>
   )
 }

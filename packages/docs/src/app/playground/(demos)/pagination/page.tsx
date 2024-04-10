@@ -33,10 +33,27 @@ export default async function PaginationDemoPage({ searchParams }: PageProps) {
       <Suspense>
         <ProductSection />
       </Suspense>
-      <SourceOnGitHub path="pagination/searchParams.ts" />
-      <SourceOnGitHub path="pagination/page.tsx" />
-      <SourceOnGitHub path="pagination/pagination-controls.server.tsx" />
-      <SourceOnGitHub path="pagination/pagination-controls.client.tsx" />
+      <SourceOnGitHub
+        path={
+          process.cwd() +
+          '/src/app/playground/(demos)/pagination/searchParams.ts'
+        }
+      />
+      <SourceOnGitHub
+        path={process.cwd() + '/src/app/playground/(demos)/pagination/page.tsx'}
+      />
+      <SourceOnGitHub
+        path={
+          process.cwd() +
+          '/src/app/playground/(demos)/pagination/pagination-controls.server.tsx'
+        }
+      />
+      <SourceOnGitHub
+        path={
+          process.cwd() +
+          '/src/app/playground/(demos)/pagination/pagination-controls.client.tsx'
+        }
+      />
     </>
   )
 }

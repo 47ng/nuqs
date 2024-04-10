@@ -1,23 +1,23 @@
 import { CodeBlock } from '@/src/components/code-block'
 import { FileCode2 } from 'lucide-react'
 import fs from 'node:fs/promises'
-import path from 'node:path'
 
 type SourceOnGitHubProps = {
   path: string
 }
 
 export async function SourceOnGitHub({ path }: SourceOnGitHubProps) {
-  const source = await readSourceCode(path)
+  const localPath = path.replace(process.cwd(), '')
+  const source = await fs.readFile(path, 'utf8')
   return (
     <footer className="mt-2 space-y-2 border-t py-4">
       <div className="flex items-baseline">
         <span className="flex items-center gap-1 text-zinc-500">
           <FileCode2 size={16} />
-          {path.split('/').slice(1).join('/')}
+          {localPath.split('/').slice(1).join('/')}
         </span>
         <a
-          href={`https://github.com/47ng/nuqs/tree/next/packages/docs/src/app/playground/(demos)/${path}`}
+          href={`https://github.com/47ng/nuqs/tree/next/packages/docs${localPath}`}
           className="ml-auto text-sm"
         >
           Source on GitHub
@@ -28,16 +28,4 @@ export async function SourceOnGitHub({ path }: SourceOnGitHubProps) {
       </div>
     </footer>
   )
-}
-
-function readSourceCode(demoPath: string) {
-  const demoFilePath = path.resolve(
-    process.cwd(),
-    'src',
-    'app',
-    'playground',
-    '(demos)',
-    demoPath
-  )
-  return fs.readFile(demoFilePath, 'utf8')
 }
