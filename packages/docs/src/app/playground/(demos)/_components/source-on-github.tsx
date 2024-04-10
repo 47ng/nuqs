@@ -1,6 +1,7 @@
 import { CodeBlock } from '@/src/components/code-block'
 import { FileCode2 } from 'lucide-react'
 import fs from 'node:fs/promises'
+import path from 'node:path'
 
 type SourceOnGitHubProps = {
   path: string
@@ -30,6 +31,13 @@ export async function SourceOnGitHub({ path }: SourceOnGitHubProps) {
 }
 
 function readSourceCode(demoPath: string) {
-  const demoFilePath = process.cwd() + '/src/app/playground/(demos)/' + demoPath
+  const demoFilePath = path.resolve(
+    process.cwd(),
+    'src',
+    'app',
+    'playground',
+    '(demos)',
+    demoPath
+  )
   return fs.readFile(demoFilePath, 'utf8')
 }
