@@ -7,17 +7,16 @@ type SourceOnGitHubProps = {
 }
 
 export async function SourceOnGitHub({ path }: SourceOnGitHubProps) {
-  const localPath = path.replace(process.cwd(), '')
-  const source = await fs.readFile(path, 'utf8')
+  const source = await readSourceCode(path)
   return (
     <footer className="mt-2 space-y-2 border-t py-4">
       <div className="flex items-baseline">
         <span className="flex items-center gap-1 text-zinc-500">
           <FileCode2 size={16} />
-          {localPath.split('/').slice(1).join('/')}
+          {path.split('/').slice(1).join('/')}
         </span>
         <a
-          href={`https://github.com/47ng/nuqs/tree/next/packages/docs${localPath}`}
+          href={`https://github.com/47ng/nuqs/tree/next/packages/docs/src/app/playground/(demos)/${path}`}
           className="ml-auto text-sm"
         >
           Source on GitHub
@@ -28,4 +27,9 @@ export async function SourceOnGitHub({ path }: SourceOnGitHubProps) {
       </div>
     </footer>
   )
+}
+
+function readSourceCode(demoPath: string) {
+  const demoFilePath = process.cwd() + '/src/app/playground/(demos)/' + demoPath
+  return fs.readFile(demoFilePath, 'utf8')
 }

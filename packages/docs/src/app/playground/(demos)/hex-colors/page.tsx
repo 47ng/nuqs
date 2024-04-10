@@ -14,11 +14,7 @@ export default function HexColorsDemoPage() {
       <Suspense>
         <Client />
       </Suspense>
-      <SourceOnGitHub
-        path={
-          process.cwd() + '/src/app/playground/(demos)/hex-colors/client.tsx'
-        }
-      />
+      <SourceOnGitHub path="hex-colors/client.tsx" />
     </>
   )
 }

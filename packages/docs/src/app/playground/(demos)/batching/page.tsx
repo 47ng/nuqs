@@ -14,9 +14,7 @@ export default function BuilderPatternDemoPage() {
       <Suspense>
         <Client />
       </Suspense>
-      <SourceOnGitHub
-        path={process.cwd() + '/src/app/playground/(demos)/batching/client.tsx'}
-      />
+      <SourceOnGitHub path="batching/client.tsx" />
     </>
   )
 }
