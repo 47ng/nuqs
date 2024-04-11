@@ -24,24 +24,10 @@ export const crawlDependents = unstable_cache(
 async function _crawlDependents() {
   const tick = performance.now()
   const allResults: Result[] = []
-  let url = `https://github.com/47ng/nuqs/network/dependents?package_id=${PackageId.nuqs}`
-  while (true) {
-    const { results, nextPage } = await crawlDependentsPage(url)
-    allResults.push(...results)
-    if (nextPage === null) {
-      break
-    }
-    url = nextPage
-  }
-  url = `https://github.com/47ng/nuqs/network/dependents?package_id=${PackageId.nextUseQueryState}`
-  while (true) {
-    const { results, nextPage } = await crawlDependentsPage(url)
-    allResults.push(...results)
-    if (nextPage === null) {
-      break
-    }
-    url = nextPage
-  }
+  await Promise.allSettled([
+    crawlPackageDependents(PackageId.nuqs, allResults),
+    crawlPackageDependents(PackageId.nextUseQueryState, allResults)
+  ])
   const out = allResults
     .sort((a, b) => b.stars - a.stars)
     .filter(
@@ -54,7 +40,20 @@ async function _crawlDependents() {
   return out
 }
 
+async function crawlPackageDependents(pkgId: string, allResults: Result[]) {
+  let url = `https://github.com/47ng/nuqs/network/dependents?package_id=${pkgId}`
+  while (true) {
+    const { results, nextPage } = await crawlDependentsPage(url)
+    allResults.push(...results)
+    if (nextPage === null) {
+      return
+    }
+    url = nextPage
+  }
+}
+
 async function crawlDependentsPage(url: string) {
+  const tick = performance.now()
   const pkg =
     new URLSearchParams(url.split('?')[1]).get('package_id') === PackageId.nuqs
       ? 'nuqs'
@@ -62,7 +61,9 @@ async function crawlDependentsPage(url: string) {
   const html = await fetch(url, {
     cache: 'no-store'
   }).then(res => res.text())
+  const endOfFetch = performance.now()
   const $ = cheerio.load(html)
+  const endOfParse = performance.now()
   const results: Result[] = []
   $('[data-test-id="dg-repo-pkg-dependent"]').each((index, element) => {
     const img = $(element).find('img').attr('src') // ?.replace('s=40', 's=64')
@@ -95,6 +96,13 @@ async function crawlDependentsPage(url: string) {
   })
   const nextButton = $('div.paginate-container a:contains(Next)')
   const nextPage = nextButton?.attr('href') ?? null
+  console.log(
+    'Crawled page %s (fetch: %s, parse: %s, extract: %s)',
+    url,
+    (endOfFetch - tick).toFixed(2),
+    (endOfParse - endOfFetch).toFixed(2),
+    (performance.now() - endOfParse).toFixed(2)
+  )
   return { results, nextPage }
 }
 
