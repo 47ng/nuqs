@@ -22,6 +22,7 @@ export const crawlDependents = unstable_cache(
 )
 
 async function _crawlDependents() {
+  const tick = performance.now()
   const allResults: Result[] = []
   let url = `https://github.com/47ng/nuqs/network/dependents?package_id=${PackageId.nuqs}`
   while (true) {
@@ -41,7 +42,7 @@ async function _crawlDependents() {
     }
     url = nextPage
   }
-  return allResults
+  const out = allResults
     .sort((a, b) => b.stars - a.stars)
     .filter(
       // remove duplicates by repo
@@ -49,6 +50,8 @@ async function _crawlDependents() {
         index === self.findIndex(r => r.repo === result.repo)
     )
     .slice(0, 100)
+  console.log(`Dependents crawled in ${performance.now() - tick}ms`)
+  return out
 }
 
 async function crawlDependentsPage(url: string) {
