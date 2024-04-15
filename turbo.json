@@ -26,7 +26,8 @@
       "dependsOn": ["build"]
     },
     "e2e#test": {
-      "dependsOn": ["build", "E2E_NO_CACHE_ON_RERUN"]
+      "dependsOn": ["build"],
+      "env": ["E2E_NO_CACHE_ON_RERUN"]
     }
   }
 }
