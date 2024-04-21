@@ -5,6 +5,7 @@ it('Reproduction for issue #542', () => {
   cy.contains('#hydration-marker', 'hydrated').should('be.hidden')
   cy.get('#q').should('have.text', 'foo')
   cy.get('#r').should('have.text', 'bar')
+  cy.get('#initial').should('have.text', '{"q":"foo","r":"bar"}')
   cy.get('a').click()
   cy.location('search').should('eq', '')
   cy.get('#q').should('have.text', '')
