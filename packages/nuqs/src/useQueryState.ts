@@ -227,12 +227,7 @@ export function useQueryState<T = string>(
   const initialSearchParams = useSearchParams()
   const [internalState, setInternalState] = React.useState<T | null>(() => {
     const queueValue = getQueuedValue(key)
-    const urlValue =
-      typeof location !== 'object'
-        ? // SSR
-          initialSearchParams?.get(key) ?? null
-        : // Components mounted after page load must use the current URL value
-          new URLSearchParams(location.search).get(key) ?? null
+    const urlValue = initialSearchParams?.get(key) ?? null
     const value = queueValue ?? urlValue
     return value === null ? null : safeParse(parse, value, key)
   })
