@@ -404,3 +404,48 @@ export function parseAsArrayOf<ItemType>(
     }
   })
 }
+
+/**
+ * Encode an array of items into a base64 string in the querystring.
+ * Items are JSON-encoded before being base64-encoded.
+ *
+ * @param itemParser Parser for each individual item in the array
+ * @returns A parser that can be used with `useQueryState`
+ */
+export function parseAsBase64ArrayOf<ItemType>(itemParser: Parser<ItemType>) {
+  return createParser<ItemType[]>({
+    parse: query => {
+      if (!query) return null
+      try {
+        const decoded = Buffer.from(query, 'base64').toString('utf-8')
+        const parsed = JSON.parse(decoded)
+
+        if (!Array.isArray(parsed)) {
+          return null
+        }
+        return parsed
+          .map(item => itemParser.parse(item))
+          .filter(item => item !== null) as ItemType[]
+      } catch {
+        return null
+      }
+    },
+    serialize: values => {
+      const serialized = values.map(item =>
+        itemParser.serialize ? itemParser.serialize(item) : item
+      )
+      const stringified = JSON.stringify(serialized)
+      const encoded = Buffer.from(stringified).toString('base64')
+      return encoded
+    },
+    eq(a, b) {
+      if (a === b) {
+        return true // Referentially stable
+      }
+      if (a.length !== b.length) {
+        return false
+      }
+      return a.every((value, index) => itemParser.eq!(value, b[index]!))
+    }
+  })
+}
