@@ -102,6 +102,7 @@ import {
   parseAsTimestamp,
   parseAsIsoDateTime,
   parseAsArrayOf,
+  parseAsBase64ArrayOf,
   parseAsJson,
   parseAsStringEnum,
   parseAsStringLiteral,
@@ -115,6 +116,7 @@ useQueryState('darkMode', parseAsBoolean)
 useQueryState('after', parseAsTimestamp) // state is a Date
 useQueryState('date', parseAsIsoDateTime) // state is a Date
 useQueryState('array', parseAsArrayOf(parseAsInteger)) // state is number[]
+useQueryState('base64', parseAsBase64ArrayOf(parseAsJson)) // state is an object[] 
 useQueryState('json', parseAsJson<Point>()) // state is a Point
 
 // Enums (string-based only)

@@ -416,6 +416,7 @@ export function parseAsBase64ArrayOf<ItemType>(itemParser: Parser<ItemType>) {
   return createParser<ItemType[]>({
     parse: query => {
       if (!query) return null
+      if (query === '') return []
       try {
         const decoded = Buffer.from(query, 'base64').toString('utf-8')
         const parsed = JSON.parse(decoded)
@@ -431,6 +432,9 @@ export function parseAsBase64ArrayOf<ItemType>(itemParser: Parser<ItemType>) {
       }
     },
     serialize: values => {
+      if (values.length === 0) {
+        return ''
+      }
       const serialized = values.map(item =>
         itemParser.serialize ? itemParser.serialize(item) : item
       )

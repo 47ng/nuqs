@@ -1,10 +1,12 @@
 import { describe, expect, test } from 'vitest'
 import {
   parseAsArrayOf,
+  parseAsBase64ArrayOf,
   parseAsFloat,
   parseAsHex,
   parseAsInteger,
   parseAsIsoDateTime,
+  parseAsJson,
   parseAsString,
   parseAsTimestamp
 } from './parsers'
@@ -53,6 +55,19 @@ describe('parsers', () => {
     expect(parser.serialize([])).toBe('')
     // It encodes its separator
     expect(parser.serialize(['a', ',', 'b'])).toBe('a,%2C,b')
+  })
+
+  test('parseAsBase64ArrayOf', () => {
+    const stringParser = parseAsBase64ArrayOf(parseAsString)
+    expect(stringParser.serialize([])).toBe('')
+    expect(stringParser.serialize(['a', ',', 'b'])).toBe('WyJhIiwiLCIsImIiXQ==')
+
+    const objectParser =
+      parseAsBase64ArrayOf(parseAsJson<{ a?: number; b?: number }>())
+
+    expect(objectParser.serialize([{ a: 1 }, { b: 2 }])).toBe(
+      'WyJ7XCJhXCI6MX0iLCJ7XCJiXCI6Mn0iXQ=='
+    )
   })
 
   test('parseServerSide with default (#384)', () => {
