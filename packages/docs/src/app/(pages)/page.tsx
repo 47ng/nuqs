@@ -6,7 +6,7 @@ import { HeroSection } from './_landing/hero'
 import { QuotesSection } from './_landing/quotes/quotes-section'
 import { SponsorsSection } from './_landing/sponsors'
 
-export const maxDuration = 60_000
+export const maxDuration = 60
 
 export const metadata: Metadata = {
   title: {
