@@ -21,16 +21,31 @@ export function createSearchParamsCache<
   // whereas a simple object would be bound to the lifecycle of the process,
   // which may be reused between requests in a serverless environment
   // (warm lambdas on Vercel or AWS).
-  const getCache = cache<() => Partial<ParsedSearchParams>>(() => ({}))
+  const getCache = cache<() => Partial<ParsedSearchParams> & { _orig?: SearchParams }>(() => ({}))
   function parse(searchParams: SearchParams) {
     const c = getCache()
+
     if (Object.isFrozen(c)) {
+      // parse has already been called
+      if (searchParams === c._orig) {
+        // but we're being called with the identical object again, so we can safely return the same cached result
+        // (an example of when this occurs would be if parse was called in generateMetadata as well as the page itself).
+        // note that this simply checks for referential equality and will still fail if a different object with the
+        // same contents is passed. fortunately next.js uses the same object for search params in the same request.
+        return all()
+      }
+
+      // different input in the same request - fail
       throw new Error(error(501))
     }
+
     for (const key in parsers) {
       const parser = parsers[key]!
       c[key] = parser.parseServerSide(searchParams[key])
     }
+
+    c._orig = searchParams
+
     return Object.freeze(c) as Readonly<ParsedSearchParams>
   }
   function all() {
