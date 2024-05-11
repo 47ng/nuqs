@@ -1,7 +1,7 @@
 import { revalidateTag } from 'next/cache'
 import { NextRequest, NextResponse } from 'next/server'
 
-const ACCEPTED_TAGS = ['github', 'github-actions-status', 'npm']
+const ACCEPTED_TAGS = ['github', 'github-actions-status', 'npm', 'dependents']
 
 export async function GET(req: NextRequest) {
   const token = req.nextUrl.searchParams.get('token')

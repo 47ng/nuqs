@@ -1,11 +1,31 @@
 import { cn } from '@/src/lib/utils'
 import Image from 'next/image'
-import { Result, crawlDependents } from './crawler'
+import { z } from 'zod'
+
+const dependentSchema = z.object({
+  stars: z.number(),
+  owner: z.string(),
+  name: z.string(),
+  pkg: z.string(),
+  avatarURL: z.string(),
+  createdAt: z.string().transform(date => new Date(date))
+})
+type Dependent = z.infer<typeof dependentSchema>
+
+async function fetchDependents() {
+  const data = await fetch('https://dependents.47ng.com', {
+    next: {
+      revalidate: 86_400,
+      tags: ['dependents']
+    }
+  }).then(res => res.json())
+  return z.array(dependentSchema).parse(data)
+}
 
 export async function DependentsSection() {
-  let dependents: Result[] = []
+  let dependents: Dependent[] = []
   try {
-    dependents = await crawlDependents()
+    dependents = await fetchDependents()
   } catch (error) {
     console.error(error)
     return <section className="text-red-500">{String(error)}</section>
@@ -30,13 +50,13 @@ export async function DependentsSection() {
       <div className="flex flex-wrap justify-center gap-1.5">
         {dependents.map(dep => (
           <a
-            key={dep.repo}
-            href={`https://github.com/${dep.repo}`}
+            key={dep.owner + dep.name}
+            href={`https://github.com/${dep.owner}/${dep.name}`}
             className="relative h-8 w-8 rounded-full"
           >
             <Image
-              src={`https://avatars.githubusercontent.com/u/${dep.avatarID}?s=64&v=4`}
-              alt={dep.repo}
+              src={upscaleGitHubAvatar(dep.avatarURL, 64)}
+              alt={dep.owner + '/' + dep.name}
               className="rounded-full"
               width={64}
               height={64}
@@ -53,4 +73,10 @@ export async function DependentsSection() {
       </div>
     </section>
   )
+}
+
+function upscaleGitHubAvatar(originalURL: string, size: number) {
+  const url = new URL(originalURL)
+  url.searchParams.set('s', size.toFixed())
+  return url.toString()
 }
