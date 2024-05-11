@@ -1,10 +1,10 @@
-import { describe, expect, it , vi } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { createSearchParamsCache } from './cache'
 import { parseAsString } from './parsers'
 
 // provide a simple mock for React cache
 vi.mock('react', () => {
-  return ({
+  return {
     cache<T, CachedFunction extends () => T>(fn: CachedFunction) {
       let cache: T | undefined = undefined
       function cachedFn() {
@@ -13,7 +13,7 @@ vi.mock('react', () => {
       }
       return cachedFn
     }
-  });
+  }
 })
 
 describe('cache', () => {
@@ -22,7 +22,7 @@ describe('cache', () => {
       string: "I'm a string"
     }
 
-    it("allows parsing same object multiple times in a request", () => {
+    it('allows parsing same object multiple times in a request', () => {
       const cache = createSearchParamsCache({
         string: parseAsString
       })
@@ -37,7 +37,7 @@ describe('cache', () => {
       expect(cache.all()).toBe(all)
     })
 
-    it("disallows parsing different objects in a request", () => {
+    it('disallows parsing different objects in a request', () => {
       const cache = createSearchParamsCache({
         string: parseAsString
       })

@@ -21,7 +21,9 @@ export function createSearchParamsCache<
   // whereas a simple object would be bound to the lifecycle of the process,
   // which may be reused between requests in a serverless environment
   // (warm lambdas on Vercel or AWS).
-  const getCache = cache<() => Partial<ParsedSearchParams> & { _orig?: SearchParams }>(() => ({}))
+  const getCache = cache<
+    () => Partial<ParsedSearchParams> & { _orig?: SearchParams }
+  >(() => ({}))
   function parse(searchParams: SearchParams) {
     const c = getCache()
 
