@@ -4,11 +4,11 @@ import { Get } from './get'
 import { cache } from './searchParams'
 import { Set } from './set'
 
-export default function Page({
-  searchParams
-}: {
+type Props = {
   searchParams: Record<string, string | string[] | undefined>
-}) {
+}
+
+export default function Page({ searchParams }: Props) {
   const { str, bool, num, def, nope } = cache.parse(searchParams)
   return (
     <>
@@ -28,4 +28,12 @@ export default function Page({
       </Suspense>
     </>
   )
+}
+
+export function generateMetadata({ searchParams }: Props) {
+  // parse here too to ensure we can idempotently parse the same search params as the page in the same request
+  const { str } = cache.parse(searchParams)
+  return {
+    title: `metadata-title-str:${str}`
+  }
 }
