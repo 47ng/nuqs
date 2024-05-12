@@ -35,7 +35,7 @@ export function createSearchParamsCache<
   function parse(searchParams: SearchParams) {
     const c = getCache()
 
-    if (Object.isFrozen(c)) {
+    if (Object.isFrozen(c.searchParams)) {
       // parse has already been called
       if (searchParams === c[$input]) {
         // but we're being called with the identical object again, so we can safely return the same cached result
@@ -55,9 +55,8 @@ export function createSearchParamsCache<
     }
 
     c[$input] = searchParams
-    Object.freeze(c)
 
-    return c.searchParams as Readonly<ParsedSearchParams>
+    return Object.freeze(c.searchParams) as Readonly<ParsedSearchParams>
   }
   function all() {
     const { searchParams } = getCache()
