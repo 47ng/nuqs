@@ -18,5 +18,6 @@ describe('cache', () => {
     cy.get('#get-bool').should('have.text', 'true')
     cy.get('#get-def').should('have.text', 'default')
     cy.get('#get-nope').should('have.text', 'null')
+    cy.title().should('eq', 'metadata-title-str:foo')
   })
 })
