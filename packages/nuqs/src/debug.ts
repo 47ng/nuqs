@@ -1,9 +1,18 @@
 // todo: Remove check for `next-usequerystate` in v2
-const enabled =
-  (typeof localStorage === 'object' &&
-    (localStorage.getItem('debug')?.includes('next-usequerystate') ||
-      localStorage.getItem('debug')?.includes('nuqs'))) ||
-  false
+let enabled = false
+
+try {
+  enabled =
+    (typeof localStorage === 'object' &&
+      (localStorage.getItem('debug')?.includes('next-usequerystate') ||
+        localStorage.getItem('debug')?.includes('nuqs'))) ||
+    false
+} catch (error) {
+  console.error(
+    '[nuqs]: debug mode is disabled (localStorage unavailable).',
+    error
+  )
+}
 
 export function debug(message: string, ...args: any[]) {
   if (!enabled) {
