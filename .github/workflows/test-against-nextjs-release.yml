@@ -25,6 +25,7 @@ jobs:
       - uses: pnpm/action-setup@a3252b78c470c02df07e9d59298aecedc3ccdd6d
       - uses: actions/setup-node@60edb5dd545a775178f52524783378180af0d1f8
         with:
+          node-version-file: .node-version
           cache: pnpm
       - name: Install dependencies
         run: pnpm install
@@ -69,6 +70,7 @@ jobs:
       - uses: pnpm/action-setup@a3252b78c470c02df07e9d59298aecedc3ccdd6d
       - uses: actions/setup-node@60edb5dd545a775178f52524783378180af0d1f8
         with:
+          node-version-file: .node-version
           cache: pnpm
       - name: Install dependencies
         run: pnpm install
