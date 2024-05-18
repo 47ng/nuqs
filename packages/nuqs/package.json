@@ -74,7 +74,7 @@
     "@types/node": "^20.12.8",
     "@types/react": "^18.3.2",
     "@types/react-dom": "^18.3.0",
-    "next": "14.2.3",
+    "next": "14.3.0-canary.70",
     "npm-run-all": "^4.1.5",
     "react": "rc",
     "react-dom": "rc",
