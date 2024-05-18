@@ -20,7 +20,7 @@
     "cypress:run": "cypress run --headless"
   },
   "dependencies": {
-    "next": "14.3.0-canary.70",
+    "next": "^14.2.3",
     "nuqs": "workspace:*",
     "react": "rc",
     "react-dom": "rc"
