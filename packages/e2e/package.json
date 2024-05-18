@@ -20,14 +20,14 @@
     "cypress:run": "cypress run --headless"
   },
   "dependencies": {
-    "next": "14.2.3",
+    "next": "^14.2.3",
     "nuqs": "workspace:*",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react": "rc",
+    "react-dom": "rc"
   },
   "devDependencies": {
     "@types/node": "^20.12.8",
-    "@types/react": "^18.3.1",
+    "@types/react": "^18.3.2",
     "@types/react-dom": "^18.3.0",
     "@types/semver": "^7.5.8",
     "@types/webpack": "^5.28.5",
