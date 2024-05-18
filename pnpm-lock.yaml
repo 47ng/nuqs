@@ -97,7 +97,7 @@ importers:
         version: 6.0.2(@types/react@18.3.1)(next@14.2.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       next-docs-ui:
         specifier: 6.0.2
-        version: 6.0.2(@types/react-dom@18.3.0)(@types/react@18.3.1)(next@14.2.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(tailwindcss@3.4.3(ts-node@9.1.1(typescript@5.4.5)))(vitest@1.6.0(@types/node@20.12.8)(terser@5.31.0))
+        version: 6.0.2(@types/react-dom@18.3.0)(@types/react@18.3.1)(next@14.2.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(tailwindcss@3.4.3(ts-node@9.1.1(typescript@5.4.5)))(vitest@1.6.0(@types/node@20.12.8))
       next-docs-zeta:
         specifier: 6.0.2
         version: 6.0.2(@types/react@18.3.1)(next@14.2.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -176,23 +176,23 @@ importers:
     dependencies:
       next:
         specifier: 14.2.3
-        version: 14.2.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        version: 14.2.3(react-dom@19.0.0-rc-3f1436cca1-20240516(react@19.0.0-rc-3f1436cca1-20240516))(react@19.0.0-rc-3f1436cca1-20240516)
       nuqs:
         specifier: workspace:*
         version: link:../nuqs
       react:
-        specifier: ^18.3.1
-        version: 18.3.1
+        specifier: rc
+        version: 19.0.0-rc-3f1436cca1-20240516
       react-dom:
-        specifier: ^18.3.1
-        version: 18.3.1(react@18.3.1)
+        specifier: rc
+        version: 19.0.0-rc-3f1436cca1-20240516(react@19.0.0-rc-3f1436cca1-20240516)
     devDependencies:
       '@types/node':
         specifier: ^20.12.8
         version: 20.12.8
       '@types/react':
-        specifier: ^18.3.1
-        version: 18.3.1
+        specifier: ^18.3.2
+        version: 18.3.2
       '@types/react-dom':
         specifier: ^18.3.0
         version: 18.3.0
@@ -228,23 +228,23 @@ importers:
         specifier: ^20.12.8
         version: 20.12.8
       '@types/react':
-        specifier: ^18.3.1
-        version: 18.3.1
+        specifier: ^18.3.2
+        version: 18.3.2
       '@types/react-dom':
         specifier: ^18.3.0
         version: 18.3.0
       next:
         specifier: 14.2.3
-        version: 14.2.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        version: 14.2.3(react-dom@19.0.0-rc-3f1436cca1-20240516(react@19.0.0-rc-3f1436cca1-20240516))(react@19.0.0-rc-3f1436cca1-20240516)
       npm-run-all:
         specifier: ^4.1.5
         version: 4.1.5
       react:
-        specifier: ^18.3.1
-        version: 18.3.1
+        specifier: rc
+        version: 19.0.0-rc-3f1436cca1-20240516
       react-dom:
-        specifier: ^18.3.1
-        version: 18.3.1(react@18.3.1)
+        specifier: rc
+        version: 19.0.0-rc-3f1436cca1-20240516(react@19.0.0-rc-3f1436cca1-20240516)
       size-limit:
         specifier: ^11.1.2
         version: 11.1.2
@@ -1878,6 +1878,9 @@ packages:
 
   '@types/react@18.3.1':
     resolution: {integrity: sha512-V0kuGBX3+prX+DQ/7r2qsv1NsdfnCLnTgnRJ1pYnxykBhGMz+qj+box5lq7XsO5mtZsBqpjwwTu/7wszPfMBcw==}
+
+  '@types/react@18.3.2':
+    resolution: {integrity: sha512-Btgg89dAnqD4vV7R3hlwOxgqobUQKgx3MmrQRi0yYbs/P0ym8XozIAlkqVilPqHQwXs4e9Tf63rrCgl58BcO4w==}
 
   '@types/semver@7.5.8':
     resolution: {integrity: sha512-I8EUhyrgfLrcTkzV3TSsGyl1tSuPrEDzr0yd5m90UgNxQkyDXULk3b6MlQqTCpZpNtWe1K0hzclnZkTcLBe2UQ==}
@@ -4697,6 +4700,11 @@ packages:
     peerDependencies:
       react: ^18.3.1
 
+  react-dom@19.0.0-rc-3f1436cca1-20240516:
+    resolution: {integrity: sha512-or7TvmgsPqNGudf4SfSWvZxdIW9ZRP0FxQGyEazfKK6Nevuy39G2SKKhPh285vFZuES13X90XSCkeOrgL+70CQ==}
+    peerDependencies:
+      react: 19.0.0-rc-3f1436cca1-20240516
+
   react-is@16.13.1:
     resolution: {integrity: sha512-24e6ynE2H+OKt4kqsOvNd8kBpV65zoxbA4BVsEOB3ARVWQki/DHzaUoC5KuON/BiccDaCCTZBuOcfZs70kR8bQ==}
 
@@ -4782,6 +4790,10 @@ packages:
 
   react@18.3.1:
     resolution: {integrity: sha512-wS+hAgJShR0KhEvPJArfuPVN1+Hz1t0Y6n5jLrGQbkb4urgPE/0Rve+1kMB1v/oWgHgm4WIcV+i7F2pTVj+2iQ==}
+    engines: {node: '>=0.10.0'}
+
+  react@19.0.0-rc-3f1436cca1-20240516:
+    resolution: {integrity: sha512-wLZoTg7n8ta+VOIc5ek+A6ry5qU1yj6QgT6IvjKNA5KGzWivMeqOHFGAF62wHgDBTNcdJx3aiilOmHtDHaNIDA==}
     engines: {node: '>=0.10.0'}
 
   read-cache@1.0.0:
@@ -4967,6 +4979,9 @@ packages:
 
   scheduler@0.23.2:
     resolution: {integrity: sha512-UOShsPwz7NrMUqhR6t0hWjFduvOzbtv7toDH1/hIrfRNIDBnnBWd0CwJTGvTpngVlmwGCdP9/Zl/tVrDqcuYzQ==}
+
+  scheduler@0.25.0-rc-3f1436cca1-20240516:
+    resolution: {integrity: sha512-iJvRR7IYYhTx2TxKa9sBBAI+7dgpgQbCZyzd5oY88kkJM9BhbfqF/zexoV/aa5JtBdQNYKn4EHYXg8hu8rrqOA==}
 
   schema-utils@3.3.0:
     resolution: {integrity: sha512-pN/yOAvcC+5rQ5nERGuwrjLlYvLTbCibnZ1I7B1LaiAz9BRBlE9GMgE/eqV30P7aJQUf7Ddimy/RsbYO/GrVGg==}
@@ -7389,14 +7404,14 @@ snapshots:
       ts-dedent: 2.2.0
       util-deprecate: 1.0.2
 
-  '@storybook/test@8.0.10(vitest@1.6.0(@types/node@20.12.8)(terser@5.31.0))':
+  '@storybook/test@8.0.10(vitest@1.6.0(@types/node@20.12.8))':
     dependencies:
       '@storybook/client-logger': 8.0.10
       '@storybook/core-events': 8.0.10
       '@storybook/instrumenter': 8.0.10
       '@storybook/preview-api': 8.0.10
       '@testing-library/dom': 9.3.4
-      '@testing-library/jest-dom': 6.4.5(vitest@1.6.0(@types/node@20.12.8)(terser@5.31.0))
+      '@testing-library/jest-dom': 6.4.5(vitest@1.6.0(@types/node@20.12.8))
       '@testing-library/user-event': 14.5.2(@testing-library/dom@9.3.4)
       '@vitest/expect': 1.3.1
       '@vitest/spy': 1.6.0
@@ -7458,7 +7473,7 @@ snapshots:
       lz-string: 1.5.0
       pretty-format: 27.5.1
 
-  '@testing-library/jest-dom@6.4.5(vitest@1.6.0(@types/node@20.12.8)(terser@5.31.0))':
+  '@testing-library/jest-dom@6.4.5(vitest@1.6.0(@types/node@20.12.8))':
     dependencies:
       '@adobe/css-tools': 4.3.3
       '@babel/runtime': 7.24.5
@@ -7617,6 +7632,11 @@ snapshots:
       '@types/react': 18.3.1
 
   '@types/react@18.3.1':
+    dependencies:
+      '@types/prop-types': 15.7.12
+      csstype: 3.1.3
+
+  '@types/react@18.3.2':
     dependencies:
       '@types/prop-types': 15.7.12
       csstype: 3.1.3
@@ -10364,7 +10384,7 @@ snapshots:
       - react-dom
       - supports-color
 
-  next-docs-ui@6.0.2(@types/react-dom@18.3.0)(@types/react@18.3.1)(next@14.2.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(tailwindcss@3.4.3(ts-node@9.1.1(typescript@5.4.5)))(vitest@1.6.0(@types/node@20.12.8)(terser@5.31.0)):
+  next-docs-ui@6.0.2(@types/react-dom@18.3.0)(@types/react@18.3.1)(next@14.2.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(tailwindcss@3.4.3(ts-node@9.1.1(typescript@5.4.5)))(vitest@1.6.0(@types/node@20.12.8)):
     dependencies:
       '@radix-ui/react-accordion': 1.1.2(@types/react-dom@18.3.0)(@types/react@18.3.1)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@radix-ui/react-collapsible': 1.0.3(@types/react-dom@18.3.0)(@types/react@18.3.1)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -10383,7 +10403,7 @@ snapshots:
       next-themes: 0.2.1(next@14.2.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
-      react-medium-image-zoom: 5.2.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(vitest@1.6.0(@types/node@20.12.8)(terser@5.31.0))
+      react-medium-image-zoom: 5.2.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(vitest@1.6.0(@types/node@20.12.8))
       tailwind-merge: 2.3.0
       tailwindcss-animate: 1.0.7(tailwindcss@3.4.3(ts-node@9.1.1(typescript@5.4.5)))
     transitivePeerDependencies:
@@ -10437,6 +10457,31 @@ snapshots:
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
       styled-jsx: 5.1.1(react@18.3.1)
+    optionalDependencies:
+      '@next/swc-darwin-arm64': 14.2.3
+      '@next/swc-darwin-x64': 14.2.3
+      '@next/swc-linux-arm64-gnu': 14.2.3
+      '@next/swc-linux-arm64-musl': 14.2.3
+      '@next/swc-linux-x64-gnu': 14.2.3
+      '@next/swc-linux-x64-musl': 14.2.3
+      '@next/swc-win32-arm64-msvc': 14.2.3
+      '@next/swc-win32-ia32-msvc': 14.2.3
+      '@next/swc-win32-x64-msvc': 14.2.3
+    transitivePeerDependencies:
+      - '@babel/core'
+      - babel-plugin-macros
+
+  next@14.2.3(react-dom@19.0.0-rc-3f1436cca1-20240516(react@19.0.0-rc-3f1436cca1-20240516))(react@19.0.0-rc-3f1436cca1-20240516):
+    dependencies:
+      '@next/env': 14.2.3
+      '@swc/helpers': 0.5.5
+      busboy: 1.6.0
+      caniuse-lite: 1.0.30001616
+      graceful-fs: 4.2.11
+      postcss: 8.4.31
+      react: 19.0.0-rc-3f1436cca1-20240516
+      react-dom: 19.0.0-rc-3f1436cca1-20240516(react@19.0.0-rc-3f1436cca1-20240516)
+      styled-jsx: 5.1.1(react@19.0.0-rc-3f1436cca1-20240516)
     optionalDependencies:
       '@next/swc-darwin-arm64': 14.2.3
       '@next/swc-darwin-x64': 14.2.3
@@ -10875,15 +10920,20 @@ snapshots:
       react: 18.3.1
       scheduler: 0.23.2
 
+  react-dom@19.0.0-rc-3f1436cca1-20240516(react@19.0.0-rc-3f1436cca1-20240516):
+    dependencies:
+      react: 19.0.0-rc-3f1436cca1-20240516
+      scheduler: 0.25.0-rc-3f1436cca1-20240516
+
   react-is@16.13.1: {}
 
   react-is@17.0.2: {}
 
   react-is@18.3.1: {}
 
-  react-medium-image-zoom@5.2.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(vitest@1.6.0(@types/node@20.12.8)(terser@5.31.0)):
+  react-medium-image-zoom@5.2.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(vitest@1.6.0(@types/node@20.12.8)):
     dependencies:
-      '@storybook/test': 8.0.10(vitest@1.6.0(@types/node@20.12.8)(terser@5.31.0))
+      '@storybook/test': 8.0.10(vitest@1.6.0(@types/node@20.12.8))
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
     transitivePeerDependencies:
@@ -10968,6 +11018,8 @@ snapshots:
   react@18.3.1:
     dependencies:
       loose-envify: 1.4.0
+
+  react@19.0.0-rc-3f1436cca1-20240516: {}
 
   read-cache@1.0.0:
     dependencies:
@@ -11256,6 +11308,8 @@ snapshots:
   scheduler@0.23.2:
     dependencies:
       loose-envify: 1.4.0
+
+  scheduler@0.25.0-rc-3f1436cca1-20240516: {}
 
   schema-utils@3.3.0:
     dependencies:
@@ -11571,6 +11625,11 @@ snapshots:
     dependencies:
       client-only: 0.0.1
       react: 18.3.1
+
+  styled-jsx@5.1.1(react@19.0.0-rc-3f1436cca1-20240516):
+    dependencies:
+      client-only: 0.0.1
+      react: 19.0.0-rc-3f1436cca1-20240516
 
   sucrase@3.35.0:
     dependencies:

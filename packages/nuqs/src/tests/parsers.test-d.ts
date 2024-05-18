@@ -1,3 +1,4 @@
+import React from 'react'
 import { expectError, expectType } from 'tsd'
 import { parseAsString } from '../../dist'
 

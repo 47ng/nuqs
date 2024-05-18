@@ -1,3 +1,4 @@
+// @ts-expect-error (not exported in types for React 19 beta, but available in Next.js)
 import { cache } from 'react'
 import { error } from './errors'
 import type { ParserBuilder } from './parsers'
@@ -29,7 +30,7 @@ export function createSearchParamsCache<
   // whereas a simple object would be bound to the lifecycle of the process,
   // which may be reused between requests in a serverless environment
   // (warm lambdas on Vercel or AWS).
-  const getCache = cache<() => Cache>(() => ({
+  const getCache: () => Cache = cache<() => Cache>(() => ({
     searchParams: {}
   }))
   function parse(searchParams: SearchParams) {
