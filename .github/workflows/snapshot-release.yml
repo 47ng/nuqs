@@ -35,7 +35,7 @@ jobs:
       - name: Publish package
         working-directory: packages/nuqs
         run: |
-          pnpm pkg set version ${{ steps.version.outputs.version }}
+          pnpm pkg set version=${{ steps.version.outputs.version }}
           echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > .npmrc
           pnpm publish --access public --tag snapshot --no-git-checks
           rm -f .npmrc
