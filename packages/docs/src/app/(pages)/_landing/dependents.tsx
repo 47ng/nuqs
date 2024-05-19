@@ -8,11 +8,12 @@ const dependentSchema = z.object({
   name: z.string(),
   pkg: z.string(),
   avatarURL: z.string(),
+  version: z.string().nullable(),
   createdAt: z.string().transform(date => new Date(date))
 })
 type Dependent = z.infer<typeof dependentSchema>
 
-async function fetchDependents() {
+export async function fetchDependents() {
   const data = await fetch('https://dependents.47ng.com', {
     next: {
       revalidate: 86_400,
