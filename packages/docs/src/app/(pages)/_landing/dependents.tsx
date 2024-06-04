@@ -20,6 +20,7 @@ export async function fetchDependents() {
       // tags: ['dependents']
     }
   }).then(res => res.json())
+  console.log(JSON.stringify(data))
   return z.array(dependentSchema).parse(data)
 }
 
