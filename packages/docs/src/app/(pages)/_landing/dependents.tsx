@@ -16,8 +16,8 @@ type Dependent = z.infer<typeof dependentSchema>
 export async function fetchDependents() {
   const data = await fetch('https://dependents.47ng.com', {
     next: {
-      revalidate: 86_400,
-      tags: ['dependents']
+      revalidate: 60
+      // tags: ['dependents']
     }
   }).then(res => res.json())
   return z.array(dependentSchema).parse(data)
