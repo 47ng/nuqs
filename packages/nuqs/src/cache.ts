@@ -34,28 +34,23 @@ export function createSearchParamsCache<
   }))
   function parse(searchParams: SearchParams) {
     const c = getCache()
-
     if (Object.isFrozen(c.searchParams)) {
-      // parse has already been called
-      if (searchParams === c[$input]) {
-        // but we're being called with the identical object again, so we can safely return the same cached result
-        // (an example of when this occurs would be if parse was called in generateMetadata as well as the page itself).
-        // note that this simply checks for referential equality and will still fail if a different object with the
-        // same contents is passed. fortunately next.js uses the same object for search params in the same request.
+      // Parse has already been called...
+      if (c[$input] && compareSearchParams(searchParams, c[$input])) {
+        // ...but we're being called with the same contents again,
+        // so we can safely return the same cached result (an example of when
+        // this occurs would be if parse was called in generateMetadata as well
+        // as the page itself).
         return all()
       }
-
-      // different input in the same request - fail
+      // Different inputs in the same request - fail
       throw new Error(error(501))
     }
-
     for (const key in parsers) {
       const parser = parsers[key]!
       c.searchParams[key] = parser.parseServerSide(searchParams[key])
     }
-
     c[$input] = searchParams
-
     return Object.freeze(c.searchParams) as Readonly<ParsedSearchParams>
   }
   function all() {
@@ -79,4 +74,19 @@ export function createSearchParamsCache<
     return entry
   }
   return { parse, get, all }
+}
+
+export function compareSearchParams(a: SearchParams, b: SearchParams) {
+  if (a === b) {
+    return true
+  }
+  if (Object.keys(a).length !== Object.keys(b).length) {
+    return false
+  }
+  for (const key in a) {
+    if (a[key] !== b[key]) {
+      return false
+    }
+  }
+  return true
 }

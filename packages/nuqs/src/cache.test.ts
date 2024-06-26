@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { createSearchParamsCache } from './cache'
+import { compareSearchParams, createSearchParamsCache } from './cache'
 import { parseAsString } from './parsers'
 
 // provide a simple mock for React cache
@@ -22,7 +22,7 @@ describe('cache', () => {
       string: "I'm a string"
     }
 
-    it('allows parsing same object multiple times in a request', () => {
+    it('allows parsing the same object multiple times in a request', () => {
       const cache = createSearchParamsCache({
         string: parseAsString
       })
@@ -37,6 +37,15 @@ describe('cache', () => {
       expect(cache.all()).toBe(all)
     })
 
+    it('allows parsing the same content with different references', () => {
+      const cache = createSearchParamsCache({
+        string: parseAsString
+      })
+      const copy = { ...input }
+      expect(cache.parse(input).string).toBe(input.string)
+      expect(cache.parse(copy).string).toBe(input.string)
+    })
+
     it('disallows parsing different objects in a request', () => {
       const cache = createSearchParamsCache({
         string: parseAsString
@@ -49,6 +58,32 @@ describe('cache', () => {
 
       // cache still works though
       expect(cache.all()).toBe(all)
+    })
+  })
+
+  describe('compareSearchParams', () => {
+    it('works on empty search params', () => {
+      expect(compareSearchParams({}, {})).toBe(true)
+    })
+    it('rejects different lengths', () => {
+      expect(compareSearchParams({ a: 'a' }, { a: 'a', b: 'b' })).toBe(false)
+    })
+    it('rejects different values', () => {
+      expect(compareSearchParams({ x: 'a' }, { x: 'b' })).toBe(false)
+    })
+    it('does not care about order', () => {
+      expect(compareSearchParams({ x: 'a', y: 'b' }, { y: 'b', x: 'a' })).toBe(
+        true
+      )
+    })
+    it('supports array values (referentially stable)', () => {
+      const array = ['a', 'b']
+      expect(compareSearchParams({ x: array }, { x: array })).toBe(true)
+    })
+    it('does not do deep comparison', () => {
+      expect(compareSearchParams({ x: ['a', 'b'] }, { x: ['a', 'b'] })).toBe(
+        false
+      )
     })
   })
 })
