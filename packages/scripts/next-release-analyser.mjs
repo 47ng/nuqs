@@ -47,15 +47,18 @@ async function main() {
   const compareURL = `https://api.github.com/repos/vercel/next.js/compare/v${previousVersion}...v${thisVersion}`
   const compare = await fetch(compareURL).then(res => res.json())
   const files = z.array(fileSchema).parse(compare.files)
-  const appRouterFile = files.find(
-    file =>
-      file.filename === 'packages/next/src/client/components/app-router.tsx'
+  const relevantFiles = files.filter(file =>
+    [
+      'packages/next/src/client/components/app-router.tsx',
+      'packages/next/src/client/components/search-params.ts',
+      'packages/next/src/client/components/navigation.ts'
+    ].includes(file.filename)
   )
-  if (!appRouterFile) {
-    console.log('No changes in app-router.tsx')
+  if (relevantFiles.length === 0) {
+    console.log('No relevant changes')
     process.exit(0)
   }
-  await sendNotificationEmail(thisVersion, appRouterFile)
+  await sendNotificationEmail(thisVersion, relevantFiles)
 }
 
 // --
@@ -78,28 +81,34 @@ function getPreviousVersion(version) {
 /**
  *
  * @param {string} thisVersion
- * @param {z.infer<typeof fileSchema>} appRouterFile
+ * @param {z.infer<typeof fileSchema>[]} files
  * @returns
  */
-async function sendNotificationEmail(thisVersion, appRouterFile) {
+async function sendNotificationEmail(thisVersion, files) {
   const client = new MailPace.DomainClient(env.MAILPACE_API_TOKEN)
   const release = await fetch(
     `https://api.github.com/repos/vercel/next.js/releases/tags/v${thisVersion}`
   ).then(res => res.json())
-  const subject = `[nuqs] Next.js ${thisVersion} has app router changes`
+  const subject = `[nuqs] Next.js ${thisVersion} has relevant core changes`
+  const patchSection = files
+    .map(file => {
+      if (!file.patch) {
+        return `${file.filename}: no patch available`
+      }
+      return `${file.filename}:
+\`\`\`diff
+${file.patch}
+\`\`\`
+`
+    })
+    .join('\n')
+
   const body = `Release: ${release.html_url}
 
 ${release.body}
 ---
 
-${
-  appRouterFile.patch
-    ? `App router changes:
-  \`\`\`diff
-  ${appRouterFile.patch}
-  \`\`\``
-    : 'No patch available'
-}
+${patchSection}
 `
   console.info('Sending email:', subject)
   console.info(body)
