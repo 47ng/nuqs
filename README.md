@@ -684,6 +684,41 @@ serialize(url, { foo: 'bar' }) // https://example.com/path?baz=qux&foo=bar
 serialize('?remove=me', { foo: 'bar', remove: null }) // ?foo=bar
 ```
 
+## Parser type inference
+
+To access the underlying type returned by a parser, you can use the
+`inferParserType` type helper:
+
+```ts
+import { parseAsInteger, type inferParserType } from 'nuqs' // or 'nuqs/server'
+
+const intNullable = parseAsInteger
+const intNonNull = parseAsInteger.withDefault(0)
+
+inferParserType<typeof intNullable> // number | null
+inferParserType<typeof intNonNull> // number
+```
+
+For an object describing parsers (that you'd pass to `createSearchParamsCache`
+or to `useQueryStates`, you can use the
+`inferParserRecordType` helper:
+
+```ts
+import {
+  parseAsBoolean,
+  parseAsInteger,
+  type inferParserRecordType
+} from 'nuqs' // or 'nuqs/server'
+
+const parsers = {
+  a: parseAsInteger,
+  b: parseAsBoolean.withDefault(false)
+}
+
+inferParserRecordType<typeof parsers>
+// { a: number | null, b: boolean }
+```
+
 ## Testing
 
 Currently, the best way to test the behaviour of your components using
