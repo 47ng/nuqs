@@ -61,23 +61,3 @@ jobs:
     steps:
       - name: Invalidate ISR cache for GitHub Actions status on landing page
         run: curl -s "https://nuqs.47ng.com/api/isr?tag=github-actions-status&token=${{ secrets.ISR_TOKEN }}"
-
-  analyse-release:
-    runs-on: ubuntu-latest
-    name: Check for app router changes
-    steps:
-      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332
-      - uses: pnpm/action-setup@fe02b34f77f8bc703788d5817da081398fad5dd2
-      - uses: actions/setup-node@60edb5dd545a775178f52524783378180af0d1f8
-        with:
-          node-version-file: .node-version
-          cache: pnpm
-      - name: Install dependencies
-        run: pnpm install
-      - name: Check for changes in app router
-        run: ./next-release-analyser.mjs --version ${{ inputs.version }}
-        working-directory: packages/scripts
-        env:
-          MAILPACE_API_TOKEN: ${{ secrets.MAILPACE_API_TOKEN }}
-          EMAIL_ADDRESS_TO: ${{ secrets.EMAIL_ADDRESS_TO }}
-          EMAIL_ADDRESS_FROM: ${{ secrets.EMAIL_ADDRESS_FROM }}
