@@ -1,6 +1,6 @@
 {
-  "$schema": "https://turbo.build/schema.json",
-  "pipeline": {
+  "$schema": "https://turbo.build/schema.v2.json",
+  "tasks": {
     "dev": {
       "cache": false,
       "persistent": true
@@ -27,7 +27,7 @@
     },
     "e2e#test": {
       "dependsOn": ["build"],
-      "env": ["E2E_NO_CACHE_ON_RERUN"]
+      "env": ["BASE_PATH", "WINDOW_HISTORY_SUPPORT", "E2E_NO_CACHE_ON_RERUN"]
     }
   }
 }
