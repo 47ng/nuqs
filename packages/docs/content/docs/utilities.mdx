@@ -61,3 +61,38 @@ serialize(url, { foo: 'bar' }) // https://example.com/path?baz=qux&foo=bar
 // Passing null removes existing values
 serialize('?remove=me', { foo: 'bar', remove: null }) // ?foo=bar
 ```
+
+## Parser type inference
+
+To access the underlying type returned by a parser, you can use the
+`inferParserType` type helper:
+
+```ts
+import { parseAsInteger, type inferParserType } from 'nuqs' // or 'nuqs/server'
+
+const intNullable = parseAsInteger
+const intNonNull = parseAsInteger.withDefault(0)
+
+inferParserType<typeof intNullable> // number | null
+inferParserType<typeof intNonNull> // number
+```
+
+For an object describing parsers (that you'd pass to [`createSearchParamsCache`](./server-side)
+or to [`useQueryStates`](./batching#usequerystates)), you can use the
+`inferParserRecordType` helper:
+
+```ts
+import {
+  parseAsBoolean,
+  parseAsInteger,
+  type inferParserRecordType
+} from 'nuqs' // or 'nuqs/server'
+
+const parsers = {
+  a: parseAsInteger,
+  b: parseAsBoolean.withDefault(false)
+}
+
+inferParserRecordType<typeof parsers>
+// { a: number | null, b: boolean }
+```
