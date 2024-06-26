@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { createSearchParamsCache, stringify } from './cache'
+import { compareSearchParams, createSearchParamsCache } from './cache'
 import { parseAsString } from './parsers'
 
 // provide a simple mock for React cache
@@ -61,15 +61,29 @@ describe('cache', () => {
     })
   })
 
-  describe('stringify', () => {
-    it('works on string values', () => {
-      expect(stringify({ foo: 'bar' })).toEqual('foo=bar')
+  describe('compareSearchParams', () => {
+    it('works on empty search params', () => {
+      expect(compareSearchParams({}, {})).toBe(true)
     })
-    it('works on array values', () => {
-      expect(stringify({ foo: ['bar', 'baz'] })).toEqual('foo=bar%2Cbaz')
+    it('rejects different lengths', () => {
+      expect(compareSearchParams({ a: 'a' }, { a: 'a', b: 'b' })).toBe(false)
     })
-    it('works on undefined values', () => {
-      expect(stringify({ foo: undefined })).toEqual('foo=undefined')
+    it('rejects different values', () => {
+      expect(compareSearchParams({ x: 'a' }, { x: 'b' })).toBe(false)
+    })
+    it('does not care about order', () => {
+      expect(compareSearchParams({ x: 'a', y: 'b' }, { y: 'b', x: 'a' })).toBe(
+        true
+      )
+    })
+    it('supports array values (referentially stable)', () => {
+      const array = ['a', 'b']
+      expect(compareSearchParams({ x: array }, { x: array })).toBe(true)
+    })
+    it('does not do deep comparison', () => {
+      expect(compareSearchParams({ x: ['a', 'b'] }, { x: ['a', 'b'] })).toBe(
+        false
+      )
     })
   })
 })

@@ -2,7 +2,7 @@
 
 describe('cache', () => {
   it('works in app router', () => {
-    cy.visit('/app/cache?str=foo&num=42&bool=true')
+    cy.visit('/app/cache?str=foo&num=42&bool=true&multi=foo&multi=bar')
     cy.get('#parse-str').should('have.text', 'foo')
     cy.get('#parse-num').should('have.text', '42')
     cy.get('#parse-bool').should('have.text', 'true')

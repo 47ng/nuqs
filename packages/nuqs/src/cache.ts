@@ -21,7 +21,7 @@ export function createSearchParamsCache<
 
   type Cache = {
     searchParams: Partial<ParsedSearchParams>
-    [$input]?: string
+    [$input]?: SearchParams
   }
 
   // Why not use a good old object here ?
@@ -36,7 +36,7 @@ export function createSearchParamsCache<
     const c = getCache()
     if (Object.isFrozen(c.searchParams)) {
       // Parse has already been called...
-      if (stringify(searchParams) === c[$input]) {
+      if (c[$input] && compareSearchParams(searchParams, c[$input])) {
         // ...but we're being called with the same contents again,
         // so we can safely return the same cached result (an example of when
         // this occurs would be if parse was called in generateMetadata as well
@@ -50,7 +50,7 @@ export function createSearchParamsCache<
       const parser = parsers[key]!
       c.searchParams[key] = parser.parseServerSide(searchParams[key])
     }
-    c[$input] = stringify(searchParams)
+    c[$input] = searchParams
     return Object.freeze(c.searchParams) as Readonly<ParsedSearchParams>
   }
   function all() {
@@ -76,11 +76,17 @@ export function createSearchParamsCache<
   return { parse, get, all }
 }
 
-/**
- * Internal function: reduce a SearchParams object to a string
- * for internal comparison of inputs passed to the cache's `parse` function.
- */
-export function stringify(searchParams: SearchParams) {
-  // @ts-expect-error - URLSearchParams is actually OK with array values
-  return new URLSearchParams(searchParams).toString()
+export function compareSearchParams(a: SearchParams, b: SearchParams) {
+  if (a === b) {
+    return true
+  }
+  if (Object.keys(a).length !== Object.keys(b).length) {
+    return false
+  }
+  for (const key in a) {
+    if (a[key] !== b[key]) {
+      return false
+    }
+  }
+  return true
 }
