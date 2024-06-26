@@ -404,3 +404,52 @@ export function parseAsArrayOf<ItemType>(
     }
   })
 }
+
+/**
+ * Type helper to extract the underlying returned data type of a parser.
+ *
+ * Usage:
+ *
+ * ```ts
+ * import { type inferParserType } from 'nuqs' // or 'nuqs/server'
+ *
+ * const intNullable = parseAsInteger
+ * const intNonNull = parseAsInteger.withDefault(0)
+ *
+ * inferParserType<typeof intNullable> // number | null
+ * inferParserType<typeof intNonNull> // number
+ * ```
+ */
+export type inferParserType<Parser> = Parser extends ParserBuilder<
+  infer Type
+> & {
+  defaultValue: infer Type
+}
+  ? Type
+  : Parser extends ParserBuilder<infer Type>
+    ? Type | null
+    : never
+
+/**
+ * Type helper to extract the underlying returned data type of an object
+ * describing multiple parsers and their associated keys.
+ *
+ * Usage:
+ *
+ * ```ts
+ * import { type inferParserRecordType } from 'nuqs' // or 'nuqs/server'
+ *
+ * const parsers = {
+ *  a: parseAsInteger,
+ *  b: parseAsBoolean.withDefault(false)
+ * }
+ *
+ * inferParserRecordType<typeof parsers>
+ * // { a: number | null, b: boolean }
+ * ```
+ */
+export type inferParserRecordType<
+  Map extends Record<string, ParserBuilder<any>>
+> = {
+  [Key in keyof Map]: inferParserType<Map[Key]>
+}
