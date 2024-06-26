@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { createSearchParamsCache } from './cache'
+import { createSearchParamsCache, stringify } from './cache'
 import { parseAsString } from './parsers'
 
 // provide a simple mock for React cache
@@ -22,7 +22,7 @@ describe('cache', () => {
       string: "I'm a string"
     }
 
-    it('allows parsing same object multiple times in a request', () => {
+    it('allows parsing the same object multiple times in a request', () => {
       const cache = createSearchParamsCache({
         string: parseAsString
       })
@@ -37,6 +37,15 @@ describe('cache', () => {
       expect(cache.all()).toBe(all)
     })
 
+    it('allows parsing the same content with different references', () => {
+      const cache = createSearchParamsCache({
+        string: parseAsString
+      })
+      const copy = { ...input }
+      expect(cache.parse(input).string).toBe(input.string)
+      expect(cache.parse(copy).string).toBe(input.string)
+    })
+
     it('disallows parsing different objects in a request', () => {
       const cache = createSearchParamsCache({
         string: parseAsString
@@ -49,6 +58,18 @@ describe('cache', () => {
 
       // cache still works though
       expect(cache.all()).toBe(all)
+    })
+  })
+
+  describe('stringify', () => {
+    it('works on string values', () => {
+      expect(stringify({ foo: 'bar' })).toEqual('foo=bar')
+    })
+    it('works on array values', () => {
+      expect(stringify({ foo: ['bar', 'baz'] })).toEqual('foo=bar%2Cbaz')
+    })
+    it('works on undefined values', () => {
+      expect(stringify({ foo: undefined })).toEqual('foo=undefined')
     })
   })
 })
