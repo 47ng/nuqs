@@ -5,7 +5,8 @@ const basePath =
 const config = {
   basePath,
   experimental: {
-    clientRouterFilter: false
+    clientRouterFilter: false,
+    reactCompiler: process.env.REACT_COMPILER === 'true'
   },
   rewrites: async () => [
     {

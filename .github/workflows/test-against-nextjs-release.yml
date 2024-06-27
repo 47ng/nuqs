@@ -14,12 +14,13 @@ env:
 
 jobs:
   test_against_nextjs_release:
-    name: CI (${{ inputs.version }}${{ matrix.base-path && ' basePath' || ''}})
+    name: CI (${{ inputs.version }}${{ matrix.base-path && ' basePath' || ''}}${{ matrix.react-compiler && ' ⚛️⚡️' || ''}})
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         base-path: [false, '/base']
+        react-compiler: [true, false]
     steps:
       - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332
       - uses: pnpm/action-setup@fe02b34f77f8bc703788d5817da081398fad5dd2
@@ -35,6 +36,7 @@ jobs:
         run: pnpm run test
         env:
           BASE_PATH: ${{ matrix.base-path && matrix.base-path || '/' }}
+          REACT_COMPILER: ${{ matrix.react-compiler }}
           TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
           TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
           E2E_NO_CACHE_ON_RERUN: ${{ github.run_attempt }}
@@ -43,13 +45,13 @@ jobs:
         if: failure()
         with:
           path: packages/e2e/cypress/screenshots
-          name: ci-${{ inputs.version }}${{ matrix.base-path && '-basePath' || ''}}
+          name: ci-${{ inputs.version }}${{ matrix.base-path && '-basePath' || ''}}${{ matrix.react-compiler && '-react-compiler' || ''}}
       - uses: 47ng/actions-slack-notify@main
         name: Notify on Slack
         if: always()
         with:
           status: ${{ job.status }}
-          jobName: next@${{ inputs.version }}${{ matrix.base-path && ' basePath' || ''}}
+          jobName: next@${{ inputs.version }}${{ matrix.base-path && ' basePath' || ''}}${{ matrix.react-compiler && ' ⚛️⚡️' || ''}}
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
