@@ -1,4 +1,4 @@
-import { useRouter } from 'next/navigation.js' // https://github.com/47ng/nuqs/discussions/352
+import type { useRouter } from 'next/navigation.js' // https://github.com/47ng/nuqs/discussions/352
 import type { TransitionStartFunction } from 'react'
 
 export type Router = ReturnType<typeof useRouter>
