@@ -7,6 +7,7 @@ const config = {
   productionBrowserSourceMaps: true,
   experimental: {
     clientRouterFilter: false,
+    reactCompiler: process.env.REACT_COMPILER === 'true',
     serverSourceMaps: true
   },
   rewrites: async () => [
