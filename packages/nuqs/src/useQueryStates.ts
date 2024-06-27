@@ -141,6 +141,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
           ? stateUpdater(stateRef.current)
           : stateUpdater
       debug('[nuq+ `%s`] setState: %O', keys, newState)
+      // eslint-disable-next-line prefer-const
       for (let [key, value] of Object.entries(newState)) {
         const config = keyMap[key]
         if (!config) {

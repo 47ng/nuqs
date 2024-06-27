@@ -28,6 +28,10 @@
     "e2e#test": {
       "dependsOn": ["build"],
       "env": ["BASE_PATH", "WINDOW_HISTORY_SUPPORT", "E2E_NO_CACHE_ON_RERUN"]
+    },
+    "lint": {
+      "cache": false,
+      "persistent": true
     }
   }
 }
