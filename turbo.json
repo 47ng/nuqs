@@ -14,7 +14,7 @@
     "e2e#build": {
       "outputs": [".next/**", "!.next/cache/**", "cypress/**"],
       "dependsOn": ["^build"],
-      "env": ["BASE_PATH", "WINDOW_HISTORY_SUPPORT", "E2E_NO_CACHE_ON_RERUN"]
+      "env": ["BASE_PATH", "REACT_COMPILER", "E2E_NO_CACHE_ON_RERUN"]
     },
     "docs#build": {
       "outputs": [".next/**", "!.next/cache/**"],
@@ -37,7 +37,7 @@
     },
     "e2e#test": {
       "dependsOn": ["build"],
-      "env": ["BASE_PATH", "WINDOW_HISTORY_SUPPORT", "E2E_NO_CACHE_ON_RERUN"]
+      "env": ["BASE_PATH", "REACT_COMPILER", "E2E_NO_CACHE_ON_RERUN"]
     }
   }
 }
