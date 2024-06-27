@@ -1,4 +1,3 @@
-import type { NextRouter } from 'next/router'
 import { debug } from './debug'
 import type { Options, Router } from './defs'
 import { error } from './errors'
@@ -123,7 +122,7 @@ declare global {
   interface Window {
     next?: {
       version: string
-      router?: NextRouter & {
+      router?: Router & {
         state: {
           asPath: string
         }
@@ -170,7 +169,7 @@ function flushUpdateQueue(router: Router): [URLSearchParams, null | unknown] {
       debug('[nuqs queue (pages)] Updating url: %s', url)
       const method =
         options.history === 'push' ? nextRouter.push : nextRouter.replace
-      method.call(nextRouter, url, url, {
+      method.call(nextRouter, url, {
         scroll: options.scroll,
         shallow: options.shallow
       })
