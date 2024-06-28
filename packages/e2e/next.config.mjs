@@ -23,7 +23,7 @@ const config = {
 
 console.info(`Next.js config:
   basePath:       ${basePath}
-  reactCompiler:  ${experimental?.reactCompiler ?? false}
+  reactCompiler:  ${config.experimental.reactCompiler ?? false}
 `)
 
 export default config
