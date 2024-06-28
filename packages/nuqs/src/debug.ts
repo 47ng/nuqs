@@ -4,8 +4,7 @@ let enabled = false
 try {
   enabled =
     (typeof localStorage === 'object' &&
-      (localStorage.getItem('debug')?.includes('next-usequerystate') ||
-        localStorage.getItem('debug')?.includes('nuqs'))) ||
+      localStorage.getItem('debug')?.includes('nuqs')) ||
     false
 } catch (error) {
   console.error(
