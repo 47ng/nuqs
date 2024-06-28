@@ -6,7 +6,7 @@ const config = {
   basePath,
   experimental: {
     clientRouterFilter: false,
-    reactCompiler: process.env.REACT_COMPILER === 'true'
+    ...(process.env.REACT_COMPILER === 'true' ? { reactCompiler: true } : {})
   },
   rewrites: async () => [
     {
@@ -20,5 +20,10 @@ const config = {
     }
   ]
 }
+
+console.info(`Next.js config:
+  basePath:       ${basePath}
+  reactCompiler:  ${experimental?.reactCompiler ?? false}
+`)
 
 export default config
