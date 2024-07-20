@@ -46,13 +46,13 @@ export function QuotesSection() {
       />
       <Quote
         author={{
-          name: 'Acropolis1111',
-          handle: '/u/Acropolis1111',
+          name: 'Marc Seitz',
+          handle: '@mfts0',
           avatar:
-            'https://i.redd.it/snoovatar/avatars/nftv2_bmZ0X2VpcDE1NToxMzdfZWI5NTlhNzE1ZGZmZmU2ZjgyZjQ2MDU1MzM5ODJjNDg1OWNiMTRmZV8yNTI4MjUxOA_rare_41d7bb59-a0cc-4579-9823-72042de422e3-headshot.png'
+            'https://pbs.twimg.com/profile_images/1176854646343852032/iYnUXJ-m_400x400.jpg'
         }}
-        text="This package is dope"
-        url="https://www.reddit.com/r/nextjs/comments/196g6kp/comment/khtdy3j"
+        text="It’s a database ORM for your URL"
+        url="https://x.com/mfts0/status/1814577051703066783"
       />
       <Quote
         author={{
