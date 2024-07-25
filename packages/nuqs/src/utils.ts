@@ -38,3 +38,22 @@ export function getDefaultThrottle() {
     return 320
   }
 }
+
+/**
+ * Check if localStorage is available
+ */
+export function isLocalStorageAvailable(){
+  try {
+    const test = 'test';
+
+    window.localStorage.setItem(test, test);
+
+    const isValueAvailable = window.localStorage.getItem(test) === test;
+
+    window.localStorage.removeItem(test);
+
+    return isValueAvailable;
+  } catch (_) {
+    return false;
+  }
+};
