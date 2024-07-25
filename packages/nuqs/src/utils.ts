@@ -40,16 +40,20 @@ export function getDefaultThrottle() {
 }
 
 /**
- * Check if localStorage is available
+ * Check if localStorage is available.
+ *
+ * It may be unavailable in some environments, like Safari in private browsing
+ * mode.
+ * See https://github.com/47ng/nuqs/pull/588
  */
-export function isLocalStorageAvailable(){
+export function isLocalStorageAvailable() {
   try {
-    const test = 'nuqs-localStorage-test';
-    window.localStorage.setItem(test, test);
-    const isValueAvailable = window.localStorage.getItem(test) === test;
-    window.localStorage.removeItem(test);
-    return isValueAvailable;
+    const test = 'nuqs-localStorage-test'
+    window.localStorage.setItem(test, test)
+    const isValueAvailable = window.localStorage.getItem(test) === test
+    window.localStorage.removeItem(test)
+    return isValueAvailable
   } catch (_) {
-    return false;
+    return false
   }
-};
+}

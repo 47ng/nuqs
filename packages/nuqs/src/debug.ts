@@ -1,4 +1,4 @@
-import { isLocalStorageAvailable } from './utils';
+import { isLocalStorageAvailable } from './utils'
 
 // todo: Remove check for `next-usequerystate` in v2
 let enabled = false
