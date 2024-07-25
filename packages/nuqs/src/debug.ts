@@ -1,9 +1,11 @@
+import { isLocalStorageAvailable } from './utils'
+
 // todo: Remove check for `next-usequerystate` in v2
 let enabled = false
 
 try {
   enabled =
-    (typeof localStorage === 'object' &&
+    (isLocalStorageAvailable() &&
       (localStorage.getItem('debug')?.includes('next-usequerystate') ||
         localStorage.getItem('debug')?.includes('nuqs'))) ||
     false
