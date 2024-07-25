@@ -44,14 +44,10 @@ export function getDefaultThrottle() {
  */
 export function isLocalStorageAvailable(){
   try {
-    const test = 'test';
-
+    const test = 'nuqs-localStorage-test';
     window.localStorage.setItem(test, test);
-
     const isValueAvailable = window.localStorage.getItem(test) === test;
-
     window.localStorage.removeItem(test);
-
     return isValueAvailable;
   } catch (_) {
     return false;
