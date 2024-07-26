@@ -28,15 +28,15 @@ jobs:
         # branch protection settings for `next`.
         base-path: [false, '/base']
         next-version:
-          - '13.4' # App router in GA
-          - '13.5'
-          - '14.0.1'
-          # 14.0.2 to 14.1.1 included are skipped as shallow routing
-          # implementation was experimental and unstable after GA release.
-          # 14.0.2 is not compatible due to a prefetch issue
-          # 14.0.3 is dropped due to a bug requiring WHS + syncing against uSP,
-          #        which creates other problems under other versions of Next.js
           - '14.1.2'
+          # - '14.1.3'
+          # - '14.1.4'
+          # - '14.2.0'
+          # - '14.2.1'
+          # - '14.2.2'
+          # - '14.2.3'
+          # - '14.2.4'
+          - '14.2.5'
           - latest
           - local
 
