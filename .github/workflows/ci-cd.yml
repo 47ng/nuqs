@@ -72,6 +72,27 @@ jobs:
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
+  check-formatting:
+    name: Check formatting
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332
+      - uses: pnpm/action-setup@fe02b34f77f8bc703788d5817da081398fad5dd2
+      - uses: actions/setup-node@60edb5dd545a775178f52524783378180af0d1f8
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - name: Install dependencies
+        run: pnpm install
+      - name: Check formatting
+        run: |
+          prettier --check ./packages/nuqs 2>&1 | while IFS= read -r line; do
+            if [[ $line == "[warn]"* ]]; then
+              file_path=$(echo "$line" | awk '{print $2}')
+              printf "::warning file=%s::Prettier detected formatting issues\n" "$file_path"
+            fi
+          done
+
   cd:
     name: Deployment
     runs-on: ubuntu-latest
