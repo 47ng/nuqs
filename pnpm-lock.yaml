@@ -20,6 +20,9 @@ importers:
       npm-run-all:
         specifier: ^4.1.5
         version: 4.1.5
+      prettier:
+        specifier: 3.2.5
+        version: 3.2.5
       semantic-release:
         specifier: ^23.0.8
         version: 23.0.8(typescript@5.4.5)
