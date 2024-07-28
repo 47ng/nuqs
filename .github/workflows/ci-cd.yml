@@ -86,9 +86,15 @@ jobs:
         run: pnpm install
       - name: Check formatting
         run: |
-          ./node_modules/.bin/prettier --list-different ./packages/nuqs 2>&1 | while IFS= read -r line; do
-            printf "::warning file=%s::Prettier detected formatting issues\n" "$line"
+          # Run prettier check, capture output and exit code
+          output=$(./node_modules/.bin/prettier --list-different ./packages/nuqs 2>&1)
+          exit_code=$?
+          # Emit an annotation for every file in the output
+          echo "$output" | while IFS= read -r file; do
+            printf "::warning file=%s::Prettier detected formatting issues\n" "$file"
           done
+          # Exit with the captured exit code
+          exit $exit_code
 
   cd:
     name: Deployment
