@@ -91,8 +91,8 @@ jobs:
           exit_code=$?
           set -e
           if [ $exit_code -ne 0 ]; then
-            echo "$output" | while IFS= read -r line; do
-              printf "::warning file=%s::Prettier detected formatting issues\n" "$line"
+            echo "$output" | while IFS= read -r file; do
+              echo "::warning file=$file::Prettier detected formatting issues in %line"
             done
             exit $exit_code
           else
