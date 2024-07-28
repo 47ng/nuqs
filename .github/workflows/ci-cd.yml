@@ -92,7 +92,7 @@ jobs:
           set -e
           if [ $exit_code -ne 0 ]; then
             echo "$output" | while IFS= read -r file; do
-              echo "::warning file=$file::Prettier detected formatting issues in %line"
+              echo "::warning file=$file::Prettier detected formatting issues in $file"
             done
             exit $exit_code
           else
