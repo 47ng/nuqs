@@ -72,6 +72,33 @@ jobs:
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
+  check-formatting:
+    name: Check formatting
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332
+      - uses: pnpm/action-setup@fe02b34f77f8bc703788d5817da081398fad5dd2
+      - uses: actions/setup-node@60edb5dd545a775178f52524783378180af0d1f8
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - name: Install dependencies
+        run: pnpm install --ignore-scripts --frozen-lockfile
+      - name: Check formatting
+        run: |
+          set +e # Allow Prettier to fail, but capture the error code
+          output=$(./node_modules/.bin/prettier --list-different ./packages/nuqs 2>&1)
+          exit_code=$?
+          set -e
+          if [ $exit_code -ne 0 ]; then
+            echo "$output" | while IFS= read -r file; do
+              echo "::warning file=$file::Prettier detected formatting issues in $file"
+            done
+            exit $exit_code
+          else
+            echo "No formatting issues found"
+          fi
+
   cd:
     name: Deployment
     runs-on: ubuntu-latest
