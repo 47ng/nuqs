@@ -1,9 +1,10 @@
 import type { ParserBuilder } from './parsers'
 import { renderQueryString } from './url-encoding'
 
-type ExtractParserType<Parser> = Parser extends ParserBuilder<any>
-  ? ReturnType<Parser['parseServerSide']>
-  : never
+type ExtractParserType<Parser> =
+  Parser extends ParserBuilder<any>
+    ? ReturnType<Parser['parseServerSide']>
+    : never
 
 type Base = string | URLSearchParams | URL
 type Values<Parsers extends Record<string, ParserBuilder<any>>> = Partial<{
