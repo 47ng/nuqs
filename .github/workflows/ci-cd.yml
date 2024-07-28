@@ -86,7 +86,6 @@ jobs:
         run: pnpm install
       - name: Check formatting
         run: |
-          ./node_modules/.bin/prettier --version
           ./node_modules/.bin/prettier --list-different ./packages/nuqs 2>&1 | while IFS= read -r line; do
             printf "::warning file=%s::Prettier detected formatting issues\n" "$line"
           done

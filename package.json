@@ -28,7 +28,7 @@
     "turbo": "^2.0.1",
     "typescript": "^5.4.5"
   },
-  "packageManager": "pnpm@9.1.1",
+  "packageManager": "pnpm@9.2.0",
   "prettier": {
     "arrowParens": "avoid",
     "semi": false,
