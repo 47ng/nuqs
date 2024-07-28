@@ -83,7 +83,7 @@ jobs:
           node-version-file: .node-version
           cache: pnpm
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm install --ignore-scripts --frozen-lockfile
       - name: Check formatting
         run: ./node_modules/.bin/prettier --list-different ./packages/nuqs 2>&1
 
