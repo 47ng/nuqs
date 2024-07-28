@@ -86,11 +86,14 @@ jobs:
         run: pnpm install --ignore-scripts --frozen-lockfile
       - name: Check formatting
         run: |
-          set +e
+          set +e # Allow Prettier to fail, but capture the error code
           output=$(./node_modules/.bin/prettier --list-different ./packages/nuqs 2>&1)
           exit_code=$?
+          set -e
           if [ $exit_code -ne 0 ]; then
-            echo "$output"
+            echo "$output" | while IFS= read -r line; do
+              printf "::warning file=%s::Prettier detected formatting issues\n" "$line"
+            done
             exit $exit_code
           else
             echo "No formatting issues found"
