@@ -1,20 +1,13 @@
-const experimental =
-  process.env.WINDOW_HISTORY_SUPPORT === 'true'
-    ? {
-        windowHistorySupport: true,
-        clientRouterFilter: false
-      }
-    : {
-        clientRouterFilter: false
-      }
-
 const basePath =
   process.env.BASE_PATH === '/' ? undefined : process.env.BASE_PATH
 
 /** @type {import('next').NextConfig } */
 const config = {
   basePath,
-  experimental,
+  experimental: {
+    clientRouterFilter: false,
+    ...(process.env.REACT_COMPILER === 'true' ? { reactCompiler: true } : {})
+  },
   rewrites: async () => [
     {
       source: '/app/rewrites/source',
@@ -29,8 +22,8 @@ const config = {
 }
 
 console.info(`Next.js config:
-  basePath:             ${basePath}
-  windowHistorySupport: ${experimental?.windowHistorySupport ?? false}
+  basePath:       ${basePath}
+  reactCompiler:  ${config.experimental.reactCompiler ?? false}
 `)
 
 export default config

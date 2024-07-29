@@ -1,11 +1,12 @@
 import { withSentryConfig } from '@sentry/nextjs'
 import createNextDocsMDX from 'next-docs-mdx/config'
+import remarkGitHub from 'remark-github'
 import remarkMdxImages from 'remark-mdx-images'
 import remarkSmartypants from 'remark-smartypants'
 
 const withFumaMDX = createNextDocsMDX({
   mdxOptions: {
-    remarkPlugins: [remarkMdxImages, remarkSmartypants]
+    remarkPlugins: [remarkMdxImages, remarkGitHub, remarkSmartypants]
   }
 })
 

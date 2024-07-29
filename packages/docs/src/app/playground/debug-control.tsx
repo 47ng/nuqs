@@ -7,16 +7,14 @@ export default function DebugControl() {
     if (typeof localStorage === 'undefined') {
       return false
     }
-    return (
-      localStorage.getItem('debug')?.includes('next-usequerystate') ?? false
-    )
+    return localStorage.getItem('debug')?.includes('nuqs') ?? false
   })
   const update = React.useCallback(() => {
     setChecked(c => {
       const checked = !c
       if (typeof localStorage !== 'undefined') {
         if (checked) {
-          localStorage.setItem('debug', 'next-usequerystate')
+          localStorage.setItem('debug', 'nuqs')
         } else {
           localStorage.removeItem('debug')
         }
