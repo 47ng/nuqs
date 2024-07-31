@@ -1,20 +1,4 @@
-import { isLocalStorageAvailable } from './utils'
-
-// todo: Remove check for `next-usequerystate` in v2
-let enabled = false
-
-try {
-  enabled =
-    (isLocalStorageAvailable() &&
-      (localStorage.getItem('debug')?.includes('next-usequerystate') ||
-        localStorage.getItem('debug')?.includes('nuqs'))) ||
-    false
-} catch (error) {
-  console.error(
-    '[nuqs]: debug mode is disabled (localStorage unavailable).',
-    error
-  )
-}
+const enabled = isDebugEnabled()
 
 export function debug(message: string, ...args: any[]) {
   if (!enabled) {
@@ -41,4 +25,32 @@ export function sprintf(base: string, ...args: any[]) {
       return String(arg)
     }
   })
+}
+
+function isDebugEnabled() {
+  // Check if localStorage is available.
+  // It may be unavailable in some environments,
+  // like Safari in private browsing mode.
+  // See https://github.com/47ng/nuqs/pull/588
+  try {
+    if (typeof localStorage === 'undefined') {
+      return false
+    }
+    const test = 'nuqs-localStorage-test'
+    localStorage.setItem(test, test)
+    const isStorageAvailable = localStorage.getItem(test) === test
+    localStorage.removeItem(test)
+    if (!isStorageAvailable) {
+      return false
+    }
+  } catch (error) {
+    console.error(
+      '[nuqs]: debug mode is disabled (localStorage unavailable).',
+      error
+    )
+    return false
+  }
+  const debug = localStorage.getItem('debug') ?? ''
+  // todo: Remove check for `next-usequerystate` in v2
+  return debug.includes('nuqs') || debug.includes('next-usequerystate')
 }
