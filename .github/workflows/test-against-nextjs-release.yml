@@ -39,7 +39,7 @@ jobs:
           TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
           E2E_NO_CACHE_ON_RERUN: ${{ github.run_attempt }}
       - name: Save Cypress artifacts
-        uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808
+        uses: actions/upload-artifact@0b2256b8c012f0828dc542b3febcab082c67f72b
         if: failure()
         with:
           path: packages/e2e/cypress/screenshots
