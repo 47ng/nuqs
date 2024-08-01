@@ -41,7 +41,7 @@ jobs:
     steps:
       - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332
       - uses: pnpm/action-setup@fe02b34f77f8bc703788d5817da081398fad5dd2
-      - uses: actions/setup-node@60edb5dd545a775178f52524783378180af0d1f8
+      - uses: actions/setup-node@1e60f620b9541d16bece96c5465dc8ee9832be0b
         with:
           node-version-file: .node-version
           cache: pnpm
@@ -78,7 +78,7 @@ jobs:
     steps:
       - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332
       - uses: pnpm/action-setup@fe02b34f77f8bc703788d5817da081398fad5dd2
-      - uses: actions/setup-node@60edb5dd545a775178f52524783378180af0d1f8
+      - uses: actions/setup-node@1e60f620b9541d16bece96c5465dc8ee9832be0b
         with:
           node-version-file: .node-version
           cache: pnpm
@@ -107,7 +107,7 @@ jobs:
     steps:
       - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332
       - uses: pnpm/action-setup@fe02b34f77f8bc703788d5817da081398fad5dd2
-      - uses: actions/setup-node@60edb5dd545a775178f52524783378180af0d1f8
+      - uses: actions/setup-node@1e60f620b9541d16bece96c5465dc8ee9832be0b
         with:
           node-version-file: .node-version
           cache: pnpm
