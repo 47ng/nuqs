@@ -1,6 +1,7 @@
 import { Button } from '@/src/components/ui/button'
 import { Heart } from 'lucide-react'
 import Image from 'next/image'
+import { ReactNode } from 'react'
 import { z } from 'zod'
 
 export async function SponsorsSection() {
@@ -10,26 +11,32 @@ export async function SponsorsSection() {
       <h2 className="mb-12 text-center text-3xl font-bold tracking-tighter dark:text-white md:text-4xl xl:text-5xl">
         Sponsors
       </h2>
-      <div className="flex flex-wrap justify-center gap-4">
+      <ul className="grid grid-cols-1 gap-y-12 sm:grid-cols-3">
         {sponsors.map(sponsor => (
-          <a
-            key={sponsor.handle}
-            href={sponsor.url}
-            className="h-32 w-32 rounded-full text-center"
-          >
-            <Image
-              src={sponsor.img}
-              alt={sponsor.name ?? sponsor.handle}
-              className="rounded-full"
-              width={128}
-              height={128}
-            />
-            <span className="mt-2 inline-block text-sm text-zinc-500">
+          <li key={sponsor.handle} className="flex flex-col items-center">
+            <a href={sponsor.url} className="h-32 w-32 rounded-full">
+              <Image
+                src={sponsor.img}
+                alt={sponsor.name ?? sponsor.handle}
+                className="rounded-full"
+                width={128}
+                height={128}
+              />
+            </a>
+            <a
+              href={sponsor.url}
+              className="mt-2 inline-block text-sm font-semibold hover:underline"
+            >
               {sponsor.name ?? sponsor.handle}
-            </span>
-          </a>
+            </a>
+            {Boolean(sponsor.title) && (
+              <span className="mt-1 inline-block text-sm text-zinc-500">
+                {sponsor.title}
+              </span>
+            )}
+          </li>
         ))}
-      </div>
+      </ul>
       <div className="mt-16 flex justify-center">
         <Button className="mx-auto" asChild variant="outline">
           <a href="https://github.com/sponsors/franky47">
@@ -47,7 +54,8 @@ const sponsorSchema = z.object({
   name: z.string().nullish(),
   handle: z.string(),
   url: z.string().url(),
-  img: z.string().url()
+  img: z.string().url(),
+  title: z.custom<ReactNode>()
 })
 type Sponsors = z.infer<typeof sponsorSchema>[]
 
@@ -75,19 +83,40 @@ async function fetchSponsors(): Promise<Sponsors> {
   //   }
   // }
   return [
-    // GitHub sponsors
     {
-      handle: 'rwieruch',
-      name: 'Robin Wieruch',
-      url: 'https://github.com/rwieruch',
-      img: 'https://avatars.githubusercontent.com/u/2479967?u=cba76c8678af8e63ee2dd32853a4e262b35f9ac0&v=4'
+      handle: 'pontusab',
+      name: 'Pontus Abrahamsson',
+      url: 'https://x.com/pontusab',
+      img: 'https://avatars.githubusercontent.com/u/655158?v=4',
+      title: (
+        <>
+          Founder of{' '}
+          <a href="https://midday.ai" className="hover:underline">
+            Midday.ai
+          </a>
+        </>
+      )
     },
-    // Other sponsors
     {
       handle: 'YoannFleuryDev',
       name: 'Yoann Fleury',
-      url: 'https://twitter.com/YoannFleuryDev',
-      img: 'https://pbs.twimg.com/profile_images/1594632934245498880/CJTKNRCO_400x400.jpg'
+      url: 'https://www.yoannfleury.dev/',
+      img: 'https://pbs.twimg.com/profile_images/1594632934245498880/CJTKNRCO_400x400.jpg',
+      title: 'Front end developer'
+    },
+    {
+      handle: 'rwieruch',
+      name: 'Robin Wieruch',
+      url: 'https://www.robinwieruch.de/',
+      img: 'https://avatars.githubusercontent.com/u/2479967?v=4',
+      title: (
+        <>
+          Author of{' '}
+          <a href="https://www.roadtoreact.com/" className="hover:underline">
+            The Road to React
+          </a>
+        </>
+      )
     }
   ]
 }
