@@ -117,6 +117,13 @@ describe('url-encoding/renderQueryString', () => {
       expect(search).toBe(url.search)
     }
   })
+  test('keys with special characters get escaped', () => {
+    const search = new URLSearchParams()
+    search.set('a &b?c=d#e%f+g"h\'i`j<k>l(m)n*o,p.q:r;s/t', 'value')
+    expect(renderQueryString(search)).toBe(
+      '?a %26b%3Fc%3Dd%23e%f%2Bg"h\'i`j<k>l(m)n*o,p.q:r;s/t=value'
+    )
+  })
 })
 
 test.skip('encodeURI vs encodeURIComponent vs custom encoding', () => {
