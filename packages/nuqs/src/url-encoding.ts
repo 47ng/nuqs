@@ -4,7 +4,15 @@ export function renderQueryString(search: URLSearchParams) {
   }
   const query: string[] = []
   for (const [key, value] of search.entries()) {
-    query.push(`${key}=${encodeQueryValue(value)}`)
+    // Replace disallowed characters in keys,
+    // see https://github.com/47ng/nuqs/issues/599
+    const safeKey = key
+      .replace(/#/g, '%23')
+      .replace(/&/g, '%26')
+      .replace(/\+/g, '%2B')
+      .replace(/=/g, '%3D')
+      .replace(/\?/g, '%3F')
+    query.push(`${safeKey}=${encodeQueryValue(value)}`)
   }
   return '?' + query.join('&')
 }
