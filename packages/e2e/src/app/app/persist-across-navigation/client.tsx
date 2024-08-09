@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import {
   createSerializer,
   parseAsBoolean,
@@ -37,7 +38,7 @@ export function Client({ page, target }: ClientProps) {
         checked={checked}
         onChange={e => setParams({ checked: e.target.checked })}
       />
-      <a href={href}>Go to page {target}</a>
+      <Link href={href}>Go to page {target}</Link>
     </>
   )
 }
