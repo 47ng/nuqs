@@ -3,12 +3,13 @@ import { Description, H1 } from '@/src/components/typography'
 import type { Metadata } from 'next'
 import { DocsBody, DocsPage } from 'next-docs-ui/page'
 import { notFound } from 'next/navigation'
+import { stat } from 'node:fs/promises'
 
-export default async function Page({
-  params
-}: {
+type PageProps = {
   params: { slug?: string[] }
-}) {
+}
+
+export default async function Page({ params }: PageProps) {
   const page = getPage(params.slug)
 
   if (page == null) {
@@ -36,13 +37,55 @@ export async function generateStaticParams() {
   }))
 }
 
-export function generateMetadata({ params }: { params: { slug?: string[] } }) {
+export async function generateMetadata({ params }: PageProps) {
   const page = getPage(params.slug)
-
   if (page == null) notFound()
 
   return {
     title: page.matter.title,
-    description: page.matter.description
+    description: page.matter.description,
+    ...(await getSocialImages(page.slugs))
   } satisfies Metadata
+}
+
+// --
+
+async function getSocialImages(
+  slug: string[]
+): Promise<Pick<Metadata, 'openGraph' | 'twitter'>> {
+  try {
+    const publicImagePath = `${process.cwd()}/public/og/${slug.join('/')}.jpg`
+    await stat(publicImagePath) // Does it exist?
+    const baseUrl =
+      process.env.VERCEL_ENV === 'production'
+        ? 'https://' + process.env.VERCEL_PROJECT_PRODUCTION_URL
+        : process.env.VERCEL_URL
+          ? 'https://' + process.env.VERCEL_URL
+          : ''
+    return {
+      openGraph: {
+        type: 'website',
+        images: [
+          {
+            url: `${baseUrl}/og/${slug.join('/')}.jpg`,
+            width: 1200,
+            height: 675
+          }
+        ]
+      },
+      twitter: {
+        card: 'summary_large_image',
+        images: [
+          {
+            url: `${baseUrl}/og/${slug.join('/')}.jpg`,
+            width: 1200,
+            height: 675
+          }
+        ]
+      }
+    }
+  } catch {
+    console.warn(`No og:image found for doc page \`${slug.join('/')}\``)
+    return {}
+  }
 }
