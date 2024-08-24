@@ -2,7 +2,7 @@ import { Quote } from '@/src/components/quote'
 
 export function QuotesSection() {
   return (
-    <section className="container my-12 grid grid-cols-1 gap-8 md:grid-cols-2 xl:grid-cols-3">
+    <section className="container my-24 grid grid-cols-1 gap-8 md:grid-cols-2 xl:grid-cols-3">
       <Quote
         text={
           <>

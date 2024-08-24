@@ -11,7 +11,7 @@ export async function SponsorsSection() {
       <h2 className="mb-12 text-center text-3xl font-bold tracking-tighter dark:text-white md:text-4xl xl:text-5xl">
         Sponsors
       </h2>
-      <ul className="grid grid-cols-1 gap-y-12 sm:grid-cols-3">
+      <ul className="container grid grid-cols-1 gap-y-12 sm:grid-cols-2 md:grid-cols-4">
         {sponsors.map(sponsor => (
           <li key={sponsor.handle} className="flex flex-col items-center">
             <a href={sponsor.url} className="h-32 w-32 rounded-full">
@@ -38,7 +38,7 @@ export async function SponsorsSection() {
         ))}
       </ul>
       <div className="mt-16 flex justify-center">
-        <Button className="mx-auto" asChild variant="outline">
+        <Button className="mx-auto" asChild>
           <a href="https://github.com/sponsors/franky47">
             <Heart className="mr-2 text-pink-500" size={16} /> Sponsor my work
           </a>
@@ -98,6 +98,20 @@ async function fetchSponsors(): Promise<Sponsors> {
       )
     },
     {
+      handle: 'lindesvard',
+      name: 'Carl Lindesvärd',
+      url: 'https://x.com/CarlLindesvard',
+      img: 'https://pbs.twimg.com/profile_images/1751607056316944384/8E4F88FL_400x400.jpg',
+      title: (
+        <>
+          Founder of{' '}
+          <a href="https://openpanel.dev" className="hover:underline">
+            OpenPanel
+          </a>
+        </>
+      )
+    },
+    {
       handle: 'YoannFleuryDev',
       name: 'Yoann Fleury',
       url: 'https://www.yoannfleury.dev/',
@@ -112,8 +126,8 @@ async function fetchSponsors(): Promise<Sponsors> {
       title: (
         <>
           Author of{' '}
-          <a href="https://www.roadtoreact.com/" className="hover:underline">
-            The Road to React
+          <a href="https://www.road-to-next.com/" className="hover:underline">
+            The Road to Next
           </a>
         </>
       )
