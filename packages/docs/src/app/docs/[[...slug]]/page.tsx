@@ -55,14 +55,20 @@ async function getSocialImages(
 ): Promise<Pick<Metadata, 'openGraph' | 'twitter'>> {
   try {
     const publicImagePath = `${process.cwd()}/public/og/${slug.join('/')}.jpg`
-    console.log(publicImagePath)
+    const baseUrl =
+      process.env.VERCEL_ENV === 'production'
+        ? 'https://' + process.env.VERCEL_PROJECT_PRODUCTION_URL
+        : process.env.VERCEL_URL
+          ? 'https://' + process.env.VERCEL_URL
+          : ''
+
     await stat(publicImagePath) // Does it exist?
     return {
       openGraph: {
         type: 'website',
         images: [
           {
-            url: `/og/${slug.join('/')}.jpg`,
+            url: `${baseUrl}/og/${slug.join('/')}.jpg`,
             width: 1200,
             height: 675
           }
@@ -72,7 +78,7 @@ async function getSocialImages(
         card: 'summary_large_image',
         images: [
           {
-            url: `/og/${slug.join('/')}.jpg`,
+            url: `${baseUrl}/og/${slug.join('/')}.jpg`,
             width: 1200,
             height: 675
           }
