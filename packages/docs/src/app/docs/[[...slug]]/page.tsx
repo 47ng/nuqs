@@ -55,14 +55,13 @@ async function getSocialImages(
 ): Promise<Pick<Metadata, 'openGraph' | 'twitter'>> {
   try {
     const publicImagePath = `${process.cwd()}/public/og/${slug.join('/')}.jpg`
+    await stat(publicImagePath) // Does it exist?
     const baseUrl =
       process.env.VERCEL_ENV === 'production'
         ? 'https://' + process.env.VERCEL_PROJECT_PRODUCTION_URL
         : process.env.VERCEL_URL
           ? 'https://' + process.env.VERCEL_URL
           : ''
-
-    await stat(publicImagePath) // Does it exist?
     return {
       openGraph: {
         type: 'website',
@@ -85,8 +84,7 @@ async function getSocialImages(
         ]
       }
     }
-  } catch (error) {
-    console.error(error)
+  } catch {
     console.warn(`No og:image found for doc page \`${slug.join('/')}\``)
     return {}
   }
