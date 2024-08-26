@@ -149,13 +149,13 @@ const prettyStatus: Record<GameStatus, string> = {
   'o-turn': 'Next player: O',
   'x-wins': 'X wins',
   'o-wins': 'O wins',
-  draw: 'Game ended in a draw'
+  draw: 'Draw'
 }
 
 function Status() {
   const { status, reset } = useGameEngine()
   return (
-    <section className="flex w-full max-w-[240px] items-center justify-between">
+    <section className="flex w-full max-w-[256px] items-center justify-between">
       <span className="text-lg font-semibold" aria-live="polite">
         {prettyStatus[status]}
       </span>
