@@ -26,7 +26,10 @@ const defaultState = {
 
 const gameParser = createParser<GameState>({
   parse(query) {
-    const board = query.split('|').map(row => row.split(''))
+    const board = query
+      .replace('_', ' ')
+      .split('|')
+      .map(row => row.split(''))
     // Validate the board
     if (board.length !== 3) {
       throw new Error('Invalid board length')
@@ -47,7 +50,10 @@ const gameParser = createParser<GameState>({
     }
   },
   serialize(state) {
-    return state.board.map(row => row.join('')).join('|')
+    return state.board
+      .map(row => row.join(''))
+      .join('|')
+      .replace(' ', '_')
   }
 })
 
