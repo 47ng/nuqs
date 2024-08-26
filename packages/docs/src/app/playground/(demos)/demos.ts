@@ -22,6 +22,10 @@ export const demos = {
   pagination: {
     title: 'Pagination',
     description: 'Integer page index with server-side rendering'
+  },
+  'tic-tac-toe': {
+    title: 'Tic Tac Toe',
+    description: 'A game of tic tac toe stored in the URL'
   }
 } as const satisfies Record<string, DemoMetadata>
 
