@@ -27,7 +27,7 @@ const defaultState = {
 const gameParser = createParser<GameState>({
   parse(query) {
     const board = query
-      .replace('_', ' ')
+      .replace(/_/g, ' ')
       .split('|')
       .map(row => row.split(''))
     // Validate the board
@@ -53,7 +53,7 @@ const gameParser = createParser<GameState>({
     return state.board
       .map(row => row.join(''))
       .join('|')
-      .replace(' ', '_')
+      .replace(/ /g, '_')
   }
 })
 
