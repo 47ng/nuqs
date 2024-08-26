@@ -25,7 +25,8 @@ export const demos = {
   },
   'tic-tac-toe': {
     title: 'Tic Tac Toe',
-    description: 'A game of tic tac toe stored in the URL'
+    description:
+      'A game of tic tac toe stored in the URL. Use the Back/Forward buttons to undo/redo moves.'
   }
 } as const satisfies Record<string, DemoMetadata>
 
