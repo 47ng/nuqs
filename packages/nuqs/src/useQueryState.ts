@@ -225,10 +225,12 @@ export function useQueryState<T = string>(
   const router = useRouter()
   // Not reactive, but available on the server and on page load
   const initialSearchParams = useSearchParams()
+  const valueRef = React.useRef<string | null>(null)
   const [internalState, setInternalState] = React.useState<T | null>(() => {
     const queueValue = getQueuedValue(key)
     const urlValue = initialSearchParams?.get(key) ?? null
     const value = queueValue ?? urlValue
+    valueRef.current = value
     return value === null ? null : safeParse(parse, value, key)
   })
   const stateRef = React.useRef(internalState)
@@ -246,9 +248,13 @@ export function useQueryState<T = string>(
       return
     }
     const value = initialSearchParams.get(key) ?? null
+    if (value === valueRef.current) {
+      return
+    }
     const state = value === null ? null : safeParse(parse, value, key)
     debug('[nuqs `%s`] syncFromUseSearchParams %O', key, state)
     stateRef.current = state
+    valueRef.current = value
     setInternalState(state)
   }, [initialSearchParams?.get(key), key])
 
@@ -257,13 +263,18 @@ export function useQueryState<T = string>(
     function updateInternalState(state: T | null) {
       debug('[nuqs `%s`] updateInternalState %O', key, state)
       stateRef.current = state
+      valueRef.current = state === null ? null : serialize(state)
       setInternalState(state)
     }
     function syncFromURL(search: URLSearchParams) {
       const value = search.get(key) ?? null
+      if (value === valueRef.current) {
+        return
+      }
       const state = value === null ? null : safeParse(parse, value, key)
       debug('[nuqs `%s`] syncFromURL %O', key, state)
       updateInternalState(state)
+      valueRef.current = value
     }
     debug('[nuqs `%s`] subscribing to sync', key)
     emitter.on(SYNC_EVENT_KEY, syncFromURL)
@@ -290,7 +301,7 @@ export function useQueryState<T = string>(
       }
       // Sync all hooks state (including this one)
       emitter.emit(key, newValue)
-      enqueueQueryStringUpdate(key, newValue, serialize, {
+      valueRef.current = enqueueQueryStringUpdate(key, newValue, serialize, {
         // Call-level options take precedence over hook declaration options.
         history: options.history ?? history,
         shallow: options.shallow ?? shallow,
