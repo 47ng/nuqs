@@ -7,7 +7,7 @@ import React from 'react'
 import { debug } from './debug'
 import type { Nullable, Options } from './defs'
 import type { Parser } from './parsers'
-import { SYNC_EVENT_KEY, emitter } from './sync'
+import { SYNC_EVENT_KEY, emitter, type CrossHookSyncPayload } from './sync'
 import {
   FLUSH_RATE_LIMIT_MS,
   enqueueQueryStringUpdate,
@@ -102,20 +102,20 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
     }
     const handlers = Object.keys(keyMap).reduce(
       (handlers, key) => {
-        handlers[key as keyof V] = (value: any) => {
-          const { defaultValue, serialize = String } = keyMap[key]!
+        handlers[key as keyof V] = ({ state, query }: CrossHookSyncPayload) => {
+          const { defaultValue } = keyMap[key]!
           // Note: cannot mutate in-place, the object ref must change
           // for the subsequent setState to pick it up.
           stateRef.current = {
             ...stateRef.current,
-            [key as keyof V]: value ?? defaultValue ?? null
+            [key as keyof V]: state ?? defaultValue ?? null
           }
-          queryRef.current[key] = value === null ? null : serialize(value)
+          queryRef.current[key] = query
           debug(
             '[nuq+ `%s`] Cross-hook key sync %s: %O (default: %O). Resolved: %O',
             keys,
             key,
-            value,
+            state,
             defaultValue,
             stateRef.current
           )
@@ -123,13 +123,13 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
         }
         return handlers
       },
-      {} as Record<keyof V, any>
+      {} as Record<keyof V, (payload: CrossHookSyncPayload) => void>
     )
 
     emitter.on(SYNC_EVENT_KEY, syncFromURL)
     for (const key of Object.keys(keyMap)) {
       debug('[nuq+ `%s`] Subscribing to sync for `%s`', keys, key)
-      emitter.on(key, handlers[key])
+      emitter.on(key, handlers[key]!)
     }
     return () => {
       emitter.off(SYNC_EVENT_KEY, syncFromURL)
@@ -166,7 +166,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
         ) {
           value = null
         }
-        emitter.emit(key, value)
+
         queryRef.current[key] = enqueueQueryStringUpdate(
           key,
           value,
@@ -185,6 +185,10 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
               startTransition
           }
         )
+        emitter.emit(key, {
+          state: value,
+          query: queryRef.current[key] ?? null
+        })
       }
       return scheduleFlushToURL(router)
     },
