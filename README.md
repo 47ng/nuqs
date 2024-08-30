@@ -700,22 +700,18 @@ inferParserType<typeof intNonNull> // number
 ```
 
 For an object describing parsers (that you'd pass to `createSearchParamsCache`
-or to `useQueryStates`, you can use the
-`inferParserRecordType` helper:
+or to `useQueryStates`, `inferParserType` will
+return the type of the object with the parsers replaced by their inferred types:
 
 ```ts
-import {
-  parseAsBoolean,
-  parseAsInteger,
-  type inferParserRecordType
-} from 'nuqs' // or 'nuqs/server'
+import { parseAsBoolean, parseAsInteger, type inferParserType } from 'nuqs' // or 'nuqs/server'
 
 const parsers = {
   a: parseAsInteger,
   b: parseAsBoolean.withDefault(false)
 }
 
-inferParserRecordType<typeof parsers>
+inferParserType<typeof parsers>
 // { a: number | null, b: boolean }
 ```
 

@@ -1,12 +1,7 @@
 import React from 'react'
 import { assert, type Equals } from 'tsafe'
 import { expectError, expectType } from 'tsd'
-import {
-  parseAsInteger,
-  parseAsString,
-  type inferParserRecordType,
-  type inferParserType
-} from '../../dist'
+import { parseAsInteger, parseAsString, type inferParserType } from '../../dist'
 
 {
   const p = parseAsString
@@ -92,7 +87,7 @@ const parsers = {
 }
 assert<
   Equals<
-    inferParserRecordType<typeof parsers>,
+    inferParserType<typeof parsers>,
     { str: string | null; int: number | null }
   >
 >()
