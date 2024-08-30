@@ -1,6 +1,7 @@
 import React from 'react'
+import { assert, type Equals } from 'tsafe'
 import { expectError, expectType } from 'tsd'
-import { parseAsString } from '../../dist'
+import { parseAsInteger, parseAsString, type inferParserType } from '../../dist'
 
 {
   const p = parseAsString
@@ -75,3 +76,18 @@ import { parseAsString } from '../../dist'
     })
   })
 }
+
+// Type inference
+assert<Equals<inferParserType<typeof parseAsString>, string | null>>()
+const withDefault = parseAsString.withDefault('')
+assert<Equals<inferParserType<typeof withDefault>, string>>()
+const parsers = {
+  str: parseAsString,
+  int: parseAsInteger
+}
+assert<
+  Equals<
+    inferParserType<typeof parsers>,
+    { str: string | null; int: number | null }
+  >
+>()

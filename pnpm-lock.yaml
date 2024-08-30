@@ -251,6 +251,9 @@ importers:
       size-limit:
         specifier: ^11.1.2
         version: 11.1.2
+      tsafe:
+        specifier: ^1.7.2
+        version: 1.7.2
       tsd:
         specifier: ^0.30.7
         version: 0.30.7
@@ -5437,6 +5440,9 @@ packages:
     hasBin: true
     peerDependencies:
       typescript: '>=2.7'
+
+  tsafe@1.7.2:
+    resolution: {integrity: sha512-dAPfQLhCfCRre5qs+Z5Q2a7s2CV7RxffZUmvj7puGaePYjECzWREJFd3w4XSFe/T5tbxgowfItA/JSSZ6Ma3dA==}
 
   tsd@0.30.7:
     resolution: {integrity: sha512-oTiJ28D6B/KXoU3ww/Eji+xqHJojiuPVMwA12g4KYX1O72N93Nb6P3P3h2OAhhf92Xl8NIhb/xFmBZd5zw/xUw==}
@@ -11818,6 +11824,8 @@ snapshots:
       source-map-support: 0.5.21
       typescript: 5.4.5
       yn: 3.1.1
+
+  tsafe@1.7.2: {}
 
   tsd@0.30.7:
     dependencies:
