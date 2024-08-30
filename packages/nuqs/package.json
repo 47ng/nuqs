@@ -79,6 +79,7 @@
     "react": "rc",
     "react-dom": "rc",
     "size-limit": "^11.1.2",
+    "tsafe": "^1.7.2",
     "tsd": "^0.30.7",
     "tsup": "^8.0.2",
     "typescript": "^5.4.5",
