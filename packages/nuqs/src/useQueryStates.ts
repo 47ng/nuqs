@@ -16,9 +16,10 @@ import {
 } from './update-queue'
 import { safeParse } from './utils'
 
-type KeyMapValue<Type> = Parser<Type> & {
-  defaultValue?: Type
-}
+type KeyMapValue<Type> = Parser<Type> &
+  Options & {
+    defaultValue?: Type
+  }
 
 export type UseQueryStatesKeysMap<Map = any> = {
   [Key in keyof Map]: KeyMapValue<Map[Key]>
@@ -135,33 +136,39 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
   }, [keyMap])
 
   const update = React.useCallback<SetValues<KeyMap>>(
-    (stateUpdater, options = {}) => {
+    (stateUpdater, callOptions = {}) => {
       const newState: Partial<Nullable<KeyMap>> =
         typeof stateUpdater === 'function'
           ? stateUpdater(stateRef.current)
           : stateUpdater
       debug('[nuq+ `%s`] setState: %O', keys, newState)
       for (let [key, value] of Object.entries(newState)) {
-        const config = keyMap[key]
-        if (!config) {
+        const parser = keyMap[key]
+        if (!parser) {
           continue
         }
         if (
-          (options.clearOnDefault || clearOnDefault) &&
+          (callOptions.clearOnDefault ??
+            parser.clearOnDefault ??
+            clearOnDefault) &&
           value !== null &&
-          config.defaultValue !== undefined &&
-          (config.eq ?? ((a, b) => a === b))(value, config.defaultValue)
+          parser.defaultValue !== undefined &&
+          (parser.eq ?? ((a, b) => a === b))(value, parser.defaultValue)
         ) {
           value = null
         }
         emitter.emit(key, value)
-        enqueueQueryStringUpdate(key, value, config.serialize ?? String, {
-          // Call-level options take precedence over hook declaration options.
-          history: options.history ?? history,
-          shallow: options.shallow ?? shallow,
-          scroll: options.scroll ?? scroll,
-          throttleMs: options.throttleMs ?? throttleMs,
-          startTransition: options.startTransition ?? startTransition
+        enqueueQueryStringUpdate(key, value, parser.serialize ?? String, {
+          // Call-level options take precedence over individual parser options
+          // which take precedence over global options
+          history: callOptions.history ?? parser.history ?? history,
+          shallow: callOptions.shallow ?? parser.shallow ?? shallow,
+          scroll: callOptions.scroll ?? parser.scroll ?? scroll,
+          throttleMs: callOptions.throttleMs ?? parser.throttleMs ?? throttleMs,
+          startTransition:
+            callOptions.startTransition ??
+            parser.startTransition ??
+            startTransition
         })
       }
       return scheduleFlushToURL(router)
