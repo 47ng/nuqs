@@ -98,3 +98,16 @@ setCoordinates({
 ```
 
 The order of precedence is: call-level options > parser options > global options.
+
+<Callout title="Tip">
+You can clear all keys managed by a `useQueryStates` hook by passing
+`null` to the state updater function.
+
+```ts
+const clearAll = () => setCoordinates(null)
+```
+
+This will clear `lat` & `lng`, and leave other search params untouched.
+
+</Callout>
+
