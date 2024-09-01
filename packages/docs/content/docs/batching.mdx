@@ -3,7 +3,7 @@ title: useQueryStates
 description: How to read & update multiple search params at once
 ---
 
-## Multiple Queries (batching)
+## Multiple updates (batching)
 
 You can call as many state update function as needed in a single event loop
 tick, and they will be applied to the URL asynchronously:
@@ -80,3 +80,21 @@ const search = await setCoordinates({
   lng: Math.random() * 360 - 180
 })
 ```
+
+### Options
+
+There are three places you can define [options](./options) in `useQueryStates`:
+- As the second argument to the hook itself (global options)
+- On each parser, like `parseAsFloat.withOptions({ shallow: false }){:ts}`
+- At the call level when updating the state:
+
+```ts
+setCoordinates({
+  lat: 42,
+  lng: 12
+}, {
+  shallow: false
+})
+```
+
+The order of precedence is: call-level options > parser options > global options.
