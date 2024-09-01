@@ -1,4 +1,4 @@
-import { expectError, expectNotAssignable, expectType } from 'tsd'
+import { expectNotAssignable, expectType } from 'tsd'
 import {
   parseAsBoolean,
   parseAsFloat,
@@ -57,10 +57,7 @@ import {
     hasDefault: null,
     doesNot: null
   }))
-  // but not at root level
-  expectError(() => {
-    setStates(null)
-  })
+  setStates(null)
 }
 
 // Custom parsers

@@ -1,4 +1,4 @@
-import { expectError, expectNotAssignable, expectType } from 'tsd'
+import { expectNotAssignable, expectType } from 'tsd'
 import { queryTypes, useQueryStates } from '../../../dist'
 
 {
@@ -50,10 +50,7 @@ import { queryTypes, useQueryStates } from '../../../dist'
     hasDefault: null,
     doesNot: null
   }))
-  // but not at root level
-  expectError(() => {
-    setStates(null)
-  })
+  setStates(null)
 }
 
 // Custom parsers

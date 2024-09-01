@@ -40,7 +40,7 @@ type UpdaterFn<T extends UseQueryStatesKeysMap> = (
 ) => Partial<Nullable<Values<T>>>
 
 export type SetValues<T extends UseQueryStatesKeysMap> = (
-  values: Partial<Nullable<Values<T>>> | UpdaterFn<T>,
+  values: Partial<Nullable<Values<T>>> | UpdaterFn<T> | null,
   options?: Options
 ) => Promise<URLSearchParams>
 
@@ -140,7 +140,11 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
       const newState: Partial<Nullable<KeyMap>> =
         typeof stateUpdater === 'function'
           ? stateUpdater(stateRef.current)
-          : stateUpdater
+          : stateUpdater === null
+            ? (Object.fromEntries(
+                Object.keys(keyMap).map(key => [key, null])
+              ) as Nullable<KeyMap>)
+            : stateUpdater
       debug('[nuq+ `%s`] setState: %O', keys, newState)
       for (let [key, value] of Object.entries(newState)) {
         const parser = keyMap[key]
