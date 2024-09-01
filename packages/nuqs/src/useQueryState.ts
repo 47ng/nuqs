@@ -281,7 +281,7 @@ export function useQueryState<T = string>(
         ? stateUpdater(stateRef.current ?? defaultValue ?? null)
         : stateUpdater
       if (
-        (options.clearOnDefault || clearOnDefault) &&
+        (options.clearOnDefault ?? clearOnDefault) &&
         newValue !== null &&
         defaultValue !== undefined &&
         eq(newValue, defaultValue)

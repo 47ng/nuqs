@@ -27,7 +27,10 @@ export function enqueueQueryStringUpdate<Value>(
   key: string,
   value: Value | null,
   serialize: (value: Value) => string,
-  options: Options
+  options: Pick<
+    Options,
+    'history' | 'scroll' | 'shallow' | 'startTransition' | 'throttleMs'
+  >
 ) {
   const serializedOrNull = value === null ? null : serialize(value)
   debug('[nuqs queue] Enqueueing %s=%s %O', key, serializedOrNull, options)
