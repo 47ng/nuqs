@@ -1,0 +1,28 @@
+name: PR Preview
+on:
+  pull_request:
+    types: [opened, synchronize]
+  pull_request_review:
+    types: [submitted]
+
+jobs:
+  deploy-preview:
+    name: Deploy to pkg.pr.new
+    if: github.event.review.state == 'APPROVED' || contains(github.event.pull_request.author_association, 'MEMBER')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332
+      - uses: pnpm/action-setup@fe02b34f77f8bc703788d5817da081398fad5dd2
+      - uses: actions/setup-node@1e60f620b9541d16bece96c5465dc8ee9832be0b
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - name: Install dependencies
+        run: pnpm install
+      - name: Build package
+        run: pnpm build --filter nuqs
+      - name: Set package version
+        run: pnpm pkg set version=0.0.0-preview.${{ github.event.pull_request.head.sha }}
+        working-directory: packages/nuqs
+      - name: Publish to pkg.pr.new
+        run: pnpx pkg-pr-new publish --compact './packages/nuqs'
