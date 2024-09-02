@@ -55,6 +55,7 @@ export function enqueueQueryStringUpdate<Value>(
     options.throttleMs ?? FLUSH_RATE_LIMIT_MS,
     Number.isFinite(queueOptions.throttleMs) ? queueOptions.throttleMs : 0
   )
+  return serializedOrNull
 }
 
 export function getQueuedValue(key: string) {

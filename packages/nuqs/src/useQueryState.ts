@@ -3,7 +3,7 @@ import React from 'react'
 import { debug } from './debug'
 import type { Options } from './defs'
 import type { Parser } from './parsers'
-import { SYNC_EVENT_KEY, emitter } from './sync'
+import { SYNC_EVENT_KEY, emitter, type CrossHookSyncPayload } from './sync'
 import {
   FLUSH_RATE_LIMIT_MS,
   enqueueQueryStringUpdate,
@@ -225,10 +225,12 @@ export function useQueryState<T = string>(
   const router = useRouter()
   // Not reactive, but available on the server and on page load
   const initialSearchParams = useSearchParams()
+  const queryRef = React.useRef<string | null>(null)
   const [internalState, setInternalState] = React.useState<T | null>(() => {
     const queueValue = getQueuedValue(key)
     const urlValue = initialSearchParams?.get(key) ?? null
     const value = queueValue ?? urlValue
+    queryRef.current = value
     return value === null ? null : safeParse(parse, value, key)
   })
   const stateRef = React.useRef(internalState)
@@ -245,25 +247,33 @@ export function useQueryState<T = string>(
     if (window.next?.version !== '14.0.3') {
       return
     }
-    const value = initialSearchParams.get(key) ?? null
-    const state = value === null ? null : safeParse(parse, value, key)
+    const query = initialSearchParams.get(key) ?? null
+    if (query === queryRef.current) {
+      return
+    }
+    const state = query === null ? null : safeParse(parse, query, key)
     debug('[nuqs `%s`] syncFromUseSearchParams %O', key, state)
     stateRef.current = state
+    queryRef.current = query
     setInternalState(state)
   }, [initialSearchParams?.get(key), key])
 
   // Sync all hooks together & with external URL changes
   React.useInsertionEffect(() => {
-    function updateInternalState(state: T | null) {
+    function updateInternalState({ state, query }: CrossHookSyncPayload) {
       debug('[nuqs `%s`] updateInternalState %O', key, state)
       stateRef.current = state
+      queryRef.current = query
       setInternalState(state)
     }
     function syncFromURL(search: URLSearchParams) {
-      const value = search.get(key) ?? null
-      const state = value === null ? null : safeParse(parse, value, key)
+      const query = search.get(key)
+      if (query === queryRef.current) {
+        return
+      }
+      const state = query === null ? null : safeParse(parse, query, key)
       debug('[nuqs `%s`] syncFromURL %O', key, state)
-      updateInternalState(state)
+      updateInternalState({ state, query })
     }
     debug('[nuqs `%s`] subscribing to sync', key)
     emitter.on(SYNC_EVENT_KEY, syncFromURL)
@@ -288,9 +298,7 @@ export function useQueryState<T = string>(
       ) {
         newValue = null
       }
-      // Sync all hooks state (including this one)
-      emitter.emit(key, newValue)
-      enqueueQueryStringUpdate(key, newValue, serialize, {
+      queryRef.current = enqueueQueryStringUpdate(key, newValue, serialize, {
         // Call-level options take precedence over hook declaration options.
         history: options.history ?? history,
         shallow: options.shallow ?? shallow,
@@ -298,6 +306,8 @@ export function useQueryState<T = string>(
         throttleMs: options.throttleMs ?? throttleMs,
         startTransition: options.startTransition ?? startTransition
       })
+      // Sync all hooks state (including this one)
+      emitter.emit(key, { state: newValue, query: queryRef.current })
       return scheduleFlushToURL(router)
     },
     [key, history, shallow, scroll, throttleMs, startTransition]

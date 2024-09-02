@@ -13,3 +13,32 @@ Because the Next.js **pages router** is not available in an SSR context, this
 hook will always return `null` (or the default value if supplied) on SSR/SSG.
 
 This limitation doesn't apply to the app router.
+
+## Caveats
+
+### Different parsers on the same key
+
+Hooks are synced together on a per-key bassis, so if you use different parsers
+on the same key, the last state update will be propagated to all other hooks
+using that key. It can lead to unexpected states like this:
+
+```ts
+const [int] = useQueryState('foo', parseAsInteger)
+const [float, setFloat] = useQueryState('foo', parseAsFloat)
+
+setFloat(1.234)
+
+// `int` is now 1.234, instead of 1
+```
+
+We recommend you abstract a key/parser pair into a dedicated hook to avoid this,
+and derive any desired state from the value:
+
+```ts
+function useIntFloat() {
+  const [float, setFloat] = useQueryState('foo', parseAsFloat)
+  const int = Math.floor(float)
+  return [{int, float}, setFloat] as const
+}
+```
+

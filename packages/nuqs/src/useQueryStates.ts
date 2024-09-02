@@ -7,7 +7,7 @@ import React from 'react'
 import { debug } from './debug'
 import type { Nullable, Options } from './defs'
 import type { Parser } from './parsers'
-import { SYNC_EVENT_KEY, emitter } from './sync'
+import { SYNC_EVENT_KEY, emitter, type CrossHookSyncPayload } from './sync'
 import {
   FLUSH_RATE_LIMIT_MS,
   enqueueQueryStringUpdate,
@@ -73,9 +73,13 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
   const router = useRouter()
   // Not reactive, but available on the server and on page load
   const initialSearchParams = useSearchParams()
-  const [internalState, setInternalState] = React.useState<V>(() =>
-    parseMap(keyMap, initialSearchParams ?? new URLSearchParams())
-  )
+  const queryRef = React.useRef<Record<string, string | null>>({})
+  const [internalState, setInternalState] = React.useState<V>(() => {
+    const source = initialSearchParams ?? new URLSearchParams()
+    queryRef.current = Object.fromEntries(source.entries())
+    return parseMap(keyMap, source)
+  })
+
   const stateRef = React.useRef(internalState)
   debug(
     '[nuq+ `%s`] render - state: %O, iSP: %s',
@@ -92,25 +96,26 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
       setInternalState(state)
     }
     function syncFromURL(search: URLSearchParams) {
-      const state = parseMap(keyMap, search)
+      const state = parseMap(keyMap, search, queryRef.current, stateRef.current)
       debug('[nuq+ `%s`] syncFromURL %O', keys, state)
       updateInternalState(state)
     }
     const handlers = Object.keys(keyMap).reduce(
       (handlers, key) => {
-        handlers[key as keyof V] = (value: any) => {
+        handlers[key as keyof V] = ({ state, query }: CrossHookSyncPayload) => {
           const { defaultValue } = keyMap[key]!
           // Note: cannot mutate in-place, the object ref must change
           // for the subsequent setState to pick it up.
           stateRef.current = {
             ...stateRef.current,
-            [key as keyof V]: value ?? defaultValue ?? null
+            [key as keyof V]: state ?? defaultValue ?? null
           }
+          queryRef.current[key] = query
           debug(
             '[nuq+ `%s`] Cross-hook key sync %s: %O (default: %O). Resolved: %O',
             keys,
             key,
-            value,
+            state,
             defaultValue,
             stateRef.current
           )
@@ -118,13 +123,13 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
         }
         return handlers
       },
-      {} as Record<keyof V, any>
+      {} as Record<keyof V, (payload: CrossHookSyncPayload) => void>
     )
 
     emitter.on(SYNC_EVENT_KEY, syncFromURL)
     for (const key of Object.keys(keyMap)) {
       debug('[nuq+ `%s`] Subscribing to sync for `%s`', keys, key)
-      emitter.on(key, handlers[key])
+      emitter.on(key, handlers[key]!)
     }
     return () => {
       emitter.off(SYNC_EVENT_KEY, syncFromURL)
@@ -161,18 +166,28 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
         ) {
           value = null
         }
-        emitter.emit(key, value)
-        enqueueQueryStringUpdate(key, value, parser.serialize ?? String, {
-          // Call-level options take precedence over individual parser options
-          // which take precedence over global options
-          history: callOptions.history ?? parser.history ?? history,
-          shallow: callOptions.shallow ?? parser.shallow ?? shallow,
-          scroll: callOptions.scroll ?? parser.scroll ?? scroll,
-          throttleMs: callOptions.throttleMs ?? parser.throttleMs ?? throttleMs,
-          startTransition:
-            callOptions.startTransition ??
-            parser.startTransition ??
-            startTransition
+
+        queryRef.current[key] = enqueueQueryStringUpdate(
+          key,
+          value,
+          parser.serialize ?? String,
+          {
+            // Call-level options take precedence over individual parser options
+            // which take precedence over global options
+            history: callOptions.history ?? parser.history ?? history,
+            shallow: callOptions.shallow ?? parser.shallow ?? shallow,
+            scroll: callOptions.scroll ?? parser.scroll ?? scroll,
+            throttleMs:
+              callOptions.throttleMs ?? parser.throttleMs ?? throttleMs,
+            startTransition:
+              callOptions.startTransition ??
+              parser.startTransition ??
+              startTransition
+          }
+        )
+        emitter.emit(key, {
+          state: value,
+          query: queryRef.current[key] ?? null
         })
       }
       return scheduleFlushToURL(router)
@@ -186,13 +201,19 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
 
 function parseMap<KeyMap extends UseQueryStatesKeysMap>(
   keyMap: KeyMap,
-  searchParams: URLSearchParams | ReadonlyURLSearchParams
+  searchParams: URLSearchParams | ReadonlyURLSearchParams,
+  cachedQuery?: Record<string, string | null>,
+  cachedState?: Values<KeyMap>
 ) {
   return Object.keys(keyMap).reduce((obj, key) => {
     const { defaultValue, parse } = keyMap[key]!
     const urlQuery = searchParams?.get(key) ?? null
     const queueQuery = getQueuedValue(key)
     const query = queueQuery ?? urlQuery
+    if (cachedQuery && cachedState && cachedQuery[key] === query) {
+      obj[key as keyof KeyMap] = cachedState[key] ?? defaultValue ?? null
+      return obj
+    }
     const value = query === null ? null : safeParse(parse, query, key)
     obj[key as keyof KeyMap] = value ?? defaultValue ?? null
     return obj
