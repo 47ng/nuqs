@@ -1,4 +1,4 @@
-name: Preview Approved Pull Requests
+name: PR Preview
 on:
   pull_request:
     types: [opened, synchronize]
@@ -7,7 +7,7 @@ on:
 
 jobs:
   deploy-preview:
-    name: Deploy preview version to pkg.pr.new
+    name: Deploy to pkg.pr.new
     if: github.event.review.state == 'APPROVED' || contains(github.event.pull_request.author_association, 'MEMBER')
     runs-on: ubuntu-latest
     steps:
