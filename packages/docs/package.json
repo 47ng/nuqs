@@ -52,7 +52,6 @@
     "@types/semver": "^7.5.8",
     "autoprefixer": "^10.4.19",
     "postcss": "^8.4.38",
-    "prettier": "^3.2.5",
     "prettier-plugin-tailwindcss": "^0.5.14",
     "remark-mdx-images": "^3.0.0",
     "shikiji": "^0.10.2",

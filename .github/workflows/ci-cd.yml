@@ -72,8 +72,8 @@ jobs:
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
-  check-formatting:
-    name: Check formatting
+  lint:
+    name: Linting
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332
@@ -84,7 +84,9 @@ jobs:
           cache: pnpm
       - name: Install dependencies
         run: pnpm install --ignore-scripts --frozen-lockfile
-      - name: Check formatting
+      - name: Check monorepo with Sherif
+        run: pnpm dlx sherif@1.0.0 --no-install
+      - name: Check source code formatting
         run: |
           set +e # Allow Prettier to fail, but capture the error code
           output=$(./node_modules/.bin/prettier --list-different ./packages/nuqs 2>&1)
