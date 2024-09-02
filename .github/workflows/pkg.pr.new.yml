@@ -19,5 +19,7 @@ jobs:
           cache: pnpm
       - name: Install dependencies
         run: pnpm install
+      - name: Build package
+        run: pnpm build --filter nuqs
       - name: Publish to pkg.pr.new
         run: pnpx pkg-pr-new publish --compact './packages/nuqs'
