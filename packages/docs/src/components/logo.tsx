@@ -1,23 +1,17 @@
-import { cn } from '../lib/utils'
+import Image from 'next/image'
+import Wordmark from 'res/wordmark.svg'
+import { cn } from 'src/lib/utils'
 
-export function NuqsWordmark({
-  className,
-  ...props
-}: React.ComponentProps<'span'>) {
+export function NuqsWordmark({ className }: React.ComponentProps<'img'>) {
   return (
-    <span
-      aria-label="nuqs"
-      className={cn('whitespace-nowrap', className)}
-      {...props}
-    >
-      <span className="font-light text-zinc-300 dark:text-zinc-700">?</span>
-      <span className="font-bold">n</span>
-      <span className="font-light text-zinc-300 dark:text-zinc-700">=</span>
-      <span className="font-bold">u</span>
-      <span className="font-light text-zinc-300 dark:text-zinc-700">&</span>
-      <span className="font-bold">q</span>
-      <span className="font-light text-zinc-300 dark:text-zinc-700">=</span>
-      <span className="font-bold">s</span>
-    </span>
+    <>
+      <Image
+        src={Wordmark}
+        role="presentation"
+        alt="nuqs"
+        className={cn('h-[1em] w-auto', className)}
+      />
+      <span className="sr-only">nuqs</span>
+    </>
   )
 }
