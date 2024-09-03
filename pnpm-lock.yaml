@@ -122,6 +122,9 @@ importers:
       remark-smartypants:
         specifier: ^2.1.0
         version: 2.1.0
+      res:
+        specifier: workspace:*
+        version: link:../res
       semver:
         specifier: ^7.6.3
         version: 7.6.3
