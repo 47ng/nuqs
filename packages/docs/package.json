@@ -38,6 +38,7 @@
     "react-dom": "^18.3.1",
     "recharts": "^2.12.7",
     "remark-smartypants": "^2.1.0",
+    "res": "workspace:*",
     "semver": "^7.6.3",
     "server-only": "^0.0.1",
     "tailwind-merge": "^2.5.2",

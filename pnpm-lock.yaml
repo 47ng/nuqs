@@ -122,6 +122,9 @@ importers:
       remark-smartypants:
         specifier: ^2.1.0
         version: 2.1.0
+      res:
+        specifier: workspace:*
+        version: link:../res
       semver:
         specifier: ^7.6.3
         version: 7.6.3
@@ -263,6 +266,8 @@ importers:
       vitest:
         specifier: ^1.6.0
         version: 1.6.0(@types/node@20.16.3)(terser@5.31.6)
+
+  packages/res: {}
 
   packages/scripts:
     dependencies:
