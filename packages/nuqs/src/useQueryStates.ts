@@ -216,6 +216,9 @@ function parseMap<KeyMap extends UseQueryStatesKeysMap>(
     }
     const value = query === null ? null : safeParse(parse, query, key)
     obj[key as keyof KeyMap] = value ?? defaultValue ?? null
+    if (cachedQuery) {
+      cachedQuery[key] = query
+    }
     return obj
   }, {} as Values<KeyMap>)
 }
