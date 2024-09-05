@@ -88,6 +88,26 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
     initialSearchParams
   )
 
+  React.useEffect(() => {
+    // This will be removed in v2 which will drop support for
+    // partially-functional shallow routing (14.0.2 and 14.0.3)
+    if (window.next?.version !== '14.0.3') {
+      return
+    }
+    const state = parseMap(
+      keyMap,
+      initialSearchParams,
+      queryRef.current,
+      stateRef.current
+    )
+    setInternalState(state)
+  }, [
+    Object.keys(keyMap)
+      .map(key => initialSearchParams?.get(key))
+      .join('&'),
+    keys
+  ])
+
   // Sync all hooks together & with external URL changes
   React.useInsertionEffect(() => {
     function updateInternalState(state: V) {
@@ -216,6 +236,9 @@ function parseMap<KeyMap extends UseQueryStatesKeysMap>(
     }
     const value = query === null ? null : safeParse(parse, query, key)
     obj[key as keyof KeyMap] = value ?? defaultValue ?? null
+    if (cachedQuery) {
+      cachedQuery[key] = query
+    }
     return obj
   }, {} as Values<KeyMap>)
 }
