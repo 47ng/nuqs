@@ -241,6 +241,18 @@ export function useQueryState<T = string>(
     initialSearchParams?.get(key) ?? null
   )
 
+  React.useEffect(() => {
+    const query = initialSearchParams.get(key) ?? null
+    if (query === queryRef.current) {
+      return
+    }
+    const state = query === null ? null : safeParse(parse, query, key)
+    debug('[nuqs `%s`] syncFromUseSearchParams %O', key, state)
+    stateRef.current = state
+    queryRef.current = query
+    setInternalState(state)
+  }, [initialSearchParams?.get(key), key])
+
   // Sync all hooks together & with external URL changes
   React.useInsertionEffect(() => {
     function updateInternalState({ state, query }: CrossHookSyncPayload) {
