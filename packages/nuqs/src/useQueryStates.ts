@@ -88,6 +88,21 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
     initialSearchParams
   )
 
+  React.useEffect(() => {
+    const state = parseMap(
+      keyMap,
+      initialSearchParams,
+      queryRef.current,
+      stateRef.current
+    )
+    setInternalState(state)
+  }, [
+    Object.keys(keyMap)
+      .map(key => initialSearchParams?.get(key))
+      .join('&'),
+    keys
+  ])
+
   // Sync all hooks together & with external URL changes
   React.useInsertionEffect(() => {
     function updateInternalState(state: V) {
