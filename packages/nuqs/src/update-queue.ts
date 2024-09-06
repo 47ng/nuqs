@@ -2,7 +2,6 @@ import type { NextRouter } from 'next/router'
 import { debug } from './debug'
 import type { Options, Router } from './defs'
 import { error } from './errors'
-import { NOSYNC_MARKER } from './sync'
 import { renderQueryString } from './url-encoding'
 import { getDefaultThrottle } from './utils'
 
@@ -191,11 +190,7 @@ function flushUpdateQueue(router: Router): [URLSearchParams, null | unknown] {
         // In next@14.1.0, useSearchParams becomes reactive to shallow updates,
         // but only if passing `null` as the history state.
         null,
-        // Our own updates have a marker to prevent syncing
-        // when the URL changes (we've already sync'd them up
-        // via `emitter.emit(key, newValue)` above, without
-        // going through the parsers).
-        NOSYNC_MARKER,
+        '',
         url
       )
       if (options.scroll) {
