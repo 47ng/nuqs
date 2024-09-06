@@ -32,7 +32,7 @@
     "server.d.ts"
   ],
   "type": "module",
-  "sideEffects": true,
+  "sideEffects": false,
   "module": "dist/index.js",
   "types": "dist/index.d.ts",
   "exports": {
