@@ -7,7 +7,7 @@ import React from 'react'
 import { debug } from './debug'
 import type { Nullable, Options } from './defs'
 import type { Parser } from './parsers'
-import { SYNC_EVENT_KEY, emitter, type CrossHookSyncPayload } from './sync'
+import { emitter, type CrossHookSyncPayload } from './sync'
 import {
   FLUSH_RATE_LIMIT_MS,
   enqueueQueryStringUpdate,
@@ -111,16 +111,17 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
   React.useEffect(() => {
     const state = parseMap(
       keyMap,
+      urlKeys,
       initialSearchParams,
       queryRef.current,
       stateRef.current
     )
     setInternalState(state)
   }, [
-    Object.keys(keyMap)
+    Object.keys(resolvedUrlKeys)
       .map(key => initialSearchParams?.get(key))
       .join('&'),
-    keys
+    stateKeys
   ])
 
   // Sync all hooks together & with external URL changes
@@ -129,17 +130,6 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
       debug('[nuq+ `%s`] updateInternalState %O', stateKeys, state)
       stateRef.current = state
       setInternalState(state)
-    }
-    function syncFromURL(search: URLSearchParams) {
-      const state = parseMap(
-        keyMap,
-        urlKeys,
-        search,
-        queryRef.current,
-        stateRef.current
-      )
-      debug('[nuq+ `%s`] syncFromURL %O', stateKeys, state)
-      updateInternalState(state)
     }
     const handlers = Object.keys(keyMap).reduce(
       (handlers, stateKey) => {
@@ -171,14 +161,12 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
       {} as Record<keyof V, (payload: CrossHookSyncPayload) => void>
     )
 
-    emitter.on(SYNC_EVENT_KEY, syncFromURL)
     for (const stateKey of Object.keys(keyMap)) {
       const urlKey = resolvedUrlKeys[stateKey]!
       debug('[nuq+ `%s`] Subscribing to sync for `%s`', stateKeys, urlKey)
       emitter.on(urlKey, handlers[stateKey]!)
     }
     return () => {
-      emitter.off(SYNC_EVENT_KEY, syncFromURL)
       for (const stateKey of Object.keys(keyMap)) {
         const urlKey = resolvedUrlKeys[stateKey]!
         debug('[nuq+ `%s`] Unsubscribing to sync for `%s`', stateKeys, urlKey)
