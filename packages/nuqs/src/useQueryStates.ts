@@ -7,7 +7,7 @@ import React from 'react'
 import { debug } from './debug'
 import type { Nullable, Options } from './defs'
 import type { Parser } from './parsers'
-import { SYNC_EVENT_KEY, emitter, type CrossHookSyncPayload } from './sync'
+import { emitter, type CrossHookSyncPayload } from './sync'
 import {
   FLUSH_RATE_LIMIT_MS,
   enqueueQueryStringUpdate,
@@ -110,11 +110,6 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
       stateRef.current = state
       setInternalState(state)
     }
-    function syncFromURL(search: URLSearchParams) {
-      const state = parseMap(keyMap, search, queryRef.current, stateRef.current)
-      debug('[nuq+ `%s`] syncFromURL %O', keys, state)
-      updateInternalState(state)
-    }
     const handlers = Object.keys(keyMap).reduce(
       (handlers, key) => {
         handlers[key as keyof V] = ({ state, query }: CrossHookSyncPayload) => {
@@ -140,14 +135,11 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
       },
       {} as Record<keyof V, (payload: CrossHookSyncPayload) => void>
     )
-
-    emitter.on(SYNC_EVENT_KEY, syncFromURL)
     for (const key of Object.keys(keyMap)) {
       debug('[nuq+ `%s`] Subscribing to sync for `%s`', keys, key)
       emitter.on(key, handlers[key]!)
     }
     return () => {
-      emitter.off(SYNC_EVENT_KEY, syncFromURL)
       for (const key of Object.keys(keyMap)) {
         debug('[nuq+ `%s`] Unsubscribing to sync for `%s`', keys, key)
         emitter.off(key, handlers[key])
