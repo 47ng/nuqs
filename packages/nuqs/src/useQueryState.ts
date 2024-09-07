@@ -3,7 +3,7 @@ import React from 'react'
 import { debug } from './debug'
 import type { Options } from './defs'
 import type { Parser } from './parsers'
-import { SYNC_EVENT_KEY, emitter, type CrossHookSyncPayload } from './sync'
+import { emitter, type CrossHookSyncPayload } from './sync'
 import {
   FLUSH_RATE_LIMIT_MS,
   enqueueQueryStringUpdate,
@@ -261,21 +261,10 @@ export function useQueryState<T = string>(
       queryRef.current = query
       setInternalState(state)
     }
-    function syncFromURL(search: URLSearchParams) {
-      const query = search.get(key)
-      if (query === queryRef.current) {
-        return
-      }
-      const state = query === null ? null : safeParse(parse, query, key)
-      debug('[nuqs `%s`] syncFromURL %O', key, state)
-      updateInternalState({ state, query })
-    }
     debug('[nuqs `%s`] subscribing to sync', key)
-    emitter.on(SYNC_EVENT_KEY, syncFromURL)
     emitter.on(key, updateInternalState)
     return () => {
       debug('[nuqs `%s`] unsubscribing from sync', key)
-      emitter.off(SYNC_EVENT_KEY, syncFromURL)
       emitter.off(key, updateInternalState)
     }
   }, [key])
