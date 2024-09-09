@@ -11,7 +11,6 @@ import { emitter, type CrossHookSyncPayload } from './sync'
 import {
   FLUSH_RATE_LIMIT_MS,
   enqueueQueryStringUpdate,
-  getQueuedValue,
   scheduleFlushToURL
 } from './update-queue'
 import { safeParse } from './utils'
@@ -94,9 +93,13 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
   // Not reactive, but available on the server and on page load
   const initialSearchParams = useSearchParams()
   const queryRef = React.useRef<Record<string, string | null>>({})
+  // Initialise the queryRef with the initial values
+  if (Object.keys(queryRef.current).length !== Object.keys(keyMap).length) {
+    queryRef.current = Object.fromEntries(initialSearchParams?.entries() ?? [])
+  }
+
   const [internalState, setInternalState] = React.useState<V>(() => {
     const source = initialSearchParams ?? new URLSearchParams()
-    queryRef.current = Object.fromEntries(source.entries())
     return parseMap(keyMap, urlKeys, source)
   })
 
@@ -120,8 +123,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
   }, [
     Object.keys(resolvedUrlKeys)
       .map(key => initialSearchParams?.get(key))
-      .join('&'),
-    stateKeys
+      .join('&')
   ])
 
   // Sync all hooks together & with external URL changes
@@ -253,9 +255,7 @@ function parseMap<KeyMap extends UseQueryStatesKeysMap>(
   return Object.keys(keyMap).reduce((obj, stateKey) => {
     const urlKey = urlKeys?.[stateKey] ?? stateKey
     const { defaultValue, parse } = keyMap[stateKey]!
-    const urlQuery = searchParams?.get(urlKey) ?? null
-    const queueQuery = getQueuedValue(urlKey)
-    const query = queueQuery ?? urlQuery
+    const query = searchParams?.get(urlKey) ?? null
     if (cachedQuery && cachedState && cachedQuery[urlKey] === query) {
       obj[stateKey as keyof KeyMap] =
         cachedState[stateKey] ?? defaultValue ?? null
