@@ -7,7 +7,6 @@ import { emitter, type CrossHookSyncPayload } from './sync'
 import {
   FLUSH_RATE_LIMIT_MS,
   enqueueQueryStringUpdate,
-  getQueuedValue,
   scheduleFlushToURL
 } from './update-queue'
 import { safeParse } from './utils'
@@ -225,13 +224,12 @@ export function useQueryState<T = string>(
   const router = useRouter()
   // Not reactive, but available on the server and on page load
   const initialSearchParams = useSearchParams()
-  const queryRef = React.useRef<string | null>(null)
+  const queryRef = React.useRef<string | null>(
+    initialSearchParams?.get(key) ?? null
+  )
   const [internalState, setInternalState] = React.useState<T | null>(() => {
-    const queueValue = getQueuedValue(key)
-    const urlValue = initialSearchParams?.get(key) ?? null
-    const value = queueValue ?? urlValue
-    queryRef.current = value
-    return value === null ? null : safeParse(parse, value, key)
+    const query = initialSearchParams?.get(key) ?? null
+    return query === null ? null : safeParse(parse, query, key)
   })
   const stateRef = React.useRef(internalState)
   debug(
