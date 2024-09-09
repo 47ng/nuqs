@@ -57,10 +57,6 @@ export function enqueueQueryStringUpdate<Value>(
   return serializedOrNull
 }
 
-export function getQueuedValue(key: string) {
-  return updateQueue.get(key) ?? null
-}
-
 /**
  * Eventually flush the update queue to the URL query string.
  *
