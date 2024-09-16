@@ -21,8 +21,8 @@ describe('serializer', () => {
   })
   test('several items', () => {
     const serialize = createSerializer(parsers)
-    const result = serialize({ str: 'foo', int: 1, bool: true })
-    expect(result).toBe('?str=foo&int=1&bool=true')
+    const result = serialize({ bool: true, int: 1, str: 'foo' })
+    expect(result).toBe('?bool=true&int=1&str=foo')
   })
   test("null items don't show up", () => {
     const serialize = createSerializer(parsers)

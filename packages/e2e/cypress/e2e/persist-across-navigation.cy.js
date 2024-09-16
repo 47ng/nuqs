@@ -10,7 +10,7 @@ it('Persists search params across navigation using a generated Link href', () =>
     'eq',
     `${Cypress.env('basePath')}/app/persist-across-navigation/b`
   )
-  cy.location('search').should('eq', '?q=foo&checked=true')
+  cy.location('search').should('eq', '?checked=true&q=foo')
   cy.get('input[type=text]').should('have.value', 'foo')
   cy.get('input[type=checkbox]').should('be.checked')
 })
