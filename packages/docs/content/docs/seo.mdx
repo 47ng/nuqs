@@ -45,3 +45,10 @@ export async function generateMetadata({
   }
 }
 ```
+
+By default, query strings are sorted by their keys to prevent SEO issues related to variations in query string order.
+The following example will serialize the query string as `?apple=foo&banana=foo`:
+
+```tsx
+  useQueryState({ banana: 'foo', apple: 'foo' })
+```
