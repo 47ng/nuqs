@@ -7,6 +7,6 @@ if (Cypress.env('supportsShallowRouting')) {
     cy.get('input').type('foo', { delay: 0 })
     cy.get('#searchParams').should('have.text', 'q=foo')
     cy.get('button').click()
-    cy.get('#searchParams').should('have.text', 'q=foo&push=true')
+    cy.get('#searchParams').should('have.text', 'push=true&q=foo')
   })
 }

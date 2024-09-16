@@ -15,7 +15,7 @@ describe('push', () => {
     cy.get('#client').should('have.text', '0')
 
     cy.get('button#client-incr').click()
-    cy.location('search').should('eq', '?server=1&client=1')
+    cy.location('search').should('eq', '?client=1&server=1')
     cy.get('#server-side').should('have.text', '1')
     cy.get('#server').should('have.text', '1')
     cy.get('#client').should('have.text', '1')
@@ -39,7 +39,7 @@ describe('push', () => {
     cy.get('#client').should('have.text', '0')
 
     cy.go('forward')
-    cy.location('search').should('eq', '?server=1&client=1')
+    cy.location('search').should('eq', '?client=1&server=1')
     cy.get('#server-side').should('have.text', '1')
     cy.get('#server').should('have.text', '1')
     cy.get('#client').should('have.text', '1')
@@ -58,7 +58,7 @@ describe('push', () => {
     cy.get('#client').should('have.text', '0')
 
     cy.get('button#client-incr').click()
-    cy.location('search').should('eq', '?server=1&client=1')
+    cy.location('search').should('eq', '?client=1&server=1')
     cy.get('#server-side').should('have.text', '1')
     cy.get('#server').should('have.text', '1')
     cy.get('#client').should('have.text', '1')
@@ -82,7 +82,7 @@ describe('push', () => {
     cy.get('#client').should('have.text', '0')
 
     cy.go('forward')
-    cy.location('search').should('eq', '?server=1&client=1')
+    cy.location('search').should('eq', '?client=1&server=1')
     cy.get('#server-side').should('have.text', '1')
     cy.get('#server').should('have.text', '1')
     cy.get('#client').should('have.text', '1')
