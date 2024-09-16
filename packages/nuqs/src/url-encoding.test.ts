@@ -99,6 +99,29 @@ describe('url-encoding/renderQueryString', () => {
       '?name=John+Doe&email=foo.bar%2Begg-spam@example.com&message=Hello,+world!+%23greeting'
     )
   })
+  test('it sorts keys', () => {
+    const search = new URLSearchParams()
+    search.set('a', '3')
+    search.set('b', '2')
+    search.set('c', '1')
+    const query = renderQueryString(search)
+    expect(query).toBe('?a=3&b=2&c=1')
+  })
+  test('it preserves order of keys with the same name', () => {
+    const search = new URLSearchParams()
+    search.set('a', '3')
+    search.append('a', '2')
+    search.append('a', '1')
+    const query = renderQueryString(search)
+    expect(query).toBe('?a=3&a=2&a=1')
+  })
+  test('it sorts by unicode code points', () => {
+    const search = new URLSearchParams()
+    search.set('😊', 'foo')
+    search.set('a', 'foo')
+    const query = renderQueryString(search)
+    expect(query).toBe('?a=foo&😊=foo')
+  })
   test('practical use-cases', () => {
     // https://github.com/47ng/nuqs/issues/355
     {

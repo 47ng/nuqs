@@ -2,8 +2,13 @@ export function renderQueryString(search: URLSearchParams) {
   if (search.size === 0) {
     return ''
   }
+
+  const clonedSearch = new URLSearchParams(search)
+  clonedSearch.sort()
+  const entries = clonedSearch.entries()
+
   const query: string[] = []
-  for (const [key, value] of search.entries()) {
+  for (const [key, value] of entries) {
     // Replace disallowed characters in keys,
     // see https://github.com/47ng/nuqs/issues/599
     const safeKey = key
