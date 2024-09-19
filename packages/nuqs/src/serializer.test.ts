@@ -1,10 +1,10 @@
 import { describe, expect, test } from 'vitest'
 import {
+  parseAsArrayOf,
   parseAsBoolean,
   parseAsInteger,
-  parseAsString,
   parseAsJson,
-  parseAsArrayOf
+  parseAsString
 } from './parsers'
 import { createSerializer } from './serializer'
 
