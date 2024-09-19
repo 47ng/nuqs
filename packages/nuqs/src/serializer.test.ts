@@ -1,5 +1,11 @@
 import { describe, expect, test } from 'vitest'
-import { parseAsBoolean, parseAsInteger, parseAsString } from './parsers'
+import {
+  parseAsBoolean,
+  parseAsInteger,
+  parseAsString,
+  parseAsJson,
+  parseAsArrayOf
+} from './parsers'
 import { createSerializer } from './serializer'
 
 const parsers = {
@@ -61,5 +67,28 @@ describe('serializer', () => {
     const serialize = createSerializer(parsers)
     const result = serialize('?str=bar&int=-1', { str: 'foo', int: null })
     expect(result).toBe('?str=foo')
+  })
+  test('clears value when setting the default value when `clearOnDefault` is used', () => {
+    const serialize = createSerializer({
+      int: parseAsInteger.withOptions({ clearOnDefault: true }).withDefault(0),
+      str: parseAsString.withOptions({ clearOnDefault: true }).withDefault(''),
+      bool: parseAsBoolean
+        .withOptions({ clearOnDefault: true })
+        .withDefault(false),
+      arr: parseAsArrayOf(parseAsString)
+        .withOptions({ clearOnDefault: true })
+        .withDefault([]),
+      json: parseAsJson()
+        .withOptions({ clearOnDefault: true })
+        .withDefault({ foo: 'bar' })
+    })
+    const result = serialize({
+      int: 0,
+      str: '',
+      bool: false,
+      arr: [],
+      json: { foo: 'bar' }
+    })
+    expect(result).toBe('')
   })
 })

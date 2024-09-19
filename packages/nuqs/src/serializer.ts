@@ -41,7 +41,13 @@ export function createSerializer<
       if (!parser || value === undefined) {
         continue
       }
-      if (value === null) {
+      const isMatchingDefault =
+        // @ts-expect-error
+        parser.defaultValue !== undefined &&
+        // @ts-expect-error
+        (parser.eq ?? ((a, b) => a === b))(value, parser.defaultValue)
+
+      if (value === null || (parser.clearOnDefault && isMatchingDefault)) {
         search.delete(key)
       } else {
         search.set(key, parser.serialize(value))
