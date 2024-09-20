@@ -2,6 +2,7 @@ import { RootProvider } from 'fumadocs-ui/provider'
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import Script from 'next/script'
+import { NuqsAdapter } from 'nuqs/adapters/next'
 import type { ReactNode } from 'react'
 import { ResponsiveHelper } from '../components/responsive-helpers'
 import { cn } from '../lib/utils'
@@ -32,7 +33,9 @@ export default function Layout({ children }: { children: ReactNode }) {
   return (
     <html lang="en" className={cn(inter.className, 'antialiased')}>
       <body>
-        <RootProvider>{children}</RootProvider>
+        <RootProvider>
+          <NuqsAdapter>{children}</NuqsAdapter>
+        </RootProvider>
         {enableChiffreAnalytics && (
           <Script
             async
