@@ -1,4 +1,5 @@
 export const errors = {
+  404: 'nuqs requires an adapter to work with your framework.',
   409: 'Multiple versions of the library are loaded. This may lead to unexpected behavior. Currently using `%s`, but `%s` was about to load on top.',
   429: 'URL update rate-limited by the browser. Consider increasing `throttleMs` for key(s) `%s`. %O',
   500: "Empty search params cache. Search params can't be accessed in Layouts.",

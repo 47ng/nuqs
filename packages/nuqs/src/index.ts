@@ -1,5 +1,3 @@
-'use client'
-
 export type { HistoryOptions, Options } from './defs'
 export * from './parsers'
 export { createSerializer } from './serializer'

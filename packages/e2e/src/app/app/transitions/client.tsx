@@ -1,14 +1,17 @@
 'use client'
 
 import { parseAsInteger, useQueryState } from 'nuqs'
-import React from 'react'
+import { useTransition } from 'react'
 import { HydrationMarker } from '../../../components/hydration-marker'
 
 export function Client() {
-  const [isLoading, startTransition] = React.useTransition()
+  const [isLoading, startTransition] = useTransition()
   const [counter, setCounter] = useQueryState(
     'counter',
-    parseAsInteger.withDefault(0).withOptions({ startTransition })
+    parseAsInteger.withDefault(0).withOptions({
+      shallow: false,
+      startTransition
+    })
   )
   return (
     <>
