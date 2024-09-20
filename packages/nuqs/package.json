@@ -28,8 +28,10 @@
   },
   "files": [
     "dist/",
-    "parsers.d.ts",
-    "server.d.ts"
+    "server.d.ts",
+    "adapters/react.d.ts",
+    "adapters/next.d.ts",
+    "adapters/testing.d.ts"
   ],
   "type": "module",
   "sideEffects": false,
@@ -43,11 +45,24 @@
     "./server": {
       "types": "./dist/server.d.ts",
       "import": "./dist/server.js"
+    },
+    "./adapters/react": {
+      "types": "./dist/adapters/react.d.ts",
+      "import": "./dist/adapters/react.js"
+    },
+    "./adapters/next": {
+      "types": "./dist/adapters/next.d.ts",
+      "import": "./dist/adapters/next.js"
+    },
+    "./adapters/testing": {
+      "types": "./dist/adapters/testing.d.ts",
+      "import": "./dist/adapters/testing.js"
     }
   },
   "scripts": {
-    "dev": "tsup --watch --external=react",
-    "build": "tsup --clean --external=react",
+    "dev": "tsup --watch",
+    "prebuild": "rm -rf dist",
+    "build": "tsup",
     "postbuild": "size-limit --json > size.json",
     "test": "pnpm run --parallel --stream '/^test:/'",
     "test:types": "tsd",
@@ -56,20 +71,23 @@
     "prepack": "./scripts/prepack.sh"
   },
   "peerDependencies": {
-    "next": ">= 14.1.2",
     "react": ">= 18.2.0"
   },
   "dependencies": {
     "mitt": "^3.0.1"
   },
+  "optionalDependencies": {
+    "next": ">= 14.1.2"
+  },
   "devDependencies": {
+    "@microsoft/api-extractor": "^7.47.9",
     "@size-limit/preset-small-lib": "^11.1.6",
     "@types/node": "^22.7.5",
-    "@types/react": "^18.3.11",
     "@types/react-dom": "^18.3.0",
+    "@types/react": "^18.3.11",
     "next": "14.2.15",
-    "react": "catalog:react19rc",
     "react-dom": "catalog:react19rc",
+    "react": "catalog:react19rc",
     "size-limit": "^11.1.6",
     "tsafe": "^1.7.5",
     "tsd": "^0.31.2",
@@ -86,7 +104,8 @@
       "path": "dist/index.js",
       "limit": "5 kB",
       "ignore": [
-        "react"
+        "react",
+        "next"
       ]
     },
     {
@@ -94,7 +113,8 @@
       "path": "dist/server.js",
       "limit": "2 kB",
       "ignore": [
-        "react"
+        "react",
+        "next"
       ]
     }
   ]
