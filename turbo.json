@@ -9,7 +9,7 @@
       "dependsOn": ["^build"]
     },
     "nuqs#build": {
-      "outputs": ["dist/**", "size.json"]
+      "outputs": ["dist/**", "size.json", ".tsup"]
     },
     "e2e#build": {
       "outputs": [".next/**", "!.next/cache/**", "cypress/**"],

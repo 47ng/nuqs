@@ -1,5 +1,11 @@
-import { useRouter, useSearchParams } from 'next/navigation.js' // https://github.com/47ng/nuqs/discussions/352
-import React from 'react'
+import {
+  useCallback,
+  useEffect,
+  useInsertionEffect,
+  useRef,
+  useState
+} from 'react'
+import { useAdapter } from './adapters/internal.context'
 import { debug } from './debug'
 import type { Options } from './defs'
 import type { Parser } from './parsers'
@@ -17,14 +23,14 @@ export type UseQueryStateReturn<Parsed, Default> = [
   Default extends undefined
     ? Parsed | null // value can't be null if default is specified
     : Parsed,
-  <Shallow>(
+  (
     value:
       | null
       | Parsed
       | ((
           old: Default extends Parsed ? Parsed : Parsed | null
         ) => Parsed | null),
-    options?: Options<Shallow>
+    options?: Options
   ) => Promise<URLSearchParams>
 ]
 
@@ -221,17 +227,18 @@ export function useQueryState<T = string>(
     defaultValue: undefined
   }
 ) {
-  const router = useRouter()
   // Not reactive, but available on the server and on page load
-  const initialSearchParams = useSearchParams()
-  const queryRef = React.useRef<string | null>(
-    initialSearchParams?.get(key) ?? null
-  )
-  const [internalState, setInternalState] = React.useState<T | null>(() => {
+  const {
+    searchParams: initialSearchParams,
+    updateUrl,
+    rateLimitFactor = 1
+  } = useAdapter()
+  const queryRef = useRef<string | null>(initialSearchParams?.get(key) ?? null)
+  const [internalState, setInternalState] = useState<T | null>(() => {
     const query = initialSearchParams?.get(key) ?? null
     return query === null ? null : safeParse(parse, query, key)
   })
-  const stateRef = React.useRef(internalState)
+  const stateRef = useRef(internalState)
   debug(
     '[nuqs `%s`] render - state: %O, iSP: %s',
     key,
@@ -239,7 +246,7 @@ export function useQueryState<T = string>(
     initialSearchParams?.get(key) ?? null
   )
 
-  React.useEffect(() => {
+  useEffect(() => {
     const query = initialSearchParams.get(key) ?? null
     if (query === queryRef.current) {
       return
@@ -252,7 +259,7 @@ export function useQueryState<T = string>(
   }, [initialSearchParams?.get(key), key])
 
   // Sync all hooks together & with external URL changes
-  React.useInsertionEffect(() => {
+  useInsertionEffect(() => {
     function updateInternalState({ state, query }: CrossHookSyncPayload) {
       debug('[nuqs `%s`] updateInternalState %O', key, state)
       stateRef.current = state
@@ -267,7 +274,7 @@ export function useQueryState<T = string>(
     }
   }, [key])
 
-  const update = React.useCallback(
+  const update = useCallback(
     (stateUpdater: React.SetStateAction<T | null>, options: Options = {}) => {
       let newValue: T | null = isUpdaterFunction(stateUpdater)
         ? stateUpdater(stateRef.current ?? defaultValue ?? null)
@@ -290,9 +297,18 @@ export function useQueryState<T = string>(
       })
       // Sync all hooks state (including this one)
       emitter.emit(key, { state: newValue, query: queryRef.current })
-      return scheduleFlushToURL(router)
+      return scheduleFlushToURL(updateUrl, rateLimitFactor)
     },
-    [key, history, shallow, scroll, throttleMs, startTransition]
+    [
+      key,
+      history,
+      shallow,
+      scroll,
+      throttleMs,
+      startTransition,
+      updateUrl,
+      rateLimitFactor
+    ]
   )
   return [internalState ?? defaultValue ?? null, update]
 }
