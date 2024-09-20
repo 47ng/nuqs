@@ -1,3 +1,4 @@
+import { NuqsAdapter } from 'nuqs/adapters/next'
 import React, { Suspense } from 'react'
 import { HydrationMarker } from '../components/hydration-marker'
 
@@ -16,7 +17,7 @@ export default function RootLayout({
         <Suspense>
           <HydrationMarker />
         </Suspense>
-        {children}
+        <NuqsAdapter>{children}</NuqsAdapter>
       </body>
     </html>
   )
