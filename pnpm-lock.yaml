@@ -234,7 +234,14 @@ importers:
       mitt:
         specifier: ^3.0.1
         version: 3.0.1
+    optionalDependencies:
+      next:
+        specifier: '>= 14.1.2'
+        version: 14.2.15(@babel/core@7.25.7)(@opentelemetry/api@1.9.0)(react-dom@19.0.0-rc-d5bba18b-20241009(react@19.0.0-rc-d5bba18b-20241009))(react@19.0.0-rc-d5bba18b-20241009)
     devDependencies:
+      '@microsoft/api-extractor':
+        specifier: ^7.47.9
+        version: 7.47.9(@types/node@22.7.5)
       '@size-limit/preset-small-lib':
         specifier: ^11.1.6
         version: 11.1.6(size-limit@11.1.6)
@@ -247,9 +254,6 @@ importers:
       '@types/react-dom':
         specifier: ^18.3.0
         version: 18.3.0
-      next:
-        specifier: 14.2.15
-        version: 14.2.15(@babel/core@7.25.7)(@opentelemetry/api@1.9.0)(react-dom@19.0.0-rc-d5bba18b-20241009(react@19.0.0-rc-d5bba18b-20241009))(react@19.0.0-rc-d5bba18b-20241009)
       react:
         specifier: catalog:react19rc
         version: 19.0.0-rc-d5bba18b-20241009
@@ -349,16 +353,8 @@ packages:
     resolution: {integrity: sha512-FPGAkJmyoChQeM+ruBGIDyrT2tKfZJO8NcxdC+CWNJi7N8/rZpSxK7yvBJ5O/nF1gfu5KzN7VKG3YVSLFfRSxQ==}
     engines: {node: '>=6.9.0'}
 
-  '@babel/helper-string-parser@7.24.7':
-    resolution: {integrity: sha512-7MbVt6xrwFQbunH2DNQsAP5sTGxfqQtErvBIvIMi6EQnbgUOuVYanvREcmFrOPhoXBrTtjhhP+lW+o5UfK+tDg==}
-    engines: {node: '>=6.9.0'}
-
   '@babel/helper-string-parser@7.25.7':
     resolution: {integrity: sha512-CbkjYdsJNHFk8uqpEkpCvRs3YRp9tY6FmFY7wLMSYuGYkrdUi7r2lc4/wqsvlHoMznX3WJ9IP8giGPq68T/Y6g==}
-    engines: {node: '>=6.9.0'}
-
-  '@babel/helper-validator-identifier@7.24.7':
-    resolution: {integrity: sha512-rR+PBcQ1SMQDDyF6X0wxtG8QyLCgUB0eRAGguqRLfkCA87l7yAP7ehq8SNj96OOGTO8OBV70KhuFYcIkHXOg0w==}
     engines: {node: '>=6.9.0'}
 
   '@babel/helper-validator-identifier@7.25.7':
@@ -392,10 +388,6 @@ packages:
 
   '@babel/traverse@7.25.7':
     resolution: {integrity: sha512-jatJPT1Zjqvh/1FyJs6qAHL+Dzb7sTb+xr7Q+gM1b+1oBsMsQQ4FkVKb6dFlJvLlVssqkRzV05Jzervt9yhnzg==}
-    engines: {node: '>=6.9.0'}
-
-  '@babel/types@7.24.7':
-    resolution: {integrity: sha512-XEFXSlxiG5td2EJRe8vOmRbaXVgfcBlszKujvVmWIK/UpywWljQCfzAv3RQCGujWQ1RD4YYWEAqDXfuJiy8f5Q==}
     engines: {node: '>=6.9.0'}
 
   '@babel/types@7.25.7':
@@ -6647,9 +6639,6 @@ packages:
     peerDependencies:
       zod: ^3.18.0
 
-  zod@3.23.6:
-    resolution: {integrity: sha512-RTHJlZhsRbuA8Hmp/iNL7jnfc4nZishjsanDAfEY1QpDQZCahUp3xDzl+zfweE9BklxMUcgBgS1b7Lvie/ZVwA==}
-
   zod@3.23.8:
     resolution: {integrity: sha512-XBx9AXhXktjUqnepgTiE5flcKIYWi/rme0Eaj+5Y0lftuGBq+jyRu/md4WnuxqgP1ubdpNCsYEYPxrzVHD8d6g==}
 
@@ -6694,7 +6683,7 @@ snapshots:
 
   '@babel/generator@7.2.0':
     dependencies:
-      '@babel/types': 7.24.7
+      '@babel/types': 7.25.7
       jsesc: 2.5.2
       lodash: 4.17.21
       source-map: 0.5.7
@@ -6739,11 +6728,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@babel/helper-string-parser@7.24.7': {}
-
   '@babel/helper-string-parser@7.25.7': {}
-
-  '@babel/helper-validator-identifier@7.24.7': {}
 
   '@babel/helper-validator-identifier@7.25.7': {}
 
@@ -6786,12 +6771,6 @@ snapshots:
       globals: 11.12.0
     transitivePeerDependencies:
       - supports-color
-
-  '@babel/types@7.24.7':
-    dependencies:
-      '@babel/helper-string-parser': 7.24.7
-      '@babel/helper-validator-identifier': 7.24.7
-      to-fast-properties: 2.0.0
 
   '@babel/types@7.25.7':
     dependencies:
@@ -7309,7 +7288,6 @@ snapshots:
       '@rushstack/node-core-library': 5.9.0(@types/node@22.7.5)
     transitivePeerDependencies:
       - '@types/node'
-    optional: true
 
   '@microsoft/api-extractor@7.47.9(@types/node@22.7.5)':
     dependencies:
@@ -7328,7 +7306,6 @@ snapshots:
       typescript: 5.4.2
     transitivePeerDependencies:
       - '@types/node'
-    optional: true
 
   '@microsoft/tsdoc-config@0.17.0':
     dependencies:
@@ -7336,10 +7313,8 @@ snapshots:
       ajv: 8.12.0
       jju: 1.4.0
       resolve: 1.22.8
-    optional: true
 
-  '@microsoft/tsdoc@0.15.0':
-    optional: true
+  '@microsoft/tsdoc@0.15.0': {}
 
   '@next/env@14.2.15': {}
 
@@ -8404,13 +8379,11 @@ snapshots:
       semver: 7.5.4
     optionalDependencies:
       '@types/node': 22.7.5
-    optional: true
 
   '@rushstack/rig-package@0.5.3':
     dependencies:
       resolve: 1.22.8
       strip-json-comments: 3.1.1
-    optional: true
 
   '@rushstack/terminal@0.14.2(@types/node@22.7.5)':
     dependencies:
@@ -8418,7 +8391,6 @@ snapshots:
       supports-color: 8.1.1
     optionalDependencies:
       '@types/node': 22.7.5
-    optional: true
 
   '@rushstack/ts-command-line@4.22.8(@types/node@22.7.5)':
     dependencies:
@@ -8428,7 +8400,6 @@ snapshots:
       string-argv: 0.3.2
     transitivePeerDependencies:
       - '@types/node'
-    optional: true
 
   '@sec-ant/readable-stream@0.4.1': {}
 
@@ -8895,8 +8866,7 @@ snapshots:
     dependencies:
       '@types/estree': 1.0.6
 
-  '@types/argparse@1.0.38':
-    optional: true
+  '@types/argparse@1.0.38': {}
 
   '@types/connect@3.4.36':
     dependencies:
@@ -9205,12 +9175,10 @@ snapshots:
   ajv-draft-04@1.0.0(ajv@8.13.0):
     optionalDependencies:
       ajv: 8.13.0
-    optional: true
 
   ajv-formats@3.0.1(ajv@8.13.0):
     optionalDependencies:
       ajv: 8.13.0
-    optional: true
 
   ajv-keywords@3.5.2(ajv@6.12.6):
     dependencies:
@@ -9229,7 +9197,6 @@ snapshots:
       json-schema-traverse: 1.0.0
       require-from-string: 2.0.2
       uri-js: 4.4.1
-    optional: true
 
   ajv@8.13.0:
     dependencies:
@@ -9237,7 +9204,6 @@ snapshots:
       json-schema-traverse: 1.0.0
       require-from-string: 2.0.2
       uri-js: 4.4.1
-    optional: true
 
   ajv@8.17.1:
     dependencies:
@@ -9356,12 +9322,12 @@ snapshots:
   babel-plugin-react-compiler@0.0.0-experimental-696af53-20240625:
     dependencies:
       '@babel/generator': 7.2.0
-      '@babel/types': 7.24.7
+      '@babel/types': 7.25.7
       chalk: 4.1.2
       invariant: 2.2.4
       pretty-format: 24.9.0
-      zod: 3.23.6
-      zod-validation-error: 2.1.0(zod@3.23.6)
+      zod: 3.23.8
+      zod-validation-error: 2.1.0(zod@3.23.8)
 
   bail@2.0.2: {}
 
@@ -9389,7 +9355,6 @@ snapshots:
     dependencies:
       balanced-match: 1.0.2
       concat-map: 0.0.1
-    optional: true
 
   brace-expansion@2.0.1:
     dependencies:
@@ -9648,8 +9613,7 @@ snapshots:
 
   compute-scroll-into-view@3.1.0: {}
 
-  concat-map@0.0.1:
-    optional: true
+  concat-map@0.0.1: {}
 
   config-chain@1.1.13:
     dependencies:
@@ -10357,7 +10321,6 @@ snapshots:
       graceful-fs: 4.2.11
       jsonfile: 4.0.0
       universalify: 0.1.2
-    optional: true
 
   fs-extra@9.1.0:
     dependencies:
@@ -10766,8 +10729,7 @@ snapshots:
       cjs-module-lexer: 1.4.1
       module-details-from-path: 1.0.3
 
-  import-lazy@4.0.0:
-    optional: true
+  import-lazy@4.0.0: {}
 
   import-meta-resolve@4.1.0: {}
 
@@ -10920,8 +10882,7 @@ snapshots:
 
   jiti@2.3.3: {}
 
-  jju@1.4.0:
-    optional: true
+  jju@1.4.0: {}
 
   joi@17.13.3:
     dependencies:
@@ -10996,7 +10957,6 @@ snapshots:
   jsonfile@4.0.0:
     optionalDependencies:
       graceful-fs: 4.2.11
-    optional: true
 
   jsonfile@6.1.0:
     dependencies:
@@ -11689,7 +11649,6 @@ snapshots:
   minimatch@3.0.8:
     dependencies:
       brace-expansion: 1.1.11
-    optional: true
 
   minimatch@8.0.4:
     dependencies:
@@ -12593,7 +12552,6 @@ snapshots:
   semver@7.5.4:
     dependencies:
       lru-cache: 6.0.0
-    optional: true
 
   semver@7.6.3: {}
 
@@ -12769,8 +12727,7 @@ snapshots:
 
   streamsearch@1.1.0: {}
 
-  string-argv@0.3.2:
-    optional: true
+  string-argv@0.3.2: {}
 
   string-width@4.2.3:
     dependencies:
@@ -12817,8 +12774,7 @@ snapshots:
 
   strip-json-comments@2.0.1: {}
 
-  strip-json-comments@3.1.1:
-    optional: true
+  strip-json-comments@3.1.1: {}
 
   style-to-object@0.4.4:
     dependencies:
@@ -13137,8 +13093,7 @@ snapshots:
 
   type-fest@4.26.1: {}
 
-  typescript@5.4.2:
-    optional: true
+  typescript@5.4.2: {}
 
   typescript@5.6.3: {}
 
@@ -13205,8 +13160,7 @@ snapshots:
 
   universal-user-agent@7.0.2: {}
 
-  universalify@0.1.2:
-    optional: true
+  universalify@0.1.2: {}
 
   universalify@0.2.0: {}
 
@@ -13537,11 +13491,9 @@ snapshots:
 
   yoctocolors@2.1.1: {}
 
-  zod-validation-error@2.1.0(zod@3.23.6):
+  zod-validation-error@2.1.0(zod@3.23.8):
     dependencies:
-      zod: 3.23.6
-
-  zod@3.23.6: {}
+      zod: 3.23.8
 
   zod@3.23.8: {}
 

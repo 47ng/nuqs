@@ -13,6 +13,7 @@ export function Client() {
   const [serverDelay, setServerDelay] = useQueryState(
     'serverDelay',
     delayParser.withOptions({
+      shallow: false,
       startTransition: startDelayTransition
     })
   )
@@ -23,6 +24,7 @@ export function Client() {
   const [q, setQ] = useQueryState(
     'q',
     queryParser.withOptions({
+      shallow: false,
       throttleMs: clientDelay,
       startTransition: startQueryTransition
     })

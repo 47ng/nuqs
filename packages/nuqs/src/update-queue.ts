@@ -1,8 +1,7 @@
-import type { NextRouter } from 'next/router'
+import type { UpdateUrlFunction } from './adapters/defs'
 import { debug } from './debug'
-import type { Options, Router } from './defs'
+import type { Options } from './defs'
 import { error } from './errors'
-import { renderQueryString } from './url-encoding'
 import { getDefaultThrottle } from './utils'
 
 export const FLUSH_RATE_LIMIT_MS = getDefaultThrottle()
@@ -45,10 +44,7 @@ export function enqueueQueryStringUpdate<Value>(
     queueOptions.shallow = false
   }
   if (options.startTransition) {
-    // Providing a startTransition function will
-    // cause the update to be non-shallow.
     transitionsQueue.add(options.startTransition)
-    queueOptions.shallow = false
   }
   queueOptions.throttleMs = Math.max(
     options.throttleMs ?? FLUSH_RATE_LIMIT_MS,
@@ -67,7 +63,10 @@ export function enqueueQueryStringUpdate<Value>(
  *
  * @returns a Promise to the URLSearchParams that have been applied.
  */
-export function scheduleFlushToURL(router: Router) {
+export function scheduleFlushToURL(
+  updateUrl: UpdateUrlFunction,
+  rateLimitFactor: number
+) {
   if (flushPromiseCache === null) {
     flushPromiseCache = new Promise<URLSearchParams>((resolve, reject) => {
       if (!Number.isFinite(queueOptions.throttleMs)) {
@@ -81,7 +80,7 @@ export function scheduleFlushToURL(router: Router) {
       }
       function flushNow() {
         lastFlushTimestamp = performance.now()
-        const [search, error] = flushUpdateQueue(router)
+        const [search, error] = flushUpdateQueue(updateUrl)
         if (error === null) {
           resolve(search)
         } else {
@@ -95,10 +94,9 @@ export function scheduleFlushToURL(router: Router) {
         const now = performance.now()
         const timeSinceLastFlush = now - lastFlushTimestamp
         const throttleMs = queueOptions.throttleMs
-        const flushInMs = Math.max(
-          0,
-          Math.min(throttleMs, throttleMs - timeSinceLastFlush)
-        )
+        const flushInMs =
+          rateLimitFactor *
+          Math.max(0, Math.min(throttleMs, throttleMs - timeSinceLastFlush))
         debug(
           '[nuqs queue] Scheduling flush in %f ms. Throttled at %f ms',
           flushInMs,
@@ -118,20 +116,9 @@ export function scheduleFlushToURL(router: Router) {
   return flushPromiseCache
 }
 
-declare global {
-  interface Window {
-    next?: {
-      version: string
-      router?: NextRouter & {
-        state: {
-          asPath: string
-        }
-      }
-    }
-  }
-}
-
-function flushUpdateQueue(router: Router): [URLSearchParams, null | unknown] {
+function flushUpdateQueue(
+  updateUrl: UpdateUrlFunction
+): [URLSearchParams, null | unknown] {
   const search = new URLSearchParams(location.search)
   if (updateQueue.size === 0) {
     return [search, null]
@@ -156,52 +143,13 @@ function flushUpdateQueue(router: Router): [URLSearchParams, null | unknown] {
     }
   }
   try {
-    // While the Next.js team doesn't recommend using internals like this,
-    // we need access to the pages router here to let it know about non-shallow
-    // updates, as going through the window.history API directly will make it
-    // miss pushed history updates.
-    // The router adapter imported from next/navigation also doesn't support
-    // passing an asPath, causing issues in dynamic routes in the pages router.
-    const nextRouter = window.next?.router
-    const isPagesRouter = typeof nextRouter?.state?.asPath === 'string'
-    if (isPagesRouter) {
-      const url = renderURL(nextRouter.state.asPath.split('?')[0] ?? '', search)
-      debug('[nuqs queue (pages)] Updating url: %s', url)
-      const method =
-        options.history === 'push' ? nextRouter.push : nextRouter.replace
-      method.call(nextRouter, url, url, {
+    compose(transitions, () => {
+      updateUrl(search, {
+        history: options.history,
         scroll: options.scroll,
         shallow: options.shallow
       })
-    } else {
-      // App router
-      const url = renderURL(location.origin + location.pathname, search)
-      debug('[nuqs queue (app)] Updating url: %s', url)
-      // First, update the URL locally without triggering a network request,
-      // this allows keeping a reactive URL if the network is slow.
-      const updateMethod =
-        options.history === 'push' ? history.pushState : history.replaceState
-      updateMethod.call(
-        history,
-        // In next@14.1.0, useSearchParams becomes reactive to shallow updates,
-        // but only if passing `null` as the history state.
-        null,
-        '',
-        url
-      )
-      if (options.scroll) {
-        window.scrollTo(0, 0)
-      }
-      if (!options.shallow) {
-        compose(transitions, () => {
-          // Call the Next.js router to perform a network request
-          // and re-render server components.
-          router.replace(url, {
-            scroll: false
-          })
-        })
-      }
-    }
+    })
     return [search, null]
   } catch (err) {
     // This may fail due to rate-limiting of history methods,
@@ -209,13 +157,6 @@ function flushUpdateQueue(router: Router): [URLSearchParams, null | unknown] {
     console.error(error(429), items.map(([key]) => key).join(), err)
     return [search, err]
   }
-}
-
-function renderURL(base: string, search: URLSearchParams) {
-  const hashlessBase = base.split('#')[0] ?? ''
-  const query = renderQueryString(search)
-  const hash = location.hash
-  return hashlessBase + query + hash
 }
 
 export function compose(

@@ -1,9 +1,12 @@
 import {
-  ReadonlyURLSearchParams,
-  useRouter,
-  useSearchParams
-} from 'next/navigation.js' // https://github.com/47ng/nuqs/discussions/352
-import React from 'react'
+  useCallback,
+  useEffect,
+  useInsertionEffect,
+  useMemo,
+  useRef,
+  useState
+} from 'react'
+import { useAdapter } from './adapters/internal.context'
 import { debug } from './debug'
 import type { Nullable, Options } from './defs'
 import type { Parser } from './parsers'
@@ -81,29 +84,30 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
 ): UseQueryStatesReturn<KeyMap> {
   type V = Values<KeyMap>
   const stateKeys = Object.keys(keyMap).join(',')
-  const resolvedUrlKeys = React.useMemo(
+  const resolvedUrlKeys = useMemo(
     () =>
       Object.fromEntries(
         Object.keys(keyMap).map(key => [key, urlKeys[key] ?? key])
       ),
     [stateKeys, urlKeys]
   )
-
-  const router = useRouter()
-  // Not reactive, but available on the server and on page load
-  const initialSearchParams = useSearchParams()
-  const queryRef = React.useRef<Record<string, string | null>>({})
+  const {
+    searchParams: initialSearchParams,
+    updateUrl,
+    rateLimitFactor = 1
+  } = useAdapter()
+  const queryRef = useRef<Record<string, string | null>>({})
   // Initialise the queryRef with the initial values
   if (Object.keys(queryRef.current).length !== Object.keys(keyMap).length) {
     queryRef.current = Object.fromEntries(initialSearchParams?.entries() ?? [])
   }
 
-  const [internalState, setInternalState] = React.useState<V>(() => {
+  const [internalState, setInternalState] = useState<V>(() => {
     const source = initialSearchParams ?? new URLSearchParams()
     return parseMap(keyMap, urlKeys, source)
   })
 
-  const stateRef = React.useRef(internalState)
+  const stateRef = useRef(internalState)
   debug(
     '[nuq+ `%s`] render - state: %O, iSP: %s',
     stateKeys,
@@ -111,7 +115,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
     initialSearchParams
   )
 
-  React.useEffect(() => {
+  useEffect(() => {
     const state = parseMap(
       keyMap,
       urlKeys,
@@ -127,7 +131,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
   ])
 
   // Sync all hooks together & with external URL changes
-  React.useInsertionEffect(() => {
+  useInsertionEffect(() => {
     function updateInternalState(state: V) {
       debug('[nuq+ `%s`] updateInternalState %O', stateKeys, state)
       stateRef.current = state
@@ -177,7 +181,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
     }
   }, [keyMap, resolvedUrlKeys])
 
-  const update = React.useCallback<SetValues<KeyMap>>(
+  const update = useCallback<SetValues<KeyMap>>(
     (stateUpdater, callOptions = {}) => {
       const newState: Partial<Nullable<KeyMap>> =
         typeof stateUpdater === 'function'
@@ -228,7 +232,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
           query: queryRef.current[urlKey] ?? null
         })
       }
-      return scheduleFlushToURL(router)
+      return scheduleFlushToURL(updateUrl, rateLimitFactor)
     },
     [
       keyMap,
@@ -237,7 +241,9 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
       scroll,
       throttleMs,
       startTransition,
-      resolvedUrlKeys
+      resolvedUrlKeys,
+      updateUrl,
+      rateLimitFactor
     ]
   )
   return [internalState, update]
@@ -248,7 +254,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
 function parseMap<KeyMap extends UseQueryStatesKeysMap>(
   keyMap: KeyMap,
   urlKeys: Partial<Record<keyof KeyMap, string>>,
-  searchParams: URLSearchParams | ReadonlyURLSearchParams,
+  searchParams: URLSearchParams,
   cachedQuery?: Record<string, string | null>,
   cachedState?: Values<KeyMap>
 ) {
