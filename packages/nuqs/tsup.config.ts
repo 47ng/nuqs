@@ -16,6 +16,8 @@ const entrypoints = {
     index: 'src/index.ts',
     'adapters/react': 'src/adapters/react.ts',
     'adapters/next': 'src/adapters/next.ts',
+    'adapters/next/app': 'src/adapters/next/app.ts',
+    'adapters/next/pages': 'src/adapters/next/pages.ts',
     'adapters/testing': 'src/adapters/testing.ts'
   },
   server: {

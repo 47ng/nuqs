@@ -31,6 +31,8 @@
     "server.d.ts",
     "adapters/react.d.ts",
     "adapters/next.d.ts",
+    "adapters/next/app.d.ts",
+    "adapters/next/pages.d.ts",
     "adapters/testing.d.ts"
   ],
   "type": "module",
@@ -53,6 +55,14 @@
     "./adapters/next": {
       "types": "./dist/adapters/next.d.ts",
       "import": "./dist/adapters/next.js"
+    },
+    "./adapters/next/app": {
+      "types": "./dist/adapters/next/app.d.ts",
+      "import": "./dist/adapters/next/app.js"
+    },
+    "./adapters/next/pages": {
+      "types": "./dist/adapters/next/pages.d.ts",
+      "import": "./dist/adapters/next/pages.js"
     },
     "./adapters/testing": {
       "types": "./dist/adapters/testing.d.ts",

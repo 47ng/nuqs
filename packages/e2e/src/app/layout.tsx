@@ -1,4 +1,4 @@
-import { NuqsAdapter } from 'nuqs/adapters/next'
+import { NuqsAdapter } from 'nuqs/adapters/next/app'
 import React, { Suspense } from 'react'
 import { HydrationMarker } from '../components/hydration-marker'
 
