@@ -10,9 +10,10 @@ type Base = string | URLSearchParams | URL
 type Values<Parsers extends Record<string, ParserBuilder<any>>> = Partial<{
   [K in keyof Parsers]?: ExtractParserType<Parsers[K]>
 }>
+type ParserWithOptionalDefault<T> = ParserBuilder<T> & { defaultValue?: T }
 
 export function createSerializer<
-  Parsers extends Record<string, ParserBuilder<any>>
+  Parsers extends Record<string, ParserWithOptionalDefault<any>>
 >(parsers: Parsers) {
   /**
    * Generate a query string for the given values.
@@ -41,7 +42,11 @@ export function createSerializer<
       if (!parser || value === undefined) {
         continue
       }
-      if (value === null) {
+      const isMatchingDefault =
+        parser.defaultValue !== undefined &&
+        (parser.eq ?? ((a, b) => a === b))(value, parser.defaultValue)
+
+      if (value === null || (parser.clearOnDefault && isMatchingDefault)) {
         search.delete(key)
       } else {
         search.set(key, parser.serialize(value))
