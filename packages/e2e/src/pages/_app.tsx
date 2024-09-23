@@ -1,5 +1,5 @@
 import type { AppProps } from 'next/app'
-import { NuqsAdapter } from 'nuqs/adapters/next'
+import { NuqsAdapter } from 'nuqs/adapters/next/pages'
 
 export default function MyApp({ Component, pageProps }: AppProps) {
   return (
