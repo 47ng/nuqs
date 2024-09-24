@@ -3,12 +3,146 @@ title: Migration guide to v2
 description: How to update your code to use nuqs@2.0.0
 ---
 
-## Support moved to `next@>=14.1.2`
+Here's a summary of the breaking changes in `nuqs@2.0.0`:
+
+- [Enable support for other React frameworks](#adapters)
+- [ESM-only package](#esm-only)
+- [Deprecated exports have been removed](#deprecated-exports)
+- [Renamed `nuqs/parsers` to `nuqs/server`](#renamed-nuqs-parsers-to-nuqs-server)
+- [Debug printout detection](#debug-printout-detection)
+
+## Adapters
+
+The biggest change is that `nuqs@2.0.0` now supports other React frameworks,
+providing type-safe URL state for all.
+
+You will need to wrap your app with the appropriate **adapter** for your framework,
+to let the hooks know how to interact with its router.
+
+Adapters are currently available for:
+- Next.js (app & pages routers)
+- React (Vite, Astro, etc.)
+- Testing environments (Vitest, Jest, etc.)
+
+More adapters will be released soon (React Router, Remix etc.), PRs are welcome!
+
+### Next.js
+
+<Callout title="Minimum required version: next@>=14.1.2">
 
 Early versions of Next.js 14 were in flux with regards to shallow routing,
 only from 14.1.2 is it stable enough to not require ugly hacks.
 
 See #423 for context and a table of supported versions.
+
+</Callout>
+
+#### App router
+
+```tsx
+// src/app/layout.tsx
+import { NuqsAdapter } from 'nuqs/adapters/next/app'
+import { type ReactNode } from 'react'
+
+export default function RootLayout({
+  children
+}: {
+  children: ReactNode
+}) {
+  return (
+    <html>
+      <body>
+        <NuqsAdapter>{children}</NuqsAdapter>
+      </body>
+    </html>
+  )
+}
+```
+
+#### Pages router
+
+```tsx
+// src/pages/_app.tsx
+import type { AppProps } from 'next/app'
+import { NuqsAdapter } from 'nuqs/adapters/next/pages'
+
+export default function MyApp({ Component, pageProps }: AppProps) {
+  return (
+    <NuqsAdapter>
+      <Component {...pageProps} />
+    </NuqsAdapter>
+  )
+}
+```
+
+<details>
+<summary>
+
+#### Next.js (unified)
+
+</summary>
+
+If your Next.js app uses both the app _and_ pages routers, you can use
+the unified adapter if it needs to be mounted in either routers, at the cost
+of a slightly larger bundle size (~100B).
+
+```tsx
+import { NuqsAdapter } from 'nuqs/adapters/next'
+```
+
+</details>
+
+### React (with Vite)
+
+```tsx
+import { NuqsAdapter } from 'nuqs/adapters/react'
+
+createRoot(document.getElementById('root')!).render(
+  <NuqsAdapter>
+    <App />
+  </NuqsAdapter>
+)
+```
+
+### Testing adapter
+
+Until now, unit-testing nuqs components was a hassle, as it required mocking
+Next.js internals, causing abstraction leaks.
+
+You can now wrap your components to test with the `NuqsTestingAdapter`, which
+provides setup & assertion helpers for your tests.
+
+Here's an example with Vitest & Testing Library:
+
+```tsx
+import { render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
+import { NuqsTestingAdapter, type UrlUpdateEvent } from 'nuqs/adapters/testing'
+import { describe, expect, it, vi } from 'vitest'
+import { CounterButton } from './counter-button'
+
+it('should increment the count when clicked', async () => {
+  const user = userEvent.setup()
+  const onUrlUpdate = vi.fn<[UrlUpdateEvent]>()
+  render(<CounterButton />, {
+    // Setup the test by passing initial search params / querystring:
+    wrapper: ({ children }) => (
+      <NuqsTestingAdapter searchParams="?count=1" onUrlUpdate={onUrlUpdate}>
+        {children}
+      </NuqsTestingAdapter>
+    )
+  })
+  // Act
+  const button = screen.getByRole('button')
+  await user.click(button)
+  // Assert changes in the state and in the (mocked) URL
+  expect(button).toHaveTextContent('count is 2')
+  expect(onUrlUpdate).toHaveBeenCalledOnce()
+  expect(onUrlUpdate.mock.calls[0][0].queryString).toBe('?count=2')
+  expect(onUrlUpdate.mock.calls[0][0].searchParams.get('count')).toBe('2')
+  expect(onUrlUpdate.mock.calls[0][0].options.history).toBe('push')
+})
+```
 
 ## ESM only
 
