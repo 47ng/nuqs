@@ -34,11 +34,6 @@ yarn add nuqs
 npm install nuqs
 ```
 
-> Note: the package is moving to a new name: `nuqs` :tada:
->
-> The 1.x versions will also be available under `next-usequerystate`,
-> but 2.x onwards will only be published under `nuqs`.
-
 ### Which version should I use?
 
 | Next.js version range   | Supported `nuqs` version                                                                                                                        |
