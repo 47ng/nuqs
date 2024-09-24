@@ -41,13 +41,14 @@ npm install nuqs
 
 ### Which version should I use?
 
-| Next.js version range | Supported `nuqs` / `next-usequerystate` version                                                                                                 |
-| --------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------- |
-| >=14.0.4              | `nuqs@latest`                                                                                                                                   |
-| 14.0.3                | `nuqs@latest`, with the `windowHistorySupport` experimental flag, see [#417](https://github.com/47ng/nuqs/issues/417)                           |
-| 14.0.2                | Not compatible, see issue [#388](https://github.com/47ng/nuqs/issues/388) and Next.js PR [#58297](https://github.com/vercel/next.js/pull/58297) |
-| >= 13.1 && <= 14.0.1  | `nuqs@latest`                                                                                                                                   |
-| < 13.1                | `next-usequerystate@1.7.3`                                                                                                                      |
+| Next.js version range   | Supported `nuqs` version                                                                                                                        |
+| ----------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------- |
+| >= 14.1.2               | `nuqs@latest`                                                                                                                                   |
+| >=14.0.4 && \<\= 14.1.1 | `nuqs@^1`                                                                                                                                       |
+| 14.0.3                  | `nuqs@^1`, with the `windowHistorySupport` experimental flag, see [#417](https://github.com/47ng/nuqs/issues/417)                               |
+| 14.0.2                  | Not compatible, see issue [#388](https://github.com/47ng/nuqs/issues/388) and Next.js PR [#58297](https://github.com/vercel/next.js/pull/58297) |
+| >= 13.1 && \<\= 14.0.1  | `nuqs@^1`                                                                                                                                       |
+| < 13.1                  | `next-usequerystate@1.7.3`                                                                                                                      |
 
 ## Usage
 
