@@ -13,7 +13,7 @@ assignees: ''
 What's your version of `nuqs`?
 
 ```
--> Paste result from `cat package.json | grep -e nuqs -e next-usequerystate` here
+-> Paste result from `cat package.json | grep -e nuqs` here
 ```
 
 Next.js information (obtained by running `next info`):
