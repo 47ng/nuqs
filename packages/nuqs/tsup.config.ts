@@ -6,7 +6,7 @@ const commonConfig = {
   format: ['esm'],
   experimentalDts: true,
   outDir: 'dist',
-  external: ['next', 'react'],
+  external: ['next', 'react', '@remix-run/react'],
   splitting: true,
   treeshake: true
 } satisfies Options
@@ -18,6 +18,7 @@ const entrypoints = {
     'adapters/next': 'src/adapters/next.ts',
     'adapters/next/app': 'src/adapters/next/app.ts',
     'adapters/next/pages': 'src/adapters/next/pages.ts',
+    'adapters/remix': 'src/adapters/remix.ts',
     'adapters/testing': 'src/adapters/testing.ts'
   },
   server: {
