@@ -2,6 +2,7 @@ name: Prevent PRs targetting master
 
 on:
   pull_request:
+    types: [opened, edited]
     branches:
       - master
 
