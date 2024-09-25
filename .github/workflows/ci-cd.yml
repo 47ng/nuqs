@@ -2,8 +2,12 @@ name: CI/CD
 
 on:
   push:
+    branches:
+      - master
+      - beta
+      - next
   pull_request:
-    types: [opened, reopened]
+    types: [opened, reopened, synchronize]
 
 env:
   FORCE_COLOR: 3 # Diplay chalk colors
