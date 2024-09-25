@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Post comment to update base branch
-        run: gh pr comment ${{ github.event.pull_request.number }} --body "⚠️ Pull requests targetting the `master` branch are not allowed. Please update the base branch to `next`."
+        run: gh pr comment ${{ github.event.pull_request.number }} --body "⚠️ Pull requests targetting the \`master\` branch are not allowed. Please update the base branch to \`next\`."
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Close PR
