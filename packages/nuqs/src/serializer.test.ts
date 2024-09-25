@@ -54,10 +54,9 @@ describe('serializer', () => {
   test('Does not mutate existing params with URLSearchParams base', () => {
     const serialize = createSerializer(parsers)
     const searchBefore = new URLSearchParams('?str=foo')
-    expect(searchBefore.get("str")).toBe("foo")
     const result = serialize(searchBefore, { str: 'bar' })
     expect(result).toBe('?str=bar')
-    expect(searchBefore.get("str")).toBe("foo")
+    expect(searchBefore.get('str')).toBe('foo')
   })
   test('with URL base', () => {
     const serialize = createSerializer(parsers)

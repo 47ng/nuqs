@@ -72,6 +72,9 @@ function splitBase(base: Base) {
   } else if (base instanceof URLSearchParams) {
     return ['', new URLSearchParams(base)] as const // Operate on a copy of URLSearchParams, as derived classes may restrict its allowed methods
   } else {
-    return [base.origin + base.pathname, new URLSearchParams(base.searchParams)] as const
+    return [
+      base.origin + base.pathname,
+      new URLSearchParams(base.searchParams)
+    ] as const
   }
 }
