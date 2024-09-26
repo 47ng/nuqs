@@ -52,6 +52,9 @@ importers:
       react-dom:
         specifier: rc
         version: 19.0.0-rc-d5bba18b-20241009(react@19.0.0-rc-d5bba18b-20241009)
+      react-router-dom:
+        specifier: ^6.26.2
+        version: 6.26.2(react-dom@19.0.0-rc-d5bba18b-20241009(react@19.0.0-rc-d5bba18b-20241009))(react@19.0.0-rc-d5bba18b-20241009)
     devDependencies:
       '@testing-library/dom':
         specifier: ^10.1.0
@@ -372,16 +375,19 @@ importers:
         specifier: ^3.0.1
         version: 3.0.1
     optionalDependencies:
+      '@remix-run/react':
+        specifier: '>= 2'
+        version: 2.12.1(react-dom@19.0.0-rc-d5bba18b-20241009(react@19.0.0-rc-d5bba18b-20241009))(react@19.0.0-rc-d5bba18b-20241009)(typescript@5.6.3)
       next:
         specifier: '>= 14.1.2'
         version: 14.2.15(@opentelemetry/api@1.9.0)(react-dom@19.0.0-rc-d5bba18b-20241009(react@19.0.0-rc-d5bba18b-20241009))(react@19.0.0-rc-d5bba18b-20241009)
+      react-router-dom:
+        specifier: '>= 6'
+        version: 6.26.2(react-dom@19.0.0-rc-d5bba18b-20241009(react@19.0.0-rc-d5bba18b-20241009))(react@19.0.0-rc-d5bba18b-20241009)
     devDependencies:
       '@microsoft/api-extractor':
         specifier: ^7.47.9
         version: 7.47.9(@types/node@22.7.5)
-      '@remix-run/react':
-        specifier: ^2.12.1
-        version: 2.12.1(react-dom@19.0.0-rc-d5bba18b-20241009(react@19.0.0-rc-d5bba18b-20241009))(react@19.0.0-rc-d5bba18b-20241009)(typescript@5.6.3)
       '@size-limit/preset-small-lib':
         specifier: ^11.1.6
         version: 11.1.6(size-limit@11.1.6)
@@ -10969,6 +10975,7 @@ snapshots:
       turbo-stream: 2.4.0
     optionalDependencies:
       typescript: 5.6.3
+    optional: true
 
   '@remix-run/router@1.19.2': {}
 
