@@ -1,5 +1,4 @@
 import { cn } from '@/src/lib/utils'
-import Image from 'next/image'
 import { z } from 'zod'
 
 const dependentSchema = z.object({
@@ -94,10 +93,11 @@ export async function DependentsSection() {
             href={`https://github.com/${dep.owner}/${dep.name}`}
             className="relative h-8 w-8 rounded-full"
           >
-            <Image
+            <img
               src={upscaleGitHubAvatar(dep.avatarURL, 64)}
               alt={dep.owner + '/' + dep.name}
               className="rounded-full"
+              loading="lazy"
               width={64}
               height={64}
             />
