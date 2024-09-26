@@ -1,12 +1,16 @@
-import { NuqsAdapter } from 'nuqs/adapters/react'
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import App from './App.tsx'
+import { ReactRouter } from './react-router'
+import { VanillaReact } from './vanilla-react'
 
-createRoot(document.getElementById('root')!).render(
+createRoot(document.getElementById('root-vanilla')!).render(
   <StrictMode>
-    <NuqsAdapter>
-      <App />
-    </NuqsAdapter>
+    <VanillaReact />
+  </StrictMode>
+)
+
+createRoot(document.getElementById('root-react-router')!).render(
+  <StrictMode>
+    <ReactRouter />
   </StrictMode>
 )

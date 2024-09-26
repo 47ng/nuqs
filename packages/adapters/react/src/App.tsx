@@ -1,10 +1,14 @@
 import { CounterButton } from './components/counter-button'
 import { SearchInput } from './components/search-input'
 
-export default function App() {
+type AppProps = {
+  router: string
+}
+
+export default function App({ router }: AppProps) {
   return (
     <>
-      <h1>Vite + React + nuqs</h1>
+      <h1>{router} + nuqs</h1>
       <div>
         <CounterButton />
         <SearchInput />
