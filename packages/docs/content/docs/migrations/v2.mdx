@@ -8,7 +8,7 @@ Here's a summary of the breaking changes in `nuqs@2.0.0`:
 - [Enable support for other React frameworks](#adapters)
 - [ESM-only package](#esm-only)
 - [Deprecated exports have been removed](#deprecated-exports)
-- [Renamed `nuqs/parsers` to `nuqs/server`](#renamed-nuqs-parsers-to-nuqs-server)
+- [Renamed `nuqs/parsers` to `nuqs/server`](#renamed-nuqsparsers-to-nuqsserver)
 - [Debug printout detection](#debug-printout-detection)
 
 ## Adapters
@@ -39,8 +39,7 @@ See #423 for context and a table of supported versions.
 
 #### App router
 
-```tsx
-// src/app/layout.tsx
+```tsx {1} /NuqsAdapter/ title="src/app/layout.tsx"
 import { NuqsAdapter } from 'nuqs/adapters/next/app'
 import { type ReactNode } from 'react'
 
@@ -61,8 +60,7 @@ export default function RootLayout({
 
 #### Pages router
 
-```tsx
-// src/pages/_app.tsx
+```tsx {2} /NuqsAdapter/ title="src/pages/_app.tsx"
 import type { AppProps } from 'next/app'
 import { NuqsAdapter } from 'nuqs/adapters/next/pages'
 
@@ -75,26 +73,20 @@ export default function MyApp({ Component, pageProps }: AppProps) {
 }
 ```
 
-<details>
-<summary>
+#### Unified (router-agnostic)
 
-#### Next.js (unified)
-
-</summary>
-
-If your Next.js app uses both the app _and_ pages routers, you can use
-the unified adapter if it needs to be mounted in either routers, at the cost
+If your Next.js app uses **both the app and pages routers** and the adapter needs
+to be mounted in either, you can use the unified adapter, at the cost
 of a slightly larger bundle size (~100B).
 
 ```tsx
 import { NuqsAdapter } from 'nuqs/adapters/next'
 ```
 
-</details>
 
 ### React (with Vite)
 
-```tsx
+```tsx /NuqsAdapter/
 import { NuqsAdapter } from 'nuqs/adapters/react'
 
 createRoot(document.getElementById('root')!).render(
