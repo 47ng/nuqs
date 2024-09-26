@@ -1,5 +1,4 @@
 import type { MetaFunction } from '@remix-run/node'
-import { NuqsAdapter } from 'nuqs/adapters/remix'
 import { CounterButton } from '../components/counter-button'
 import { SearchInput } from '../components/search-input'
 
@@ -31,10 +30,8 @@ export default function Index() {
             />
           </div>
         </header>
-        <NuqsAdapter>
-          <CounterButton />
-          <SearchInput />
-        </NuqsAdapter>
+        <CounterButton />
+        <SearchInput />
       </div>
     </div>
   )
