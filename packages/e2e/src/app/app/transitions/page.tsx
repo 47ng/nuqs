@@ -1,9 +1,10 @@
 import { setTimeout } from 'node:timers/promises'
+import type { SearchParams } from 'nuqs/server'
 import { Suspense } from 'react'
 import { Client } from './client'
 
 type PageProps = {
-  searchParams: Record<string, string | string[] | undefined>
+  searchParams: Promise<SearchParams>
 }
 
 export default async function Page({ searchParams }: PageProps) {
@@ -11,7 +12,7 @@ export default async function Page({ searchParams }: PageProps) {
   return (
     <>
       <h1>Transitions</h1>
-      <pre id="server-rendered">{JSON.stringify(searchParams)}</pre>
+      <pre id="server-rendered">{JSON.stringify(await searchParams)}</pre>
       <Suspense>
         <Client />
       </Suspense>

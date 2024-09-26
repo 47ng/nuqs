@@ -29,4 +29,8 @@ import {
   type All = Readonly<{ foo: string | null; bar: number | null; egg: boolean }>
   expectType<All>(cache.parse({}))
   expectType<All>(cache.all())
+
+  // It supports async search params (Next.js 15+)
+  expectType<Promise<All>>(cache.parse(Promise.resolve({})))
+  expectType<All>(cache.all())
 }
