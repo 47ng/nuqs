@@ -1,22 +1,17 @@
 import { cache } from 'react'
 import { error } from './errors'
-import type { ParserBuilder } from './parsers'
+import type { ParserBuilder, inferParserType } from './parsers'
 
 export type SearchParams = Record<string, string | string[] | undefined>
 
 const $input: unique symbol = Symbol('Input')
-
-type ExtractParserType<Parser> =
-  Parser extends ParserBuilder<any>
-    ? ReturnType<Parser['parseServerSide']>
-    : never
 
 export function createSearchParamsCache<
   Parsers extends Record<string, ParserBuilder<any>>
 >(parsers: Parsers) {
   type Keys = keyof Parsers
   type ParsedSearchParams = {
-    [K in Keys]: ExtractParserType<Parsers[K]>
+    readonly [K in Keys]: inferParserType<Parsers[K]>
   }
 
   type Cache = {
@@ -32,7 +27,8 @@ export function createSearchParamsCache<
   const getCache = cache<() => Cache>(() => ({
     searchParams: {}
   }))
-  function parse(searchParams: SearchParams) {
+
+  function parseSync(searchParams: SearchParams): ParsedSearchParams {
     const c = getCache()
     if (Object.isFrozen(c.searchParams)) {
       // Parse has already been called...
@@ -51,14 +47,43 @@ export function createSearchParamsCache<
       c.searchParams[key] = parser.parseServerSide(searchParams[key])
     }
     c[$input] = searchParams
-    return Object.freeze(c.searchParams) as Readonly<ParsedSearchParams>
+    return Object.freeze(c.searchParams) as ParsedSearchParams
+  }
+
+  /**
+   * Parse the incoming `searchParams` page prop using the parsers provided,
+   * and make it available to the RSC tree.
+   *
+   * @returns The parsed search params for direct use in the page component.
+   *
+   * Note: Next.js 15 introduced a breaking change in making their
+   * `searchParam` prop a Promise. You will need to await this function
+   * to use the Promise version in Next.js 15.
+   */
+  function parse(searchParams: SearchParams): ParsedSearchParams
+
+  /**
+   * Parse the incoming `searchParams` page prop using the parsers provided,
+   * and make it available to the RSC tree.
+   *
+   * @returns The parsed search params for direct use in the page component.
+   *
+   * Note: this async version requires Next.js 15 or later.
+   */
+  function parse(searchParams: Promise<any>): Promise<ParsedSearchParams>
+
+  function parse(searchParams: SearchParams | Promise<any>) {
+    if (searchParams instanceof Promise) {
+      return searchParams.then(parseSync)
+    }
+    return parseSync(searchParams)
   }
   function all() {
     const { searchParams } = getCache()
     if (Object.keys(searchParams).length === 0) {
       throw new Error(error(500))
     }
-    return searchParams as Readonly<ParsedSearchParams>
+    return searchParams as ParsedSearchParams
   }
   function get<Key extends Keys>(key: Key): ParsedSearchParams[Key] {
     const { searchParams } = getCache()

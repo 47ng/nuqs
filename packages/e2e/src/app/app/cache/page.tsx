@@ -1,3 +1,4 @@
+import type { SearchParams } from 'nuqs/server'
 import { Suspense } from 'react'
 import { All } from './all'
 import { Get } from './get'
@@ -5,11 +6,11 @@ import { cache } from './searchParams'
 import { Set } from './set'
 
 type Props = {
-  searchParams: Record<string, string | string[] | undefined>
+  searchParams: Promise<SearchParams>
 }
 
-export default function Page({ searchParams }: Props) {
-  const { str, bool, num, def, nope } = cache.parse(searchParams)
+export default async function Page({ searchParams }: Props) {
+  const { str, bool, num, def, nope } = await cache.parse(searchParams)
   return (
     <>
       <h1>Root page</h1>
@@ -30,9 +31,9 @@ export default function Page({ searchParams }: Props) {
   )
 }
 
-export function generateMetadata({ searchParams }: Props) {
+export async function generateMetadata({ searchParams }: Props) {
   // parse here too to ensure we can idempotently parse the same search params as the page in the same request
-  const { str } = cache.parse(searchParams)
+  const { str } = await cache.parse(searchParams)
   return {
     title: `metadata-title-str:${str}`
   }

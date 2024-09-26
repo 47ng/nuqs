@@ -3,12 +3,12 @@ import { Suspense } from 'react'
 import { RewriteDestinationClient } from './client'
 import { cache } from './searchParams'
 
-export default function RewriteDestinationPage({
+export default async function RewriteDestinationPage({
   searchParams
 }: {
-  searchParams: SearchParams
+  searchParams: Promise<SearchParams>
 }) {
-  const { injected, through } = cache.parse(searchParams)
+  const { injected, through } = await cache.parse(searchParams)
   return (
     <>
       <p>

@@ -1,12 +1,13 @@
+import type { SearchParams } from 'nuqs/server'
 import { Client } from './client'
-import { parser } from './searchParams'
+import { searchParamsCache } from './searchParams'
 
-export default function Page({
+export default async function Page({
   searchParams
 }: {
-  searchParams: Record<string, string | string[] | undefined>
+  searchParams: Promise<SearchParams>
 }) {
-  const server = parser.parseServerSide(searchParams.server)
+  const { server } = await searchParamsCache.parse(searchParams)
   return (
     <>
       <p>
