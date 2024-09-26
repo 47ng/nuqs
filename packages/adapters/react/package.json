@@ -12,7 +12,8 @@
   "dependencies": {
     "nuqs": "workspace:*",
     "react": "rc",
-    "react-dom": "rc"
+    "react-dom": "rc",
+    "react-router-dom": "^6.26.2"
   },
   "devDependencies": {
     "@testing-library/dom": "^10.1.0",
