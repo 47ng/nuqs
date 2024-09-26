@@ -6,7 +6,7 @@ import {
   Scripts,
   ScrollRestoration
 } from '@remix-run/react'
-
+import { NuqsAdapter } from 'nuqs/adapters/remix'
 import './tailwind.css'
 
 export const links: LinksFunction = () => [
@@ -41,5 +41,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
-  return <Outlet />
+  return (
+    <NuqsAdapter>
+      <Outlet />
+    </NuqsAdapter>
+  )
 }
