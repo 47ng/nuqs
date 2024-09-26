@@ -15,13 +15,17 @@
   },
   "homepage": "https://nuqs.47ng.com",
   "keywords": [
-    "nextjs",
+    "url-state",
     "router",
     "url",
     "query-string",
     "react-hook",
     "useState",
-    "next-usequerystate"
+    "next-usequerystate",
+    "nextjs",
+    "react",
+    "remix",
+    "react-router"
   ],
   "publishConfig": {
     "access": "public"
@@ -33,6 +37,8 @@
     "adapters/next.d.ts",
     "adapters/next/app.d.ts",
     "adapters/next/pages.d.ts",
+    "adapters/remix.d.ts",
+    "adapters/react-router.d.ts",
     "adapters/testing.d.ts"
   ],
   "type": "module",
@@ -68,6 +74,10 @@
       "types": "./dist/adapters/remix.d.ts",
       "import": "./dist/adapters/remix.js"
     },
+    "./adapters/react-router": {
+      "types": "./dist/adapters/react-router.d.ts",
+      "import": "./dist/adapters/react-router.js"
+    },
     "./adapters/testing": {
       "types": "./dist/adapters/testing.d.ts",
       "import": "./dist/adapters/testing.js"
@@ -91,7 +101,9 @@
     "mitt": "^3.0.1"
   },
   "optionalDependencies": {
-    "next": ">= 14.1.2"
+    "next": ">= 14.1.2",
+    "@remix-run/react": ">= 2",
+    "react-router-dom": ">= 6"
   },
   "devDependencies": {
     "@microsoft/api-extractor": "^7.47.9",
@@ -103,6 +115,7 @@
     "next": "14.2.15",
     "react-dom": "catalog:react19rc",
     "react": "catalog:react19rc",
+    "react-router-dom": "^6.26.2",
     "size-limit": "^11.1.6",
     "tsafe": "^1.7.5",
     "tsd": "^0.31.2",
