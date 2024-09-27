@@ -18,17 +18,17 @@ jobs:
         run: |
           if git diff --quiet HEAD^ HEAD ./packages/nuqs; then
             echo "No changes to nuqs package, skipping build."
-            echo "skip=true" >> $GITHUB_OUTPUT
+            echo "enable=false" >> $GITHUB_OUTPUT
           else
             echo "Changes detected."
-            echo "skip=false" >> $GITHUB_OUTPUT
+            echo "enable=true" >> $GITHUB_OUTPUT
           fi
-          echo "Current skip status: ${{ steps.check-for-changes.outputs.skip }}"  # Debug statement
+          echo "Current enable status: ${{ steps.check-for-changes.outputs.enable }}"  # Debug statement
 
   deploy-preview:
     needs: check-changes
+    if: needs.check-changes.outputs.enable == 'true'
     runs-on: ubuntu-latest
-    if: needs.check-changes.outputs.skip != 'true'
     steps:
       - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332
         with:
@@ -38,7 +38,7 @@ jobs:
       
       - uses: actions/setup-node@1e60f620b9541d16bece96c5465dc8ee9832be0b
         with:
-          # node-version-file: .node-version
+          node-version-file: .node-version
           cache: pnpm
 
       - name: Install dependencies
