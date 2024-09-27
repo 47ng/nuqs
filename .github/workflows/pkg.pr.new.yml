@@ -33,5 +33,4 @@ jobs:
         working-directory: packages/nuqs
       - name: Publish to pkg.pr.new
       - if: steps.check-for-changes.outputs.skip != 'true'
-        
         run: pnpx pkg-pr-new publish --compact './packages/nuqs'
