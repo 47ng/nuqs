@@ -38,7 +38,7 @@ jobs:
       
       - uses: actions/setup-node@1e60f620b9541d16bece96c5465dc8ee9832be0b
         with:
-          node-version-file: .node-version
+          # node-version-file: .node-version
           cache: pnpm
 
       - name: Install dependencies
