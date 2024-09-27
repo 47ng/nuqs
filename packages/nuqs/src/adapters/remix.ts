@@ -1,14 +1,21 @@
-import { useSearchParams } from '@remix-run/react'
+import { useNavigate, useSearchParams } from '@remix-run/react'
+import { renderQueryString } from '../url-encoding'
 import type { AdapterOptions } from './defs'
 import { createAdapterProvider } from './internal.context'
 
 function useNuqsRemixAdapter() {
-  const [searchParams, setSearchParams] = useSearchParams()
+  const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const updateUrl = (search: URLSearchParams, options: AdapterOptions) => {
-    setSearchParams(search, {
-      replace: options.history === 'replace',
-      preventScrollReset: !options.scroll
-    })
+    navigate(
+      {
+        search: renderQueryString(search)
+      },
+      {
+        replace: options.history === 'replace',
+        preventScrollReset: !options.scroll
+      }
+    )
   }
   return {
     searchParams,
