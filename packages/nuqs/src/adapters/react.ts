@@ -1,5 +1,6 @@
 import mitt from 'mitt'
 import { useEffect, useState } from 'react'
+import { renderQueryString } from '../url-encoding'
 import type { AdapterOptions } from './defs'
 import { createAdapterProvider } from './internal.context'
 
@@ -7,11 +8,10 @@ const emitter = mitt<{ update: URLSearchParams }>()
 
 function updateUrl(search: URLSearchParams, options: AdapterOptions) {
   const url = new URL(location.href)
-  url.search = search.toString()
-  const href = url.toString()
+  url.search = renderQueryString(search)
   const method =
     options.history === 'push' ? history.pushState : history.replaceState
-  method.call(history, history.state, '', href)
+  method.call(history, history.state, '', url)
   emitter.emit('update', search)
 }
 
