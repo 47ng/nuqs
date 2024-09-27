@@ -80,11 +80,11 @@ describe('serializer', () => {
     const result = serialize('?str=bar&int=-1', null)
     expect(result).toBe('')
   })
-  test('null keeps search params not managed by the serializer', () => {  
-    const serialize = createSerializer(parsers)  
-    const result = serialize('?str=foo&external=kept', null)  
-    expect(result).toBe('?external=kept')  
-  })  
+  test('null keeps search params not managed by the serializer', () => {
+    const serialize = createSerializer(parsers)
+    const result = serialize('?str=foo&external=kept', null)
+    expect(result).toBe('?external=kept')
+  })
   test('clears value when setting the default value when `clearOnDefault` is used', () => {
     const serialize = createSerializer({
       int: parseAsInteger.withOptions({ clearOnDefault: true }).withDefault(0),
