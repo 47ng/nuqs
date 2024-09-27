@@ -23,11 +23,12 @@ jobs:
             echo "Changes detected."
             echo "skip=false" >> $GITHUB_OUTPUT
           fi
+          echo "Current skip status: ${{ steps.check-for-changes.outputs.skip }}"  # Debug statement
 
   deploy-preview:
-    needs: check-changes  # This job depends on the check-changes job
+    needs: check-changes
     runs-on: ubuntu-latest
-    if: needs.check-changes.outputs.skip != 'true'  # Only run if changes were detected
+    if: needs.check-changes.outputs.skip != 'true'
     steps:
       - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332
         with:
@@ -48,4 +49,3 @@ jobs:
 
       - name: Publish to pkg.pr.new
         run: pnpx pkg-pr-new publish --compact './packages/nuqs'
-        
