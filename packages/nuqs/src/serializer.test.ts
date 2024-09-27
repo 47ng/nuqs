@@ -70,10 +70,15 @@ describe('serializer', () => {
     const result = serialize(url, { str: 'foo' })
     expect(result).toBe('https://example.com/path?bar=egg&str=foo')
   })
-  test('null deletes from base', () => {
+  test('null value deletes from base', () => {
     const serialize = createSerializer(parsers)
     const result = serialize('?str=bar&int=-1', { str: 'foo', int: null })
     expect(result).toBe('?str=foo')
+  })
+  test('null deletes all from base', () => {
+    const serialize = createSerializer(parsers)
+    const result = serialize('?str=bar&int=-1', null)
+    expect(result).toBe('')
   })
   test('clears value when setting the default value when `clearOnDefault` is used', () => {
     const serialize = createSerializer({

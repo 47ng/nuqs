@@ -27,15 +27,21 @@ export function createSerializer<
    * - another value is given for an existing key, in which case the
    *  search param will be updated
    */
-  function serialize(base: Base, values: Values<Parsers>): string
+  function serialize(base: Base, values: Values<Parsers> | null): string
   function serialize(
-    baseOrValues: Base | Values<Parsers>,
-    values: Values<Parsers> = {}
+    baseOrValues: Base | Values<Parsers> | null,
+    values: Values<Parsers> | null = {}
   ) {
     const [base, search] = isBase(baseOrValues)
       ? splitBase(baseOrValues)
       : ['', new URLSearchParams()]
     const vals = isBase(baseOrValues) ? values : baseOrValues
+    if (vals === null) {
+      for (const key in parsers) {
+        search.delete(key)
+      }
+      return base + renderQueryString(search)
+    }
     for (const key in parsers) {
       const parser = parsers[key]
       const value = vals[key]
