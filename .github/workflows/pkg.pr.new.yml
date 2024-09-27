@@ -12,6 +12,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332
+      - name: Check for changes to nuqs package
+        run: |
+          if git diff --quiet HEAD^ HEAD ./packages/nuqs; then
+            echo "No changes to nuqs package, skipping preview deployment."
+            exit 0
+          fi
       - uses: pnpm/action-setup@fe02b34f77f8bc703788d5817da081398fad5dd2
       - uses: actions/setup-node@1e60f620b9541d16bece96c5465dc8ee9832be0b
         with:
