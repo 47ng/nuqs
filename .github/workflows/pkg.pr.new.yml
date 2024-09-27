@@ -6,33 +6,50 @@ on:
     types: [submitted]
 
 jobs:
-  deploy-preview:
-    name: Deploy to pkg.pr.new
-    if: github.event.review.state == 'APPROVED' || contains(github.event.pull_request.author_association, 'MEMBER')
+  check-changes:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332
         with:
           fetch-depth: 2
+
       - name: Check for changes to nuqs package
         id: check-for-changes
         run: |
           if git diff --quiet HEAD^ HEAD ./packages/nuqs; then
-            echo "No changes to nuqs package, skipping preview deployment."
+            echo "No changes to nuqs package, skipping build."
             echo "skip=true" >> $GITHUB_OUTPUT
+          else
+            echo "Changes detected."
+            echo "skip=false" >> $GITHUB_OUTPUT
           fi
+
+  deploy-preview:
+    needs: check-changes  # This job depends on the check-changes job
+    runs-on: ubuntu-latest
+    if: needs.check-changes.outputs.skip != 'true'  # Only run if changes were detected
+    steps:
+      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332
+        with:
+          fetch-depth: 2
+
       - uses: pnpm/action-setup@fe02b34f77f8bc703788d5817da081398fad5dd2
+      
       - uses: actions/setup-node@1e60f620b9541d16bece96c5465dc8ee9832be0b
         with:
           node-version-file: .node-version
           cache: pnpm
+
       - name: Install dependencies
         run: pnpm install
+        
       - name: Build package
         run: pnpm build --filter nuqs
+        
       - name: Set package version
         run: pnpm pkg set version=0.0.0-preview.${{ github.event.pull_request.head.sha }}
         working-directory: packages/nuqs
+
       - name: Publish to pkg.pr.new
-        if: steps.check-for-changes.outputs.skip != 'true'
         run: pnpx pkg-pr-new publish --compact './packages/nuqs'
+        
