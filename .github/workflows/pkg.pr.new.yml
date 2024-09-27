@@ -13,20 +13,18 @@ jobs:
         with:
           fetch-depth: 2
 
-      - name: Check for changes to nuqs package
-        id: check-for-changes
+      - name: Check for PR Approval
         run: |
-          if git diff --quiet HEAD^ HEAD ./packages/nuqs; then
-            echo "No changes to nuqs package, skipping build."
+          if [[ "${{ github.event.review.state }}" != "APPROVED" && ! "$(echo "${{ github.event.pull_request.author_association }}" | grep 'MEMBER')" ]]; then
+            echo "Deployment not allowed."
             echo "enable=false" >> $GITHUB_OUTPUT
           else
-            echo "Changes detected."
+            echo "Deployment allowed."
             echo "enable=true" >> $GITHUB_OUTPUT
           fi
-          echo "Current enable status: ${{ steps.check-for-changes.outputs.enable }}"  # Debug statement
 
   deploy-preview:
-    needs: check-changes
+    name: Deploy to pkg.pr.new
     if: needs.check-changes.outputs.enable == 'true'
     runs-on: ubuntu-latest
     steps:
