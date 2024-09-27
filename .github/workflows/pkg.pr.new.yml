@@ -32,5 +32,5 @@ jobs:
         run: pnpm pkg set version=0.0.0-preview.${{ github.event.pull_request.head.sha }}
         working-directory: packages/nuqs
       - name: Publish to pkg.pr.new
-      - if: steps.check-for-changes.outputs.skip != 'true'
+        if: steps.check-for-changes.outputs.skip != 'true'
         run: pnpx pkg-pr-new publish --compact './packages/nuqs'
