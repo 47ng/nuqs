@@ -7,19 +7,20 @@ on:
 
 jobs:
   check-changes:
+    name: Check for relevant changes to deploy
+    if: github.event.review.state == 'APPROVED' || contains(github.event.pull_request.author_association, 'MEMBER')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332
         with:
           fetch-depth: 2
 
-      - name: Check for PR Approval
+      - name: Check for relevant changes
         run: |
-          if [[ "${{ github.event.review.state }}" != "APPROVED" && ! "$(echo "${{ github.event.pull_request.author_association }}" | grep 'MEMBER')" ]]; then
-            echo "Deployment not allowed."
+          if git diff --quiet HEAD^ HEAD ./packages/nuqs; then
+            echo "No changes to nuqs package, skipping preview deployment."
             echo "enable=false" >> $GITHUB_OUTPUT
           else
-            echo "Deployment allowed."
             echo "enable=true" >> $GITHUB_OUTPUT
           fi
 
@@ -29,21 +30,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332
-        with:
-          fetch-depth: 2
-
       - uses: pnpm/action-setup@fe02b34f77f8bc703788d5817da081398fad5dd2
-      
       - uses: actions/setup-node@1e60f620b9541d16bece96c5465dc8ee9832be0b
         with:
           node-version-file: .node-version
           cache: pnpm
-
       - name: Install dependencies
         run: pnpm install
-        
       - name: Build package
         run: pnpm build --filter nuqs
-
+      - name: Set package version
+        run: pnpm pkg set version=0.0.0-preview.${{ github.event.pull_request.head.sha }}
+        working-directory: packages/nuqs
       - name: Publish to pkg.pr.new
         run: pnpx pkg-pr-new publish --compact './packages/nuqs'
