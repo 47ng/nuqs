@@ -27,6 +27,7 @@ jobs:
   deploy-preview:
     name: Deploy to pkg.pr.new
     if: needs.check-changes.outputs.enable == 'true'
+    needs: check-changes
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332
