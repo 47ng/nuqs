@@ -11,7 +11,7 @@ jobs:
     if: |
       github.event.review.state == 'APPROVED' ||
       contains(github.event.pull_request.author_association, 'MEMBER') ||
-      contains(github.event.pull_request.labels, 'deploy:preview')
+      github.event.pull_request.labels.*.name == 'deploy:preview'
     runs-on: ubuntu-latest
     outputs:
       enable: ${{ steps.check-for-changes.outputs.enable }}
