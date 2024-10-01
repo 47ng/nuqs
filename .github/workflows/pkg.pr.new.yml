@@ -1,26 +1,41 @@
 name: PR Preview
 on:
   pull_request:
-    types: [opened, synchronize]
+    types: [opened, synchronize, labeled]
   pull_request_review:
     types: [submitted]
 
 jobs:
-  deploy-preview:
-    name: Deploy to pkg.pr.new
-    if: github.event.review.state == 'APPROVED' || contains(github.event.pull_request.author_association, 'MEMBER')
+  check-changes:
+    name: Check for relevant changes to deploy
+    if: |
+      github.event.review.state == 'APPROVED' ||
+      contains(github.event.pull_request.author_association, 'MEMBER') ||
+      contains(github.event.pull_request.labels.*.name, 'deploy:preview')
     runs-on: ubuntu-latest
+    outputs:
+      enable: ${{ steps.check-for-changes.outputs.enable }}
     steps:
       - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332
         with:
           fetch-depth: 2
-      - name: Check for changes to nuqs package
+      - name: Check for relevant changes
         id: check-for-changes
         run: |
           if git diff --quiet HEAD^ HEAD ./packages/nuqs; then
             echo "No changes to nuqs package, skipping preview deployment."
-            echo "skip=true" >> $GITHUB_OUTPUT
+            echo "enable=false" >> $GITHUB_OUTPUT
+          else
+            echo "enable=true" >> $GITHUB_OUTPUT
           fi
+
+  deploy-preview:
+    name: Deploy to pkg.pr.new
+    needs: check-changes
+    if: needs.check-changes.outputs.enable == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332
       - uses: pnpm/action-setup@fe02b34f77f8bc703788d5817da081398fad5dd2
       - uses: actions/setup-node@1e60f620b9541d16bece96c5465dc8ee9832be0b
         with:
@@ -34,5 +49,4 @@ jobs:
         run: pnpm pkg set version=0.0.0-preview.${{ github.event.pull_request.head.sha }}
         working-directory: packages/nuqs
       - name: Publish to pkg.pr.new
-        if: steps.check-for-changes.outputs.skip != 'true'
         run: pnpx pkg-pr-new publish --compact './packages/nuqs'
