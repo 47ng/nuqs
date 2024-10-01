@@ -1,7 +1,7 @@
 name: PR Preview
 on:
   pull_request:
-    types: [opened, synchronize]
+    types: [opened, synchronize, labeled]
   pull_request_review:
     types: [submitted]
 
@@ -11,7 +11,7 @@ jobs:
     if: |
       github.event.review.state == 'APPROVED' ||
       contains(github.event.pull_request.author_association, 'MEMBER') ||
-      github.event.pull_request.labels.*.name == 'deploy:preview'
+      contains(github.event.pull_request.labels.*.name, 'deploy:preview')
     runs-on: ubuntu-latest
     outputs:
       enable: ${{ steps.check-for-changes.outputs.enable }}
