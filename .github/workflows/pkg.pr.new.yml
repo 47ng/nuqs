@@ -24,6 +24,7 @@ jobs:
             echo "enable=false" >> $GITHUB_OUTPUT
           else
             echo "enable=true" >> $GITHUB_OUTPUT
+          fi
 
   deploy-preview:
     name: Deploy to pkg.pr.new
