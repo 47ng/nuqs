@@ -8,7 +8,10 @@ on:
 jobs:
   check-changes:
     name: Check for relevant changes to deploy
-    if: github.event.review.state == 'APPROVED' || contains(github.event.pull_request.author_association, 'MEMBER')
+    if: |
+      github.event.review.state == 'APPROVED' ||
+      contains(github.event.pull_request.author_association, 'MEMBER') ||
+      contains(github.event.pull_request.labels, 'deploy:preview')
     runs-on: ubuntu-latest
     outputs:
       enable: ${{ steps.check-for-changes.outputs.enable }}
