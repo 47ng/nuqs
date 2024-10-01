@@ -10,24 +10,25 @@ jobs:
     name: Check for relevant changes to deploy
     if: github.event.review.state == 'APPROVED' || contains(github.event.pull_request.author_association, 'MEMBER')
     runs-on: ubuntu-latest
+    outputs:
+      enable: ${{ steps.check-for-changes.outputs.enable }}
     steps:
       - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332
         with:
           fetch-depth: 2
-
       - name: Check for relevant changes
+        id: check-for-changes
         run: |
           if git diff --quiet HEAD^ HEAD ./packages/nuqs; then
             echo "No changes to nuqs package, skipping preview deployment."
             echo "enable=false" >> $GITHUB_OUTPUT
           else
             echo "enable=true" >> $GITHUB_OUTPUT
-          fi
 
   deploy-preview:
     name: Deploy to pkg.pr.new
-    if: needs.check-changes.outputs.enable == 'true'
     needs: check-changes
+    if: needs.check-changes.outputs.enable == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332
