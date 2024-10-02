@@ -10,8 +10,7 @@ jobs:
     name: Check for relevant changes to deploy
     if: |
       github.event.review.state == 'APPROVED' ||
-      contains(github.event.pull_request.author_association, 'MEMBER') ||
-      contains(github.event.pull_request.labels.*.name, 'deploy:preview')
+      contains(github.event.pull_request.author_association, 'MEMBER')
     runs-on: ubuntu-latest
     outputs:
       enable: ${{ steps.check-for-changes.outputs.enable }}
@@ -32,7 +31,7 @@ jobs:
   deploy-preview:
     name: Deploy to pkg.pr.new
     needs: check-changes
-    if: needs.check-changes.outputs.enable == 'true'
+    if: needs.check-changes.outputs.enable == 'true' || contains(github.event.pull_request.labels.*.name, 'deploy:preview')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@d632683dd7b4114ad314bca15554477dd762a938
@@ -46,7 +45,11 @@ jobs:
       - name: Build package
         run: pnpm build --filter nuqs
       - name: Set package version
-        run: pnpm pkg set version=0.0.0-preview.${{ github.event.pull_request.head.sha }}
+        run: |
+          pnpm pkg set version=0.0.0-preview.${{ github.event.pull_request.head.sha }}
+          echo "::notice title=Install (PR)::pnpm add https://pkg.pr.new/nuqs@${{ github.event.pull_request.number }}"
+          echo "::notice title=Install (SHA)::pnpm add https://pkg.pr.new/nuqs@${{ github.event.pull_request.head.sha }}"
+          echo "::notice title=Version::0.0.0-preview.${{ github.event.pull_request.head.sha }}"
         working-directory: packages/nuqs
       - name: Publish to pkg.pr.new
         run: pnpx pkg-pr-new publish --compact './packages/nuqs'
