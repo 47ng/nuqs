@@ -19,7 +19,12 @@
     "docs#build": {
       "outputs": [".next/**", "!.next/cache/**"],
       "dependsOn": ["^build"],
-      "env": ["VERCEL_ENV", "VERCEL_URL", "VERCEL_PROJECT_PRODUCTION_URL"]
+      "env": [
+        "VERCEL_ENV",
+        "VERCEL_URL",
+        "VERCEL_PROJECT_PRODUCTION_URL",
+        "SENTRY_AUTH_TOKEN"
+      ]
     },
     "nuqs#test": {
       "outputs": ["dist/**", "coverage/**"],
