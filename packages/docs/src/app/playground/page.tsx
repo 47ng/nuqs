@@ -1,5 +1,5 @@
 import { Description, H1 } from '@/src/components/typography'
-import { Card } from 'next-docs-ui/mdx/card'
+import { Card } from 'fumadocs-ui/components/card'
 import { demos } from './(demos)/demos'
 
 export const metadata = {

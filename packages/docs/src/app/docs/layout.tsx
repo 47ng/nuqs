@@ -1,18 +1,13 @@
-import { NuqsWordmark } from '@/src/components/logo'
-import { navItems } from '@/src/components/nav'
-import { DocsLayout } from 'next-docs-ui/layout'
+import { source } from '@/src/app/source'
+import { getSharedLayoutProps } from '@/src/components/shared-layout'
+import { DocsLayout } from 'fumadocs-ui/layout'
 import { Suspense, type ReactNode } from 'react'
-import { tree } from '../source'
 
 export default function RootDocsLayout({ children }: { children: ReactNode }) {
   return (
     <DocsLayout
-      tree={tree}
-      nav={{
-        title: <NuqsWordmark className="px-3" />,
-        items: navItems,
-        githubUrl: 'https://github.com/47ng/nuqs'
-      }}
+      tree={source.pageTree}
+      {...getSharedLayoutProps()}
       sidebar={{
         collapsible: false,
         footer: (

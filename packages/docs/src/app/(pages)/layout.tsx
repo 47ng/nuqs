@@ -1,21 +1,10 @@
-import { Nav } from 'next-docs-ui/nav'
-import { NuqsWordmark } from '../../components/logo'
-import { navItems, navLinks } from '../../components/nav'
+import { getSharedLayoutProps } from '@/src/components/shared-layout'
+import { HomeLayout } from 'fumadocs-ui/home-layout'
 
 export default function PageLayout({
   children
 }: {
   children: React.ReactNode
 }) {
-  return (
-    <>
-      <Nav
-        title={<NuqsWordmark className="px-3" />}
-        enableSidebar={false}
-        items={navItems}
-        links={navLinks}
-      />
-      {children}
-    </>
-  )
+  return <HomeLayout {...getSharedLayoutProps()}>{children}</HomeLayout>
 }

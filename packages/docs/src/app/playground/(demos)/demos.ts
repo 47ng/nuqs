@@ -1,4 +1,4 @@
-import type { PageTree } from 'next-docs-zeta/server'
+import type { PageTree } from 'fumadocs-core/server'
 
 type DemoMetadata = {
   title: string
@@ -36,7 +36,7 @@ export function getMetadata(path: keyof typeof demos): DemoMetadata {
 
 // --
 
-export function getPlaygroundTree(): PageTree {
+export function getPlaygroundTree(): PageTree.Root {
   return {
     name: 'Playground',
     children: Object.entries(demos).map(([path, { title, description }]) => ({

@@ -1,11 +1,12 @@
-import { pages } from '@/src/app/source'
-import { createSearchAPI } from 'next-docs-zeta/search/server'
+import { source } from '@/src/app/source'
+import { createSearchAPI } from 'fumadocs-core/search/server'
 
 export const { GET } = createSearchAPI('advanced', {
-  indexes: pages.map(page => ({
-    title: page.matter.title,
+  indexes: source.getPages().map(page => ({
+    title: page.data.title,
+    description: page.data.description,
     structuredData: page.data.structuredData,
-    id: page.file.id,
+    id: page.url,
     url: page.url
   }))
 })

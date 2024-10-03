@@ -1,71 +1,11 @@
 import headlessUI from '@headlessui/tailwindcss'
 import containerQueries from '@tailwindcss/container-queries'
-import { docsUi, docsUiPlugins } from 'next-docs-ui/tailwind-plugin'
+import { createPreset as createFumadocsPreset } from 'fumadocs-ui/tailwind-plugin'
 import type { Config } from 'tailwindcss'
 import tailwindAnimate from 'tailwindcss-animate'
 import colors from 'tailwindcss/colors'
-import { fontFamily } from 'tailwindcss/defaultTheme'
 import { CustomThemeConfig } from 'tailwindcss/types/config'
-
-const shadcnThemeExtension: Partial<CustomThemeConfig> = {
-  colors: {
-    border: 'hsl(var(--border))',
-    input: 'hsl(var(--input))',
-    ring: 'hsl(var(--ring))',
-    background: 'hsl(var(--background))',
-    foreground: 'hsl(var(--foreground))',
-    primary: {
-      DEFAULT: 'hsl(var(--primary))',
-      foreground: 'hsl(var(--primary-foreground))'
-    },
-    secondary: {
-      DEFAULT: 'hsl(var(--secondary))',
-      foreground: 'hsl(var(--secondary-foreground))'
-    },
-    destructive: {
-      DEFAULT: 'hsl(var(--destructive))',
-      foreground: 'hsl(var(--destructive-foreground))'
-    },
-    muted: {
-      DEFAULT: 'hsl(var(--muted))',
-      foreground: 'hsl(var(--muted-foreground))'
-    },
-    accent: {
-      DEFAULT: 'hsl(var(--accent))',
-      foreground: 'hsl(var(--accent-foreground))'
-    },
-    popover: {
-      DEFAULT: 'hsl(var(--popover))',
-      foreground: 'hsl(var(--popover-foreground))'
-    },
-    card: {
-      DEFAULT: 'hsl(var(--card))',
-      foreground: 'hsl(var(--card-foreground))'
-    }
-  },
-  borderRadius: {
-    lg: `var(--radius)`,
-    md: `calc(var(--radius) - 2px)`,
-    sm: 'calc(var(--radius) - 4px)'
-  },
-  fontFamily: {
-    sans: ['var(--font-sans)', ...fontFamily.sans]
-  },
-  keyframes: {
-    'accordion-down': {
-      from: { height: '0' },
-      to: { height: 'var(--radix-accordion-content-height)' }
-    },
-    'accordion-up': {
-      from: { height: 'var(--radix-accordion-content-height)' },
-      to: { height: '0' }
-    }
-  },
-  animation: {
-    'accordion-down': 'accordion-down 0.2s ease-out',
-    'accordion-up': 'accordion-up 0.2s ease-out'
-  }
-}
+import shadcnPreset from './tailwind.shadcn'
 
 const tremorThemeExtension: Partial<CustomThemeConfig> = {
   colors: {
@@ -164,7 +104,7 @@ const tailwindConfig: Config = {
     './content/**/*.mdx',
     './content/**/*.tsx',
     './mdx-components.tsx',
-    './node_modules/next-docs-ui/dist/**/*.js',
+    './node_modules/fumadocs-ui/dist/**/*.js',
     './node_modules/@tremor/**/*.{js,ts,jsx,tsx}'
   ],
   theme: {
@@ -176,7 +116,7 @@ const tailwindConfig: Config = {
       }
     },
     extend: {
-      ...shadcnThemeExtension,
+      //...shadcnThemeExtension,
       ...tremorThemeExtension
     }
   },
@@ -209,13 +149,13 @@ const tailwindConfig: Config = {
     //     /^(fill-(?:slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose)-(?:50|100|200|300|400|500|600|700|800|900|950))$/
     // }
   ],
-  plugins: [
-    tailwindAnimate,
-    containerQueries,
-    ...docsUiPlugins,
-    docsUi,
-    headlessUI
-  ]
+  presets: [
+    createFumadocsPreset({
+      preset: 'neutral'
+    }),
+    shadcnPreset
+  ],
+  plugins: [tailwindAnimate, containerQueries, headlessUI]
 }
 
 export default tailwindConfig

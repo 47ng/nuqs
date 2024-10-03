@@ -1,13 +1,9 @@
-import { withSentryConfig } from '@sentry/nextjs'
-import createNextDocsMDX from 'next-docs-mdx/config'
-import remarkMdxImages from 'remark-mdx-images'
-import remarkSmartypants from 'remark-smartypants'
+// @ts-check
 
-const withFumaMDX = createNextDocsMDX({
-  mdxOptions: {
-    remarkPlugins: [remarkMdxImages, remarkSmartypants]
-  }
-})
+import { withSentryConfig } from '@sentry/nextjs'
+import { createMDX } from 'fumadocs-mdx/next'
+
+const withFumadocsMDX = createMDX()
 
 /** @type {import('next').NextConfig} */
 const config = {
@@ -90,7 +86,7 @@ const sentryOptions = {
 }
 
 export default withSentryConfig(
-  withFumaMDX(config),
+  withFumadocsMDX(config),
   sentryConfig,
   sentryOptions
 )
