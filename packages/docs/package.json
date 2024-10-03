@@ -21,7 +21,7 @@
     "@radix-ui/react-switch": "^1.1.1",
     "@radix-ui/react-toggle": "^1.1.0",
     "@radix-ui/react-toggle-group": "^1.1.0",
-    "@sentry/nextjs": "^7.119.0",
+    "@sentry/nextjs": "^8.33.1",
     "@tailwindcss/container-queries": "^0.1.1",
     "@tremor/react": "^3.18.3",
     "cheerio": "1.0.0-rc.12",

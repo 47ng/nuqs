@@ -8,6 +8,7 @@ const withFumadocsMDX = createMDX()
 /** @type {import('next').NextConfig} */
 const config = {
   experimental: {
+    instrumentationHook: true,
     outputFileTracingIncludes: {
       '/playground/pagination': [
         './src/app/playground/(demos)/pagination/searchParams.ts',
@@ -53,7 +54,7 @@ const sentryConfig = {
   // https://github.com/getsentry/sentry-webpack-plugin#options
 
   // Suppresses source map uploading logs during build
-  silent: true,
+  silent: false,
   org: '47ng',
   project: 'nuqs'
 }
@@ -63,10 +64,10 @@ const sentryOptions = {
   // https://docs.sentry.io/platforms/javascript/guides/nextjs/manual-setup/
 
   // Upload a larger set of source maps for prettier stack traces (increases build time)
-  widenClientFileUpload: true,
+  widenClientFileUpload: false,
 
   // Transpiles SDK to be compatible with IE11 (increases bundle size)
-  transpileClientSDK: true,
+  transpileClientSDK: false,
 
   // Routes browser requests to Sentry through a Next.js rewrite to circumvent ad-blockers. (increases server load)
   // Note: Check that the configured route will not match with your Next.js middleware, otherwise reporting of client-
@@ -85,8 +86,7 @@ const sentryOptions = {
   automaticVercelMonitors: true
 }
 
-export default withSentryConfig(
-  withFumadocsMDX(config),
-  sentryConfig,
-  sentryOptions
-)
+export default withSentryConfig(withFumadocsMDX(config), {
+  ...sentryConfig,
+  ...sentryOptions
+})
