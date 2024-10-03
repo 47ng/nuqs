@@ -49,6 +49,11 @@ const config = {
   }
 }
 
+console.log(
+  'SENTRY_AUTH_TOKEN:',
+  process.env.SENTRY_AUTH_TOKEN?.slice(0, 8) ?? 'undefined'
+)
+
 const sentryConfig = {
   // For all available options, see:
   // https://github.com/getsentry/sentry-webpack-plugin#options
