@@ -78,10 +78,7 @@ export default function Component() {
                 </Link>
               </li>
               <li>
-                <Link
-                  href="https://twitter.com/fortysevenfx"
-                  className="hover:underline"
-                >
+                <Link href="https://x.com/nuqs47ng" className="hover:underline">
                   <TwitterIcon className="mr-2 inline-block h-5 w-5" /> Twitter
                 </Link>
               </li>
