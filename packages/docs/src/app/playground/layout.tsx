@@ -1,6 +1,6 @@
 import { getSharedLayoutProps } from '@/src/components/shared-layout'
 import { DocsLayout } from 'fumadocs-ui/layout'
-import { DocsBody } from 'fumadocs-ui/page'
+import { DocsBody, DocsPage } from 'fumadocs-ui/page'
 import dynamic from 'next/dynamic'
 import React from 'react'
 import { getPlaygroundTree } from './(demos)/demos'
@@ -32,7 +32,9 @@ export default function PlaygroundLayout({
           footer: <DebugControl />
         }}
       >
-        <DocsBody className="min-w-0 flex-1">{children}</DocsBody>
+        <DocsPage>
+          <DocsBody>{children}</DocsBody>
+        </DocsPage>
       </DocsLayout>
     </>
   )
