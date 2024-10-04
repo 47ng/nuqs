@@ -55,8 +55,8 @@ const sentryConfig = {
 
   // Suppresses source map uploading logs during build
   silent: true,
-  org: '47ng',
-  project: 'nuqs',
+  org: process.env.SENTRY_ORG,
+  project: process.env.SENTRY_PROJECT,
   authToken: process.env.SENTRY_AUTH_TOKEN
 }
 

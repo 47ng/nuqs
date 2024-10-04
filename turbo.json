@@ -23,7 +23,12 @@
         "VERCEL_ENV",
         "VERCEL_URL",
         "VERCEL_PROJECT_PRODUCTION_URL",
-        "SENTRY_AUTH_TOKEN"
+        "SENTRY_ORG",
+        "SENTRY_PROJECT",
+        "SENTRY_AUTH_TOKEN",
+        "NEXT_PUBLIC_SENTRY_DSN",
+        "GITHUB_TOKEN",
+        "ISR_TOKEN"
       ]
     },
     "nuqs#test": {
