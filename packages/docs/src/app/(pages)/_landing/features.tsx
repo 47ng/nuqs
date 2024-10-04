@@ -62,7 +62,7 @@ export function FeaturesSection(props: React.ComponentProps<'section'>) {
       <Feature
         icon={<BatteryFull size={32} />}
         title="Batteries included"
-        description="Built-in parsers for common state types."
+        description="Built-in parsers & serializers for common state types."
       />
       <Feature
         icon={<History size={32} />}
@@ -86,7 +86,7 @@ export function FeaturesSection(props: React.ComponentProps<'section'>) {
       <Feature
         icon={<Server size={32} />}
         title="Server cache"
-        description="Type-safe search params access in nested React Server Components."
+        description="Type-safe search params access in nested React Server Components. No prop drilling needed."
         isNew
       />
       <Feature
