@@ -151,7 +151,8 @@ const tailwindConfig: Config = {
   ],
   presets: [
     createFumadocsPreset({
-      preset: 'neutral'
+      preset: 'neutral',
+      layoutWidth: '1600px'
     }),
     shadcnPreset
   ],
