@@ -15,7 +15,7 @@
     "build": "next build",
     "start": "next start --port 3001",
     "pretest": "cypress install",
-    "test": "start-server-and-test start http://localhost:3001 cypress:run",
+    "test": "start-server-and-test start http://localhost:3001${BASE_PATH} cypress:run",
     "cypress:open": "cypress open",
     "cypress:run": "cypress run --headless"
   },
