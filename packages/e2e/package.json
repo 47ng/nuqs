@@ -20,7 +20,7 @@
     "cypress:run": "cypress run --headless"
   },
   "dependencies": {
-    "next": "^14.2.7",
+    "next": "^14.2.10",
     "nuqs": "workspace:*",
     "react": "rc",
     "react-dom": "rc"

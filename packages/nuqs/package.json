@@ -74,7 +74,7 @@
     "@types/node": "^20.16.3",
     "@types/react": "^18.3.5",
     "@types/react-dom": "^18.3.0",
-    "next": "^14.2.7",
+    "next": "^14.2.10",
     "react": "rc",
     "react-dom": "rc",
     "size-limit": "^11.1.4",

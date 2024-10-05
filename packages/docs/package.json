@@ -28,7 +28,7 @@
     "clsx": "^2.1.1",
     "dayjs": "^1.11.13",
     "lucide-react": "^0.323.0",
-    "next": "^14.2.7",
+    "next": "^14.2.10",
     "next-docs-mdx": "6.0.2",
     "next-docs-ui": "6.0.2",
     "next-docs-zeta": "6.0.2",
