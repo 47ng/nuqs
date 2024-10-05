@@ -15,7 +15,7 @@
     "build": "next build",
     "start": "next start --port 3001",
     "pretest": "cypress install",
-    "test": "run-p --race start cypress:run",
+    "test": "start-server-and-test start http://localhost:3001${BASE_PATH} cypress:run",
     "cypress:open": "cypress open",
     "cypress:run": "cypress run --headless"
   },
@@ -32,8 +32,8 @@
     "@types/semver": "^7.5.8",
     "@types/webpack": "^5.28.5",
     "cypress": "^13.14.1",
-    "npm-run-all": "^4.1.5",
     "semver": "^7.6.3",
+    "start-server-and-test": "^2.0.8",
     "typescript": "^5.5.4"
   }
 }
