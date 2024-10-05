@@ -54,7 +54,7 @@ export async function DependentsSection() {
             />
           </svg>
         </a>
-        <a href="https://vercel.com">
+        <a href="https://vercel.com" className="order-last sm:order-none">
           <svg
             aria-label="Vercel"
             xmlns="http://www.w3.org/2000/svg"
