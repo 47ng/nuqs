@@ -109,8 +109,8 @@
   "optionalDependencies": {
     "@remix-run/react": ">= 2",
     "next": ">= 14.1.2",
-    "react-router-dom": ">= 6",
-    "one": ">= 1"
+    "one": ">= 1",
+    "react-router-dom": ">= 6"
   },
   "devDependencies": {
     "@microsoft/api-extractor": "^7.47.9",
