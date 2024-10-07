@@ -1,4 +1,4 @@
-import { expectNotAssignable, expectType } from 'tsd'
+import { expectError, expectNotAssignable, expectType } from 'tsd'
 import {
   parseAsBoolean,
   parseAsFloat,
@@ -76,4 +76,45 @@ import {
     hex: number | null
     bin: Buffer
   }>(states)
+}
+
+// Remapped keys
+{
+  const [states, setStates] = useQueryStates(
+    {
+      foo: parseAsString,
+      bar: parseAsString
+    },
+    {
+      urlKeys: {
+        foo: 'f'
+        // bar: 'b' // allows partial remapping
+      }
+    }
+  )
+  expectType<{
+    foo: string | null
+    bar: string | null
+  }>(states)
+  setStates({
+    foo: 'baz',
+    bar: 'qux'
+  })
+}
+
+// Remapped keys
+{
+  expectError(() => {
+    useQueryStates(
+      {
+        foo: parseAsString,
+        bar: parseAsString
+      },
+      {
+        urlKeys: {
+          notInTheList: 'f'
+        }
+      }
+    )
+  })
 }
