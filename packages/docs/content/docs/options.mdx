@@ -163,6 +163,11 @@ By default, when the state is set to the default value, the search parameter is
 **not** removed from the URL, and is reflected explicitly. This is because
 **default values _can_ change**, and the meaning of the URL along with it.
 
+<Callout title="Upcoming changes" type="warn">
+  In `nuqs@2.0.0`, clearOnDefault will be set to `true{:ts}` by default, in response
+  to [user feedback](https://x.com/fortysevenfx/status/1841610237540696261).
+</Callout>
+
 If you want to remove the search parameter from the URL when it's set to the default
 value, you can set `clearOnDefault` to `true{:ts}`:
 
