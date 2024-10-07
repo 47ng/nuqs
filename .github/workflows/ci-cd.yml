@@ -6,6 +6,7 @@ on:
       - master
       - beta
       - next
+      - ci
   pull_request:
     types: [opened, reopened, synchronize]
 
