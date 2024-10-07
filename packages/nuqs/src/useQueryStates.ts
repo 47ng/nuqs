@@ -49,6 +49,11 @@ export type UseQueryStatesReturn<T extends UseQueryStatesKeysMap> = [
   SetValues<T>
 ]
 
+// Ensure referential consistency for the default value of urlKeys
+// by hoisting it out of the function scope.
+// Otherwise useEffect loops go brrrr
+const defaultUrlKeys = {}
+
 /**
  * Synchronise multiple query string arguments to React state in Next.js
  *
@@ -66,7 +71,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
     throttleMs = FLUSH_RATE_LIMIT_MS,
     clearOnDefault = false,
     startTransition,
-    urlKeys = {}
+    urlKeys = defaultUrlKeys
   }: Partial<
     UseQueryStatesOptions & {
       // todo: Move into UseQueryStatesOptions in v2 (requires a breaking change
@@ -110,7 +115,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
     )
     setInternalState(state)
   }, [
-    Object.keys(keyMap)
+    Object.keys(urlKeys)
       .map(key => initialSearchParams?.get(key))
       .join('&'),
     stateKeys,
