@@ -57,7 +57,7 @@
     "dev": "tsup --format esm --watch --external=react",
     "build": "tsup --clean --external=react",
     "postbuild": "size-limit --json > size.json",
-    "test": "pnpm run --parallel --stream \"/^test:.*/\"",
+    "test": "pnpm run --parallel --stream '/^test:/'",
     "test:types": "tsd",
     "test:unit": "vitest run",
     "test:size": "size-limit",
