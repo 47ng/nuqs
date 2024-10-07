@@ -181,3 +181,16 @@ useQueryState('search', {
 <Callout title="Tip">
   Clearing the key-value pair from the query string can always be done by setting the state to `null{:ts}`.
 </Callout>
+
+This option compares the set state against the default value using `===` reference
+equality, so if you are using a [custom parser](./parsers#making-your-own-parsers)
+for a state type that wouldn't work with reference equality, you should provide
+the `eq` function to your parser (this is done for you in built-in parsers):
+
+```ts
+const dateParser = createParser({
+  parse: (value: string) => new Date(value.slice(0, 10)),
+  serialize: (date: Date) => date.toISOString().slice(0, 10),
+  eq: (a: Date, b: Date) => a.getTime() === b.getTime()
+})
+```
