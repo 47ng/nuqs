@@ -82,6 +82,14 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
 ): UseQueryStatesReturn<KeyMap> {
   type V = Values<KeyMap>
   const stateKeys = Object.keys(keyMap).join(',')
+  const resolvedUrlKeys = React.useMemo(
+    () =>
+      Object.fromEntries(
+        Object.keys(keyMap).map(key => [key, urlKeys[key] ?? key])
+      ),
+    [stateKeys, urlKeys]
+  )
+
   const router = useRouter()
   // Not reactive, but available on the server and on page load
   const initialSearchParams = useSearchParams()
@@ -115,11 +123,10 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
     )
     setInternalState(state)
   }, [
-    Object.keys(urlKeys)
+    Object.keys(resolvedUrlKeys)
       .map(key => initialSearchParams?.get(key))
       .join('&'),
-    stateKeys,
-    urlKeys
+    stateKeys
   ])
 
   // Sync all hooks together & with external URL changes
@@ -147,7 +154,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
           query
         }: CrossHookSyncPayload) => {
           const { defaultValue } = keyMap[stateKey]!
-          const urlKey = urlKeys[stateKey] ?? stateKey
+          const urlKey = resolvedUrlKeys[stateKey]!
           // Note: cannot mutate in-place, the object ref must change
           // for the subsequent setState to pick it up.
           stateRef.current = {
@@ -172,19 +179,19 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
 
     emitter.on(SYNC_EVENT_KEY, syncFromURL)
     for (const stateKey of Object.keys(keyMap)) {
-      const urlKey = urlKeys[stateKey] ?? stateKey
+      const urlKey = resolvedUrlKeys[stateKey]!
       debug('[nuq+ `%s`] Subscribing to sync for `%s`', stateKeys, urlKey)
       emitter.on(urlKey, handlers[stateKey]!)
     }
     return () => {
       emitter.off(SYNC_EVENT_KEY, syncFromURL)
       for (const stateKey of Object.keys(keyMap)) {
-        const urlKey = urlKeys[stateKey] ?? stateKey
+        const urlKey = resolvedUrlKeys[stateKey]!
         debug('[nuq+ `%s`] Unsubscribing to sync for `%s`', stateKeys, urlKey)
         emitter.off(urlKey, handlers[stateKey])
       }
     }
-  }, [keyMap, urlKeys])
+  }, [keyMap, resolvedUrlKeys])
 
   const update = React.useCallback<SetValues<KeyMap>>(
     (stateUpdater, callOptions = {}) => {
@@ -199,7 +206,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
       debug('[nuq+ `%s`] setState: %O', stateKeys, newState)
       for (let [stateKey, value] of Object.entries(newState)) {
         const parser = keyMap[stateKey]
-        const urlKey = urlKeys[stateKey] ?? stateKey
+        const urlKey = resolvedUrlKeys[stateKey]!
         if (!parser) {
           continue
         }
@@ -239,7 +246,15 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
       }
       return scheduleFlushToURL(router)
     },
-    [keyMap, history, shallow, scroll, throttleMs, startTransition]
+    [
+      keyMap,
+      history,
+      shallow,
+      scroll,
+      throttleMs,
+      startTransition,
+      resolvedUrlKeys
+    ]
   )
   return [internalState, update]
 }
