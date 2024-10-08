@@ -55,7 +55,7 @@ jobs:
       - name: Install Next.js version ${{ matrix.next-version }}
         run: pnpm add --filter e2e next@${{ matrix.next-version }}
       - name: Run integration tests
-        run: pnpm run test
+        run: pnpm run test ${{ github.ref_name == 'ci' && '-- --force' || '' }}
         env:
           BASE_PATH: ${{ matrix.base-path && matrix.base-path || '/' }}
           WINDOW_HISTORY_SUPPORT: ${{ matrix.window-history-support }}
