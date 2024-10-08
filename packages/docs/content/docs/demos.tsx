@@ -288,7 +288,7 @@ export function DateTimestampParserDemo() {
 }
 
 export function JsonParserDemo() {
-  const [value, setValue] = useQueryState('json', parseAsJson())
+  const [value, setValue] = useQueryState('json', parseAsJson<unknown>())
   return (
     <DemoContainer>
       <pre className="flex-1 rounded-md border bg-background p-2 text-sm text-zinc-500">
