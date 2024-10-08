@@ -1,9 +1,10 @@
 import { defineConfig } from 'cypress'
+import cypressTerminalReport from 'cypress-terminal-report/src/installLogsPrinter'
 import fs from 'node:fs'
 import semver from 'semver'
 
 const basePath =
-  process.env.BASE_PATH === '/' ? '' : process.env.BASE_PATH ?? ''
+  process.env.BASE_PATH === '/' ? '' : (process.env.BASE_PATH ?? '')
 
 const nextJsVersion = readNextJsVersion()
 
@@ -18,8 +19,10 @@ export default defineConfig({
     baseUrl: `http://localhost:3001${basePath}`,
     video: false,
     fixturesFolder: false,
-    supportFile: false,
     testIsolation: true,
+    setupNodeEvents(on) {
+      cypressTerminalReport(on)
+    },
     retries: 2,
     env: {
       basePath,
