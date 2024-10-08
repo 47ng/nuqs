@@ -325,7 +325,6 @@ export function parseAsNumberLiteral<Literal extends number>(
 
 /**
  * Encode any object shape into the querystring value as JSON.
- * Value is URI-encoded for safety, so it may not look nice in the URL.
  * Note: you may want to use `useQueryStates` for finer control over
  * multiple related query keys.
  *
