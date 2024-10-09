@@ -2,10 +2,12 @@ const experimental =
   process.env.WINDOW_HISTORY_SUPPORT === 'true'
     ? {
         windowHistorySupport: true,
-        clientRouterFilter: false
+        clientRouterFilter: false,
+        serverSourceMaps: true
       }
     : {
-        clientRouterFilter: false
+        clientRouterFilter: false,
+        serverSourceMaps: true
       }
 
 const basePath =
@@ -15,6 +17,7 @@ const basePath =
 const config = {
   basePath,
   experimental,
+  productionBrowserSourceMaps: true,
   rewrites: async () => [
     {
       source: '/app/rewrites/source',
