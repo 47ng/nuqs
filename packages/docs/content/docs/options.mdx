@@ -108,8 +108,10 @@ useQueryState('foo', {
 })
 ```
 
-> Note: the state returned by the hook is always updated **instantly**, to keep UI responsive.
-> Only changes to the URL, and server requests when using `shallow: false`, are throttled.
+<Callout title="Note">
+the state returned by the hook is always updated **instantly**, to keep UI responsive.
+Only changes to the URL, and server requests when using `shallow: false`, are throttled.
+</Callout>
 
 If multiple hooks set different throttle values on the same event loop tick,
 the highest value will be used. Also, values lower than 50ms will be ignored,
@@ -117,8 +119,8 @@ to avoid rate-limiting issues.
 [Read more](https://francoisbest.com/posts/2023/storing-react-state-in-the-url-with-nextjs#batching--throttling).
 
 Specifying a `+Infinity{:ts}` value for `throttleMs` will **disable** updates to the
-URL or the server, which means `useQueryState` will behave essentially like
-`React.useState`.
+URL or the server, but all `useQueryState(s)` hooks will still update their
+internal state and stay in sync with each other.
 
 
 ## Transitions
