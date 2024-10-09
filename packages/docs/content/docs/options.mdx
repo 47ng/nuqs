@@ -52,9 +52,10 @@ useQueryState('foo', { history: 'push' })
 ```
 
 <Callout title="Watch out!" type="warn">
-Breaking the Back button can lead to a bad UX, make sure to use this option
-only if the search param(s) to update contribute to a navigation-like experience,
-where hacking the Back button is a UX enhancement rather than a nuisance.
+Breaking the Back button can lead to a bad user experience. Make sure to use this
+option only if the search params to update contribute to a navigation-like
+experience (eg: tabs, modals). Overriding the Back behaviour must be a UX
+enhancement rather than a nuisance.
 
 _-- "With great power comes great responsibility."_
 </Callout>
