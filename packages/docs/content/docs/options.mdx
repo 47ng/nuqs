@@ -33,20 +33,17 @@ Call-level options will override hook level options.
 
 ## History
 
-By default, state updates are done by replacing the current history entry with
+By default, state updates are done by **replacing** the current history entry with
 the updated query when state changes.
 
 You can see this as a sort of `git squash{:shell}`, where all state-changing
-operations are merged into a single history value.
+operations are merged into a single browsing history entry.
 
-You can also opt-in to push a new history item for each state change,
+You can also opt-in to **push** a new history entry for each state change,
 per key, which will let you use the Back button to navigate state
 updates:
 
-```ts /history: 'replace'/ /history: 'push'/
-// Default: replace current history with new state
-useQueryState('foo', { history: 'replace' })
-
+```ts /history: /history: 'push'/
 // Append state changes to history:
 useQueryState('foo', { history: 'push' })
 ```
