@@ -15,6 +15,7 @@ import {
   parseAsHex,
   parseAsInteger,
   parseAsIsoDateTime,
+  parseAsJson,
   parseAsStringLiteral,
   parseAsTimestamp,
   useQueryState
@@ -242,7 +243,7 @@ export function DateParserDemo({
   const [value, setValue] = useQueryState(queryKey, parser)
   return (
     <DemoContainer className="@container">
-      <div className="@md:flex-row flex w-full flex-col items-stretch gap-2">
+      <div className="flex w-full flex-col items-stretch gap-2 @md:flex-row">
         <div className="flex flex-1 items-center gap-2">
           <input
             type="datetime-local"
@@ -258,15 +259,15 @@ export function DateParserDemo({
           />
           <span className="px-2 text-zinc-500">UTC</span>
         </div>
-        <div className="@md:flex-initial flex flex-1 gap-2">
+        <div className="flex flex-1 gap-2 @md:flex-initial">
           <Button
-            className="@md:w-auto w-full"
+            className="w-full @md:w-auto"
             onClick={() => setValue(new Date())}
           >
             Now
           </Button>
           <Button
-            className="@md:w-auto w-full"
+            className="w-full @md:w-auto"
             variant="secondary"
             onClick={() => setValue(null)}
           >
@@ -284,6 +285,27 @@ export function DateISOParserDemo() {
 
 export function DateTimestampParserDemo() {
   return <DateParserDemo queryKey="ts" parser={parseAsTimestamp} />
+}
+
+export function JsonParserDemo() {
+  const [value, setValue] = useQueryState('json', parseAsJson<unknown>())
+  return (
+    <DemoContainer>
+      <pre className="flex-1 rounded-md border bg-background p-2 text-sm text-zinc-500">
+        {JSON.stringify(value)}
+      </pre>
+      <Button onClick={() => setValue({ hello: 'world', foo: 'bar' })}>
+        Set to {`{ hello: 'world' }`}
+      </Button>
+      <Button
+        variant="secondary"
+        className="ml-auto"
+        onClick={() => setValue(null)}
+      >
+        Clear
+      </Button>
+    </DemoContainer>
+  )
 }
 
 const STAR = '★'

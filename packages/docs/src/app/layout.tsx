@@ -1,5 +1,5 @@
+import { RootProvider } from 'fumadocs-ui/provider'
 import type { Metadata } from 'next'
-import { RootProvider } from 'next-docs-ui/provider'
 import { Inter } from 'next/font/google'
 import Script from 'next/script'
 import type { ReactNode } from 'react'

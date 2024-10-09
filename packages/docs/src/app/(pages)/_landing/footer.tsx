@@ -11,8 +11,8 @@ export default function Component() {
     <footer className="w-full border-t bg-zinc-50/50 py-12 dark:bg-zinc-900/50">
       <nav className="container px-4 md:px-6">
         <div className="grid gap-12 lg:grid-cols-3">
-          <div className="space-y-6">
-            <NuqsWordmark className="h-6 text-4xl" />
+          <div className="space-y-4">
+            <NuqsWordmark className="text-4xl" />
             <p className="text-sm text-zinc-500">
               Made by{' '}
               <a
@@ -78,10 +78,7 @@ export default function Component() {
                 </Link>
               </li>
               <li>
-                <Link
-                  href="https://twitter.com/fortysevenfx"
-                  className="hover:underline"
-                >
+                <Link href="https://x.com/nuqs47ng" className="hover:underline">
                   <TwitterIcon className="mr-2 inline-block h-5 w-5" /> Twitter
                 </Link>
               </li>

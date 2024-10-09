@@ -1,7 +1,12 @@
-import { getPage, pages } from '@/src/app/source'
-import { Description, H1 } from '@/src/components/typography'
+import { useMDXComponents } from '@/mdx-components'
+import { source } from '@/src/app/source'
+import {
+  DocsBody,
+  DocsDescription,
+  DocsPage,
+  DocsTitle
+} from 'fumadocs-ui/page'
 import type { Metadata } from 'next'
-import { DocsBody, DocsPage } from 'next-docs-ui/page'
 import { notFound } from 'next/navigation'
 import { stat } from 'node:fs/promises'
 
@@ -10,40 +15,38 @@ type PageProps = {
 }
 
 export default async function Page({ params }: PageProps) {
-  const page = getPage(params.slug)
+  const page = source.getPage(params.slug)
 
   if (page == null) {
     notFound()
   }
 
-  const MDX = page.data.default
+  const MDX = page.data.body
 
   return (
-    <DocsPage url={page.url} toc={page.data.toc}>
+    <DocsPage toc={page.data.toc}>
+      <DocsTitle>{page.data.title}</DocsTitle>
+      <DocsDescription>{page.data.description}</DocsDescription>
       <DocsBody>
-        <div className="not-prose mb-12">
-          <H1>{page.matter.title}</H1>
-          <Description>{page.matter.description}</Description>
-        </div>
-        <MDX />
+        <MDX components={{ ...useMDXComponents({}) }} />
       </DocsBody>
     </DocsPage>
   )
 }
 
 export async function generateStaticParams() {
-  return pages.map(page => ({
+  return source.getPages().map(page => ({
     slug: page.slugs
   }))
 }
 
 export async function generateMetadata({ params }: PageProps) {
-  const page = getPage(params.slug)
-  if (page == null) notFound()
+  const page = source.getPage(params.slug)
+  if (!page) notFound()
 
   return {
-    title: page.matter.title,
-    description: page.matter.description,
+    title: page.data.title,
+    description: page.data.description,
     ...(await getSocialImages(page.slugs))
   } satisfies Metadata
 }

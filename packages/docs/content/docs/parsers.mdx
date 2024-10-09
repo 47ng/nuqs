@@ -13,6 +13,7 @@ import {
   StringLiteralParserDemo,
   DateISOParserDemo,
   DateTimestampParserDemo,
+  JsonParserDemo,
   CustomParserDemo
 } from './demos'
 
@@ -21,7 +22,7 @@ Search params are strings by default, but chances are your state is more complex
 You might want to use numbers, booleans, Dates, objects, arrays, or even custom types.
 This is where **parsers** come in.
 
-`nuqs` provides built-in parsers for the most common types, and allows you to define your own.
+`nuqs` provides built-in parsers for the most common types, and allows you to [define your own](#making-your-own-parsers).
 
 ## Built-in parsers
 
@@ -46,7 +47,8 @@ see [Literals](#literals) for ensuring type-runtime safety.
 If search params are strings by default, what's the point of this _"parser"_ ?
 
 It becomes useful if you're declaring a search params object, and/or you want
-to use the builder pattern to specify default values and options:
+to use the builder pattern to specify [default values](./basic-usage#default-values)
+and [options](./options):
 
 ```ts
 export const searchParamsParsers = {
@@ -64,6 +66,8 @@ Transforms the search param string into an integer with `parseInt` (base 10).
 
 ```ts
 import { parseAsInteger } from 'nuqs'
+
+useQueryState('int', parseAsInteger.withDefault(0))
 ```
 
 <Suspense fallback={<DemoFallback/>}>
@@ -77,6 +81,8 @@ Same as integer, but uses `parseFloat` under the hood.
 
 ```ts
 import { parseAsFloat } from 'nuqs'
+
+useQueryState('float', parseAsFloat.withDefault(0))
 ```
 
 <Suspense fallback={<DemoFallback/>}>
@@ -90,6 +96,8 @@ Encodes integers in hexadecimal.
 
 ```ts
 import { parseAsHex } from 'nuqs'
+
+useQueryState('hex', parseAsHex.withDefault(0x00))
 ```
 
 <Suspense fallback={<DemoFallback/>}>
@@ -104,6 +112,8 @@ import { parseAsHex } from 'nuqs'
 
 ```ts
 import { parseAsBoolean } from 'nuqs'
+
+useQueryState('bool', parseAsBoolean.withDefault(false))
 ```
 
 <Suspense fallback={<DemoFallback/>}>
@@ -218,14 +228,23 @@ If primitive types are not enough, you can encode JSON in the query string.
 ```ts /parseAsJson()/
 import { parseAsJson } from 'nuqs'
 
-// This one is a function, don't forget to call it:
-const [obj, setObj] = useQueryState('zod', parseAsJson())
+// This parser is a function, don't forget to call it:
+const [json, setJson] = useQueryState('json', parseAsJson())
+
+setJson({ hello: 'world' })
 ```
+
+<Suspense>
+  <JsonParserDemo/>
+</Suspense>
 
 #### Validation with Zod
 
-`parseAsJson` is a function that takes an optional callback argument to validate
-the parsed data. Using a Zod schema looks like this:
+Note that by itself, `parseAsJson` isn't type-safe, and will return `unknown{:ts}`,
+as the value could be anything.
+
+You can pass it an optional callback argument to validate the parsed data.
+Using a Zod schema looks like this:
 
 ```ts
 const zodSchema = z.object({

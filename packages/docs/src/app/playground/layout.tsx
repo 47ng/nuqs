@@ -1,7 +1,6 @@
-import { NuqsWordmark } from '@/src/components/logo'
-import { navItems } from '@/src/components/nav'
-import { DocsLayout } from 'next-docs-ui/layout'
-import { DocsBody } from 'next-docs-ui/page'
+import { getSharedLayoutProps } from '@/src/components/shared-layout'
+import { DocsLayout } from 'fumadocs-ui/layout'
+import { DocsBody, DocsPage } from 'fumadocs-ui/page'
 import dynamic from 'next/dynamic'
 import React from 'react'
 import { getPlaygroundTree } from './(demos)/demos'
@@ -27,17 +26,15 @@ export default function PlaygroundLayout({
     <>
       <DocsLayout
         tree={getPlaygroundTree()}
-        nav={{
-          title: <NuqsWordmark className="px-3" />,
-          items: navItems,
-          githubUrl: 'https://github.com/47ng/nuqs'
-        }}
+        {...getSharedLayoutProps()}
         sidebar={{
           collapsible: false,
           footer: <DebugControl />
         }}
       >
-        <DocsBody className="min-w-0 flex-1">{children}</DocsBody>
+        <DocsPage>
+          <DocsBody>{children}</DocsBody>
+        </DocsPage>
       </DocsLayout>
     </>
   )

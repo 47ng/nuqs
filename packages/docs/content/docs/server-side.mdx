@@ -15,7 +15,7 @@ to do so in a type-safe manner.
   Built-in validation support is coming. [Read the RFC](https://github.com/47ng/nuqs/discussions/446)
 </Callout>
 
-```tsx title="searchParams.ts"
+```ts title="searchParams.ts"
 import {
   createSearchParamsCache,
   parseAsInteger,
@@ -62,7 +62,7 @@ The cache will only be valid for the current page render
 Note: the cache only works for **server components**, but you may share your
 parser declaration with `useQueryStates` for type-safety in client components:
 
-```tsx title="searchParams.ts"
+```ts title="searchParams.ts"
 import {
   parseAsFloat,
   createSearchParamsCache

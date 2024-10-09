@@ -11,7 +11,7 @@ By default, `nuqs` will update search params:
 These behaviours can be configured, along with a few additional options.
 
 
-## Providing options
+## Passing options
 
 Options can be passed at the hook level via the builder pattern:
 
@@ -33,28 +33,26 @@ Call-level options will override hook level options.
 
 ## History
 
-By default, state updates are done by replacing the current history entry with
+By default, state updates are done by **replacing** the current history entry with
 the updated query when state changes.
 
 You can see this as a sort of `git squash{:shell}`, where all state-changing
-operations are merged into a single history value.
+operations are merged into a single browsing history entry.
 
-You can also opt-in to push a new history item for each state change,
+You can also opt-in to **push** a new history entry for each state change,
 per key, which will let you use the Back button to navigate state
 updates:
 
-```ts /history: 'replace'/ /history: 'push'/
-// Default: replace current history with new state
-useQueryState('foo', { history: 'replace' })
-
+```ts /history: /history: 'push'/
 // Append state changes to history:
 useQueryState('foo', { history: 'push' })
 ```
 
 <Callout title="Watch out!" type="warn">
-Breaking the Back button can lead to a bad UX, make sure to use this option
-only if the search param(s) to update contribute to a navigation-like experience,
-where hacking the Back button is a UX enhancement rather than a nuisance.
+Breaking the Back button can lead to a bad user experience. Make sure to use this
+option only if the search params to update contribute to a navigation-like
+experience (eg: tabs, modals). Overriding the Back behaviour must be a UX
+enhancement rather than a nuisance.
 
 _-- "With great power comes great responsibility."_
 </Callout>
@@ -66,8 +64,8 @@ no network calls to the server.
 
 This is equivalent to the `shallow` option of the Next.js router set to `true{:ts}`.
 
-To opt-in to query updates notifying the server (to re-run `getServerSideProps`
-in the pages router and re-render Server Components on the app router),
+To opt-in to query updates notifying the server (to re-render Server Components
+on the app router and re-run `getServerSideProps` in the pages router),
 you can set `shallow` to `false{:ts}`:
 
 ```ts /shallow: false/
@@ -110,8 +108,10 @@ useQueryState('foo', {
 })
 ```
 
-> Note: the state returned by the hook is always updated **instantly**, to keep UI responsive.
-> Only changes to the URL, and server requests when using `shallow: false`, are throttled.
+<Callout title="Note">
+the state returned by the hook is always updated **instantly**, to keep UI responsive.
+Only changes to the URL, and server requests when using `shallow: false`, are throttled.
+</Callout>
 
 If multiple hooks set different throttle values on the same event loop tick,
 the highest value will be used. Also, values lower than 50ms will be ignored,
@@ -119,8 +119,8 @@ to avoid rate-limiting issues.
 [Read more](https://francoisbest.com/posts/2023/storing-react-state-in-the-url-with-nextjs#batching--throttling).
 
 Specifying a `+Infinity{:ts}` value for `throttleMs` will **disable** updates to the
-URL or the server, which means `useQueryState` will behave essentially like
-`React.useState`.
+URL or the server, but all `useQueryState(s)` hooks will still update their
+internal state and stay in sync with each other.
 
 
 ## Transitions
@@ -131,6 +131,10 @@ the updated URL.
 
 Pass in the `startTransition` function from `useTransition` to the options
 to enable this behaviour _(this will set `shallow: false{:ts}` automatically for you)_:
+
+<Callout title="Upcoming changes" type="warn">
+  In `nuqs@2.0.0`, passing `startTransition` will no longer automatically set `shallow: false{:ts}`.
+</Callout>
 
 ```tsx /startTransition/1,3#2
 'use client'
@@ -163,6 +167,11 @@ By default, when the state is set to the default value, the search parameter is
 **not** removed from the URL, and is reflected explicitly. This is because
 **default values _can_ change**, and the meaning of the URL along with it.
 
+<Callout title="Upcoming changes" type="warn">
+  In `nuqs@2.0.0`, clearOnDefault will be set to `true{:ts}` by default, in response
+  to [user feedback](https://x.com/fortysevenfx/status/1841610237540696261).
+</Callout>
+
 If you want to remove the search parameter from the URL when it's set to the default
 value, you can set `clearOnDefault` to `true{:ts}`:
 
@@ -176,3 +185,16 @@ useQueryState('search', {
 <Callout title="Tip">
   Clearing the key-value pair from the query string can always be done by setting the state to `null{:ts}`.
 </Callout>
+
+This option compares the set state against the default value using `===` reference
+equality, so if you are using a [custom parser](./parsers#making-your-own-parsers)
+for a state type that wouldn't work with reference equality, you should provide
+the `eq` function to your parser (this is done for you in built-in parsers):
+
+```ts
+const dateParser = createParser({
+  parse: (value: string) => new Date(value.slice(0, 10)),
+  serialize: (date: Date) => date.toISOString().slice(0, 10),
+  eq: (a: Date, b: Date) => a.getTime() === b.getTime()
+})
+```

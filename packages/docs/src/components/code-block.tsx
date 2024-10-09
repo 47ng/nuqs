@@ -1,4 +1,4 @@
-import { codeToHtml } from 'shikiji'
+import { codeToHtml } from 'shiki'
 import { twMerge } from 'tailwind-merge'
 
 type CodeBlockProps = React.ComponentProps<'div'> & {

@@ -1,5 +1,7 @@
 import { twMerge } from 'tailwind-merge'
 
+// todo: See if this is still used
+
 export const H1: React.FC<React.ComponentProps<'h1'>> = ({
   children,
   className,

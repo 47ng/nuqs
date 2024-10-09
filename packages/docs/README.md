@@ -1,7 +1,7 @@
 # docs
 
 This is a Next.js application generated with
-[Create Next Docs](https://github.com/fuma-nama/next-docs).
+[Fumadocs](https://github.com/fuma-nama/fumadocs).
 
 Run development server:
 
@@ -23,4 +23,4 @@ resources:
 - [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js
   features and API.
 - [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-- [Next Docs](https://next-docs-zeta.vercel.app) - learn about Next Docs
+- [Fumadocs](https://fumadocs.vercel.app) - learn about Fumadocs
