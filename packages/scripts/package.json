@@ -5,13 +5,13 @@
   "type": "module",
   "dependencies": {
     "@mailpace/mailpace.js": "^0.1.1",
-    "@t3-oss/env-core": "^0.9.2",
+    "@t3-oss/env-core": "^0.11.1",
     "minimist": "^1.2.8",
     "zod": "^3.23.8"
   },
   "devDependencies": {
     "@types/minimist": "^1.2.5",
-    "@types/node": "^20.16.10",
-    "typescript": "^5.6.2"
+    "@types/node": "^20.16.11",
+    "typescript": "^5.6.3"
   }
 }
