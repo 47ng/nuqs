@@ -34,9 +34,9 @@ export default defineConfig({
 })
 
 function readNextJsVersion() {
-  const pkgPath = new URL('./package.json', import.meta.url)
+  const pkgPath = new URL('./node_modules/next/package.json', import.meta.url)
   const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf-8'))
-  return pkg.dependencies.next.replace('^', '')
+  return pkg.version
 }
 
 function supportsWHS(nextVersion: string) {
