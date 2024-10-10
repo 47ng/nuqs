@@ -36,6 +36,7 @@ jobs:
           # 14.0.3 requires the WHS flag (see below)
           - '14.0.4'
           - latest # Current latest is 14.1.0
+          - local # Use the local workspace version (don't override)
         include:
           - next-version: '14.0.3'
             window-history-support: true
@@ -53,6 +54,7 @@ jobs:
       - name: Install dependencies
         run: pnpm install
       - name: Install Next.js version ${{ matrix.next-version }}
+        if: ${{ matrix.next-version != 'local' }}
         run: pnpm add --filter e2e next@${{ matrix.next-version }}
       - name: Run integration tests
         run: pnpm run test ${{ github.ref_name == 'ci' && '--force' || '' }}
