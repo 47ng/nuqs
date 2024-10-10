@@ -89,7 +89,7 @@ jobs:
       - name: Install dependencies
         run: pnpm install --ignore-scripts --frozen-lockfile
       - name: Check monorepo with Sherif
-        run: pnpm dlx sherif@1.0.0 --no-install
+        run: pnpm run lint:sherif
       - name: Check source code formatting
         run: |
           set +e # Allow Prettier to fail, but capture the error code
