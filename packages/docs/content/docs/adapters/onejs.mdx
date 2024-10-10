@@ -1,0 +1,78 @@
+---
+title: One
+description: Integrate nuqs with One
+---
+
+[One](https://onestack.dev/) is supported as a community-contributed adapter.
+
+It's not built-in because it's based on both React web & React Native, and
+pulls a lot of dependencies into the nuqs build process (doubling the dependency
+install time).
+
+If it becomes popular and there is sufficient demand, it may be included in the
+core package.
+
+## Step 1: Add the adapter code
+
+```tsx title="app/nuqs-adapter.tsx"
+import {
+  type AdapterOptions,
+  createAdapterProvider,
+  renderQueryString
+} from 'nuqs/adapters/custom'
+import { useActiveParams, useRouter } from 'one'
+
+function useNuqsOneAdapter() {
+  const router = useRouter()
+  const searchParams = new URLSearchParams(useActiveParams() as {})
+  const updateUrl = (search: URLSearchParams, options: AdapterOptions) => {
+    if (options.history === 'push') {
+      router.push(renderQueryString(search), {
+        scroll: options.scroll
+      })
+    } else {
+      router.replace(renderQueryString(search), {
+        scroll: options.scroll
+      })
+    }
+  }
+  return {
+    searchParams,
+    updateUrl
+  }
+}
+
+export const NuqsAdapter = createAdapterProvider(useNuqsOneAdapter)
+
+```
+
+## Step 2: wrap your main route
+
+Integrate the adapter into the root layout file, by wrapping the `<Slot>`
+component:
+
+```tsx title="app/_layout.tsx" /NuqsAdapter/
+import { NuqsAdapter } from './nuqs-adapter'
+import { Slot } from 'one'
+
+export default function Layout() {
+  return (
+    <>
+      {typeof document !== 'undefined' && (
+        <>
+          <meta charSet="utf-8" />
+          <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
+          <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1, maximum-scale=5"
+          />
+          <link rel="icon" href="/favicon.svg" />
+        </>
+      )}
+      <NuqsAdapter>
+        <Slot />
+      </NuqsAdapter>
+    </>
+  )
+}
+```
