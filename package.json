@@ -16,7 +16,10 @@
     "dev": "turbo run dev",
     "build": "turbo run build",
     "test": "turbo run test",
-    "prepare": "husky"
+    "prepare": "husky",
+    "lint": "pnpm run -w --parallel --stream '/^lint:/'",
+    "lint:prettier": "prettier --check ./packages/nuqs/src/**/*.ts",
+    "lint:sherif": "sherif"
   },
   "devDependencies": {
     "@commitlint/config-conventional": "^19.5.0",
@@ -24,6 +27,7 @@
     "husky": "^9.1.6",
     "prettier": "3.3.3",
     "semantic-release": "^24.1.2",
+    "sherif": "^1.0.0",
     "turbo": "^2.1.3",
     "typescript": "^5.6.3"
   },
@@ -38,7 +42,8 @@
   },
   "husky": {
     "hooks": {
-      "commit-msg": "commitlint -E HUSKY_GIT_PARAMS"
+      "commit-msg": "commitlint -E HUSKY_GIT_PARAMS",
+      "pre-push": "pnpm run lint"
     }
   },
   "commitlint": {
