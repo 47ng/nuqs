@@ -9,3 +9,4 @@ package-lock.json
 .next/
 .turbo/
 .vercel
+.tsbuildinfo

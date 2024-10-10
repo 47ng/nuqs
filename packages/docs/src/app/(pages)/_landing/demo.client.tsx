@@ -1,13 +1,22 @@
 'use client'
 
-import { parseAsInteger, useQueryState } from 'nuqs'
+import { useQueryState } from 'nuqs'
+import { z } from 'zod'
 
 export function Demo() {
   const [hello, setHello] = useQueryState('hello', { defaultValue: '' })
-  const [count, setCount] = useQueryState(
-    'count',
-    parseAsInteger.withDefault(0)
-  )
+  const [count, setCount] = useQueryState('count', {
+    parse: z.coerce
+      .number()
+      .int()
+      .default(0)
+      .catch(({ input = 0 }) => {
+        if (typeof input !== 'number') return 0 // Somehow it can be a string
+        if (Number.isNaN(input)) return 0
+        return Math.floor(input)
+      }).parse,
+    defaultValue: 0
+  })
   return (
     <>
       <button
