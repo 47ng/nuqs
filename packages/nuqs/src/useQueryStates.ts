@@ -7,11 +7,10 @@ import React from 'react'
 import { debug } from './debug'
 import type { Nullable, Options } from './defs'
 import type { Parser } from './parsers'
-import { SYNC_EVENT_KEY, emitter, type CrossHookSyncPayload } from './sync'
+import { emitter, type CrossHookSyncPayload } from './sync'
 import {
   FLUSH_RATE_LIMIT_MS,
   enqueueQueryStringUpdate,
-  getQueuedValue,
   scheduleFlushToURL
 } from './update-queue'
 import { safeParse } from './utils'
@@ -59,7 +58,7 @@ const defaultUrlKeys = {}
  *
  * @param keys - An object describing the keys to synchronise and how to
  *               serialise and parse them.
- *               Use `queryTypes.(string|integer|float)` for quick shorthands.
+ *               Use `parseAs(String|Integer|Float|...)` for quick shorthands.
  * @param options - Optional history mode, shallow routing and scroll restoration options.
  */
 export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
@@ -94,9 +93,13 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
   // Not reactive, but available on the server and on page load
   const initialSearchParams = useSearchParams()
   const queryRef = React.useRef<Record<string, string | null>>({})
+  // Initialise the queryRef with the initial values
+  if (Object.keys(queryRef.current).length !== Object.keys(keyMap).length) {
+    queryRef.current = Object.fromEntries(initialSearchParams?.entries() ?? [])
+  }
+
   const [internalState, setInternalState] = React.useState<V>(() => {
     const source = initialSearchParams ?? new URLSearchParams()
-    queryRef.current = Object.fromEntries(source.entries())
     return parseMap(keyMap, urlKeys, source)
   })
 
@@ -109,11 +112,6 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
   )
 
   React.useEffect(() => {
-    // This will be removed in v2 which will drop support for
-    // partially-functional shallow routing (14.0.2 and 14.0.3)
-    if (window.next?.version !== '14.0.3') {
-      return
-    }
     const state = parseMap(
       keyMap,
       urlKeys,
@@ -125,8 +123,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
   }, [
     Object.keys(resolvedUrlKeys)
       .map(key => initialSearchParams?.get(key))
-      .join('&'),
-    stateKeys
+      .join('&')
   ])
 
   // Sync all hooks together & with external URL changes
@@ -135,17 +132,6 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
       debug('[nuq+ `%s`] updateInternalState %O', stateKeys, state)
       stateRef.current = state
       setInternalState(state)
-    }
-    function syncFromURL(search: URLSearchParams) {
-      const state = parseMap(
-        keyMap,
-        urlKeys,
-        search,
-        queryRef.current,
-        stateRef.current
-      )
-      debug('[nuq+ `%s`] syncFromURL %O', stateKeys, state)
-      updateInternalState(state)
     }
     const handlers = Object.keys(keyMap).reduce(
       (handlers, stateKey) => {
@@ -177,14 +163,12 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
       {} as Record<keyof V, (payload: CrossHookSyncPayload) => void>
     )
 
-    emitter.on(SYNC_EVENT_KEY, syncFromURL)
     for (const stateKey of Object.keys(keyMap)) {
       const urlKey = resolvedUrlKeys[stateKey]!
       debug('[nuq+ `%s`] Subscribing to sync for `%s`', stateKeys, urlKey)
       emitter.on(urlKey, handlers[stateKey]!)
     }
     return () => {
-      emitter.off(SYNC_EVENT_KEY, syncFromURL)
       for (const stateKey of Object.keys(keyMap)) {
         const urlKey = resolvedUrlKeys[stateKey]!
         debug('[nuq+ `%s`] Unsubscribing to sync for `%s`', stateKeys, urlKey)
@@ -271,9 +255,7 @@ function parseMap<KeyMap extends UseQueryStatesKeysMap>(
   return Object.keys(keyMap).reduce((obj, stateKey) => {
     const urlKey = urlKeys?.[stateKey] ?? stateKey
     const { defaultValue, parse } = keyMap[stateKey]!
-    const urlQuery = searchParams?.get(urlKey) ?? null
-    const queueQuery = getQueuedValue(urlKey)
-    const query = queueQuery ?? urlQuery
+    const query = searchParams?.get(urlKey) ?? null
     if (cachedQuery && cachedState && cachedQuery[urlKey] === query) {
       obj[stateKey as keyof KeyMap] =
         cachedState[stateKey] ?? defaultValue ?? null

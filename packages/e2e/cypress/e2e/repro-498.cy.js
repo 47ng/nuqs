@@ -1,7 +1,6 @@
 /// <reference types="cypress" />
 
 if (
-  Cypress.env('windowHistorySupport') !== 'true' &&
   ['14.1.0', '14.1.1'].includes(Cypress.env('nextJsVersion')) === false // See issue #498
 ) {
   it('Reproduction for issue #498', () => {

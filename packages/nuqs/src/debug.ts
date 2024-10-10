@@ -51,6 +51,5 @@ function isDebugEnabled() {
     return false
   }
   const debug = localStorage.getItem('debug') ?? ''
-  // todo: Remove check for `next-usequerystate` in v2
-  return debug.includes('nuqs') || debug.includes('next-usequerystate')
+  return debug.includes('nuqs')
 }

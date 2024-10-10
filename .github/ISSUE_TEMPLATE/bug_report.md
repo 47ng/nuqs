@@ -13,7 +13,7 @@ assignees: ''
 What's your version of `nuqs`?
 
 ```
--> Paste result from `cat package.json | grep -e nuqs -e next-usequerystate` here
+-> Paste result from `cat package.json | grep -e nuqs` here
 ```
 
 Next.js information (obtained by running `next info`):
@@ -29,7 +29,6 @@ Are you using:
 - ✅/❌ The app router
 - ✅/❌ The pages router
 - ✅/❌ The `basePath` option in your Next.js config
-- ✅/❌ The experimental `windowHistorySupport` flag in your Next.js config
 
 ## Description
 
