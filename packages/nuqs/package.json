@@ -25,8 +25,7 @@
     "nextjs",
     "react",
     "remix",
-    "react-router",
-    "one"
+    "react-router"
   ],
   "publishConfig": {
     "access": "public"
@@ -40,7 +39,6 @@
     "adapters/next/pages.d.ts",
     "adapters/remix.d.ts",
     "adapters/react-router.d.ts",
-    "adapters/one.d.ts",
     "adapters/testing.d.ts"
   ],
   "type": "module",
@@ -80,10 +78,6 @@
       "types": "./dist/adapters/react-router.d.ts",
       "import": "./dist/adapters/react-router.js"
     },
-    "./adapters/one": {
-      "types": "./dist/adapters/one.d.ts",
-      "import": "./dist/adapters/one.js"
-    },
     "./adapters/testing": {
       "types": "./dist/adapters/testing.d.ts",
       "import": "./dist/adapters/testing.js"
@@ -109,7 +103,6 @@
   "optionalDependencies": {
     "@remix-run/react": ">= 2",
     "next": ">= 14.1.2",
-    "one": ">= 1",
     "react-router-dom": ">= 6"
   },
   "devDependencies": {
@@ -120,7 +113,6 @@
     "@types/react": "^18.3.11",
     "@types/react-dom": "^18.3.0",
     "next": "14.2.15",
-    "one": "^1.1.295",
     "react-dom": "catalog:react19rc",
     "react": "catalog:react19rc",
     "react-router-dom": "^6.26.2",
