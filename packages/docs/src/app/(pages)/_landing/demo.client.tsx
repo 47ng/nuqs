@@ -3,7 +3,7 @@
 import { parseAsInteger, useQueryState } from 'nuqs'
 
 export function Demo() {
-  const [hello, setHello] = useQueryState('hello', { defaultValue: '' })
+  const [name, setName] = useQueryState('name', { defaultValue: '' })
   const [count, setCount] = useQueryState(
     'count',
     parseAsInteger.withDefault(0)
@@ -18,13 +18,13 @@ export function Demo() {
         Count: {count}
       </button>
       <input
-        value={hello}
+        value={name}
         placeholder="Enter your name"
         className="peer flex h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-        onChange={e => setHello(e.target.value || null)}
-        data-interacted={Boolean(hello)}
+        onChange={e => setName(e.target.value || null)}
+        data-interacted={Boolean(name)}
       />
-      <p>Hello, {hello || 'anonymous visitor'}!</p>
+      <p>Hello, {name || 'anonymous visitor'}!</p>
     </>
   )
 }
