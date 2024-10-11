@@ -55,7 +55,7 @@ jobs:
         run: pnpm install
       - name: Install Next.js version ${{ matrix.next-version }}
         if: ${{ matrix.next-version != 'local' }}
-        run: pnpm add --filter e2e next@${{ matrix.next-version }}
+        run: pnpm add --filter e2e --filter nuqs next@${{ matrix.next-version }}
       - name: Run integration tests
         run: pnpm run test ${{ github.ref_name == 'ci' && '--force' || '' }}
         env:

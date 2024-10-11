@@ -30,7 +30,7 @@ jobs:
       - name: Install dependencies
         run: pnpm install
       - name: Install Next.js version ${{ inputs.version }}
-        run: pnpm add --filter e2e next@${{ inputs.version }}
+        run: pnpm add --filter e2e --filter nuqs next@${{ inputs.version }}
       - name: Run integration tests
         run: pnpm run test
         env:
