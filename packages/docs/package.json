@@ -32,7 +32,7 @@
     "fumadocs-mdx": "^10.0.2",
     "fumadocs-ui": "^13.4.10",
     "lucide-react": "^0.451.0",
-    "next": "catalog:next",
+    "next": "14.2.15",
     "nuqs": "workspace:*",
     "pretty-bytes": "^6.1.1",
     "react": "catalog:react19rc",

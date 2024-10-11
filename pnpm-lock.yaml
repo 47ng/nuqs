@@ -5,10 +5,6 @@ settings:
   excludeLinksFromLockfile: false
 
 catalogs:
-  next:
-    next:
-      specifier: 14.2.15
-      version: 14.2.15
   react19rc:
     react:
       specifier: rc
@@ -114,7 +110,7 @@ importers:
         specifier: ^0.451.0
         version: 0.451.0(react@19.0.0-rc-09111202-20241011)
       next:
-        specifier: catalog:next
+        specifier: 14.2.15
         version: 14.2.15(@babel/core@7.25.7)(@opentelemetry/api@1.9.0)(react-dom@19.0.0-rc-09111202-20241011(react@19.0.0-rc-09111202-20241011))(react@19.0.0-rc-09111202-20241011)
       nuqs:
         specifier: workspace:*
@@ -187,7 +183,7 @@ importers:
   packages/e2e:
     dependencies:
       next:
-        specifier: catalog:next
+        specifier: 14.2.15
         version: 14.2.15(@babel/core@7.25.7)(@opentelemetry/api@1.9.0)(react-dom@19.0.0-rc-09111202-20241011(react@19.0.0-rc-09111202-20241011))(react@19.0.0-rc-09111202-20241011)
       nuqs:
         specifier: workspace:*
@@ -249,7 +245,7 @@ importers:
         specifier: ^18.3.0
         version: 18.3.0
       next:
-        specifier: catalog:next
+        specifier: 14.2.15
         version: 14.2.15(@babel/core@7.25.7)(@opentelemetry/api@1.9.0)(react-dom@19.0.0-rc-09111202-20241011(react@19.0.0-rc-09111202-20241011))(react@19.0.0-rc-09111202-20241011)
       react:
         specifier: catalog:react19rc
