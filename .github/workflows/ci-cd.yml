@@ -28,24 +28,56 @@ jobs:
         # branch protection settings for `next`.
         base-path: [false, '/base']
         next-version:
+          # Only keep versions where there were
+          # relevant changes in the app router core.
           - '14.2.0'
-          - '14.2.1'
-          - '14.2.2'
-          - '14.2.3'
           - '14.2.4'
-          - '14.2.5'
-          - '14.2.6'
-          - '14.2.7'
           - '14.2.8'
-          - '14.2.9'
-          - '14.2.10'
-          - '14.2.11'
-          - '14.2.12'
-          - '14.2.13'
-          - '14.2.14'
-          - '14.2.15'
           - latest
           - local
+        include:
+          # All intermediate versions are tested
+          # only when merging PRs and before deployment.
+          # (these can be triggered using the dangling `ci` branch)
+          - next-version: '14.2.1'
+            base-path: false
+            if: ${{ github.event_name == 'push' }}
+          - next-version: '14.2.2'
+            base-path: false
+            if: ${{ github.event_name == 'push' }}
+          - next-version: '14.2.3'
+            base-path: false
+            if: ${{ github.event_name == 'push' }}
+          - next-version: '14.2.5'
+            base-path: false
+            if: ${{ github.event_name == 'push' }}
+          - next-version: '14.2.6'
+            base-path: false
+            if: ${{ github.event_name == 'push' }}
+          - next-version: '14.2.7'
+            base-path: false
+            if: ${{ github.event_name == 'push' }}
+          - next-version: '14.2.9'
+            base-path: false
+            if: ${{ github.event_name == 'push' }}
+          - next-version: '14.2.10'
+            base-path: false
+            if: ${{ github.event_name == 'push' }}
+          - next-version: '14.2.11'
+            base-path: false
+            if: ${{ github.event_name == 'push' }}
+          - next-version: '14.2.12'
+            base-path: false
+            if: ${{ github.event_name == 'push' }}
+          - next-version: '14.2.13'
+            base-path: false
+            if: ${{ github.event_name == 'push' }}
+          - next-version: '14.2.14'
+            base-path: false
+            if: ${{ github.event_name == 'push' }}
+          - next-version: '14.2.15'
+            base-path: false
+            if: ${{ github.event_name == 'push' }}
 
     steps:
       - uses: actions/checkout@d632683dd7b4114ad314bca15554477dd762a938
