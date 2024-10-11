@@ -51,11 +51,16 @@ jobs:
         with:
           node-version-file: .node-version
           cache: pnpm
+      - name: Set Next.js version ${{ matrix.next-version }}
+        if: ${{ matrix.next-version != 'local' }}
+        uses: mikefarah/yq@bbdd97482f2d439126582a59689eb1c855944955
+        with:
+          cmd: yq -i '.catalogs.next.next = "${{ matrix.next-version }}"' pnpm-workspace.yaml
+      - name: Test if YQ worked
+        if: ${{ matrix.next-version != 'local' }}
+        run: cat pnpm-workspace.yaml
       - name: Install dependencies
         run: pnpm install
-      - name: Install Next.js version ${{ matrix.next-version }}
-        if: ${{ matrix.next-version != 'local' }}
-        run: pnpm add --filter e2e next@${{ matrix.next-version }}
       - name: Run integration tests
         run: pnpm run test ${{ github.ref_name == 'ci' && '--force' || '' }}
         env:
