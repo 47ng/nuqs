@@ -3,11 +3,10 @@ import React from 'react'
 import { debug } from './debug'
 import type { Options } from './defs'
 import type { Parser } from './parsers'
-import { SYNC_EVENT_KEY, emitter, type CrossHookSyncPayload } from './sync'
+import { emitter, type CrossHookSyncPayload } from './sync'
 import {
   FLUSH_RATE_LIMIT_MS,
   enqueueQueryStringUpdate,
-  getQueuedValue,
   scheduleFlushToURL
 } from './update-queue'
 import { safeParse } from './utils'
@@ -49,7 +48,7 @@ export type UseQueryStateReturn<Parsed, Default> = [
  * ```ts
  *   const [count, setCount] = useQueryState(
  *     'count',
- *     queryTypes.integer.defaultValue(0)
+ *     parseAsInteger.defaultValue(0)
  *   )
  *
  *   const increment = () => setCount(oldCount => oldCount + 1)
@@ -104,11 +103,11 @@ export function useQueryState(
  * If the query is missing in the URL, the state will be `null`.
  *
  * Note: by default the state type is a `string`. To use different types,
- * check out the `queryTypes` helpers:
+ * check out the `parseAsXYZ` helpers:
  * ```ts
  *   const [date, setDate] = useQueryState(
  *     'date',
- *     queryTypes.isoDateTime.withDefault(new Date('2021-01-01'))
+ *     parseAsIsoDateTime.withDefault(new Date('2021-01-01'))
  *   )
  *
  *   const setToNow = () => setDate(new Date())
@@ -130,11 +129,11 @@ export function useQueryState(
  * If the query is missing in the URL, the state will be `null`.
  *
  * Note: by default the state type is a `string`. To use different types,
- * check out the `queryTypes` helpers:
+ * check out the `parseAsXYZ` helpers:
  * ```ts
  *   const [date, setDate] = useQueryState(
  *     'date',
- *     queryTypes.isoDateTime.withDefault(new Date('2021-01-01'))
+ *     parseAsIsoDateTime.withDefault(new Date('2021-01-01'))
  *   )
  *
  *   const setToNow = () => setDate(new Date())
@@ -173,7 +172,7 @@ export function useQueryState(
  *
  *   const [count, setCount] = useQueryState(
  *     'count',
- *     queryTypes.integer.defaultValue(0)
+ *     parseAsInteger.defaultValue(0)
  *   )
  *
  *   const increment = () => setCount(oldCount => oldCount + 1)
@@ -184,7 +183,7 @@ export function useQueryState(
  *
  *   const [date, setDate] = useQueryState(
  *     'date',
- *     queryTypes.isoDateTime.withDefault(new Date('2021-01-01'))
+ *     parseAsIsoDateTime.withDefault(new Date('2021-01-01'))
  *   )
  *
  *   const setToNow = () => setDate(new Date())
@@ -225,13 +224,12 @@ export function useQueryState<T = string>(
   const router = useRouter()
   // Not reactive, but available on the server and on page load
   const initialSearchParams = useSearchParams()
-  const queryRef = React.useRef<string | null>(null)
+  const queryRef = React.useRef<string | null>(
+    initialSearchParams?.get(key) ?? null
+  )
   const [internalState, setInternalState] = React.useState<T | null>(() => {
-    const queueValue = getQueuedValue(key)
-    const urlValue = initialSearchParams?.get(key) ?? null
-    const value = queueValue ?? urlValue
-    queryRef.current = value
-    return value === null ? null : safeParse(parse, value, key)
+    const query = initialSearchParams?.get(key) ?? null
+    return query === null ? null : safeParse(parse, query, key)
   })
   const stateRef = React.useRef(internalState)
   debug(
@@ -242,11 +240,6 @@ export function useQueryState<T = string>(
   )
 
   React.useEffect(() => {
-    // This will be removed in v2 which will drop support for
-    // partially-functional shallow routing (14.0.2 and 14.0.3)
-    if (window.next?.version !== '14.0.3') {
-      return
-    }
     const query = initialSearchParams.get(key) ?? null
     if (query === queryRef.current) {
       return
@@ -266,21 +259,10 @@ export function useQueryState<T = string>(
       queryRef.current = query
       setInternalState(state)
     }
-    function syncFromURL(search: URLSearchParams) {
-      const query = search.get(key)
-      if (query === queryRef.current) {
-        return
-      }
-      const state = query === null ? null : safeParse(parse, query, key)
-      debug('[nuqs `%s`] syncFromURL %O', key, state)
-      updateInternalState({ state, query })
-    }
     debug('[nuqs `%s`] subscribing to sync', key)
-    emitter.on(SYNC_EVENT_KEY, syncFromURL)
     emitter.on(key, updateInternalState)
     return () => {
       debug('[nuqs `%s`] unsubscribing from sync', key)
-      emitter.off(SYNC_EVENT_KEY, syncFromURL)
       emitter.off(key, updateInternalState)
     }
   }, [key])

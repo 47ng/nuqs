@@ -3,6 +3,16 @@
   "version": "0.0.0-internal",
   "private": true,
   "type": "module",
+  "author": {
+    "name": "François Best",
+    "email": "contact@francoisbest.com",
+    "url": "https://francoisbest.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/47ng/nuqs.git",
+    "directory": "packages/docs"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
