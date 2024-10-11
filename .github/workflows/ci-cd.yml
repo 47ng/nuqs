@@ -40,43 +40,30 @@ jobs:
           # only when merging PRs and before deployment.
           # (these can be triggered using the dangling `ci` branch)
           - next-version: '14.2.1'
-            base-path: false
             if: ${{ github.event_name == 'push' }}
           - next-version: '14.2.2'
-            base-path: false
             if: ${{ github.event_name == 'push' }}
           - next-version: '14.2.3'
-            base-path: false
             if: ${{ github.event_name == 'push' }}
           - next-version: '14.2.5'
-            base-path: false
             if: ${{ github.event_name == 'push' }}
           - next-version: '14.2.6'
-            base-path: false
             if: ${{ github.event_name == 'push' }}
           - next-version: '14.2.7'
-            base-path: false
             if: ${{ github.event_name == 'push' }}
           - next-version: '14.2.9'
-            base-path: false
             if: ${{ github.event_name == 'push' }}
           - next-version: '14.2.10'
-            base-path: false
             if: ${{ github.event_name == 'push' }}
           - next-version: '14.2.11'
-            base-path: false
             if: ${{ github.event_name == 'push' }}
           - next-version: '14.2.12'
-            base-path: false
             if: ${{ github.event_name == 'push' }}
           - next-version: '14.2.13'
-            base-path: false
             if: ${{ github.event_name == 'push' }}
           - next-version: '14.2.14'
-            base-path: false
             if: ${{ github.event_name == 'push' }}
           - next-version: '14.2.15'
-            base-path: false
             if: ${{ github.event_name == 'push' }}
 
     steps:
