@@ -38,8 +38,8 @@ npm install nuqs
 
 | Next.js version range   | Supported `nuqs` version                                                                                                                        |
 | ----------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------- |
-| >= 14.1.2               | `nuqs@latest`                                                                                                                                   |
-| >=14.0.4 && \<\= 14.1.1 | `nuqs@^1`                                                                                                                                       |
+| >= 14.2.0               | `nuqs@latest`                                                                                                                                   |
+| >=14.0.4 && \<\= 14.1.4 | `nuqs@^1`                                                                                                                                       |
 | 14.0.3                  | `nuqs@^1`, with the `windowHistorySupport` experimental flag, see [#417](https://github.com/47ng/nuqs/issues/417)                               |
 | 14.0.2                  | Not compatible, see issue [#388](https://github.com/47ng/nuqs/issues/388) and Next.js PR [#58297](https://github.com/vercel/next.js/pull/58297) |
 | >= 13.1 && \<\= 14.0.1  | `nuqs@^1`                                                                                                                                       |
