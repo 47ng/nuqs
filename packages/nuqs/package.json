@@ -102,7 +102,7 @@
   },
   "optionalDependencies": {
     "@remix-run/react": ">= 2",
-    "next": ">= 14.1.2",
+    "next": ">= 14.2.0",
     "react-router-dom": ">= 6"
   },
   "devDependencies": {
