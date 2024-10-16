@@ -1,5 +1,6 @@
 import { readFile, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
+import { styleText } from 'node:util'
 import { defineConfig, type Options } from 'tsup'
 
 const commonConfig = {
@@ -41,7 +42,11 @@ export default defineConfig([
           const withUseClientDirective = `'use client';\n\n${fileContents}`
           await writeFile(filePath, withUseClientDirective)
           console.info(
-            `Successfully prepended "use client" directive to ${entry}.`
+            [
+              styleText('green', 'USE'),
+              styleText('bold', filePath.padEnd(29)),
+              styleText('dim', 'prepended "use client"')
+            ].join(' ')
           )
         })
       )
