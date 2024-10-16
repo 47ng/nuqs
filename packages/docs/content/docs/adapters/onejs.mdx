@@ -14,10 +14,15 @@ core package.
 
 ## Step 1: Add the adapter code
 
-```tsx title="app/nuqs-adapter.tsx"
+<Callout type="warn">
+  The custom adapters APIs are not yet stable and may change in the future
+  in a minor or patch release (not following SemVer).
+</Callout>
+
+```tsx title="app/nuqs-one-adapter.tsx"
 import {
-  type AdapterOptions,
-  createAdapterProvider,
+  type unstable_AdapterOptions as AdapterOptions,
+  unstable_createAdapterProvider as createAdapterProvider,
   renderQueryString
 } from 'nuqs/adapters/custom'
 import { useActiveParams, useRouter } from 'one'
@@ -52,7 +57,7 @@ Integrate the adapter into the root layout file, by wrapping the `<Slot>`
 component:
 
 ```tsx title="app/_layout.tsx" /NuqsAdapter/
-import { NuqsAdapter } from './nuqs-adapter'
+import { NuqsAdapter } from './nuqs-one-adapter'
 import { Slot } from 'one'
 
 export default function Layout() {

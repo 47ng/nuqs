@@ -20,6 +20,7 @@ const entrypoints = {
     'adapters/next/pages': 'src/adapters/next/pages.ts',
     'adapters/remix': 'src/adapters/remix.ts',
     'adapters/react-router': 'src/adapters/react-router.ts',
+    'adapters/custom': 'src/adapters/custom.ts',
     'adapters/testing': 'src/adapters/testing.ts'
   },
   server: {
