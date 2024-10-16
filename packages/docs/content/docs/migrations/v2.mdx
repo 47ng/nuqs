@@ -11,14 +11,15 @@ Here's a summary of the breaking changes in `nuqs@2.0.0`:
 - [Deprecated exports have been removed](#deprecated-exports)
 - [Renamed `nuqs/parsers` to `nuqs/server`](#renamed-nuqsparsers-to-nuqsserver)
 - [Debug printout detection](#debug-printout-detection)
+- [Dropping `next-usequerystate`](#dropping-next-usequerystate)
 
 ## Adapters
 
 The biggest change is that `nuqs@2.0.0` now supports other React frameworks,
 providing type-safe URL state for all.
 
-You will need to wrap your app with the appropriate **adapter** for your framework,
-to let the hooks know how to interact with its router.
+You will need to wrap your app with the appropriate [adapter](/docs/adapters)
+for your framework or router, to let the hooks know how to interact with it.
 
 Adapters are currently available for:
 - Next.js (app & pages routers)
@@ -32,7 +33,7 @@ wrap your app with the appropriate `NuqsAdapter`:
 
 ### Next.js
 
-<Callout title="Minimum required version: next@>=14.2.0">
+<Callout title="Minimum required version: next@>=14.2.0" type="warn">
 
 Early versions of Next.js 14 were in flux with regards to shallow routing.
 Supporting those earlier versions required a lot of hacks, workarounds, and
@@ -89,7 +90,7 @@ import { NuqsAdapter } from 'nuqs/adapters/next'
 ### Other adapters
 
 Albeit not part of a migration from v1, you can now use nuqs in other React
-frameworks via their respective [adapters](https://nuqs.47ng.com/docs/adapters).
+frameworks via their respective [adapters](/docs/adapters).
 
 {/* todo: Add the docs/adapters page */}
 
@@ -98,15 +99,15 @@ a long-standing issue with testing components using nuqs hooks:
 
 ### Testing adapter
 
-Until now, unit-testing nuqs components was a hassle, as it required mocking
-Next.js internals, causing abstraction leaks.
+Unit-testing components that used nuqs v1 was a hassle, as it required mocking
+the Next.js router internals, causing abstraction leaks.
 
-You can now wrap your components to test with the `NuqsTestingAdapter`, which
-provides setup & assertion helpers for your tests.
+In v2, you can now wrap your components to test with the [`NuqsTestingAdapter`](/docs/testing),
+which provides a convenient setup & assertion API for your tests.
 
 Here's an example with Vitest & Testing Library:
 
-```tsx
+```tsx title="counter-button-example.test.tsx"
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { NuqsTestingAdapter, type UrlUpdateEvent } from 'nuqs/adapters/testing'
@@ -138,10 +139,10 @@ it('should increment the count when clicked', async () => {
 
 ## Behaviour changes
 
-Setting `startTransition` no longer sets `shallow: false` automatically.
+Setting the `startTransition` option no longer sets `shallow: false` automatically.
+
 In Next.js, you'll have to specify both to get a loading state.
-This is to align with other frameworks that don't have a concept of shallow
-(or deep) routing.
+This is to align with other frameworks that don't have a concept of shallow/deep routing.
 
 As a consequence, the `Options` type is no longer generic.
 
@@ -199,11 +200,11 @@ Replace with `parseAsXYZ` to match:
 ### `subscribeToQueryUpdates`
 
 Next.js 14.1.0 makes `useSearchParams` reactive to shallow search params updates,
-which makes this internal helper function redundant. See #425 for context.
+which makes this internal helper function redundant. See [#425](https://github.com/47ng/nuqs/pull/425) for context.
 
 ## Renamed `nuqs/parsers` to `nuqs/server`
 
-When introducing the server cache in #387, the dedicated export for parsers was
+When introducing the server cache in [#397](https://github.com/47ng/nuqs/pull/397), the dedicated export for parsers was
 reused as it didn't include the `"use client"` directive. Since it now contains
 more than parsers and probably will be extended with server-only code in the future,
 it has been renamed to a clearer export name.
@@ -228,3 +229,11 @@ if (localStorage.debug) {
   localStorage.debug = localStorage.debug.replace('next-usequerystate', 'nuqs')
 }
 ```
+
+## Dropping next-usequerystate
+
+This package started under the name `next-usequerystate`, and was renamed to
+`nuqs` in January 2024. The old package name was kept as an alias for the v1
+release line.
+
+`nuqs` version 2 and onwards no longer mirror to the `next-usequerystate` package name.
