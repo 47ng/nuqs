@@ -39,6 +39,7 @@
     "adapters/next/pages.d.ts",
     "adapters/remix.d.ts",
     "adapters/react-router.d.ts",
+    "adapters/custom.d.ts",
     "adapters/testing.d.ts"
   ],
   "type": "module",
@@ -77,6 +78,10 @@
     "./adapters/react-router": {
       "types": "./dist/adapters/react-router.d.ts",
       "import": "./dist/adapters/react-router.js"
+    },
+    "./adapters/custom": {
+      "types": "./dist/adapters/custom.d.ts",
+      "import": "./dist/adapters/custom.js"
     },
     "./adapters/testing": {
       "types": "./dist/adapters/testing.d.ts",
