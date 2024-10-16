@@ -6,6 +6,7 @@ description: How to update your code to use nuqs@2.0.0
 Here's a summary of the breaking changes in `nuqs@2.0.0`:
 
 - [Enable support for other React frameworks](#adapters)
+- [Behaviour changes](#behaviour-changes)
 - [ESM-only package](#esm-only)
 - [Deprecated exports have been removed](#deprecated-exports)
 - [Renamed `nuqs/parsers` to `nuqs/server`](#renamed-nuqsparsers-to-nuqsserver)
@@ -21,19 +22,21 @@ to let the hooks know how to interact with its router.
 
 Adapters are currently available for:
 - Next.js (app & pages routers)
-- React (Vite, Astro, etc.)
+- React SPA
+- Remix
+- React Router
 - Testing environments (Vitest, Jest, etc.)
 
-More adapters will be released soon (React Router, Remix etc.), PRs are welcome!
+If you are coming from nuqs v1 (which only supported Next.js), you'll need to
+wrap your app with the appropriate `NuqsAdapter`:
 
 ### Next.js
 
 <Callout title="Minimum required version: next@>=14.2.0">
 
-Early versions of Next.js 14 were in flux with regards to shallow routing,
-only from 14.2.0 is it stable enough to not require ugly hacks.
-
-See #423 for context and a table of supported versions.
+Early versions of Next.js 14 were in flux with regards to shallow routing.
+Supporting those earlier versions required a lot of hacks, workarounds, and
+performance penalties, which were removed in `nuqs@2.0.0`.
 
 </Callout>
 
@@ -83,18 +86,15 @@ of a slightly larger bundle size (~100B).
 import { NuqsAdapter } from 'nuqs/adapters/next'
 ```
 
+### Other adapters
 
-### React (with Vite)
+Albeit not part of a migration from v1, you can now use nuqs in other React
+frameworks via their respective [adapters](https://nuqs.47ng.com/docs/adapters).
 
-```tsx /NuqsAdapter/
-import { NuqsAdapter } from 'nuqs/adapters/react'
+{/* todo: Add the docs/adapters page */}
 
-createRoot(document.getElementById('root')!).render(
-  <NuqsAdapter>
-    <App />
-  </NuqsAdapter>
-)
-```
+However, there's one more adapter that might be of interest to you, and solves
+a long-standing issue with testing components using nuqs hooks:
 
 ### Testing adapter
 
@@ -136,13 +136,32 @@ it('should increment the count when clicked', async () => {
 })
 ```
 
+## Behaviour changes
+
+Setting `startTransition` no longer sets `shallow: false` automatically.
+In Next.js, you'll have to specify both to get a loading state.
+This is to align with other frameworks that don't have a concept of shallow
+(or deep) routing.
+
+As a consequence, the `Options` type is no longer generic.
+
+The `"use client"` directive was not included in the client import
+(`import {} from 'nuqs'`). It has now been added, meaning that server-side code
+needs to import from `nuqs/server` to avoid errors like:
+
+```
+Error: Attempted to call withDefault() from the server but withDefault is on
+the client. It's not possible to invoke a client function from the server, it can
+only be rendered as a Component or passed to props of a Client
+Component.
+```
+
 ## ESM only
 
 `nuqs@2.0.0` is now an [ESM-only](https://gist.github.com/sindresorhus/a39789f98801d908bbc7ff3ecc99d99c)
-package. This should not be much of an issue since
-Next.js supports ESM in app code since version 12, but if you are bundling
-`nuqs` code into an intermediate CJS library to be consumed in Next.js,
-you'll run into import issues:
+package. This should not be much of an issue since Next.js supports ESM in
+app code since version 12, but if you are bundling `nuqs` code into an
+intermediate CJS library to be consumed in Next.js, you'll run into import issues:
 
 ```txt
 [ERR_REQUIRE_ESM]: require() of ES Module not supported
