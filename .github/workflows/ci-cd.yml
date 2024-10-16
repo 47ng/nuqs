@@ -28,17 +28,13 @@ jobs:
         # branch protection settings for `next`.
         base-path: [false, '/base']
         next-version:
-          - '14.1.2'
-          - '14.1.3'
-          - '14.1.4'
+          # Only keep versions where there were relevant changes in the app router core,
+          # and the previous one to use as a baseline.
           - '14.2.0'
-          - '14.2.1'
-          - '14.2.2'
-          - '14.2.3'
-          - '14.2.4'
-          - '14.2.5'
-          - '14.2.6'
-          - '14.2.7'
+          - '14.2.3' # before vercel/next.js#66755
+          - '14.2.4' # after vercel/next.js#66755
+          - '14.2.7' # before vercel/next.js#69509
+          - '14.2.8' # after vercel/next.js#69509
           - latest
           - local
 
@@ -89,7 +85,7 @@ jobs:
       - name: Install dependencies
         run: pnpm install --ignore-scripts --frozen-lockfile
       - name: Check monorepo with Sherif
-        run: pnpm dlx sherif@1.0.0 --no-install
+        run: pnpm run lint:sherif
       - name: Check source code formatting
         run: |
           set +e # Allow Prettier to fail, but capture the error code

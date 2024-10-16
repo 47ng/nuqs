@@ -130,7 +130,7 @@ to get loading states while the server is re-rendering server components with
 the updated URL.
 
 Pass in the `startTransition` function from `useTransition` to the options
-to enable this behaviour _(this will set `shallow: false{:ts}` automatically for you)_:
+to enable this behaviour:
 
 <Callout title="Upcoming changes" type="warn">
   In `nuqs@2.0.0`, passing `startTransition` will no longer automatically set `shallow: false{:ts}`.
@@ -148,7 +148,7 @@ function ClientComponent({ data }) {
   const [query, setQuery] = useQueryState(
     'query',
     // 2. Pass the `startTransition` as an option:
-    parseAsString().withOptions({ startTransition })
+    parseAsString().withOptions({ startTransition, shallow: false })
   )
   // 3. `isLoading` will be true while the server is re-rendering
   // and streaming RSC payloads, when the query is updated via `setQuery`.
@@ -160,6 +160,13 @@ function ClientComponent({ data }) {
   return <div>...</div>
 }
 ```
+
+<Callout>
+  In `nuqs@1.x.x`, passing `startTransition` as an option automatically sets
+  `shallow: false{:ts}`.
+
+  This is no longer the case in `nuqs@>=2.0.0`: you'll need to set it explicitly.
+</Callout>
 
 ## Clear on default
 

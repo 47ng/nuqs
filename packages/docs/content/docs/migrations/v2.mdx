@@ -3,20 +3,166 @@ title: Migration guide to v2
 description: How to update your code to use nuqs@2.0.0
 ---
 
-## Support moved to `next@>=14.1.2`
+Here's a summary of the breaking changes in `nuqs@2.0.0`:
 
-Early versions of Next.js 14 were in flux with regards to shallow routing,
-only from 14.1.2 is it stable enough to not require ugly hacks.
+- [Enable support for other React frameworks](#adapters)
+- [Behaviour changes](#behaviour-changes)
+- [ESM-only package](#esm-only)
+- [Deprecated exports have been removed](#deprecated-exports)
+- [Renamed `nuqs/parsers` to `nuqs/server`](#renamed-nuqsparsers-to-nuqsserver)
+- [Debug printout detection](#debug-printout-detection)
+- [Dropping `next-usequerystate`](#dropping-next-usequerystate)
 
-See #423 for context and a table of supported versions.
+## Adapters
+
+The biggest change is that `nuqs@2.0.0` now supports other React frameworks,
+providing type-safe URL state for all.
+
+You will need to wrap your app with the appropriate [adapter](/docs/adapters)
+for your framework or router, to let the hooks know how to interact with it.
+
+Adapters are currently available for:
+- Next.js (app & pages routers)
+- React SPA
+- Remix
+- React Router
+- Testing environments (Vitest, Jest, etc.)
+
+If you are coming from nuqs v1 (which only supported Next.js), you'll need to
+wrap your app with the appropriate `NuqsAdapter`:
+
+### Next.js
+
+<Callout title="Minimum required version: next@>=14.2.0" type="warn">
+
+Early versions of Next.js 14 were in flux with regards to shallow routing.
+Supporting those earlier versions required a lot of hacks, workarounds, and
+performance penalties, which were removed in `nuqs@2.0.0`.
+
+</Callout>
+
+#### App router
+
+```tsx {1} /NuqsAdapter/ title="src/app/layout.tsx"
+import { NuqsAdapter } from 'nuqs/adapters/next/app'
+import { type ReactNode } from 'react'
+
+export default function RootLayout({
+  children
+}: {
+  children: ReactNode
+}) {
+  return (
+    <html>
+      <body>
+        <NuqsAdapter>{children}</NuqsAdapter>
+      </body>
+    </html>
+  )
+}
+```
+
+#### Pages router
+
+```tsx {2} /NuqsAdapter/ title="src/pages/_app.tsx"
+import type { AppProps } from 'next/app'
+import { NuqsAdapter } from 'nuqs/adapters/next/pages'
+
+export default function MyApp({ Component, pageProps }: AppProps) {
+  return (
+    <NuqsAdapter>
+      <Component {...pageProps} />
+    </NuqsAdapter>
+  )
+}
+```
+
+#### Unified (router-agnostic)
+
+If your Next.js app uses **both the app and pages routers** and the adapter needs
+to be mounted in either, you can use the unified adapter, at the cost
+of a slightly larger bundle size (~100B).
+
+```tsx
+import { NuqsAdapter } from 'nuqs/adapters/next'
+```
+
+### Other adapters
+
+Albeit not part of a migration from v1, you can now use nuqs in other React
+frameworks via their respective [adapters](/docs/adapters).
+
+{/* todo: Add the docs/adapters page */}
+
+However, there's one more adapter that might be of interest to you, and solves
+a long-standing issue with testing components using nuqs hooks:
+
+### Testing adapter
+
+Unit-testing components that used nuqs v1 was a hassle, as it required mocking
+the Next.js router internals, causing abstraction leaks.
+
+In v2, you can now wrap your components to test with the [`NuqsTestingAdapter`](/docs/testing),
+which provides a convenient setup & assertion API for your tests.
+
+Here's an example with Vitest & Testing Library:
+
+```tsx title="counter-button-example.test.tsx"
+import { render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
+import { NuqsTestingAdapter, type UrlUpdateEvent } from 'nuqs/adapters/testing'
+import { describe, expect, it, vi } from 'vitest'
+import { CounterButton } from './counter-button'
+
+it('should increment the count when clicked', async () => {
+  const user = userEvent.setup()
+  const onUrlUpdate = vi.fn<[UrlUpdateEvent]>()
+  render(<CounterButton />, {
+    // Setup the test by passing initial search params / querystring:
+    wrapper: ({ children }) => (
+      <NuqsTestingAdapter searchParams="?count=1" onUrlUpdate={onUrlUpdate}>
+        {children}
+      </NuqsTestingAdapter>
+    )
+  })
+  // Act
+  const button = screen.getByRole('button')
+  await user.click(button)
+  // Assert changes in the state and in the (mocked) URL
+  expect(button).toHaveTextContent('count is 2')
+  expect(onUrlUpdate).toHaveBeenCalledOnce()
+  expect(onUrlUpdate.mock.calls[0][0].queryString).toBe('?count=2')
+  expect(onUrlUpdate.mock.calls[0][0].searchParams.get('count')).toBe('2')
+  expect(onUrlUpdate.mock.calls[0][0].options.history).toBe('push')
+})
+```
+
+## Behaviour changes
+
+Setting the `startTransition` option no longer sets `shallow: false` automatically.
+
+In Next.js, you'll have to specify both to get a loading state.
+This is to align with other frameworks that don't have a concept of shallow/deep routing.
+
+As a consequence, the `Options` type is no longer generic.
+
+The `"use client"` directive was not included in the client import
+(`import {} from 'nuqs'`). It has now been added, meaning that server-side code
+needs to import from `nuqs/server` to avoid errors like:
+
+```
+Error: Attempted to call withDefault() from the server but withDefault is on
+the client. It's not possible to invoke a client function from the server, it can
+only be rendered as a Component or passed to props of a Client
+Component.
+```
 
 ## ESM only
 
 `nuqs@2.0.0` is now an [ESM-only](https://gist.github.com/sindresorhus/a39789f98801d908bbc7ff3ecc99d99c)
-package. This should not be much of an issue since
-Next.js supports ESM in app code since version 12, but if you are bundling
-`nuqs` code into an intermediate CJS library to be consumed in Next.js,
-you'll run into import issues:
+package. This should not be much of an issue since Next.js supports ESM in
+app code since version 12, but if you are bundling `nuqs` code into an
+intermediate CJS library to be consumed in Next.js, you'll run into import issues:
 
 ```txt
 [ERR_REQUIRE_ESM]: require() of ES Module not supported
@@ -54,11 +200,11 @@ Replace with `parseAsXYZ` to match:
 ### `subscribeToQueryUpdates`
 
 Next.js 14.1.0 makes `useSearchParams` reactive to shallow search params updates,
-which makes this internal helper function redundant. See #425 for context.
+which makes this internal helper function redundant. See [#425](https://github.com/47ng/nuqs/pull/425) for context.
 
 ## Renamed `nuqs/parsers` to `nuqs/server`
 
-When introducing the server cache in #387, the dedicated export for parsers was
+When introducing the server cache in [#397](https://github.com/47ng/nuqs/pull/397), the dedicated export for parsers was
 reused as it didn't include the `"use client"` directive. Since it now contains
 more than parsers and probably will be extended with server-only code in the future,
 it has been renamed to a clearer export name.
@@ -83,3 +229,11 @@ if (localStorage.debug) {
   localStorage.debug = localStorage.debug.replace('next-usequerystate', 'nuqs')
 }
 ```
+
+## Dropping next-usequerystate
+
+This package started under the name `next-usequerystate`, and was renamed to
+`nuqs` in January 2024. The old package name was kept as an alias for the v1
+release line.
+
+`nuqs` version 2 and onwards no longer mirror to the `next-usequerystate` package name.

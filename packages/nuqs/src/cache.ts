@@ -1,3 +1,4 @@
+// @ts-ignore
 import { cache } from 'react'
 import { error } from './errors'
 import type { ParserBuilder, inferParserType } from './parsers'
