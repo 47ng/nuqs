@@ -1,24 +1,26 @@
-# useQueryState for Next.js
+# nuqs
 
 [![NPM](https://img.shields.io/npm/v/nuqs?color=red)](https://www.npmjs.com/package/nuqs)
 [![MIT License](https://img.shields.io/github/license/47ng/nuqs.svg?color=blue)](https://github.com/47ng/nuqs/blob/next/LICENSE)
 [![Continuous Integration](https://github.com/47ng/nuqs/workflows/Continuous%20Integration/badge.svg?branch=next)](https://github.com/47ng/nuqs/actions)
 [![Depfu](https://badges.depfu.com/badges/acad53fa2b09b1e435a19d6d18f29af4/count.svg)](https://depfu.com/github/47ng/nuqs?project_id=22104)
 
-<!-- [![Coverage Status](https://coveralls.io/repos/github/47ng/nuqs/badge.svg?branch=next)](https://coveralls.io/github/47ng/nuqs?branch=next) -->
-
-useQueryState hook for Next.js - Like React.useState, but stored in the URL query string
+Type-safe search params state manager for React frameworks. Like `useState`, but stored in the URL query string.
 
 ## Features
 
-- 🔀 Supports both the `app` and `pages` routers
+- 🔀 **new:** Supports Next.js (`app` and `pages` routers), plain React (SPA), Remix, React Router, and custom routers via [adapters](#adapters)
 - 🧘‍♀️ Simple: the URL is the source of truth
 - 🕰 Replace history or [append](#history) to use the Back button to navigate state updates
-- ⚡️ Built-in [parsers](#parsing) for common state types (integer, float, boolean, Date, and more)
+- ⚡️ Built-in [parsers](#parsing) for common state types (integer, float, boolean, Date, and more). Create your own parsers for custom types & pretty URLs
 - ♊️ Related querystrings with [`useQueryStates`](#usequerystates)
 - 📡 [Shallow mode](#shallow) by default for URL query updates, opt-in to notify server components
-- 🗃 _**new:**_ [Server cache](#accessing-searchparams-in-server-components) for type-safe searchParams access in nested server components
-- ⌛️ _**new:**_ Support for [`useTransition`](#transitions) to get loading states on server updates
+- 🗃 [Server cache](#accessing-searchparams-in-server-components) for type-safe searchParams access in nested server components
+- ⌛️ Support for [`useTransition`](#transitions) to get loading states on server updates
+
+## Documentation
+
+Read the complete documentation at [nuqs.47ng.com](https://nuqs.47ng.com).
 
 ## Installation
 
@@ -34,21 +36,120 @@ yarn add nuqs
 npm install nuqs
 ```
 
-### Which version should I use?
+## Adapters
 
-| Next.js version range   | Supported `nuqs` version                                                                                                                        |
-| ----------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------- |
-| >= 14.2.0               | `nuqs@latest`                                                                                                                                   |
-| >=14.0.4 && \<\= 14.1.4 | `nuqs@^1`                                                                                                                                       |
-| 14.0.3                  | `nuqs@^1`, with the `windowHistorySupport` experimental flag, see [#417](https://github.com/47ng/nuqs/issues/417)                               |
-| 14.0.2                  | Not compatible, see issue [#388](https://github.com/47ng/nuqs/issues/388) and Next.js PR [#58297](https://github.com/vercel/next.js/pull/58297) |
-| >= 13.1 && \<\= 14.0.1  | `nuqs@^1`                                                                                                                                       |
-| < 13.1                  | `next-usequerystate@1.7.3`                                                                                                                      |
+You will need to wrap your React component tree with an adapter for your framework. _(expand the appropriate section below)_
+
+<details><summary>▲ Next.js (app router)</summary>
+
+> Supported Next.js versions: `>=14.2.0`. For older versions, install `nuqs@^1` (which doesn't need this adapter code).
+
+```tsx
+// src/app/layout.tsx
+import { NuqsAdapter } from 'nuqs/adapters/next/app'
+import { type ReactNode } from 'react'
+
+export default function RootLayout({ children }: { children: ReactNode }) {
+  return (
+    <html>
+      <body>
+        <NuqsAdapter>{children}</NuqsAdapter>
+      </body>
+    </html>
+  )
+}
+```
+
+</details>
+
+<details><summary>▲ Next.js (pages router)</summary>
+
+> Supported Next.js versions: `>=14.2.0`. For older versions, install `nuqs@^1` (which doesn't need this adapter code).
+
+```tsx
+// src/pages/_app.tsx
+import type { AppProps } from 'next/app'
+import { NuqsAdapter } from 'nuqs/adapters/next/pages'
+
+export default function MyApp({ Component, pageProps }: AppProps) {
+  return (
+    <NuqsAdapter>
+      <Component {...pageProps} />
+    </NuqsAdapter>
+  )
+}
+```
+
+</details>
+
+<details><summary>⚛️ Plain React (SPA)</summary>
+
+Example: via Vite or create-react-app.
+
+```tsx
+import { NuqsAdapter } from 'nuqs/adapters/react'
+
+createRoot(document.getElementById('root')!).render(
+  <NuqsAdapter>
+    <App />
+  </NuqsAdapter>
+)
+```
+
+</details>
+
+<details><summary>💿 Remix</summary>
+
+> Supported Remix versions: `@remix-run/react@>=2`
+
+```tsx
+// app/root.tsx
+import { NuqsAdapter } from 'nuqs/adapters/remix'
+
+// ...
+
+export default function App() {
+  return (
+    <NuqsAdapter>
+      <Outlet />
+    </NuqsAdapter>
+  )
+}
+```
+
+</details>
+
+<details><summary><svg width="1em" viewBox="0 0 94 61" fill="none" xmlns="http://www.w3.org/2000/svg"><style>.bw{fill:"#121212";} @media (prefers-color-scheme: dark){.bw{fill:#fff;}}</style><path d="M72.7315 20.9357C70.0548 20.0941 68.6725 20.3778 65.8649 20.071C61.5246 19.5976 59.7954 17.9013 59.0619 13.5356C58.6514 11.0985 59.1361 7.53022 58.0881 5.32106C56.0839 1.10875 51.3943 -0.780439 46.6828 0.297843C42.7049 1.20956 39.3951 5.18518 39.2117 9.266C39.0021 13.9254 41.657 17.901 46.2156 19.273C48.3814 19.9261 50.6825 20.2548 52.9444 20.4214C57.0925 20.7238 57.4113 23.0297 58.5335 24.9277C59.2409 26.1243 59.9264 27.3034 59.9264 30.8714C59.9264 34.4394 59.2365 35.6185 58.5335 36.8151C57.4113 38.7087 56.0271 39.9491 51.879 40.2559C49.6171 40.4225 47.3116 40.7513 45.1502 41.4044C40.5916 42.7807 37.9367 46.7519 38.1463 51.4113C38.3297 55.4921 41.6395 59.4678 45.6174 60.3795C50.3289 61.4621 55.0185 59.5686 57.0227 55.3563C58.075 53.1471 58.6514 50.6443 59.0619 48.2072C59.7998 43.8414 61.5289 42.1451 65.8649 41.6717C68.6725 41.3649 71.5783 41.6717 74.2093 40.177C76.9895 38.1456 79.4734 35.0968 79.4734 30.8714C79.4734 26.6459 76.7967 22.2156 72.7315 20.9357Z" fill="#F44250"/><path d="M28.1997 40.7739C22.7285 40.7739 18.2656 36.3027 18.2656 30.8213C18.2656 25.3399 22.7285 20.8687 28.1997 20.8687C33.6709 20.8687 38.1338 25.3399 38.1338 30.8213C38.1338 36.2983 33.6665 40.7739 28.1997 40.7739Z" class="bw"/><path d="M9.899 61C4.43661 60.9868 -0.0130938 56.498 2.89511e-05 51.0122C0.0132099 45.5353 4.4936 41.0773 9.96914 41.0948C15.4359 41.108 19.8856 45.5968 19.8681 51.0825C19.8549 56.5551 15.3745 61.0131 9.899 61Z" class="bw"/><path d="M83.7137 60.9998C78.2339 61.0304 73.7361 56.5901 73.7052 51.122C73.6747 45.632 78.1068 41.1258 83.5646 41.0949C89.0444 41.0643 93.5423 45.5046 93.5731 50.9727C93.6036 56.4583 89.1716 60.9689 83.7137 60.9998Z" class="bw"/></svg> React Router</summary>
+
+> Supported React Router versions: `react-router-dom@>=6`
+
+```tsx
+import { NuqsAdapter } from 'nuqs/adapters/react-router'
+import { createBrowserRouter, RouterProvider } from 'react-router-dom'
+import App from './App'
+
+const router = createBrowserRouter([
+  {
+    path: '/',
+    element: <App />
+  }
+])
+
+export function ReactRouter() {
+  return (
+    <NuqsAdapter>
+      <RouterProvider router={router} />
+    </NuqsAdapter>
+  )
+}
+```
+
+</details>
 
 ## Usage
 
 ```tsx
-'use client' // app router: only works in client components
+'use client' // Only works in client components
 
 import { useQueryState } from 'nuqs'
 
@@ -65,8 +166,6 @@ export default () => {
 ```
 
 ![](https://raw.githubusercontent.com/47ng/nuqs/next/useQueryState.gif)
-
-## Documentation
 
 `useQueryState` takes one required argument: the key to use in the query string.
 
@@ -276,6 +375,8 @@ setQuery(null, { history: 'replace' })
 
 ### Shallow
 
+> Note: this feature only applies to Next.js
+
 By default, query state updates are done in a _client-first_ manner: there are
 no network calls to the server.
 
@@ -292,21 +393,6 @@ const [state, setState] = useQueryState('foo', { shallow: false })
 
 // You can also pass the option on calls to setState:
 setState('bar', { shallow: false })
-```
-
-### Scroll
-
-The Next.js router scrolls to the top of the page on navigation updates,
-which may not be desirable when updating the query string with local state.
-
-Query state updates won't scroll to the top of the page by default, but you
-can opt-in to this behaviour (which was the default up to 1.8.0):
-
-```ts
-const [state, setState] = useQueryState('foo', { scroll: true })
-
-// You can also pass the option on calls to setState:
-setState('bar', { scroll: true })
 ```
 
 ### Throttling URL updates
@@ -345,7 +431,7 @@ loading states while the server is re-rendering server components with the
 updated URL.
 
 Pass in the `startTransition` function from `useTransition` to the options
-to enable this behaviour _(this will set `shallow: false` automatically for you)_:
+to enable this behaviour:
 
 ```tsx
 'use client'
@@ -359,7 +445,10 @@ function ClientComponent({ data }) {
   const [query, setQuery] = useQueryState(
     'query',
     // 2. Pass the `startTransition` as an option:
-    parseAsString().withOptions({ startTransition })
+    parseAsString().withOptions({
+      startTransition,
+      shallow: false // opt-in to notify the server (Next.js only)
+    })
   )
   // 3. `isLoading` will be true while the server is re-rendering
   // and streaming RSC payloads, when the query is updated via `setQuery`.
@@ -713,14 +802,46 @@ inferParserType<typeof parsers>
 
 ## Testing
 
-Currently, the best way to test the behaviour of your components using
-`useQueryState(s)` is end-to-end testing, with tools like Playwright or Cypress.
+Since nuqs v2, you can use a testing adapter to unit-test components using
+`useQueryState` and `useQueryStates` in isolation, without needing to mock
+your framework or router.
 
-Running components that use the Next.js router in isolation requires mocking it,
-which is being [worked on](https://github.com/scottrippey/next-router-mock/pull/103)
-for the app router.
+Here's an example using Testing Library and Vitest:
 
-See issue #259 for more testing-related discussions.
+```tsx
+import { render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
+import { NuqsTestingAdapter, type UrlUpdateEvent } from 'nuqs/adapters/testing'
+import { describe, expect, it, vi } from 'vitest'
+import { CounterButton } from './counter-button'
+
+it('should increment the count when clicked', async () => {
+  const user = userEvent.setup()
+  const onUrlUpdate = vi.fn<[UrlUpdateEvent]>()
+  render(<CounterButton />, {
+    // Setup the test by passing initial search params / querystring,
+    // and give it a function to call on URL updates
+    wrapper: ({ children }) => (
+      <NuqsTestingAdapter searchParams="?count=42" onUrlUpdate={onUrlUpdate}>
+        {children}
+      </NuqsTestingAdapter>
+    )
+  })
+  // Initial state assertions: there's a clickable button displaying the count
+  const button = screen.getByRole('button')
+  expect(button).toHaveTextContent('count is 42')
+  // Act
+  await user.click(button)
+  // Assert changes in the state and in the (mocked) URL
+  expect(button).toHaveTextContent('count is 43')
+  expect(onUrlUpdate).toHaveBeenCalledOnce()
+  expect(onUrlUpdate.mock.calls[0][0].queryString).toBe('?count=43')
+  expect(onUrlUpdate.mock.calls[0][0].searchParams.get('count')).toBe('43')
+  expect(onUrlUpdate.mock.calls[0][0].options.history).toBe('push')
+})
+```
+
+See [#259](https://github.com/47ng/nuqs/issues/259) for more testing-related discussions.
 
 ## Debugging
 
@@ -743,13 +864,6 @@ your browser's devtools.
 
 Providing debug logs when opening an [issue](https://github.com/47ng/nuqs/issues)
 is always appreciated. 🙏
-
-## Caveats
-
-Because the Next.js **pages router** is not available in an SSR context, this
-hook will always return `null` (or the default value if supplied) on SSR/SSG.
-
-This limitation doesn't apply to the app router.
 
 ### SEO
 
