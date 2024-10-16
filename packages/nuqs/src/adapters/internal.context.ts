@@ -13,6 +13,14 @@ export const context = createContext<AdapterContext>({
 })
 context.displayName = 'NuqsAdapterContext'
 
+/**
+ * Create a custom adapter (context provider) for nuqs to work with your framework / router.
+ *
+ * Adapters are based on React Context,
+ *
+ * @param useAdapter
+ * @returns
+ */
 export function createAdapterProvider(useAdapter: UseAdapterHook) {
   return ({ children, ...props }: { children: ReactNode }) =>
     createElement(
