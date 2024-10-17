@@ -49,7 +49,7 @@ function DemoContainer({ children, className, ...props }: DemoContainerProps) {
 }
 
 export function BasicUsageDemo() {
-  const [value, setValue] = useQueryState('hello', { defaultValue: '' })
+  const [value, setValue] = useQueryState('name', { defaultValue: '' })
   return (
     <DemoContainer className="flex-col items-stretch">
       <input
