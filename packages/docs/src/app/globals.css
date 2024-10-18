@@ -61,32 +61,35 @@
   }
 }
 
-/* https://shikiji.netlify.app/guide/dual-themes#class-based-dark-mode */
-@layer base {
-  html.dark .shiki,
-  html.dark .shiki span {
-    color: var(--shiki-dark) !important;
-    background-color: var(--shiki-dark-bg) !important;
-    /* Optional, if you also want font styles */
-    font-style: var(--shiki-dark-font-style) !important;
-    font-weight: var(--shiki-dark-font-weight) !important;
-    text-decoration: var(--shiki-dark-text-decoration) !important;
-  }
-}
-
 @layer components {
-  .nd-codeblock [data-highlighted-chars] {
+  /* Remove the background color on title bar */
+  .fd-codeblock div:has(> figcaption) {
+    background-color: transparent;
+  }
+
+  .fd-codeblock .highlighted-word,
+  .fd-codeblock .line.highlighted {
     --highlight-color: var(--foreground);
     --highlight-opacity: 5%;
-    border: none;
-    box-shadow: 0 0 0 3px hsl(var(--highlight-color) / var(--highlight-opacity));
-    padding-block: 1px;
     background-color: hsl(var(--highlight-color) / var(--highlight-opacity));
-    border-radius: 2px;
+  }
+  .fd-codeblock .highlighted-word {
+    border: none;
+    box-shadow: 0 0 0 1.25px
+      hsl(var(--highlight-color) / var(--highlight-opacity));
+    border-radius: 4px;
   }
 
-  .dark .nd-codeblock [data-highlighted-chars] {
-    --highlight-opacity: 10%;
+  .fd-codeblock:not([custom~='compact']) pre.max-h-\[400px\] {
+    max-height: unset;
+  }
+  .fd-codeblock[custom~='compact'] {
+    pre {
+      padding-block: 0;
+    }
+    code {
+      padding-block: 1rem;
+    }
   }
 }
 
