@@ -1,6 +1,6 @@
 'use client'
 
-import { QuerySpy } from '@/src/app/playground/(demos)/_components/query-spy'
+import { QuerySpy } from '@/src/components/query-spy'
 import { ContainerQueryHelper } from '@/src/components/responsive-helpers'
 import { Button } from '@/src/components/ui/button'
 import { Checkbox } from '@/src/components/ui/checkbox'
@@ -30,9 +30,16 @@ export function DemoFallback() {
   )
 }
 
-type DemoContainerProps = React.ComponentProps<'section'>
+type DemoContainerProps = React.ComponentProps<'section'> & {
+  demoKey: string
+}
 
-function DemoContainer({ children, className, ...props }: DemoContainerProps) {
+function DemoContainer({
+  children,
+  className,
+  demoKey,
+  ...props
+}: DemoContainerProps) {
   return (
     <section
       className={cn(
@@ -41,7 +48,7 @@ function DemoContainer({ children, className, ...props }: DemoContainerProps) {
       )}
       {...props}
     >
-      <QuerySpy className="mt-0 rounded-md" />
+      <QuerySpy className="rounded-md" keepKeys={[demoKey]} />
       {children}
       <ContainerQueryHelper />
     </section>
@@ -51,7 +58,7 @@ function DemoContainer({ children, className, ...props }: DemoContainerProps) {
 export function BasicUsageDemo() {
   const [value, setValue] = useQueryState('hello', { defaultValue: '' })
   return (
-    <DemoContainer className="flex-col items-stretch">
+    <DemoContainer className="flex-col items-stretch" demoKey="hello">
       <input
         className="h-10 flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
         value={value}
@@ -73,7 +80,7 @@ export function BasicUsageDemo() {
 export function StringParserDemo() {
   const [value, setValue] = useQueryState('string', { defaultValue: '' })
   return (
-    <DemoContainer>
+    <DemoContainer demoKey="string">
       <input
         className="h-10 flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
         value={value}
@@ -94,7 +101,7 @@ export function StringParserDemo() {
 export function IntegerParserDemo() {
   const [value, setValue] = useQueryState('int', parseAsInteger)
   return (
-    <DemoContainer>
+    <DemoContainer demoKey="int">
       <input
         type="number"
         className="flex h-10 flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
@@ -125,7 +132,7 @@ export function FloatParserDemo() {
     parseAsFloat.withDefault(0).withOptions({ throttleMs: 100 })
   )
   return (
-    <DemoContainer>
+    <DemoContainer demoKey="float">
       <Slider
         value={[value]}
         onValueChange={([v]) => setValue(v).catch()}
@@ -147,7 +154,7 @@ export function HexParserDemo() {
     parseAsHex.withDefault(0).withOptions({ throttleMs: 100 })
   )
   return (
-    <DemoContainer>
+    <DemoContainer demoKey="hex">
       <Slider
         value={[value]}
         onValueChange={([v]) => setValue(v).catch(console.error)}
@@ -163,9 +170,12 @@ export function HexParserDemo() {
 }
 
 export function BooleanParserDemo() {
-  const [value, setValue] = useQueryState('bool', parseAsBoolean)
+  const [value, setValue] = useQueryState(
+    'bool',
+    parseAsBoolean.withDefault(false)
+  )
   return (
-    <DemoContainer>
+    <DemoContainer demoKey="bool">
       <Checkbox
         id="boolean-demo"
         checked={value ?? false}
@@ -176,7 +186,7 @@ export function BooleanParserDemo() {
         htmlFor="boolean-demo"
         className="select-none text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
       >
-        State: <code>{String(value)}</code>
+        Checked: <code>{String(value)}</code>
       </label>
       <Button
         variant="secondary"
@@ -195,7 +205,7 @@ export function StringLiteralParserDemo() {
     parseAsStringLiteral(['asc', 'desc'] as const)
   )
   return (
-    <DemoContainer>
+    <DemoContainer demoKey="sort">
       <Button
         onClick={() =>
           setValue(old => {
@@ -242,7 +252,7 @@ export function DateParserDemo({
 }) {
   const [value, setValue] = useQueryState(queryKey, parser)
   return (
-    <DemoContainer className="@container">
+    <DemoContainer className="@container" demoKey={queryKey}>
       <div className="flex w-full flex-col items-stretch gap-2 @md:flex-row">
         <div className="flex flex-1 items-center gap-2">
           <input
@@ -290,7 +300,7 @@ export function DateTimestampParserDemo() {
 export function JsonParserDemo() {
   const [value, setValue] = useQueryState('json', parseAsJson<unknown>())
   return (
-    <DemoContainer>
+    <DemoContainer demoKey="json">
       <pre className="flex-1 rounded-md border bg-background p-2 text-sm text-zinc-500">
         {JSON.stringify(value)}
       </pre>
@@ -327,7 +337,7 @@ const parseAsStarRating = createParser({
 export function CustomParserDemo() {
   const [value, setValue] = useQueryState('rating', parseAsStarRating)
   return (
-    <DemoContainer>
+    <DemoContainer demoKey="rating">
       <div className="group">
         <StarButton index={1} value={value} setValue={setValue} />
         <StarButton index={2} value={value} setValue={setValue} />

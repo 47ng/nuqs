@@ -1,6 +1,6 @@
+import { QuerySpy } from '@/src/components/query-spy'
+import { QuerystringSkeleton } from '@/src/components/querystring'
 import React, { Suspense } from 'react'
-import { QuerySpy } from './_components/query-spy'
-import { QuerySpySkeleton } from './_components/query-spy.skeleton'
 
 export default function PlaygroundDemoLayout({
   children
@@ -9,7 +9,7 @@ export default function PlaygroundDemoLayout({
 }) {
   return (
     <>
-      <Suspense fallback={<QuerySpySkeleton>&nbsp;</QuerySpySkeleton>}>
+      <Suspense fallback={<QuerystringSkeleton>&nbsp;</QuerystringSkeleton>}>
         <QuerySpy />
       </Suspense>
       {children}
