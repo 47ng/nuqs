@@ -1,0 +1,38 @@
+---
+title: TanStack Table Parsers
+description: Store your table state in the URL, with style.
+---
+
+[TanStack Table](https://tanstack.com/table) is a popular library for managing
+tabular content in React (and other frameworks).
+
+By default, it will store its state in memory, losing all filters, sorts and
+pagination when the page is refreshed. This is a prime example where URL state
+shines.
+
+## Pagination
+
+TanStack Table stores pagination under two pieces of state:
+
+- `pageIndex`: a zero-based integer representing the current page
+- `pageSize`: an integer representing the number of items per page
+
+You will likely want the URL to follow your UI and be one-based for the page index:
+
+import { TanStackTablePagination } from './tanstack-table.generator'
+
+<Suspense>
+  <TanStackTablePagination />
+</Suspense>
+
+## Filtering
+
+<Callout>
+  This section is empty for now, [contributions](https://github.com/47ng/nuqs) are welcome!
+</Callout>
+
+## Sorting
+
+<Callout>
+  This section is empty for now, [contributions](https://github.com/47ng/nuqs) are welcome!
+</Callout>

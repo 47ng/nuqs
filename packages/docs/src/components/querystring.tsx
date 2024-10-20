@@ -13,20 +13,21 @@ export function Querystring({ value, keepKeys, ...props }: QuerystringProps) {
   )
   return (
     <QuerystringSkeleton {...props}>
-      {search.size > 0 && (
-        <span className="text-zinc-500">
-          ?
-          {Array.from(search.entries()).map(([key, value], i) => (
-            <Fragment key={key + i}>
-              <span className="text-[#005CC5] dark:text-[#79B8FF]">{key}</span>=
-              <span className="text-[#D73A49] dark:text-[#F97583]">
-                {value}
-              </span>
-              {i < search.size - 1 && <span className="text-zinc-500">&</span>}
-            </Fragment>
-          ))}
-        </span>
-      )}
+      {Array.from(search.entries()).map(([key, value], i) => (
+        <Fragment key={key + i}>
+          <span className="text-zinc-500">
+            {i === 0 ? (
+              '?'
+            ) : (
+              <>
+                <wbr />&
+              </>
+            )}
+          </span>
+          <span className="text-[#005CC5] dark:text-[#79B8FF]">{key}</span>=
+          <span className="text-[#D73A49] dark:text-[#F97583]">{value}</span>
+        </Fragment>
+      ))}
       {search.size === 0 && (
         <span className="italic text-zinc-500">{'<empty query>'}</span>
       )}
@@ -44,7 +45,7 @@ export function QuerystringSkeleton({
       aria-label="Querystring spy"
       aria-description="For browsers where the query is hard to see (eg: on mobile)"
       className={cn(
-        'block w-full overflow-x-auto rounded-lg border bg-background px-3 py-2 text-xs dark:bg-zinc-900/50 dark:shadow-inner sm:text-sm',
+        'block w-full overflow-x-auto text-wrap rounded-lg border bg-background px-3 py-2 text-xs dark:bg-zinc-900/50 dark:shadow-inner sm:text-sm',
         className
       )}
       {...props}

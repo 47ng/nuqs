@@ -67,6 +67,12 @@
     background-color: transparent;
   }
 
+  /* Fix height of empty lines */
+  .fd-codeblock .line:empty:not(:last-child) {
+    height: 1.5em;
+  }
+
+  /* Line & word highlighing */
   .fd-codeblock .highlighted-word,
   .fd-codeblock .line.highlighted {
     --highlight-color: var(--foreground);
@@ -80,9 +86,14 @@
     border-radius: 4px;
   }
 
+  /* By default, every code block should expand to fit its contents.
+    Fumadocs uses a max-height to prevent this behaviour, that we override by default
+    but we can still use custom="compact" in the meta string in MDX to enable it back.
+  */
   .fd-codeblock:not([custom~='compact']) pre.max-h-\[400px\] {
     max-height: unset;
   }
+  /* Fix bottom padding of compact code blocks (applied at the wrong level) */
   .fd-codeblock[custom~='compact'] {
     pre {
       padding-block: 0;
