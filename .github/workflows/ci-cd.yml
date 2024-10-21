@@ -35,6 +35,7 @@ jobs:
           - '14.2.4' # after vercel/next.js#66755
           - '14.2.7' # before vercel/next.js#69509
           - '14.2.8' # after vercel/next.js#69509
+          - '15.0.0'
           - latest
           - local
 
