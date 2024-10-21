@@ -27,7 +27,10 @@ export type UseQueryStatesKeysMap<Map = any> = {
   [Key in keyof Map]: KeyMapValue<Map[Key]>
 }
 
-export interface UseQueryStatesOptions extends Options {}
+export type UseQueryStatesOptions<KeyMap extends UseQueryStatesKeysMap> =
+  Options & {
+    urlKeys: Partial<Record<keyof KeyMap, string>>
+  }
 
 export type Values<T extends UseQueryStatesKeysMap> = {
   [K in keyof T]: T[K]['defaultValue'] extends NonNullable<
@@ -74,13 +77,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
     clearOnDefault = false,
     startTransition,
     urlKeys = defaultUrlKeys
-  }: Partial<
-    UseQueryStatesOptions & {
-      // todo: Move into UseQueryStatesOptions in v2 (requires a breaking change
-      // to make the options type generic over the key map)
-      urlKeys: Partial<Record<keyof KeyMap, string>>
-    }
-  > = {}
+  }: Partial<UseQueryStatesOptions<KeyMap>> = {}
 ): UseQueryStatesReturn<KeyMap> {
   type V = Values<KeyMap>
   const stateKeys = Object.keys(keyMap).join(',')
