@@ -23,11 +23,12 @@ bun add nuqs
 
 ## Which version should I use?
 
-| Next.js version range   | Supported `nuqs` version                                                                                                                        |
-| ----------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------- |
-| >= 14.2.0               | `nuqs@latest`                                                                                                                                   |
-| >=14.0.4 && \<\= 14.1.4 | `nuqs@^1`                                                                                                                                       |
-| 14.0.3                  | `nuqs@^1`, with the `windowHistorySupport` experimental flag, see [#417](https://github.com/47ng/nuqs/issues/417)                               |
-| 14.0.2                  | Not compatible, see issue [#388](https://github.com/47ng/nuqs/issues/388) and Next.js PR [#58297](https://github.com/vercel/next.js/pull/58297) |
-| >= 13.1 && \<\= 14.0.1  | `nuqs@^1`                                                                                                                                       |
-| < 13.1                  | `next-usequerystate@1.7.3`                                                                                                                      |
+`nuqs` supports the following frameworks and their respective versions:
+
+- [Next.js](./adapters#nextjs-app-router): 14.2.0 and above (including Next.js 15)
+- [React SPA](./adapters#react-spa): 18.3.0 & 19 RC
+- [Remix](./adapters#remix): 2 and above
+- [React Router](./adapters#react-router): 6 and above
+
+For older versions of Next.js, you may use `nuqs@^1`.
+
