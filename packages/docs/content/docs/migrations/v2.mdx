@@ -5,7 +5,7 @@ description: How to update your code to use nuqs@2.0.0
 
 Here's a summary of the breaking changes in `nuqs@2.0.0`:
 
-- [Enable support for other React frameworks](#adapters)
+- [Enable support for other React frameworks via **adapters**](#adapters)
 - [Behaviour changes](#behaviour-changes)
 - [ESM-only package](#esm-only)
 - [Deprecated exports have been removed](#deprecated-exports)
@@ -140,16 +140,25 @@ it('should increment the count when clicked', async () => {
 
 ## Behaviour changes
 
-Setting the `startTransition` option no longer sets `shallow: false` automatically.
+Setting the `startTransition{:ts}` option no longer sets `shallow: false{:ts}` automatically.
+This is to align with other frameworks that don't have a concept
+of shallow/deep routing.
 
-In Next.js, you'll have to specify both to get a loading state.
-This is to align with other frameworks that don't have a concept of shallow/deep routing.
+You'll have to set both to keep sending updates to the server and getting a loading
+state in Next.js:
 
-The `"use client"` directive was not included in the client import
-(`import {} from 'nuqs'`). It has now been added, meaning that server-side code
+```diff
+useQueryState('q', {
+  startTransition: true,
++ shallow: false
+})
+```
+
+The `"use client"{:ts}` directive was not included in the client import
+(`import {} from 'nuqs'{:ts}`). It has now been added, meaning that server-side code
 needs to import from `nuqs/server` to avoid errors like:
 
-```
+```txt
 Error: Attempted to call withDefault() from the server but withDefault is on
 the client. It's not possible to invoke a client function from the server, it can
 only be rendered as a Component or passed to props of a Client
@@ -179,12 +188,12 @@ const { useQueryState } = await import('nuqs')
 Some of the v1 API was marked as deprecated back in September 2023, and has been
 removed in `nuqs@2.0.0`.
 
-### `queryTypes` parsers object
+### `queryTypes{:ts}` parsers object
 
-The `queryTypes` object has been removed in favor of individual parser exports,
+The `queryTypes{:ts}` object has been removed in favor of individual parser exports,
 for better tree-shaking.
 
-Replace with `parseAsXYZ` to match:
+Replace with `parseAsXYZ{:ts}` to match:
 
 ```diff
 - import { queryTypes } from 'nuqs'
@@ -196,15 +205,15 @@ Replace with `parseAsXYZ` to match:
 + useQueryState('page', parseAsInteger.withDefault(1))
 ```
 
-### `subscribeToQueryUpdates`
+### `subscribeToQueryUpdates{:ts}`
 
-Next.js 14.1.0 makes `useSearchParams` reactive to shallow search params updates,
+Next.js 14.1.0 makes `useSearchParams{:ts}` reactive to shallow search params updates,
 which makes this internal helper function redundant. See [#425](https://github.com/47ng/nuqs/pull/425) for context.
 
 ## Renamed `nuqs/parsers` to `nuqs/server`
 
 When introducing the server cache in [#397](https://github.com/47ng/nuqs/pull/397), the dedicated export for parsers was
-reused as it didn't include the `"use client"` directive. Since it now contains
+reused as it didn't include the `"use client"{:ts}` directive. Since it now contains
 more than parsers and probably will be extended with server-only code in the future,
 it has been renamed to a clearer export name.
 
@@ -218,7 +227,7 @@ Find and replace all occurrences of `nuqs/parsers` to `nuqs/server` in your code
 ## Debug printout detection
 
 After the rename to `nuqs`, the debugging printout detection logic handled either
-`next-usequerystate` or `nuqs` being present in the `localStorage.debug` variable.
+`next-usequerystate` or `nuqs` being present in the `localStorage.debug{:ts}` variable.
 `nuqs@2.0.0` only checks for the presence of the `nuqs` substring to enable logs.
 
 Update your local dev environments to match by running this once in the devtools console:
@@ -241,6 +250,6 @@ release line.
 
 The following breaking changes only apply to exported types:
 
-- The `Options` type is no longer generic
-- The `UseQueryStatesOptions` is now a type rather than an interface, and is now
-generic over the type of the object you pass to `useQueryStates`.
+- The `Options{:ts}` type is no longer generic
+- The `UseQueryStatesOptions{:ts}` is now a type rather than an interface, and is now
+generic over the type of the object you pass to `useQueryStates{:ts}`.
