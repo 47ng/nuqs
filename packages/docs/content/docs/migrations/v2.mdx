@@ -253,3 +253,5 @@ The following breaking changes only apply to exported types:
 - The `Options{:ts}` type is no longer generic
 - The `UseQueryStatesOptions{:ts}` is now a type rather than an interface, and is now
 generic over the type of the object you pass to `useQueryStates{:ts}`.
+- [`parseAsJson{:ts}`](/docs/parsers/built-in#json) now requires a runtime
+validation function to infer the type of the parsed JSON data.

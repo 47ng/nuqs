@@ -328,17 +328,14 @@ export function parseAsNumberLiteral<Literal extends number>(
  * Note: you may want to use `useQueryStates` for finer control over
  * multiple related query keys.
  *
- * @param parser optional parser (eg: Zod schema) to validate after JSON.parse
+ * @param runtimeParser Runtime parser (eg: Zod schema) to validate after JSON.parse
  */
-export function parseAsJson<T>(parser?: (value: unknown) => T) {
+export function parseAsJson<T>(runtimeParser: (value: unknown) => T) {
   return createParser({
     parse: query => {
       try {
         const obj = JSON.parse(query)
-        if (typeof parser === 'function') {
-          return parser(obj)
-        }
-        return obj as T
+        return runtimeParser(obj)
       } catch {
         return null
       }

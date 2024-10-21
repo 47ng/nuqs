@@ -17,6 +17,7 @@ export default function Page() {
 }
 
 const defaultJSON = { foo: 'bar' }
+const runtimePassthrough = (x: unknown) => x
 
 function Client() {
   const [, setA] = useQueryState('a')
@@ -32,11 +33,15 @@ function Client() {
   )
   const [, setJsonRef] = useQueryState(
     'json-ref',
-    parseAsJson().withDefault(defaultJSON).withOptions({ clearOnDefault: true })
+    parseAsJson(runtimePassthrough)
+      .withDefault(defaultJSON)
+      .withOptions({ clearOnDefault: true })
   )
   const [, setJsonNew] = useQueryState(
     'json-new',
-    parseAsJson().withDefault(defaultJSON).withOptions({ clearOnDefault: true })
+    parseAsJson(runtimePassthrough)
+      .withDefault(defaultJSON)
+      .withOptions({ clearOnDefault: true })
   )
   return (
     <>
