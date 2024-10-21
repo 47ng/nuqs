@@ -1,0 +1,59 @@
+---
+title: Custom parsers
+description: Making your own parsers for custom data types & pretty URLs
+---
+
+import {
+  CustomParserDemo
+} from '@/content/docs/parsers/demos'
+
+You may wish to customise the rendered query string for your data type.
+For this, `nuqs` exposes the `createParser` function to make your own parsers.
+
+You pass it two functions:
+1. `parse`: a function that takes a string and returns the parsed value, or `null{:ts}` if invalid.
+2. `serialize`: a function that takes the parsed value and returns a string.
+
+```ts
+import { createParser } from 'nuqs'
+
+const parseAsStarRating = createParser({
+  parse(queryValue) {
+    const inBetween = queryValue.split('★')
+    const isValid = inBetween.length > 1 && inBetween.every(s => s === '')
+    if (!isValid) return null
+    const numStars = inBetween.length - 1
+    return Math.min(5, numStars)
+  },
+  serialize(value) {
+    return Array.from({length: value}, () => '★').join('')
+  }
+})
+```
+
+<Suspense>
+  <CustomParserDemo/>
+</Suspense>
+
+## Caveat: lossy serializers
+
+If your serializer loses precision or doesn't accurately represent
+the underlying state value, you will lose this precision when
+reloading the page or restoring state from the URL (eg: on navigation).
+
+Example:
+
+```ts
+const geoCoordParser = {
+  parse: parseFloat,
+  serialize: v => v.toFixed(4) // Loses precision
+}
+
+const [lat, setLat] = useQueryState('lat', geoCoordParser)
+```
+
+Here, setting a latitude of 1.23456789 will render a URL query string
+of `lat=1.2345`, while the internal `lat` state will be correctly
+set to 1.23456789.
+
+Upon reloading the page, the state will be incorrectly set to 1.2345.

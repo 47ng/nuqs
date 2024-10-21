@@ -300,12 +300,20 @@ export function DateTimestampParserDemo() {
 export function JsonParserDemo() {
   const [value, setValue] = useQueryState('json', parseAsJson<unknown>())
   return (
-    <DemoContainer demoKey="json">
+    <DemoContainer demoKey="json" className="items-start">
       <pre className="flex-1 rounded-md border bg-background p-2 text-sm text-zinc-500">
-        {JSON.stringify(value)}
+        {JSON.stringify(value, null, 2)}
       </pre>
-      <Button onClick={() => setValue({ hello: 'world', foo: 'bar' })}>
-        Set to {`{ hello: 'world' }`}
+      <Button
+        onClick={() =>
+          setValue({
+            pkg: 'nuqs',
+            version: 2,
+            worksWith: ['Next.js', 'React', 'Remix', 'React Router', 'and more']
+          })
+        }
+      >
+        Try it
       </Button>
       <Button
         variant="secondary"

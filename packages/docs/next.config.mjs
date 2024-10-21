@@ -22,9 +22,16 @@ const config = {
   redirects: async () => {
     return [
       {
+        // Jump straight to the first page (no root index page)
         source: '/docs',
         destination: '/docs/installation',
         permanent: false
+      },
+      // Cool URLs don't break
+      {
+        source: '/docs/parsers',
+        destination: '/docs/parsers/built-in',
+        permanent: true
       }
     ]
   },

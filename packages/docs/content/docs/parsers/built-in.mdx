@@ -1,5 +1,5 @@
 ---
-title: Parsers
+title: Built-in parsers
 description: When using strings is not enough
 ---
 
@@ -13,20 +13,17 @@ import {
   StringLiteralParserDemo,
   DateISOParserDemo,
   DateTimestampParserDemo,
-  JsonParserDemo,
-  CustomParserDemo
-} from './demos'
+  JsonParserDemo
+} from '@/content/docs/parsers/demos'
 
 Search params are strings by default, but chances are your state is more complex than that.
 
 You might want to use numbers, booleans, Dates, objects, arrays, or even custom types.
 This is where **parsers** come in.
 
-`nuqs` provides built-in parsers for the most common types, and allows you to [define your own](#making-your-own-parsers).
+`nuqs` provides built-in parsers for the most common types, and allows you to [define your own](./making-your-own).
 
-## Built-in parsers
-
-### String
+## String
 
 ```ts
 import { parseAsString } from 'nuqs'
@@ -58,9 +55,9 @@ export const searchParamsParsers = {
 }
 ```
 
-### Numbers
+## Numbers
 
-#### Integers
+### Integers
 
 Transforms the search param string into an integer with `parseInt` (base 10).
 
@@ -75,7 +72,7 @@ useQueryState('int', parseAsInteger.withDefault(0))
 </Suspense>
 
 
-#### Floating point
+### Floating point
 
 Same as integer, but uses `parseFloat` under the hood.
 
@@ -90,7 +87,7 @@ useQueryState('float', parseAsFloat.withDefault(0))
 </Suspense>
 
 
-#### Hexadecimal
+### Hexadecimal
 
 Encodes integers in hexadecimal.
 
@@ -108,7 +105,7 @@ useQueryState('hex', parseAsHex.withDefault(0x00))
  Check out the [Hex Colors](/playground/hex-colors) playground for a demo.
 </Callout>
 
-### Boolean
+## Boolean
 
 ```ts
 import { parseAsBoolean } from 'nuqs'
@@ -120,7 +117,7 @@ useQueryState('bool', parseAsBoolean.withDefault(false))
   <BooleanParserDemo/>
 </Suspense>
 
-### Literals
+## Literals
 
 These parsers extend the basic integer and float parsers, but test against
 some expected valid values, defined as [TypeScript literals](https://www.typescriptlang.org/docs/handbook/2/everyday-types.html#literal-types).
@@ -129,7 +126,7 @@ some expected valid values, defined as [TypeScript literals](https://www.typescr
 Don't forget the `as const{:ts}` when declaring your expected values.
 </Callout>
 
-#### String literals
+### String literals
 
 ```ts /as const/
 import { parseAsStringLiteral } from 'nuqs'
@@ -149,7 +146,7 @@ type SortOrder = (typeof sortOrder)[number]; // 'asc' | 'desc'
 </Suspense>
 
 
-#### Numeric literals
+### Numeric literals
 
 ```ts /as const/
 import { parseAsNumberLiteral } from 'nuqs'
@@ -161,7 +158,7 @@ const diceSides = [1, 2, 3, 4, 5, 6] as const
 parseAsNumberLiteral(diceSides)
 ```
 
-### Enums
+## Enums
 
 String enums are a bit more verbose than string literals, but `nuqs` supports them.
 
@@ -181,12 +178,12 @@ The query string value will be the **value** of the enum, not its name
 (here: `?direction=UP`).
 </Callout>
 
-### Dates & timestamps
+## Dates & timestamps
 
 There are two parsers that give you a `Date` object, their difference is
 on how they encode the value into the query string.
 
-#### ISO 8601
+### ISO 8601
 
 ```ts
 import { parseAsIsoDateTime } from 'nuqs'
@@ -196,7 +193,7 @@ import { parseAsIsoDateTime } from 'nuqs'
   <DateISOParserDemo/>
 </Suspense>
 
-#### Timestamp
+### Timestamp
 
 Miliseconds since the Unix epoch.
 
@@ -208,7 +205,7 @@ import { parseAsTimestamp } from 'nuqs'
   <DateTimestampParserDemo/>
 </Suspense>
 
-### Arrays
+## Arrays
 
 All of the parsers on this page can be used to parse arrays of their respective types.
 
@@ -221,7 +218,7 @@ parseAsArrayOf(parseAsInteger)
 parseAsArrayOf(parseAsInteger, ';')
 ```
 
-### JSON
+## JSON
 
 If primitive types are not enough, you can encode JSON in the query string.
 
@@ -231,14 +228,18 @@ import { parseAsJson } from 'nuqs'
 // This parser is a function, don't forget to call it:
 const [json, setJson] = useQueryState('json', parseAsJson())
 
-setJson({ hello: 'world' })
+setJson({
+  pkg: "nuqs",
+  version: 2,
+  worksWith: ["Next.js", "React", "Remix", "React Router", "and more"],
+});
 ```
 
 <Suspense>
   <JsonParserDemo/>
 </Suspense>
 
-#### Validation with Zod
+### Validation with Zod
 
 Note that by itself, `parseAsJson` isn't type-safe, and will return `unknown{:ts}`,
 as the value could be anything.
@@ -257,59 +258,6 @@ const [obj, setObj] = useQueryState('zod', parseAsJson(zodSchema.parse))
 
 Using other validation libraries is possible, as long as they throw an error
 when the data is invalid.
-
-## Making your own parsers
-
-You may wish to customise the rendered query string for your data type.
-For this, `nuqs` exposes the `createParser` function to make your own parsers.
-
-You pass it two functions:
-1. `parse`: a function that takes a string and returns the parsed value, or `null{:ts}` if invalid.
-2. `serialize`: a function that takes the parsed value and returns a string.
-
-```ts
-import { createParser } from 'nuqs'
-
-const parseAsStarRating = createParser({
-  parse(queryValue) {
-    const inBetween = queryValue.split('★')
-    const isValid = inBetween.length > 1 && inBetween.every(s => s === '')
-    if (!isValid) return null
-    const numStars = inBetween.length - 1
-    return Math.min(5, numStars)
-  },
-  serialize(value) {
-    return Array.from({length: value}, () => '★').join('')
-  }
-})
-```
-
-<Suspense>
-  <CustomParserDemo/>
-</Suspense>
-
-### Caveat: lossy serializers
-
-If your serializer loses precision or doesn't accurately represent
-the underlying state value, you will lose this precision when
-reloading the page or restoring state from the URL (eg: on navigation).
-
-Example:
-
-```ts
-const geoCoordParser = {
-  parse: parseFloat,
-  serialize: v => v.toFixed(4) // Loses precision
-}
-
-const [lat, setLat] = useQueryState('lat', geoCoordParser)
-```
-
-Here, setting a latitude of 1.23456789 will render a URL query string
-of `lat=1.2345`, while the internal `lat` state will be correctly
-set to 1.23456789.
-
-Upon reloading the page, the state will be incorrectly set to 1.2345.
 
 ## Using parsers server-side
 
