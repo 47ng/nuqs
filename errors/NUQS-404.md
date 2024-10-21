@@ -6,7 +6,8 @@ You haven't wrapped the components calling `useQueryState(s)` with
 an adapter.
 
 [Adapters](https://nuqs.47ng.com/docs/adapters) are based on React Context,
-and provide nuqs hooks with the interfaces to work with your framework.
+and provide nuqs hooks with the interfaces to work with your framework:
+reacting to URL changes, and calling your router when you update your state.
 
 ## Possible solutions
 
@@ -22,9 +23,6 @@ using a suitable adapter:
 ### Test adapter
 
 If you encounter this error outside of the browser, like in a test
-runner, you may use the test adapter from `nuqs/adapters/test`
-to mock the context and access setup/assertion testing facilities.
-
-```tsx
-
-```
+runner (eg: Vitest or Jest), you may use the [testing adapter](https://nuqs.47ng.com/docs/testing)
+from `nuqs/adapters/testing` to mock the initial search params and access
+setup/assertion testing facilities.
