@@ -34,5 +34,5 @@
     "tsBuildInfoFile": ".tsbuildinfo"
   },
   "include": ["**/*.ts", "**/*.tsx"],
-  "exclude": ["node_modules", "src/tests"]
+  "exclude": ["node_modules", "dist"]
 }
