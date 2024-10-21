@@ -34,7 +34,10 @@ export default function BasicCounterDemoPage() {
     'array',
     parseAsArrayOf(parseAsIsoDateTime).withDefault([])
   )
-  const [obj, setObj] = useQueryState('json', parseAsJson().withDefault({}))
+  const [obj, setObj] = useQueryState(
+    'json',
+    parseAsJson(x => x).withDefault({})
+  )
 
   return (
     <>

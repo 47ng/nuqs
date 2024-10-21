@@ -95,7 +95,7 @@ describe('serializer', () => {
       arr: parseAsArrayOf(parseAsString)
         .withOptions({ clearOnDefault: true })
         .withDefault([]),
-      json: parseAsJson()
+      json: parseAsJson(x => x)
         .withOptions({ clearOnDefault: true })
         .withDefault({ foo: 'bar' })
     })
