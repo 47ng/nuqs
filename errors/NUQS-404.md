@@ -5,35 +5,19 @@
 You haven't wrapped the components calling `useQueryState(s)` with
 an adapter.
 
-Adapters are based on React Context, and provide nuqs hooks with
-the interfaces to work with your framework.
+[Adapters](https://nuqs.47ng.com/docs/adapters) are based on React Context,
+and provide nuqs hooks with the interfaces to work with your framework.
 
 ## Possible solutions
 
 Follow the setup instructions to import and wrap your application
-using a suitable adapter.
+using a suitable adapter:
 
-Example, for Next.js (app router)
-
-```tsx
-// src/app/layout.tsx
-import React from 'react'
-import { NuqsAdapter } from 'nuqs/adapters/next'
-
-export default function RootLayout({
-  children
-}: {
-  children: React.ReactNode
-}) {
-  return (
-    <html>
-      <body>
-        <NuqsAdapter>{children}</NuqsAdapter>
-      </body>
-    </html>
-  )
-}
-```
+- [Next.js (app router)](https://nuqs.47ng.com/docs/adapters#nextjs-app-router)
+- [Next.js (pages router)](https://nuqs.47ng.com/docs/adapters#nextjs-pages-router)
+- [React SPA (eg: with Vite)](https://nuqs.47ng.com/docs/adapters#react-spa)
+- [Remix](https://nuqs.47ng.com/docs/adapters#remix)
+- [React Router](https://nuqs.47ng.com/docs/adapters#react-router)
 
 ### Test adapter
 

@@ -1,0 +1,109 @@
+---
+title: Adapters
+description: Using nuqs in your React framework of choice
+---
+
+Since version 2, you can now use nuqs in the following React frameworks, by
+wrapping it with a `NuqsAdapter` context provider:
+
+- [Next.js (app router)](#nextjs-app-router)
+- [Next.js (pages router)](#nextjs-pages-router)
+- [React SPA (eg: with Vite)](#react-spa)
+- [Remix](#remix)
+- [React Router](#react-router)
+
+## Next.js (app router)
+
+```tsx title="src/app/layout.tsx"
+// [!code word:NuqsAdapter]
+import { NuqsAdapter } from 'nuqs/adapters/next/app'
+import { type ReactNode } from 'react'
+
+export default function RootLayout({
+  children
+}: {
+  children: ReactNode
+}) {
+  return (
+    <html>
+      <body>
+        <NuqsAdapter>{children}</NuqsAdapter>
+      </body>
+    </html>
+  )
+}
+```
+
+## Next.js (pages router)
+
+```tsx title="src/pages/_app.tsx"
+// [!code word:NuqsAdapter]
+import type { AppProps } from 'next/app'
+import { NuqsAdapter } from 'nuqs/adapters/next/pages'
+
+export default function MyApp({ Component, pageProps }: AppProps) {
+  return (
+    <NuqsAdapter>
+      <Component {...pageProps} />
+    </NuqsAdapter>
+  )
+}
+```
+
+The main reason for adapters is to open up nuqs to other React frameworks:
+
+## React SPA
+
+Example, with Vite:
+
+```tsx title="src/main.tsx"
+// [!code word:NuqsAdapter]
+import { NuqsAdapter } from 'nuqs/adapters/react'
+
+createRoot(document.getElementById('root')!).render(
+  <NuqsAdapter>
+    <App />
+  </NuqsAdapter>
+)
+```
+
+## Remix
+
+```tsx title="app/root.tsx"
+// [!code word:NuqsAdapter]
+import { NuqsAdapter } from 'nuqs/adapters/remix'
+
+// ...
+
+export default function App() {
+  return (
+    <NuqsAdapter>
+      <Outlet />
+    </NuqsAdapter>
+  )
+}
+```
+
+## React Router
+
+```tsx title="src/main.tsx"
+// [!code word:NuqsAdapter]
+import { NuqsAdapter } from 'nuqs/adapters/react-router'
+import { createBrowserRouter, RouterProvider } from 'react-router-dom'
+import App from './App'
+
+const router = createBrowserRouter([
+  {
+    path: '/',
+    element: <App />
+  }
+])
+
+export function ReactRouter() {
+  return (
+    <NuqsAdapter>
+      <RouterProvider router={router} />
+    </NuqsAdapter>
+  )
+}
+```
