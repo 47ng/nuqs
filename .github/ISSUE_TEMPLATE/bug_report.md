@@ -6,7 +6,11 @@ labels: bug
 assignees: ''
 ---
 
-<!-- Please read and follow the issue template. Issues submitted without a reproduction and context will take longer to resolve. -->
+<!--
+Please read and follow the issue template.
+Issues submitted without a reproduction and context
+will take longer to resolve.
+-->
 
 ## Context
 
@@ -16,19 +20,24 @@ What's your version of `nuqs`?
 -> Paste result from `cat package.json | grep -e nuqs` here
 ```
 
-Next.js information (obtained by running `next info`):
-
-```
--> Paste result from `next info` here
-```
-
-Are you using:
+What framework are you using?
 
 <!-- Keep whichever is relevant (✅: used, ❌ not used) -->
 
-- ✅/❌ The app router
-- ✅/❌ The pages router
-- ✅/❌ The `basePath` option in your Next.js config
+- ✅/❌ Next.js (app router)
+- ✅/❌ Next.js (pages router)
+- ✅/❌ React SPA (no router)
+- ✅/❌ Remix
+- ✅/❌ React Router
+- ✅/❌ Other (please specify)
+
+Which version of your framework are you using?
+
+<!-- Note: Next.js information can obtained by running `next info` -->
+
+```
+-> Paste the relevant framework versions from your package.json here
+```
 
 ## Description
 
