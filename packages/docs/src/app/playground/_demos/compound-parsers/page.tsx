@@ -7,11 +7,14 @@ const escaped = '-_.!~*\'()?#/&,"`<>{}[]|•@$£%+=:;'
 export default function CompoundParsersDemo() {
   const [code, setCode] = useQueryState(
     'code',
-    parseAsJson<any>().withDefault({})
+    parseAsJson(x => x).withDefault({})
   )
   const [array, setArray] = useQueryState(
     'array',
-    parseAsArrayOf(parseAsJson<any>(), ';').withDefault([])
+    parseAsArrayOf(
+      parseAsJson(x => x),
+      ';'
+    ).withDefault([])
   )
   return (
     <>
