@@ -12,6 +12,7 @@ Here's a summary of the breaking changes in `nuqs@2.0.0`:
 - [Renamed `nuqs/parsers` to `nuqs/server`](#renamed-nuqsparsers-to-nuqsserver)
 - [Debug printout detection](#debug-printout-detection)
 - [Dropping `next-usequerystate`](#dropping-next-usequerystate)
+- [Type changes](#type-changes)
 
 ## Adapters
 
@@ -144,8 +145,6 @@ Setting the `startTransition` option no longer sets `shallow: false` automatical
 In Next.js, you'll have to specify both to get a loading state.
 This is to align with other frameworks that don't have a concept of shallow/deep routing.
 
-As a consequence, the `Options` type is no longer generic.
-
 The `"use client"` directive was not included in the client import
 (`import {} from 'nuqs'`). It has now been added, meaning that server-side code
 needs to import from `nuqs/server` to avoid errors like:
@@ -237,3 +236,11 @@ This package started under the name `next-usequerystate`, and was renamed to
 release line.
 
 `nuqs` version 2 and onwards no longer mirror to the `next-usequerystate` package name.
+
+## Type changes
+
+The following breaking changes only apply to exported types:
+
+- The `Options` type is no longer generic
+- The `UseQueryStatesOptions` is now a type rather than an interface, and is now
+generic over the type of the object you pass to `useQueryStates`.
