@@ -9,7 +9,8 @@ const commonConfig = {
   outDir: 'dist',
   external: ['next', 'react', '@remix-run/react', 'react-router-dom'],
   splitting: true,
-  treeshake: true
+  treeshake: true,
+  tsconfig: 'tsconfig.build.json'
 } satisfies Options
 
 const entrypoints = {
