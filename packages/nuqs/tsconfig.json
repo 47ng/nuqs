@@ -1,6 +1,7 @@
 {
   "$schema": "https://json.schemastore.org/tsconfig",
   "compilerOptions": {
+    "jsx": "react",
     // Type checking
     "strict": true,
     "noUncheckedIndexedAccess": true,
@@ -12,6 +13,7 @@
     // Language & Environment
     "target": "ESNext",
     "lib": ["DOM", "DOM.Iterable", "ESNext"],
+    "types": ["node", "@testing-library/jest-dom"],
     // Emit
     "noEmit": true,
     "declaration": true,
