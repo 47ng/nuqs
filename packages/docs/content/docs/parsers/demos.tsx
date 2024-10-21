@@ -21,6 +21,7 @@ import {
   useQueryState
 } from 'nuqs'
 import React from 'react'
+import { z } from 'zod'
 
 export function DemoFallback() {
   return (
@@ -297,8 +298,17 @@ export function DateTimestampParserDemo() {
   return <DateParserDemo queryKey="ts" parser={parseAsTimestamp} />
 }
 
+const jsonParserSchema = z.object({
+  pkg: z.string(),
+  version: z.number(),
+  worksWith: z.array(z.string())
+})
+
 export function JsonParserDemo() {
-  const [value, setValue] = useQueryState('json', parseAsJson<unknown>())
+  const [value, setValue] = useQueryState(
+    'json',
+    parseAsJson(jsonParserSchema.parse)
+  )
   return (
     <DemoContainer demoKey="json" className="items-start">
       <pre className="flex-1 rounded-md border bg-background p-2 text-sm text-zinc-500">
