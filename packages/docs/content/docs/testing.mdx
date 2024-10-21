@@ -3,11 +3,41 @@ title: Testing
 description: Some tips on testing components that use `nuqs`
 ---
 
-Currently, the best way to test the behaviour of your components using
-`useQueryState(s)` is end-to-end testing, with tools like Playwright or Cypress.
+Since nuqs 2, you can unit-test components that use `useQueryState(s){:ts}` hooks
+by wrapping your rendered component in a `NuqsTestingAdapter{:ts}`.
 
-Running components that use the Next.js router in isolation requires mocking it,
-which is being [worked on](https://github.com/scottrippey/next-router-mock/pull/103)
-for the app router.
+Here is an example for Vitest and Testing Library to test a button rendering
+a counter:
+
+```tsx title="counter-button.test.tsx"
+// [!code word:NuqsTestingAdapter]
+import { render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
+import { NuqsTestingAdapter, type UrlUpdateEvent } from 'nuqs/adapters/testing'
+import { describe, expect, it, vi } from 'vitest'
+import { CounterButton } from './counter-button'
+
+it('should increment the count when clicked', async () => {
+  const user = userEvent.setup()
+  const onUrlUpdate = vi.fn<[UrlUpdateEvent]>()
+  render(<CounterButton />, {
+    // 1. Setup the test by passing initial search params / querystring:
+    wrapper: ({ children }) => (
+      <NuqsTestingAdapter searchParams="?count=42" onUrlUpdate={onUrlUpdate}>
+        {children}
+      </NuqsTestingAdapter>
+    )
+  })
+  // 2. Act
+  const button = screen.getByRole('button')
+  await user.click(button)
+  // 3. Assert changes in the state and in the (mocked) URL
+  expect(button).toHaveTextContent('count is 43')
+  expect(onUrlUpdate).toHaveBeenCalledOnce()
+  expect(onUrlUpdate.mock.calls[0][0].queryString).toBe('?count=43')
+  expect(onUrlUpdate.mock.calls[0][0].searchParams.get('count')).toBe('43')
+  expect(onUrlUpdate.mock.calls[0][0].options.history).toBe('push')
+})
+```
 
 See issue [#259](https://github.com/47ng/nuqs/issues/259) for more testing-related discussions.
