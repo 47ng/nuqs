@@ -59,7 +59,7 @@ Example outputs for our demo example:
 ## Default values
 
 When the query string is not present in the URL, the default behaviour is to
-return `null` as state.
+return `null{:ts}` as state.
 
 It can make state updating and UI rendering tedious.
 Take this example of a simple counter stored in the URL:
@@ -86,8 +86,11 @@ You can provide a default value as the second argument to `useQueryState` (or
 via the `.withDefault{:ts}` builder method on parsers):
 
 ```ts
+const [search] = useQueryState('search', { defaultValue: '' })
+//      ^? string
+
 const [count] = useQueryState('count', parseAsInteger)
-//      ^? number | null
+//      ^? number | null -> no default value = nullable
 
 const [count] = useQueryState('count', parseAsInteger.withDefault(0))
 //      ^? number
@@ -103,7 +106,7 @@ const clearCount = () => setCount(null) // Remove query from the URL
 
 <Callout title="Note">
   The default value is internal to React, it will **not** be written to the
-  URL _unless you set it explicitly_.
+  URL _unless you set it explicitly_ and use [`clearOnDefault: false{:ts}`](./options#clear-on-default).
 </Callout>
 
 <Callout title="Tip">
@@ -113,5 +116,5 @@ const clearCount = () => setCount(null) // Remove query from the URL
 <Callout title="Tip">
   Setting the state to `null{:ts}` when a default value is specified:
   1. Clears the query from the URL
-  2. Sets the state to the default value
+  2. Returns the default value as state
 </Callout>
