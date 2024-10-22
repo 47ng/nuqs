@@ -10,7 +10,7 @@ export const maxDuration = 60
 
 export const metadata: Metadata = {
   title: {
-    absolute: 'nuqs | Type-safe search params state management for Next.js'
+    absolute: 'nuqs | Type-safe search params state management for React'
   },
   alternates: {
     canonical: 'https://nuqs.47ng.com'

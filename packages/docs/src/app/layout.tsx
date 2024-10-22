@@ -21,7 +21,7 @@ export const metadata = {
     default: 'nuqs'
   },
   description:
-    'Type-safe search params state management for Next.js. Like React.useState, but stored in the URL query string.',
+    'Type-safe search params state management for React. Like useState, but stored in the URL query string.',
   authors: [
     {
       name: 'François Best',
