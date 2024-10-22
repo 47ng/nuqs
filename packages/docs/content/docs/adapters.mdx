@@ -12,7 +12,9 @@ wrapping it with a `NuqsAdapter` context provider:
 - [Remix](#remix)
 - [React Router](#react-router)
 
-## Next.js (app router)
+## Next.js
+
+### App router
 
 ```tsx title="src/app/layout.tsx"
 // [!code word:NuqsAdapter]
@@ -34,7 +36,7 @@ export default function RootLayout({
 }
 ```
 
-## Next.js (pages router)
+### Pages router
 
 ```tsx title="src/pages/_app.tsx"
 // [!code word:NuqsAdapter]
@@ -49,6 +51,18 @@ export default function MyApp({ Component, pageProps }: AppProps) {
   )
 }
 ```
+
+### Unified (router-agnostic)
+
+If your Next.js app uses **both the app and pages routers** and the adapter needs
+to be mounted in either, you can import the unified adapter, at the cost
+of a slightly larger bundle size (~100B).
+
+```tsx
+import { NuqsAdapter } from 'nuqs/adapters/next'
+```
+
+<br/>
 
 The main reason for adapters is to open up nuqs to other React frameworks:
 
@@ -107,3 +121,9 @@ export function ReactRouter() {
   )
 }
 ```
+
+## Testing
+
+<Callout>
+  Documentation for the `NuqsTestingAdapter{:ts}` is on the [testing page](/docs/testing).
+</Callout>

@@ -5,43 +5,62 @@ author: François Best
 date: 2024-10-22
 ---
 
-nuqs@2.0.0 is available, install it now:
+nuqs@2.0.0 is available, try it now:
 
 ```bash
 pnpm add nuqs@latest
 ```
 
-It's packing a lot of exciting features & improvements, including:
+It's packing exciting features & improvements, including:
 
 - [Support for other React frameworks](#hello-react): Next.js, React SPA, Remix, React Router, and more to come
 - A built-in [testing adapter](#testing) to unit-test your components in isolation
-- A 20% smaller, tree-shakable, ESM-only bundle
-- Improved documentation with [community parsers](/docs/parsers/community)
+- [Bundle size improvements](#bundle-size-improvements)
+- Interactive documentation, with [community parsers](/docs/parsers/community)
 
 <hr/>
 
 ## Hello, React! 👋 ⚛️
 
-nuqs started as a Next.js-only hook, and v2 brings compatibility for other React frameworks.
+nuqs started as a Next.js-only hook, and v2 brings compatibility for other React frameworks:
 
 - Next.js 14 & 15 (app & pages routers)
 - React SPA
 - Remix
 - React Router
 
-No code change is necessary in components that use nuqs hooks, making them universal across all supported frameworks.
+No code change is necessary in components that use nuqs hooks,
+making them **universal** across all supported frameworks.
 
-The only new requirement is to wrap your React tree with an [Adapter](/docs/adapters) for your framework.
+The only new requirement is to wrap your React tree with an
+[adapter](/docs/adapters) for your framework.
+
+Example for a React SPA with Vite:
+
+```tsx title="src/main.tsx"
+// [!code word:NuqsAdapter]
+import { NuqsAdapter } from 'nuqs/adapters/react'
+
+createRoot(document.getElementById('root')!).render(
+  <NuqsAdapter>
+    <App />
+  </NuqsAdapter>
+)
+```
+
+<Callout>
+  The [adapters documentation](/docs/adapters) has examples for all supported frameworks.
+</Callout>
 
 ## Testing
 
 One of the major pain points with nuqs v1 was testing components that used its hooks.
 
-Nuqs V2 comes with a built-in [testing adapter](/docs/testing) that mocks URL behaviours,
+Nuqs v2 comes with a built-in [testing adapter](/docs/testing) that mocks URL behaviours,
 allowing you to test your components in isolation, outside of any framework runtime.
 
 You can use it with any unit testing framework that renders React components
-(we recommend [Vitest](https://vitest.dev) & [Testing Library](https://testing-library.com/)).
+(I recommend [Vitest](https://vitest.dev) & [Testing Library](https://testing-library.com/)).
 
 ```tsx title="counter-button.test.tsx"
 // [!code word:NuqsTestingAdapter]
@@ -75,9 +94,11 @@ it('should increment the count when clicked', async () => {
 ```
 
 The adapter conforms to the **setup** / **act** / **assert** testing strategy, allowing you
-to set the initial URL, then letting your test framework perform actions
-on your component, and asserting on how the URL was changed as a result.
+to:
 
+1. Set the initial URL search params
+2. Let your test framework perform actions on your component
+3. Asserting on how the URL was changed as a result
 
 ## Breaking changes & migration
 
@@ -87,24 +108,41 @@ Another one is related to deprecated APIs.
 The `next-usequerystate` package that started this journey is no longer updated.
 All updates are now published under the `nuqs` package name.
 
-<Callout >
-Read the complete [migration guide](/docs/migrations/v2) to update your application.
+The minimum version of Next.js supported is now 14.2.0. It is compatible with
+Next.js 15, including the async `searchParams{:ts}` page prop in the [server-side cache](/docs/server-side).
+
+There are some important behaviour changes, based on feedback from the community:
+
+- [`clearOnDefault{:ts}`](/docs/options#clear-on-default) is now `true{:ts}` by default
+- [`startTransition{:ts}`](/docs/options#transitions) no longer sets `shallow: false{:ts}`
+- [`parseAsJson{:ts}`](/docs/parsers/built-in#json) now requires a validation function
+
+<Callout>
+Read the complete [migration guide](/docs/migrations/v2) to update your applications.
 </Callout>
+
+## Bundle size improvements
+
+By moving to **ESM-only**, and dropping hacks needed to support older versions of Next.js,
+the bundle size is now **20% smaller** than v1. It's also **side-effects free** and **tree-shakable**.
 
 ## What's next?
 
-We have a lot of ideas for the future of nuqs, including:
+The community and I have a lot of ideas for the future of nuqs, including:
 
-- More adapters for other React frameworks
-- Community-contributed parsers
--
+- A unified, scalable, type-safe routing experience in all supported React frameworks
+- Community-contributed parsers & adapters
+- New options: debouncing, global defaults override
+- Middleware to migrate old URLs to new ones
+- Better Zod integration for type-safe & runtime-safe validation
 
 ## Thanks
 
-A huge thank you to [sponsors](https://github.com/sponsors/franky47),
+I want to thank [sponsors](https://github.com/sponsors/franky47),
 [contributors](https://github.com/47ng/nuqs/graphs/contributors)
-and people who raised issues and discussions on GitHub and X/Twitter,
-you are the growing community that drives this project forward,
+and people who raised issues and discussions on
+[GitHub](https://github.com/47ng/nuqs) and [X/Twitter](https://x.com/nuqs47ng).
+You are the growing community that drives this project forward,
 and I couldn't be happier with the response.
 
 ### Sponsors
@@ -115,6 +153,9 @@ and I couldn't be happier with the response.
 - [Yoann Fleury](https://x.com/YoannFleuryDev)
 - [Sunghyun Cho](https://github.com/anaclumos)
 - [Jalol](https://github.com/mirislomovmirjalol)
+
+Thanks to these amazing people, I'm able to dedicate more time to this project and make it better for everyone.
+Join them on [GitHub Sponsors](https://github.com/sponsors/franky47)!
 
 ### Contributors
 

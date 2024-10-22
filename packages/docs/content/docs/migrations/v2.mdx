@@ -81,7 +81,7 @@ export default function MyApp({ Component, pageProps }: AppProps) {
 #### Unified (router-agnostic)
 
 If your Next.js app uses **both the app and pages routers** and the adapter needs
-to be mounted in either, you can use the unified adapter, at the cost
+to be mounted in either, you can import the unified adapter, at the cost
 of a slightly larger bundle size (~100B).
 
 ```tsx
@@ -92,8 +92,6 @@ import { NuqsAdapter } from 'nuqs/adapters/next'
 
 Albeit not part of a migration from v1, you can now use nuqs in other React
 frameworks via their respective [adapters](/docs/adapters).
-
-{/* todo: Add the docs/adapters page */}
 
 However, there's one more adapter that might be of interest to you, and solves
 a long-standing issue with testing components using nuqs hooks:

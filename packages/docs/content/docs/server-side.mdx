@@ -3,8 +3,12 @@ title: Server-Side usage
 description: Type-safe search params on the server
 ---
 
+<Callout>
+  This feature is available for Next.js only.
+</Callout>
+
 If you wish to access the searchParams in a deeply nested Server Component
-(ie: not in the Page component), you can use `createSearchParamsCache`
+(ie: not in the Page component), you can use `createSearchParamsCache{:ts}`
 to do so in a type-safe manner.
 
 <Callout type="warn" title="Note">
@@ -32,15 +36,16 @@ export const searchParamsCache = createSearchParamsCache({
 
 ```tsx title="page.tsx"
 import { searchParamsCache } from './searchParams'
+import { type SearchParams } from 'nuqs/server'
 
-export default function Page({
-  searchParams
-}: {
-  searchParams: Record<string, string | string[] | undefined>
-}) {
+type PageProps = {
+  searchParams: Promise<SearchParams> // Next.js 15+: async searchParams prop
+}
+
+export default async function Page({ searchParams }: PageProps) {
   // ⚠️ Don't forget to call `parse` here.
   // You can access type-safe values from the returned object:
-  const { q: query } = searchParamsCache.parse(searchParams)
+  const { q: query } = searchParamsCache.parse(await searchParams)
   return (
     <div>
       <h1>Search Results for {query}</h1>
@@ -81,8 +86,8 @@ import { coordinatesCache } from './searchParams'
 import { Server } from './server'
 import { Client } from './client'
 
-export default function Page({ searchParams }) {
-  coordinatesCache.parse(searchParams)
+export default async function Page({ searchParams }) {
+  coordinatesCache.parse(await searchParams)
   return (
     <>
       <Server />
