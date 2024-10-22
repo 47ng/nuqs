@@ -1,0 +1,112 @@
+---
+title: nuqs 2
+description: Opening up to other React frameworks
+author: François Best
+date: 2024-10-22
+---
+
+nuqs@2.0.0 is available, install it now:
+
+```bash
+pnpm add nuqs@latest
+```
+
+## Hello, React! 👋 ⚛️
+
+nuqs started as a Next.js-only hook, and v2 brings compatibility for other React frameworks.
+
+- Next.js 14 & 15 (app & pages routers)
+- React SPA
+- Remix
+- React Router
+
+No code change is necessary in components that use nuqs hooks, making them universal across all supported frameworks.
+
+The only new requirement is to wrap your React tree with an [Adapter](/docs/adapters) for your framework
+
+## Testing
+
+One of the major pain points with nuqs v1 was testing components that used its hooks.
+
+Nuqs V2 comes with a built-in [testing adapter](/docs/testing) that mocks URL behaviours,
+allowing you to test your components in isolation, outside of any framework runtime.
+
+You can use it with any unit testing framework that renders React components
+(we recommend Vitest & Testing Library).
+
+```tsx title="counter-button.test.tsx"
+// [!code word:NuqsTestingAdapter]
+import { render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
+import { NuqsTestingAdapter, type UrlUpdateEvent } from 'nuqs/adapters/testing'
+import { describe, expect, it, vi } from 'vitest'
+import { CounterButton } from './counter-button'
+
+it('should increment the count when clicked', async () => {
+  const user = userEvent.setup()
+  const onUrlUpdate = vi.fn<[UrlUpdateEvent]>()
+  render(<CounterButton />, {
+    // 1. Setup the test by passing initial search params / querystring:
+    wrapper: ({ children }) => (
+      <NuqsTestingAdapter searchParams="?count=42" onUrlUpdate={onUrlUpdate}>
+        {children}
+      </NuqsTestingAdapter>
+    )
+  })
+  // 2. Act
+  const button = screen.getByRole('button')
+  await user.click(button)
+  // 3. Assert changes in the state and in the (mocked) URL
+  expect(button).toHaveTextContent('count is 43')
+  expect(onUrlUpdate).toHaveBeenCalledOnce()
+  expect(onUrlUpdate.mock.calls[0][0].queryString).toBe('?count=43')
+  expect(onUrlUpdate.mock.calls[0][0].searchParams.get('count')).toBe('43')
+  expect(onUrlUpdate.mock.calls[0][0].options.history).toBe('push')
+})
+```
+
+The adapter conforms to the setup / act / assert testing strategy, allowing you
+to set the initial URL, then letting your test framework perform actions
+on your component, and asserting on how the URL was changed as a result.
+
+
+## Breaking changes & migration
+
+The biggest breaking change is the introduction of [adapters](/docs/adapters).
+Another one is related to deprecated APIs.
+
+The `next-usequerystate` package that started this journey is no longer updated.
+All updates are now published under the `nuqs` package name.
+
+<Callout >
+Read the complete [migration guide](/docs/migrations/v2) to update your application.
+</Callout>
+
+## What's next?
+
+We have a lot of ideas for the future of nuqs, including:
+
+- More adapters for other React frameworks
+- Community-contributed parsers
+-
+
+## Thanks
+
+A huge thank you to [sponsors](https://github.com/sponsors/franky47),
+[contributors](https://github.com/47ng/nuqs/graphs/contributors)
+and people who raised issues and discussions on GitHub and X/Twitter,
+you are the growing community that drives this project forward,
+and I couldn't be happier with the response.
+
+### Sponsors
+
+- [Pontus Abrahamsson](https://x.com/pontusab), founder of [Midday.ai](https://midday.ai)
+- [Carl Lindesvard](https://x.com/lindesvard), founder of [OpenPanel](https://openpanel.dev)
+- [Robin Wieruch](https://x.com/rwieruch), author of [The Road to Next](https://www.road-to-next.com/)
+- [Yoann Fleury](https://x.com/YoannFleuryDev)
+- [Sunghyun Cho](https://github.com/anaclumos)
+- [Jalol](https://github.com/mirislomovmirjalol)
+
+### Contributors
+
+Huge thanks to [@andreisocaciu](https://github.com/andreisocaciu), [@tordans](https://github.com/tordans), [@prasannamestha](https://github.com/prasannamestha), [@Talent30](https://github.com/Talent30), [@neefrehman](https://github.com/neefrehman), [@chbg](https://github.com/chbg), [@dopry](https://github.com/dopry), [@weisisheng](https://github.com/weisisheng), [@hugotiger](https://github.com/hugotiger), [@iuriizaporozhets](https://github.com/iuriizaporozhets), [@rikbrown](https://github.com/rikbrown), [@mateogianolio](https://github.com/mateogianolio), [@timheerwagen](https://github.com/timheerwagen), [@psdmsft](https://github.com/psdmsft), and [@psdewar](https://github.com/psdewar) for helping!
