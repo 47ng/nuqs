@@ -1,4 +1,4 @@
-import { useSearchParams } from 'next/navigation'
+import { useSearchParams } from 'next/navigation.js'
 import type { NextRouter } from 'next/router'
 import { useCallback } from 'react'
 import { debug } from '../../debug'
