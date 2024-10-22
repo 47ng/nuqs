@@ -14,7 +14,9 @@ wrapping it with a `NuqsAdapter` context provider:
 
 ## Next.js
 
-### App router
+### App router [#nextjs-app-router]
+
+Wrap your `{children}{:ts}` with the `NuqsAdapter{:ts}` component in your root layout file:
 
 ```tsx title="src/app/layout.tsx"
 // [!code word:NuqsAdapter]
@@ -36,7 +38,9 @@ export default function RootLayout({
 }
 ```
 
-### Pages router
+### Pages router [#nextjs-pages-router]
+
+Wrap the `<Component>{:ts}` page outlet with the `NuqsAdapter{:ts}` component in your `_app.tsx` file:
 
 ```tsx title="src/pages/_app.tsx"
 // [!code word:NuqsAdapter]
@@ -52,7 +56,7 @@ export default function MyApp({ Component, pageProps }: AppProps) {
 }
 ```
 
-### Unified (router-agnostic)
+### Unified (router-agnostic) [#nextjs-unified]
 
 If your Next.js app uses **both the app and pages routers** and the adapter needs
 to be mounted in either, you can import the unified adapter, at the cost

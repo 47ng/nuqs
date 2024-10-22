@@ -186,7 +186,7 @@ const { useQueryState } = await import('nuqs')
 Some of the v1 API was marked as deprecated back in September 2023, and has been
 removed in `nuqs@2.0.0`.
 
-### `queryTypes{:ts}` parsers object
+### `queryTypes` parsers object
 
 The `queryTypes{:ts}` object has been removed in favor of individual parser exports,
 for better tree-shaking.
@@ -203,7 +203,7 @@ Replace with `parseAsXYZ{:ts}` to match:
 + useQueryState('page', parseAsInteger.withDefault(1))
 ```
 
-### `subscribeToQueryUpdates{:ts}`
+### `subscribeToQueryUpdates`
 
 Next.js 14.1.0 makes `useSearchParams{:ts}` reactive to shallow search params updates,
 which makes this internal helper function redundant. See [#425](https://github.com/47ng/nuqs/pull/425) for context.
