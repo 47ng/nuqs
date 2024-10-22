@@ -1,6 +1,4 @@
-import { twMerge } from 'tailwind-merge'
-
-// todo: See if this is still used
+import { cn } from '@/src/lib/utils'
 
 export const H1: React.FC<React.ComponentProps<'h1'>> = ({
   children,
@@ -8,7 +6,7 @@ export const H1: React.FC<React.ComponentProps<'h1'>> = ({
   ...props
 }) => (
   <h1
-    className={twMerge(
+    className={cn(
       'mb-4 text-3xl font-bold text-foreground sm:text-4xl',
       className
     )}
@@ -23,7 +21,7 @@ export const Description: React.FC<React.ComponentProps<'p'>> = ({
   className,
   ...props
 }) => (
-  <p className={twMerge('text-lg text-muted-foreground', className)} {...props}>
+  <p className={cn('text-lg text-muted-foreground', className)} {...props}>
     {children}
   </p>
 )

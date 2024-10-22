@@ -11,6 +11,15 @@ nuqs@2.0.0 is available, install it now:
 pnpm add nuqs@latest
 ```
 
+It's packing a lot of exciting features & improvements, including:
+
+- [Support for other React frameworks](#hello-react): Next.js, React SPA, Remix, React Router, and more to come
+- A built-in [testing adapter](#testing) to unit-test your components in isolation
+- A 20% smaller, tree-shakable, ESM-only bundle
+- Improved documentation with [community parsers](/docs/parsers/community)
+
+<hr/>
+
 ## Hello, React! 👋 ⚛️
 
 nuqs started as a Next.js-only hook, and v2 brings compatibility for other React frameworks.
@@ -22,7 +31,7 @@ nuqs started as a Next.js-only hook, and v2 brings compatibility for other React
 
 No code change is necessary in components that use nuqs hooks, making them universal across all supported frameworks.
 
-The only new requirement is to wrap your React tree with an [Adapter](/docs/adapters) for your framework
+The only new requirement is to wrap your React tree with an [Adapter](/docs/adapters) for your framework.
 
 ## Testing
 
@@ -32,7 +41,7 @@ Nuqs V2 comes with a built-in [testing adapter](/docs/testing) that mocks URL be
 allowing you to test your components in isolation, outside of any framework runtime.
 
 You can use it with any unit testing framework that renders React components
-(we recommend Vitest & Testing Library).
+(we recommend [Vitest](https://vitest.dev) & [Testing Library](https://testing-library.com/)).
 
 ```tsx title="counter-button.test.tsx"
 // [!code word:NuqsTestingAdapter]
@@ -65,7 +74,7 @@ it('should increment the count when clicked', async () => {
 })
 ```
 
-The adapter conforms to the setup / act / assert testing strategy, allowing you
+The adapter conforms to the **setup** / **act** / **assert** testing strategy, allowing you
 to set the initial URL, then letting your test framework perform actions
 on your component, and asserting on how the URL was changed as a result.
 

@@ -1,10 +1,11 @@
 import { blog } from '@/src/app/source'
-import { Description, H1 } from '@/src/components/typography'
 // import { createMetadata } from '@/utils/metadata'
-import { InlineTOC } from 'fumadocs-ui/components/inline-toc'
+import Footer from '@/src/app/(pages)/_landing/footer'
+import { Description } from '@/src/components/typography'
 import defaultMdxComponents from 'fumadocs-ui/mdx'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
+import { Logo as Logo47ng } from './_components/47ng'
 
 export default async function Page(props: {
   params: Promise<{ slug: string }>
@@ -16,28 +17,42 @@ export default async function Page(props: {
 
   return (
     <>
-      <div className="container py-12 md:px-8">
-        <H1>{page.data.title}</H1>
+      <div className="container max-w-[900px] py-12 md:px-8">
+        <h1 className="mb-4 text-4xl font-bold text-foreground sm:text-5xl">
+          {page.data.title}
+        </h1>
         <Description>{page.data.description}</Description>
       </div>
-      <article className="container flex flex-col px-0 py-8 lg:flex-row lg:px-4">
+      <div className="container flex max-w-[900px] flex-col gap-4 px-4 text-sm sm:flex-row sm:items-center sm:justify-between lg:px-8">
+        <a
+          href="https://x.com/fortysevenfx"
+          className="flex items-center gap-3 rounded-lg px-2 py-1 hover:bg-foreground/5"
+          aria-description="Author"
+        >
+          <Logo47ng size={8} />
+          <div>
+            <p className="font-semibold">François Best</p>
+            <p className="text-xs text-fd-muted-foreground">@fortysevenfx</p>
+          </div>
+        </a>
+        {page.data.date && (
+          <p className="text-sm font-medium text-fd-muted-foreground">
+            {new Date(page.data.date).toLocaleDateString('en-GB', {
+              dateStyle: 'full'
+            })}
+          </p>
+        )}
+      </div>
+      <div className="container max-w-[900px] px-0 lg:px-8">
+        <hr className="my-4" />
+      </div>
+      <article className="container max-w-[900px] px-0 pb-24 pt-8 lg:px-4">
+        {/* <InlineTOC items={page.data.toc} /> */}
         <div className="prose min-w-0 flex-1 p-4">
-          <InlineTOC items={page.data.toc} />
           <page.data.body components={defaultMdxComponents} />
         </div>
-        <div className="flex flex-col gap-4 border-l p-4 text-sm lg:w-[250px]">
-          <div>
-            <p className="mb-1 text-fd-muted-foreground">Written by</p>
-            <p className="font-medium">{page.data.author}</p>
-          </div>
-          <div>
-            <p className="mb-1 text-sm text-fd-muted-foreground">At</p>
-            <p className="font-medium">
-              {new Date(page.data.date ?? page.file.name).toDateString()}
-            </p>
-          </div>
-        </div>
       </article>
+      <Footer />
     </>
   )
 }
