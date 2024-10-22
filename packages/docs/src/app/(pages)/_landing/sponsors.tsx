@@ -98,7 +98,7 @@ async function fetchSponsors(): Promise<Sponsors> {
       )
     },
     {
-      handle: 'lindesvard',
+      handle: 'CarlLindesvard',
       name: 'Carl Lindesvärd',
       url: 'https://x.com/CarlLindesvard',
       img: 'https://pbs.twimg.com/profile_images/1751607056316944384/8E4F88FL_400x400.jpg',
