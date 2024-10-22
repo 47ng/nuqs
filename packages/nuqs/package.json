@@ -99,16 +99,25 @@
     "test:size": "size-limit",
     "prepack": "./scripts/prepack.sh"
   },
-  "peerDependencies": {
-    "react": ">= 18.2.0"
-  },
   "dependencies": {
     "mitt": "^3.0.1"
   },
-  "optionalDependencies": {
+  "peerDependencies": {
+    "react": ">= 18.2.0",
     "@remix-run/react": ">= 2",
     "next": ">= 14.2.0",
     "react-router-dom": ">= 6"
+  },
+  "peerDependenciesMeta": {
+    "@remix-run/react": {
+      "optional": true
+    },
+    "next": {
+      "optional": true
+    },
+    "react-router-dom": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "@microsoft/api-extractor": "^7.47.9",
