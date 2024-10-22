@@ -15,7 +15,7 @@ export function HeroSection() {
         <p className="my-8 text-center text-2xl md:text-4xl xl:text-left">
           Type-safe search params
           <br />
-          state manager for Next.js
+          state manager for React
         </p>
         <nav className="flex flex-wrap gap-4">
           <Link

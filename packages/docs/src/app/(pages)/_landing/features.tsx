@@ -47,7 +47,8 @@ export function FeaturesSection(props: React.ComponentProps<'section'>) {
       <Feature
         icon={<Shuffle size={32} />}
         title="Universal"
-        description="Supports both the app router and pages router."
+        description="Supports Next.js (app & pages routers), React SPA, Remix, React Router, and more."
+        isNew
       />
       <Feature
         icon={<BookCheck size={32} />}
@@ -87,13 +88,11 @@ export function FeaturesSection(props: React.ComponentProps<'section'>) {
         icon={<Server size={32} />}
         title="Server cache"
         description="Type-safe search params access in nested React Server Components. No prop drilling needed."
-        isNew
       />
       <Feature
         icon={<Hourglass size={32} />}
         title="Transition"
         description="Support for useTransition to get loading states on server updates."
-        isNew
       />
       <Feature
         icon={<Rainbow size={32} />}
@@ -113,11 +112,11 @@ export function FeaturesSection(props: React.ComponentProps<'section'>) {
         icon={<TestTube2 size={32} />}
         title={
           <span className="flex items-center">
-            Tested
+            Tested & testable
             <GitHubActionsStatus className="ml-4 inline-flex" />
           </span>
         }
-        description="Tested against every Next.js release."
+        description="Tested against every Next.js release. Use the provided test adapter to test your components in isolation."
       />
     </section>
   )
