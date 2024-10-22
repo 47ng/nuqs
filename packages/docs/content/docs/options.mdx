@@ -125,11 +125,11 @@ internal state and stay in sync with each other.
 
 ## Transitions
 
-When combined with `shallow: false{:ts}`, you can use React's `useTransition` hook
+When combined with `shallow: false{:ts}`, you can use React's `useTransition{:ts}` hook
 to get loading states while the server is re-rendering server components with
 the updated URL.
 
-Pass in the `startTransition` function from `useTransition` to the options
+Pass in the `startTransition{:ts}` function from `useTransition{:ts}` to the options
 to enable this behaviour:
 
 <Callout title="Upcoming changes" type="warn">
@@ -144,10 +144,12 @@ import { useQueryState, parseAsString } from 'nuqs'
 
 function ClientComponent({ data }) {
   // 1. Provide your own useTransition hook:
+  // [!code word:startTransition:1]
   const [isLoading, startTransition] = React.useTransition()
   const [query, setQuery] = useQueryState(
     'query',
     // 2. Pass the `startTransition` as an option:
+    // [!code word:startTransition:1]
     parseAsString().withOptions({ startTransition, shallow: false })
   )
   // 3. `isLoading` will be true while the server is re-rendering
@@ -170,22 +172,25 @@ function ClientComponent({ data }) {
 
 ## Clear on default
 
-By default, when the state is set to the default value, the search parameter is
-**not** removed from the URL, and is reflected explicitly. This is because
-**default values _can_ change**, and the meaning of the URL along with it.
+When the state is set to the default value, the search parameter is
+removed from the URL, instead of being reflected explicitly.
 
-<Callout title="Upcoming changes" type="warn">
-  In `nuqs@2.0.0`, clearOnDefault will be set to `true{:ts}` by default, in response
+However, sometimes you might want to keep the search parameter in the URL,
+because **default values _can_ change**, and the meaning of the URL along with it.
+
+<Callout title="Example of defaults changing">
+  In `nuqs@1.x.x`, `clearOnDefault{:ts}` was `false{:ts}` by default.<br/>
+  in `nuqs@2.0.0`, `clearOnDefault{:ts}` is now `true{:ts}` by default, in response
   to [user feedback](https://x.com/fortysevenfx/status/1841610237540696261).
 </Callout>
 
-If you want to remove the search parameter from the URL when it's set to the default
-value, you can set `clearOnDefault` to `true{:ts}`:
+If you want to keep the search parameter in the URL when it's set to the default
+value, you can set `clearOnDefault` to `false{:ts}`:
 
 ```ts /clearOnDefault: true/
 useQueryState('search', {
   defaultValue: '',
-  clearOnDefault: true
+  clearOnDefault: false
 })
 ```
 
@@ -193,15 +198,15 @@ useQueryState('search', {
   Clearing the key-value pair from the query string can always be done by setting the state to `null{:ts}`.
 </Callout>
 
-This option compares the set state against the default value using `===` reference
-equality, so if you are using a [custom parser](./parsers/making-your-own)
+This option compares the set state against the default value using `==={:ts}`
+reference equality, so if you are using a [custom parser](./parsers/making-your-own)
 for a state type that wouldn't work with reference equality, you should provide
-the `eq` function to your parser (this is done for you in built-in parsers):
+the `eq{:ts}` function to your parser (this is done for you in built-in parsers):
 
 ```ts
 const dateParser = createParser({
   parse: (value: string) => new Date(value.slice(0, 10)),
   serialize: (date: Date) => date.toISOString().slice(0, 10),
-  eq: (a: Date, b: Date) => a.getTime() === b.getTime()
+  eq: (a: Date, b: Date) => a.getTime() === b.getTime() // [!code highlight]
 })
 ```
