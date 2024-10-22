@@ -81,7 +81,7 @@ export default function MyApp({ Component, pageProps }: AppProps) {
 #### Unified (router-agnostic)
 
 If your Next.js app uses **both the app and pages routers** and the adapter needs
-to be mounted in either, you can use the unified adapter, at the cost
+to be mounted in either, you can import the unified adapter, at the cost
 of a slightly larger bundle size (~100B).
 
 ```tsx
@@ -92,8 +92,6 @@ import { NuqsAdapter } from 'nuqs/adapters/next'
 
 Albeit not part of a migration from v1, you can now use nuqs in other React
 frameworks via their respective [adapters](/docs/adapters).
-
-{/* todo: Add the docs/adapters page */}
 
 However, there's one more adapter that might be of interest to you, and solves
 a long-standing issue with testing components using nuqs hooks:
@@ -188,7 +186,7 @@ const { useQueryState } = await import('nuqs')
 Some of the v1 API was marked as deprecated back in September 2023, and has been
 removed in `nuqs@2.0.0`.
 
-### `queryTypes{:ts}` parsers object
+### `queryTypes` parsers object
 
 The `queryTypes{:ts}` object has been removed in favor of individual parser exports,
 for better tree-shaking.
@@ -205,7 +203,7 @@ Replace with `parseAsXYZ{:ts}` to match:
 + useQueryState('page', parseAsInteger.withDefault(1))
 ```
 
-### `subscribeToQueryUpdates{:ts}`
+### `subscribeToQueryUpdates`
 
 Next.js 14.1.0 makes `useSearchParams{:ts}` reactive to shallow search params updates,
 which makes this internal helper function redundant. See [#425](https://github.com/47ng/nuqs/pull/425) for context.

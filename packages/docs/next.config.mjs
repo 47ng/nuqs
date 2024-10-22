@@ -27,6 +27,11 @@ const config = {
         destination: '/docs/installation',
         permanent: false
       },
+      {
+        source: '/docs/parsers/community',
+        destination: '/docs/parsers/community/tanstack-table',
+        permanent: false
+      },
       // Cool URLs don't break
       {
         source: '/docs/parsers',
