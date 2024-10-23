@@ -211,7 +211,7 @@ export function useQueryState<T = string>(
     serialize = String,
     eq = (a, b) => a === b,
     defaultValue = undefined,
-    clearOnDefault = false,
+    clearOnDefault = true,
     startTransition
   }: Partial<UseQueryStateOptions<T>> & {
     defaultValue?: T
@@ -223,7 +223,7 @@ export function useQueryState<T = string>(
     parse: x => x as unknown as T,
     serialize: String,
     eq: (a, b) => a === b,
-    clearOnDefault: false,
+    clearOnDefault: true,
     defaultValue: undefined
   }
 ) {

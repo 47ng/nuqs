@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'vitest'
+import type { Options } from './defs'
 import {
   parseAsArrayOf,
   parseAsBoolean,
@@ -85,19 +86,13 @@ describe('serializer', () => {
     const result = serialize('?str=foo&external=kept', null)
     expect(result).toBe('?external=kept')
   })
-  test('clears value when setting the default value when `clearOnDefault` is used', () => {
+  test('clears value when setting the default value (`clearOnDefault: true` is the default)', () => {
     const serialize = createSerializer({
-      int: parseAsInteger.withOptions({ clearOnDefault: true }).withDefault(0),
-      str: parseAsString.withOptions({ clearOnDefault: true }).withDefault(''),
-      bool: parseAsBoolean
-        .withOptions({ clearOnDefault: true })
-        .withDefault(false),
-      arr: parseAsArrayOf(parseAsString)
-        .withOptions({ clearOnDefault: true })
-        .withDefault([]),
-      json: parseAsJson(x => x)
-        .withOptions({ clearOnDefault: true })
-        .withDefault({ foo: 'bar' })
+      int: parseAsInteger.withDefault(0),
+      str: parseAsString.withDefault(''),
+      bool: parseAsBoolean.withDefault(false),
+      arr: parseAsArrayOf(parseAsString).withDefault([]),
+      json: parseAsJson(x => x).withDefault({ foo: 'bar' })
     })
     const result = serialize({
       int: 0,
@@ -107,5 +102,27 @@ describe('serializer', () => {
       json: { foo: 'bar' }
     })
     expect(result).toBe('')
+  })
+  test('keeps value when setting the default value when `clearOnDefault: false`', () => {
+    const options: Options = { clearOnDefault: false }
+    const serialize = createSerializer({
+      int: parseAsInteger.withOptions(options).withDefault(0),
+      str: parseAsString.withOptions(options).withDefault(''),
+      bool: parseAsBoolean.withOptions(options).withDefault(false),
+      arr: parseAsArrayOf(parseAsString).withOptions(options).withDefault([]),
+      json: parseAsJson(x => x)
+        .withOptions(options)
+        .withDefault({ foo: 'bar' })
+    })
+    const result = serialize({
+      int: 0,
+      str: '',
+      bool: false,
+      arr: [],
+      json: { foo: 'bar' }
+    })
+    expect(result).toBe(
+      '?int=0&str=&bool=false&arr=&json={%22foo%22:%22bar%22}'
+    )
   })
 })

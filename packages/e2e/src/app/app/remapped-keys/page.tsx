@@ -24,7 +24,6 @@ function Client() {
       activeTags: parseAsArrayOf(parseAsString).withDefault([])
     },
     {
-      clearOnDefault: true,
       urlKeys: {
         searchQuery: 'q',
         pageNumber: 'page',
