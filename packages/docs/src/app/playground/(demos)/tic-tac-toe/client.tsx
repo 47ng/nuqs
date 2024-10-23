@@ -60,9 +60,7 @@ const gameParser = createParser<GameState>({
 function useGameEngine() {
   const [{ board, status }, setGameState] = useQueryState(
     'board',
-    gameParser
-      .withDefault(defaultState)
-      .withOptions({ clearOnDefault: true, history: 'push' })
+    gameParser.withDefault(defaultState).withOptions({ history: 'push' })
   )
   const play = useCallback(
     (i: number, j: number) => {

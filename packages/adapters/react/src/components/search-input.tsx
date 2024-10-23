@@ -2,7 +2,7 @@ import { parseAsString, useQueryStates } from 'nuqs'
 
 export function SearchInput() {
   const [{ search }, setSearch] = useQueryStates({
-    search: parseAsString.withDefault('').withOptions({ clearOnDefault: true })
+    search: parseAsString.withDefault('')
   })
   return (
     <input

@@ -52,7 +52,10 @@ export function createSerializer<
         parser.defaultValue !== undefined &&
         (parser.eq ?? ((a, b) => a === b))(value, parser.defaultValue)
 
-      if (value === null || (parser.clearOnDefault && isMatchingDefault)) {
+      if (
+        value === null ||
+        ((parser.clearOnDefault ?? true) && isMatchingDefault)
+      ) {
         search.delete(key)
       } else {
         search.set(key, parser.serialize(value))

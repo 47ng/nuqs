@@ -74,7 +74,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
     scroll = false,
     shallow = true,
     throttleMs = FLUSH_RATE_LIMIT_MS,
-    clearOnDefault = false,
+    clearOnDefault = true,
     startTransition,
     urlKeys = defaultUrlKeys
   }: Partial<UseQueryStatesOptions<KeyMap>> = {}

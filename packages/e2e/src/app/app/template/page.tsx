@@ -13,8 +13,7 @@ export default function Page() {
 
 function Client() {
   const [state, setState] = useQueryState('state', {
-    defaultValue: '',
-    clearOnDefault: true
+    defaultValue: ''
   })
   return (
     <>
