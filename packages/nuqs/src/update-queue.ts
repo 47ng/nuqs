@@ -21,6 +21,10 @@ const transitionsQueue: Set<React.TransitionStartFunction> = new Set()
 let lastFlushTimestamp = 0
 let flushPromiseCache: Promise<URLSearchParams> | null = null
 
+export function getQueuedValue(key: string) {
+  return updateQueue.get(key)
+}
+
 export function enqueueQueryStringUpdate<Value>(
   key: string,
   value: Value | null,
