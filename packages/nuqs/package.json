@@ -40,7 +40,8 @@
     "adapters/remix.d.ts",
     "adapters/react-router.d.ts",
     "adapters/custom.d.ts",
-    "adapters/testing.d.ts"
+    "adapters/testing.d.ts",
+    "esm-only.cjs"
   ],
   "type": "module",
   "sideEffects": false,
@@ -49,43 +50,53 @@
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
+      "import": "./dist/index.js",
+      "require": "./esm-only.cjs"
     },
     "./server": {
       "types": "./dist/server.d.ts",
-      "import": "./dist/server.js"
+      "import": "./dist/server.js",
+      "require": "./esm-only.cjs"
     },
     "./adapters/react": {
       "types": "./dist/adapters/react.d.ts",
-      "import": "./dist/adapters/react.js"
+      "import": "./dist/adapters/react.js",
+      "require": "./esm-only.cjs"
     },
     "./adapters/next": {
       "types": "./dist/adapters/next.d.ts",
-      "import": "./dist/adapters/next.js"
+      "import": "./dist/adapters/next.js",
+      "require": "./esm-only.cjs"
     },
     "./adapters/next/app": {
       "types": "./dist/adapters/next/app.d.ts",
-      "import": "./dist/adapters/next/app.js"
+      "import": "./dist/adapters/next/app.js",
+      "require": "./esm-only.cjs"
     },
     "./adapters/next/pages": {
       "types": "./dist/adapters/next/pages.d.ts",
-      "import": "./dist/adapters/next/pages.js"
+      "import": "./dist/adapters/next/pages.js",
+      "require": "./esm-only.cjs"
     },
     "./adapters/remix": {
       "types": "./dist/adapters/remix.d.ts",
-      "import": "./dist/adapters/remix.js"
+      "import": "./dist/adapters/remix.js",
+      "require": "./esm-only.cjs"
     },
     "./adapters/react-router": {
       "types": "./dist/adapters/react-router.d.ts",
-      "import": "./dist/adapters/react-router.js"
+      "import": "./dist/adapters/react-router.js",
+      "require": "./esm-only.cjs"
     },
     "./adapters/custom": {
       "types": "./dist/adapters/custom.d.ts",
-      "import": "./dist/adapters/custom.js"
+      "import": "./dist/adapters/custom.js",
+      "require": "./esm-only.cjs"
     },
     "./adapters/testing": {
       "types": "./dist/adapters/testing.d.ts",
-      "import": "./dist/adapters/testing.js"
+      "import": "./dist/adapters/testing.js",
+      "require": "./esm-only.cjs"
     }
   },
   "scripts": {
