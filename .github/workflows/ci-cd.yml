@@ -9,6 +9,9 @@ on:
       - ci
   pull_request:
     types: [opened, reopened, synchronize]
+  workflow_run:
+    workflows: ['Move `master` to `next`']
+    types: completed
 
 env:
   FORCE_COLOR: 3 # Diplay chalk colors
