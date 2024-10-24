@@ -11,21 +11,21 @@ export async function SponsorsSection() {
       <h2 className="mb-12 text-center text-3xl font-bold tracking-tighter dark:text-white md:text-4xl xl:text-5xl">
         Sponsors
       </h2>
-      <ul className="container grid grid-cols-1 gap-y-12 sm:grid-cols-2 md:grid-cols-4">
+      <ul className="container grid grid-cols-1 gap-y-12 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
         {sponsors.map(sponsor => (
           <li key={sponsor.handle} className="flex flex-col items-center">
             <a href={sponsor.url} className="h-32 w-32 rounded-full">
               <Image
                 src={sponsor.img}
                 alt={sponsor.name ?? sponsor.handle}
-                className="rounded-full"
+                className="mx-auto size-28 rounded-full"
                 width={128}
                 height={128}
               />
             </a>
             <a
               href={sponsor.url}
-              className="mt-2 inline-block text-sm font-semibold hover:underline"
+              className="mt-2 inline-block font-semibold hover:underline"
             >
               {sponsor.name ?? sponsor.handle}
             </a>
@@ -84,6 +84,13 @@ async function fetchSponsors(): Promise<Sponsors> {
   // }
   return [
     {
+      handle: 'YoannFleuryDev',
+      name: 'Yoann Fleury',
+      url: 'https://www.yoannfleury.dev/',
+      img: 'https://pbs.twimg.com/profile_images/1594632934245498880/CJTKNRCO_400x400.jpg',
+      title: 'Front end developer'
+    },
+    {
       handle: 'pontusab',
       name: 'Pontus Abrahamsson',
       url: 'https://x.com/pontusab',
@@ -98,6 +105,12 @@ async function fetchSponsors(): Promise<Sponsors> {
       )
     },
     {
+      handle: 'vercel',
+      name: 'Vercel',
+      url: 'https://vercel.com/',
+      img: 'https://avatars.githubusercontent.com/u/14985020?v=4'
+    },
+    {
       handle: 'CarlLindesvard',
       name: 'Carl Lindesvärd',
       url: 'https://x.com/CarlLindesvard',
@@ -110,13 +123,6 @@ async function fetchSponsors(): Promise<Sponsors> {
           </a>
         </>
       )
-    },
-    {
-      handle: 'YoannFleuryDev',
-      name: 'Yoann Fleury',
-      url: 'https://www.yoannfleury.dev/',
-      img: 'https://pbs.twimg.com/profile_images/1594632934245498880/CJTKNRCO_400x400.jpg',
-      title: 'Front end developer'
     },
     {
       handle: 'rwieruch',
