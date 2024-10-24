@@ -14,6 +14,7 @@ import { emitter, type CrossHookSyncPayload } from './sync'
 import {
   FLUSH_RATE_LIMIT_MS,
   enqueueQueryStringUpdate,
+  getQueuedValue,
   scheduleFlushToURL
 } from './update-queue'
 import { safeParse } from './utils'
@@ -258,7 +259,11 @@ function parseMap<KeyMap extends UseQueryStatesKeysMap>(
   return Object.keys(keyMap).reduce((obj, stateKey) => {
     const urlKey = urlKeys?.[stateKey] ?? stateKey
     const { defaultValue, parse } = keyMap[stateKey]!
-    const query = searchParams?.get(urlKey) ?? null
+    const queuedQuery = getQueuedValue(urlKey)
+    const query =
+      queuedQuery === undefined
+        ? (searchParams?.get(urlKey) ?? null)
+        : queuedQuery
     if (cachedQuery && cachedState && cachedQuery[urlKey] === query) {
       obj[stateKey as keyof KeyMap] =
         cachedState[stateKey] ?? defaultValue ?? null

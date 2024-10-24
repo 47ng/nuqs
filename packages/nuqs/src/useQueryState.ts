@@ -13,6 +13,7 @@ import { emitter, type CrossHookSyncPayload } from './sync'
 import {
   FLUSH_RATE_LIMIT_MS,
   enqueueQueryStringUpdate,
+  getQueuedValue,
   scheduleFlushToURL
 } from './update-queue'
 import { safeParse } from './utils'
@@ -235,7 +236,11 @@ export function useQueryState<T = string>(
   } = useAdapter()
   const queryRef = useRef<string | null>(initialSearchParams?.get(key) ?? null)
   const [internalState, setInternalState] = useState<T | null>(() => {
-    const query = initialSearchParams?.get(key) ?? null
+    const queuedQuery = getQueuedValue(key)
+    const query =
+      queuedQuery === undefined
+        ? (initialSearchParams?.get(key) ?? null)
+        : queuedQuery
     return query === null ? null : safeParse(parse, query, key)
   })
   const stateRef = useRef(internalState)
