@@ -6,9 +6,9 @@ on:
       - master
       - beta
       - next
-      - ci
   pull_request:
     types: [opened, reopened, synchronize]
+  workflow_dispatch:
 
 env:
   FORCE_COLOR: 3 # Diplay chalk colors
@@ -52,7 +52,7 @@ jobs:
         if: ${{ matrix.next-version != 'local' }}
         run: pnpm add --filter e2e --filter nuqs next@${{ matrix.next-version }}
       - name: Run integration tests
-        run: pnpm run test ${{ github.ref_name == 'ci' && '--force' || '' }}
+        run: pnpm run test ${{ github.event_name == 'workflow_dispatch' && '--force' || '' }}
         env:
           BASE_PATH: ${{ matrix.base-path && matrix.base-path || '/' }}
           TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
