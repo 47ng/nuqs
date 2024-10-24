@@ -264,7 +264,7 @@ export function DateParserDemo({
               if (e.target.value === '') {
                 setValue(null)
               } else {
-                setValue(e.target.valueAsDate)
+                setValue(new Date(e.target.value))
               }
             }}
           />
