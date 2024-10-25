@@ -14,6 +14,7 @@ import {
   parseAsFloat,
   parseAsHex,
   parseAsInteger,
+  parseAsIsoDate,
   parseAsIsoDateTime,
   parseAsJson,
   parseAsStringLiteral,
@@ -290,8 +291,12 @@ export function DateParserDemo({
   )
 }
 
-export function DateISOParserDemo() {
+export function DatetimeISOParserDemo() {
   return <DateParserDemo queryKey="iso" parser={parseAsIsoDateTime} />
+}
+
+export function DateISOParserDemo() {
+  return <DateParserDemo queryKey="iso" parser={parseAsIsoDate} />
 }
 
 export function DateTimestampParserDemo() {

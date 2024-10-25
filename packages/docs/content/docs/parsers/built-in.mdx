@@ -12,6 +12,7 @@ import {
   BooleanParserDemo,
   StringLiteralParserDemo,
   DateISOParserDemo,
+  DatetimeISOParserDemo,
   DateTimestampParserDemo,
   JsonParserDemo
 } from '@/content/docs/parsers/demos'
@@ -183,10 +184,20 @@ The query string value will be the **value** of the enum, not its name
 There are two parsers that give you a `Date` object, their difference is
 on how they encode the value into the query string.
 
-### ISO 8601
+### ISO 8601 Datetime
 
 ```ts
 import { parseAsIsoDateTime } from 'nuqs'
+```
+
+<Suspense>
+  <DatetimeISOParserDemo/>
+</Suspense>
+
+### ISO 8601 Date
+
+```ts
+import { parseAsIsoDate } from 'nuqs'
 ```
 
 <Suspense>

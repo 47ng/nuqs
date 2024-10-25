@@ -216,6 +216,22 @@ export const parseAsIsoDateTime = createParser({
 })
 
 /**
+ * Querystring encoded as an ISO-8601 string (UTC)
+ * without the time zone offset, and returned as
+ * a Date object.
+ */
+export const parseAsIsoDate = createParser({
+  parse: v => {
+    const date = new Date(v + 'T00:00:00.000Z')
+    if (Number.isNaN(date.valueOf())) {
+      return null
+    }
+    return date
+  },
+  serialize: (v: Date) => v.toISOString().slice(0, 10)
+})
+
+/**
  * String-based enums provide better type-safety for known sets of values.
  * You will need to pass the parseAsStringEnum function a list of your enum values
  * in order to validate the query string. Anything else will return `null`,

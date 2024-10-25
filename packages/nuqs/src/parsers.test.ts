@@ -5,6 +5,7 @@ import {
   parseAsHex,
   parseAsInteger,
   parseAsIsoDateTime,
+  parseAsIsoDate,
   parseAsString,
   parseAsTimestamp
 } from './parsers'
@@ -47,6 +48,16 @@ describe('parsers', () => {
     expect(parseAsIsoDateTime.parse(moment.slice(0, 16) + 'Z')).toStrictEqual(
       ref
     )
+  })
+  test('parseAsIsoDate', () => {
+    expect(parseAsIsoDate.parse('')).toBeNull()
+    expect(parseAsIsoDate.parse('not-a-date')).toBeNull()
+    const moment = '2020-01-01'
+    const ref = new Date(moment)
+    expect(parseAsIsoDate.parse(moment)).toStrictEqual(ref)
+    expect(parseAsIsoDate.parse(moment.slice(0, 10))).toStrictEqual(ref)
+    expect(parseAsIsoDate.serialize(ref).length).toBe(10)
+    expect(parseAsIsoDate.serialize(ref).length).not.toContain('T')
   })
   test('parseAsArrayOf', () => {
     const parser = parseAsArrayOf(parseAsString)
