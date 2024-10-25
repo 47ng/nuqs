@@ -9,9 +9,11 @@ export type UrlUpdateEvent = {
   options: Required<AdapterOptions>
 }
 
+export type OnUrlUpdateFunction = (event: UrlUpdateEvent) => void
+
 type TestingAdapterProps = {
   searchParams?: string | Record<string, string> | URLSearchParams
-  onUrlUpdate?: (event: UrlUpdateEvent) => void
+  onUrlUpdate?: OnUrlUpdateFunction
   rateLimitFactor?: number
   children: ReactNode
 }
