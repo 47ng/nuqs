@@ -297,16 +297,14 @@ export function DatetimeISOParserDemo() {
   return (
     <DateParserDemo
       type="datetime-local"
-      queryKey="iso-datetime"
+      queryKey="iso"
       parser={parseAsIsoDateTime}
     />
   )
 }
 
 export function DateISOParserDemo() {
-  return (
-    <DateParserDemo type="date" queryKey="iso-date" parser={parseAsIsoDate} />
-  )
+  return <DateParserDemo type="date" queryKey="date" parser={parseAsIsoDate} />
 }
 
 export function DateTimestampParserDemo() {
