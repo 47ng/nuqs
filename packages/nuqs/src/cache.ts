@@ -1,9 +1,8 @@
 // @ts-ignore
 import { cache } from 'react'
+import type { SearchParams } from './defs'
 import { error } from './errors'
 import type { ParserBuilder, inferParserType } from './parsers'
-
-export type SearchParams = Record<string, string | string[] | undefined>
 
 const $input: unique symbol = Symbol('Input')
 
