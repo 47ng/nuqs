@@ -55,9 +55,7 @@ describe('parsers', () => {
     const moment = '2020-01-01'
     const ref = new Date(moment)
     expect(parseAsIsoDate.parse(moment)).toStrictEqual(ref)
-    expect(parseAsIsoDate.parse(moment.slice(0, 10))).toStrictEqual(ref)
-    expect(parseAsIsoDate.serialize(ref).length).toBe(10)
-    expect(parseAsIsoDate.serialize(ref).length).not.toContain('T')
+    expect(parseAsIsoDate.serialize(ref)).toEqual(moment)
   })
   test('parseAsArrayOf', () => {
     const parser = parseAsArrayOf(parseAsString)

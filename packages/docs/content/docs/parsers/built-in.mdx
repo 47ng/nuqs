@@ -30,8 +30,8 @@ This is where **parsers** come in.
 import { parseAsString } from 'nuqs'
 ```
 
-<Suspense fallback={<DemoFallback/>}>
-  <StringParserDemo/>
+<Suspense fallback={<DemoFallback />}>
+  <StringParserDemo />
 </Suspense>
 
 <Callout title="Type-safety tip">
@@ -40,6 +40,7 @@ and will accept **any** value.
 
 If you're expecting a certain set of string values, like `'foo' | 'bar'{:ts}`,
 see [Literals](#literals) for ensuring type-runtime safety.
+
 </Callout>
 
 If search params are strings by default, what's the point of this _"parser"_ ?
@@ -68,10 +69,9 @@ import { parseAsInteger } from 'nuqs'
 useQueryState('int', parseAsInteger.withDefault(0))
 ```
 
-<Suspense fallback={<DemoFallback/>}>
-  <IntegerParserDemo/>
+<Suspense fallback={<DemoFallback />}>
+  <IntegerParserDemo />
 </Suspense>
-
 
 ### Floating point
 
@@ -83,10 +83,9 @@ import { parseAsFloat } from 'nuqs'
 useQueryState('float', parseAsFloat.withDefault(0))
 ```
 
-<Suspense fallback={<DemoFallback/>}>
-  <FloatParserDemo/>
+<Suspense fallback={<DemoFallback />}>
+  <FloatParserDemo />
 </Suspense>
-
 
 ### Hexadecimal
 
@@ -98,12 +97,12 @@ import { parseAsHex } from 'nuqs'
 useQueryState('hex', parseAsHex.withDefault(0x00))
 ```
 
-<Suspense fallback={<DemoFallback/>}>
-  <HexParserDemo/>
+<Suspense fallback={<DemoFallback />}>
+  <HexParserDemo />
 </Suspense>
 
 <Callout title="Going further">
- Check out the [Hex Colors](/playground/hex-colors) playground for a demo.
+  Check out the [Hex Colors](/playground/hex-colors) playground for a demo.
 </Callout>
 
 ## Boolean
@@ -114,8 +113,8 @@ import { parseAsBoolean } from 'nuqs'
 useQueryState('bool', parseAsBoolean.withDefault(false))
 ```
 
-<Suspense fallback={<DemoFallback/>}>
-  <BooleanParserDemo/>
+<Suspense fallback={<DemoFallback />}>
+  <BooleanParserDemo />
 </Suspense>
 
 ## Literals
@@ -139,13 +138,12 @@ const sortOrder = ['asc', 'desc'] as const
 parseAsStringLiteral(sortOrder)
 
 // Optional: extract the type from them
-type SortOrder = (typeof sortOrder)[number]; // 'asc' | 'desc'
+type SortOrder = (typeof sortOrder)[number] // 'asc' | 'desc'
 ```
 
-<Suspense fallback={<DemoFallback/>}>
-  <StringLiteralParserDemo/>
+<Suspense fallback={<DemoFallback />}>
+  <StringLiteralParserDemo />
 </Suspense>
-
 
 ### Numeric literals
 
@@ -175,8 +173,8 @@ parseAsStringEnum<Direction>(Object.values(Direction))
 ```
 
 <Callout title="Note">
-The query string value will be the **value** of the enum, not its name
-(here: `?direction=UP`).
+  The query string value will be the **value** of the enum, not its name (here:
+  `?direction=UP`).
 </Callout>
 
 ## Dates & timestamps
@@ -191,17 +189,19 @@ import { parseAsIsoDateTime } from 'nuqs'
 ```
 
 <Suspense>
-  <DatetimeISOParserDemo/>
+  <DatetimeISOParserDemo />
 </Suspense>
 
 ### ISO 8601 Date
+
+Note: the Date is parsed without the time zone offset, making it at GMT 00:00:00 UTC.
 
 ```ts
 import { parseAsIsoDate } from 'nuqs'
 ```
 
 <Suspense>
-  <DateISOParserDemo/>
+  <DateISOParserDemo />
 </Suspense>
 
 ### Timestamp
@@ -213,7 +213,7 @@ import { parseAsTimestamp } from 'nuqs'
 ```
 
 <Suspense>
-  <DateTimestampParserDemo/>
+  <DateTimestampParserDemo />
 </Suspense>
 
 ## Arrays
@@ -252,14 +252,14 @@ const schema = z.object({
 const [json, setJson] = useQueryState('json', parseAsJson(schema.parse))
 
 setJson({
-  pkg: "nuqs",
+  pkg: 'nuqs',
   version: 2,
-  worksWith: ["Next.js", "React", "Remix", "React Router", "and more"],
-});
+  worksWith: ['Next.js', 'React', 'Remix', 'React Router', 'and more']
+})
 ```
 
 <Suspense>
-  <JsonParserDemo/>
+  <JsonParserDemo />
 </Suspense>
 
 Using other validation libraries is possible, as long as they throw an error
@@ -275,6 +275,6 @@ import { parseAsString } from 'nuqs/server'
 ```
 
 <Callout title="Note">
-It used to be available under the alias import `nuqs/parsers`,
-which will be dropped in the next major version.
+  It used to be available under the alias import `nuqs/parsers`, which will be
+  dropped in the next major version.
 </Callout>

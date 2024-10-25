@@ -247,10 +247,12 @@ export function StringLiteralParserDemo() {
 
 export function DateParserDemo({
   queryKey,
-  parser
+  parser,
+  type
 }: {
   queryKey: string
   parser: ParserBuilder<Date>
+  type: 'date' | 'datetime-local'
 }) {
   const [value, setValue] = useQueryState(queryKey, parser)
   return (
@@ -258,7 +260,7 @@ export function DateParserDemo({
       <div className="flex w-full flex-col items-stretch gap-2 @md:flex-row">
         <div className="flex flex-1 items-center gap-2">
           <input
-            type="datetime-local"
+            type={type}
             className="flex h-10 flex-[2] rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
             value={value === null ? '' : value.toISOString().slice(0, -8)}
             onChange={e => {
@@ -292,15 +294,29 @@ export function DateParserDemo({
 }
 
 export function DatetimeISOParserDemo() {
-  return <DateParserDemo queryKey="iso" parser={parseAsIsoDateTime} />
+  return (
+    <DateParserDemo
+      type="datetime-local"
+      queryKey="iso-datetime"
+      parser={parseAsIsoDateTime}
+    />
+  )
 }
 
 export function DateISOParserDemo() {
-  return <DateParserDemo queryKey="iso" parser={parseAsIsoDate} />
+  return (
+    <DateParserDemo type="date" queryKey="iso-date" parser={parseAsIsoDate} />
+  )
 }
 
 export function DateTimestampParserDemo() {
-  return <DateParserDemo queryKey="ts" parser={parseAsTimestamp} />
+  return (
+    <DateParserDemo
+      type="datetime-local"
+      queryKey="ts"
+      parser={parseAsTimestamp}
+    />
+  )
 }
 
 const jsonParserSchema = z.object({
