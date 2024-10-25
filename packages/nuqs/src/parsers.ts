@@ -221,7 +221,7 @@ export const parseAsIsoDateTime = createParser({
  * a Date object.
  *
  * The Date is parsed without the time zone offset,
- * making it at GMT 00:00:00 UTC.
+ * making it at 00:00:00 UTC.
  */
 export const parseAsIsoDate = createParser({
   parse: v => {
