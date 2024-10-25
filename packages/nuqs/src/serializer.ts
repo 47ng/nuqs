@@ -1,24 +1,18 @@
-import type { ParserBuilder } from './parsers'
+import type { inferParserType, ParserBuilder } from './parsers'
 import { renderQueryString } from './url-encoding'
 
-type ExtractParserType<Parser> =
-  Parser extends ParserBuilder<any>
-    ? ReturnType<Parser['parseServerSide']>
-    : never
-
 type Base = string | URLSearchParams | URL
-type Values<Parsers extends Record<string, ParserBuilder<any>>> = Partial<{
-  [K in keyof Parsers]?: ExtractParserType<Parsers[K]>
-}>
 type ParserWithOptionalDefault<T> = ParserBuilder<T> & { defaultValue?: T }
 
 export function createSerializer<
   Parsers extends Record<string, ParserWithOptionalDefault<any>>
 >(parsers: Parsers) {
+  type Values = Partial<inferParserType<Parsers>>
+
   /**
    * Generate a query string for the given values.
    */
-  function serialize(values: Values<Parsers>): string
+  function serialize(values: Values): string
   /**
    * Append/amend the query string of the given base with the given values.
    *
@@ -27,10 +21,10 @@ export function createSerializer<
    * - another value is given for an existing key, in which case the
    *  search param will be updated
    */
-  function serialize(base: Base, values: Values<Parsers> | null): string
+  function serialize(base: Base, values: Values | null): string
   function serialize(
-    baseOrValues: Base | Values<Parsers> | null,
-    values: Values<Parsers> | null = {}
+    baseOrValues: Base | Values | null,
+    values: Values | null = {}
   ) {
     const [base, search] = isBase(baseOrValues)
       ? splitBase(baseOrValues)

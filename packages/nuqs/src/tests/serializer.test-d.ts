@@ -1,0 +1,50 @@
+import { expectError, expectType } from 'tsd'
+import { createSerializer, parseAsInteger, parseAsString } from '../../dist'
+
+// prettier-ignore
+{
+  const serialize = createSerializer({
+    foo: parseAsString,
+    bar: parseAsInteger
+  })
+  // It returns a string
+  expectType<string>(serialize({}))
+  expectType<string>(serialize({ foo: 'foo', bar: 42 }))
+  expectType<string>(serialize({ foo: null, bar: null }))
+  // With base
+  expectType<string>(serialize('/', {}))
+  expectType<string>(serialize('/', { foo: 'foo', bar: 42 }))
+  expectType<string>(serialize('/', { foo: null, bar: null }))
+  expectType<string>(serialize(new URLSearchParams(), {}))
+  expectType<string>(serialize(new URLSearchParams(), { foo: 'foo', bar: 42 }))
+  expectType<string>(serialize(new URLSearchParams(), { foo: null, bar: null }))
+  expectType<string>(serialize(new URL('https://example.com'), {}))
+  expectType<string>(serialize(new URL('https://example.com'), { foo: 'foo', bar: 42 }))
+  expectType<string>(serialize(new URL('https://example.com'), { foo: null, bar: null }))
+  // Clearing from base
+  expectType<string>(serialize('/', null))
+  expectType<string>(serialize(new URLSearchParams(), null))
+  expectType<string>(serialize(new URL('https://example.com'), null))
+}
+
+// It accepts partial inputs
+{
+  const serialize = createSerializer({
+    foo: parseAsString,
+    bar: parseAsInteger
+  })
+
+  expectType<string>(serialize({ foo: 'foo' }))
+  expectType<string>(serialize({ bar: 42 }))
+}
+
+// It doesn't accept extra properties
+{
+  const serialize = createSerializer({
+    foo: parseAsString,
+    bar: parseAsInteger
+  })
+  expectError(() => {
+    serialize({ nope: null })
+  })
+}
