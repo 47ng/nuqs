@@ -1,4 +1,10 @@
-import { createContext, createElement, useContext, type ReactNode } from 'react'
+import {
+  createContext,
+  createElement,
+  useContext,
+  type FC,
+  type ReactNode
+} from 'react'
 import { error } from '../errors'
 import type { UseAdapterHook } from './defs'
 
@@ -21,7 +27,9 @@ context.displayName = 'NuqsAdapterContext'
  * @param useAdapter
  * @returns
  */
-export function createAdapterProvider(useAdapter: UseAdapterHook) {
+export function createAdapterProvider(
+  useAdapter: UseAdapterHook
+): FC<{ children: ReactNode }> {
   return ({ children, ...props }: { children: ReactNode }) =>
     createElement(
       context.Provider,
