@@ -9,7 +9,9 @@ by wrapping your rendered component in a `NuqsTestingAdapter{:ts}`.
 Here is an example for Vitest and Testing Library to test a button rendering
 a counter:
 
-```tsx title="counter-button.test.tsx"
+<Tabs items={['Vitest v1', 'Vitest v2']}>
+
+```tsx title="counter-button.test.tsx" tab="Vitest v1"
 // [!code word:NuqsTestingAdapter]
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
@@ -34,10 +36,45 @@ it('should increment the count when clicked', async () => {
   // 3. Assert changes in the state and in the (mocked) URL
   expect(button).toHaveTextContent('count is 43')
   expect(onUrlUpdate).toHaveBeenCalledOnce()
-  expect(onUrlUpdate.mock.calls[0][0].queryString).toBe('?count=43')
-  expect(onUrlUpdate.mock.calls[0][0].searchParams.get('count')).toBe('43')
-  expect(onUrlUpdate.mock.calls[0][0].options.history).toBe('push')
+  const event = onUrlUpdate.mock.calls[0][0]!
+  expect(event.queryString).toBe('?count=43')
+  expect(event.searchParams.get('count')).toBe('43')
+  expect(event.options.history).toBe('push')
 })
 ```
+
+```tsx title="counter-button.test.tsx" tab="Vitest v2"
+// [!code word:NuqsTestingAdapter]
+import { render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
+import { NuqsTestingAdapter, type OnUrlUpdateFunction } from 'nuqs/adapters/testing'
+import { describe, expect, it, vi } from 'vitest'
+import { CounterButton } from './counter-button'
+
+it('should increment the count when clicked', async () => {
+  const user = userEvent.setup()
+  const onUrlUpdate = vi.fn<OnUrlUpdateFunction>()
+  render(<CounterButton />, {
+    // 1. Setup the test by passing initial search params / querystring:
+    wrapper: ({ children }) => (
+      <NuqsTestingAdapter searchParams="?count=42" onUrlUpdate={onUrlUpdate}>
+        {children}
+      </NuqsTestingAdapter>
+    )
+  })
+  // 2. Act
+  const button = screen.getByRole('button')
+  await user.click(button)
+  // 3. Assert changes in the state and in the (mocked) URL
+  expect(button).toHaveTextContent('count is 43')
+  expect(onUrlUpdate).toHaveBeenCalledOnce()
+  const event = onUrlUpdate.mock.calls[0][0]!
+  expect(event.queryString).toBe('?count=43')
+  expect(event.searchParams.get('count')).toBe('43')
+  expect(event.options.history).toBe('push')
+})
+```
+
+</Tabs>
 
 See issue [#259](https://github.com/47ng/nuqs/issues/259) for more testing-related discussions.

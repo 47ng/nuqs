@@ -1,5 +1,6 @@
 import type { TransitionStartFunction } from 'react'
 
+export type SearchParams = Record<string, string | string[] | undefined>
 export type HistoryOptions = 'replace' | 'push'
 
 export type Options = {
