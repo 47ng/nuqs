@@ -11,8 +11,15 @@ export function useNuqsNextAppRouterAdapter(): AdapterInterface {
     // App router
     const url = renderURL(location.origin + location.pathname, search)
     debug('[nuqs queue (app)] Updating url: %s', url)
-    // First, update the URL locally without triggering a network request,
-    // this allows keeping a reactive URL if the network is slow.
+    if (!options.shallow) {
+      // Call the Next.js router to perform a network request
+      // and re-render server components.
+      router.replace(url, {
+        scroll: false
+      })
+    }
+    // Then, optimistically update the URL locally without triggering a network
+    // request, this allows keeping a reactive URL if the network is slow.
     const updateMethod =
       options.history === 'push' ? history.pushState : history.replaceState
     updateMethod.call(
@@ -25,13 +32,6 @@ export function useNuqsNextAppRouterAdapter(): AdapterInterface {
     )
     if (options.scroll) {
       window.scrollTo(0, 0)
-    }
-    if (!options.shallow) {
-      // Call the Next.js router to perform a network request
-      // and re-render server components.
-      router.replace(url, {
-        scroll: false
-      })
     }
   }, [])
   return {
