@@ -1,7 +1,7 @@
 import {
   useCallback,
-  useEffect,
   useInsertionEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState
@@ -113,7 +113,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
     initialSearchParams
   )
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const state = parseMap(
       keyMap,
       urlKeys,

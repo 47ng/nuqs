@@ -1,7 +1,7 @@
 import {
   useCallback,
-  useEffect,
   useInsertionEffect,
+  useLayoutEffect,
   useRef,
   useState
 } from 'react'
@@ -251,7 +251,7 @@ export function useQueryState<T = string>(
     initialSearchParams?.get(key) ?? null
   )
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const query = initialSearchParams.get(key) ?? null
     if (query === queryRef.current) {
       return
