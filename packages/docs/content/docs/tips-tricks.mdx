@@ -15,7 +15,7 @@ All query states bound to the same key will be synchronized across components.
 ```ts title="hooks/useCoordinates.ts"
 'use client'
 
-import { parseAsFloat } from 'nuqs'
+import { useQueryStates, parseAsFloat } from 'nuqs'
 
 export function useCoordinates() {
   return useQueryStates({
