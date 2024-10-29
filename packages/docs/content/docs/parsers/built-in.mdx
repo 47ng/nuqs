@@ -179,7 +179,7 @@ parseAsStringEnum<Direction>(Object.values(Direction))
 
 ## Dates & timestamps
 
-There are two parsers that give you a `Date` object, their difference is
+There are three parsers that give you a `Date` object, their difference is
 on how they encode the value into the query string.
 
 ### ISO 8601 Datetime
@@ -194,8 +194,6 @@ import { parseAsIsoDateTime } from 'nuqs'
 
 ### ISO 8601 Date
 
-Note: the Date is parsed without the time zone offset, making it at GMT 00:00:00 UTC.
-
 ```ts
 import { parseAsIsoDate } from 'nuqs'
 ```
@@ -203,6 +201,11 @@ import { parseAsIsoDate } from 'nuqs'
 <Suspense>
   <DateISOParserDemo />
 </Suspense>
+
+<Callout>
+  The Date is parsed without the time zone offset, making it at 00:00:00 UTC.<br/>
+  <span className='block mt-1.5'>_Support: introduced in version 2.1.0._</span>
+</Callout>
 
 ### Timestamp
 

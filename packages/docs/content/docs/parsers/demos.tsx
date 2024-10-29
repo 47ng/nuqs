@@ -262,16 +262,21 @@ export function DateParserDemo({
           <input
             type={type}
             className="flex h-10 flex-[2] rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-            value={value === null ? '' : value.toISOString().slice(0, -8)}
+            value={
+              value?.toISOString().slice(0, type === 'date' ? 10 : 19) ?? ''
+            }
             onChange={e => {
               if (e.target.value === '') {
                 setValue(null)
               } else {
-                setValue(new Date(e.target.value))
+                // Force back the date to UTC to avoid lossy SerDe conversion.
+                // We could use the valueAsDate, but it's not supported in Chrome.
+                // See https://github.com/47ng/nuqs/pull/704
+                setValue(new Date(e.target.value + 'Z'))
               }
             }}
           />
-          <span className="px-2 text-zinc-500">UTC</span>
+          <span className="px-2 font-medium text-zinc-500">UTC</span>
         </div>
         <div className="flex flex-1 gap-2 @md:flex-initial">
           <Button
