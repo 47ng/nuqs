@@ -1,5 +1,5 @@
 import { useRouter, useSearchParams } from 'next/navigation'
-import { useCallback } from 'react'
+import { useCallback, useOptimistic } from 'react'
 import { debug } from '../../debug'
 import type { AdapterInterface, UpdateUrlFunction } from '../defs'
 import { renderURL } from './shared'
@@ -7,8 +7,11 @@ import { renderURL } from './shared'
 export function useNuqsNextAppRouterAdapter(): AdapterInterface {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const [optimisticSearchParams, setOptimisticSearchParams] =
+    useOptimistic<URLSearchParams>(searchParams)
   const updateUrl: UpdateUrlFunction = useCallback((search, options) => {
     // App router
+    setOptimisticSearchParams(search)
     const url = renderURL(location.origin + location.pathname, search)
     debug('[nuqs queue (app)] Updating url: %s', url)
     // First, update the URL locally without triggering a network request,
@@ -35,7 +38,7 @@ export function useNuqsNextAppRouterAdapter(): AdapterInterface {
     }
   }, [])
   return {
-    searchParams,
+    searchParams: optimisticSearchParams,
     updateUrl,
     // See: https://github.com/47ng/nuqs/issues/603#issuecomment-2317057128
     rateLimitFactor: 2
