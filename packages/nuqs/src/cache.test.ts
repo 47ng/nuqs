@@ -81,6 +81,26 @@ describe('cache', () => {
       expect(cache.all().string).toBe('this one is used')
       expect(cache.get('string')).toBe('this one is used')
     })
+
+    it('supports partial urlKeys', () => {
+      const cache = createSearchParamsCache(
+        {
+          foo: parseAsString,
+          bar: parseAsString
+        },
+        {
+          urlKeys: {
+            foo: 'f'
+          }
+        }
+      )
+      const parseOutput = cache.parse({
+        f: 'foo',
+        bar: 'bar'
+      })
+      expect(parseOutput.foo).toBe('foo')
+      expect(parseOutput.bar).toBe('bar')
+    })
   })
 
   describe('compareSearchParams', () => {
