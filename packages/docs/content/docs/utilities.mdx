@@ -71,13 +71,13 @@ to shorter keys in the URL:
 ```ts
 const serialize = createSerializer(
   {
-    // Use variable names that make sense for your domain/business logic
+    // 1. Use variable names that make sense for your domain/business logic
     latitude: parseAsFloat,
     longitude: parseAsFloat,
     zoomLevel: parseAsInteger
   },
   {
-    // And remap them to shorter keys in the URL
+    // 2. Remap them to shorter keys in the URL
     urlKeys: {
       latitude: 'lat',
       longitude: 'lng',
@@ -86,6 +86,8 @@ const serialize = createSerializer(
   }
 )
 
+// 3. Use your variable names when calling the serializer,
+// and the shorter keys will be rendered in the URL:
 serialize({
   latitude: 45.18,
   longitude: 5.72,
