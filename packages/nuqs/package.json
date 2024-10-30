@@ -97,6 +97,11 @@
       "types": "./dist/adapters/testing.d.ts",
       "import": "./dist/adapters/testing.js",
       "require": "./esm-only.cjs"
+    },
+    "./experimental-async-cache": {
+      "types": "./dist/experimental-async-cache.d.ts",
+      "import": "./dist/experimental-async-cache.js",
+      "require": "./esm-only.cjs"
     }
   },
   "scripts": {
@@ -141,7 +146,7 @@
     "@types/react": "^18.3.11",
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react": "^4.3.1",
-    "next": "14.2.15",
+    "next": "catalog:next",
     "react": "catalog:react19rc",
     "react-dom": "catalog:react19rc",
     "react-router-dom": "^6.26.2",

@@ -6,6 +6,7 @@ const config = {
   basePath,
   productionBrowserSourceMaps: true,
   experimental: {
+    ppr: true,
     clientRouterFilter: false,
     ...(process.env.REACT_COMPILER === 'true' ? { reactCompiler: true } : {}),
     serverSourceMaps: true
