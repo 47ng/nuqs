@@ -125,4 +125,53 @@ describe('serializer', () => {
       '?int=0&str=&bool=false&arr=&json={%22foo%22:%22bar%22}'
     )
   })
+  test('support for global clearOnDefault option', () => {
+    const serialize = createSerializer(
+      {
+        int: parseAsInteger.withDefault(0),
+        str: parseAsString.withDefault(''),
+        bool: parseAsBoolean.withDefault(false),
+        arr: parseAsArrayOf(parseAsString).withDefault([]),
+        json: parseAsJson(x => x).withDefault({ foo: 'bar' })
+      },
+      { clearOnDefault: false }
+    )
+    const result = serialize({
+      int: 0,
+      str: '',
+      bool: false,
+      arr: [],
+      json: { foo: 'bar' }
+    })
+    expect(result).toBe(
+      '?int=0&str=&bool=false&arr=&json={%22foo%22:%22bar%22}'
+    )
+  })
+  test('parser clearOnDefault takes precedence over global clearOnDefault', () => {
+    const serialize = createSerializer(
+      {
+        int: parseAsInteger
+          .withDefault(0)
+          .withOptions({ clearOnDefault: true }),
+        str: parseAsString.withDefault('')
+      },
+      { clearOnDefault: false }
+    )
+    const result = serialize({
+      int: 0,
+      str: ''
+    })
+    expect(result).toBe('?str=')
+  })
+  test('supports urlKeys', () => {
+    const serialize = createSerializer(parsers, {
+      urlKeys: {
+        bool: 'b',
+        int: 'i',
+        str: 's'
+      }
+    })
+    const result = serialize({ str: 'foo', int: 1, bool: true })
+    expect(result).toBe('?s=foo&i=1&b=true')
+  })
 })
