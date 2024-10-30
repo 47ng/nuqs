@@ -62,6 +62,38 @@ serialize(url, { foo: 'bar' }) // https://example.com/path?baz=qux&foo=bar
 serialize('?remove=me', { foo: 'bar', remove: null }) // ?foo=bar
 ```
 
+### Shorter search params keys
+
+Just like [`useQueryStates{:ts}`](./batching#shorter-search-params-keys), you can
+specify a `urlKeys{:ts}` object to map the variable names defined by the parsers
+to shorter keys in the URL:
+
+```ts
+const serialize = createSerializer(
+  {
+    // Use variable names that make sense for your domain/business logic
+    latitude: parseAsFloat,
+    longitude: parseAsFloat,
+    zoomLevel: parseAsInteger
+  },
+  {
+    // And remap them to shorter keys in the URL
+    urlKeys: {
+      latitude: 'lat',
+      longitude: 'lng',
+      zoomLevel: 'z'
+    }
+  }
+)
+
+serialize({
+  latitude: 45.18,
+  longitude: 5.72,
+  zoomLevel: 12
+})
+// ?lat=45.18&lng=5.72&z=12
+```
+
 ## Parser type inference
 
 To access the underlying type returned by a parser, you can use the
