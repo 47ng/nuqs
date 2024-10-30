@@ -8,7 +8,10 @@ const $input: unique symbol = Symbol('Input')
 
 export function createSearchParamsCache<
   Parsers extends Record<string, ParserBuilder<any>>
->(parsers: Parsers) {
+>(
+  parsers: Parsers,
+  { urlKeys = {} }: { urlKeys?: Partial<Record<keyof Parsers, string>> } = {}
+) {
   type Keys = keyof Parsers
   type ParsedSearchParams = {
     readonly [K in Keys]: inferParserType<Parsers[K]>
@@ -44,7 +47,8 @@ export function createSearchParamsCache<
     }
     for (const key in parsers) {
       const parser = parsers[key]!
-      c.searchParams[key] = parser.parseServerSide(searchParams[key])
+      const urlKey = urlKeys[key] ?? key
+      c.searchParams[key] = parser.parseServerSide(searchParams[urlKey])
     }
     c[$input] = searchParams
     return Object.freeze(c.searchParams) as ParsedSearchParams
