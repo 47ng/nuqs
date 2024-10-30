@@ -128,3 +128,25 @@ export function Client() {
   // ...
 }
 ```
+
+### Shorter search params keys
+
+Just like [`useQueryStates`](./batching#shorter-search-params-keys), you can
+define a `urlKeys` object to map the variable names defined by the parser to
+shorter keys in the URL. They will be translated on read and your codebase
+can only refer to variable names that make sense for your domain or business logic.
+
+```ts title="searchParams.ts"
+export const coordinatesParsers = {
+  // Use human-readable variable names throughout your codebase
+  latitude: parseAsFloat.withDefault(45.18),
+  longitude: parseAsFloat.withDefault(5.72)
+}
+export const coordinatesCache = createSearchParamsCache(coordinatesParsers, {
+  urlKeys: {
+    // Remap them to read from shorter keys in the URL
+    latitude: 'lat',
+    longitude: 'lng'
+  }
+})
+```

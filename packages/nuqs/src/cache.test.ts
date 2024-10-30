@@ -59,6 +59,28 @@ describe('cache', () => {
       // cache still works though
       expect(cache.all()).toBe(all)
     })
+
+    it('supports urlKeys', () => {
+      const cache = createSearchParamsCache(
+        {
+          string: parseAsString
+        },
+        {
+          urlKeys: {
+            string: 'str'
+          }
+        }
+      )
+      const parseOutput = cache.parse({
+        str: 'this one is used',
+        string: 'not this one'
+      })
+      expect(parseOutput.string).toBe('this one is used')
+      // @ts-expect-error - Making sure types & runtime are in sync
+      expect(parseOutput.str).toBeUndefined()
+      expect(cache.all().string).toBe('this one is used')
+      expect(cache.get('string')).toBe('this one is used')
+    })
   })
 
   describe('compareSearchParams', () => {
