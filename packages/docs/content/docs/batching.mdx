@@ -84,17 +84,21 @@ const search = await setCoordinates({
 ### Options
 
 There are three places you can define [options](./options) in `useQueryStates`:
-- As the second argument to the hook itself (global options, see above)
+- As the second argument to the hook itself (global options, like `history: 'push'{:ts}` above)
 - On each parser, like `parseAsFloat.withOptions({ shallow: false }){:ts}`
 - At the call level when updating the state:
 
 ```ts
-setCoordinates({
-  lat: 42,
-  lng: 12
-}, {
-  shallow: false
-})
+setCoordinates(
+  {
+    lat: 42,
+    lng: 12
+  },
+  // [!code highlight:4]
+  {
+    shallow: false
+  }
+)
 ```
 
 The order of precedence is: call-level options > parser options > global options.
