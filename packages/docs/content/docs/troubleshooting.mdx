@@ -47,7 +47,7 @@ function useIntFloat() {
 When using nuqs hooks, keep the following guidelines in mind:
 Components using hooks like useQueryState should be wrapped in `<Suspense>` when rendered within a page component. 
 For example:
-```ts
+```tsx
 'use client'
 export default function Page() {
   return (
