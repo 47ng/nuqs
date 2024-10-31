@@ -42,27 +42,38 @@ function useIntFloat() {
 }
 ```
 
-## Client Components to be Wrapped in a `<Suspense>` Boundary
+## Client components need to be wrapped in a `<Suspense>` boundary
 
-When using nuqs hooks, keep the following guidelines in mind:
-Components using hooks like useQueryState should be wrapped in `<Suspense>` when rendered within a page component. 
-For example:
+You may have encountered the following [error message](https://nextjs.org/docs/messages/missing-suspense-with-csr-bailout)
+from Next.js:
+
+```
+Missing Suspense boundary with useSearchParams
+```
+
+Components using hooks like useQueryState should be wrapped in `<Suspense>` when
+rendered within a page component:
+
 ```tsx
 'use client'
+
 export default function Page() {
   return (
     <Suspense>
       <Client />
     </Suspense>
-  ) 
+  )
 }
+
 function Client() {
   const [foo, setFoo] = useQueryState('foo')
   // ...
 }
 ```
-For reference - https://nextjs.org/docs/messages/missing-suspense-with-csr-bailout
 
-The recommended approach is to keep page.tsx as a server component (no 'use client') and 
-move client-side features into a separate client.tsx file.
+The recommended approach is:
+
+1. Keep page.tsx as a server component (no `'use client'{:ts}` directive)
+2. Move client-side features into a separate client file.
+3. Wrap the client component in a `<Suspense>` boundary.
 
