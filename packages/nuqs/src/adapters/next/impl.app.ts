@@ -1,5 +1,5 @@
 import { useRouter, useSearchParams } from 'next/navigation'
-import { useCallback, useOptimistic } from 'react'
+import { useCallback, useOptimistic, startTransition } from 'react'
 import { debug } from '../../debug'
 import type { AdapterInterface, UpdateUrlFunction } from '../defs'
 import { renderURL } from './shared'
@@ -11,7 +11,9 @@ export function useNuqsNextAppRouterAdapter(): AdapterInterface {
     useOptimistic<URLSearchParams>(searchParams)
   const updateUrl: UpdateUrlFunction = useCallback((search, options) => {
     // App router
-    setOptimisticSearchParams(search)
+    startTransition(() => {
+      setOptimisticSearchParams(search)
+    })
     const url = renderURL(location.origin + location.pathname, search)
     debug('[nuqs queue (app)] Updating url: %s', url)
     // First, update the URL locally without triggering a network request,
