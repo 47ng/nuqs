@@ -16,7 +16,8 @@
     },
     {
       "label": "Open Issues",
-      "query": "repo:47ng/nuqs is:issue is:open -label:internal"
+      "query": "repo:47ng/nuqs is:issue is:open -label:internal",
+      "groupBy": ["milestone"]
     },
     {
       "label": "Internal",
