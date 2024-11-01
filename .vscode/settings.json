@@ -16,7 +16,11 @@
     },
     {
       "label": "Open Issues",
-      "query": "repo:47ng/nuqs is:issue is:open"
+      "query": "repo:47ng/nuqs is:issue is:open -label:internal"
+    },
+    {
+      "label": "Internal",
+      "query": "repo:47ng/nuqs is:issue label:internal"
     }
   ]
 }
