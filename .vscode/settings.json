@@ -1,0 +1,22 @@
+{
+  "githubPullRequests.queries": [
+    {
+      "label": "Backlog",
+      "query": "repo:47ng/nuqs is:pr is:open milestone:\"🪵 Backlog\""
+    }
+  ],
+  "githubIssues.queries": [
+    {
+      "label": "Backlog",
+      "query": "repo:47ng/nuqs is:issue is:open milestone:\"🪵 Backlog\""
+    },
+    {
+      "label": "Bugs",
+      "query": "repo:47ng/nuqs is:issue is:open label:bug"
+    },
+    {
+      "label": "Open Issues",
+      "query": "repo:47ng/nuqs is:issue is:open"
+    }
+  ]
+}
