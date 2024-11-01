@@ -10,7 +10,7 @@ jobs:
   prevent-pr-targetting-master:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@d632683dd7b4114ad314bca15554477dd762a938
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
       - name: Post comment to update base branch
         run: gh pr comment ${{ github.event.pull_request.number }} --body "⚠️ Pull requests targetting the \`master\` branch are not allowed. Please update the base branch to \`next\`."
         env:
