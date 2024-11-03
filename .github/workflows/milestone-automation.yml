@@ -16,7 +16,7 @@ jobs:
       - name: Check if PR was in Backlog
         id: check_milestone
         run: |
-          milestone_id=$(gh pr view ${{ github.event.pull_request.number }} --json milestone --jq '.milestone.number')
+          milestone_id=$(gh pr view ${{ github.repository }}#${{ github.event.pull_request.number }} --json milestone --jq '.milestone.number')
           if [[ "$milestone_id" == "3" ]]; then
             echo "backlog_milestone=true" >> $GITHUB_OUTPUT
           else
@@ -36,7 +36,7 @@ jobs:
       - name: Find and update associated issues to "shipping next"
         if: steps.check_milestone.outputs.backlog_milestone == 'true'
         run: |
-          issues=$(gh pr view ${{ github.event.pull_request.number }} --json closingIssuesReferences --jq '.closingIssuesReferences[].number')
+          issues=$(gh pr view ${{ github.repository }}#${{ github.event.pull_request.number }} --json closingIssuesReferences --jq '.closingIssuesReferences[].number')
           for issue in $issues; do
             echo "Updating issue #$issue to milestone ID 2 (shipping next)"
 
