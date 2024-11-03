@@ -1,0 +1,56 @@
+name: Mark as "Shipping Next"
+
+on:
+  pull_request:
+    types: [closed]
+    branches:
+      - next
+
+jobs:
+  update_milestones:
+    name: Update Milestones
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.merged == true
+
+    steps:
+      - name: Check if PR was in Backlog
+        id: check_milestone
+        run: |
+          milestone_id=$(gh pr view ${{ github.event.pull_request.number }} --json milestone --jq '.milestone.number')
+          if [[ "$milestone_id" == "3" ]]; then
+            echo "backlog_milestone=true" >> $GITHUB_OUTPUT
+          else
+            echo "backlog_milestone=false" >> $GITHUB_OUTPUT
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Update PR milestone to "shipping next"
+        if: steps.check_milestone.outputs.backlog_milestone == 'true'
+        run: |
+          gh api -X PATCH \
+            repos/${{ github.repository }}/issues/${{ github.event.pull_request.number }} \
+            -f milestone=2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Find and update associated issues to "shipping next"
+        if: steps.check_milestone.outputs.backlog_milestone == 'true'
+        run: |
+          issues=$(gh pr view ${{ github.event.pull_request.number }} --json closingIssuesReferences --jq '.closingIssuesReferences[].number')
+          for issue in $issues; do
+            echo "Updating issue #$issue to milestone ID 2 (shipping next)"
+
+            # Attempt to update the issue's milestone and capture any errors
+            response=$(gh api -X PATCH repos/${{ github.repository }}/issues/$issue -f milestone=2 2>&1)
+            exit_code=$?
+
+            if [[ $exit_code -ne 0 ]]; then
+              issue_url="https://github.com/${{ github.repository }}/issues/$issue"
+              echo "::error title=Failed to update issue [#issue]($issue_url)::${response}"
+              echo "Skipping issue #$issue due to error."
+            else
+              echo "Issue #$issue updated successfully to milestone ID 2."
+            fi
+          done
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
