@@ -44,12 +44,12 @@ jobs:
             response=$(gh api -X PATCH repos/${{ github.repository }}/issues/$issue -f milestone=2 2>&1)
             exit_code=$?
 
+            issue_url="https://github.com/${{ github.repository }}/issues/$issue"
             if [[ $exit_code -ne 0 ]]; then
-              issue_url="https://github.com/${{ github.repository }}/issues/$issue"
               echo "::error title=Failed to update issue [#issue]($issue_url)::${response}"
               echo "Skipping issue #$issue due to error."
             else
-              echo "Issue #$issue updated successfully to milestone ID 2."
+              echo "::notice title=Issue $issue added to Shipping Next::$issue_url"
             fi
           done
         env:
