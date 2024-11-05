@@ -14,65 +14,6 @@ env:
   FORCE_COLOR: 3 # Diplay chalk colors
 
 jobs:
-  ci:
-    # Watch out! When changing the job name,
-    # update the required checks in GitHub
-    # branch protection settings for `next`.
-    name: CI (${{ matrix.next-version }}${{ matrix.base-path && ' basePath' || ''}})
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        # Watch out! When changing the compat grid,
-        # update the required checks in GitHub
-        # branch protection settings for `next`.
-        base-path: [false, '/base']
-        next-version:
-          # Only keep versions where there were relevant changes in the app router core,
-          # and the previous one to use as a baseline.
-          - '14.2.0'
-          - '14.2.3' # before vercel/next.js#66755
-          - '14.2.4' # after vercel/next.js#66755
-          - '14.2.7' # before vercel/next.js#69509
-          - '14.2.8' # after vercel/next.js#69509
-          - '15.0.0'
-          - latest
-          - local
-
-    steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
-      - uses: pnpm/action-setup@fe02b34f77f8bc703788d5817da081398fad5dd2
-      - uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af
-        with:
-          node-version-file: .node-version
-          cache: pnpm
-      - name: Install dependencies
-        run: pnpm install
-      - name: Install Next.js version ${{ matrix.next-version }}
-        if: ${{ matrix.next-version != 'local' }}
-        run: pnpm add --filter e2e --filter nuqs next@${{ matrix.next-version }}
-      - name: Run integration tests
-        run: pnpm run test ${{ github.event_name == 'workflow_dispatch' && '--force' || '' }}
-        env:
-          BASE_PATH: ${{ matrix.base-path && matrix.base-path || '/' }}
-          TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
-          TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
-          E2E_NO_CACHE_ON_RERUN: ${{ github.run_attempt }}
-      - name: Save Cypress artifacts
-        uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882
-        if: failure()
-        with:
-          path: packages/e2e/cypress/screenshots
-          name: ci-${{ matrix.next-version }}${{ matrix.base-path && '-basePath' || ''}}
-      - uses: 47ng/actions-slack-notify@main
-        name: Notify on Slack
-        if: always()
-        with:
-          status: ${{ job.status }}
-          jobName: next@${{ matrix.next-version }}${{ matrix.base-path && ' basePath' || ''}}
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-
   lint:
     name: Linting
     runs-on: ubuntu-latest
@@ -84,7 +25,7 @@ jobs:
           node-version-file: .node-version
           cache: pnpm
       - name: Install dependencies
-        run: pnpm install --ignore-scripts --frozen-lockfile
+        run: pnpm install --ignore-scripts --frozen-lockfile --workspace-root
       - name: Check monorepo with Sherif
         run: pnpm run lint:sherif
       - name: Check source code formatting
@@ -102,10 +43,195 @@ jobs:
             echo "No formatting issues found"
           fi
 
+  ci-core:
+    name: CI (core)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - uses: pnpm/action-setup@fe02b34f77f8bc703788d5817da081398fad5dd2
+      - uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - name: Install dependencies
+        run: pnpm install --ignore-scripts --frozen-lockfile --filter nuqs...
+      - name: Run tests
+        run: pnpm run test ${{ github.event_name == 'workflow_dispatch' && '--force' || '' }} --filter nuqs
+        env:
+          TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+          TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
+          E2E_NO_CACHE_ON_RERUN: ${{ github.run_attempt }}
+
+  e2e-next:
+    # Watch out! When changing the job name,
+    # update the required checks in GitHub
+    # branch protection settings for `next`.
+    name: E2E (next@${{ matrix.next-version }}${{ matrix.base-path && ' basePath' || ''}})
+    runs-on: ubuntu-latest
+    needs: [ci-core]
+    strategy:
+      fail-fast: false
+      matrix:
+        # Watch out! When changing the compat grid,
+        # update the required checks in GitHub
+        # branch protection settings for `next`.
+        base-path: [false, '/base']
+        next-version:
+          # Only keep versions where there were relevant changes in the app router core,
+          # and the previous one to use as a baseline.
+          - '14.2.0'
+          - '14.2.3' # before vercel/next.js#66755
+          - '14.2.4' # after vercel/next.js#66755
+          - '14.2.7' # before vercel/next.js#69509
+          - '14.2.8' # after vercel/next.js#69509
+          - '15.0.0'
+          - latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - uses: pnpm/action-setup@fe02b34f77f8bc703788d5817da081398fad5dd2
+      - uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - name: Install dependencies
+        run: pnpm install
+      - name: Install Next.js version ${{ matrix.next-version }}
+        if: ${{ matrix.next-version != 'local' }}
+        run: pnpm add --filter e2e-next --filter nuqs next@${{ matrix.next-version }}
+      - name: Run integration tests
+        run: pnpm run test ${{ github.event_name == 'workflow_dispatch' && '--force' || '' }} --filter e2e-next
+        env:
+          BASE_PATH: ${{ matrix.base-path && matrix.base-path || '/' }}
+          TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+          TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
+          E2E_NO_CACHE_ON_RERUN: ${{ github.run_attempt }}
+      - name: Save Cypress artifacts
+        uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882
+        if: failure()
+        with:
+          path: packages/e2e/next/cypress/screenshots
+          name: ci-${{ matrix.next-version }}${{ matrix.base-path && '-basePath' || ''}}
+      - uses: 47ng/actions-slack-notify@main
+        name: Notify on Slack
+        if: always()
+        with:
+          status: ${{ job.status }}
+          jobName: next@${{ matrix.next-version }}${{ matrix.base-path && ' basePath' || ''}}
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+  e2e-react:
+    name: E2E (react)
+    runs-on: ubuntu-latest
+    needs: [ci-core]
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - uses: pnpm/action-setup@fe02b34f77f8bc703788d5817da081398fad5dd2
+      - uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - name: Install dependencies
+        run: pnpm install
+      - name: Run tests
+        run: pnpm run test ${{ github.event_name == 'workflow_dispatch' && '--force' || '' }} --filter e2e-react
+        env:
+          TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+          TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
+          E2E_NO_CACHE_ON_RERUN: ${{ github.run_attempt }}
+      - name: Save Cypress artifacts
+        uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882
+        if: failure()
+        with:
+          path: packages/e2e/react/cypress/screenshots
+          name: ci-react
+      - uses: 47ng/actions-slack-notify@main
+        name: Notify on Slack
+        if: always()
+        with:
+          status: ${{ job.status }}
+          jobName: react
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+  e2e-react-router:
+    name: E2E (react-router)
+    runs-on: ubuntu-latest
+    needs: [ci-core]
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - uses: pnpm/action-setup@fe02b34f77f8bc703788d5817da081398fad5dd2
+      - uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - name: Install dependencies
+        run: pnpm install
+      - name: Run tests
+        run: pnpm run test ${{ github.event_name == 'workflow_dispatch' && '--force' || '' }} --filter e2e-react-router
+        env:
+          TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+          TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
+          E2E_NO_CACHE_ON_RERUN: ${{ github.run_attempt }}
+      - name: Save Cypress artifacts
+        uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882
+        if: failure()
+        with:
+          path: packages/e2e/react-router/cypress/screenshots
+          name: ci-react-router
+      - uses: 47ng/actions-slack-notify@main
+        name: Notify on Slack
+        if: always()
+        with:
+          status: ${{ job.status }}
+          jobName: react-router
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+  e2e-remix:
+    name: E2E (remix)
+    runs-on: ubuntu-latest
+    needs: [ci-core]
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - uses: pnpm/action-setup@fe02b34f77f8bc703788d5817da081398fad5dd2
+      - uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - name: Install dependencies
+        run: pnpm install
+      - name: Run tests
+        run: pnpm run test ${{ github.event_name == 'workflow_dispatch' && '--force' || '' }} --filter e2e-remix
+        env:
+          TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+          TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
+          E2E_NO_CACHE_ON_RERUN: ${{ github.run_attempt }}
+      - name: Save Cypress artifacts
+        uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882
+        if: failure()
+        with:
+          path: packages/e2e/remix/cypress/screenshots
+          name: ci-remix
+      - uses: 47ng/actions-slack-notify@main
+        name: Notify on Slack
+        if: always()
+        with:
+          status: ${{ job.status }}
+          jobName: remix
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
   cd:
     name: Deployment
     runs-on: ubuntu-latest
-    needs: [ci]
+    needs:
+      - lint
+      - ci-core
+      - e2e-next
+      - e2e-react
+      - e2e-react-router
+      - e2e-remix
     if: ${{ github.ref_name == 'master' || github.ref_name == 'beta' }}
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
@@ -117,7 +243,7 @@ jobs:
       # Note: we do not use an external Turbo cache for publishing
       # to prevent against possible cache collision attacks.
       - name: Install dependencies
-        run: pnpm install --ignore-scripts --frozen-lockfile
+        run: pnpm install --ignore-scripts --frozen-lockfile --filter nuqs...
       - name: Build package
         run: pnpm build --filter nuqs
       - name: Semantic Release

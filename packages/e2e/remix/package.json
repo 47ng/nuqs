@@ -1,5 +1,5 @@
 {
-  "name": "adapters-remix",
+  "name": "e2e-remix",
   "private": true,
   "sideEffects": false,
   "type": "module",
@@ -8,7 +8,9 @@
     "dev": "remix vite:dev --port 4001",
     "lint": "eslint --ignore-path .gitignore --cache --cache-location ./node_modules/.cache/eslint .",
     "start": "remix-serve ./build/server/index.js",
-    "typecheck": "tsc"
+    "test": "pnpm run --parallel --stream --filter e2e-remix '/^test:/'",
+    "test:e2e": "echo \"todo: Add e2e tests for Remix\"",
+    "test:types": "tsc"
   },
   "dependencies": {
     "@remix-run/node": "^2.12.1",
