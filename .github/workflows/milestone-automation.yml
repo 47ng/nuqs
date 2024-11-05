@@ -21,6 +21,7 @@ jobs:
             echo "backlog_milestone=true" >> $GITHUB_OUTPUT
           else
             echo "backlog_milestone=false" >> $GITHUB_OUTPUT
+          fi
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
