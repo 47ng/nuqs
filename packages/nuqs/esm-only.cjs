@@ -5,5 +5,5 @@
 
 throw new Error(
   `This package is ESM only.
-  See https://github.com/47ng/nuqs/issues/691 for more details.`
+  See https://err.47ng.com/NUQS-101 for more details.`
 )
