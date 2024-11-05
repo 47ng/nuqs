@@ -17,7 +17,9 @@
     "pretest": "cypress install",
     "test": "start-server-and-test start http://localhost:3001${BASE_PATH} cypress:run",
     "cypress:open": "cypress open",
-    "cypress:run": "cypress run --headless"
+    "cypress:run": "cypress run --headless",
+    "storybook": "storybook dev -p 6006",
+    "build-storybook": "storybook build"
   },
   "dependencies": {
     "next": "14.2.15",
@@ -26,6 +28,14 @@
     "react-dom": "catalog:react19rc"
   },
   "devDependencies": {
+    "@chromatic-com/storybook": "^3.2.2",
+    "@storybook/addon-essentials": "^8.4.2",
+    "@storybook/addon-interactions": "^8.4.2",
+    "@storybook/addon-onboarding": "^8.4.2",
+    "@storybook/blocks": "^8.4.2",
+    "@storybook/nextjs": "^8.4.2",
+    "@storybook/react": "^8.4.2",
+    "@storybook/test": "^8.4.2",
     "@types/node": "^22.7.5",
     "@types/react": "^18.3.11",
     "@types/react-dom": "^18.3.0",
@@ -36,6 +46,7 @@
     "cypress-terminal-report": "^7.0.3",
     "semver": "^7.6.3",
     "start-server-and-test": "^2.0.8",
+    "storybook": "^8.4.2",
     "typescript": "^5.6.3"
   }
 }
