@@ -62,11 +62,11 @@ jobs:
           TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
           E2E_NO_CACHE_ON_RERUN: ${{ github.run_attempt }}
 
-  ci-next:
+  e2e-next:
     # Watch out! When changing the job name,
     # update the required checks in GitHub
     # branch protection settings for `next`.
-    name: CI (next@${{ matrix.next-version }}${{ matrix.base-path && ' basePath' || ''}})
+    name: E2E (next@${{ matrix.next-version }}${{ matrix.base-path && ' basePath' || ''}})
     runs-on: ubuntu-latest
     needs: [ci-core]
     strategy:
@@ -120,8 +120,8 @@ jobs:
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
-  ci-remix:
-    name: CI (remix)
+  e2e-remix:
+    name: E2E (remix)
     runs-on: ubuntu-latest
     needs: [ci-core]
     steps:
@@ -154,8 +154,8 @@ jobs:
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
-  # ci-react-router:
-  #   name: CI (react-router)
+  # e2e-react-router:
+  #   name: E2E (react-router)
   #   runs-on: ubuntu-latest
   #   needs: [ci-core]
   #   steps:
@@ -188,8 +188,8 @@ jobs:
   #       env:
   #         SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
-  # ci-react:
-  #   name: CI (react)
+  # e2e-react:
+  #   name: E2E (react)
   #   runs-on: ubuntu-latest
   #   needs: [ci-core]
   #   steps:
@@ -228,10 +228,10 @@ jobs:
     needs:
       - lint
       - ci-core
-      - ci-next
-      - ci-remix
-      # - ci-react-router
-      # - ci-react
+      - e2e-next
+      - e2e-remix
+      # - e2e-react-router
+      # - e2e-react
     if: ${{ github.ref_name == 'master' || github.ref_name == 'beta' }}
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
