@@ -14,7 +14,7 @@ env:
 
 jobs:
   test_against_nextjs_release:
-    name: CI (${{ inputs.version }}${{ matrix.base-path && ' basePath' || ''}}${{ matrix.react-compiler && ' ⚛️⚡️' || ''}})
+    name: CI (next@${{ inputs.version }}${{ matrix.base-path && ' basePath' || ''}}${{ matrix.react-compiler && ' ⚛️⚡️' || ''}})
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -31,9 +31,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install
       - name: Install Next.js version ${{ inputs.version }}
-        run: pnpm add --filter e2e --filter nuqs next@${{ inputs.version }}
+        run: pnpm add --filter e2e-next --filter nuqs next@${{ inputs.version }}
       - name: Run integration tests
-        run: pnpm run test
+        run: pnpm run test -- --filter e2e-next
         env:
           BASE_PATH: ${{ matrix.base-path && matrix.base-path || '/' }}
           REACT_COMPILER: ${{ matrix.react-compiler }}
@@ -45,7 +45,7 @@ jobs:
         if: failure()
         with:
           path: packages/e2e/cypress/screenshots
-          name: ci-${{ inputs.version }}${{ matrix.base-path && '-basePath' || ''}}${{ matrix.react-compiler && '-react-compiler' || ''}}
+          name: ci-next-${{ inputs.version }}${{ matrix.base-path && '-basePath' || ''}}${{ matrix.react-compiler && '-react-compiler' || ''}}
       - uses: 47ng/actions-slack-notify@main
         name: Notify on Slack
         if: always()

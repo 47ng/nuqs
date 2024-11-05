@@ -14,13 +14,17 @@ This monorepo contains:
 
 - The source code for the `nuqs` NPM package, in [`packages/nuqs`](./packages/nuqs).
 - A Next.js app under [`packages/docs`](./packages/docs) that serves the documentation and as a playground deployed at <https://nuqs.47ng.com>
-- A test bench for [end-to-end tests](./packages/e2e) driven by Cypress
+- A test bench for [end-to-end tests](./packages/e2e) for each supported framework, driven by Cypress
 
 When running `next dev`, this will:
 
 - Build the library and watch for changes using [`tsup`](https://tsup.egoist.dev/)
-- Start the docs/playground, which will be available at <http://localhost:3000>.
-- Start the end-to-end test bench, which will be available at <http://localhost:3001>.
+- Start the docs app, which will be available at <http://localhost:3000>.
+- Start the end-to-end test benches:
+  - Next.js: http://localhost:3001
+  - Remix: http://localhost:3002
+  - React Router: http://localhost:3003
+  - React SPA: http://localhost:3004
 
 ## Testing
 
