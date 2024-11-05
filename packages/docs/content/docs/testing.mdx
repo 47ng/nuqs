@@ -92,6 +92,7 @@ through to make it work with Jest. This is extracted from the
 ```ts title="jest.config.ts"
 const config: Config = {
   // <Other options here>
+  // [!code highlight:3]
   extensionsToTreatAsEsm: [".ts", ".tsx"],
   transform: {}
 };
@@ -100,9 +101,10 @@ const config: Config = {
 2. Change your test command to include the `--experimental-vm-modules` flag:
 
 ```json title="package.json"
+// [!code word:--experimental-vm-modules]
 {
   "scripts": {
-    "test": "NODE_OPTIONS=\"$NODE_OPTIONS --experimental-vm-modules\" jest"`
+    "test": "NODE_OPTIONS=\"$NODE_OPTIONS --experimental-vm-modules\" jest"
   }
 }
 ```
