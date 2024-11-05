@@ -9,6 +9,8 @@ Browsers rate-limit the History API, updates to the URL are queued and throttled
 
 Safari’s rate limits are much higher and require a throttle of 120ms (320ms for older versions of Safari).
 
+Nuqs handles this out of the box so you don't run into those rate-limits, however it is possible to set your own custom throttles.
+
 For more info how to set custom throttles see [Throttling URL updates](./options#throttling-url-updates)
 
 ## Max URL lengths
@@ -17,7 +19,7 @@ Most modern browsers enforce a max URL length, which can vary:
 
 - **Chrome:** ~2 MB (practically, you might encounter issues at around 2,000 characters).
 - **Firefox:** ~65,000 characters.
-- **Safari:** Generally has more restrictive limits (around 8,000 characters).
+- **Safari:** Generally has more restrictive limits (around 80,000 characters).
 - **IE/Edge:** Historically limited to 2,083 characters (IE), although Edge has relaxed this limit.
 
 Keep in mind that not all application state should be stored in URLs. Exceeding the 2,000-character range may indicate the need to reconsider your state management approach.
