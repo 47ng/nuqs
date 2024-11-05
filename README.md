@@ -89,7 +89,7 @@ Example: via Vite or create-react-app.
 ```tsx
 import { NuqsAdapter } from 'nuqs/adapters/react'
 
-createRoot(document.getElementById('root')!).render(
+createRoot(document.getElementById('root')).render(
   <NuqsAdapter>
     <App />
   </NuqsAdapter>
