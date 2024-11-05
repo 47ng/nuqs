@@ -24,5 +24,5 @@ See issue [#691](https://github.com/47ng/nuqs/issues/691) for more details.
 ### Something else?
 
 If you are encountering this error in a different context, please
-[open an issue](https://github.com/47ng/nuqs/issues/new) with details about
+[open an issue](https://github.com/47ng/nuqs/issues/new/choose) with details about
 your setup (a reproduction repository would be even better).
