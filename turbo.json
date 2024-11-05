@@ -21,6 +21,16 @@
       "dependsOn": ["^build"],
       "env": ["REACT_COMPILER", "E2E_NO_CACHE_ON_RERUN"]
     },
+    "e2e-react-router#build": {
+      "outputs": ["dist/**", "cypress/**"],
+      "dependsOn": ["^build"],
+      "env": ["REACT_COMPILER", "E2E_NO_CACHE_ON_RERUN"]
+    },
+    "e2e-react#build": {
+      "outputs": ["dist/**", "cypress/**"],
+      "dependsOn": ["^build"],
+      "env": ["REACT_COMPILER", "E2E_NO_CACHE_ON_RERUN"]
+    },
     "docs#build": {
       "outputs": [".next/**", "!.next/cache/**"],
       "dependsOn": ["^build"],
@@ -45,6 +55,14 @@
       "env": ["BASE_PATH", "REACT_COMPILER", "E2E_NO_CACHE_ON_RERUN"]
     },
     "e2e-remix#test": {
+      "dependsOn": ["build"],
+      "env": ["REACT_COMPILER", "E2E_NO_CACHE_ON_RERUN"]
+    },
+    "e2e-react-router#test": {
+      "dependsOn": ["build"],
+      "env": ["REACT_COMPILER", "E2E_NO_CACHE_ON_RERUN"]
+    },
+    "e2e-react#test": {
       "dependsOn": ["build"],
       "env": ["REACT_COMPILER", "E2E_NO_CACHE_ON_RERUN"]
     }

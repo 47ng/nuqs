@@ -1,5 +1,5 @@
 {
-  "name": "adapters-react",
+  "name": "e2e-react",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -7,13 +7,14 @@
     "dev": "vite --port 4000",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
-    "test": "vitest"
+    "test": "pnpm run --parallel --stream --filter e2e-react '/^test:/'",
+    "test:unit": "vitest",
+    "test:e2e": "echo 'todo: Implement e2e tests'"
   },
   "dependencies": {
     "nuqs": "workspace:*",
-    "react": "rc",
-    "react-dom": "rc",
-    "react-router-dom": "^6.26.2"
+    "react": "catalog:react18",
+    "react-dom": "catalog:react18"
   },
   "devDependencies": {
     "@testing-library/dom": "^10.1.0",
