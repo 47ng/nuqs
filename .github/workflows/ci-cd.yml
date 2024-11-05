@@ -56,7 +56,7 @@ jobs:
       - name: Install dependencies
         run: pnpm install
       - name: Run tests
-        run: pnpm run test ${{ github.event_name == 'workflow_dispatch' && '--force' || '' }} -- --filter nuqs
+        run: pnpm run test ${{ github.event_name == 'workflow_dispatch' && '--force' || '' }} --filter nuqs
         env:
           TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
           TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
@@ -100,7 +100,7 @@ jobs:
         if: ${{ matrix.next-version != 'local' }}
         run: pnpm add --filter e2e-next --filter nuqs next@${{ matrix.next-version }}
       - name: Run integration tests
-        run: pnpm run test ${{ github.event_name == 'workflow_dispatch' && '--force' || '' }} -- --filter e2e-next
+        run: pnpm run test ${{ github.event_name == 'workflow_dispatch' && '--force' || '' }} --filter e2e-next
         env:
           BASE_PATH: ${{ matrix.base-path && matrix.base-path || '/' }}
           TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
@@ -135,7 +135,7 @@ jobs:
   #     - name: Install dependencies
   #       run: pnpm install
   #     - name: Run tests
-  #       run: pnpm run test ${{ github.event_name == 'workflow_dispatch' && '--force' || '' }} -- --filter e2e-remix
+  #       run: pnpm run test ${{ github.event_name == 'workflow_dispatch' && '--force' || '' }} --filter e2e-remix
   #       env:
   #         TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
   #         TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
@@ -169,7 +169,7 @@ jobs:
   #     - name: Install dependencies
   #       run: pnpm install
   #     - name: Run tests
-  #       run: pnpm run test ${{ github.event_name == 'workflow_dispatch' && '--force' || '' }} -- --filter e2e-react-router
+  #       run: pnpm run test ${{ github.event_name == 'workflow_dispatch' && '--force' || '' }} --filter e2e-react-router
   #       env:
   #         TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
   #         TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
@@ -203,7 +203,7 @@ jobs:
   #     - name: Install dependencies
   #       run: pnpm install
   #     - name: Run tests
-  #       run: pnpm run test ${{ github.event_name == 'workflow_dispatch' && '--force' || '' }} -- --filter e2e-react
+  #       run: pnpm run test ${{ github.event_name == 'workflow_dispatch' && '--force' || '' }} --filter e2e-react
   #       env:
   #         TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
   #         TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
