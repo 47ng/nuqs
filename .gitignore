@@ -10,3 +10,5 @@ package-lock.json
 .turbo/
 .vercel
 .tsbuildinfo
+
+*storybook.log
