@@ -86,7 +86,6 @@ jobs:
           - '14.2.8' # after vercel/next.js#69509
           - '15.0.0'
           - latest
-          - local
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
       - uses: pnpm/action-setup@fe02b34f77f8bc703788d5817da081398fad5dd2
@@ -121,39 +120,39 @@ jobs:
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
-  # ci-remix:
-  #   name: CI (remix)
-  #   runs-on: ubuntu-latest
-  #   needs: [ci-core]
-  #   steps:
-  #     - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
-  #     - uses: pnpm/action-setup@fe02b34f77f8bc703788d5817da081398fad5dd2
-  #     - uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af
-  #       with:
-  #         node-version-file: .node-version
-  #         cache: pnpm
-  #     - name: Install dependencies
-  #       run: pnpm install
-  #     - name: Run tests
-  #       run: pnpm run test ${{ github.event_name == 'workflow_dispatch' && '--force' || '' }} --filter e2e-remix
-  #       env:
-  #         TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
-  #         TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
-  #         E2E_NO_CACHE_ON_RERUN: ${{ github.run_attempt }}
-  #     - name: Save Cypress artifacts
-  #       uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882
-  #       if: failure()
-  #       with:
-  #         path: packages/e2e/remix/cypress/screenshots
-  #         name: ci-remix
-  #     - uses: 47ng/actions-slack-notify@main
-  #       name: Notify on Slack
-  #       if: always()
-  #       with:
-  #         status: ${{ job.status }}
-  #         jobName: remix
-  #       env:
-  #         SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+  ci-remix:
+    name: CI (remix)
+    runs-on: ubuntu-latest
+    needs: [ci-core]
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - uses: pnpm/action-setup@fe02b34f77f8bc703788d5817da081398fad5dd2
+      - uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - name: Install dependencies
+        run: pnpm install
+      - name: Run tests
+        run: pnpm run test ${{ github.event_name == 'workflow_dispatch' && '--force' || '' }} --filter e2e-remix
+        env:
+          TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+          TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
+          E2E_NO_CACHE_ON_RERUN: ${{ github.run_attempt }}
+      - name: Save Cypress artifacts
+        uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882
+        if: failure()
+        with:
+          path: packages/e2e/remix/cypress/screenshots
+          name: ci-remix
+      - uses: 47ng/actions-slack-notify@main
+        name: Notify on Slack
+        if: always()
+        with:
+          status: ${{ job.status }}
+          jobName: remix
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
   # ci-react-router:
   #   name: CI (react-router)
@@ -230,7 +229,7 @@ jobs:
       - lint
       - ci-core
       - ci-next
-      # - ci-remix
+      - ci-remix
       # - ci-react-router
       # - ci-react
     if: ${{ github.ref_name == 'master' || github.ref_name == 'beta' }}

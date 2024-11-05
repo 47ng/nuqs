@@ -16,6 +16,11 @@
       "dependsOn": ["^build"],
       "env": ["BASE_PATH", "REACT_COMPILER", "E2E_NO_CACHE_ON_RERUN"]
     },
+    "e2e-remix#build": {
+      "outputs": ["dist/**", "cypress/**"],
+      "dependsOn": ["^build"],
+      "env": ["REACT_COMPILER", "E2E_NO_CACHE_ON_RERUN"]
+    },
     "docs#build": {
       "outputs": [".next/**", "!.next/cache/**"],
       "dependsOn": ["^build"],
@@ -38,6 +43,10 @@
     "e2e-next#test": {
       "dependsOn": ["build"],
       "env": ["BASE_PATH", "REACT_COMPILER", "E2E_NO_CACHE_ON_RERUN"]
+    },
+    "e2e-remix#test": {
+      "dependsOn": ["build"],
+      "env": ["REACT_COMPILER", "E2E_NO_CACHE_ON_RERUN"]
     }
   }
 }
