@@ -6,6 +6,8 @@ description: Some tips on testing components that use `nuqs`
 Since nuqs 2, you can unit-test components that use `useQueryState(s){:ts}` hooks
 by wrapping your rendered component in a `NuqsTestingAdapter{:ts}`.
 
+## With Vitest
+
 Here is an example for Vitest and Testing Library to test a button rendering
 a counter:
 
@@ -78,3 +80,35 @@ it('should increment the count when clicked', async () => {
 </Tabs>
 
 See issue [#259](https://github.com/47ng/nuqs/issues/259) for more testing-related discussions.
+
+## With Jest
+
+Since nuqs 2 is an [ESM-only package](https://gist.github.com/sindresorhus/a39789f98801d908bbc7ff3ecc99d99c),
+there are a few hoops you need to jump through to make it work with Jest.
+This is extracted from the [Jest ESM guide](https://jestjs.io/docs/ecmascript-modules).
+
+1. Add the following options to your jest.config.ts file:
+
+```ts title="jest.config.ts"
+const config: Config = {
+  // <Other options here>
+  // [!code highlight:3]
+  extensionsToTreatAsEsm: [".ts", ".tsx"],
+  transform: {}
+};
+```
+
+2. Change your test command to include the `--experimental-vm-modules` flag:
+
+```json title="package.json"
+// [!code word:--experimental-vm-modules]
+{
+  "scripts": {
+    "test": "NODE_OPTIONS=\"$NODE_OPTIONS --experimental-vm-modules\" jest"
+  }
+}
+```
+
+<Callout>
+Adapt accordingly for Windows with [`cross-env`](https://www.npmjs.com/package/cross-env).
+</Callout>
