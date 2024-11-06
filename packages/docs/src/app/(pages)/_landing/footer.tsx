@@ -1,9 +1,5 @@
-/**
- * v0 by Vercel.
- * @see https://v0.dev/t/I8Btobzyd7p
- */
 import { NuqsWordmark } from '@/src/components/logo'
-import { GithubIcon, TwitterIcon, YoutubeIcon } from 'lucide-react'
+import { SiBluesky, SiGithub, SiYoutube } from '@icons-pack/react-simple-icons'
 import Link from 'next/link'
 
 export default function Component() {
@@ -60,26 +56,32 @@ export default function Component() {
           </div>
           <div className="space-y-3">
             <h3 className="text-xl font-semibold">Social</h3>
-            <ul className="space-y-2">
+            <ul className="space-y-1">
               <li>
                 <Link
                   href="https://github.com/47ng/nuqs"
-                  className="hover:underline"
+                  className="inline-flex items-center gap-1 hover:underline"
                 >
-                  <GithubIcon className="mr-2 inline-block h-5 w-5" /> GitHub
+                  <SiGithub role="presentation" className="mr-2 size-5" />
+                  <span>GitHub</span>
                 </Link>
               </li>
               <li>
                 <Link
                   href="https://www.youtube.com/@47ng-dev"
-                  className="hover:underline"
+                  className="inline-flex items-center gap-1 hover:underline"
                 >
-                  <YoutubeIcon className="mr-2 inline-block h-5 w-5" /> YouTube
+                  <SiYoutube role="presentation" className="mr-2 size-5" />
+                  <span>YouTube</span>
                 </Link>
               </li>
               <li>
-                <Link href="https://x.com/nuqs47ng" className="hover:underline">
-                  <TwitterIcon className="mr-2 inline-block h-5 w-5" /> Twitter
+                <Link
+                  href="https://bsky.app/profile/nuqs.47ng.com"
+                  className="inline-flex items-center gap-1 hover:underline"
+                >
+                  <SiBluesky role="presentation" className="mr-2 size-5" />
+                  <span>Bluesky</span>
                 </Link>
               </li>
             </ul>

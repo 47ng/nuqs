@@ -23,6 +23,7 @@
     "@faker-js/faker": "^9.0.3",
     "@headlessui/react": "^2.1.9",
     "@headlessui/tailwindcss": "^0.2.1",
+    "@icons-pack/react-simple-icons": "^10.1.0",
     "@radix-ui/react-checkbox": "^1.1.2",
     "@radix-ui/react-label": "^2.1.0",
     "@radix-ui/react-select": "^2.1.2",
