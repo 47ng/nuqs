@@ -2,7 +2,7 @@ import type { UpdateUrlFunction } from './adapters/defs'
 import { debug } from './debug'
 import type { Options } from './defs'
 import { error } from './errors'
-import { getDefaultThrottle } from './utils'
+import { URIIsTooLong, getDefaultThrottle } from './utils'
 
 export const FLUSH_RATE_LIMIT_MS = getDefaultThrottle()
 
@@ -153,6 +153,9 @@ function flushUpdateQueue(
         scroll: options.scroll,
         shallow: options.shallow
       })
+      if (URIIsTooLong() && process.env.NODE_ENV === 'development') {
+        console.error(error(414))
+      }
     })
     return [search, null]
   } catch (err) {

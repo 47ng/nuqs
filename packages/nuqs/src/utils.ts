@@ -1,6 +1,9 @@
 import { warn } from './debug'
 import type { Parser } from './parsers'
 
+// Change error documentation after changing this value.
+export const URI_MAX_LENGTH = 2000
+
 export function safeParse<T>(
   parser: Parser<T>['parse'],
   value: string,
@@ -37,4 +40,8 @@ export function getDefaultThrottle() {
   } catch {
     return 320
   }
+}
+
+export function URIIsTooLong() {
+  return window.location.href.length > URI_MAX_LENGTH
 }
