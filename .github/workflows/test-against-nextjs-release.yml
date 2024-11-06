@@ -33,7 +33,7 @@ jobs:
       - name: Install Next.js version ${{ inputs.version }}
         run: pnpm add --filter e2e-next --filter nuqs next@${{ inputs.version }}
       - name: Run integration tests
-        run: pnpm run test -- --filter e2e-next
+        run: pnpm run test --filter e2e-next
         env:
           BASE_PATH: ${{ matrix.base-path && matrix.base-path || '/' }}
           REACT_COMPILER: ${{ matrix.react-compiler }}
@@ -44,7 +44,7 @@ jobs:
         uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882
         if: failure()
         with:
-          path: packages/e2e/cypress/screenshots
+          path: packages/e2e-next/cypress/screenshots
           name: ci-next-${{ inputs.version }}${{ matrix.base-path && '-basePath' || ''}}${{ matrix.react-compiler && '-react-compiler' || ''}}
       - uses: 47ng/actions-slack-notify@main
         name: Notify on Slack
