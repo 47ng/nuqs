@@ -8,7 +8,7 @@
     "dev": "remix vite:dev --port 4001",
     "lint": "eslint --ignore-path .gitignore --cache --cache-location ./node_modules/.cache/eslint .",
     "start": "remix-serve ./build/server/index.js",
-    "test": "pnpm run --parallel --stream --filter e2e-remix '/^test:/'",
+    "test": "pnpm run '/^test:/'",
     "test:e2e": "echo \"todo: Add e2e tests for Remix\"",
     "test:types": "tsc"
   },

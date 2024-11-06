@@ -7,7 +7,7 @@
     "dev": "vite --port 4000",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
-    "test": "pnpm run --parallel --stream --filter e2e-react-router '/^test:/'",
+    "test": "pnpm run '/^test:/'",
     "test:unit": "vitest",
     "test:e2e": "echo 'todo: Implement e2e tests'"
   },
