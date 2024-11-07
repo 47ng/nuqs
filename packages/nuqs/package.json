@@ -1,7 +1,7 @@
 {
   "name": "nuqs",
   "version": "0.0.0-semantically-released",
-  "description": "Type-safe search params state manager for Next.js - Like React.useState, but stored in the URL query string",
+  "description": "Type-safe search params state manager for React - Like useState, but stored in the URL query string",
   "license": "MIT",
   "author": {
     "name": "François Best",
