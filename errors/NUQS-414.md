@@ -2,7 +2,9 @@
 
 This error occurs if your URI length exceeds 2,000
 characters, there are varying browser limitations
-for max URI lengths.
+for max URL lengths.
+
+See [here](https://nuqs.47ng.com/docs/limits#max-url-lengths) for URL max lengths across different browsers.
 
 ## Possible Solutions
 
