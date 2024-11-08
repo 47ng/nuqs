@@ -1,4 +1,4 @@
-# Max URI Length Exceeded
+# Max Safe URL Length Exceeded
 
 This error occurs if your URI length exceeds 2,000
 characters, there are varying browser limitations
