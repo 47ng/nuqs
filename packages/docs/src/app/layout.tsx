@@ -44,6 +44,7 @@ export default function Layout({ children }: { children: ReactNode }) {
           <Link
             href="/blog/nuqs-2"
             className="decoration-slice decoration-1 transition-all hover:underline hover:underline-offset-8 focus-visible:underline focus-visible:outline-none"
+            prefetch={false}
           >
             Announcing nuqs version 2
           </Link>

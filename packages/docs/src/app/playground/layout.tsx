@@ -36,6 +36,7 @@ export default function PlaygroundLayout({
               <Link
                 href="/blog/nuqs-2"
                 className="text-blue-900 hover:underline focus-visible:underline focus-visible:outline-none dark:text-blue-100"
+                prefetch={false}
               >
                 Announcing nuqs v2 !
               </Link>
