@@ -44,7 +44,7 @@ function LookAtTheURL() {
       <text
         x="84.43988539137376"
         y="33.319640699669435"
-        fontFamily="Virgil, Segoe UI Emoji"
+        className="font-medium italic"
         fontSize="20px"
         fill="currentColor"
         direction="ltr"

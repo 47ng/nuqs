@@ -104,13 +104,6 @@
   }
 }
 
-@layer base {
-  @font-face {
-    font-family: 'Virgil';
-    src: url(https://excalidraw.com/Virgil.woff2);
-  }
-}
-
 @layer components {
   button:hover .star,
   button:focus .star {
