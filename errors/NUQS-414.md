@@ -6,5 +6,5 @@ for max URI lengths.
 
 ## Possible Solutions
 
-Refactor your state architecture to ensure you store
-less than 2,000 characters of state in your URI.
+Refactor your state architecture to ensure your total
+URL length doesn't exceed 2,000 characters.
