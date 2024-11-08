@@ -3,12 +3,23 @@ title: TanStack Table Parsers
 description: Store your table state in the URL, with style.
 ---
 
+import { TanStackTableFiltering } from './tanstack-table-filtering.generator'
+import { TanStackTablePagination } from './tanstack-table-pagination.generator'
+import { TanStackTableSorting } from './tanstack-table-sorting.generator'
+
 [TanStack Table](https://tanstack.com/table) is a popular library for managing
 tabular content in React (and other frameworks).
 
 By default, it will store its state in memory, losing all filters, sorts and
 pagination when the page is refreshed. This is a prime example where URL state
 shines.
+
+Using URL state instead of in memory state requires providing the query state to
+the `useReactTable` hook and then hooking in to the `onChange` event to update
+query state.
+
+For a complete
+example see [sadmann7/shadcn-table](https://github.com/sadmann7/shadcn-table)
 
 ## Pagination
 
@@ -17,9 +28,42 @@ TanStack Table stores pagination under two pieces of state:
 - `pageIndex`: a zero-based integer representing the current page
 - `pageSize`: an integer representing the number of items per page
 
-You will likely want the URL to follow your UI and be one-based for the page index:
+```ts
+import {useReactTable, type PaginationState, type Updater} from "@tanstack/react-table"
+import {useQueryState} from 'nuqs'
 
-import { TanStackTablePagination } from './tanstack-table.generator'
+// You can change the url key here
+const [page, setPage] = useQueryState("page", parseAsInteger.withDefault(1))
+const [perPage, setPerPage] = useQueryState("perPage", parseAsInteger.withDefault(10))
+
+// The data object passed to the table
+const pagination: PaginationState = {
+  pageIndex: page - 1, // zero-based index -> one-based index
+  pageSize: perPage,
+}
+
+// Handle on pagination change callback from the table
+function onPaginationChange(updaterOrValue: Updater<PaginationState>) {
+  if (typeof updaterOrValue === "function") {
+    const newPagination = updaterOrValue(pagination)
+    void setPage(newPagination.pageIndex + 1)
+    void setPerPage(newPagination.pageSize)
+  } else {
+    void setPage(updaterOrValue.pageIndex + 1)
+    void setPerPage(updaterOrValue.pageSize)
+  }
+}
+
+// Create the table with manually provided state and callback
+const table = useReactTable({
+  ...otherProps,
+  onPaginationChange,
+  state: {
+    ...otherState,
+    pagination,
+  }
+})
+```
 
 <Suspense>
   <TanStackTablePagination />
@@ -33,6 +77,45 @@ import { TanStackTablePagination } from './tanstack-table.generator'
 
 ## Sorting
 
-<Callout>
-  This section is empty for now, [contributions](https://github.com/47ng/nuqs) are welcome!
-</Callout>
+TanStack Table stores sorting in an object with keys:
+
+- `id`: a string with the column name
+- `desc`: a boolean with the direction of sorting
+
+```ts
+import {useReactTable, type SortingState, type Updater} from "@tanstack/react-table"
+import {useQueryState, parseAsJson} from 'nuqs'
+import {z} from 'zod'
+
+// sorting schema to pase to `parseAsJson`. Any validation solution will work
+const sortingSchema = z.object({
+  id: z.string(),
+  desc: z.boolean(),
+})
+
+const [sorting, setSorting] = useQueryState("sort", parseAsJson(sortingSchema.parse))
+
+// Handle on sort change callback from the table
+function onSortingChange(updaterOrValue: Updater<SortingState>) {
+  if (typeof updaterOrValue === "function") {
+    const newSorting = updaterOrValue(sorting)
+    void setSorting(newSorting)
+  } else {
+    void setSorting(updaterOrValue)
+  }
+}
+
+// Create the table with manually provided state and callback
+const table = useReactTable({
+  ...otherProps,
+  onSortingChange,
+  state: {
+    ...otherState,
+    sorting,
+  }
+})
+```
+
+<Suspense>
+  <TanStackTableSorting />
+</Suspense>
