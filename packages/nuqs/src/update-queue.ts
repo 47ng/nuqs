@@ -154,7 +154,7 @@ function flushUpdateQueue(
         shallow: options.shallow
       })
       if (URIIsTooLong() && process.env.NODE_ENV === 'development') {
-        console.error(error(414))
+        console.warn(error(414))
       }
     })
     return [search, null]
