@@ -1,4 +1,5 @@
 import { warn } from './debug'
+import { error } from './errors'
 import type { Parser } from './parsers'
 
 // Change error documentation after changing this value.
@@ -42,6 +43,13 @@ export function getDefaultThrottle() {
   }
 }
 
-export function URIIsTooLong() {
-  return window.location.href.length > URI_MAX_LENGTH
+export function warnIfURLIsTooLong(queryString: string) {
+  if(process.env.NODE_ENV != 'development') {
+    return;
+  }
+  const url = new URL(window.location.href)
+  url.search = queryString
+  if(url.href.length > URI_MAX_LENGTH) {
+    console.warn(error(414))
+  }
 }

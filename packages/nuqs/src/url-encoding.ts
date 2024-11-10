@@ -1,3 +1,5 @@
+import { warnIfURLIsTooLong } from "./utils";
+
 export function renderQueryString(search: URLSearchParams) {
   if (search.size === 0) {
     return ''
@@ -14,7 +16,9 @@ export function renderQueryString(search: URLSearchParams) {
       .replace(/\?/g, '%3F')
     query.push(`${safeKey}=${encodeQueryValue(value)}`)
   }
-  return '?' + query.join('&')
+  const joinedQuery = query.join('&')
+  warnIfURLIsTooLong(joinedQuery);
+  return '?' + joinedQuery;
 }
 
 export function encodeQueryValue(input: string) {
