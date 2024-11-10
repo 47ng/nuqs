@@ -3,7 +3,7 @@ import { error } from './errors'
 import type { Parser } from './parsers'
 
 // Change error documentation after changing this value.
-export const URI_MAX_LENGTH = 2000
+export const URL_MAX_LENGTH = 2000
 
 export function safeParse<T>(
   parser: Parser<T>['parse'],
@@ -49,7 +49,7 @@ export function warnIfURLIsTooLong(queryString: string) {
   }
   const url = new URL(window.location.href)
   url.search = queryString
-  if (url.href.length > URI_MAX_LENGTH) {
+  if (url.href.length > URL_MAX_LENGTH) {
     console.warn(error(414))
   }
 }
