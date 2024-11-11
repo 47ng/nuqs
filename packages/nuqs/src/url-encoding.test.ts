@@ -1,4 +1,4 @@
-import { describe, expect, test } from 'vitest'
+import { describe, expect, test, vi } from 'vitest'
 import { encodeQueryValue, renderQueryString } from './url-encoding'
 
 describe('url-encoding/encodeQueryValue', () => {
@@ -123,6 +123,15 @@ describe('url-encoding/renderQueryString', () => {
     expect(renderQueryString(search)).toBe(
       '?a %26b%3Fc%3Dd%23e%f%2Bg"h\'i`j<k>l(m)n*o,p.q:r;s/t=value'
     )
+  })
+  test('emits a warning if the URL is too long', () => {
+    const search = new URLSearchParams()
+    search.set('a', 'a'.repeat(2000))
+    const warn = console.warn
+    console.warn = vi.fn()
+    renderQueryString(search)
+    expect(console.warn).toHaveBeenCalledTimes(1)
+    console.warn = warn
   })
 })
 

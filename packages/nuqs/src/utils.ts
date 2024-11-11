@@ -1,9 +1,5 @@
 import { warn } from './debug'
-import { error } from './errors'
 import type { Parser } from './parsers'
-
-// Change error documentation after changing this value.
-export const URL_MAX_LENGTH = 2000
 
 export function safeParse<T>(
   parser: Parser<T>['parse'],
@@ -40,16 +36,5 @@ export function getDefaultThrottle() {
     return parseFloat(match![1]!) >= 17 ? 120 : 320
   } catch {
     return 320
-  }
-}
-
-export function warnIfURLIsTooLong(queryString: string) {
-  if (process.env.NODE_ENV != 'development') {
-    return
-  }
-  const url = new URL(window.location.href)
-  url.search = queryString
-  if (url.href.length > URL_MAX_LENGTH) {
-    console.warn(error(414))
   }
 }

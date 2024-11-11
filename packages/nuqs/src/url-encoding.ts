@@ -1,4 +1,4 @@
-import { warnIfURLIsTooLong } from './utils'
+import { error } from './errors'
 
 export function renderQueryString(search: URLSearchParams) {
   if (search.size === 0) {
@@ -16,9 +16,9 @@ export function renderQueryString(search: URLSearchParams) {
       .replace(/\?/g, '%3F')
     query.push(`${safeKey}=${encodeQueryValue(value)}`)
   }
-  const joinedQuery = query.join('&')
-  warnIfURLIsTooLong(joinedQuery)
-  return '?' + joinedQuery
+  const queryString = '?' + query.join('&')
+  warnIfURLIsTooLong(queryString)
+  return queryString
 }
 
 export function encodeQueryValue(input: string) {
@@ -43,4 +43,21 @@ export function encodeQueryValue(input: string) {
       .replace(/</g, '%3C')
       .replace(/>/g, '%3E')
   )
+}
+
+// Note: change error documentation (NUQS-414) when changing this value.
+export const URL_MAX_LENGTH = 2000
+
+export function warnIfURLIsTooLong(queryString: string) {
+  if (process.env.NODE_ENV === 'production') {
+    return
+  }
+  if (typeof location === 'undefined') {
+    return
+  }
+  const url = new URL(location.href)
+  url.search = queryString
+  if (url.href.length > URL_MAX_LENGTH) {
+    console.warn(error(414))
+  }
 }
