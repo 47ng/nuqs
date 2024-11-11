@@ -114,10 +114,10 @@
     "mitt": "^3.0.1"
   },
   "peerDependencies": {
-    "@remix-run/react": ">= 2",
-    "next": ">= 14.2.0",
-    "react": ">= 18.2.0",
-    "react-router-dom": ">= 6"
+    "@remix-run/react": ">=2",
+    "next": ">=14.2.0",
+    "react": ">=18.2.0",
+    "react-router-dom": ">=6"
   },
   "peerDependenciesMeta": {
     "@remix-run/react": {
