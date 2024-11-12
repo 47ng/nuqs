@@ -123,7 +123,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
     )
     setInternalState(state)
   }, [
-    Object.keys(resolvedUrlKeys)
+    Object.values(resolvedUrlKeys)
       .map(key => initialSearchParams?.get(key))
       .join('&')
   ])
