@@ -671,8 +671,8 @@ import { coordinatesCache } from './searchParams'
 import { Server } from './server'
 import { Client } from './client'
 
-export default function Page({ searchParams }) {
-  coordinatesCache.parse(searchParams)
+export default async function Page({ searchParams }) {
+  await coordinatesCache.parse(searchParams)
   return (
     <>
       <Server />

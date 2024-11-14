@@ -25,7 +25,8 @@ Run the `parse` method and feed it the page's `searchParams`:
 import {
   createSearchParamsCache,
   parseAsInteger,
-  parseAsString
+  parseAsString,
+  type SearchParams
 } from 'nuqs/server'
 
 const cache = createSearchParamsCache({
@@ -36,10 +37,10 @@ const cache = createSearchParamsCache({
 export default function Page({
   searchParams
 }: {
-  searchParams: Record<string, string | string[] | undefined>
+  searchParams: Promise<SearchParams>
 }) {
   // ⚠️ Don't forget to call `parse` here:
-  const { q: query } = cache.parse(searchParams)
+  const { q: query } = await cache.parse(searchParams)
   return (
     <div>
       <h1>Search Results for {query}</h1>

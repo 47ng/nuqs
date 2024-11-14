@@ -14,12 +14,12 @@ import { searchParamsCache } from './searchParams'
 export const metadata = getMetadata('pagination')
 
 type PageProps = {
-  searchParams: SearchParams
+  searchParams: Promise<SearchParams>
 }
 
 export default async function PaginationDemoPage({ searchParams }: PageProps) {
   // Allow nested RSCs to access the search params (in a type-safe way)
-  searchParamsCache.parse(searchParams)
+  await searchParamsCache.parse(searchParams)
   return (
     <>
       <h1>{metadata.title}</h1>
