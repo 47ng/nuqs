@@ -105,6 +105,12 @@
 }
 
 @layer components {
+  #nd-nav[aria-label='Main'] {
+    @apply lg:rounded-full;
+  }
+}
+
+@layer components {
   button:hover .star,
   button:focus .star {
     fill: currentColor;
