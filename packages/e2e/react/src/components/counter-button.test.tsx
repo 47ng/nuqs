@@ -1,17 +1,16 @@
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { NuqsTestingAdapter, type UrlUpdateEvent } from 'nuqs/adapters/testing'
+import {
+  withNuqsTestingAdapter,
+  type UrlUpdateEvent
+} from 'nuqs/adapters/testing'
 import { describe, expect, it, vi } from 'vitest'
 import { CounterButton } from './counter-button'
 
 describe('CounterButton', () => {
   it('should render the button with state loaded from the URL', () => {
     render(<CounterButton />, {
-      wrapper: ({ children }) => (
-        <NuqsTestingAdapter searchParams="?count=42">
-          {children}
-        </NuqsTestingAdapter>
-      )
+      wrapper: withNuqsTestingAdapter({ searchParams: '?count=42' })
     })
     expect(screen.getByRole('button')).toHaveTextContent('count is 42')
   })
@@ -19,11 +18,10 @@ describe('CounterButton', () => {
     const user = userEvent.setup()
     const onUrlUpdate = vi.fn<[UrlUpdateEvent]>()
     render(<CounterButton />, {
-      wrapper: ({ children }) => (
-        <NuqsTestingAdapter searchParams="?count=42" onUrlUpdate={onUrlUpdate}>
-          {children}
-        </NuqsTestingAdapter>
-      )
+      wrapper: withNuqsTestingAdapter({
+        searchParams: '?count=42',
+        onUrlUpdate
+      })
     })
     const button = screen.getByRole('button')
     await user.click(button)
