@@ -14,7 +14,7 @@
     "directory": "packages/docs"
   },
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev --turbo",
     "build": "next build",
     "start": "next start",
     "postinstall": "fumadocs-mdx"
