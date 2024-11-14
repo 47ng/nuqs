@@ -49,6 +49,8 @@ importers:
         specifier: ^5.6.3
         version: 5.6.3
 
+  packages/adapters: {}
+
   packages/docs:
     dependencies:
       '@faker-js/faker':
@@ -199,6 +201,8 @@ importers:
       typescript:
         specifier: ^5.6.3
         version: 5.6.3
+
+  packages/e2e: {}
 
   packages/e2e/next:
     dependencies:
@@ -523,8 +527,8 @@ importers:
         specifier: ^1.2.5
         version: 1.2.5
       '@types/node':
-        specifier: ^22.7.5
-        version: 22.7.5
+        specifier: ^22.9.0
+        version: 22.9.0
       typescript:
         specifier: ^5.6.3
         version: 5.6.3
@@ -3300,9 +3304,6 @@ packages:
 
   '@types/node@14.18.63':
     resolution: {integrity: sha512-fAtCfv4jJg+ExtXhvCkCqUKZ+4ok/JQk01qDKhL5BDDoS3AxKXhV5/MAVUZyQnSEd2GT92fkgZl0pz0Q0AzcIQ==}
-
-  '@types/node@22.7.5':
-    resolution: {integrity: sha512-jML7s2NAzMWc//QSJ1a3prpk78cOPchGvXJsC3C6R6PSMoooztvRVQEz89gmBTBY1SPMaqo5teB4uNHPdetShQ==}
 
   '@types/node@22.9.0':
     resolution: {integrity: sha512-vuyHg81vvWA1Z1ELfvLko2c8f34gyA0zaic0+Rllc5lbCnbSyuvb2Oxpm6TAUAC/2xZN3QGqxBNggD1nNR2AfQ==}
@@ -11934,10 +11935,6 @@ snapshots:
       '@types/unist': 3.0.3
 
   '@types/node@14.18.63': {}
-
-  '@types/node@22.7.5':
-    dependencies:
-      undici-types: 6.19.8
 
   '@types/node@22.9.0':
     dependencies:
