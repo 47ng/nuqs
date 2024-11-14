@@ -10,10 +10,7 @@ function withSearchParams(
   searchParams?: string | URLSearchParams | Record<string, string>
 ) {
   return (props: { children: ReactNode }) => (
-    <NuqsTestingAdapter
-      searchParams={searchParams}
-      {...props}
-    />
+    <NuqsTestingAdapter searchParams={searchParams} {...props} />
   )
 }
 
