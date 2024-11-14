@@ -4,7 +4,8 @@ description: Some tips on testing components that use `nuqs`
 ---
 
 Since nuqs 2, you can unit-test components that use `useQueryState(s){:ts}` hooks
-by wrapping your rendered component in a `NuqsTestingAdapter{:ts}`.
+by wrapping your rendered component in a `NuqsTestingAdapter{:ts}`, or using
+the `withNuqsTestingAdapter{:ts}` higher-order component.
 
 ## With Vitest
 
@@ -14,10 +15,10 @@ a counter:
 <Tabs items={['Vitest v1', 'Vitest v2']}>
 
 ```tsx title="counter-button.test.tsx" tab="Vitest v1"
-// [!code word:NuqsTestingAdapter]
+// [!code word:withNuqsTestingAdapter]
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { NuqsTestingAdapter, type UrlUpdateEvent } from 'nuqs/adapters/testing'
+import { withNuqsTestingAdapter, type UrlUpdateEvent } from 'nuqs/adapters/testing'
 import { describe, expect, it, vi } from 'vitest'
 import { CounterButton } from './counter-button'
 
@@ -26,11 +27,7 @@ it('should increment the count when clicked', async () => {
   const onUrlUpdate = vi.fn<[UrlUpdateEvent]>()
   render(<CounterButton />, {
     // 1. Setup the test by passing initial search params / querystring:
-    wrapper: ({ children }) => (
-      <NuqsTestingAdapter searchParams="?count=42" onUrlUpdate={onUrlUpdate}>
-        {children}
-      </NuqsTestingAdapter>
-    )
+    wrapper: withNuqsTestingAdapter({ searchParams: '?count=42', onUrlUpdate })
   })
   // 2. Act
   const button = screen.getByRole('button')
@@ -46,10 +43,10 @@ it('should increment the count when clicked', async () => {
 ```
 
 ```tsx title="counter-button.test.tsx" tab="Vitest v2"
-// [!code word:NuqsTestingAdapter]
+// [!code word:withNuqsTestingAdapter]
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { NuqsTestingAdapter, type OnUrlUpdateFunction } from 'nuqs/adapters/testing'
+import { withNuqsTestingAdapter, type OnUrlUpdateFunction } from 'nuqs/adapters/testing'
 import { describe, expect, it, vi } from 'vitest'
 import { CounterButton } from './counter-button'
 
@@ -58,11 +55,7 @@ it('should increment the count when clicked', async () => {
   const onUrlUpdate = vi.fn<OnUrlUpdateFunction>()
   render(<CounterButton />, {
     // 1. Setup the test by passing initial search params / querystring:
-    wrapper: ({ children }) => (
-      <NuqsTestingAdapter searchParams="?count=42" onUrlUpdate={onUrlUpdate}>
-        {children}
-      </NuqsTestingAdapter>
-    )
+    wrapper: withNuqsTestingAdapter({ searchParams: '?count=42', onUrlUpdate })
   })
   // 2. Act
   const button = screen.getByRole('button')
@@ -113,19 +106,22 @@ const config: Config = {
 Adapt accordingly for Windows with [`cross-env`](https://www.npmjs.com/package/cross-env).
 </Callout>
 
-## Higher-order component
+## NuqsTestingAdapter
 
-Creating a wrapper component to pass props to the `NuqsTestingAdapter{:ts}`
-can be verbose as your test suite grows.
+The `withNuqsTestingAdapter{:ts}` function is a higher-order component that
+wraps your component with a `NuqsTestingAdapter{:ts}`, but you can also use
+it directly.
 
-You can use the `withNuqsTestingAdapter{:ts}` function to pass the right props,
-and it will return a wrapper component:
+It takes the following props:
+
+- `searchParams`: The initial search params to use for the test. These can be a
+  query string, a `URLSearchParams` object or a record object with string values.
 
 ```tsx
-// [!code word:withNuqsTestingAdapter]
-import { withNuqsTestingAdapter } from 'nuqs/adapters/testing'
-
-render(<CounterButton />, {
-  wrapper: withNuqsTestingAdapter({ searchParams: '?count=42', onUrlUpdate })
-})
+<NuqsTestingAdapter searchParams="?q=hello&limit=10">
+<NuqsTestingAdapter searchParams={new URLSearchParams("?q=hello&limit=10")}>
+<NuqsTestingAdapter searchParams={{
+  q: 'hello',
+  limit: '10' // Values are serialized strings
+}}>
 ```
