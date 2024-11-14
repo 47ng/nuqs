@@ -13,8 +13,8 @@
   },
   "dependencies": {
     "nuqs": "workspace:*",
-    "react": "catalog:react18",
-    "react-dom": "catalog:react18",
+    "react": "catalog:react19rc",
+    "react-dom": "catalog:react19rc",
     "react-router-dom": "^6.28.0"
   },
   "devDependencies": {
