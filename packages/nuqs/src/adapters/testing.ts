@@ -1,4 +1,5 @@
 import { createElement, type ReactNode } from 'react'
+import { resetQueue } from '../update-queue'
 import { renderQueryString } from '../url-encoding'
 import type { AdapterInterface, AdapterOptions } from './defs'
 import { context } from './internal.context'
@@ -15,10 +16,17 @@ type TestingAdapterProps = {
   searchParams?: string | Record<string, string> | URLSearchParams
   onUrlUpdate?: OnUrlUpdateFunction
   rateLimitFactor?: number
+  resetUrlUpdateQueueOnMount?: boolean
   children: ReactNode
 }
 
-export function NuqsTestingAdapter(props: TestingAdapterProps) {
+export function NuqsTestingAdapter({
+  resetUrlUpdateQueueOnMount = true,
+  ...props
+}: TestingAdapterProps) {
+  if (resetUrlUpdateQueueOnMount) {
+    resetQueue()
+  }
   const useAdapter = (): AdapterInterface => ({
     searchParams: new URLSearchParams(props.searchParams),
     updateUrl(search, options) {
