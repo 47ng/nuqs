@@ -38,17 +38,25 @@ export default function Component() {
             <h3 className="text-xl font-semibold">Quick Links</h3>
             <ul className="space-y-2">
               <li>
-                <Link href="/docs" className="hover:underline">
+                <Link href="/docs" className="hover:underline" prefetch={false}>
                   Documentation
                 </Link>
               </li>
               <li>
-                <Link href="/playground" className="hover:underline">
+                <Link
+                  href="/playground"
+                  className="hover:underline"
+                  prefetch={false}
+                >
                   Playground
                 </Link>
               </li>
               <li>
-                <Link href="/stats" className="hover:underline">
+                <Link
+                  href="/stats"
+                  className="hover:underline"
+                  prefetch={false}
+                >
                   Project Stats
                 </Link>
               </li>
@@ -58,31 +66,31 @@ export default function Component() {
             <h3 className="text-xl font-semibold">Social</h3>
             <ul className="space-y-1">
               <li>
-                <Link
+                <a
                   href="https://github.com/47ng/nuqs"
                   className="inline-flex items-center gap-1 hover:underline"
                 >
                   <SiGithub role="presentation" className="mr-2 size-5" />
                   <span>GitHub</span>
-                </Link>
+                </a>
               </li>
               <li>
-                <Link
+                <a
                   href="https://www.youtube.com/@47ng-dev"
                   className="inline-flex items-center gap-1 hover:underline"
                 >
                   <SiYoutube role="presentation" className="mr-2 size-5" />
                   <span>YouTube</span>
-                </Link>
+                </a>
               </li>
               <li>
-                <Link
+                <a
                   href="https://bsky.app/profile/nuqs.47ng.com"
                   className="inline-flex items-center gap-1 hover:underline"
                 >
                   <SiBluesky role="presentation" className="mr-2 size-5" />
                   <span>Bluesky</span>
-                </Link>
+                </a>
               </li>
             </ul>
           </div>

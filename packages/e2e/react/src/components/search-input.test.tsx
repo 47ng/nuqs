@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import {
   withNuqsTestingAdapter,
-  type UrlUpdateEvent
+  type OnUrlUpdateFunction
 } from 'nuqs/adapters/testing'
 import { describe, expect, it, vi } from 'vitest'
 import { SearchInput } from './search-input'
@@ -17,7 +17,7 @@ describe('SearchInput', () => {
   })
   it('should follow the user typing text', async () => {
     const user = userEvent.setup()
-    const onUrlUpdate = vi.fn<[UrlUpdateEvent]>()
+    const onUrlUpdate = vi.fn<OnUrlUpdateFunction>()
     render(<SearchInput />, {
       wrapper: withNuqsTestingAdapter({
         onUrlUpdate

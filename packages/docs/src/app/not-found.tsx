@@ -37,7 +37,9 @@ export function NotFoundComponent() {
             </p>
           </div>
           <Button asChild>
-            <Link href="/">Return to Home</Link>
+            <Link prefetch={false} href="/">
+              Return to Home
+            </Link>
           </Button>
         </div>
       </div>
