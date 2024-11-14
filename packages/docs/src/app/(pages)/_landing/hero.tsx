@@ -7,7 +7,7 @@ import { LandingDemo } from './demo'
 
 export function HeroSection() {
   return (
-    <section className="container relative flex flex-col justify-center gap-8 xl:h-[calc(100vh-4rem)] xl:flex-row">
+    <section className="container relative mb-12 grid grid-cols-1 items-center justify-center gap-8 xl:h-[max(650px,min(800px,calc(75vh)))] xl:grid-cols-2 xl:flex-row">
       <aside className="my-16 flex flex-col items-center self-center xl:my-24 xl:-mr-10 xl:ml-10 xl:flex-1 xl:items-start">
         <h1 className="text-6xl md:text-8xl">
           <NuqsWordmark />
@@ -45,11 +45,11 @@ export function HeroSection() {
           </a>
         </nav>
       </aside>
-      <aside className="relative my-4 xl:my-8 xl:flex-1">
+      <aside className="relative my-4 xl:my-auto xl:flex-1 xl:pt-4">
         <LandingDemo />
       </aside>
       <div
-        className="absolute bottom-2 left-0 right-0 hidden h-12 items-center justify-center xl:flex"
+        className="absolute -bottom-12 left-0 right-0 hidden h-12 items-center justify-center xl:flex"
         aria-hidden
       >
         <ChevronDown />
