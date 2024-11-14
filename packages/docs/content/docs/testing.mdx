@@ -114,10 +114,12 @@ it directly.
 
 It takes the following props:
 
-- `searchParams`: The initial search params to use for the test. These can be a
+- `searchParams{:ts}`: The initial search params to use for the test. These can be a
   query string, a `URLSearchParams` object or a record object with string values.
 
 ```tsx
+import { NuqsTestingAdapter } from 'nuqs/adapters/testing'
+
 <NuqsTestingAdapter searchParams="?q=hello&limit=10">
 <NuqsTestingAdapter searchParams={new URLSearchParams("?q=hello&limit=10")}>
 <NuqsTestingAdapter searchParams={{
@@ -125,3 +127,22 @@ It takes the following props:
   limit: '10' // Values are serialized strings
 }}>
 ```
+
+- `onUrlUpdate{:ts}`, a function that will be called when the URL is updated
+  by the component. It receives an object with:
+  - the new search params as an instance of `URLSearchParams{:ts}`
+  - the new querystring (for convenience)
+  - the options used to update the URL.
+
+<details>
+<summary>🧪 Internal/advanced options</summary>
+
+- `rateLimitFactor{:ts}`. By default, rate limiting is disabled when testing,
+as it can lead to unexpected behaviours. Setting this to 1 will enable rate
+limiting with the same factor as in production.
+
+- `resetUrlUpdateQueueOnMount{:ts}`: clear the URL update queue before running the test.
+This is `true{:ts}` by default to isolate tests, but you can set it to `false{:ts}` to keep the
+URL update queue between renders and match the production behaviour more closely.
+
+</details>
