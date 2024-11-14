@@ -11,11 +11,12 @@ import { notFound } from 'next/navigation'
 import { stat } from 'node:fs/promises'
 
 type PageProps = {
-  params: { slug?: string[] }
+  params: Promise<{ slug?: string[] }>
 }
 
-export default async function Page({ params }: PageProps) {
-  const page = source.getPage(params.slug)
+export default async function Page(props: PageProps) {
+  const { slug } = await props.params
+  const page = source.getPage(slug)
 
   if (page == null) {
     notFound()
@@ -40,8 +41,9 @@ export async function generateStaticParams() {
   }))
 }
 
-export async function generateMetadata({ params }: PageProps) {
-  const page = source.getPage(params.slug)
+export async function generateMetadata(props: PageProps) {
+  const { slug } = await props.params
+  const page = source.getPage(slug)
   if (!page) notFound()
 
   return {
