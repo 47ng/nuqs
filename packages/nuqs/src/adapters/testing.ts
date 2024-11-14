@@ -44,3 +44,33 @@ export function NuqsTestingAdapter({
     props.children
   )
 }
+
+/**
+ * A higher order component that wraps the children with the NuqsTestingAdapter
+ *
+ * It allows creating wrappers for testing purposes by providing only the
+ * necessary props to the NuqsTestingAdapter.
+ *
+ * Usage:
+ * ```tsx
+ * render(<MyComponent />, {
+ *   wrapper: withNuqsTestingAdapter({ searchParams: '?foo=bar' })
+ * })
+ * ```
+ */
+export function withNuqsTestingAdapter(
+  props: Omit<TestingAdapterProps, 'children'> = {}
+) {
+  return function NuqsTestingAdapterWrapper({
+    children
+  }: {
+    children: ReactNode
+  }) {
+    return createElement(
+      NuqsTestingAdapter,
+      // @ts-expect-error - Ignore missing children error
+      props,
+      children
+    )
+  }
+}

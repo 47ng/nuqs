@@ -112,3 +112,20 @@ const config: Config = {
 <Callout>
 Adapt accordingly for Windows with [`cross-env`](https://www.npmjs.com/package/cross-env).
 </Callout>
+
+## Higher-order component
+
+Creating a wrapper component to pass props to the `NuqsTestingAdapter{:ts}`
+can be verbose as your test suite grows.
+
+You can use the `withNuqsTestingAdapter{:ts}` function to pass the right props,
+and it will return a wrapper component:
+
+```tsx
+// [!code word:withNuqsTestingAdapter]
+import { withNuqsTestingAdapter } from 'nuqs/adapters/testing'
+
+render(<CounterButton />, {
+  wrapper: withNuqsTestingAdapter({ searchParams: '?count=42', onUrlUpdate })
+})
+```
