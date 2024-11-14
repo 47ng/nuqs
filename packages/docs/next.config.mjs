@@ -7,16 +7,13 @@ const withFumadocsMDX = createMDX()
 
 /** @type {import('next').NextConfig} */
 const config = {
-  experimental: {
-    instrumentationHook: true,
-    outputFileTracingIncludes: {
-      '/playground/pagination': [
-        './src/app/playground/(demos)/pagination/searchParams.ts',
-        './src/app/playground/(demos)/pagination/page.tsx',
-        './src/app/playground/(demos)/pagination/pagination-controls.server.tsx',
-        './src/app/playground/(demos)/pagination/pagination-controls.client.tsx'
-      ]
-    }
+  outputFileTracingIncludes: {
+    '/playground/pagination': [
+      './src/app/playground/(demos)/pagination/searchParams.ts',
+      './src/app/playground/(demos)/pagination/page.tsx',
+      './src/app/playground/(demos)/pagination/pagination-controls.server.tsx',
+      './src/app/playground/(demos)/pagination/pagination-controls.client.tsx'
+    ]
   },
   reactStrictMode: true,
   redirects: async () => {

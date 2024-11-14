@@ -1,6 +1,6 @@
 import { source } from '@/src/app/source'
 import { getSharedLayoutProps } from '@/src/components/shared-layout'
-import { DocsLayout } from 'fumadocs-ui/layout'
+import { DocsLayout } from 'fumadocs-ui/layouts/docs'
 import Link from 'next/link'
 import { Suspense, type ReactNode } from 'react'
 

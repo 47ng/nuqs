@@ -1,10 +1,10 @@
 import { getSharedLayoutProps } from '@/src/components/shared-layout'
-import { DocsLayout } from 'fumadocs-ui/layout'
+import { DocsLayout } from 'fumadocs-ui/layouts/docs'
 import { DocsBody, DocsPage } from 'fumadocs-ui/page'
-import dynamic from 'next/dynamic'
 import Link from 'next/link'
-import React from 'react'
+import React, { Suspense } from 'react'
 import { getPlaygroundTree } from './(demos)/demos'
+import { DebugControl } from './debug-control'
 
 const DebugControlsSkeleton = () => (
   <label className="pointer-events-none mr-auto space-x-2 text-zinc-500 opacity-50">
@@ -12,11 +12,6 @@ const DebugControlsSkeleton = () => (
     <span>Console debugging</span>
   </label>
 )
-
-const DebugControl = dynamic(() => import('./debug-control'), {
-  ssr: false,
-  loading: DebugControlsSkeleton
-})
 
 export default function PlaygroundLayout({
   children
@@ -43,7 +38,11 @@ export default function PlaygroundLayout({
               <span aria-hidden>🎉</span>
             </div>
           ),
-          footer: <DebugControl />
+          footer: (
+            <Suspense fallback={<DebugControlsSkeleton />}>
+              <DebugControl />
+            </Suspense>
+          )
         }}
       >
         <DocsPage>

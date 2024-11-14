@@ -1,5 +1,5 @@
 import { getSharedLayoutProps } from '@/src/components/shared-layout'
-import { HomeLayout } from 'fumadocs-ui/home-layout'
+import { HomeLayout } from 'fumadocs-ui/layouts/home'
 
 export default function PageLayout({
   children

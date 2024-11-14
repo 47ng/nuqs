@@ -2,7 +2,7 @@
 
 import React from 'react'
 
-export default function DebugControl() {
+export function DebugControl() {
   const [checked, setChecked] = React.useState(() => {
     if (typeof localStorage === 'undefined') {
       return false

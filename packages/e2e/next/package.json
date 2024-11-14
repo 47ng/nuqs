@@ -22,8 +22,8 @@
   "dependencies": {
     "next": "15.0.3",
     "nuqs": "workspace:*",
-    "react": "catalog:react19rc",
-    "react-dom": "catalog:react19rc"
+    "react": "catalog:react18",
+    "react-dom": "catalog:react18"
   },
   "devDependencies": {
     "@types/node": "^22.9.0",
