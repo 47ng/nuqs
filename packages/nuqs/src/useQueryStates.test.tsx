@@ -10,31 +10,36 @@ function withSearchParams(
   searchParams?: string | URLSearchParams | Record<string, string>
 ) {
   return (props: { children: ReactNode }) => (
-    <NuqsTestingAdapter searchParams={searchParams} {...props} />
+    <NuqsTestingAdapter
+      searchParams={searchParams}
+      {...props}
+    />
   )
 }
 
+const defaults = {
+  str: 'foo',
+  obj: { initial: 'state' },
+  arr: [
+    {
+      initial: 'state'
+    }
+  ]
+}
+
+const hook = ({ defaultValue } = { defaultValue: defaults.str }) => {
+  return useQueryStates({
+    str: parseAsString.withDefault(defaultValue),
+    obj: parseAsJson<any>(x => x).withDefault(defaults.obj),
+    arr: parseAsArrayOf(parseAsJson<any>(x => x)).withDefault(defaults.arr)
+  })
+}
+
 describe('useQueryStates', () => {
-  const defaults = {
-    str: 'foo',
-    obj: { initial: 'state' },
-    arr: [
-      {
-        initial: 'state'
-      }
-    ]
-  }
-
-  const hook = () => {
-    return useQueryStates({
-      str: parseAsString.withDefault(defaults.str),
-      obj: parseAsJson<any>(x => x).withDefault(defaults.obj),
-      arr: parseAsArrayOf(parseAsJson<any>(x => x)).withDefault(defaults.arr)
-    })
-  }
-
   it('should have referential equality on default values', () => {
-    const { result } = renderHook(hook, { wrapper: NuqsTestingAdapter })
+    const { result } = renderHook(hook, {
+      wrapper: NuqsTestingAdapter
+    })
     const [state] = result.current
     expect(state.str).toBe(defaults.str)
     expect(state.obj).toBe(defaults.obj)
@@ -76,5 +81,18 @@ describe('useQueryStates', () => {
     expect(str).toBe('bar')
     expect(obj).toBe(initialObj)
     expect(arr).toBe(initialArr)
+  })
+
+  it('should keep referential equality when default changes for another key', () => {
+    const { result, rerender } = renderHook(hook, {
+      wrapper: withSearchParams()
+    })
+    expect(result.current[0].str).toBe('foo')
+    rerender({ defaultValue: 'b' })
+    const [state] = result.current
+    expect(state.str).toBe('b')
+    expect(state.obj).toBe(defaults.obj)
+    expect(state.arr).toBe(defaults.arr)
+    expect(state.arr[0]).toBe(defaults.arr[0])
   })
 })
