@@ -421,13 +421,13 @@ export function parseAsArrayOf<ItemType>(
 }
 
 type inferSingleParserType<Parser> = Parser extends ParserBuilder<
-  infer Type
+  infer Value
 > & {
-  defaultValue: infer Type
+  defaultValue: infer Value
 }
-  ? Type
-  : Parser extends ParserBuilder<infer Type>
-    ? Type | null
+  ? Value
+  : Parser extends ParserBuilder<infer Value>
+    ? Value | null
     : never
 
 type inferParserRecordType<Map extends Record<string, ParserBuilder<any>>> = {

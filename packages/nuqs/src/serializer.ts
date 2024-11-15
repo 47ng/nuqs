@@ -1,4 +1,4 @@
-import type { Options } from './defs'
+import type { Nullable, Options } from './defs'
 import type { inferParserType, ParserBuilder } from './parsers'
 import { renderQueryString } from './url-encoding'
 
@@ -16,7 +16,7 @@ export function createSerializer<
     urlKeys?: Partial<Record<keyof Parsers, string>>
   } = {}
 ) {
-  type Values = Partial<inferParserType<Parsers>>
+  type Values = Partial<Nullable<inferParserType<Parsers>>>
 
   /**
    * Generate a query string for the given values.
