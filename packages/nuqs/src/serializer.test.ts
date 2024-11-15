@@ -86,6 +86,20 @@ describe('serializer', () => {
     const result = serialize('?str=foo&external=kept', null)
     expect(result).toBe('?external=kept')
   })
+  test('clears value when setting null for search param that has a default value', () => {
+    const serialize = createSerializer({
+      int: parseAsInteger.withDefault(0)
+    })
+    const result = serialize('?int=1&str=foo', { int: null })
+    expect(result).toBe('?str=foo')
+  })
+  test('clears value when setting null for search param that is set to its default value', () => {
+    const serialize = createSerializer({
+      int: parseAsInteger.withDefault(0)
+    })
+    const result = serialize('?int=0&str=foo', { int: null })
+    expect(result).toBe('?str=foo')
+  })
   test('clears value when setting the default value (`clearOnDefault: true` is the default)', () => {
     const serialize = createSerializer({
       int: parseAsInteger.withDefault(0),

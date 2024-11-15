@@ -48,3 +48,16 @@ import { createSerializer, parseAsInteger, parseAsString } from '../../dist'
     serialize({ nope: null })
   })
 }
+
+// It accepts null for values
+{
+  const serialize = createSerializer({
+    foo: parseAsInteger,
+    bar: parseAsInteger.withDefault(0)
+  })
+  // Should accept number | null | undefined
+  expectType<string>(serialize({ foo: null }))
+  expectType<string>(serialize({ foo: undefined }))
+  expectType<string>(serialize({ bar: null }))
+  expectType<string>(serialize({ bar: undefined }))
+}
