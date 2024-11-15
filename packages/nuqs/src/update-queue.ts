@@ -37,7 +37,7 @@ export function resetQueue() {
 export function enqueueQueryStringUpdate<Value>(
   key: string,
   value: Value | null,
-  serialize: (value: Value) => string,
+  serialize: (value: Value) => string | null,
   options: Pick<
     Options,
     'history' | 'scroll' | 'shallow' | 'startTransition' | 'throttleMs'

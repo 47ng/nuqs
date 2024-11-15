@@ -14,8 +14,10 @@ export type Parser<T> = {
 
   /**
    * Render the state value into a query string value.
+   *
+   * Return `null` to remove the query parameter from the URL.
    */
-  serialize?: (value: T) => string
+  serialize?: (value: T) => string | null
 
   /**
    * Check if two state values are equal.
@@ -94,7 +96,7 @@ export type ParserBuilder<T> = Required<Parser<T>> &
  * you can pass to one of the hooks, making its default value type safe.
  */
 export function createParser<T>(
-  parser: Require<Parser<T>, 'parse' | 'serialize'>
+  parser: Require<Parser<T>, 'parse'>
 ): ParserBuilder<T> {
   function parseServerSideNullable(value: string | string[] | undefined) {
     if (typeof value === 'undefined') {
@@ -117,6 +119,7 @@ export function createParser<T>(
 
   return {
     eq: (a, b) => a === b,
+    serialize: String,
     ...parser,
     parseServerSide: parseServerSideNullable,
     withDefault(defaultValue) {
@@ -401,12 +404,11 @@ export function parseAsArrayOf<ItemType>(
     },
     serialize: values =>
       values
-        .map<string>(value => {
-          const str = itemParser.serialize
-            ? itemParser.serialize(value)
-            : String(value)
-          return str.replaceAll(separator, encodedSeparator)
+        .map<string | null>(value => {
+          const str = (itemParser.serialize ?? String)(value)
+          return str?.replaceAll(separator, encodedSeparator) ?? null
         })
+        .filter(value => value !== null)
         .join(separator),
     eq(a, b) {
       if (a === b) {

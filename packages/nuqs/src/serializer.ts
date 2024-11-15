@@ -63,7 +63,12 @@ export function createSerializer<
       ) {
         search.delete(urlKey)
       } else {
-        search.set(urlKey, parser.serialize(value))
+        const serialized = parser.serialize(value)
+        if (serialized === null) {
+          search.delete(urlKey)
+        } else {
+          search.set(urlKey, serialized)
+        }
       }
     }
     return base + renderQueryString(search)
