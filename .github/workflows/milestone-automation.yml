@@ -1,7 +1,7 @@
 name: Mark as "Shipping Next"
 
 on:
-  pull_request:
+  pull_request_target:
     types: [closed]
     branches:
       - next
