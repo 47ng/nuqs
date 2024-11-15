@@ -464,12 +464,3 @@ export type inferParserType<Input> =
     : Input extends Record<string, ParserBuilder<any>>
       ? inferParserRecordType<Input>
       : never
-
-type inferSingleSerializerType<Parser> =
-  Parser extends ParserBuilder<infer Value> ? Value | null : never
-
-export type inferSerializerRecordType<
-  Map extends Record<string, ParserBuilder<any>>
-> = {
-  [Key in keyof Map]: inferSingleSerializerType<Map[Key]>
-}

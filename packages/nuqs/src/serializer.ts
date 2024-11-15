@@ -1,9 +1,18 @@
 import type { Options } from './defs'
-import type { inferSerializerRecordType, ParserBuilder } from './parsers'
+import type { ParserBuilder } from './parsers'
 import { renderQueryString } from './url-encoding'
 
 type Base = string | URLSearchParams | URL
 type ParserWithOptionalDefault<T> = ParserBuilder<T> & { defaultValue?: T }
+
+type inferSingleSerializerType<Parser> =
+  Parser extends ParserBuilder<infer Value> ? Value | null : never
+
+export type inferSerializerRecordType<
+  Map extends Record<string, ParserBuilder<any>>
+> = {
+  [Key in keyof Map]: inferSingleSerializerType<Map[Key]>
+}
 
 export function createSerializer<
   Parsers extends Record<string, ParserWithOptionalDefault<any>>
