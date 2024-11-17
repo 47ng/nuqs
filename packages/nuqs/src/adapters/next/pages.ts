@@ -1,3 +1,5 @@
+'use client'
+
 import { createAdapterProvider } from '../internal.context'
 import { useNuqsNextPagesRouterAdapter } from './impl.pages'
 
