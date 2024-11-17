@@ -1,3 +1,5 @@
+'use client'
+
 import { useNavigate, useSearchParams } from '@remix-run/react'
 import { renderQueryString } from '../url-encoding'
 import type { AdapterOptions } from './defs'

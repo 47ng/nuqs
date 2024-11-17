@@ -1,3 +1,5 @@
+'use client'
+
 import type { AdapterInterface } from './defs'
 import { createAdapterProvider } from './internal.context'
 import { useNuqsNextAppRouterAdapter } from './next/impl.app'
