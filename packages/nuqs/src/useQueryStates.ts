@@ -133,6 +133,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
       queryRef.current,
       stateRef.current
     )
+    stateRef.current = state
     setInternalState(state)
   }, [
     Object.values(resolvedUrlKeys)
