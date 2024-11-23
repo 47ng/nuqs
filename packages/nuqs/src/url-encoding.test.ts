@@ -24,6 +24,12 @@ describe('url-encoding/encodeQueryValue', () => {
     expect(encodeQueryValue('<')).toEqual(encodeURIComponent('<'))
     expect(encodeQueryValue('>')).toEqual(encodeURIComponent('>'))
   })
+  test('hidden ASCII characters are encoded', () => {
+    const chars = Array.from({ length: 32 }, (_, i) => String.fromCharCode(i))
+    chars.forEach(char => {
+      expect(encodeQueryValue(char)).toBe(encodeURIComponent(char))
+    })
+  })
   test('Alphanumericals are passed through', () => {
     const input = 'abcdefghijklmnopqrstuvwxyz0123456789'
     expect(encodeQueryValue(input)).toBe(input)
