@@ -88,6 +88,16 @@
       "import": "./dist/adapters/react-router.js",
       "require": "./esm-only.cjs"
     },
+    "./adapters/react-router/v6": {
+      "types": "./dist/adapters/react-router/v6.d.ts",
+      "import": "./dist/adapters/react-router/v6.js",
+      "require": "./esm-only.cjs"
+    },
+    "./adapters/react-router/v7": {
+      "types": "./dist/adapters/react-router/v7.d.ts",
+      "import": "./dist/adapters/react-router/v7.js",
+      "require": "./esm-only.cjs"
+    },
     "./adapters/custom": {
       "types": "./dist/adapters/custom.d.ts",
       "import": "./dist/adapters/custom.js",
