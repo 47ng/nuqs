@@ -3,5 +3,7 @@
 // Other module resolutions strategies will look for the `exports` in `package.json`,
 // but with `node`, TypeScript will look for a .d.ts file with that name at the
 // root of the package.
+// This default react-router adapter is for react-router v6. If you are using
+// react-router v7, please use adapters/react-router/v7
 
 export * from '../dist/adapters/react-router'
