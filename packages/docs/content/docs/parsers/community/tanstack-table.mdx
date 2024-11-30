@@ -3,7 +3,6 @@ title: TanStack Table Parsers
 description: Store your table state in the URL, with style.
 ---
 
-import { TanStackTableFiltering } from './tanstack-table-filtering.generator'
 import { TanStackTablePagination } from './tanstack-table-pagination.generator'
 import { TanStackTableSorting } from './tanstack-table-sorting.generator'
 
@@ -28,43 +27,6 @@ TanStack Table stores pagination under two pieces of state:
 - `pageIndex`: a zero-based integer representing the current page
 - `pageSize`: an integer representing the number of items per page
 
-```ts
-import {useReactTable, type PaginationState, type Updater} from "@tanstack/react-table"
-import {useQueryState} from 'nuqs'
-
-// You can change the url key here
-const [page, setPage] = useQueryState("page", parseAsInteger.withDefault(1))
-const [perPage, setPerPage] = useQueryState("perPage", parseAsInteger.withDefault(10))
-
-// The data object passed to the table
-const pagination: PaginationState = {
-  pageIndex: page - 1, // zero-based index -> one-based index
-  pageSize: perPage,
-}
-
-// Handle on pagination change callback from the table
-function onPaginationChange(updaterOrValue: Updater<PaginationState>) {
-  if (typeof updaterOrValue === "function") {
-    const newPagination = updaterOrValue(pagination)
-    void setPage(newPagination.pageIndex + 1)
-    void setPerPage(newPagination.pageSize)
-  } else {
-    void setPage(updaterOrValue.pageIndex + 1)
-    void setPerPage(updaterOrValue.pageSize)
-  }
-}
-
-// Create the table with manually provided state and callback
-const table = useReactTable({
-  ...otherProps,
-  onPaginationChange,
-  state: {
-    ...otherState,
-    pagination,
-  }
-})
-```
-
 <Suspense>
   <TanStackTablePagination />
 </Suspense>
@@ -77,10 +39,10 @@ const table = useReactTable({
 
 ## Sorting
 
-TanStack Table stores sorting in an object with keys:
+TanStack Table stores sorting in an an array of objects with keys:
 
 - `id`: a string with the column name
-- `desc`: a boolean with the direction of sorting
+- `desc`: a boolean indicating if the sorting is descending (`true`) or ascending (`false`)
 
 ```ts
 import {useReactTable, type SortingState, type Updater} from "@tanstack/react-table"
@@ -97,12 +59,8 @@ const [sorting, setSorting] = useQueryState("sort", parseAsJson(sortingSchema.pa
 
 // Handle on sort change callback from the table
 function onSortingChange(updaterOrValue: Updater<SortingState>) {
-  if (typeof updaterOrValue === "function") {
-    const newSorting = updaterOrValue(sorting)
-    void setSorting(newSorting)
-  } else {
-    void setSorting(updaterOrValue)
-  }
+  const newSorting = typeof updaterOrValue === "function" ? updaterOrValue(sorting) : updaterOrValue
+  void setSorting(newSorting)
 }
 
 // Create the table with manually provided state and callback
