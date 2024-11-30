@@ -60,8 +60,8 @@ export default async function Page(props: {
 export async function generateMetadata(props: {
   params: Promise<{ slug: string }>
 }): Promise<Metadata> {
-  const params = await props.params
-  const page = blog.getPage([params.slug])
+  const { slug } = await props.params
+  const page = blog.getPage([slug])
 
   if (!page) notFound()
 
@@ -74,7 +74,7 @@ export async function generateMetadata(props: {
   }
 }
 
-export function generateStaticParams(): { slug: string }[] {
+export async function generateStaticParams(): Promise<{ slug: string }[]> {
   return blog.getPages().map(page => ({
     slug: page.slugs[0]
   }))

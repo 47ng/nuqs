@@ -25,6 +25,15 @@ export function getQueuedValue(key: string) {
   return updateQueue.get(key)
 }
 
+export function resetQueue() {
+  updateQueue.clear()
+  transitionsQueue.clear()
+  queueOptions.history = 'replace'
+  queueOptions.scroll = false
+  queueOptions.shallow = true
+  queueOptions.throttleMs = FLUSH_RATE_LIMIT_MS
+}
+
 export function enqueueQueryStringUpdate<Value>(
   key: string,
   value: Value | null,
@@ -132,12 +141,7 @@ function flushUpdateQueue(
   const options = { ...queueOptions }
   const transitions = Array.from(transitionsQueue)
   // Restore defaults
-  updateQueue.clear()
-  transitionsQueue.clear()
-  queueOptions.history = 'replace'
-  queueOptions.scroll = false
-  queueOptions.shallow = true
-  queueOptions.throttleMs = FLUSH_RATE_LIMIT_MS
+  resetQueue()
   debug('[nuqs queue] Flushing queue %O with options %O', items, options)
   for (const [key, value] of items) {
     if (value === null) {

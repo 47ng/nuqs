@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import React from 'react'
 import { describe, expect, it } from 'vitest'
-import { NuqsTestingAdapter } from './adapters/testing'
+import { withNuqsTestingAdapter } from './adapters/testing'
 import { parseAsInteger, useQueryState, useQueryStates } from './index'
 
 type TestComponentProps = {
@@ -30,9 +30,7 @@ describe('sync', () => {
         <TestComponent testId="b" />
       </>,
       {
-        wrapper: ({ children }) => (
-          <NuqsTestingAdapter>{children}</NuqsTestingAdapter>
-        )
+        wrapper: withNuqsTestingAdapter()
       }
     )
     // Act
@@ -79,9 +77,7 @@ describe('sync', () => {
         <TestComponentB testId="b" />
       </>,
       {
-        wrapper: ({ children }) => (
-          <NuqsTestingAdapter>{children}</NuqsTestingAdapter>
-        )
+        wrapper: withNuqsTestingAdapter()
       }
     )
     // Act

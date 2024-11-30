@@ -252,7 +252,7 @@ export function useQueryState<T = string>(
   )
 
   useEffect(() => {
-    const query = initialSearchParams.get(key) ?? null
+    const query = initialSearchParams?.get(key) ?? null
     if (query === queryRef.current) {
       return
     }

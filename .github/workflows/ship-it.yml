@@ -1,0 +1,37 @@
+name: Ship it
+
+on:
+  workflow_dispatch:
+
+jobs:
+  ship-it:
+    name: Ship it
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          # Ensure full history is fetched to have a clear
+          # path between next and master
+          fetch-depth: 0
+          ref: next
+
+      - name: Check master can fast-forward to next
+        run: |
+          git fetch origin master
+          if ! git merge-base --is-ancestor master next; then
+            echo "::error::master cannot be fast-forwarded to next. Aborting."
+            exit 1
+          fi
+      - name: Log commits to ship
+        run: git log master..next --oneline
+
+      - name: Move master to next branch
+        run: |
+          git checkout master
+          git reset --hard next
+
+      - name: Push updated master to origin
+        run: |
+          git push origin master
+        env:
+          GITHUB_TOKEN: ${{ secrets.SHIP_IT_TOKEN }}

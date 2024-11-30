@@ -13,23 +13,23 @@
   },
   "dependencies": {
     "nuqs": "workspace:*",
-    "react": "catalog:react18",
-    "react-dom": "catalog:react18",
-    "react-router-dom": "^6.26.2"
+    "react": "catalog:react19rc",
+    "react-dom": "catalog:react19rc",
+    "react-router-dom": "^6.28.0"
   },
   "devDependencies": {
-    "@testing-library/dom": "^10.1.0",
-    "@testing-library/jest-dom": "^6.4.5",
-    "@testing-library/react": "^15.0.7",
+    "@testing-library/dom": "^10.4.0",
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.0.1",
     "@testing-library/user-event": "^14.5.2",
-    "@types/node": "^20.16.3",
-    "@types/react": "^18.3.7",
-    "@types/react-dom": "^18.3.0",
-    "@vitejs/plugin-react": "^4.3.1",
-    "globals": "^15.9.0",
-    "jsdom": "^24.1.0",
-    "typescript": "^5.5.3",
-    "vite": "^5.4.1",
-    "vitest": "^1.6.0"
+    "@types/node": "^22.9.0",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.3.3",
+    "globals": "^15.12.0",
+    "jsdom": "^25.0.1",
+    "typescript": "^5.6.3",
+    "vite": "^5.4.11",
+    "vitest": "^2.1.5"
   }
 }

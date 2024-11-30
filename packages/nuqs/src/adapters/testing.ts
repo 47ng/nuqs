@@ -1,4 +1,5 @@
 import { createElement, type ReactNode } from 'react'
+import { resetQueue } from '../update-queue'
 import { renderQueryString } from '../url-encoding'
 import type { AdapterInterface, AdapterOptions } from './defs'
 import { context } from './internal.context'
@@ -15,10 +16,17 @@ type TestingAdapterProps = {
   searchParams?: string | Record<string, string> | URLSearchParams
   onUrlUpdate?: OnUrlUpdateFunction
   rateLimitFactor?: number
+  resetUrlUpdateQueueOnMount?: boolean
   children: ReactNode
 }
 
-export function NuqsTestingAdapter(props: TestingAdapterProps) {
+export function NuqsTestingAdapter({
+  resetUrlUpdateQueueOnMount = true,
+  ...props
+}: TestingAdapterProps) {
+  if (resetUrlUpdateQueueOnMount) {
+    resetQueue()
+  }
   const useAdapter = (): AdapterInterface => ({
     searchParams: new URLSearchParams(props.searchParams),
     updateUrl(search, options) {
@@ -35,4 +43,34 @@ export function NuqsTestingAdapter(props: TestingAdapterProps) {
     { value: { useAdapter } },
     props.children
   )
+}
+
+/**
+ * A higher order component that wraps the children with the NuqsTestingAdapter
+ *
+ * It allows creating wrappers for testing purposes by providing only the
+ * necessary props to the NuqsTestingAdapter.
+ *
+ * Usage:
+ * ```tsx
+ * render(<MyComponent />, {
+ *   wrapper: withNuqsTestingAdapter({ searchParams: '?foo=bar' })
+ * })
+ * ```
+ */
+export function withNuqsTestingAdapter(
+  props: Omit<TestingAdapterProps, 'children'> = {}
+) {
+  return function NuqsTestingAdapterWrapper({
+    children
+  }: {
+    children: ReactNode
+  }) {
+    return createElement(
+      NuqsTestingAdapter,
+      // @ts-expect-error - Ignore missing children error
+      props,
+      children
+    )
+  }
 }

@@ -104,10 +104,9 @@
   }
 }
 
-@layer base {
-  @font-face {
-    font-family: 'Virgil';
-    src: url(https://excalidraw.com/Virgil.woff2);
+@layer components {
+  #nd-nav[aria-label='Main'] {
+    @apply lg:rounded-full;
   }
 }
 

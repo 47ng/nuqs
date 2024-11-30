@@ -1,6 +1,6 @@
 import { source } from '@/src/app/source'
 import { getSharedLayoutProps } from '@/src/components/shared-layout'
-import { DocsLayout } from 'fumadocs-ui/layout'
+import { DocsLayout } from 'fumadocs-ui/layouts/docs'
 import Link from 'next/link'
 import { Suspense, type ReactNode } from 'react'
 
@@ -17,6 +17,7 @@ export default function RootDocsLayout({ children }: { children: ReactNode }) {
             <Link
               href="/blog/nuqs-2"
               className="text-blue-900 hover:underline focus-visible:underline focus-visible:outline-none dark:text-blue-100"
+              prefetch={false}
             >
               Announcing nuqs v2 !
             </Link>

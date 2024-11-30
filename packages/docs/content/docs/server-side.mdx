@@ -45,7 +45,7 @@ type PageProps = {
 export default async function Page({ searchParams }: PageProps) {
   // ⚠️ Don't forget to call `parse` here.
   // You can access type-safe values from the returned object:
-  const { q: query } = searchParamsCache.parse(await searchParams)
+  const { q: query } = await searchParamsCache.parse(searchParams)
   return (
     <div>
       <h1>Search Results for {query}</h1>
@@ -87,7 +87,7 @@ import { Server } from './server'
 import { Client } from './client'
 
 export default async function Page({ searchParams }) {
-  coordinatesCache.parse(await searchParams)
+  await coordinatesCache.parse(searchParams)
   return (
     <>
       <Server />

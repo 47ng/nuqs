@@ -11,11 +11,11 @@ import { searchParamsCache } from './searchParams'
 export const dynamic = 'force-dynamic'
 
 type StatsPageProps = {
-  searchParams: SearchParams
+  searchParams: Promise<SearchParams>
 }
 
 export default async function StatsPage({ searchParams }: StatsPageProps) {
-  const { pkg } = searchParamsCache.parse(searchParams)
+  const { pkg } = await searchParamsCache.parse(searchParams)
   const allVersions = await getVersions()
   const pkgVersions = pkg === 'both' ? sumVersions(allVersions) : allVersions
   // @ts-expect-error
