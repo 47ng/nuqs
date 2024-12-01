@@ -34,13 +34,24 @@ export async function DependentsSection() {
       <h2 className="text-center text-3xl font-bold tracking-tighter dark:text-white md:text-4xl xl:text-5xl">
         Used by
       </h2>
-      <p className="flex flex-wrap justify-center gap-x-16 gap-y-8">
+      <p className="flex flex-wrap items-center justify-center gap-x-16 gap-y-8">
+        <a href="https://vercel.com" className="order-last sm:order-none">
+          <svg
+            aria-label="Vercel"
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 284 65"
+            className="inline h-8 fill-black dark:fill-white md:h-10"
+          >
+            <path d="M141.68 16.25c-11.04 0-19 7.2-19 18s8.96 18 20 18c6.67 0 12.55-2.64 16.19-7.09l-7.65-4.42c-2.02 2.21-5.09 3.5-8.54 3.5-4.79 0-8.86-2.5-10.37-6.5h28.02c.22-1.12.35-2.28.35-3.5 0-10.79-7.96-17.99-19-17.99zm-9.46 14.5c1.25-3.99 4.67-6.5 9.45-6.5 4.79 0 8.21 2.51 9.45 6.5h-18.9zm117.14-14.5c-11.04 0-19 7.2-19 18s8.96 18 20 18c6.67 0 12.55-2.64 16.19-7.09l-7.65-4.42c-2.02 2.21-5.09 3.5-8.54 3.5-4.79 0-8.86-2.5-10.37-6.5h28.02c.22-1.12.35-2.28.35-3.5 0-10.79-7.96-17.99-19-17.99zm-9.45 14.5c1.25-3.99 4.67-6.5 9.45-6.5 4.79 0 8.21 2.51 9.45 6.5h-18.9zm-39.03 3.5c0 6 3.92 10 10 10 4.12 0 7.21-1.87 8.8-4.92l7.68 4.43c-3.18 5.3-9.14 8.49-16.48 8.49-11.05 0-19-7.2-19-18s7.96-18 19-18c7.34 0 13.29 3.19 16.48 8.49l-7.68 4.43c-1.59-3.05-4.68-4.92-8.8-4.92-6.07 0-10 4-10 10zm82.48-29v46h-9v-46h9zM37.59.25l36.95 64H.64l36.95-64zm92.38 5l-27.71 48-27.71-48h10.39l17.32 30 17.32-30h10.39zm58.91 12v9.69c-1-.29-2.06-.49-3.2-.49-5.81 0-10 4-10 10v14.8h-9v-34h9v9.2c0-5.08 5.91-9.2 13.2-9.2z" />
+          </svg>
+        </a>
         <a href="https://midday.ai">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             viewBox="0 0 102 30"
             className="inline h-8 fill-black dark:fill-white md:h-10"
             fill="none"
+            aria-label="Midday.ai"
           >
             <path
               fill="currentColor"
@@ -54,22 +65,13 @@ export async function DependentsSection() {
             />
           </svg>
         </a>
-        <a href="https://vercel.com" className="order-last sm:order-none">
-          <svg
-            aria-label="Vercel"
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 284 65"
-            className="inline h-8 fill-black dark:fill-white md:h-10"
-          >
-            <path d="M141.68 16.25c-11.04 0-19 7.2-19 18s8.96 18 20 18c6.67 0 12.55-2.64 16.19-7.09l-7.65-4.42c-2.02 2.21-5.09 3.5-8.54 3.5-4.79 0-8.86-2.5-10.37-6.5h28.02c.22-1.12.35-2.28.35-3.5 0-10.79-7.96-17.99-19-17.99zm-9.46 14.5c1.25-3.99 4.67-6.5 9.45-6.5 4.79 0 8.21 2.51 9.45 6.5h-18.9zm117.14-14.5c-11.04 0-19 7.2-19 18s8.96 18 20 18c6.67 0 12.55-2.64 16.19-7.09l-7.65-4.42c-2.02 2.21-5.09 3.5-8.54 3.5-4.79 0-8.86-2.5-10.37-6.5h28.02c.22-1.12.35-2.28.35-3.5 0-10.79-7.96-17.99-19-17.99zm-9.45 14.5c1.25-3.99 4.67-6.5 9.45-6.5 4.79 0 8.21 2.51 9.45 6.5h-18.9zm-39.03 3.5c0 6 3.92 10 10 10 4.12 0 7.21-1.87 8.8-4.92l7.68 4.43c-3.18 5.3-9.14 8.49-16.48 8.49-11.05 0-19-7.2-19-18s7.96-18 19-18c7.34 0 13.29 3.19 16.48 8.49l-7.68 4.43c-1.59-3.05-4.68-4.92-8.8-4.92-6.07 0-10 4-10 10zm82.48-29v46h-9v-46h9zM37.59.25l36.95 64H.64l36.95-64zm92.38 5l-27.71 48-27.71-48h10.39l17.32 30 17.32-30h10.39zm58.91 12v9.69c-1-.29-2.06-.49-3.2-.49-5.81 0-10 4-10 10v14.8h-9v-34h9v9.2c0-5.08 5.91-9.2 13.2-9.2z" />
-          </svg>
-        </a>
         <a href="https://openpanel.dev" className="flex items-center gap-2">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             viewBox="0 0 278 278"
             fill="none"
             className="inline h-8 fill-black dark:fill-white md:h-10"
+            role="presentation"
           >
             <rect width="278" height="278" rx="20" fill="#2664EB" />
             <path
@@ -84,6 +86,24 @@ export async function DependentsSection() {
             />
           </svg>
           <span className="text-lg font-medium">openpanel.dev</span>
+        </a>
+        <a href="https://www.liminity.se/">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 703 70"
+            className="inline h-6 fill-black dark:fill-white"
+            aria-label="Liminity"
+          >
+            <path d="m176.3 56.1h27.7v6.2h-34.5v-55.4h6.8z"></path>
+            <path d="m249.6 62.3h-6.8v-55.4h6.8z"></path>
+            <path d="m352.4 62.3h-6.7v-40.9l-20.8 40.9h-4.8l-20.8-40.9v40.9h-6.8v-55.4h6.8l23.2 45.3 23.1-45.3h6.8z"></path>
+            <path d="m402.1 62.3h-6.8v-55.4h6.8z"></path>
+            <path d="m486.8 62.3h-6.4l-28.6-42.6v42.6h-6.8v-55.4h6.3l28.8 42.7v-42.7h6.7z"></path>
+            <path d="m536.5 62.3h-6.8v-55.4h6.8z"></path>
+            <path d="m621.9 13h-20.6v49.3h-6.8v-49.3h-20.5v-6.1h47.9z"></path>
+            <path d="m681.8 40.1v22.2h-6.8v-22.2l-21-33.2h8l16.5 25.8 16.2-25.8h8z"></path>
+            <path d="m94.1 0.7l-59.3 59.3-25-25 25.6-25.6 21.7 21.5 4.5-4.5-26.2-26.1-34.7 34.7 34.1 34.1 59.3-59.3 24.7 24.7-23.5 25.5-23-23-4.6 4.5 27.8 27.7 32.2-34.9z"></path>
+          </svg>
         </a>
       </p>
       <div className="flex flex-wrap justify-center gap-1.5">
