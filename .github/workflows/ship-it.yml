@@ -15,20 +15,16 @@ jobs:
           fetch-depth: 0
           ref: next
 
-      - name: Check master can fast-forward to next
+      - name: Checkout master branch
         run: |
           git fetch origin master
-          if ! git merge-base --is-ancestor master next; then
-            echo "::error::master cannot be fast-forwarded to next. Aborting."
-            exit 1
-          fi
-      - name: Log commits to ship
-        run: git log master..next --oneline
-
-      - name: Move master to next branch
-        run: |
           git checkout master
-          git reset --hard next
+
+      - name: Log commits to be shipped
+        run: git log --oneline master..next
+
+      - name: Fast-forward master to next
+        run: git merge --ff-only next
 
       - name: Push updated master to origin
         run: |
