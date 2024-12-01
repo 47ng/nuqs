@@ -21,12 +21,17 @@ jobs:
           git checkout master
 
       - name: Log commits to be shipped
-        run: git log --oneline master..next
+        id: commits-to-ship
+        run: |
+          git log --oneline master..next
+          echo "count=$(git log --oneline master..next | wc -l)" >> $GITHUB_OUTPUT
 
       - name: Fast-forward master to next
+        if: steps.commits-to-ship.outputs.count != '0'
         run: git merge --ff-only next
 
       - name: Push updated master to origin
+        if: steps.commits-to-ship.outputs.count != '0'
         run: |
           git push origin master
         env:
