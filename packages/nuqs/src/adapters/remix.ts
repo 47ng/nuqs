@@ -1,11 +1,19 @@
-import { useNavigate, useSearchParams } from '@remix-run/react'
+import {
+  useNavigate,
+  useSearchParams as useRemixSearchParams
+} from '@remix-run/react'
 import mitt from 'mitt'
 import { startTransition, useEffect, useLayoutEffect, useState } from 'react'
 import { renderQueryString } from '../url-encoding'
 import type { AdapterOptions } from './defs'
 import { createAdapterProvider } from './internal.context'
+import {
+  historyUpdateMarker,
+  patchHistory,
+  type SearchParamsSyncEmitter
+} from './patch-history'
 
-const emitter = mitt<{ update: URLSearchParams }>()
+const emitter: SearchParamsSyncEmitter = mitt()
 
 function useNuqsRemixAdapter() {
   const navigate = useNavigate()
@@ -23,7 +31,7 @@ function useNuqsRemixAdapter() {
     updateMethod.call(
       history,
       history.state, // Maintain the history state
-      '',
+      historyUpdateMarker,
       url
     )
     if (options.scroll) {
@@ -45,7 +53,7 @@ function useNuqsRemixAdapter() {
 export const NuqsAdapter = createAdapterProvider(useNuqsRemixAdapter)
 
 export function useOptimisticSearchParams() {
-  const [serverSearchParams] = useSearchParams()
+  const [serverSearchParams] = useRemixSearchParams()
   const [searchParams, setSearchParams] = useState(serverSearchParams)
   useEffect(() => {
     emitter.on('update', setSearchParams)
@@ -57,4 +65,15 @@ export function useOptimisticSearchParams() {
     emitter.emit('update', serverSearchParams)
   }, [serverSearchParams])
   return searchParams
+}
+
+/**
+ * Opt-in to syncing shallow updates of the URL with the useOptimisticSearchParams hook.
+ *
+ * By default, the useOptimisticSearchParams hook will only react to internal nuqs updates.
+ * If third party code updates the History API directly, use this function to
+ * enable useOptimisticSearchParams to react to those changes.
+ */
+export function enableHistorySync() {
+  patchHistory(emitter, 'remix')
 }
