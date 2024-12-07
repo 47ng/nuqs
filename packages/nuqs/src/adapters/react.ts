@@ -1,3 +1,5 @@
+'use client'
+
 import mitt from 'mitt'
 import { useEffect, useState } from 'react'
 import { renderQueryString } from '../url-encoding'

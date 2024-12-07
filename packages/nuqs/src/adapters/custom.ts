@@ -1,3 +1,5 @@
+'use client'
+
 export { renderQueryString } from '../url-encoding'
 export type {
   AdapterInterface as unstable_AdapterInterface,

@@ -5,7 +5,7 @@ import { defineConfig, type Options } from 'tsup'
 
 const commonConfig = {
   format: ['esm'],
-  experimentalDts: true,
+  dts: true,
   outDir: 'dist',
   external: ['next', 'react', '@remix-run/react', 'react-router-dom'],
   splitting: true,
