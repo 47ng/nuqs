@@ -28,7 +28,7 @@ export function Demo() {
     <>
       <input value={name || ''} onChange={e => setName(e.target.value)} />
       <button onClick={() => setName(null)}>Clear</button>
-      <p>Hello, {name || 'anonymous visitor'}!</p>
+      <p className="break-all">Hello, {name || 'anonymous visitor'}!</p>
     </>
   )
 }
