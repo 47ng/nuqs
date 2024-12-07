@@ -31,7 +31,7 @@ export function Client() {
   )
   const router = useRouter()
 
-  const timeoutRef = React.useRef<number>()
+  const timeoutRef = React.useRef<number | undefined>(undefined)
   const [index, setIndex] = React.useState(0)
 
   React.useEffect(() => {
