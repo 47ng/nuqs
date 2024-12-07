@@ -128,6 +128,18 @@ import { NuqsTestingAdapter } from 'nuqs/adapters/testing'
 }}>
 ```
 
+When testing hooks that rely on nuqs' `useQueryState(s){:ts}` with React Testing Library's
+[`renderHook{:ts}`](https://testing-library.com/docs/react-testing-library/api/#renderhook) function, 
+you can use the `withNuqsTestingAdapter{:ts}` as a wrapper component passed into the
+`renderHook{:ts}` call.
+
+```tsx
+const { result } = renderHook(() => useMyNiceHook(), { wrapper: withNuqsTestingAdapter({
+  searchParams: { q: 'hello-world' }
+}) })
+```
+
+
 - `onUrlUpdate{:ts}`, a function that will be called when the URL is updated
   by the component. It receives an object with:
   - the new search params as an instance of `URLSearchParams{:ts}`
