@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite --port 4000",
+    "dev": "vite --port 3002",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "test": "pnpm run '/^test:/'",
