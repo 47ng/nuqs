@@ -441,6 +441,9 @@ importers:
       mitt:
         specifier: ^3.0.1
         version: 3.0.1
+      react-router:
+        specifier: '>=7'
+        version: 7.0.1(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
     devDependencies:
       '@microsoft/api-extractor':
         specifier: ^7.47.11
@@ -4180,6 +4183,10 @@ packages:
     resolution: {integrity: sha512-6DnInpx7SJ2AK3+CTUE/ZM0vWTUboZCegxhC2xiIydHR9jNuTAASBrfEpHhiGOZw/nX51bHt6YQl8jsGo4y/0w==}
     engines: {node: '>= 0.6'}
 
+  cookie@1.0.2:
+    resolution: {integrity: sha512-9Kr/j4O16ISv8zBBhJoi4bXOYNTkFLOqSL3UDB0njXxCXNezjeyVrJyGOWtgfs/q2km1gwBcfH8q1yEGoMYunA==}
+    engines: {node: '>=18'}
+
   core-util-is@1.0.2:
     resolution: {integrity: sha512-3lqz5YjWTYnW6dlDa5TLaTCcShfar1e40rmcJVwCBJC6mWlFuj0eCHIElmG1g5kyuJ/GD+8Wn4FFCcz4gJPfaQ==}
 
@@ -7485,6 +7492,16 @@ packages:
     engines: {node: '>=14.0.0'}
     peerDependencies:
       react: '>=16.8'
+
+  react-router@7.0.1:
+    resolution: {integrity: sha512-WVAhv9oWCNsja5AkK6KLpXJDSJCQizOIyOd4vvB/+eHGbYx5vkhcmcmwWjQ9yqkRClogi+xjEg9fNEOd5EX/tw==}
+    engines: {node: '>=20.0.0'}
+    peerDependencies:
+      react: '>=18'
+      react-dom: '>=18'
+    peerDependenciesMeta:
+      react-dom:
+        optional: true
 
   react-smooth@4.0.1:
     resolution: {integrity: sha512-OE4hm7XqR0jNOq3Qmk9mFLyd6p2+j6bvbPJ7qlB7+oo0eNcL2l7WQzG6MBnT3EXY6xzkLMUBec3AfewJdA0J8w==}
@@ -12931,6 +12948,8 @@ snapshots:
 
   cookie@0.7.1: {}
 
+  cookie@1.0.2: {}
+
   core-util-is@1.0.2: {}
 
   core-util-is@1.0.3: {}
@@ -16885,6 +16904,16 @@ snapshots:
     dependencies:
       '@remix-run/router': 1.21.0
       react: 19.0.0
+
+  react-router@7.0.1(react-dom@19.0.0(react@19.0.0))(react@19.0.0):
+    dependencies:
+      '@types/cookie': 0.6.0
+      cookie: 1.0.2
+      react: 19.0.0
+      set-cookie-parser: 2.7.0
+      turbo-stream: 2.4.0
+    optionalDependencies:
+      react-dom: 19.0.0(react@19.0.0)
 
   react-smooth@4.0.1(react-dom@19.0.0(react@19.0.0))(react@19.0.0):
     dependencies:
