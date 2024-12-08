@@ -127,8 +127,8 @@
     "@remix-run/react": ">=2",
     "next": ">=14.2.0",
     "react": ">=18.2.0 || ^19.0.0-0",
-    "react-router-dom": ">=6",
-    "react-router": ">=7"
+    "react-router": ">=7",
+    "react-router-dom": ">=6"
   },
   "peerDependenciesMeta": {
     "@remix-run/react": {
@@ -137,10 +137,10 @@
     "next": {
       "optional": true
     },
-    "react-router-dom": {
+    "react-router": {
       "optional": true
     },
-    "react-router": {
+    "react-router-dom": {
       "optional": true
     }
   },
