@@ -1,10 +1,10 @@
 {
-  "name": "e2e-react",
+  "name": "e2e-react-router-v6",
   "private": true,
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite --port 3002",
+    "dev": "vite --port 3006",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "test": "pnpm run '/^test:/'",
@@ -14,7 +14,8 @@
   "dependencies": {
     "nuqs": "workspace:*",
     "react": "catalog:react19",
-    "react-dom": "catalog:react19"
+    "react-dom": "catalog:react19",
+    "react-router-dom": "^6.28.0"
   },
   "devDependencies": {
     "@testing-library/dom": "^10.4.0",

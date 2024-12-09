@@ -88,6 +88,16 @@
       "import": "./dist/adapters/react-router.js",
       "require": "./esm-only.cjs"
     },
+    "./adapters/react-router/v6": {
+      "types": "./dist/adapters/react-router/v6.d.ts",
+      "import": "./dist/adapters/react-router/v6.js",
+      "require": "./esm-only.cjs"
+    },
+    "./adapters/react-router/v7": {
+      "types": "./dist/adapters/react-router/v7.d.ts",
+      "import": "./dist/adapters/react-router/v7.js",
+      "require": "./esm-only.cjs"
+    },
     "./adapters/custom": {
       "types": "./dist/adapters/custom.d.ts",
       "import": "./dist/adapters/custom.js",
@@ -117,6 +127,7 @@
     "@remix-run/react": ">=2",
     "next": ">=14.2.0",
     "react": ">=18.2.0 || ^19.0.0-0",
+    "react-router": ">=7",
     "react-router-dom": ">=6"
   },
   "peerDependenciesMeta": {
@@ -124,6 +135,9 @@
       "optional": true
     },
     "next": {
+      "optional": true
+    },
+    "react-router": {
       "optional": true
     },
     "react-router-dom": {

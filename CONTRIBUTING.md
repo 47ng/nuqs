@@ -21,10 +21,11 @@ When running `next dev`, this will:
 - Build the library and watch for changes using [`tsup`](https://tsup.egoist.dev/)
 - Start the docs app, which will be available at <http://localhost:3000>.
 - Start the end-to-end test benches:
-  - Next.js: http://localhost:3001
-  - Remix: http://localhost:3002
-  - React Router: http://localhost:3003
-  - React SPA: http://localhost:3004
+  - http://localhost:3001 - Next.js
+  - http://localhost:3002 - React SPA
+  - http://localhost:3003 - Remix
+  - http://localhost:3006 - React Router v6
+  - http://localhost:3007 - React Router v7
 
 ## Testing
 
