@@ -7,7 +7,13 @@ const commonConfig = {
   format: ['esm'],
   experimentalDts: true,
   outDir: 'dist',
-  external: ['next', 'react', '@remix-run/react', 'react-router-dom', 'react-router'],
+  external: [
+    'next',
+    'react',
+    '@remix-run/react',
+    'react-router-dom',
+    'react-router'
+  ],
   splitting: true,
   treeshake: true,
   tsconfig: 'tsconfig.build.json'
