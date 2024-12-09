@@ -155,7 +155,7 @@ jobs:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
   e2e-react-router:
-    name: E2E (react-router @${{ matrix.react-router-version }})
+    name: E2E (react-router ${{ matrix.react-router-version }})
     runs-on: ubuntu-24.04
     needs: [ci-core]
     strategy:
