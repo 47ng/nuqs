@@ -3,7 +3,7 @@ import { renderQueryString } from '../url-encoding'
 import type { AdapterOptions } from './defs'
 import { createAdapterProvider } from './internal.context'
 
-function useNuqsReactRouterAdapter() {
+function useNuqsReactRouterV6Adapter() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const updateUrl = (search: URLSearchParams, options: AdapterOptions) => {
@@ -23,4 +23,4 @@ function useNuqsReactRouterAdapter() {
   }
 }
 
-export const NuqsAdapter = createAdapterProvider(useNuqsReactRouterAdapter)
+export const NuqsAdapter = createAdapterProvider(useNuqsReactRouterV6Adapter)
