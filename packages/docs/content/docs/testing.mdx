@@ -4,10 +4,28 @@ description: Some tips on testing components that use `nuqs`
 ---
 
 Since nuqs 2, you can unit-test components that use `useQueryState(s){:ts}` hooks
-by wrapping your rendered component in a `NuqsTestingAdapter{:ts}`, or using
-the `withNuqsTestingAdapter{:ts}` higher-order component.
+without needing to mock anything, by using a dedicated testing adapter that will
+facilitate **setting up** your tests (with initial search params) and **asserting**
+on URL changes when **acting** on your components.
 
-## With Vitest
+## Testing hooks with React Testing Library
+
+When testing hooks that rely on nuqs' `useQueryState(s){:ts}` with React Testing Library's
+[`renderHook{:ts}`](https://testing-library.com/docs/react-testing-library/api/#renderhook) function,
+you can use `withNuqsTestingAdapter{:ts}` to get a wrapper component to pass to the
+`renderHook{:ts}` call:
+
+```tsx
+import { withNuqsTestingAdapter } from 'nuqs/adapters/testing'
+
+const { result } = renderHook(() => useTheHookToTest(), {
+  wrapper: withNuqsTestingAdapter({
+    searchParams: { count: "42" },
+  }),
+})
+```
+
+## Testing components with Vitest
 
 Here is an example for Vitest and Testing Library to test a button rendering
 a counter:
@@ -74,7 +92,7 @@ it('should increment the count when clicked', async () => {
 
 See issue [#259](https://github.com/47ng/nuqs/issues/259) for more testing-related discussions.
 
-## With Jest
+## Jest and ESM
 
 Since nuqs 2 is an [ESM-only package](https://gist.github.com/sindresorhus/a39789f98801d908bbc7ff3ecc99d99c),
 there are a few hoops you need to jump through to make it work with Jest.
@@ -82,7 +100,7 @@ This is extracted from the [Jest ESM guide](https://jestjs.io/docs/ecmascript-mo
 
 1. Add the following options to your jest.config.ts file:
 
-```ts title="jest.config.ts"
+```ts title="jest.configx.ts"
 const config: Config = {
   // <Other options here>
   // [!code highlight:3]
@@ -106,32 +124,34 @@ const config: Config = {
 Adapt accordingly for Windows with [`cross-env`](https://www.npmjs.com/package/cross-env).
 </Callout>
 
-## NuqsTestingAdapter
+## API
 
-The `withNuqsTestingAdapter{:ts}` function is a higher-order component that
-wraps your component with a `NuqsTestingAdapter{:ts}`, but you can also use
-it directly.
-
-It takes the following props:
+`withNuqsTestingAdapter{:ts}` accepts the following arguments:
 
 - `searchParams{:ts}`: The initial search params to use for the test. These can be a
   query string, a `URLSearchParams` object or a record object with string values.
 
 ```tsx
-import { NuqsTestingAdapter } from 'nuqs/adapters/testing'
+withNuqsTestingAdapter({
+  searchParams: '?q=hello&limit=10'
+})
 
-<NuqsTestingAdapter searchParams="?q=hello&limit=10">
-<NuqsTestingAdapter searchParams={new URLSearchParams("?q=hello&limit=10")}>
-<NuqsTestingAdapter searchParams={{
-  q: 'hello',
-  limit: '10' // Values are serialized strings
-}}>
+withNuqsTestingAdapter({
+  searchParams: new URLSearchParams('?q=hello&limit=10')
+})
+
+withNuqsTestingAdapter({
+  searchParams: {
+    q: 'hello',
+    limit: '10' // Values are serialized strings
+  }
+})
 ```
 
-- `onUrlUpdate{:ts}`, a function that will be called when the URL is updated
+- `onUrlUpdate{:ts}`: a function that will be called when the URL is updated
   by the component. It receives an object with:
   - the new search params as an instance of `URLSearchParams{:ts}`
-  - the new querystring (for convenience)
+  - the new renderd query string (for convenience)
   - the options used to update the URL.
 
 <details>
@@ -146,3 +166,21 @@ This is `true{:ts}` by default to isolate tests, but you can set it to `false{:t
 URL update queue between renders and match the production behaviour more closely.
 
 </details>
+
+
+## NuqsTestingAdapter
+
+The `withNuqsTestingAdapter{:ts}` function is a wrapper component factory function
+wraps children with a `NuqsTestingAdapter{:ts}`, but you can also use
+it directly:
+
+```tsx
+// [!code word:NuqsTestingAdapter]
+import { NuqsTestingAdapter } from 'nuqs/adapters/testing'
+
+<NuqsTestingAdapter>
+  <ComponentsUsingNuqs/>
+</NuqsTestingAdapter>
+```
+
+It takes the same props as the arguments you can pass to `withNuqsTestingAdapter{:ts}`.
