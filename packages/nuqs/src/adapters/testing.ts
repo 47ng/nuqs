@@ -36,6 +36,9 @@ export function NuqsTestingAdapter({
         options
       })
     },
+    getSearchParamsSnapshot() {
+      return new URLSearchParams(props.searchParams)
+    },
     rateLimitFactor: props.rateLimitFactor ?? 0
   })
   return createElement(

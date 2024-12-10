@@ -12,5 +12,6 @@ export type UseAdapterHook = () => AdapterInterface
 export type AdapterInterface = {
   searchParams: URLSearchParams
   updateUrl: UpdateUrlFunction
+  getSearchParamsSnapshot?: () => URLSearchParams
   rateLimitFactor?: number
 }
