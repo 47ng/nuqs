@@ -12,6 +12,7 @@
     "@react-router/node": "^7.0.2",
     "@react-router/serve": "^7.0.2",
     "isbot": "^5.1.17",
+    "nuqs": "workspace:*",
     "react": "catalog:react19",
     "react-dom": "catalog:react19",
     "react-router": "^7.0.2"

@@ -373,6 +373,9 @@ importers:
       isbot:
         specifier: ^5.1.17
         version: 5.1.17
+      nuqs:
+        specifier: workspace:*
+        version: link:../../../nuqs
       react:
         specifier: catalog:react19
         version: 19.0.0
