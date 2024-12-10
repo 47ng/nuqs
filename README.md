@@ -147,6 +147,39 @@ export function ReactRouter() {
 
 </details>
 
+<details><summary><img style="width:1em;height:1em;" src="https://docs.astro.build/favicon.svg" /> Astro (React)</summary>
+
+Example: [Astro React]([https://astro.build/](https://docs.astro.build/de/guides/integrations-guide/react/)).
+
+```astro
+// page.astro
+<NuqsReactComponent client:load />
+```
+
+```tsx
+// NuqsReactComponent.tsx
+import { NuqsAdapter } from 'nuqs/adapters/react'
+import { useQueryState } from 'nuqs'
+
+export const NuqsReactComponentWithNuqs = () => {
+  const [name, setName] = useQueryState('name')
+
+  return (
+    <code>{name}</code>
+  )
+}
+
+export const NuqsReactComponent = () => {
+  return (
+    <NuqsAdapter>
+      <NuqsReactComponentWithNuqs />
+    </NuqsAdapter>
+  )
+}
+```
+
+</details>
+
 ## Usage
 
 ```tsx
