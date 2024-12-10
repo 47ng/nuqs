@@ -228,12 +228,8 @@ export function useQueryState<T = string>(
     defaultValue: undefined
   }
 ) {
-  // Not reactive, but available on the server and on page load
-  const {
-    searchParams: initialSearchParams,
-    updateUrl,
-    rateLimitFactor = 1
-  } = useAdapter()
+  const adapter = useAdapter()
+  const initialSearchParams = adapter.searchParams
   const queryRef = useRef<string | null>(initialSearchParams?.get(key) ?? null)
   const [internalState, setInternalState] = useState<T | null>(() => {
     const queuedQuery = getQueuedValue(key)
@@ -302,18 +298,9 @@ export function useQueryState<T = string>(
       })
       // Sync all hooks state (including this one)
       emitter.emit(key, { state: newValue, query: queryRef.current })
-      return scheduleFlushToURL(updateUrl, rateLimitFactor)
+      return scheduleFlushToURL(adapter)
     },
-    [
-      key,
-      history,
-      shallow,
-      scroll,
-      throttleMs,
-      startTransition,
-      updateUrl,
-      rateLimitFactor
-    ]
+    [key, history, shallow, scroll, throttleMs, startTransition, adapter]
   )
   return [internalState ?? defaultValue ?? null, update]
 }
