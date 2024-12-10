@@ -7,7 +7,13 @@ const commonConfig = {
   format: ['esm'],
   experimentalDts: true,
   outDir: 'dist',
-  external: ['next', 'react', '@remix-run/react', 'react-router-dom'],
+  external: [
+    'next',
+    'react',
+    '@remix-run/react',
+    'react-router-dom',
+    'react-router'
+  ],
   splitting: true,
   treeshake: true,
   tsconfig: 'tsconfig.build.json'
@@ -22,6 +28,8 @@ const entrypoints = {
     'adapters/next/pages': 'src/adapters/next/pages.ts',
     'adapters/remix': 'src/adapters/remix.ts',
     'adapters/react-router': 'src/adapters/react-router.ts',
+    'adapters/react-router/v6': 'src/adapters/react-router/v6.ts',
+    'adapters/react-router/v7': 'src/adapters/react-router/v7.ts',
     'adapters/custom': 'src/adapters/custom.ts',
     'adapters/testing': 'src/adapters/testing.ts'
   },

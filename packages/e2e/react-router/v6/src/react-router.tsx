@@ -1,4 +1,4 @@
-import { NuqsAdapter } from 'nuqs/adapters/react-router'
+import { NuqsAdapter } from 'nuqs/adapters/react-router/v6'
 import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 import App from './App'
 

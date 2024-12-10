@@ -155,9 +155,15 @@ jobs:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
   e2e-react-router:
-    name: E2E (react-router)
+    name: E2E (react-router ${{ matrix.react-router-version }})
     runs-on: ubuntu-24.04
     needs: [ci-core]
+    strategy:
+      fail-fast: false
+      matrix:
+        react-router-version:
+          - 'v6'
+          - 'v7'
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
       - uses: pnpm/action-setup@fe02b34f77f8bc703788d5817da081398fad5dd2
@@ -168,7 +174,7 @@ jobs:
       - name: Install dependencies
         run: pnpm install
       - name: Run tests
-        run: pnpm run test ${{ github.event_name == 'workflow_dispatch' && '--force' || '' }} --filter e2e-react-router
+        run: pnpm run test ${{ github.event_name == 'workflow_dispatch' && '--force' || '' }} --filter e2e-react-router-${{ matrix.react-router-version }}
         env:
           TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
           TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
@@ -177,14 +183,14 @@ jobs:
         uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882
         if: failure()
         with:
-          path: packages/e2e/react-router/cypress/screenshots
-          name: ci-react-router
+          path: packages/e2e/react-router/${{ matrix.react-router-version }}/cypress/screenshots
+          name: ci-react-router-${{ matrix.react-router-version }}
       - uses: 47ng/actions-slack-notify@main
         name: Notify on Slack
         if: always()
         with:
           status: ${{ job.status }}
-          jobName: react-router
+          jobName: react-router-${{ matrix.react-router-version }}
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
