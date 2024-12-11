@@ -90,11 +90,8 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
       ),
     [stateKeys, urlKeys]
   )
-  const {
-    searchParams: initialSearchParams,
-    updateUrl,
-    rateLimitFactor = 1
-  } = useAdapter()
+  const adapter = useAdapter()
+  const initialSearchParams = adapter.searchParams
   const queryRef = useRef<Record<string, string | null>>({})
   // Initialise the queryRef with the initial values
   if (Object.keys(queryRef.current).length !== Object.keys(keyMap).length) {
@@ -243,7 +240,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
           query: queryRef.current[urlKey] ?? null
         })
       }
-      return scheduleFlushToURL(updateUrl, rateLimitFactor)
+      return scheduleFlushToURL(adapter)
     },
     [
       keyMap,
@@ -253,8 +250,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
       throttleMs,
       startTransition,
       resolvedUrlKeys,
-      updateUrl,
-      rateLimitFactor,
+      adapter,
       defaultValues
     ]
   )
