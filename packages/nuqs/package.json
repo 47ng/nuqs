@@ -156,6 +156,7 @@
     "@types/react": "catalog:react19",
     "@types/react-dom": "catalog:react19",
     "@vitejs/plugin-react": "^4.3.3",
+    "@vitest/coverage-v8": "^2.1.8",
     "next": "15.0.3",
     "react": "catalog:react19",
     "react-dom": "catalog:react19",
