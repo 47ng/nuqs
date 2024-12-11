@@ -200,4 +200,36 @@ describe('useQueryStates: clearOnDefault', () => {
     expect(onUrlUpdate).toHaveBeenCalledOnce()
     expect(onUrlUpdate.mock.calls[0]![0].queryString).toEqual('?a=default')
   })
+
+  it('supports clearOnDefault: false (call level)', async () => {
+    const onUrlUpdate = vi.fn<OnUrlUpdateFunction>()
+    const useTestHook = () =>
+      useQueryStates(
+        {
+          a: parseAsString.withDefault('default'),
+          b: parseAsString.withDefault('default').withOptions({
+            clearOnDefault: true // overrides hook options
+          })
+        },
+        {
+          clearOnDefault: false
+        }
+      )
+    const { result } = renderHook(useTestHook, {
+      wrapper: withNuqsTestingAdapter({
+        searchParams: '?a=init&b=init',
+        onUrlUpdate
+      })
+    })
+    await act(() =>
+      result.current[1](
+        { a: 'default', b: 'default' },
+        {
+          clearOnDefault: true
+        }
+      )
+    )
+    expect(onUrlUpdate).toHaveBeenCalledOnce()
+    expect(onUrlUpdate.mock.calls[0]![0].queryString).toEqual('')
+  })
 })
