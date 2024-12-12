@@ -34,8 +34,9 @@
     "babel-plugin-react-compiler": "19.0.0-beta-a7bf2bd-20241110",
     "cypress": "^13.15.2",
     "cypress-terminal-report": "^7.0.4",
-    "semver": "^7.6.3",
+    "e2e-shared": "workspace:*",
     "start-server-and-test": "^2.0.8",
+    "semver": "^7.6.3",
     "typescript": "^5.6.3"
   }
 }

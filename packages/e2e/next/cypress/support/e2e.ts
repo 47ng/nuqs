@@ -1,3 +1,1 @@
-import setup from 'cypress-terminal-report/src/installLogsCollector'
-
-setup()
+import 'e2e-shared/cypress/support/e2e'

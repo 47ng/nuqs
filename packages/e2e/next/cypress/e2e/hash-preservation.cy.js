@@ -1,35 +1,21 @@
-/// <reference types="cypress" />
-
-function runTest() {
-  cy.contains('#hydration-marker', 'hydrated').should('be.hidden')
-  cy.get('#string_set_a').click()
-  cy.location('hash').should('eq', '#hash')
-  cy.get('#string_set_b').click()
-  cy.location('hash').should('eq', '#hash')
-  cy.get('#string_clear').click()
-  cy.location('hash').should('eq', '#hash')
-}
+import { hashPreservation } from 'e2e-shared/cypress/e2e/hash-preservation.cy'
 
 describe('hash preservation (app router)', () => {
   it('works in standard routes', () => {
-    cy.visit('/app/useQueryState#hash')
-    runTest()
+    hashPreservation('/app/hash-preservation')
   })
 
   it('works in dynamic routes', () => {
-    cy.visit('/app/useQueryState/dynamic/route#hash')
-    runTest()
+    hashPreservation('/app/hash-preservation/dynamic/route')
   })
 })
 
 describe('hash preservation (pages router)', () => {
   it('works in standard routes', () => {
-    cy.visit('/pages/useQueryState#hash')
-    runTest()
+    hashPreservation('/pages/hash-preservation')
   })
 
   it('works in dynamic routes', () => {
-    cy.visit('/pages/useQueryState/dynamic/route#hash')
-    runTest()
+    hashPreservation('/pages/hash-preservation/dynamic/route')
   })
 })

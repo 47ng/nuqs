@@ -5,6 +5,10 @@ settings:
   excludeLinksFromLockfile: false
 
 catalogs:
+  e2e:
+    cypress:
+      specifier: ^13.15.2
+      version: 13.15.2
   react19:
     '@types/react':
       specifier: 19.0.0
@@ -243,6 +247,9 @@ importers:
       cypress-terminal-report:
         specifier: ^7.0.4
         version: 7.0.4(cypress@13.15.2)
+      e2e-shared:
+        specifier: workspace:*
+        version: link:../shared
       semver:
         specifier: ^7.6.3
         version: 7.6.3
@@ -484,6 +491,34 @@ importers:
         specifier: ^5.1.2
         version: 5.1.2(typescript@5.6.3)(vite@5.4.11(@types/node@22.9.0)(lightningcss@1.27.0)(terser@5.34.1))
 
+  packages/e2e/shared:
+    dependencies:
+      cypress-terminal-report:
+        specifier: ^7.0.4
+        version: 7.0.4(cypress@13.15.2)
+    devDependencies:
+      '@types/react':
+        specifier: catalog:react19
+        version: 19.0.0
+      '@types/react-dom':
+        specifier: catalog:react19
+        version: 19.0.0
+      cypress:
+        specifier: catalog:e2e
+        version: 13.15.2
+      nuqs:
+        specifier: workspace:*
+        version: link:../../nuqs
+      react:
+        specifier: catalog:react19
+        version: 19.0.0
+      react-dom:
+        specifier: catalog:react19
+        version: 19.0.0(react@19.0.0)
+      typescript:
+        specifier: ^5.6.3
+        version: 5.6.3
+
   packages/nuqs:
     dependencies:
       mitt:
@@ -531,7 +566,7 @@ importers:
         version: 2.1.8(vitest@2.1.5(@types/node@22.9.0)(jsdom@25.0.1)(lightningcss@1.27.0)(terser@5.34.1))
       next:
         specifier: 15.0.3
-        version: 15.0.3(@babel/core@7.25.7)(@opentelemetry/api@1.9.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
+        version: 15.0.3(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@19.0.0-beta-a7bf2bd-20241110)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
       react:
         specifier: catalog:react19
         version: 19.0.0
@@ -16490,32 +16525,6 @@ snapshots:
       react: 19.0.0
       react-dom: 19.0.0(react@19.0.0)
 
-  next@15.0.3(@babel/core@7.25.7)(@opentelemetry/api@1.9.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0):
-    dependencies:
-      '@next/env': 15.0.3
-      '@swc/counter': 0.1.3
-      '@swc/helpers': 0.5.13
-      busboy: 1.6.0
-      caniuse-lite: 1.0.30001667
-      postcss: 8.4.31
-      react: 19.0.0
-      react-dom: 19.0.0(react@19.0.0)
-      styled-jsx: 5.1.6(@babel/core@7.25.7)(react@19.0.0)
-    optionalDependencies:
-      '@next/swc-darwin-arm64': 15.0.3
-      '@next/swc-darwin-x64': 15.0.3
-      '@next/swc-linux-arm64-gnu': 15.0.3
-      '@next/swc-linux-arm64-musl': 15.0.3
-      '@next/swc-linux-x64-gnu': 15.0.3
-      '@next/swc-linux-x64-musl': 15.0.3
-      '@next/swc-win32-arm64-msvc': 15.0.3
-      '@next/swc-win32-x64-msvc': 15.0.3
-      '@opentelemetry/api': 1.9.0
-      sharp: 0.33.5
-    transitivePeerDependencies:
-      - '@babel/core'
-      - babel-plugin-macros
-
   next@15.0.3(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@19.0.0-beta-a7bf2bd-20241110)(react-dom@19.0.0(react@19.0.0))(react@19.0.0):
     dependencies:
       '@next/env': 15.0.3
@@ -16526,7 +16535,7 @@ snapshots:
       postcss: 8.4.31
       react: 19.0.0
       react-dom: 19.0.0(react@19.0.0)
-      styled-jsx: 5.1.6(@babel/core@7.25.7)(react@19.0.0)
+      styled-jsx: 5.1.6(react@19.0.0)
     optionalDependencies:
       '@next/swc-darwin-arm64': 15.0.3
       '@next/swc-darwin-x64': 15.0.3
@@ -18115,12 +18124,10 @@ snapshots:
     dependencies:
       inline-style-parser: 0.2.4
 
-  styled-jsx@5.1.6(@babel/core@7.25.7)(react@19.0.0):
+  styled-jsx@5.1.6(react@19.0.0):
     dependencies:
       client-only: 0.0.1
       react: 19.0.0
-    optionalDependencies:
-      '@babel/core': 7.25.7
 
   sucrase@3.35.0:
     dependencies:
