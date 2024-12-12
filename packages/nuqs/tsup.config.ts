@@ -34,7 +34,10 @@ const entrypoints = {
     'adapters/testing': 'src/adapters/testing.ts'
   },
   server: {
-    server: 'src/index.server.ts'
+    server: 'src/index.server.ts',
+    'server/cache': 'src/index.server.cache.ts',
+    'server/parsers': 'src/index.server.parsers.ts',
+    'server/serializer': 'src/index.server.serializer.ts'
   }
 }
 
