@@ -5,8 +5,12 @@
   "scripts": {
     "build": "react-router build",
     "dev": "react-router dev --port 3007",
-    "start": "react-router-serve ./build/server/index.js",
-    "typecheck": "react-router typegen && tsc"
+    "start": "cross-env NODE_ENV=production PORT=3007 react-router-serve ./build/server/index.js",
+    "test": "pnpm run '/^test:/'",
+    "test:types": "react-router typegen && tsc",
+    "test:e2e": "start-server-and-test start http://localhost:3007 cypress:run",
+    "cypress:open": "cypress open",
+    "cypress:run": "cypress run --headless"
   },
   "dependencies": {
     "@react-router/node": "^7.0.2",
@@ -19,11 +23,15 @@
   },
   "devDependencies": {
     "@react-router/dev": "^7.0.2",
-    "@types/node": "^20",
+    "@types/node": "^20.17.10",
     "@types/react": "catalog:react19",
     "@types/react-dom": "catalog:react19",
-    "typescript": "^5.6.3",
+    "cross-env": "^7.0.3",
+    "cypress": "catalog:e2e",
+    "e2e-shared": "workspace:*",
+    "start-server-and-test": "catalog:e2e",
+    "typescript": "^5.7.2",
     "vite": "^5.4.11",
-    "vite-tsconfig-paths": "^5.1.2"
+    "vite-tsconfig-paths": "^5.1.4"
   }
 }
