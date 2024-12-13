@@ -1,6 +1,6 @@
 import { NuqsAdapter } from 'nuqs/adapters/next/app'
 import React, { Suspense } from 'react'
-import { HydrationMarker } from '../components/hydration-marker'
+import { HydrationMarker } from 'e2e-shared/components/hydration-marker'
 
 export const metadata = {
   title: 'nuqs e2e test bench'

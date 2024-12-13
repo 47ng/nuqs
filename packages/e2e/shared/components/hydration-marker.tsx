@@ -14,16 +14,3 @@ export const HydrationMarker = () => {
     </div>
   )
 }
-
-export function withHydrationMarker(Component: React.ComponentType) {
-  return function WithHydrationMarker(
-    props: React.ComponentProps<typeof Component>
-  ) {
-    return (
-      <>
-        <HydrationMarker />
-        <Component {...props} />
-      </>
-    )
-  }
-}
