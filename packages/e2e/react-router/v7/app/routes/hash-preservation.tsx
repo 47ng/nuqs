@@ -1,3 +1,3 @@
-import { HashPreservation } from 'e2e-shared/cypress/e2e/hash-preservation'
+import { HashPreservation } from 'e2e-shared/specs/hash-preservation'
 
 export default HashPreservation

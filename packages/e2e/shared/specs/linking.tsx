@@ -1,7 +1,7 @@
 'use client'
 
 import { parseAsString, useQueryState, useQueryStates } from 'nuqs'
-import { useLink } from '../../components/link'
+import { useLink } from '../components/link'
 
 type Props = {
   path: string

@@ -1,4 +1,4 @@
-import { LinkingUseQueryState } from 'e2e-shared/cypress/e2e/linking'
+import { LinkingUseQueryState } from 'e2e-shared/specs/linking'
 import { Suspense } from 'react'
 
 export default function Page() {

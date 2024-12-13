@@ -16,5 +16,7 @@ export default [
     route('/linking/useQueryState/other',   'routes/linking.useQueryState.other.tsx'),
     route('/linking/useQueryStates',        'routes/linking.useQueryStates.tsx'),
     route('/linking/useQueryStates/other',  'routes/linking.useQueryStates.other.tsx'),
+    route('/push/useQueryState',            'routes/push.useQueryState.tsx'),
+    route('/push/useQueryStates',           'routes/push.useQueryStates.tsx'),
   ])
 ] satisfies RouteConfig

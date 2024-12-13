@@ -1,21 +1,25 @@
-import { testHashPreservation } from 'e2e-shared/cypress/e2e/hash-preservation.cy'
+import { testHashPreservation } from 'e2e-shared/specs/hash-preservation.cy'
 
-describe('hash preservation (app router)', () => {
-  it('works in standard routes', () => {
-    testHashPreservation('/app/hash-preservation')
-  })
-
-  it('works in dynamic routes', () => {
-    testHashPreservation('/app/hash-preservation/dynamic/route')
-  })
+testHashPreservation({
+  path: '/app/hash-preservation',
+  nextJsRouter: 'app',
+  description: 'standard route'
 })
 
-describe('hash preservation (pages router)', () => {
-  it('works in standard routes', () => {
-    testHashPreservation('/pages/hash-preservation')
-  })
+testHashPreservation({
+  path: '/app/hash-preservation/dynamic/route',
+  nextJsRouter: 'app',
+  description: 'dynamic route'
+})
 
-  it('works in dynamic routes', () => {
-    testHashPreservation('/pages/hash-preservation/dynamic/route')
-  })
+testHashPreservation({
+  path: '/pages/hash-preservation',
+  nextJsRouter: 'pages',
+  description: 'standard route'
+})
+
+testHashPreservation({
+  path: '/pages/hash-preservation/dynamic/route',
+  nextJsRouter: 'pages',
+  description: 'dynamic route'
 })

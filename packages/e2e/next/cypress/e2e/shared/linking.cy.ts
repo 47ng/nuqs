@@ -1,4 +1,4 @@
-import { testLinking } from 'e2e-shared/cypress/e2e/linking.cy'
+import { testLinking } from 'e2e-shared/specs/linking.cy'
 
 testLinking({
   hook: 'useQueryState',

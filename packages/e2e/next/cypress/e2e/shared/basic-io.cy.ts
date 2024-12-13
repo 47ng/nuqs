@@ -1,4 +1,4 @@
-import { testBasicIO } from 'e2e-shared/cypress/e2e/basic-io.cy'
+import { testBasicIO } from 'e2e-shared/specs/basic-io.cy'
 
 testBasicIO({
   hook: 'useQueryState',
