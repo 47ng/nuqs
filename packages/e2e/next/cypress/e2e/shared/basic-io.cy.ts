@@ -1,25 +1,25 @@
-import { basicIO } from 'e2e-shared/cypress/e2e/basic-io.cy'
+import { testBasicIO } from 'e2e-shared/cypress/e2e/basic-io.cy'
 
-basicIO({
+testBasicIO({
   hook: 'useQueryState',
   path: '/app/basic-io/useQueryState',
-  description: 'app router'
+  nextJsRouter: 'app'
 })
 
-basicIO({
+testBasicIO({
   hook: 'useQueryStates',
   path: '/app/basic-io/useQueryStates',
-  description: 'app router'
+  nextJsRouter: 'app'
 })
 
-basicIO({
+testBasicIO({
   hook: 'useQueryState',
   path: '/pages/basic-io/useQueryState',
-  description: 'pages router'
+  nextJsRouter: 'pages'
 })
 
-basicIO({
+testBasicIO({
   hook: 'useQueryStates',
   path: '/pages/basic-io/useQueryStates',
-  description: 'pages router'
+  nextJsRouter: 'pages'
 })

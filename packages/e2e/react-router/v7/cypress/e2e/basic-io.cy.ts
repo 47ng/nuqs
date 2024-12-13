@@ -1,11 +1,11 @@
-import { basicIO } from 'e2e-shared/cypress/e2e/basic-io.cy'
+import { testBasicIO } from 'e2e-shared/cypress/e2e/basic-io.cy'
 
-basicIO({
+testBasicIO({
   hook: 'useQueryState',
   path: '/basic-io/useQueryState'
 })
 
-basicIO({
+testBasicIO({
   hook: 'useQueryStates',
   path: '/basic-io/useQueryStates'
 })

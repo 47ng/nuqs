@@ -1,32 +1,28 @@
-type Args = {
-  hook: 'useQueryState' | 'useQueryStates'
-  path: string
-  description?: string
-}
+import { describeLabel, TestConfig } from '../test-config'
 
-export function basicIO({ hook, path, description }: Args) {
-  describe(`${hook} - basic I/O${description ? ` (${description})` : ''}`, () => {
+export function testBasicIO({ path, ...config }: TestConfig) {
+  describe(describeLabel('Basic I/O', { path, ...config }), () => {
     it('reads the value from the URL on mount', () => {
       cy.visit(path + '?test=init')
       cy.contains('#hydration-marker', 'hydrated').should('be.hidden')
-      cy.get('#value').should('have.text', 'init')
+      cy.get('#state').should('have.text', 'init')
     })
 
     it('writes the value to the URL', () => {
       cy.visit(path)
       cy.contains('#hydration-marker', 'hydrated').should('be.hidden')
-      cy.get('#value').should('be.empty')
+      cy.get('#state').should('be.empty')
       cy.get('button#set-pass').click()
-      cy.get('#value').should('have.text', 'pass')
+      cy.get('#state').should('have.text', 'pass')
       cy.location('search').should('eq', '?test=pass')
     })
 
     it('updates the value in the URL', () => {
       cy.visit(path + '?test=init')
       cy.contains('#hydration-marker', 'hydrated').should('be.hidden')
-      cy.get('#value').should('have.text', 'init')
+      cy.get('#state').should('have.text', 'init')
       cy.get('button#set-pass').click()
-      cy.get('#value').should('have.text', 'pass')
+      cy.get('#state').should('have.text', 'pass')
       cy.location('search').should('eq', '?test=pass')
     })
 
@@ -34,7 +30,7 @@ export function basicIO({ hook, path, description }: Args) {
       cy.visit(path + '?test=init')
       cy.contains('#hydration-marker', 'hydrated').should('be.hidden')
       cy.get('button#clear').click()
-      cy.get('#value').should('be.empty')
+      cy.get('#state').should('be.empty')
       cy.location('search').should('eq', '')
     })
 
@@ -43,7 +39,7 @@ export function basicIO({ hook, path, description }: Args) {
       cy.contains('#hydration-marker', 'hydrated').should('be.hidden')
       cy.get('button#set-pass').click()
       cy.get('button#clear').click()
-      cy.get('#value').should('be.empty')
+      cy.get('#state').should('be.empty')
       cy.location('search').should('eq', '')
     })
   })

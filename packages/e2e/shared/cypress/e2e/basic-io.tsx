@@ -12,7 +12,7 @@ export function UseQueryStateBasicIO() {
       <button id="clear" onClick={() => setState(null)}>
         Clear
       </button>
-      <pre id="value">{state}</pre>
+      <pre id="state">{state}</pre>
     </>
   )
 }
@@ -29,7 +29,7 @@ export function UseQueryStatesBasicIO() {
       <button id="clear" onClick={() => setSearchParams(null)}>
         Clear
       </button>
-      <pre id="value">{test}</pre>
+      <pre id="state">{test}</pre>
     </>
   )
 }

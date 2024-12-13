@@ -1,6 +1,6 @@
-import { createContext, useContext } from 'react'
+import { type ComponentProps, createContext, useContext } from 'react'
 
-export type LinkProps = {
+export type LinkProps = ComponentProps<'a'> & {
   href: string
   children: React.ReactNode
   replace?: boolean
