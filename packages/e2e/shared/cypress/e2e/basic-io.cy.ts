@@ -1,4 +1,4 @@
-import { describeLabel, TestConfig } from '../test-config'
+import { describeLabel, type TestConfig } from '../test-config'
 
 export function testBasicIO({ path, ...config }: TestConfig) {
   describe(describeLabel('Basic I/O', { path, ...config }), () => {
