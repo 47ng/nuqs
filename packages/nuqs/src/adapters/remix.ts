@@ -9,7 +9,8 @@ function useNuqsRemixAdapter() {
   const updateUrl = (search: URLSearchParams, options: AdapterOptions) => {
     navigate(
       {
-        search: renderQueryString(search)
+        search: renderQueryString(search),
+        hash: location.hash
       },
       {
         replace: options.history === 'replace',
