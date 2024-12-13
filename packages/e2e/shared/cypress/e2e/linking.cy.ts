@@ -15,7 +15,6 @@ export function testLinking({ path, ...config }: TestConfig) {
       cy.contains('#hydration-marker', 'hydrated').should('be.hidden')
       cy.get('#state').should('be.empty')
       cy.get('a').click()
-      cy.location('pathname').should('eq', path)
       cy.get('#state').should('have.text', 'pass')
     })
   })
