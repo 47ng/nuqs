@@ -1,10 +1,6 @@
 import { assertType, describe, expectTypeOf, it } from 'vitest'
-import {
-  createSearchParamsCache,
-  parseAsBoolean,
-  parseAsInteger,
-  parseAsString
-} from '../dist/server'
+import { parseAsBoolean, parseAsInteger, parseAsString } from '../dist/server'
+import { createSearchParamsCache } from '../dist/server/cache'
 
 describe('types/cache', () => {
   const cache = createSearchParamsCache({

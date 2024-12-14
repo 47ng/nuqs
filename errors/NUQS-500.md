@@ -22,12 +22,8 @@ Run the `parse` method and feed it the page's `searchParams`:
 
 ```tsx
 // page.tsx
-import {
-  createSearchParamsCache,
-  parseAsInteger,
-  parseAsString,
-  type SearchParams
-} from 'nuqs/server'
+import { parseAsInteger, parseAsString, type SearchParams } from 'nuqs/server'
+import { createSearchParamsCache } from 'nuqs/server/cache'
 
 const cache = createSearchParamsCache({
   q: parseAsString,
