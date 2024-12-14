@@ -1,9 +1,9 @@
 import {
-  createSearchParamsCache,
   createSerializer,
   parseAsInteger,
   parseAsStringLiteral
 } from 'nuqs/server'
+import { createSearchParamsCache } from 'nuqs/server/cache'
 
 export const renderingOptions = ['server', 'client'] as const
 export type RenderingOptions = (typeof renderingOptions)[number]
