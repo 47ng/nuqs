@@ -4,4 +4,10 @@
 // but with `node`, TypeScript will look for a .d.ts file with that name at the
 // root of the package.
 
-export * from './dist/server/cache'
+export { createSearchParamsCache } from './dist/server/cache'
+export type {
+  HistoryOptions,
+  Nullable,
+  Options,
+  SearchParams
+} from './dist/server/cache'
