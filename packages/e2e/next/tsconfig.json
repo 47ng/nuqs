@@ -6,7 +6,7 @@
     "alwaysStrict": false, // Don't emit "use strict" to avoid conflicts with "use client"
     // Modules
     "module": "ESNext",
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "resolveJsonModule": true,
     // Language & Environment
     "target": "ESNext",
