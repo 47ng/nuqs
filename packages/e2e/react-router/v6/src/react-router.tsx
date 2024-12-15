@@ -25,6 +25,10 @@ const router = createBrowserRouter(
       <Route path='linking/useQueryStates/other' lazy={load(import('./routes/linking.useQueryStates.other'))} />
       <Route path='push/useQueryState'           lazy={load(import('./routes/push.useQueryState'))} />
       <Route path='push/useQueryStates'          lazy={load(import('./routes/push.useQueryStates'))} />
+      <Route path="routing/useQueryState"        lazy={load(import('./routes/routing.useQueryState'))} />
+      <Route path="routing/useQueryState/other"  lazy={load(import('./routes/routing.useQueryState.other'))} />
+      <Route path="routing/useQueryStates"       lazy={load(import('./routes/routing.useQueryStates'))} />
+      <Route path="routing/useQueryStates/other" lazy={load(import('./routes/routing.useQueryStates.other'))} />
     </Route>
   ))
 

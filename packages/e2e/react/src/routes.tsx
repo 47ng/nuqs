@@ -11,6 +11,10 @@ const routes: Record<string, React.LazyExoticComponent<() => JSX.Element>> = {
   '/linking/useQueryState/other':   lazy(() => import('./routes/linking.useQueryState.other')),
   '/linking/useQueryStates':        lazy(() => import('./routes/linking.useQueryStates')),
   '/linking/useQueryStates/other':  lazy(() => import('./routes/linking.useQueryStates.other')),
+  '/routing/useQueryState':         lazy(() => import('./routes/routing.useQueryState')),
+  '/routing/useQueryState/other':   lazy(() => import('./routes/routing.useQueryState.other')),
+  '/routing/useQueryStates':        lazy(() => import('./routes/routing.useQueryStates')),
+  '/routing/useQueryStates/other':  lazy(() => import('./routes/routing.useQueryStates.other'))
 }
 
 export function Router() {

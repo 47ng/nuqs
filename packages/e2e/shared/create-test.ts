@@ -11,7 +11,7 @@ export function createTest(
 ) {
   return (config: TestConfig) => {
     const router = config.nextJsRouter ? `${config.nextJsRouter} router` : null
-    const describeLabel = [config.hook, label, router, config.description]
+    const describeLabel = [label, config.hook, router, config.description]
       .filter(Boolean)
       .join(' - ')
     describe(describeLabel, implementation.bind(null, config))

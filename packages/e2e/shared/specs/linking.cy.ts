@@ -9,7 +9,7 @@ export const testLinking = createTest('Linking', ({ path }) => {
     cy.get('#state').should('have.text', 'pass')
   })
 
-  it('picks up state from Links pointing to the same page', () => {
+  it('picks up state from Links from another page', () => {
     cy.visit(path + '/other')
     cy.contains('#hydration-marker', 'hydrated').should('be.hidden')
     cy.get('#state').should('be.empty')
