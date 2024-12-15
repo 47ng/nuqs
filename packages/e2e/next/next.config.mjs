@@ -10,6 +10,7 @@ const config = {
     ...(process.env.REACT_COMPILER === 'true' ? { reactCompiler: true } : {}),
     serverSourceMaps: true
   },
+  transpilePackages: ['e2e-shared'],
   rewrites: async () => [
     {
       source: '/app/rewrites/source',

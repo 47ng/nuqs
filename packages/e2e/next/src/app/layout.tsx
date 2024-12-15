@@ -1,6 +1,7 @@
+import { HydrationMarker } from 'e2e-shared/components/hydration-marker'
 import { NuqsAdapter } from 'nuqs/adapters/next/app'
 import React, { Suspense } from 'react'
-import { HydrationMarker } from '../components/hydration-marker'
+import { Providers } from './providers'
 
 export const metadata = {
   title: 'nuqs e2e test bench'
@@ -17,7 +18,9 @@ export default function RootLayout({
         <Suspense>
           <HydrationMarker />
         </Suspense>
-        <NuqsAdapter>{children}</NuqsAdapter>
+        <NuqsAdapter>
+          <Providers>{children}</Providers>
+        </NuqsAdapter>
       </body>
     </html>
   )

@@ -6,7 +6,6 @@ import {
   parseAsString,
   useQueryStates
 } from 'nuqs'
-import { HydrationMarker } from '../../../components/hydration-marker'
 
 const IntegrationPage = () => {
   const [state, setState] = useQueryStates({
@@ -17,7 +16,6 @@ const IntegrationPage = () => {
   })
   return (
     <>
-      <HydrationMarker />
       <button onClick={() => setState({ string: 'Hello' })}>Set string</button>
       <button onClick={() => setState({ int: 42 })}>Set int</button>
       <button onClick={() => setState({ float: 3.14159 })}>Set float</button>
