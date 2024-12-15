@@ -1,14 +1,14 @@
-import { NuqsAdapter } from 'nuqs/adapters/next'
+import { HydrationMarker } from 'e2e-shared/components/hydration-marker'
+import { NuqsAdapter } from 'nuqs/adapters/react'
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import { CounterButton } from './components/counter-button'
-import { SearchInput } from './components/search-input'
+import { Router } from './routes'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
+    <HydrationMarker />
     <NuqsAdapter>
-      <CounterButton />
-      <SearchInput />
+      <Router />
     </NuqsAdapter>
   </StrictMode>
 )

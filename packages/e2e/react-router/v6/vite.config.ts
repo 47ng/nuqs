@@ -6,6 +6,6 @@ export default defineConfig(() => ({
   plugins: [react()],
   build: {
     target: 'es2022',
-    sourcemap: 'inline' as const
+    sourcemap: true
   }
 }))
