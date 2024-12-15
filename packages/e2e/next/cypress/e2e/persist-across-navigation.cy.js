@@ -3,7 +3,7 @@
 it('Persists search params across navigation using a generated Link href', () => {
   cy.visit('/app/persist-across-navigation/a')
   cy.contains('#hydration-marker', 'hydrated').should('be.hidden')
-  cy.get('input[type=text]').type('foo')
+  cy.get('input[type=text]').type('foo', { delay: 0 })
   cy.get('input[type=checkbox]').check()
   cy.get('a').click()
   cy.location('pathname').should(
