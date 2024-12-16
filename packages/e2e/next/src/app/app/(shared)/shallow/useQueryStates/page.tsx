@@ -1,5 +1,5 @@
 import { ShallowUseQueryStates } from 'e2e-shared/specs/shallow'
-import { ShallowDisplay } from 'e2e-shared/specs/shallow.server'
+import { ShallowDisplay } from 'e2e-shared/specs/shallow-display'
 import {
   createSearchParamsCache,
   parseAsString,

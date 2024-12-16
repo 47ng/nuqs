@@ -12,6 +12,7 @@ export function defineConfig(config: Config) {
       video: false,
       fixturesFolder: false,
       testIsolation: true,
+      defaultCommandTimeout: 500,
       setupNodeEvents(on) {
         cypressTerminalReport(on)
       },

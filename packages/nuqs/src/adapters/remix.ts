@@ -3,9 +3,15 @@ import {
   useSearchParams as useRemixSearchParams
 } from '@remix-run/react'
 import mitt from 'mitt'
-import { startTransition, useEffect, useLayoutEffect, useState } from 'react'
+import {
+  startTransition,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useState
+} from 'react'
 import { renderQueryString } from '../url-encoding'
-import type { AdapterOptions } from './defs'
+import type { AdapterInterface, AdapterOptions } from './defs'
 import { createAdapterProvider } from './internal.context'
 import {
   historyUpdateMarker,
@@ -15,38 +21,58 @@ import {
 
 const emitter: SearchParamsSyncEmitter = mitt()
 
-function useNuqsRemixAdapter() {
+let searchParamsSnapshot = new URLSearchParams(
+  typeof location === 'object' ? location.search : ''
+)
+
+function getSearchParamsSnapshot() {
+  return new URLSearchParams(location.search)
+}
+
+function useNuqsRemixAdapter(): AdapterInterface {
   const navigate = useNavigate()
   const searchParams = useOptimisticSearchParams()
-  const updateUrl = (search: URLSearchParams, options: AdapterOptions) => {
-    startTransition(() => {
-      emitter.emit('update', search)
-    })
-    const url = new URL(location.href)
-    url.search = renderQueryString(search)
-    // First, update the URL locally without triggering a network request,
-    // this allows keeping a reactive URL if the network is slow.
-    const updateMethod =
-      options.history === 'push' ? history.pushState : history.replaceState
-    updateMethod.call(
-      history,
-      history.state, // Maintain the history state
-      historyUpdateMarker,
-      url
-    )
-    if (options.scroll) {
-      window.scrollTo(0, 0)
-    }
-    if (!options.shallow) {
-      navigate(url, {
-        replace: true,
-        preventScrollReset: true
+  const updateUrl = useCallback(
+    (search: URLSearchParams, options: AdapterOptions) => {
+      startTransition(() => {
+        emitter.emit('update', search)
       })
-    }
-  }
+      const url = new URL(location.href)
+      url.search = renderQueryString(search)
+      // First, update the URL locally without triggering a network request,
+      // this allows keeping a reactive URL if the network is slow.
+      const updateMethod =
+        options.history === 'push' ? history.pushState : history.replaceState
+      updateMethod.call(
+        history,
+        history.state, // Maintain the history state
+        historyUpdateMarker,
+        url
+      )
+      if (options.shallow === false) {
+        navigate(
+          {
+            // Somehow passing the full URL object here strips the search params
+            // when accessing the request.url in loaders.
+            hash: url.hash,
+            search: url.search
+          },
+          {
+            replace: true,
+            preventScrollReset: true
+          }
+        )
+      }
+      if (options.scroll) {
+        window.scrollTo(0, 0)
+      }
+    },
+    [navigate]
+  )
   return {
     searchParams,
-    updateUrl
+    updateUrl,
+    getSearchParamsSnapshot
   }
 }
 
@@ -59,10 +85,14 @@ export function useOptimisticSearchParams() {
     function onPopState() {
       setSearchParams(new URLSearchParams(location.search))
     }
-    emitter.on('update', setSearchParams)
+    function onEmitterUpdate(search: URLSearchParams) {
+      setSearchParams(search)
+      searchParamsSnapshot = search
+    }
+    emitter.on('update', onEmitterUpdate)
     window.addEventListener('popstate', onPopState)
     return () => {
-      emitter.off('update', setSearchParams)
+      emitter.off('update', onEmitterUpdate)
       window.removeEventListener('popstate', onPopState)
     }
   }, [])

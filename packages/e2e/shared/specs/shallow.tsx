@@ -1,8 +1,8 @@
 'use client'
 
 import { parseAsString, useQueryState, useQueryStates } from 'nuqs'
+import { ShallowDisplay } from './shallow-display'
 import { shallowSearchParams } from './shallow.defs'
-import { ShallowDisplay } from './shallow.server'
 
 export function ShallowUseQueryState() {
   const [{ shallow, history }] = useQueryStates(shallowSearchParams)
