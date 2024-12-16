@@ -15,7 +15,10 @@ export function defineConfig(config: Config) {
       setupNodeEvents(on) {
         cypressTerminalReport(on)
       },
-      retries: 2,
+      retries: {
+        openMode: 0,
+        runMode: 1
+      },
       ...config
     }
   })

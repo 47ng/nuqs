@@ -26,7 +26,7 @@ export function testRouting({
           }
         })
 
-        it('picks up state from a router issued from another page', () => {
+        it(`picks up state from a router issued from another page - router.${method}({ shallow: ${shallow} })`, () => {
           cy.visit(getRoutingUrl(path + '/other', { shallow, method }))
           cy.contains('#hydration-marker', 'hydrated').should('be.hidden')
           cy.get('#state').should('be.empty')

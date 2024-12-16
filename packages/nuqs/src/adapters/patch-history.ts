@@ -15,6 +15,20 @@ declare global {
   }
 }
 
+export function getSearchParams(url: string | URL) {
+  if (url instanceof URL) {
+    return url.searchParams
+  }
+  if (url.startsWith('?')) {
+    return new URLSearchParams(url)
+  }
+  try {
+    return new URL(url, location.origin).searchParams
+  } catch {
+    return new URLSearchParams(url)
+  }
+}
+
 export function patchHistory(
   emitter: SearchParamsSyncEmitter,
   adapter: string
@@ -44,14 +58,7 @@ export function patchHistory(
   )
   function sync(url: URL | string) {
     try {
-      if (url instanceof URL) {
-        return emitter.emit('update', url.searchParams)
-      }
-      if (URL.canParse(url)) {
-        emitter.emit('update', new URL(url).searchParams)
-      } else if (url.startsWith('?')) {
-        emitter.emit('update', new URLSearchParams(url))
-      }
+      emitter.emit('update', getSearchParams(url))
     } catch (e) {
       console.error(e)
     }
