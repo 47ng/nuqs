@@ -56,9 +56,14 @@ export function useOptimisticSearchParams() {
   const [serverSearchParams] = useRemixSearchParams()
   const [searchParams, setSearchParams] = useState(serverSearchParams)
   useEffect(() => {
+    function onPopState() {
+      setSearchParams(new URLSearchParams(location.search))
+    }
     emitter.on('update', setSearchParams)
+    window.addEventListener('popstate', onPopState)
     return () => {
       emitter.off('update', setSearchParams)
+      window.removeEventListener('popstate', onPopState)
     }
   }, [])
   useLayoutEffect(() => {
