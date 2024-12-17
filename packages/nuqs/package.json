@@ -115,7 +115,7 @@
     "prebuild": "rm -rf dist",
     "build": "tsup",
     "postbuild": "size-limit --json > size.json",
-    "test": "pnpm run '/^test:/'",
+    "test": "pnpm run --stream '/^test:/'",
     "test:types": "tsd",
     "test:unit": "vitest run",
     "test:size": "size-limit",
