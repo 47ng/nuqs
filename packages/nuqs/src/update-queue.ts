@@ -1,4 +1,4 @@
-import type { AdapterInterface } from './adapters/defs'
+import type { AdapterInterface } from './adapters/lib/defs'
 import { debug } from './debug'
 import type { Options } from './defs'
 import { error } from './errors'

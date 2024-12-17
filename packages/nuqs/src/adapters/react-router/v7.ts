@@ -1,7 +1,7 @@
 import { useNavigate, useSearchParams } from 'react-router'
 import { renderQueryString } from '../../url-encoding'
-import type { AdapterOptions } from '../defs'
-import { createAdapterProvider } from '../internal.context'
+import { createAdapterProvider } from '../lib/context'
+import type { AdapterOptions } from '../lib/defs'
 
 function useNuqsReactRouterV7Adapter() {
   const navigate = useNavigate()

@@ -11,13 +11,13 @@ import {
   useState
 } from 'react'
 import { renderQueryString } from '../url-encoding'
-import type { AdapterInterface, AdapterOptions } from './defs'
-import { createAdapterProvider } from './internal.context'
+import { createAdapterProvider } from './lib/context'
+import type { AdapterInterface, AdapterOptions } from './lib/defs'
 import {
   historyUpdateMarker,
   patchHistory,
   type SearchParamsSyncEmitter
-} from './patch-history'
+} from './lib/patch-history'
 
 const emitter: SearchParamsSyncEmitter = mitt()
 

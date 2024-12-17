@@ -1,5 +1,5 @@
-import type { AdapterInterface } from './defs'
-import { createAdapterProvider } from './internal.context'
+import { createAdapterProvider } from './lib/context'
+import type { AdapterInterface } from './lib/defs'
 import { useNuqsNextAppRouterAdapter } from './next/impl.app'
 import { isPagesRouter, useNuqsNextPagesRouterAdapter } from './next/impl.pages'
 

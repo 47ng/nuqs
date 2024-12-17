@@ -1,8 +1,8 @@
 import { createElement, type ReactNode } from 'react'
 import { resetQueue } from '../update-queue'
 import { renderQueryString } from '../url-encoding'
-import type { AdapterInterface, AdapterOptions } from './defs'
-import { context } from './internal.context'
+import { context } from './lib/context'
+import type { AdapterInterface, AdapterOptions } from './lib/defs'
 
 export type UrlUpdateEvent = {
   searchParams: URLSearchParams

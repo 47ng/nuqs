@@ -1,6 +1,6 @@
 import type { Emitter } from 'mitt'
-import { debug } from '../debug'
-import { error } from '../errors'
+import { debug } from '../../debug'
+import { error } from '../../errors'
 
 export type SearchParamsSyncEmitter = Emitter<{ update: URLSearchParams }>
 

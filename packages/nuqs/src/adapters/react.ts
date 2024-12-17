@@ -1,8 +1,8 @@
 import mitt from 'mitt'
 import { useEffect, useState } from 'react'
 import { renderQueryString } from '../url-encoding'
-import type { AdapterOptions } from './defs'
-import { createAdapterProvider } from './internal.context'
+import { createAdapterProvider } from './lib/context'
+import type { AdapterOptions } from './lib/defs'
 
 const emitter = mitt<{ update: URLSearchParams }>()
 
