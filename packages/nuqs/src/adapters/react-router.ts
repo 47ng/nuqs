@@ -1,29 +1,9 @@
-// Note: this default react-router adapter is for react-router v6.
-// If you are using react-router v7, please import from `nuqs/adapters/react-router/v7`
-
-import { useNavigate, useSearchParams } from 'react-router-dom'
-import { renderQueryString } from '../url-encoding'
-import { createAdapterProvider } from './lib/context'
-import type { AdapterOptions } from './lib/defs'
-
-function useNuqsReactRouterV6Adapter() {
-  const navigate = useNavigate()
-  const [searchParams] = useSearchParams()
-  const updateUrl = (search: URLSearchParams, options: AdapterOptions) => {
-    navigate(
-      {
-        search: renderQueryString(search)
-      },
-      {
-        replace: options.history === 'replace',
-        preventScrollReset: !options.scroll
-      }
-    )
-  }
-  return {
-    searchParams,
-    updateUrl
-  }
-}
-
-export const NuqsAdapter = createAdapterProvider(useNuqsReactRouterV6Adapter)
+/**
+ * Note: this default react-router adapter is for react-router v6.
+ * If you are using react-router v7, please import from `nuqs/adapters/react-router/v7`
+ *
+ * This shorthand import will be removed in nuqs@3.0.0.
+ *
+ * @deprecated Please pin your version of react-router in the import: `nuqs/adapters/react-router/v6` or `nuqs/adapters/react-router/v7`.
+ */
+export { NuqsAdapter } from './react-router/v6'
