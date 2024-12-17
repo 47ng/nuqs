@@ -64,13 +64,21 @@ no network calls to the server.
 
 This is equivalent to the `shallow` option of the Next.js router set to `true{:ts}`.
 
-To opt-in to query updates notifying the server (to re-render Server Components
-on the app router and re-run `getServerSideProps` in the pages router),
-you can set `shallow` to `false{:ts}`:
+To opt-in to notifying the server on query updates, you can set `shallow` to `false{:ts}`:
 
 ```ts /shallow: false/
 useQueryState('foo', { shallow: false })
 ```
+
+Note that the shallow option only makes sense if your page can be server-side rendered.
+Therefore, it's a no-op in React SPA.
+
+For server-side renderable frameworks, you would pair `shallow: false{:ts}` with:
+
+- In Next.js app router: the `searchParams` page prop to render the RSC tree based on the updated query state.
+- In Next.js pages router: the `getServerSideProps` function
+- In Remix & React Router: a `loader` function
+
 
 
 ## Scroll
