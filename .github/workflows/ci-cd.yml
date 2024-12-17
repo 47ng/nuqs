@@ -94,7 +94,7 @@ jobs:
           node-version-file: .node-version
           cache: pnpm
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm install --frozen-lockfile ${{ matrix.next-version != 'latest' && '--filter e2e-next...' || '' }}
       - name: Install Next.js version ${{ matrix.next-version }}
         if: ${{ matrix.next-version != 'local' }}
         run: pnpm add --filter e2e-next --filter nuqs next@${{ matrix.next-version }}
@@ -132,7 +132,7 @@ jobs:
           node-version-file: .node-version
           cache: pnpm
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm install --frozen-lockfile --filter e2e-react...
       - name: Run tests
         run: pnpm run test ${{ github.event_name == 'workflow_dispatch' && '--force' || '' }} --filter e2e-react
         env:
@@ -172,7 +172,7 @@ jobs:
           node-version-file: .node-version
           cache: pnpm
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm install --frozen-lockfile --filter e2e-react-router-${{ matrix.react-router-version }}...
       - name: Run tests
         run: pnpm run test ${{ github.event_name == 'workflow_dispatch' && '--force' || '' }} --filter e2e-react-router-${{ matrix.react-router-version }}
         env:
@@ -206,7 +206,7 @@ jobs:
           node-version-file: .node-version
           cache: pnpm
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm install --frozen-lockfile --filter e2e-remix...
       - name: Run tests
         run: pnpm run test ${{ github.event_name == 'workflow_dispatch' && '--force' || '' }} --filter e2e-remix
         env:

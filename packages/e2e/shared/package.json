@@ -14,16 +14,16 @@
     "nuqs": "workspace:*"
   },
   "dependencies": {
-    "cypress-terminal-report": "^7.0.4"
+    "cypress-terminal-report": "^7.1.0"
   },
   "devDependencies": {
+    "@types/node": "^22.10.2",
     "@types/react": "catalog:react19",
     "@types/react-dom": "catalog:react19",
-    "@types/node": "^22.9.0",
     "cypress": "catalog:e2e",
     "nuqs": "workspace:*",
     "react": "catalog:react19",
     "react-dom": "catalog:react19",
-    "typescript": "^5.6.3"
+    "typescript": "^5.7.2"
   }
 }

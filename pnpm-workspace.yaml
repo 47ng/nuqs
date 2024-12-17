@@ -13,5 +13,5 @@ catalogs:
     '@types/react': 19.0.0
     '@types/react-dom': 19.0.0
   e2e:
-    cypress: ^13.15.2
-    start-server-and-test: "^2.0.8"
+    cypress: ^13.17.0
+    start-server-and-test: "^2.0.9"
