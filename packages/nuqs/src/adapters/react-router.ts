@@ -6,4 +6,8 @@
  *
  * @deprecated Please pin your version of react-router in the import: `nuqs/adapters/react-router/v6` or `nuqs/adapters/react-router/v7`.
  */
-export { NuqsAdapter } from './react-router/v6'
+export {
+  enableHistorySync,
+  NuqsAdapter,
+  useOptimisticSearchParams
+} from './react-router/v6'
