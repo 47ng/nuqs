@@ -5,7 +5,7 @@ import {
   useRef,
   useState
 } from 'react'
-import { useAdapter } from './adapters/internal.context'
+import { useAdapter } from './adapters/lib/context'
 import { debug } from './debug'
 import type { Options } from './defs'
 import type { Parser } from './parsers'

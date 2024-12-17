@@ -19,6 +19,7 @@
   "devDependencies": {
     "@types/react": "catalog:react19",
     "@types/react-dom": "catalog:react19",
+    "@types/node": "^22.9.0",
     "cypress": "catalog:e2e",
     "nuqs": "workspace:*",
     "react": "catalog:react19",

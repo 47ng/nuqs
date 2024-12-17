@@ -1,10 +1,11 @@
 import mitt from 'mitt'
 import { useEffect, useState } from 'react'
 import { renderQueryString } from '../url-encoding'
-import type { AdapterOptions } from './defs'
-import { createAdapterProvider } from './internal.context'
+import { createAdapterProvider } from './lib/context'
+import type { AdapterOptions } from './lib/defs'
+import { patchHistory, type SearchParamsSyncEmitter } from './lib/patch-history'
 
-const emitter = mitt<{ update: URLSearchParams }>()
+const emitter: SearchParamsSyncEmitter = mitt()
 
 function updateUrl(search: URLSearchParams, options: AdapterOptions) {
   const url = new URL(location.href)
@@ -42,3 +43,14 @@ function useNuqsReactAdapter() {
 }
 
 export const NuqsAdapter = createAdapterProvider(useNuqsReactAdapter)
+
+/**
+ * Opt-in to syncing shallow updates of the URL with the useOptimisticSearchParams hook.
+ *
+ * By default, the useOptimisticSearchParams hook will only react to internal nuqs updates.
+ * If third party code updates the History API directly, use this function to
+ * enable useOptimisticSearchParams to react to those changes.
+ */
+export function enableHistorySync() {
+  patchHistory(emitter, 'react')
+}

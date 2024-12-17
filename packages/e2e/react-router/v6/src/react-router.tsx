@@ -1,4 +1,4 @@
-import { NuqsAdapter } from 'nuqs/adapters/react-router/v6'
+import { enableHistorySync, NuqsAdapter } from 'nuqs/adapters/react-router/v6'
 import {
   createBrowserRouter,
   createRoutesFromElements,
@@ -7,9 +7,15 @@ import {
 } from 'react-router-dom'
 import RootLayout from './layout'
 
+enableHistorySync()
+
 // Adapt the RRv7 / Remix default export for component into a Component export for v6
-function load(mod: Promise<{ default: any }>) {
-  return () => mod.then(m => ({ Component: m.default }))
+function load(mod: Promise<{ default: any; [otherExports: string]: any }>) {
+  return () =>
+    mod.then(({ default: Component, ...otherExports }) => ({
+      Component,
+      ...otherExports
+    }))
 }
 
 // prettier-ignore
@@ -29,6 +35,8 @@ const router = createBrowserRouter(
       <Route path="routing/useQueryState/other"  lazy={load(import('./routes/routing.useQueryState.other'))} />
       <Route path="routing/useQueryStates"       lazy={load(import('./routes/routing.useQueryStates'))} />
       <Route path="routing/useQueryStates/other" lazy={load(import('./routes/routing.useQueryStates.other'))} />
+      <Route path='shallow/useQueryState'        lazy={load(import('./routes/shallow.useQueryState'))} />
+      <Route path='shallow/useQueryStates'       lazy={load(import('./routes/shallow.useQueryStates'))} />
     </Route>
   ))
 

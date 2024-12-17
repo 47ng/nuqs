@@ -12,10 +12,14 @@ export function defineConfig(config: Config) {
       video: false,
       fixturesFolder: false,
       testIsolation: true,
+      defaultCommandTimeout: process.env.CI ? 500 : 200,
       setupNodeEvents(on) {
         cypressTerminalReport(on)
       },
-      retries: 2,
+      retries: {
+        openMode: 0,
+        runMode: process.env.CI ? 1 : 0
+      },
       ...config
     }
   })

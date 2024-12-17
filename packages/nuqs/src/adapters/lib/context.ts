@@ -1,5 +1,5 @@
 import { createContext, createElement, useContext, type ReactNode } from 'react'
-import { error } from '../errors'
+import { error } from '../../errors'
 import type { UseAdapterHook } from './defs'
 
 export type AdapterContext = {

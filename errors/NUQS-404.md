@@ -18,7 +18,8 @@ using a suitable adapter:
 - [Next.js (pages router)](https://nuqs.47ng.com/docs/adapters#nextjs-pages-router)
 - [React SPA (eg: with Vite)](https://nuqs.47ng.com/docs/adapters#react-spa)
 - [Remix](https://nuqs.47ng.com/docs/adapters#remix)
-- [React Router](https://nuqs.47ng.com/docs/adapters#react-router)
+- [React Router v6](https://nuqs.47ng.com/docs/adapters#react-router-v6)
+- [React Router v7](https://nuqs.47ng.com/docs/adapters#react-router-v7)
 
 ### Test adapter
 

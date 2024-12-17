@@ -25,5 +25,8 @@
       "label": "Internal",
       "query": "repo:47ng/nuqs is:issue label:internal"
     }
+  ],
+  "typescript.preferences.autoImportSpecifierExcludeRegexes": [
+    "^node:test$" // We use Vitest
   ]
 }

@@ -1,4 +1,4 @@
-import type { Options } from '../defs'
+import type { Options } from '../../defs'
 
 export type AdapterOptions = Pick<Options, 'history' | 'scroll' | 'shallow'>
 

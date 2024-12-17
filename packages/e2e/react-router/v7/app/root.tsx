@@ -1,4 +1,4 @@
-import { NuqsAdapter } from 'nuqs/adapters/react-router/v7'
+import { enableHistorySync, NuqsAdapter } from 'nuqs/adapters/react-router/v7'
 import {
   isRouteErrorResponse,
   Links,
@@ -7,6 +7,8 @@ import {
   Scripts,
   ScrollRestoration
 } from 'react-router'
+
+enableHistorySync()
 
 import type { Route } from './+types/root'
 
