@@ -1,4 +1,4 @@
-import { NuqsAdapter } from 'nuqs/adapters/react-router/v6'
+import { enableHistorySync, NuqsAdapter } from 'nuqs/adapters/react-router/v6'
 import {
   createBrowserRouter,
   createRoutesFromElements,
@@ -6,6 +6,8 @@ import {
   RouterProvider
 } from 'react-router-dom'
 import RootLayout from './layout'
+
+enableHistorySync()
 
 // Adapt the RRv7 / Remix default export for component into a Component export for v6
 function load(mod: Promise<{ default: any; [otherExports: string]: any }>) {
