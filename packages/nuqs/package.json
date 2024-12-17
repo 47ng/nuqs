@@ -55,8 +55,8 @@
       "require": "./esm-only.cjs"
     },
     "./server": {
-      "types": "./dist/server.d.ts",
-      "import": "./dist/server.js",
+      "types": "./dist/index.server.d.ts",
+      "import": "./dist/index.server.js",
       "require": "./esm-only.cjs"
     },
     "./adapters/react": {
@@ -113,7 +113,7 @@
   "scripts": {
     "dev": "tsup --watch",
     "prebuild": "rm -rf dist",
-    "build": "tsup",
+    "build": "tsc --project tsconfig.build.json",
     "postbuild": "size-limit --json > size.json",
     "test": "pnpm run --stream '/^test:/'",
     "test:types": "tsd",
@@ -184,7 +184,7 @@
     },
     {
       "name": "Server",
-      "path": "dist/server.js",
+      "path": "dist/index.server.js",
       "limit": "2 kB",
       "ignore": [
         "react",
