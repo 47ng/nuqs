@@ -10,7 +10,8 @@ wrapping it with a `NuqsAdapter` context provider:
 - [Next.js (pages router)](#nextjs-pages-router)
 - [React SPA (eg: with Vite)](#react-spa)
 - [Remix](#remix)
-- [React Router](#react-router)
+- [React Router v6](#react-router-v6)
+- [React Router v7](#react-router-v7)
 
 ## Next.js
 
@@ -102,11 +103,11 @@ export default function App() {
 }
 ```
 
-## React Router
+## React Router v6
 
 ```tsx title="src/main.tsx"
 // [!code word:NuqsAdapter]
-import { NuqsAdapter } from 'nuqs/adapters/react-router'
+import { NuqsAdapter } from 'nuqs/adapters/react-router/v6'
 import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 import App from './App'
 
@@ -126,7 +127,31 @@ export function ReactRouter() {
 }
 ```
 
-**Note**: If you are using react-router v7, please import the `NuqsAdapter{:ts}` from `nuqs/adapters/react-router/v7`
+## React Router v7
+
+```tsx title="app/root.tsx"
+// [!code word:NuqsAdapter]
+import { NuqsAdapter } from 'nuqs/adapters/react-router/v7'
+import { Outlet } from 'react-router'
+
+// ...
+
+export default function App() {
+  return (
+    <NuqsAdapter>
+      <Outlet />
+    </NuqsAdapter>
+  )
+}
+```
+
+<Callout type="warn" title="Deprecation notice">
+  The generic import `nuqs/adapters/react-router` (pointing to v6)
+  is deprecated and will be removed in nuqs@3.0.0.
+
+  Please pin your imports to the specific version,
+  eg: `nuqs/adapters/react-router/v6` or `nuqs/adapters/react-router/v7`.
+</Callout>
 
 ## Testing
 
