@@ -29,7 +29,7 @@ function getSearchParamsSnapshot() {
   return new URLSearchParams(location.search)
 }
 
-function useNuqsRemixAdapter(): AdapterInterface {
+function useNuqsReactRouterV7Adapter(): AdapterInterface {
   const navigate = useNavigate()
   const searchParams = useOptimisticSearchParams()
   const updateUrl = useCallback(
@@ -76,7 +76,7 @@ function useNuqsRemixAdapter(): AdapterInterface {
   }
 }
 
-export const NuqsAdapter = createAdapterProvider(useNuqsRemixAdapter)
+export const NuqsAdapter = createAdapterProvider(useNuqsReactRouterV7Adapter)
 
 export function useOptimisticSearchParams() {
   const [serverSearchParams] = useReactRouterSearchParams()
