@@ -66,6 +66,10 @@ export function enqueueQueryStringUpdate<Value>(
   return serializedOrNull
 }
 
+function getSearchParamsSnapshotFromLocation() {
+  return new URLSearchParams(location.search)
+}
+
 /**
  * Eventually flush the update queue to the URL query string.
  *
@@ -77,7 +81,7 @@ export function enqueueQueryStringUpdate<Value>(
  * @returns a Promise to the URLSearchParams that have been applied.
  */
 export function scheduleFlushToURL({
-  getSearchParamsSnapshot = () => new URLSearchParams(location.search),
+  getSearchParamsSnapshot = getSearchParamsSnapshotFromLocation,
   updateUrl,
   rateLimitFactor = 1
 }: Pick<

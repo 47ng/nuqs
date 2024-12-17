@@ -14,7 +14,7 @@ import {
   type SearchParamsSyncEmitter
 } from './patch-history'
 
-// Abstract the types for the useNavigate hook from react-router-based frameworks
+// Abstract away the types for the useNavigate hook from react-router-based frameworks
 type NavigateUrl = {
   hash?: string
   search?: string
@@ -29,10 +29,6 @@ type UseNavigate = () => NavigateFn
 type UseSearchParams = () => [URLSearchParams, {}]
 
 // --
-
-function getSearchParamsSnapshot() {
-  return new URLSearchParams(location.search)
-}
 
 export function createReactRouterBasedAdapter(
   adapter: string,
@@ -82,8 +78,7 @@ export function createReactRouterBasedAdapter(
     )
     return {
       searchParams,
-      updateUrl,
-      getSearchParamsSnapshot
+      updateUrl
     }
   }
   function useOptimisticSearchParams() {
