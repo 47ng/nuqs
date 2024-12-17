@@ -113,7 +113,7 @@
   "scripts": {
     "dev": "tsup --watch",
     "prebuild": "rm -rf dist",
-    "build": "tsup",
+    "build": "tsc --project tsconfig.build.json",
     "postbuild": "size-limit --json > size.json",
     "test": "pnpm run '/^test:/'",
     "test:types": "tsd",
