@@ -34,6 +34,9 @@
   "files": [
     "dist/",
     "server.d.ts",
+    "server/cache.d.ts",
+    "server/serializer.d.ts",
+    "server/parsers.d.ts",
     "adapters/react.d.ts",
     "adapters/next.d.ts",
     "adapters/next/app.d.ts",
@@ -57,6 +60,21 @@
     "./server": {
       "types": "./dist/server.d.ts",
       "import": "./dist/server.js",
+      "require": "./esm-only.cjs"
+    },
+    "./server/cache": {
+      "types": "./dist/server/cache.d.ts",
+      "import": "./dist/server/cache.js",
+      "require": "./esm-only.cjs"
+    },
+    "./server/serializer": {
+      "types": "./dist/server/serializer.d.ts",
+      "import": "./dist/server/serializer.js",
+      "require": "./esm-only.cjs"
+    },
+    "./server/parsers": {
+      "types": "./dist/server/parsers.d.ts",
+      "import": "./dist/server/parsers.js",
       "require": "./esm-only.cjs"
     },
     "./adapters/react": {
