@@ -21,7 +21,7 @@ export async function LandingDemo() {
           <div className="mb-4 h-[136px] animate-pulse rounded bg-zinc-50 dark:bg-zinc-900 sm:h-10" />
         }
       >
-        <div className="mb-4 flex flex-col gap-4 sm:flex-row sm:items-center">
+        <div className="mb-4 flex flex-col gap-4 items-start sm:flex-row">
           <Demo />
           <LookAtTheURL />
         </div>
