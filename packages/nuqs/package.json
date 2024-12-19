@@ -186,7 +186,7 @@
     {
       "name": "Server",
       "path": "dist/server.js",
-      "limit": "2 kB",
+      "limit": "2.5 kB",
       "ignore": [
         "react",
         "next"

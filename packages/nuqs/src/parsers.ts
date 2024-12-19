@@ -464,3 +464,12 @@ export type inferParserType<Input> =
     : Input extends Record<string, ParserBuilder<any>>
       ? inferParserRecordType<Input>
       : never
+
+export type ParserWithOptionalDefault<T> = ParserBuilder<T> & {
+  defaultValue?: T
+}
+export type ParserMap = Record<string, ParserWithOptionalDefault<any>>
+
+export type UrlKeys<Parsers extends ParserMap> = Partial<
+  Record<keyof Parsers, string>
+>
