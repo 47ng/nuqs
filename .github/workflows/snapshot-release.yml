@@ -6,8 +6,8 @@ on:
     inputs:
       version:
         description: Base version to use for the release
-        required: true
         type: string
+        default: '0.0.0'
 env:
   FORCE_COLOR: 3 # Diplay chalk colors
 
@@ -15,6 +15,8 @@ jobs:
   snapshot:
     name: Deployment
     runs-on: ubuntu-24.04
+    permissions:
+      id-token: write # to enable use of OIDC for NPM provenance
     steps:
       - name: Generate snapshot version
         id: version
@@ -29,7 +31,7 @@ jobs:
           node-version-file: .node-version
           cache: pnpm
       - name: Install dependencies
-        run: pnpm install --ignore-scripts --frozen-lockfile
+        run: pnpm install --ignore-scripts --frozen-lockfile --filter nuqs...
       - name: Build package
         run: pnpm build --filter nuqs
       - name: Publish package
@@ -37,7 +39,7 @@ jobs:
         run: |
           pnpm pkg set version=${{ steps.version.outputs.version }}
           echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > .npmrc
-          pnpm publish --access public --tag snapshot --no-git-checks
+          pnpm publish --access public --provenance --tag snapshot --no-git-checks
           rm -f .npmrc
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
