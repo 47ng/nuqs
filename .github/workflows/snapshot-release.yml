@@ -6,8 +6,8 @@ on:
     inputs:
       version:
         description: Base version to use for the release
-        required: true
         type: string
+        default: '0.0.0'
 env:
   FORCE_COLOR: 3 # Diplay chalk colors
 
@@ -15,6 +15,11 @@ jobs:
   snapshot:
     name: Deployment
     runs-on: ubuntu-24.04
+    permissions:
+      contents: write # to be able to publish a GitHub release
+      issues: write # to be able to comment on released issues
+      pull-requests: write # to be able to comment on released pull requests
+      id-token: write # to enable use of OIDC for NPM provenance
     steps:
       - name: Generate snapshot version
         id: version
@@ -37,7 +42,7 @@ jobs:
         run: |
           pnpm pkg set version=${{ steps.version.outputs.version }}
           echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > .npmrc
-          pnpm publish --access public --tag snapshot --no-git-checks
+          pnpm publish --access public --provenance --tag snapshot --no-git-checks
           rm -f .npmrc
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
