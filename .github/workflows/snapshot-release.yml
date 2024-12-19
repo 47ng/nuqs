@@ -34,7 +34,7 @@ jobs:
           node-version-file: .node-version
           cache: pnpm
       - name: Install dependencies
-        run: pnpm install --ignore-scripts --frozen-lockfile
+        run: pnpm install --ignore-scripts --frozen-lockfile --filter nuqs...
       - name: Build package
         run: pnpm build --filter nuqs
       - name: Publish package
