@@ -1,10 +1,26 @@
-// @ts-ignore
-import { cache } from 'react'
 import type { SearchParams } from './defs'
 import { error } from './errors'
 import type { ParserBuilder, inferParserType } from './parsers'
 
 const $input: unique symbol = Symbol('Input')
+
+type ReactCache = <CachedFunction extends Function>(
+  fn: CachedFunction
+) => CachedFunction
+
+let cache: ReactCache = () => {
+  throw new Error('cache not available')
+}
+if (process.env.NEXT_DEPLOYMENT_ID !== undefined) {
+  cache = await import('react')
+    .then(react => react.cache)
+    .catch(() => {
+      throw new Error(
+        'The React cache is not available in this environment. ' +
+          'Please ensure you are using React 18 or later.'
+      )
+    })
+}
 
 export function createSearchParamsCache<
   Parsers extends Record<string, ParserBuilder<any>>
