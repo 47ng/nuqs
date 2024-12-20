@@ -188,4 +188,17 @@ describe('serializer', () => {
     const result = serialize({ str: 'foo', int: 1, bool: true })
     expect(result).toBe('?s=foo&i=1&b=true')
   })
+  it('supports ? in the values', () => {
+    const serialize = createSerializer(parsers)
+    const result = serialize({ str: 'foo?bar', int: 1, bool: true })
+    expect(result).toBe('?str=foo?bar&int=1&bool=true')
+  })
+  it('supports & in the base', () => {
+    // Repro for https://github.com/47ng/nuqs/issues/812
+    const serialize = createSerializer(parsers)
+    const result = serialize('https://example.com/path?issue=is?here', {
+      str: 'foo?bar'
+    })
+    expect(result).toBe('https://example.com/path?issue=is?here&str=foo?bar')
+  })
 })
