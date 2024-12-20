@@ -81,8 +81,8 @@ function isBase(base: any): base is Base {
 
 function splitBase(base: Base) {
   if (typeof base === 'string') {
-    const [path = '', search] = base.split('?')
-    return [path, new URLSearchParams(search)] as const
+    const [path = '', ...search] = base.split('?')
+    return [path, new URLSearchParams(search.join('?'))] as const
   } else if (base instanceof URLSearchParams) {
     return ['', new URLSearchParams(base)] as const // Operate on a copy of URLSearchParams, as derived classes may restrict its allowed methods
   } else {
