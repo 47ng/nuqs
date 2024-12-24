@@ -1,3 +1,5 @@
+'use client'
+
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { createAdapterProvider } from '../lib/context'
 import { createReactRouterBasedAdapter } from '../lib/react-router'

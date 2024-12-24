@@ -1,3 +1,5 @@
+'use client'
+
 export { renderQueryString } from '../url-encoding'
 export {
   createAdapterProvider as unstable_createAdapterProvider,

@@ -1,3 +1,5 @@
+'use client'
+
 import { createAdapterProvider } from '../lib/context'
 import { useNuqsNextAppRouterAdapter } from './impl.app'
 
