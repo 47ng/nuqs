@@ -1,3 +1,5 @@
+'use client'
+
 export {
   /**
    * @deprecated This import will be removed in nuqs@3.0.0.

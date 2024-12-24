@@ -1,3 +1,5 @@
+'use client'
+
 import { createElement, type ReactNode } from 'react'
 import { resetQueue } from '../update-queue'
 import { renderQueryString } from '../url-encoding'
