@@ -3,8 +3,11 @@
   "compilerOptions": {
     "outDir": "dist",
     "noEmit": false,
-    "declaration": true
+    "declaration": true,
+    "declarationDir": "dist",
+    "declarationMap": false,
+    "incremental": false
   },
   "include": ["src/**/*.ts"],
-  "exclude": ["src/tests", "src/**/*.test.ts", "src/**/*.test.tsx"]
+  "exclude": ["src/tests/**", "src/**/*.test.ts", "src/**/*.test.tsx"]
 }
