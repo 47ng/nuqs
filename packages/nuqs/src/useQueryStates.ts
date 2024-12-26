@@ -8,12 +8,12 @@ import {
 } from 'react'
 import { useAdapter } from './adapters/lib/context'
 import { debug } from './debug'
-import type { Nullable, Options } from './defs'
+import type { Nullable, Options, UrlKeys } from './defs'
 import type { Parser } from './parsers'
 import { emitter, type CrossHookSyncPayload } from './sync'
 import {
-  FLUSH_RATE_LIMIT_MS,
   enqueueQueryStringUpdate,
+  FLUSH_RATE_LIMIT_MS,
   getQueuedValue,
   scheduleFlushToURL
 } from './update-queue'
@@ -30,7 +30,7 @@ export type UseQueryStatesKeysMap<Map = any> = {
 
 export type UseQueryStatesOptions<KeyMap extends UseQueryStatesKeysMap> =
   Options & {
-    urlKeys: Partial<Record<keyof KeyMap, string>>
+    urlKeys: UrlKeys<KeyMap>
   }
 
 export type Values<T extends UseQueryStatesKeysMap> = {

@@ -1,16 +1,14 @@
 // @ts-ignore
 import { cache } from 'react'
-import type { SearchParams } from './defs'
+import type { SearchParams, UrlKeys } from './defs'
 import { error } from './errors'
-import type { ParserBuilder, inferParserType } from './parsers'
+import type { inferParserType, ParserMap } from './parsers'
 
 const $input: unique symbol = Symbol('Input')
 
-export function createSearchParamsCache<
-  Parsers extends Record<string, ParserBuilder<any>>
->(
+export function createSearchParamsCache<Parsers extends ParserMap>(
   parsers: Parsers,
-  { urlKeys = {} }: { urlKeys?: Partial<Record<keyof Parsers, string>> } = {}
+  { urlKeys = {} }: { urlKeys?: UrlKeys<Parsers> } = {}
 ) {
   type Keys = keyof Parsers
   type ParsedSearchParams = {

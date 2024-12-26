@@ -61,3 +61,44 @@ import { createSerializer, parseAsInteger, parseAsString } from '../../dist'
   expectType<string>(serialize({ bar: null }))
   expectType<string>(serialize({ bar: undefined }))
 }
+
+// It supports urlKeys
+{
+  createSerializer(
+    {
+      foo: parseAsString,
+      bar: parseAsInteger
+    },
+    {
+      urlKeys: {
+        foo: 'f'
+        // It accepts partial inputs
+      }
+    }
+  )
+  createSerializer(
+    {
+      foo: parseAsString,
+      bar: parseAsInteger
+    },
+    {
+      urlKeys: {
+        foo: 'f',
+        bar: 'b'
+      }
+    }
+  )
+  expectError(() => {
+    createSerializer(
+      {
+        foo: parseAsString,
+        bar: parseAsInteger
+      },
+      {
+        urlKeys: {
+          nope: 'n' // Doesn't accept extra properties
+        }
+      }
+    )
+  })
+}

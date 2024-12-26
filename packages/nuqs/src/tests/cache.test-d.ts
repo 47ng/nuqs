@@ -34,3 +34,44 @@ import {
   expectType<Promise<All>>(cache.parse(Promise.resolve({})))
   expectType<All>(cache.all())
 }
+
+// It supports urlKeys
+{
+  createSearchParamsCache(
+    {
+      foo: parseAsString,
+      bar: parseAsInteger
+    },
+    {
+      urlKeys: {
+        foo: 'f'
+        // It accepts partial inputs
+      }
+    }
+  )
+  createSearchParamsCache(
+    {
+      foo: parseAsString,
+      bar: parseAsInteger
+    },
+    {
+      urlKeys: {
+        foo: 'f',
+        bar: 'b'
+      }
+    }
+  )
+  expectError(() => {
+    createSearchParamsCache(
+      {
+        foo: parseAsString,
+        bar: parseAsInteger
+      },
+      {
+        urlKeys: {
+          nope: 'n' // Doesn't accept extra properties
+        }
+      }
+    )
+  })
+}
