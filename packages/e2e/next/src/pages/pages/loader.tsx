@@ -3,7 +3,7 @@ import {
   LoaderRenderer,
   loadSearchParams
 } from 'e2e-shared/specs/loader'
-import { GetServerSidePropsContext } from 'next'
+import type { GetServerSidePropsContext } from 'next'
 
 type PageProps = {
   serverValues: SearchParams
