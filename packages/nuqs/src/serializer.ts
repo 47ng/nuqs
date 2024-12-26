@@ -1,19 +1,16 @@
-import type { Nullable, Options } from './defs'
-import type { inferParserType, ParserBuilder } from './parsers'
+import type { Nullable, Options, UrlKeys } from './defs'
+import type { inferParserType, ParserMap } from './parsers'
 import { renderQueryString } from './url-encoding'
 
 type Base = string | URLSearchParams | URL
-type ParserWithOptionalDefault<T> = ParserBuilder<T> & { defaultValue?: T }
 
-export function createSerializer<
-  Parsers extends Record<string, ParserWithOptionalDefault<any>>
->(
+export function createSerializer<Parsers extends ParserMap>(
   parsers: Parsers,
   {
     clearOnDefault = true,
     urlKeys = {}
   }: Pick<Options, 'clearOnDefault'> & {
-    urlKeys?: Partial<Record<keyof Parsers, string>>
+    urlKeys?: UrlKeys<Parsers>
   } = {}
 ) {
   type Values = Partial<Nullable<inferParserType<Parsers>>>
