@@ -3,6 +3,126 @@ title: Server-Side usage
 description: Type-safe search params on the server
 ---
 
+## Loaders
+
+To parse search params server-side, you can use a _loader_ function.
+
+You create one using the `createLoader` function, by passing it your search params
+descriptor object:
+
+```tsx title="searchParams.tsx"
+// [!code word:createLoader]
+import { parseAsFloat, createLoader } from 'nuqs/server'
+
+// Describe your search params, and reuse this in useQueryStates / createSerializer:
+export const coordinatesSearchParams = {
+  latitude: parseAsFloat.withDefault(0)
+  longitude: parseAsFloat.withDefault(0)
+}
+
+export const loadSearchParams = createLoader(coordinatesSearchParams)
+```
+
+Here, `loadSearchParams{:ts}` is a function that parses search params and returns
+state variables to be consumed server-side (the same state type that `useQueryStates{:ts}` returns).
+
+<Tabs items={["Next.js (app router)", "Next.js (pages router)", "API routes", "Remix / React Router", "React / client-side"]}>
+
+```tsx tab="Next.js (app router)" title="app/page.tsx"
+// [!code word:loadSearchParams]
+import { loadSearchParams } from './search-params'
+import type { SearchParams } from 'nuqs/server'
+
+type PageProps = {
+  searchParams: Promise<SearchParams>
+}
+
+export default async function Page({ searchParams }: PageProps) {
+  const { latitude, longitude } = await loadSearchParams(searchParams)
+  return <Map
+    lat={latitude}
+    lng={longitude}
+  />
+
+  // Pro tip: you don't *have* to await the result.
+  // pass the Promise object to children components wrapped in Suspense
+  // to benefit from PPR / dynamicIO and serve a static outer shell
+  // immediately, while streaming in the dynamic parts that depend on
+  // the search params when they become available.
+}
+```
+
+```ts tab="Next.js (pages router)" title="pages/index.tsx"
+// [!code word:loadSearchParams]
+import type { GetServerSidePropsContext } from 'next'
+
+export async function getServerSideProps({ query }: GetServerSidePropsContext) {
+  const { latitude, longitude } = loadSearchParams(query)
+  // Do some server-side calculations with the coordinates
+  return {
+    props: { ... }
+  }
+}
+```
+
+```tsx tab="Remix / React Router" title="app/routes/_index.tsx"
+// [!code word:loadSearchParams]
+export function loader({ request }: LoaderFunctionArgs) {
+  const { latitude, longitude } = loadSearchParams(request) // request.url works too
+  // Do some server-side calculations with the coordinates
+  return ...
+}
+```
+
+```tsx tab="React / client-side"
+// Note: you can also use this client-side (or anywhere, really),
+// for a one-off parsing of non-reactive search params:
+
+loadSearchParams('https://example.com?latitude=42&longitude=12')
+loadSearchParams(location.search)
+loadSearchParams(new URL(...))
+loadSearchParams(new URLSearchParams(...))
+```
+
+```tsx tab="API routes"
+// App router, eg: app/api/location/route.ts
+export async function GET(request: Request) {
+  const { latitude, longitude } = loadSearchParams(request)
+  // ...
+}
+
+// Pages router, eg: pages/api/location.ts
+import type { NextApiRequest, NextApiResponse } from 'next'
+export default function handler(
+  request: NextApiRequest,
+  response: NextApiResponse
+) {
+  const { latitude, longitude } = loadSearchParams(request.query)
+}
+```
+
+</Tabs>
+
+<Callout type="warn" title="Note">
+  Loaders **don't validate** your data. If you expect positive integers
+  or JSON-encoded objects of a particular shape, you'll need to feed the result
+  of the loader to a schema validation library, like [Zod](https://zod.dev).
+
+  Built-in validation support is coming. [Read the RFC](https://github.com/47ng/nuqs/discussions/446).
+  Alternatively, you can build validation into [custom parsers](/docs/parsers/making-your-own).
+</Callout>
+
+
+- A string containing a fully qualified URL (eg: `https://example.com/?foo=bar`)
+- A string containing just search params (like `location.search`, eg: `?foo=bar`)
+- A `URL{:ts}` object
+- A `URLSearchParams{:ts}` object
+- A `Request{:ts}` object
+- A `Record<string, string | string[] | undefined>{:ts}` (eg: `{ foo: 'bar' }{:ts}`)
+- A `Promise{:ts}` of any of the above, in which case it also returns a Promise.
+
+## Cache
+
 <Callout>
   This feature is available for Next.js only.
 </Callout>
@@ -11,13 +131,8 @@ If you wish to access the searchParams in a deeply nested Server Component
 (ie: not in the Page component), you can use `createSearchParamsCache{:ts}`
 to do so in a type-safe manner.
 
-<Callout type="warn" title="Note">
-  Parsers **don't validate** your data. If you expect positive integers
-  or JSON-encoded objects of a particular shape, you'll need to feed the result
-  of the parser to a schema validation library, like [Zod](https://zod.dev).
-
-  Built-in validation support is coming. [Read the RFC](https://github.com/47ng/nuqs/discussions/446)
-</Callout>
+Think of it as a loader combined with a way to propagate the parsed values down
+the RSC tree, like Context would on the client.
 
 ```ts title="searchParams.ts"
 import {
