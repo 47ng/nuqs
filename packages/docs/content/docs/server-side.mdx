@@ -45,7 +45,7 @@ export default async function Page({ searchParams }: PageProps) {
   />
 
   // Pro tip: you don't *have* to await the result.
-  // pass the Promise object to children components wrapped in Suspense
+  // Pass the Promise object to children components wrapped in <Suspense>
   // to benefit from PPR / dynamicIO and serve a static outer shell
   // immediately, while streaming in the dynamic parts that depend on
   // the search params when they become available.
