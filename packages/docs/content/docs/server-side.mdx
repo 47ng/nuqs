@@ -113,8 +113,8 @@ export default function handler(
 </Callout>
 
 The loader function will accept the following input types to parse search params from:
-- A string containing a fully qualified URL (eg: `https://example.com/?foo=bar`)
-- A string containing just search params (like `location.search`, eg: `?foo=bar`)
+- A string containing a fully qualified URL: `https://example.com/?foo=bar`
+- A string containing just search params: `?foo=bar` (like `location.search{:ts}`)
 - A `URL{:ts}` object
 - A `URLSearchParams{:ts}` object
 - A `Request{:ts}` object
