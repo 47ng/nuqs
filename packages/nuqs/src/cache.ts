@@ -2,6 +2,7 @@
 import { cache } from 'react'
 import type { SearchParams, UrlKeys } from './defs'
 import { error } from './errors'
+import { createLoader } from './loader'
 import type { inferParserType, ParserMap } from './parsers'
 
 const $input: unique symbol = Symbol('Input')
@@ -10,6 +11,7 @@ export function createSearchParamsCache<Parsers extends ParserMap>(
   parsers: Parsers,
   { urlKeys = {} }: { urlKeys?: UrlKeys<Parsers> } = {}
 ) {
+  const load = createLoader(parsers, { urlKeys })
   type Keys = keyof Parsers
   type ParsedSearchParams = {
     readonly [K in Keys]: inferParserType<Parsers[K]>
@@ -43,11 +45,7 @@ export function createSearchParamsCache<Parsers extends ParserMap>(
       // Different inputs in the same request - fail
       throw new Error(error(501))
     }
-    for (const key in parsers) {
-      const parser = parsers[key]!
-      const urlKey = urlKeys[key] ?? key
-      c.searchParams[key] = parser.parseServerSide(searchParams[urlKey])
-    }
+    c.searchParams = load(searchParams)
     c[$input] = searchParams
     return Object.freeze(c.searchParams) as ParsedSearchParams
   }
