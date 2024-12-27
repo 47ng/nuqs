@@ -112,7 +112,7 @@ export default function handler(
   Alternatively, you can build validation into [custom parsers](/docs/parsers/making-your-own).
 </Callout>
 
-
+The loader function will accept the following input types to parse search params from:
 - A string containing a fully qualified URL (eg: `https://example.com/?foo=bar`)
 - A string containing just search params (like `location.search`, eg: `?foo=bar`)
 - A `URL{:ts}` object
