@@ -1,11 +1,5 @@
 import mitt from 'mitt'
-import {
-  startTransition,
-  useCallback,
-  useEffect,
-  useLayoutEffect,
-  useState
-} from 'react'
+import { startTransition, useCallback, useEffect, useState } from 'react'
 import { renderQueryString } from '../../url-encoding'
 import type { AdapterInterface, AdapterOptions } from './defs'
 import {
@@ -98,7 +92,7 @@ export function createReactRouterBasedAdapter(
         window.removeEventListener('popstate', onPopState)
       }
     }, [])
-    useLayoutEffect(() => {
+    useEffect(() => {
       emitter.emit('update', serverSearchParams)
     }, [serverSearchParams])
     return searchParams
