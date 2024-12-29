@@ -1,11 +1,4 @@
-import {
-  useCallback,
-  useEffect,
-  useInsertionEffect,
-  useMemo,
-  useRef,
-  useState
-} from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useAdapter } from './adapters/lib/context'
 import { debug } from './debug'
 import type { Nullable, Options, UrlKeys } from './defs'
@@ -139,7 +132,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
   ])
 
   // Sync all hooks together & with external URL changes
-  useInsertionEffect(() => {
+  useEffect(() => {
     function updateInternalState(state: V) {
       debug('[nuq+ `%s`] updateInternalState %O', stateKeys, state)
       stateRef.current = state
