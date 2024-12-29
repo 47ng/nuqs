@@ -1,10 +1,4 @@
-import {
-  useCallback,
-  useEffect,
-  useInsertionEffect,
-  useRef,
-  useState
-} from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useAdapter } from './adapters/lib/context'
 import { debug } from './debug'
 import type { Options } from './defs'
@@ -260,7 +254,7 @@ export function useQueryState<T = string>(
   }, [initialSearchParams?.get(key), key])
 
   // Sync all hooks together & with external URL changes
-  useInsertionEffect(() => {
+  useEffect(() => {
     function updateInternalState({ state, query }: CrossHookSyncPayload) {
       debug('[nuqs `%s`] updateInternalState %O', key, state)
       stateRef.current = state
