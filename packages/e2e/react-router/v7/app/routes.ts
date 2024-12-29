@@ -18,6 +18,8 @@ export default [
     route('/routing/useQueryStates/other',  './routes/routing.useQueryStates.other.tsx'),
     route('/shallow/useQueryState',         './routes/shallow.useQueryState.tsx'),
     route('/shallow/useQueryStates',        './routes/shallow.useQueryStates.tsx'),
-    route('/loader',                        './routes/loader.tsx')
+    route('/loader',                        './routes/loader.tsx'),
+    route('/form/useQueryState',            './routes/form.useQueryState.tsx'),
+    route('/form/useQueryStates',           './routes/form.useQueryStates.tsx'),
   ])
 ] satisfies RouteConfig
