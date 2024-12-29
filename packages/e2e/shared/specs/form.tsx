@@ -1,3 +1,5 @@
+'use client'
+
 import { parseAsString, useQueryState, useQueryStates } from 'nuqs'
 
 type FormProps = {
