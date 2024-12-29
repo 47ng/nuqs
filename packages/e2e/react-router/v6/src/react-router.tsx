@@ -38,6 +38,8 @@ const router = createBrowserRouter(
       <Route path='shallow/useQueryState'        lazy={load(import('./routes/shallow.useQueryState'))} />
       <Route path='shallow/useQueryStates'       lazy={load(import('./routes/shallow.useQueryStates'))} />
       <Route path='loader'                       lazy={load(import('./routes/loader'))} />
+      <Route path="form/useQueryState"           lazy={load(import('./routes/form.useQueryState'))} />
+      <Route path="form/useQueryStates"          lazy={load(import('./routes/form.useQueryStates'))} />
     </Route>
   ))
 

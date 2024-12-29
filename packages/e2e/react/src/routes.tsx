@@ -17,6 +17,8 @@ const routes: Record<string, React.LazyExoticComponent<() => JSX.Element>> = {
   '/routing/useQueryStates/other':  lazy(() => import('./routes/routing.useQueryStates.other')),
   '/shallow/useQueryState':         lazy(() => import('./routes/shallow.useQueryState')),
   '/shallow/useQueryStates':        lazy(() => import('./routes/shallow.useQueryStates')),
+  '/form/useQueryState':            lazy(() => import('./routes/form.useQueryState')),
+  '/form/useQueryStates':           lazy(() => import('./routes/form.useQueryStates')),
 }
 
 export function Router() {
