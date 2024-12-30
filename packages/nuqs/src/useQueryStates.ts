@@ -209,8 +209,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
         ) {
           value = null
         }
-
-        queryRef.current[urlKey] = enqueueQueryStringUpdate(
+        const query = enqueueQueryStringUpdate(
           urlKey,
           value,
           parser.serialize ?? String,
@@ -228,10 +227,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
               startTransition
           }
         )
-        emitter.emit(urlKey, {
-          state: value,
-          query: queryRef.current[urlKey] ?? null
-        })
+        emitter.emit(urlKey, { state: value, query })
       }
       return scheduleFlushToURL(adapter)
     },

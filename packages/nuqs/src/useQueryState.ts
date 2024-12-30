@@ -282,7 +282,7 @@ export function useQueryState<T = string>(
       ) {
         newValue = null
       }
-      queryRef.current = enqueueQueryStringUpdate(key, newValue, serialize, {
+      const query = enqueueQueryStringUpdate(key, newValue, serialize, {
         // Call-level options take precedence over hook declaration options.
         history: options.history ?? history,
         shallow: options.shallow ?? shallow,
@@ -291,7 +291,7 @@ export function useQueryState<T = string>(
         startTransition: options.startTransition ?? startTransition
       })
       // Sync all hooks state (including this one)
-      emitter.emit(key, { state: newValue, query: queryRef.current })
+      emitter.emit(key, { state: newValue, query })
       return scheduleFlushToURL(adapter)
     },
     [key, history, shallow, scroll, throttleMs, startTransition, adapter]
