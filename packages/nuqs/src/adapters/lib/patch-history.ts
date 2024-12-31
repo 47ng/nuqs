@@ -51,12 +51,24 @@ export function patchHistory(
   if (history.nuqs?.adapters?.includes(adapter)) {
     return
   }
+  let lastSearchSeen = typeof location === 'object' ? location.search : ''
+
+  emitter.on('update', search => {
+    lastSearchSeen = search.toString()
+  })
+
   debug(
     '[nuqs %s] Patching history (%s adapter)',
     '0.0.0-inject-version-here',
     adapter
   )
   function sync(url: URL | string) {
+    try {
+      const newSearch = new URL(url, location.origin).search
+      if (newSearch === lastSearchSeen) {
+        return
+      }
+    } catch {}
     try {
       emitter.emit('update', getSearchParams(url))
     } catch (e) {

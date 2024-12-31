@@ -102,27 +102,15 @@ function Component() {
 This concept of _"shallow routing"_ is done via updates to the browser's
 [History API](https://developer.mozilla.org/en-US/docs/Web/API/History_API/Working_with_the_History_API).
 
-While the `useOptimisticSearchParams` and the adapter itself can handle shallow URL
-updates triggered from state updater functions, for them to react to URL changes
-triggered by explicit calls to the History API (either by first or third party code),
-you'd have to enable sync:
+<Callout title="Why not using shouldRevalidate?">
+ [`shouldRevalidate`](https://reactrouter.com/start/framework/route-module#shouldrevalidate)
+ is the idomatic way of opting out of running loaders on navigation, but nuqs uses
+ the opposite approach: opting in to running loaders only when needed.
 
-```tsx
-// Export available in:
-//  'nuqs/adapters/remix'
-//  'nuqs/adapters/react-router/v6'
-//  'nuqs/adapters/react-router/v7'
-//  'nuqs/adapters/react'
-import { enableHistorySync } from 'nuqs/adapters/remix'
-
-// Somewhere top-level (like app/root.tsx)
-enableHistorySync()
-```
-
-Note that you may not need this if only using your framework's router.
-
-It is opt-in as it patches the History APIs, which can have side effects
-if third party code does it too.
+ In order to avoid specifying `shouldRevalidate` for every route, nuqs chose to
+ patch the history methods to enable shallow routing by default (on its own updates)
+ in React Router based frameworks.
+</Callout>
 
 ## Scroll
 

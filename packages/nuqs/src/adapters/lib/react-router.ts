@@ -92,10 +92,6 @@ export function createReactRouterBasedAdapter(
         window.removeEventListener('popstate', onPopState)
       }
     }, [])
-    useEffect(() => {
-      console.log('sync from serverSearchParams:', serverSearchParams.toString())
-      emitter.emit('update', serverSearchParams)
-    }, [serverSearchParams])
     return searchParams
   }
   /**
