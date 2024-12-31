@@ -113,7 +113,7 @@ jobs:
           name: ci-${{ matrix.next-version }}${{ matrix.base-path && '-basePath' || ''}}
       - uses: 47ng/actions-slack-notify@main
         name: Notify on Slack
-        if: always()
+        if: failure()
         with:
           status: ${{ job.status }}
           jobName: next@${{ matrix.next-version }}${{ matrix.base-path && ' basePath' || ''}}
@@ -147,7 +147,7 @@ jobs:
           name: ci-react
       - uses: 47ng/actions-slack-notify@main
         name: Notify on Slack
-        if: always()
+        if: failure()
         with:
           status: ${{ job.status }}
           jobName: react
@@ -187,7 +187,7 @@ jobs:
           name: ci-react-router-${{ matrix.react-router-version }}
       - uses: 47ng/actions-slack-notify@main
         name: Notify on Slack
-        if: always()
+        if: failure()
         with:
           status: ${{ job.status }}
           jobName: react-router-${{ matrix.react-router-version }}
@@ -221,10 +221,28 @@ jobs:
           name: ci-remix
       - uses: 47ng/actions-slack-notify@main
         name: Notify on Slack
-        if: always()
+        if: failure()
         with:
           status: ${{ job.status }}
           jobName: remix
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+  ci-notify:
+    name: Notify on Slack
+    runs-on: ubuntu-24.04
+    needs:
+      - lint
+      - ci-core
+      - e2e-next
+      - e2e-react
+      - e2e-react-router
+      - e2e-remix
+    steps:
+      - uses: 47ng/actions-slack-notify@main
+        with:
+          status: ${{ job.status }}
+          jobName: Continuous Integration
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
