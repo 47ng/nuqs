@@ -242,7 +242,7 @@ jobs:
       - uses: 47ng/actions-slack-notify@main
         with:
           status: ${{ job.status }}
-          jobName: CI
+          jobName: Continuous Integration
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
