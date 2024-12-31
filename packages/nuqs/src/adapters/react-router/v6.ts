@@ -12,6 +12,8 @@ const {
   useSearchParams
 )
 
-export { enableHistorySync, useOptimisticSearchParams }
+export { useOptimisticSearchParams }
 
 export const NuqsAdapter = createAdapterProvider(useNuqsReactRouterV6Adapter)
+
+enableHistorySync()

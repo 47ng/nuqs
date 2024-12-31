@@ -8,6 +8,8 @@ const {
   useOptimisticSearchParams
 } = createReactRouterBasedAdapter('remix', useNavigate, useSearchParams)
 
-export { enableHistorySync, useOptimisticSearchParams }
+export { useOptimisticSearchParams }
 
 export const NuqsAdapter = createAdapterProvider(useNuqsRemixAdapter)
+
+enableHistorySync()

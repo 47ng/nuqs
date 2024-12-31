@@ -1,8 +1,6 @@
 import { Links, Meta, Scripts, ScrollRestoration } from '@remix-run/react'
-import { enableHistorySync, NuqsAdapter } from 'nuqs/adapters/remix'
+import { NuqsAdapter } from 'nuqs/adapters/remix'
 import RootLayout from './layout'
-
-enableHistorySync()
 
 export function Layout({ children }: { children: React.ReactNode }) {
   return (

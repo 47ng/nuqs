@@ -1,10 +1,4 @@
-import {
-  useCallback,
-  useEffect,
-  useInsertionEffect,
-  useRef,
-  useState
-} from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useAdapter } from './adapters/lib/context'
 import { debug } from './debug'
 import type { Options } from './defs'
@@ -260,7 +254,7 @@ export function useQueryState<T = string>(
   }, [initialSearchParams?.get(key), key])
 
   // Sync all hooks together & with external URL changes
-  useInsertionEffect(() => {
+  useEffect(() => {
     function updateInternalState({ state, query }: CrossHookSyncPayload) {
       debug('[nuqs `%s`] updateInternalState %O', key, state)
       stateRef.current = state
@@ -288,7 +282,7 @@ export function useQueryState<T = string>(
       ) {
         newValue = null
       }
-      queryRef.current = enqueueQueryStringUpdate(key, newValue, serialize, {
+      const query = enqueueQueryStringUpdate(key, newValue, serialize, {
         // Call-level options take precedence over hook declaration options.
         history: options.history ?? history,
         shallow: options.shallow ?? shallow,
@@ -297,7 +291,7 @@ export function useQueryState<T = string>(
         startTransition: options.startTransition ?? startTransition
       })
       // Sync all hooks state (including this one)
-      emitter.emit(key, { state: newValue, query: queryRef.current })
+      emitter.emit(key, { state: newValue, query })
       return scheduleFlushToURL(adapter)
     },
     [key, history, shallow, scroll, throttleMs, startTransition, adapter]
