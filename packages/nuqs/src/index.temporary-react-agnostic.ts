@@ -13,5 +13,3 @@ export {
 } from './loader'
 export * from './parsers'
 export { createSerializer } from './serializer'
-export * from './useQueryState'
-export * from './useQueryStates'
