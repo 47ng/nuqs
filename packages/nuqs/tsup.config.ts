@@ -36,8 +36,7 @@ const entrypoints = {
   server: {
     server: 'src/index.server.ts',
     'server/cache': 'src/index.server.cache.ts',
-    'server/parsers': 'src/index.server.parsers.ts',
-    'server/serializer': 'src/index.server.serializer.ts'
+    'server/temporary-react-agnostic': 'src/index.temporary-react-agnostic.ts'
   }
 }
 
