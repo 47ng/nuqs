@@ -13,8 +13,8 @@ VERSION=$(cat package.json | jq -r '.version')
 
 if [[ "$(uname)" == "Darwin" ]]; then
   # macOS requires an empty string as the backup extension
-  sed -i '' "s/0.0.0-inject-version-here/${VERSION}/g" dist/index.js
+  sed -i '' "s/0.0.0-inject-version-here/${VERSION}/g" index.js
 else
   # Ubuntu (CI/CD) doesn't
-  sed -i "s/0.0.0-inject-version-here/${VERSION}/g" dist/index.js
+  sed -i "s/0.0.0-inject-version-here/${VERSION}/g" index.js
 fi
