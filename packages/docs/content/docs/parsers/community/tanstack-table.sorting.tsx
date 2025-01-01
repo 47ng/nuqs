@@ -46,7 +46,7 @@ const sortParser = createParser<ColumnSort>({
 
 const parseAsSortingState = parseAsArrayOf(sortParser).withDefault([])
 
-export function useSortingSearchParams(key = 'orderBy') {
+export function useSortingSearchParams() {
   return useQueryState('${sortingUrlKey}', parseAsSortingState)
 }`)
 
