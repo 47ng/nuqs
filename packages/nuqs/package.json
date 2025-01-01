@@ -75,14 +75,9 @@
       "import": "./dist/server/cache.js",
       "require": "./esm-only.cjs"
     },
-    "./server/serializer": {
-      "types": "./dist/server/serializer.d.ts",
-      "import": "./dist/server/serializer.js",
-      "require": "./esm-only.cjs"
-    },
-    "./server/parsers": {
-      "types": "./dist/server/parsers.d.ts",
-      "import": "./dist/server/parsers.js",
+    "./server/temporary-react-agnostic": {
+      "types": "./dist/server/temporary-react-agnostic.d.ts",
+      "import": "./dist/server/temporary-react-agnostic.js",
       "require": "./esm-only.cjs"
     },
     "./adapters/react": {
