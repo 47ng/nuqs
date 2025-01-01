@@ -1,5 +1,5 @@
 import { expectError, expectType } from 'tsd'
-import { createSerializer, parseAsInteger, parseAsString } from '../../dist'
+import { createSerializer, parseAsInteger, parseAsString } from '../..'
 
 // prettier-ignore
 {

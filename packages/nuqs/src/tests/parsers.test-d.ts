@@ -1,6 +1,6 @@
 import { assert, type Equals } from 'tsafe'
 import { expectType } from 'tsd'
-import { parseAsInteger, parseAsString, type inferParserType } from '../../dist'
+import { parseAsInteger, parseAsString, type inferParserType } from '../..'
 
 {
   const p = parseAsString

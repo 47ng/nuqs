@@ -6,7 +6,7 @@ import {
   parseAsIsoDateTime,
   parseAsString,
   useQueryStates
-} from '../../dist'
+} from '../..'
 
 {
   const [states, setStates] = useQueryStates(

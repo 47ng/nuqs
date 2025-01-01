@@ -6,7 +6,7 @@ import { defineConfig, type Options } from 'tsup'
 const commonConfig = {
   format: ['esm'],
   experimentalDts: true,
-  outDir: 'dist',
+  outDir: '.',
   external: [
     'next',
     'react',

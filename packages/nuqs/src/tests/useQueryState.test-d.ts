@@ -7,7 +7,7 @@ import {
   parseAsString,
   parseAsTimestamp,
   useQueryState
-} from '../../dist'
+} from '../..'
 
 // By default, queries have a `string` state, nullable (when no query parameter is present)
 {
