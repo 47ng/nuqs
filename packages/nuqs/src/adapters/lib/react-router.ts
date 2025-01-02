@@ -16,6 +16,7 @@ type NavigateUrl = {
 type NavigateOptions = {
   replace?: boolean
   preventScrollReset?: boolean
+  state?: unknown
 }
 type NavigateFn = (url: NavigateUrl, options: NavigateOptions) => void
 type UseNavigate = () => NavigateFn
@@ -60,7 +61,8 @@ export function createReactRouterBasedAdapter(
             },
             {
               replace: true,
-              preventScrollReset: true
+              preventScrollReset: true,
+              state: history.state?.usr
             }
           )
         }
