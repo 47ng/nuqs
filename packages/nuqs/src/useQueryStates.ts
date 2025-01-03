@@ -232,14 +232,16 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
       return scheduleFlushToURL(adapter)
     },
     [
-      keyMap,
+      stateKeys,
       history,
       shallow,
       scroll,
       throttleMs,
       startTransition,
       resolvedUrlKeys,
-      adapter,
+      adapter.updateUrl,
+      adapter.getSearchParamsSnapshot,
+      adapter.rateLimitFactor,
       defaultValues
     ]
   )
