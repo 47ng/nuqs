@@ -1,10 +1,10 @@
 import { expectError, expectNotAssignable, expectType } from 'tsd'
 import {
-  createSearchParamsCache,
   parseAsBoolean,
   parseAsInteger,
   parseAsString
 } from '../../dist/server'
+import { createSearchParamsCache } from '../../dist/server/cache'
 
 {
   const cache = createSearchParamsCache({
