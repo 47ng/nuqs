@@ -127,6 +127,14 @@ export function ReactRouter() {
 }
 ```
 
+<Callout>
+
+ Only `BrowserRouter` is supported. There may be support for `HashRouter`
+ in the future (see issue [#810](https://github.com/47ng/nuqs/issues/810)), but
+ support for `MemoryRouter` is not planned.
+
+</Callout>
+
 ## React Router v7
 
 ```tsx title="app/root.tsx"
@@ -151,6 +159,9 @@ export default function App() {
 
   Please pin your imports to the specific version,
   eg: `nuqs/adapters/react-router/v6` or `nuqs/adapters/react-router/v7`.
+
+  The main difference is where the React Router hooks are imported from:
+  `react-router-dom` for v6, and `react-router` for v7.
 </Callout>
 
 ## Testing
