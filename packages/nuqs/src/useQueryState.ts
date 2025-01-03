@@ -294,7 +294,17 @@ export function useQueryState<T = string>(
       emitter.emit(key, { state: newValue, query })
       return scheduleFlushToURL(adapter)
     },
-    [key, history, shallow, scroll, throttleMs, startTransition, adapter]
+    [
+      key,
+      history,
+      shallow,
+      scroll,
+      throttleMs,
+      startTransition,
+      adapter.updateUrl,
+      adapter.getSearchParamsSnapshot,
+      adapter.rateLimitFactor
+    ]
   )
   return [internalState ?? defaultValue ?? null, update]
 }
