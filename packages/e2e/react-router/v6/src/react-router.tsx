@@ -20,6 +20,7 @@ function load(mod: Promise<{ default: any; [otherExports: string]: any }>) {
 const router = createBrowserRouter(
   createRoutesFromElements(
     <Route path="/" element={<RootLayout/>} >,
+      {/* Shared E2E tests */}
       <Route path='hash-preservation'                     lazy={load(import('./routes/hash-preservation'))} />
       <Route path='basic-io/useQueryState'                lazy={load(import('./routes/basic-io.useQueryState'))} />
       <Route path='basic-io/useQueryStates'               lazy={load(import('./routes/basic-io.useQueryStates'))} />
@@ -40,6 +41,8 @@ const router = createBrowserRouter(
       <Route path="form/useQueryStates"                   lazy={load(import('./routes/form.useQueryStates'))} />
       <Route path="referential-stability/useQueryState"   lazy={load(import('./routes/referential-stability.useQueryState'))} />
       <Route path="referential-stability/useQueryStates"  lazy={load(import('./routes/referential-stability.useQueryStates'))} />
+      {/* Reproductions */}
+      <Route path='repro-839'   lazy={load(import('./routes/repro-839'))} />
     </Route>
   ))
 

@@ -3,6 +3,7 @@ import { type RouteConfig, layout, route } from '@react-router/dev/routes'
 export default [
   // prettier-ignore
   layout('layout.tsx', [
+    // Shared E2E tests
     route('/hash-preservation',                     './routes/hash-preservation.tsx'),
     route('/basic-io/useQueryState',                './routes/basic-io.useQueryState.tsx'),
     route('/basic-io/useQueryStates',               './routes/basic-io.useQueryStates.tsx'),
@@ -22,6 +23,8 @@ export default [
     route('/form/useQueryState',                    './routes/form.useQueryState.tsx'),
     route('/form/useQueryStates',                   './routes/form.useQueryStates.tsx'),
     route('/referential-stability/useQueryState',   './routes/referential-stability.useQueryState.tsx'),
-    route('/referential-stability/useQueryStates',  './routes/referential-stability.useQueryStates.tsx')
+    route('/referential-stability/useQueryStates',  './routes/referential-stability.useQueryStates.tsx'),
+    // Reproductions
+    route('/repro-839',   './routes/repro-839.tsx'),
   ])
 ] satisfies RouteConfig
