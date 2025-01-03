@@ -35,6 +35,7 @@
     "@radix-ui/react-toggle-group": "^1.1.1",
     "@sentry/nextjs": "^8.46.0",
     "@tailwindcss/container-queries": "^0.1.1",
+    "@tanstack/react-table": "^8.20.6",
     "@tremor/react": "^3.18.6",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
