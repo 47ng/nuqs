@@ -513,7 +513,7 @@ importers:
         specifier: ^3.0.1
         version: 3.0.1
       react-router:
-        specifier: ^7
+        specifier: ^6 || ^7
         version: 7.0.2(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
     devDependencies:
       '@microsoft/api-extractor':
