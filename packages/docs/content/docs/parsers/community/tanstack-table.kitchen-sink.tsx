@@ -12,7 +12,7 @@ import {
   SelectValue
 } from '@/src/components/ui/select'
 import { useDeferredValue } from 'react'
-import { useColumnFilterSearchParams } from './search-params.column-filters'
+import { useColumnFiltersSearchParams } from './search-params.column-filters'
 import { usePaginationSearchParams } from './search-params.pagination'
 import { useSortingSearchParams } from './search-params.sorting'
 import { generateData, useTanStackTable } from './tanstack-table'
@@ -42,7 +42,7 @@ export function TanStackTableKitchenSink() {
   )
 
   const [columnFilters, setColumnFilters] =
-    useColumnFilterSearchParams(columnFiltersUrlKey)
+    useColumnFiltersSearchParams(columnFiltersUrlKey)
   const [pagination, setPagination] = usePaginationSearchParams({
     pageIndex: pageIndexUrlKey,
     pageSize: pageSizeUrlKey

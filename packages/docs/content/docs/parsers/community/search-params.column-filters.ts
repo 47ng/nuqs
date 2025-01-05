@@ -20,6 +20,6 @@ const filterParser = createParser({
 
 const parseAsColumnFiltersState = parseAsArrayOf(filterParser).withDefault([])
 
-export function useColumnFilterSearchParams(key = 'filter') {
+export function useColumnFiltersSearchParams(key = 'filter') {
   return useQueryState(key, parseAsColumnFiltersState)
 }

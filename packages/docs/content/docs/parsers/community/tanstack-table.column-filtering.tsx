@@ -15,7 +15,7 @@ import {
 import { Separator } from '@/src/components/ui/separator'
 import { parseAsString, useQueryState } from 'nuqs'
 import { useDeferredValue } from 'react'
-import { useColumnFilterSearchParams } from './search-params.column-filters'
+import { useColumnFiltersSearchParams } from './search-params.column-filters'
 import { useTanStackTable } from './tanstack-table'
 
 export function TanStackTableColumnFiltering() {
@@ -24,7 +24,7 @@ export function TanStackTableColumnFiltering() {
     parseAsString.withDefault('filter')
   )
   const [columnFilters, setColumnFilters] =
-    useColumnFilterSearchParams(columnFiltersUrlKey)
+    useColumnFiltersSearchParams(columnFiltersUrlKey)
 
   const parserCode =
     useDeferredValue(`import { ColumnFilter } from '@tanstack/react-table'
@@ -49,7 +49,7 @@ const filterParser = createParser({
 
 const parseAsColumnFiltersState = parseAsArrayOf(filterParser).withDefault([])
 
-export function useColumnFilterSearchParams() {
+export function useColumnFiltersSearchParams() {
   return useQueryState('${columnFiltersUrlKey}', parseAsColumnFiltersState)
 }`)
 
