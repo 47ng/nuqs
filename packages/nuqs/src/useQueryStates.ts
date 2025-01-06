@@ -88,7 +88,12 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
   const queryRef = useRef<Record<string, string | null>>({})
   // Initialise the queryRef with the initial values
   if (Object.keys(queryRef.current).length !== Object.keys(keyMap).length) {
-    queryRef.current = Object.fromEntries(initialSearchParams?.entries() ?? [])
+    queryRef.current = Object.fromEntries(
+      Object.values(resolvedUrlKeys).map(urlKey => [
+        urlKey,
+        initialSearchParams?.get(urlKey) ?? null
+      ])
+    )
   }
   const defaultValues = useMemo(
     () =>
@@ -104,7 +109,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
 
   const [internalState, setInternalState] = useState<V>(() => {
     const source = initialSearchParams ?? new URLSearchParams()
-    return parseMap(keyMap, urlKeys, source)
+    return parseMap(keyMap, urlKeys, source).state
   })
 
   const stateRef = useRef(internalState)
@@ -116,18 +121,20 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
   )
 
   useEffect(() => {
-    const state = parseMap(
+    const { state, hasChanged } = parseMap(
       keyMap,
       urlKeys,
       initialSearchParams,
       queryRef.current,
       stateRef.current
     )
-    stateRef.current = state
-    setInternalState(state)
+    if (hasChanged) {
+      stateRef.current = state
+      setInternalState(state)
+    }
   }, [
     Object.values(resolvedUrlKeys)
-      .map(key => initialSearchParams?.get(key))
+      .map(key => `${key}=${initialSearchParams?.get(key)}`)
       .join('&')
   ])
 
@@ -180,7 +187,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
         emitter.off(urlKey, handlers[stateKey])
       }
     }
-  }, [keyMap, resolvedUrlKeys])
+  }, [stateKeys, resolvedUrlKeys])
 
   const update = useCallback<SetValues<KeyMap>>(
     (stateUpdater, callOptions = {}) => {
@@ -261,8 +268,12 @@ function parseMap<KeyMap extends UseQueryStatesKeysMap>(
   searchParams: URLSearchParams,
   cachedQuery?: Record<string, string | null>,
   cachedState?: NullableValues<KeyMap>
-): NullableValues<KeyMap> {
-  return Object.keys(keyMap).reduce((out, stateKey) => {
+): {
+  state: NullableValues<KeyMap>
+  hasChanged: boolean
+} {
+  let hasChanged = false
+  const state = Object.keys(keyMap).reduce((out, stateKey) => {
     const urlKey = urlKeys?.[stateKey] ?? stateKey
     const { parse } = keyMap[stateKey]!
     const queuedQuery = getQueuedValue(urlKey)
@@ -270,10 +281,13 @@ function parseMap<KeyMap extends UseQueryStatesKeysMap>(
       queuedQuery === undefined
         ? (searchParams?.get(urlKey) ?? null)
         : queuedQuery
-    if (cachedQuery && cachedState && cachedQuery[urlKey] === query) {
+    if (cachedQuery && cachedState && (cachedQuery[urlKey] ?? null) === query) {
+      // Cache hit
       out[stateKey as keyof KeyMap] = cachedState[stateKey] ?? null
       return out
     }
+    // Cache miss
+    hasChanged = true
     const value = query === null ? null : safeParse(parse, query, stateKey)
     out[stateKey as keyof KeyMap] = value ?? null
     if (cachedQuery) {
@@ -281,6 +295,7 @@ function parseMap<KeyMap extends UseQueryStatesKeysMap>(
     }
     return out
   }, {} as NullableValues<KeyMap>)
+  return { state, hasChanged }
 }
 
 function applyDefaultValues<KeyMap extends UseQueryStatesKeysMap>(
