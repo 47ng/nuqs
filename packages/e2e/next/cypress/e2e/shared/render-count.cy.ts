@@ -22,7 +22,7 @@ for (const hook of hooks) {
             },
             expected: {
               mount: 1,
-              update: shallow === true ? 2 : 3
+              update: shallow === false ? 3 : 2
             },
             nextJsRouter: 'app'
           })

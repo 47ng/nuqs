@@ -53,6 +53,11 @@ export function testRenderCount({
           cy.wait(props.delay)
         }
         assertLogCount('render', expected.mount + expected.update)
+        cy.get('#state').should('have.text', 'pass')
+        cy.location('search').should(
+          'eq',
+          `?delay=${props.delay ?? 0}&test=pass`
+        )
       })
     }
   )

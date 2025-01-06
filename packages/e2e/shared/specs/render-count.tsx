@@ -18,19 +18,28 @@ export function RenderCount({
 }: RenderCountProps) {
   console.log('render')
   const startTransition = enableStartTransition ? useTransition()[1] : undefined
+  let runTest = () => {}
+  let state = null
   if (hook === 'useQueryState') {
-    const [, setState] = useQueryState('test', {
+    const [testState, setState] = useQueryState('test', {
       shallow,
       history,
       startTransition
     })
-    return <button onClick={() => setState('pass')}>Test</button>
+    runTest = () => setState('pass')
+    state = testState
   }
   if (hook === 'useQueryStates') {
-    const [, setState] = useQueryStates({
+    const [{ test }, setState] = useQueryStates({
       test: parseAsString.withOptions({ shallow, history, startTransition })
     })
-    return <button onClick={() => setState({ test: 'pass' })}>Test</button>
+    runTest = () => setState({ test: 'pass' })
+    state = test
   }
-  return null
+  return (
+    <>
+      <button onClick={runTest}>Test</button>
+      <pre id="state">{state}</pre>
+    </>
+  )
 }
