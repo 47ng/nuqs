@@ -32,22 +32,30 @@ for (const hook of hooks) {
   }
 }
 
-// for (const hook of hooks) {
-//   for (const shallow of shallows) {
-//     for (const history of histories) {
-//       testRenderCount({
-//         path: `/pages/render-count/${hook}/${shallow}/${history}`,
-//         hook,
-//         props: {
-//           shallow,
-//           history
-//         },
-//         expected: {
-//           mount: 1,
-//           update: 3
-//         },
-//         nextJsRouter: 'pages'
-//       })
-//     }
-//   }
-// }
+for (const hook of hooks) {
+  for (const shallow of shallows) {
+    for (const history of histories) {
+      for (const startTransition of shallow === false
+        ? [false, true]
+        : [false]) {
+        for (const delay of shallow === false ? [0, 50] : [0]) {
+          testRenderCount({
+            path: `/pages/render-count/${hook}/${shallow}/${history}/${startTransition}?delay=${delay}`,
+            hook,
+            props: {
+              shallow,
+              history,
+              startTransition,
+              delay
+            },
+            expected: {
+              mount: 1,
+              update: startTransition === true ? 4 : 2
+            },
+            nextJsRouter: 'pages'
+          })
+        }
+      }
+    }
+  }
+}
