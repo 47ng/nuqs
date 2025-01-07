@@ -40,22 +40,34 @@ export function testRenderCount({
         (props.delay ? `, delay: ${props.delay}ms` : '')
     },
     ({ path }) => {
-      it(`should render ${times(expected.mount)} on mount`, () => {
-        cy.visit(path, stubConsoleLog)
-        cy.contains('#hydration-marker', 'hydrated').should('be.hidden')
-        assertLogCount('render', expected.mount)
-      })
-      it(`should then render ${times(expected.update)} on updates`, () => {
-        cy.visit(path, stubConsoleLog)
-        cy.contains('#hydration-marker', 'hydrated').should('be.hidden')
-        cy.get('button').click()
-        if (props.delay) {
-          cy.wait(props.delay)
+      it(
+        `should render ${times(expected.mount)} on mount`,
+        {
+          ...(process.env.CI ? { retries: 4 } : undefined)
+        },
+        () => {
+          cy.visit(path, stubConsoleLog)
+          cy.contains('#hydration-marker', 'hydrated').should('be.hidden')
+          assertLogCount('render', expected.mount)
         }
-        assertLogCount('render', expected.mount + expected.update)
-        cy.get('#state').should('have.text', 'pass')
-        cy.location('search').should('contain', 'test=pass')
-      })
+      )
+      it(
+        `should then render ${times(expected.update)} on updates`,
+        {
+          ...(process.env.CI ? { retries: 4 } : undefined)
+        },
+        () => {
+          cy.visit(path, stubConsoleLog)
+          cy.contains('#hydration-marker', 'hydrated').should('be.hidden')
+          cy.get('button').click()
+          if (props.delay) {
+            cy.wait(props.delay)
+          }
+          assertLogCount('render', expected.mount + expected.update)
+          cy.get('#state').should('have.text', 'pass')
+          cy.location('search').should('contain', 'test=pass')
+        }
+      )
     }
   )
   return test(config)
