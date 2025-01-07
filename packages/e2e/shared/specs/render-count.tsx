@@ -1,7 +1,7 @@
 'use client'
 
 import { parseAsString, useQueryState, useQueryStates } from 'nuqs'
-import { useTransition } from 'react'
+import { startTransition as reactStartTransition } from 'react'
 
 type RenderCountProps = {
   hook: 'useQueryState' | 'useQueryStates'
@@ -17,7 +17,9 @@ export function RenderCount({
   startTransition: enableStartTransition
 }: RenderCountProps) {
   console.log('render')
-  const startTransition = enableStartTransition ? useTransition()[1] : undefined
+  const startTransition = enableStartTransition
+    ? reactStartTransition
+    : undefined
   let runTest = () => {}
   let state = null
   if (hook === 'useQueryState') {

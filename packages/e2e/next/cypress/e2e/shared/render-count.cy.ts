@@ -50,7 +50,7 @@ for (const hook of hooks) {
             },
             expected: {
               mount: 1,
-              update: startTransition === true ? 4 : 2
+              update: 2
             },
             nextJsRouter: 'pages'
           })

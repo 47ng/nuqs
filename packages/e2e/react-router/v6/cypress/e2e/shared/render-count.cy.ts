@@ -1,7 +1,7 @@
 import { testRenderCount } from 'e2e-shared/specs/render-count.cy'
 
 const hooks = ['useQueryState', 'useQueryStates'] as const
-const shallows = [false] as const
+const shallows = [true, false] as const
 const histories = ['replace', 'push'] as const
 
 for (const hook of hooks) {
@@ -19,7 +19,7 @@ for (const hook of hooks) {
           },
           expected: {
             mount: 1,
-            update: 2 + (shallow === false ? 1 : 0)
+            update: 2 + (shallow === false ? (startTransition ? 0 : 1) : 0)
           }
         })
       }
@@ -42,7 +42,7 @@ for (const hook of hooks) {
           },
           expected: {
             mount: 1,
-            update: 2 + (shallow === false ? 1 : 0) + (startTransition ? 1 : 0)
+            update: 2 + (shallow === false ? 1 : 0)
           }
         })
       }
@@ -70,7 +70,7 @@ for (const hook of hooks) {
               update:
                 2 +
                 (shallow === false ? 1 : 0) +
-                (startTransition ? 1 : delay ? 1 : 0)
+                (!startTransition && delay ? 1 : 0)
             }
           })
         }
