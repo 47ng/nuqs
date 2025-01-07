@@ -1,4 +1,4 @@
-import { createTest, TestConfig } from '../create-test'
+import { createTest, type TestConfig } from '../create-test'
 
 type TestRenderCountConfig = TestConfig & {
   props: {
