@@ -7,9 +7,7 @@ const histories = ['replace', 'push'] as const
 for (const hook of hooks) {
   for (const shallow of shallows) {
     for (const history of histories) {
-      for (const startTransition of shallow === false
-        ? [false, true]
-        : [false]) {
+      for (const startTransition of [false, true]) {
         testRenderCount({
           path: `/render-count/${hook}/${shallow}/${history}/${startTransition}`,
           hook,

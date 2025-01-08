@@ -7,9 +7,7 @@ const histories = ['replace', 'push'] as const
 for (const hook of hooks) {
   for (const shallow of shallows) {
     for (const history of histories) {
-      for (const startTransition of shallow === false
-        ? [false, true]
-        : [false]) {
+      for (const startTransition of [false, true]) {
         for (const delay of shallow === false ? [0, 50] : [0]) {
           testRenderCount({
             path: `/app/render-count/${hook}/${shallow}/${history}/${startTransition}?delay=${delay}`,
@@ -35,9 +33,7 @@ for (const hook of hooks) {
 for (const hook of hooks) {
   for (const shallow of shallows) {
     for (const history of histories) {
-      for (const startTransition of shallow === false
-        ? [false, true]
-        : [false]) {
+      for (const startTransition of [false, true]) {
         for (const delay of shallow === false ? [0, 50] : [0]) {
           testRenderCount({
             path: `/pages/render-count/${hook}/${shallow}/${history}/${startTransition}?delay=${delay}`,
