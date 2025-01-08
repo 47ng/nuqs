@@ -17,7 +17,7 @@
     "cypress-terminal-report": "^7.1.0"
   },
   "devDependencies": {
-    "@types/node": "^22.10.2",
+    "@types/node": "^22.10.5",
     "@types/react": "catalog:react19",
     "@types/react-dom": "catalog:react19",
     "cypress": "catalog:e2e",
