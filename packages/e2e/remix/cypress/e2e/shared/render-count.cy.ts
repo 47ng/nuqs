@@ -19,7 +19,7 @@ for (const hook of hooks) {
           },
           expected: {
             mount: 1,
-            update: 2 + (shallow === false ? 1 : 0)
+            update: 2
           }
         })
       }
@@ -42,7 +42,7 @@ for (const hook of hooks) {
           },
           expected: {
             mount: 1,
-            update: 2 + (shallow === false ? 2 : 0)
+            update: 2 + (shallow === false ? 1 : 0)
           }
         })
       }
@@ -67,7 +67,7 @@ for (const hook of hooks) {
             },
             expected: {
               mount: 1,
-              update: 2 + (shallow === false ? 2 : 0)
+              update: 2 + (shallow === false ? 1 : 0)
             }
           })
         }

@@ -54,7 +54,8 @@ export function patchHistory(
   let lastSearchSeen = typeof location === 'object' ? location.search : ''
 
   emitter.on('update', search => {
-    lastSearchSeen = search.toString()
+    const searchString = search.toString()
+    lastSearchSeen = searchString.length ? '?' + searchString : ''
   })
 
   debug(
