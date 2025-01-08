@@ -21,6 +21,23 @@ const routes: Record<string, React.LazyExoticComponent<() => JSX.Element>> = {
   '/form/useQueryStates':                   lazy(() => import('./routes/form.useQueryStates')),
   '/referential-stability/useQueryState':   lazy(() => import('./routes/referential-stability.useQueryState')),
   '/referential-stability/useQueryStates':  lazy(() => import('./routes/referential-stability.useQueryStates')),
+
+  '/render-count/useQueryState/true/replace/false':   lazy(() => import('./routes/render-count')),
+  '/render-count/useQueryState/true/replace/true':    lazy(() => import('./routes/render-count')),
+  '/render-count/useQueryState/true/push/false':      lazy(() => import('./routes/render-count')),
+  '/render-count/useQueryState/true/push/true':       lazy(() => import('./routes/render-count')),
+  '/render-count/useQueryState/false/replace/false':  lazy(() => import('./routes/render-count')),
+  '/render-count/useQueryState/false/replace/true':   lazy(() => import('./routes/render-count')),
+  '/render-count/useQueryState/false/push/false':     lazy(() => import('./routes/render-count')),
+  '/render-count/useQueryState/false/push/true':      lazy(() => import('./routes/render-count')),
+  '/render-count/useQueryStates/true/replace/false':  lazy(() => import('./routes/render-count')),
+  '/render-count/useQueryStates/true/replace/true':   lazy(() => import('./routes/render-count')),
+  '/render-count/useQueryStates/true/push/false':     lazy(() => import('./routes/render-count')),
+  '/render-count/useQueryStates/true/push/true':      lazy(() => import('./routes/render-count')),
+  '/render-count/useQueryStates/false/replace/false': lazy(() => import('./routes/render-count')),
+  '/render-count/useQueryStates/false/replace/true':  lazy(() => import('./routes/render-count')),
+  '/render-count/useQueryStates/false/push/false':    lazy(() => import('./routes/render-count')),
+  '/render-count/useQueryStates/false/push/true':     lazy(() => import('./routes/render-count')),
 }
 
 export function Router() {

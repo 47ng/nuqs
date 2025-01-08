@@ -20,7 +20,11 @@ export function defineConfig(config: Config) {
         openMode: 0,
         runMode: process.env.CI ? 1 : 0
       },
-      ...config
+      ...config,
+      env: {
+        ...config.env,
+        CI: Boolean(process.env.CI)
+      }
     }
   })
 }

@@ -6,12 +6,20 @@ export type TestConfig = {
 }
 
 export function createTest(
-  label: string,
+  firstArg: string | { label: string; variants: string },
   implementation: (config: TestConfig) => void
 ) {
   return (config: TestConfig) => {
+    const label = typeof firstArg === 'string' ? firstArg : firstArg.label
+    const variants = typeof firstArg === 'string' ? null : firstArg.variants
     const router = config.nextJsRouter ? `${config.nextJsRouter} router` : null
-    const describeLabel = [label, config.hook, router, config.description]
+    const describeLabel = [
+      label,
+      router,
+      config.hook,
+      variants,
+      config.description
+    ]
       .filter(Boolean)
       .join(' - ')
     describe(describeLabel, implementation.bind(null, config))

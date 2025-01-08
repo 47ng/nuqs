@@ -16,7 +16,7 @@
     "start": "NODE_OPTIONS='--enable-source-maps=true' next start --port 3001",
     "pretest": "cypress install",
     "test": "start-server-and-test start http://localhost:3001${BASE_PATH} cypress:run",
-    "cypress:open": "cypress open",
+    "cypress:open": "cypress open --e2e --browser electron",
     "cypress:run": "cypress run --headless"
   },
   "dependencies": {

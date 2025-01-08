@@ -17,7 +17,7 @@
       "env": ["BASE_PATH", "REACT_COMPILER", "E2E_NO_CACHE_ON_RERUN"]
     },
     "e2e-remix#build": {
-      "outputs": ["dist/**", "cypress/**"],
+      "outputs": ["build/**", "cypress/**"],
       "dependsOn": ["^build"],
       "env": ["REACT_COMPILER", "E2E_NO_CACHE_ON_RERUN"]
     },
@@ -27,7 +27,7 @@
       "env": ["REACT_COMPILER", "E2E_NO_CACHE_ON_RERUN"]
     },
     "e2e-react-router-v7#build": {
-      "outputs": ["dist/**", "cypress/**"],
+      "outputs": [".react-router/**", "build/**", "cypress/**"],
       "dependsOn": ["^build"],
       "env": ["REACT_COMPILER", "E2E_NO_CACHE_ON_RERUN"]
     },

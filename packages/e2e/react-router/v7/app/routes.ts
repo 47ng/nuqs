@@ -24,6 +24,9 @@ export default [
     route('/form/useQueryStates',                   './routes/form.useQueryStates.tsx'),
     route('/referential-stability/useQueryState',   './routes/referential-stability.useQueryState.tsx'),
     route('/referential-stability/useQueryStates',  './routes/referential-stability.useQueryStates.tsx'),
+    route('/render-count/:hook/:shallow/:history/:startTransition/no-loader',    './routes/render-count.$hook.$shallow.$history.$startTransition.no-loader.tsx'),
+    route('/render-count/:hook/:shallow/:history/:startTransition/sync-loader',  './routes/render-count.$hook.$shallow.$history.$startTransition.sync-loader.tsx'),
+    route('/render-count/:hook/:shallow/:history/:startTransition/async-loader', './routes/render-count.$hook.$shallow.$history.$startTransition.async-loader.tsx'),
     // Reproductions
     route('/repro-839',   './routes/repro-839.tsx'),
   ])
