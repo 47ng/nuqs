@@ -43,7 +43,7 @@ export function testRenderCount({
       it(
         `should render ${times(expected.mount)} on mount`,
         {
-          ...(process.env.CI ? { retries: 4 } : undefined)
+          ...(Cypress.env('CI') ? { retries: 4 } : undefined)
         },
         () => {
           cy.visit(path, stubConsoleLog)
@@ -54,7 +54,7 @@ export function testRenderCount({
       it(
         `should then render ${times(expected.update)} on updates`,
         {
-          ...(process.env.CI ? { retries: 4 } : undefined)
+          ...(Cypress.env('CI') ? { retries: 4 } : undefined)
         },
         () => {
           cy.visit(path, stubConsoleLog)
