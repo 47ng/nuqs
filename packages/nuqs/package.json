@@ -35,6 +35,7 @@
   "files": [
     "dist/",
     "server.d.ts",
+    "testing.d.ts",
     "adapters/react.d.ts",
     "adapters/next.d.ts",
     "adapters/next/app.d.ts",
@@ -60,6 +61,11 @@
     "./server": {
       "types": "./dist/server.d.ts",
       "import": "./dist/server.js",
+      "require": "./esm-only.cjs"
+    },
+    "./testing": {
+      "types": "./dist/testing.d.ts",
+      "import": "./dist/testing.js",
       "require": "./esm-only.cjs"
     },
     "./adapters/react": {
