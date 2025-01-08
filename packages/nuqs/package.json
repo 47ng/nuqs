@@ -159,7 +159,7 @@
     "@types/react-dom": "catalog:react19",
     "@vitejs/plugin-react": "^4.3.4",
     "@vitest/coverage-v8": "^2.1.8",
-    "next": "15.1.0",
+    "next": "15.1.4",
     "react": "catalog:react19",
     "react-dom": "catalog:react19",
     "react-router-dom": "6.28.0",
