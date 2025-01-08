@@ -20,13 +20,13 @@
     "cypress:run": "cypress run --headless"
   },
   "dependencies": {
-    "next": "15.1.0",
+    "next": "15.1.4",
     "nuqs": "workspace:*",
     "react": "catalog:react19",
     "react-dom": "catalog:react19"
   },
   "devDependencies": {
-    "@types/node": "^22.10.2",
+    "@types/node": "^22.10.5",
     "@types/react": "catalog:react19",
     "@types/react-dom": "catalog:react19",
     "@types/semver": "^7.5.8",
