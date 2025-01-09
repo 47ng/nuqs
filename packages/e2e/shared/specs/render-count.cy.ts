@@ -47,6 +47,9 @@ export function testRenderCount({
           cy.visit(path, stubConsoleLog)
           cy.contains('#hydration-marker', 'hydrated').should('be.hidden')
           cy.get('button').click()
+          if (props.delay) {
+            cy.wait(props.delay)
+          }
           cy.get('#state').should('have.text', 'pass')
           cy.location('search').should('contain', 'test=pass')
           assertLogCount('render', expected.mount + expected.update)
