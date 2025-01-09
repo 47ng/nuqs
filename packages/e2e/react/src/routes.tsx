@@ -25,6 +25,8 @@ const routes: Record<string, React.LazyExoticComponent<() => JSX.Element>> = {
   '/conditional-rendering/useQueryStates':  lazy(() => import('./routes/conditional-rendering.useQueryStates')),
   '/scroll':                                lazy(() => import('./routes/scroll')),
   '/pretty-urls':                           lazy(() => import('./routes/pretty-urls')),
+  '/key-isolation/useQueryState':           lazy(() => import('./routes/key-isolation.useQueryState')),
+  '/key-isolation/useQueryStates':          lazy(() => import('./routes/key-isolation.useQueryStates')),
 
   '/render-count/useQueryState/true/replace/false':   lazy(() => import('./routes/render-count')),
   '/render-count/useQueryState/true/replace/true':    lazy(() => import('./routes/render-count')),
