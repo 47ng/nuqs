@@ -26,6 +26,8 @@ const routes: Record<string, React.LazyExoticComponent<() => JSX.Element>> = {
   '/scroll':                                lazy(() => import('./routes/scroll')),
 
   // Local tests
+  '/key-isolation/useQueryState':           lazy(() => import('./routes/key-isolation.useQueryState')),
+  '/key-isolation/useQueryStates':          lazy(() => import('./routes/key-isolation.useQueryStates')),
   '/push/useQueryState':                    lazy(() => import('./routes/push.useQueryState')),
   '/push/useQueryStates':                   lazy(() => import('./routes/push.useQueryStates')),
   '/rate-limits':                           lazy(() => import('./routes/rate-limits')),

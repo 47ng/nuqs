@@ -66,12 +66,12 @@ export function createAdapterProvider(
     )
 }
 
-export function useAdapter(): AdapterInterface {
+export function useAdapter(watchKeys: string[]): AdapterInterface {
   const value = useContext(context)
   if (!('useAdapter' in value)) {
     throw new Error(error(404))
   }
-  return value.useAdapter()
+  return value.useAdapter(watchKeys)
 }
 
 export const useAdapterDefaultOptions = (): AdapterProps['defaultOptions'] =>
