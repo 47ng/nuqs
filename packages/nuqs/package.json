@@ -63,9 +63,7 @@
     },
     "./server": {
       "types": "./dist/server.d.ts",
-      "react-server": "./dist/server.js",
-      "default": "./dist/server/temporary-react-agnostic.js",
-      "import": "./dist/server/temporary-react-agnostic.js",
+      "import": "./dist/server.js",
       "require": "./esm-only.cjs"
     },
     "./testing": {
