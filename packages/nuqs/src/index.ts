@@ -1,4 +1,10 @@
-export type { HistoryOptions, Nullable, Options, SearchParams } from './defs'
+export type {
+  HistoryOptions,
+  Nullable,
+  Options,
+  SearchParams,
+  UrlKeys
+} from './defs'
 export {
   createLoader,
   type LoaderFunction,
