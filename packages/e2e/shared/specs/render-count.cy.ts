@@ -1,4 +1,5 @@
 import { createTest, type TestConfig } from '../create-test'
+import { assertLogCount, stubConsoleLog } from '../cypress/support/log-spy'
 
 type TestRenderCountConfig = TestConfig & {
   props: {
@@ -11,20 +12,6 @@ type TestRenderCountConfig = TestConfig & {
     mount: number
     update: number
   }
-}
-
-const stubConsoleLog = {
-  onBeforeLoad(window: any) {
-    cy.stub(window.console, 'log').as('consoleLog')
-  }
-}
-
-function assertLogCount(message: string, expectedCount: number) {
-  cy.get('@consoleLog').then(spy => {
-    // @ts-ignore
-    const matchingLogs = spy.args.filter(args => args[0] === message)
-    expect(matchingLogs.length).to.equal(expectedCount)
-  })
 }
 
 export function testRenderCount({
@@ -60,12 +47,9 @@ export function testRenderCount({
           cy.visit(path, stubConsoleLog)
           cy.contains('#hydration-marker', 'hydrated').should('be.hidden')
           cy.get('button').click()
-          if (props.delay) {
-            cy.wait(props.delay)
-          }
-          assertLogCount('render', expected.mount + expected.update)
           cy.get('#state').should('have.text', 'pass')
           cy.location('search').should('contain', 'test=pass')
+          assertLogCount('render', expected.mount + expected.update)
         }
       )
     }
