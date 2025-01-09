@@ -8,6 +8,7 @@ import {
   useState,
   type ReactNode
 } from 'react'
+import { debug } from '../debug'
 import { renderQueryString } from '../url-encoding'
 import { createAdapterProvider } from './lib/context'
 import type { AdapterOptions } from './lib/defs'
@@ -39,7 +40,7 @@ const NuqsReactAdapterContext = createContext({
   fullPageNavigationOnShallowFalseUpdates: false
 })
 
-function useNuqsReactAdapter() {
+function useNuqsReactAdapter(watchKeys: string[]) {
   const { fullPageNavigationOnShallowFalseUpdates } = useContext(
     NuqsReactAdapterContext
   )
@@ -47,21 +48,28 @@ function useNuqsReactAdapter() {
     if (typeof location === 'undefined') {
       return new URLSearchParams()
     }
-    return new URLSearchParams(location.search)
+    const search = new URLSearchParams(location.search)
+    filterSearchParams(search, watchKeys)
+    return search
   })
   useEffect(() => {
     // Popstate event is only fired when the user navigates
     // via the browser's back/forward buttons.
     const onPopState = () => {
-      setSearchParams(new URLSearchParams(location.search))
+      setSearchParams(
+        applyChange(new URLSearchParams(location.search), watchKeys)
+      )
     }
-    emitter.on('update', setSearchParams)
+    const onEmitterUpdate = (search: URLSearchParams) => {
+      setSearchParams(applyChange(search, watchKeys))
+    }
+    emitter.on('update', onEmitterUpdate)
     window.addEventListener('popstate', onPopState)
     return () => {
-      emitter.off('update', setSearchParams)
+      emitter.off('update', onEmitterUpdate)
       window.removeEventListener('popstate', onPopState)
     }
-  }, [])
+  }, [watchKeys.join('&')])
   const updateUrl = useMemo(
     () => generateUpdateUrlFn(fullPageNavigationOnShallowFalseUpdates),
     [fullPageNavigationOnShallowFalseUpdates]
@@ -97,4 +105,43 @@ export function NuqsAdapter({
  */
 export function enableHistorySync() {
   patchHistory(emitter, 'react')
+}
+
+function applyChange(newValue: URLSearchParams, keys: string[]) {
+  return (oldValue: URLSearchParams) => {
+    const hasChanged =
+      keys.length === 0
+        ? true
+        : keys.some(key => oldValue.get(key) !== newValue.get(key))
+    if (!hasChanged) {
+      debug(
+        '[nuqs `%s`] no change, returning previous',
+        keys.join(','),
+        oldValue
+      )
+      return oldValue
+    }
+    const copy = new URLSearchParams(newValue)
+    filterSearchParams(copy, keys)
+    debug(
+      `[nuqs \`%s\`] subbed search params change
+  from %O
+  to   %O`,
+      keys.join(','),
+      oldValue,
+      copy
+    )
+    return copy
+  }
+}
+
+function filterSearchParams(search: URLSearchParams, keys: string[]) {
+  if (keys.length === 0) {
+    return
+  }
+  for (const key of search.keys()) {
+    if (!keys.includes(key)) {
+      search.delete(key)
+    }
+  }
 }
