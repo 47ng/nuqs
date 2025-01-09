@@ -83,7 +83,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
       ),
     [stateKeys, urlKeys]
   )
-  const adapter = useAdapter()
+  const adapter = useAdapter(Object.values(resolvedUrlKeys))
   const initialSearchParams = adapter.searchParams
   const queryRef = useRef<Record<string, string | null>>({})
   // Initialise the queryRef with the initial values

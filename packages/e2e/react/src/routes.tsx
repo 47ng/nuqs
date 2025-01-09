@@ -21,6 +21,8 @@ const routes: Record<string, React.LazyExoticComponent<() => JSX.Element>> = {
   '/form/useQueryStates':                   lazy(() => import('./routes/form.useQueryStates')),
   '/referential-stability/useQueryState':   lazy(() => import('./routes/referential-stability.useQueryState')),
   '/referential-stability/useQueryStates':  lazy(() => import('./routes/referential-stability.useQueryStates')),
+  '/key-isolation/useQueryState':           lazy(() => import('./routes/key-isolation.useQueryState')),
+  '/key-isolation/useQueryStates':          lazy(() => import('./routes/key-isolation.useQueryStates')),
 
   '/render-count/useQueryState/true/replace/false':   lazy(() => import('./routes/render-count')),
   '/render-count/useQueryState/true/replace/true':    lazy(() => import('./routes/render-count')),
