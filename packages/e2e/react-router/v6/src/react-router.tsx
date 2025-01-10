@@ -19,7 +19,7 @@ function load(mod: Promise<{ default: any; [otherExports: string]: any }>) {
 // prettier-ignore
 const router = createBrowserRouter(
   createRoutesFromElements(
-    <Route path="/" element={<RootLayout/>} >,
+    <Route path="/" element={<RootLayout/>} >
       {/* Shared E2E tests */}
       <Route path="basic-io/useQueryState"                    lazy={load(import('./routes/basic-io.useQueryState'))} />
       <Route path="basic-io/useQueryStates"                   lazy={load(import('./routes/basic-io.useQueryStates'))} />
@@ -54,8 +54,12 @@ const router = createBrowserRouter(
       <Route path="flush-after-navigate/useQueryStates/start" lazy={load(import('./routes/flush-after-navigate.useQueryStates.start'))} />
       <Route path="fog-of-war"                                lazy={load(import('./routes/fog-of-war._index'))} />
       <Route path="fog-of-war/result"                         lazy={load(import('./routes/fog-of-war.result'))} />
+      <Route path="key-isolation/useQueryState"               lazy={load(import('./routes/key-isolation.useQueryState'))} />
+      <Route path="key-isolation/useQueryStates"              lazy={load(import('./routes/key-isolation.useQueryStates'))} />
       <Route path="loader"                                    lazy={load(import('./routes/loader'))} />
       <Route path="push/useQueryState"                        lazy={load(import('./routes/push.useQueryState'))} />
+      <Route path="push/useQueryState"                        lazy={load(import('./routes/push.useQueryState'))} />
+      <Route path="push/useQueryStates"                       lazy={load(import('./routes/push.useQueryStates'))} />
       <Route path="push/useQueryStates"                       lazy={load(import('./routes/push.useQueryStates'))} />
       <Route path="rate-limits"                               lazy={load(import('./routes/rate-limits'))} />
       <Route path="shallow/useQueryState"                     lazy={load(import('./routes/shallow.useQueryState'))} />
