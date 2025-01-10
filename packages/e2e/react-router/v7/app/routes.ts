@@ -33,6 +33,8 @@ export default [
     route('/dynamic-segments/dynamic/:segment',     './routes/dynamic-segments.dynamic.$segment.tsx'),
     route('/dynamic-segments/catch-all?/*',         './routes/dynamic-segments.catch-all.$.tsx'),
     route('/rate-limits',                           './routes/rate-limits.tsx'),
+    route('/key-isolation/useQueryState',           './routes/key-isolation.useQueryState.tsx'),
+    route('/key-isolation/useQueryStates',          './routes/key-isolation.useQueryStates.tsx'),
     route('/repro-982',                             './routes/repro-982.tsx'),
 
     route('/render-count/:hook/:shallow/:history/:startTransition/no-loader',    './routes/render-count.$hook.$shallow.$history.$startTransition.no-loader.tsx'),
