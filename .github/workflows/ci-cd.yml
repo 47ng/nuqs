@@ -97,7 +97,7 @@ jobs:
         run: pnpm install --frozen-lockfile ${{ matrix.next-version != 'latest' && '--filter e2e-next...' || '' }}
       - name: Install Next.js version ${{ matrix.next-version }}
         if: ${{ matrix.next-version != 'local' }}
-        run: pnpm add --filter e2e-next --filter nuqs next@${{ matrix.next-version }}
+        run: pnpm add --filter e2e-next next@${{ matrix.next-version }}
       - name: Run integration tests
         run: pnpm run test ${{ github.event_name == 'workflow_dispatch' && '--force' || '' }} --filter e2e-next
         env:
