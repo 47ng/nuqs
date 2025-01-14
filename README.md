@@ -622,6 +622,25 @@ const search = await setCoordinates({
 })
 ```
 
+## Loaders
+
+To parse search params as a one-off operation, you can use a **loader function**:
+
+```tsx
+import { createLoader } from 'nuqs' // or 'nuqs/server'
+
+const searchParams = {
+  q: parseAsString,
+  page: parseAsInteger.withDefault(1)
+}
+
+const loadSearchParams = createLoader(searchParams)
+
+const { q, page } = loadSearchParams('?q=hello&page=2')
+```
+
+It accepts various types of inputs (strings, URL, URLSearchParams, Request, Promises, etc.). [Read more](https://nuqs.47ng.com/docs/server-side#loaders)
+
 ## Accessing searchParams in Server Components
 
 If you wish to access the searchParams in a deeply nested Server Component
