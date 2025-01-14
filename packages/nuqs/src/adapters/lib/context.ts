@@ -1,4 +1,5 @@
 import { createContext, createElement, useContext, type ReactNode } from 'react'
+import { debugEnabled } from '../../debug'
 import { error } from '../../errors'
 import type { UseAdapterHook } from './defs'
 
@@ -12,6 +13,19 @@ export const context = createContext<AdapterContext>({
   }
 })
 context.displayName = 'NuqsAdapterContext'
+
+declare global {
+  interface Window {
+    __NuqsAdapterContext?: typeof context
+  }
+}
+
+if (debugEnabled && typeof window !== 'undefined') {
+  if (window.__NuqsAdapterContext && window.__NuqsAdapterContext !== context) {
+    console.error(error(303))
+  }
+  window.__NuqsAdapterContext = context
+}
 
 /**
  * Create a custom adapter (context provider) for nuqs to work with your framework / router.
