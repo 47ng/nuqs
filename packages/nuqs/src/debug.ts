@@ -1,7 +1,7 @@
-const enabled = isDebugEnabled()
+export const debugEnabled = isDebugEnabled()
 
 export function debug(message: string, ...args: any[]) {
-  if (!enabled) {
+  if (!debugEnabled) {
     return
   }
   const msg = sprintf(message, ...args)
@@ -15,7 +15,7 @@ export function debug(message: string, ...args: any[]) {
 }
 
 export function warn(message: string, ...args: any[]) {
-  if (!enabled) {
+  if (!debugEnabled) {
     return
   }
   console.warn(message, ...args)
