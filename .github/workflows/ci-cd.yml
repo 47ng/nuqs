@@ -16,7 +16,7 @@ env:
 jobs:
   lint:
     name: Linting
-    runs-on: ubuntu-24.04-arm
+    runs-on: ubuntu-24.04
     steps:
       - uses: green-coding-solutions/eco-ci-energy-estimation@v4
         with:
