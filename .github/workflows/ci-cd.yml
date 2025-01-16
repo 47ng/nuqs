@@ -18,16 +18,39 @@ jobs:
     name: Linting
     runs-on: ubuntu-24.04-arm
     steps:
+      - uses: green-coding-solutions/eco-ci-energy-estimation@v4
+        with:
+          task: start-measurement
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - uses: green-coding-solutions/eco-ci-energy-estimation@v4
+        with:
+          task: get-measurement
+          label: lint/checkout
       - uses: pnpm/action-setup@fe02b34f77f8bc703788d5817da081398fad5dd2
+      - uses: green-coding-solutions/eco-ci-energy-estimation@v4
+        with:
+          task: get-measurement
+          label: lint/setup-pnpm
       - uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af
         with:
           node-version-file: .node-version
           cache: pnpm
+      - uses: green-coding-solutions/eco-ci-energy-estimation@v4
+        with:
+          task: get-measurement
+          label: lint/setup-node
       - name: Install dependencies
         run: pnpm install --ignore-scripts --frozen-lockfile --workspace-root
+      - uses: green-coding-solutions/eco-ci-energy-estimation@v4
+        with:
+          task: get-measurement
+          label: lint/install-deps
       - name: Check monorepo with Sherif
         run: pnpm run lint:sherif
+      - uses: green-coding-solutions/eco-ci-energy-estimation@v4
+        with:
+          task: get-measurement
+          label: lint/sherif
       - name: Check source code formatting
         run: |
           set +e # Allow Prettier to fail, but capture the error code
@@ -42,10 +65,17 @@ jobs:
           else
             echo "No formatting issues found"
           fi
+      - uses: green-coding-solutions/eco-ci-energy-estimation@v4
+        with:
+          task: get-measurement
+          label: lint/prettier
+      - uses: green-coding-solutions/eco-ci-energy-estimation@v4
+        with:
+          task: display-results
 
   ci-core:
     name: CI (core)
-    runs-on: ubuntu-24.04-arm
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
       - uses: pnpm/action-setup@fe02b34f77f8bc703788d5817da081398fad5dd2
@@ -67,7 +97,7 @@ jobs:
     # update the required checks in GitHub
     # branch protection settings for `next`.
     name: E2E (next@${{ matrix.next-version }}${{ matrix.base-path && ' basePath' || ''}})
-    runs-on: ubuntu-24.04-arm
+    runs-on: ubuntu-24.04
     needs: [ci-core]
     strategy:
       fail-fast: false
@@ -122,7 +152,7 @@ jobs:
 
   e2e-react:
     name: E2E (react)
-    runs-on: ubuntu-24.04-arm
+    runs-on: ubuntu-24.04
     needs: [ci-core]
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
@@ -156,7 +186,7 @@ jobs:
 
   e2e-react-router:
     name: E2E (react-router ${{ matrix.react-router-version }})
-    runs-on: ubuntu-24.04-arm
+    runs-on: ubuntu-24.04
     needs: [ci-core]
     strategy:
       fail-fast: false
@@ -196,7 +226,7 @@ jobs:
 
   e2e-remix:
     name: E2E (remix)
-    runs-on: ubuntu-24.04-arm
+    runs-on: ubuntu-24.04
     needs: [ci-core]
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
@@ -230,7 +260,7 @@ jobs:
 
   ci-notify:
     name: Notify on Slack
-    runs-on: ubuntu-24.04-arm
+    runs-on: ubuntu-24.04
     needs:
       - lint
       - ci-core
@@ -248,7 +278,7 @@ jobs:
 
   cd:
     name: Deployment
-    runs-on: ubuntu-24.04-arm
+    runs-on: ubuntu-24.04
     permissions:
       contents: write # to be able to publish a GitHub release
       issues: write # to be able to comment on released issues
