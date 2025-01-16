@@ -6,6 +6,10 @@ import {
   RouterProvider
 } from 'react-router-dom'
 import RootLayout from './layout'
+import {
+  Repro862UseQueryState,
+  Repro862UseQueryStates
+} from './routes/repro-862'
 
 // Adapt the RRv7 / Remix default export for component into a Component export for v6
 function load(mod: Promise<{ default: any; [otherExports: string]: any }>) {
@@ -47,7 +51,11 @@ const router = createBrowserRouter(
       <Route path="render-count/:hook/:shallow/:history/:startTransition/async-loader"  lazy={load(import('./routes/render-count.$hook.$shallow.$history.$startTransition.async-loader'))} />
 
       {/* Reproductions */}
-      <Route path='repro-839'   lazy={load(import('./routes/repro-839'))} />
+      <Route path="repro-839"   lazy={load(import('./routes/repro-839'))} />
+      <Route path="repro-862/useQueryState"  index element={<Repro862UseQueryState  targetPath="/repro-862/useQueryState/other"  />} />
+      <Route path="repro-862/useQueryState/other"  element={<Repro862UseQueryState  targetPath="/repro-862/useQueryState"        />} />
+      <Route path="repro-862/useQueryStates" index element={<Repro862UseQueryStates targetPath="/repro-862/useQueryStates/other" />} />
+      <Route path="repro-862/useQueryStates/other" element={<Repro862UseQueryStates targetPath="/repro-862/useQueryStates"       />} />
     </Route>
   ))
 
