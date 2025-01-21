@@ -34,7 +34,7 @@
     "express": "^4.21.2",
     "start-server-and-test": "catalog:e2e",
     "typescript": "^5.7.2",
-    "vite": "^6.0.7",
+    "vite": "^6.0.9",
     "vite-tsconfig-paths": "^5.1.4"
   }
 }

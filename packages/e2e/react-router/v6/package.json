@@ -29,6 +29,6 @@
     "e2e-shared": "workspace:*",
     "start-server-and-test": "catalog:e2e",
     "typescript": "^5.7.2",
-    "vite": "^6.0.7"
+    "vite": "^6.0.9"
   }
 }
