@@ -1,6 +1,6 @@
 'use client'
 
-// [!code word:useQueryState:4]
+// [!code word:useQueryState]
 import { parseAsInteger, useQueryState } from 'nuqs'
 
 export function Demo() {

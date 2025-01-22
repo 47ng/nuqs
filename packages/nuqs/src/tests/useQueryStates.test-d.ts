@@ -1,120 +1,96 @@
-import { expectError, expectNotAssignable, expectType } from 'tsd'
-import {
-  parseAsBoolean,
-  parseAsFloat,
-  parseAsInteger,
-  parseAsIsoDateTime,
-  parseAsString,
-  useQueryStates
-} from '../../dist'
+import { describe, expectTypeOf, it } from 'vitest'
+import { parseAsInteger, parseAsString, useQueryStates } from '../../dist'
 
-{
-  const [states, setStates] = useQueryStates(
-    {
-      a: parseAsString,
-      b: parseAsInteger,
-      c: parseAsFloat,
-      d: parseAsBoolean
-    },
-    {
-      history: 'push'
-    }
-  )
-  expectType<{
-    a: string | null
-    b: number | null
-    c: number | null
-    d: boolean | null
-  }>(states)
-  setStates({
-    a: 'foo',
-    c: 3.14
+describe('types/useQueryStates', () => {
+  const parsers = {
+    a: parseAsString,
+    b: parseAsInteger
+  }
+  it('has nullable state by default', () => {
+    const [state, setState] = useQueryStates(parsers)
+    expectTypeOf(state).toEqualTypeOf<{ a: string | null; b: number | null }>()
+    setState({ a: 'foo', b: 42 })
+    setState(old => {
+      expectTypeOf(old).toEqualTypeOf<{ a: string | null; b: number | null }>()
+      return { a: 'bar' }
+    })
   })
-  setStates(old => ({
-    ...old,
-    d: !old.d
-  }))
-}
-
-// With default values, state is no longer nullable
-{
-  const [states, setStates] = useQueryStates({
-    hasDefault: parseAsString.withDefault('foo'),
-    doesNot: parseAsIsoDateTime
+  it('allows partial updates', () => {
+    const [, setState] = useQueryStates(parsers)
+    setState({ a: 'foo' })
+    setState(() => ({ b: 42 }))
   })
-  expectType<{
-    hasDefault: string
-    doesNot: Date | null
-  }>(states)
-  expectNotAssignable<null>(states.hasDefault)
-  states.doesNot = null
-  // `null` should always be accepted as setStates
-  setStates({
-    hasDefault: null,
-    doesNot: null
+  it('allows setting null to clear the query', () => {
+    const [, setState] = useQueryStates(parsers)
+    setState({ a: null }) // Clear an individual key
+    setState(null) // Clear all managed keys
+    setState(() => ({ a: null }))
+    // setState(() => null) // todo: Enable this test in a separate PR
   })
-  setStates(() => ({
-    hasDefault: null,
-    doesNot: null
-  }))
-  setStates(null)
-}
-
-// Custom parsers
-{
-  const [states] = useQueryStates({
-    hex: {
-      parse: input => parseInt(input, 16),
-      serialize: (value: number) => value.toString(16)
-    },
-    bin: {
-      parse: input => Buffer.from(input),
-      defaultValue: Buffer.from('')
-    }
+  it('allows setting to undefined to leave keys as-is', () => {
+    const [, setState] = useQueryStates(parsers)
+    setState({ a: undefined }) // No change
+    setState(() => ({ a: undefined })) // No change
   })
-  expectType<{
-    hex: number | null
-    bin: Buffer
-  }>(states)
-}
-
-// Remapped keys
-{
-  const [states, setStates] = useQueryStates(
-    {
-      foo: parseAsString,
-      bar: parseAsString
-    },
-    {
-      urlKeys: {
-        foo: 'f'
-        // bar: 'b' // allows partial remapping
-      }
-    }
-  )
-  expectType<{
-    foo: string | null
-    bar: string | null
-  }>(states)
-  setStates({
-    foo: 'baz',
-    bar: 'qux'
+  it("doesn't allow setting undefined globally", () => {
+    const [, setState] = useQueryStates(parsers)
+    // @ts-expect-error
+    setState(undefined)
+    // @ts-expect-error
+    setState(() => undefined)
   })
-}
-
-// Remapped keys
-{
-  expectError(() => {
-    useQueryStates(
-      {
-        foo: parseAsString,
-        bar: parseAsString
+  it('makes state non-nullable when using default values', () => {
+    const [state, setState] = useQueryStates({
+      a: parseAsString.withDefault('foo'),
+      b: parseAsInteger.withDefault(42)
+    })
+    expectTypeOf(state).toEqualTypeOf<{ a: string; b: number }>()
+    setState({ a: 'bar', b: 42 })
+    setState({ a: null, b: null }) // Still allowed to clear it with null (state retuns to default)
+    setState(null)
+    setState(old => {
+      expectTypeOf(old).toEqualTypeOf<{ a: string; b: number }>()
+      return {}
+    })
+    setState(() => ({ a: null, b: null })) // Still allowed to clear it with null (state retuns to default)
+    // setState(() => null)  // todo: Enable this test in a separate PR
+  })
+  it('supports inline custom parsers', () => {
+    const [state] = useQueryStates({
+      a: {
+        parse: parseInt,
+        serialize: value => value.toString()
       },
-      {
-        urlKeys: {
-          notInTheList: 'f'
-        }
+      b: {
+        parse: input => Uint8Array.from(input),
+        eq: (a: Uint8Array, b: Uint8Array) =>
+          a === b || (a.length === b.length && a.every((v, i) => v === b[i])),
+        defaultValue: Uint8Array.from('')
       }
-    )
+    })
+    expectTypeOf(state).toEqualTypeOf<{
+      a: number | null
+      b: Uint8Array<ArrayBuffer>
+    }>()
   })
-}
+  it('supports urlKeys', () => {
+    const [state, setState] = useQueryStates(parsers, {
+      urlKeys: {
+        a: 'u',
+        b: 'v'
+      }
+    })
+    // State uses the original key names
+    expectTypeOf(state).toEqualTypeOf<{
+      a: string | null
+      b: number | null
+    }>()
+    setState({ a: 'baz', b: 42 })
+    useQueryStates(parsers, {
+      urlKeys: {
+        // @ts-expect-error
+        notInTheList: 'should-error'
+      }
+    })
+  })
+})
