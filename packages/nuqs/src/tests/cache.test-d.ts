@@ -1,4 +1,4 @@
-import { expectError, expectNotAssignable, expectType } from 'tsd'
+import { assertType, describe, expectTypeOf, it } from 'vitest'
 import {
   createSearchParamsCache,
   parseAsBoolean,
@@ -6,62 +6,55 @@ import {
   parseAsString
 } from '../../dist/server'
 
-{
+describe('types/cache', () => {
   const cache = createSearchParamsCache({
     foo: parseAsString,
     bar: parseAsInteger,
     egg: parseAsBoolean.withDefault(false)
   })
-
-  // Values are type-safe
-  expectType<string | null>(cache.get('foo'))
-  expectType<number | null>(cache.get('bar'))
-  // Default values are taken into account
-  expectType<boolean>(cache.get('egg'))
-  expectNotAssignable<null>(cache.get('egg'))
-  expectNotAssignable<undefined>(cache.get('foo'))
-  expectNotAssignable<undefined>(cache.get('bar'))
-  expectNotAssignable<undefined>(cache.get('egg'))
-  // Keys are type safe
-  expectError(() => {
-    cache.get('spam')
-  })
   type All = Readonly<{ foo: string | null; bar: number | null; egg: boolean }>
-  expectType<All>(cache.parse({}))
-  expectType<All>(cache.all())
 
-  // It supports async search params (Next.js 15+)
-  expectType<Promise<All>>(cache.parse(Promise.resolve({})))
-  expectType<All>(cache.all())
-}
+  it('has a type-safe `parse` method that returns all entries', () => {
+    assertType<All>(cache.parse({}))
+  })
 
-// It supports urlKeys
-{
-  createSearchParamsCache(
-    {
+  it('has a type-safe `all` method that returns all entries', () => {
+    assertType<All>(cache.all())
+  })
+
+  it('has a type-safe `get` method that returns a single entry', () => {
+    const cache = createSearchParamsCache({
       foo: parseAsString,
-      bar: parseAsInteger
-    },
-    {
-      urlKeys: {
-        foo: 'f'
-        // It accepts partial inputs
-      }
-    }
-  )
-  createSearchParamsCache(
-    {
+      bar: parseAsInteger,
+      egg: parseAsBoolean.withDefault(false)
+    })
+    assertType<string | null>(cache.get('foo'))
+    assertType<number | null>(cache.get('bar'))
+    assertType<boolean>(cache.get('egg'))
+    expectTypeOf(cache.get('egg')).not.toBeNull()
+    expectTypeOf(cache.get('foo')).not.toBeUndefined()
+    expectTypeOf(cache.get('bar')).not.toBeUndefined()
+    expectTypeOf(cache.get('egg')).not.toBeUndefined()
+
+    // @ts-expect-error
+    assertType(cache.get('spam'))
+  })
+
+  it('supports async search params (Next.js 15+)', () => {
+    const cache = createSearchParamsCache({
       foo: parseAsString,
-      bar: parseAsInteger
-    },
-    {
-      urlKeys: {
-        foo: 'f',
-        bar: 'b'
-      }
-    }
-  )
-  expectError(() => {
+      bar: parseAsInteger,
+      egg: parseAsBoolean.withDefault(false)
+    })
+    // Only `parse` is async, getters are unwrapped
+    assertType<Promise<All>>(cache.parse(Promise.resolve({})))
+    assertType<All>(cache.all())
+    assertType<string | null>(cache.get('foo'))
+    assertType<number | null>(cache.get('bar'))
+    assertType<boolean>(cache.get('egg'))
+  })
+
+  it('supports urlKeys', () => {
     createSearchParamsCache(
       {
         foo: parseAsString,
@@ -69,9 +62,46 @@ import {
       },
       {
         urlKeys: {
+          foo: 'f'
+          // It accepts partial inputs
+        }
+      }
+    )
+    createSearchParamsCache(
+      {
+        foo: parseAsString,
+        bar: parseAsInteger
+      },
+      {
+        urlKeys: {
+          foo: 'f'
+          // It accepts partial inputs
+        }
+      }
+    )
+    createSearchParamsCache(
+      {
+        foo: parseAsString,
+        bar: parseAsInteger
+      },
+      {
+        urlKeys: {
+          foo: 'f',
+          bar: 'b'
+        }
+      }
+    )
+    createSearchParamsCache(
+      {
+        foo: parseAsString,
+        bar: parseAsInteger
+      },
+      {
+        urlKeys: {
+          // @ts-expect-error
           nope: 'n' // Doesn't accept extra properties
         }
       }
     )
   })
-}
+})

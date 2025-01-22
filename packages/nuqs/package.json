@@ -117,8 +117,7 @@
     "build": "tsup",
     "postbuild": "size-limit --json > size.json",
     "test": "pnpm run --stream '/^test:/'",
-    "test:types": "tsd",
-    "test:unit": "vitest run",
+    "test:unit": "vitest run --typecheck",
     "test:size": "size-limit",
     "prepack": "./scripts/prepack.sh"
   },
@@ -164,14 +163,9 @@
     "react-dom": "catalog:react19",
     "react-router-dom": "6.28.2",
     "size-limit": "^11.1.6",
-    "tsafe": "^1.8.5",
-    "tsd": "^0.31.2",
     "tsup": "^8.3.5",
     "typescript": "^5.7.3",
     "vitest": "^3.0.3"
-  },
-  "tsd": {
-    "directory": "src/tests"
   },
   "size-limit": [
     {
