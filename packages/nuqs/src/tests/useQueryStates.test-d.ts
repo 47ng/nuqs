@@ -25,7 +25,7 @@ describe('types/useQueryStates', () => {
     setState({ a: null }) // Clear an individual key
     setState(null) // Clear all managed keys
     setState(() => ({ a: null }))
-    // setState(() => null) // todo: Enable this test in a separate PR
+    setState(() => null)
   })
   it('allows setting to undefined to leave keys as-is', () => {
     const [, setState] = useQueryStates(parsers)
@@ -53,7 +53,7 @@ describe('types/useQueryStates', () => {
       return {}
     })
     setState(() => ({ a: null, b: null })) // Still allowed to clear it with null (state retuns to default)
-    // setState(() => null)  // todo: Enable this test in a separate PR
+    setState(() => null)
   })
   it('supports inline custom parsers', () => {
     const [state] = useQueryStates({
