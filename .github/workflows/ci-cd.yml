@@ -93,7 +93,6 @@ jobs:
         with:
           node-version-file: .node-version
           cache: pnpm
-      - run: sudo apt-get update && sudo apt-get install -y libgbm1
       - name: Install dependencies
         run: pnpm install --frozen-lockfile ${{ matrix.next-version != 'latest' && '--filter e2e-next...' || '' }}
       - name: Install Next.js version ${{ matrix.next-version }}
