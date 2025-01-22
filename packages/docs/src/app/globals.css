@@ -61,6 +61,13 @@
   }
 }
 
+@layer utilities {
+  .bg-fd-card {
+    --fd-card: var(--fd-secondary);
+    --tw-bg-opacity: 0.25;
+  }
+}
+
 @layer components {
   /* Remove the background color on title bar */
   .fd-codeblock div:has(> figcaption) {
