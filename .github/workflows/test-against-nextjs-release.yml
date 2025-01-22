@@ -15,7 +15,7 @@ env:
 jobs:
   test_against_nextjs_release:
     name: CI (next@${{ inputs.version }}${{ matrix.base-path && ' basePath' || ''}}${{ matrix.react-compiler && ' ⚛️⚡️' || ''}})
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-24.04-arm
     strategy:
       fail-fast: false
       matrix:
@@ -57,7 +57,7 @@ jobs:
 
   invalidate-isr-cache:
     name: Invalidate ISR cache
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-24.04-arm
     needs: test_against_nextjs_release
     if: ${{ always() }}
     steps:
