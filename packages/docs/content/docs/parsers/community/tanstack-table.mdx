@@ -19,20 +19,71 @@ TanStack Table stores pagination under two pieces of state:
 
 You will likely want the URL to follow your UI and be one-based for the page index:
 
-import { TanStackTablePagination } from './tanstack-table.generator'
+import { TanStackTablePagination } from './tanstack-table.pagination'
 
 <Suspense>
   <TanStackTablePagination />
 </Suspense>
 
-## Filtering
+## Column Filtering
 
-<Callout>
-  This section is empty for now, [contributions](https://github.com/47ng/nuqs) are welcome!
+TanStack Table stores filtering under a single piece of state:
+
+- `columnFilters`: an array of `ColumnFilter` objects with the following shape:
+
+  ```ts
+  type ColumnFilter = {
+    id: string
+    value: unknown
+  }
+  ```
+
+Column filters are managed by specifying the column ID and value in the URL as `columnId=value`.
+
+<Callout title="Note">
+  Value is serialized to a JSON string, so you can use any valid JSON value.
 </Callout>
+
+import { TanStackTableColumnFiltering } from './tanstack-table.column-filtering'
+
+<Suspense>
+  <TanStackTableColumnFiltering />
+</Suspense>
 
 ## Sorting
 
-<Callout>
-  This section is empty for now, [contributions](https://github.com/47ng/nuqs) are welcome!
+TanStack Table stores sorting under a single piece of state:
+
+- `sorting`: an array of `ColumnSort` objects with the following shape:
+
+  ```ts
+  type ColumnSort = {
+    id: string
+    desc: boolean
+  }
+  ```
+
+Sorting is managed by specifying the column ID and direction in the URL as `columnId:direction`.
+
+<Callout title="Tip">
+  Hold the <kbd>Shift</kbd> key while clicking column headers to sort by
+  multiple columns simultaneously.
 </Callout>
+
+import { TanStackTableSorting } from './tanstack-table.sorting'
+
+<Suspense>
+  <TanStackTableSorting />
+</Suspense>
+
+## Kitchen Sink
+
+This example demonstrates a fully-featured TanStack Table integration with Nuqs,
+including column filtering, sorting, and pagination - all persisted in the URL.
+The table's internal state is displayed below to show how the URL parameters sync with the table state.
+
+import { TanStackTableKitchenSink } from './tanstack-table.kitchen-sink'
+
+<Suspense>
+  <TanStackTableKitchenSink />
+</Suspense>
