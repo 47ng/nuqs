@@ -7,6 +7,89 @@ import {
 import { parseAsArrayOf, parseAsJson, parseAsString } from './parsers'
 import { useQueryStates } from './useQueryStates'
 
+describe('useQueryStates', () => {
+  it('allows setting a single value', async () => {
+    const onUrlUpdate = vi.fn<OnUrlUpdateFunction>()
+    const useTestHook = () =>
+      useQueryStates({
+        a: parseAsString,
+        b: parseAsString
+      })
+    const { result } = renderHook(useTestHook, {
+      wrapper: withNuqsTestingAdapter({
+        onUrlUpdate
+      })
+    })
+    expect(result.current[0].a).toBeNull()
+    expect(result.current[0].b).toBeNull()
+    await act(() => result.current[1]({ a: 'pass' }))
+    expect(result.current[0].a).toEqual('pass')
+    expect(result.current[0].b).toBeNull()
+    expect(onUrlUpdate).toHaveBeenCalledOnce()
+    expect(onUrlUpdate.mock.calls[0]![0].queryString).toEqual('?a=pass')
+  })
+
+  it('allows clearing a single key by setting it to null', async () => {
+    const onUrlUpdate = vi.fn<OnUrlUpdateFunction>()
+    const useTestHook = () =>
+      useQueryStates({
+        a: parseAsString,
+        b: parseAsString
+      })
+    const { result } = renderHook(useTestHook, {
+      wrapper: withNuqsTestingAdapter({
+        searchParams: '?a=init&b=init',
+        onUrlUpdate
+      })
+    })
+    expect(result.current[0].a).toEqual('init')
+    expect(result.current[0].b).toEqual('init')
+    await act(() => result.current[1]({ a: null }))
+    expect(result.current[0].a).toBeNull()
+    expect(result.current[0].b).toEqual('init')
+    expect(onUrlUpdate).toHaveBeenCalledOnce()
+    expect(onUrlUpdate.mock.calls[0]![0].queryString).toEqual('?b=init')
+  })
+  it('allows clearing managed keys by passing null', async () => {
+    const onUrlUpdate = vi.fn<OnUrlUpdateFunction>()
+    const useTestHook = () =>
+      useQueryStates({
+        a: parseAsString,
+        b: parseAsString
+      })
+    const { result } = renderHook(useTestHook, {
+      wrapper: withNuqsTestingAdapter({
+        searchParams: '?a=init&b=init',
+        onUrlUpdate
+      })
+    })
+    await act(() => result.current[1](null))
+    expect(result.current[0].a).toBeNull()
+    expect(result.current[0].b).toBeNull()
+    expect(onUrlUpdate).toHaveBeenCalledOnce()
+    expect(onUrlUpdate.mock.calls[0]![0].queryString).toEqual('')
+  })
+  it('allows clearing managed keys by passing a function that returns null', async () => {
+    const onUrlUpdate = vi.fn<OnUrlUpdateFunction>()
+    const useTestHook = () =>
+      useQueryStates({
+        a: parseAsString,
+        b: parseAsString
+      })
+    const { result } = renderHook(useTestHook, {
+      wrapper: withNuqsTestingAdapter({
+        searchParams: '?a=init&b=init',
+        onUrlUpdate
+      })
+    })
+    await act(() => result.current[1](() => null))
+    expect(result.current[0].a).toBeNull()
+    expect(result.current[0].b).toBeNull()
+    expect(onUrlUpdate).toHaveBeenCalledOnce()
+    expect(onUrlUpdate.mock.calls[0]![0].queryString).toEqual('')
+  })
+})
+
 describe('useQueryStates: referential equality', () => {
   const defaults = {
     str: 'foo',
