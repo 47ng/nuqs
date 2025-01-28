@@ -23,3 +23,19 @@ testBasicIO({
   path: '/pages/basic-io/useQueryStates',
   nextJsRouter: 'pages'
 })
+
+// Test the agnostic adapter
+
+testBasicIO({
+  hook: 'useQueryState',
+  path: '/app/agnostic/basic-io',
+  nextJsRouter: 'app',
+  description: 'Agnostic adapter'
+})
+
+testBasicIO({
+  hook: 'useQueryState',
+  path: '/pages/agnostic/basic-io',
+  nextJsRouter: 'pages',
+  description: 'Agnostic adapter'
+})
