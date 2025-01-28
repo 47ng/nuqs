@@ -324,10 +324,10 @@ describe('useQueryStates: clearOnDefault', () => {
 
 describe('useQueryStates: dynamic keys', () => {
   it('supports dynamic keys', () => {
-    const useTestHook = (keys: string[] = ['a', 'b']) =>
+    const useTestHook = (keys: [string, string] = ['a', 'b']) =>
       useQueryStates({
-        [keys[0]!]: parseAsInteger,
-        [keys[1]!]: parseAsInteger
+        [keys[0]]: parseAsInteger,
+        [keys[1]]: parseAsInteger
       })
     const { result, rerender } = renderHook(useTestHook, {
       wrapper: withNuqsTestingAdapter({
@@ -346,11 +346,11 @@ describe('useQueryStates: dynamic keys', () => {
   })
 
   it('supports dynamic keys with remapping', () => {
-    const useTestHook = (keys: string[] = ['a', 'b']) =>
+    const useTestHook = (keys: [string, string] = ['a', 'b']) =>
       useQueryStates(
         {
-          [keys[0]!]: parseAsInteger,
-          [keys[1]!]: parseAsInteger
+          [keys[0]]: parseAsInteger,
+          [keys[1]]: parseAsInteger
         },
         {
           urlKeys: {
