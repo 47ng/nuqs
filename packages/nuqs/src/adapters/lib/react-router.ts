@@ -2,6 +2,7 @@ import mitt from 'mitt'
 import { startTransition, useCallback, useEffect, useState } from 'react'
 import { renderQueryString } from '../../url-encoding'
 import type { AdapterInterface, AdapterOptions } from './defs'
+import { applyChange, filterSearchParams } from './key-isolation'
 import {
   historyUpdateMarker,
   patchHistory,
@@ -20,7 +21,6 @@ type NavigateOptions = {
 }
 type NavigateFn = (url: NavigateUrl, options: NavigateOptions) => void
 type UseNavigate = () => NavigateFn
-
 type UseSearchParams = () => [URLSearchParams, {}]
 
 // --
@@ -31,9 +31,11 @@ export function createReactRouterBasedAdapter(
   useSearchParams: UseSearchParams
 ) {
   const emitter: SearchParamsSyncEmitter = mitt()
-  function useNuqsReactRouterBasedAdapter(): AdapterInterface {
+  function useNuqsReactRouterBasedAdapter(
+    watchKeys: string[]
+  ): AdapterInterface {
     const navigate = useNavigate()
-    const searchParams = useOptimisticSearchParams()
+    const searchParams = useOptimisticSearchParams(watchKeys)
     const updateUrl = useCallback(
       (search: URLSearchParams, options: AdapterOptions) => {
         startTransition(() => {
@@ -77,15 +79,21 @@ export function createReactRouterBasedAdapter(
       updateUrl
     }
   }
-  function useOptimisticSearchParams() {
+  function useOptimisticSearchParams(watchKeys: string[] = []) {
     const [serverSearchParams] = useSearchParams()
-    const [searchParams, setSearchParams] = useState(serverSearchParams)
+    const [searchParams, setSearchParams] = useState(() => {
+      // Make a copy to avoid modifying the original search params
+      return filterSearchParams(serverSearchParams, watchKeys, true)
+    })
+
     useEffect(() => {
       function onPopState() {
-        setSearchParams(new URLSearchParams(location.search))
+        setSearchParams(
+          applyChange(new URLSearchParams(location.search), watchKeys, false)
+        )
       }
       function onEmitterUpdate(search: URLSearchParams) {
-        setSearchParams(search)
+        setSearchParams(applyChange(search, watchKeys, true))
       }
       emitter.on('update', onEmitterUpdate)
       window.addEventListener('popstate', onPopState)

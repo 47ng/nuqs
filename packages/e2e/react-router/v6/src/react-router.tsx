@@ -41,6 +41,8 @@ const router = createBrowserRouter(
       <Route path="form/useQueryStates"                   lazy={load(import('./routes/form.useQueryStates'))} />
       <Route path="referential-stability/useQueryState"   lazy={load(import('./routes/referential-stability.useQueryState'))} />
       <Route path="referential-stability/useQueryStates"  lazy={load(import('./routes/referential-stability.useQueryStates'))} />
+      <Route path="key-isolation/useQueryState"           lazy={load(import('./routes/key-isolation.useQueryState'))} />
+      <Route path="key-isolation/useQueryStates"          lazy={load(import('./routes/key-isolation.useQueryStates'))} />
 
       <Route path="render-count/:hook/:shallow/:history/:startTransition/no-loader"     lazy={load(import('./routes/render-count.$hook.$shallow.$history.$startTransition.no-loader'))} />
       <Route path="render-count/:hook/:shallow/:history/:startTransition/sync-loader"   lazy={load(import('./routes/render-count.$hook.$shallow.$history.$startTransition.sync-loader'))} />

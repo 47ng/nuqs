@@ -30,10 +30,10 @@ export function createAdapterProvider(useAdapter: UseAdapterHook) {
     )
 }
 
-export function useAdapter() {
+export function useAdapter(watchKeys: string[]) {
   const value = useContext(context)
   if (!('useAdapter' in value)) {
     throw new Error(error(404))
   }
-  return value.useAdapter()
+  return value.useAdapter(watchKeys)
 }
