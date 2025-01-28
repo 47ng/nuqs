@@ -4,7 +4,12 @@ import {
   withNuqsTestingAdapter,
   type OnUrlUpdateFunction
 } from './adapters/testing'
-import { parseAsArrayOf, parseAsJson, parseAsString } from './parsers'
+import {
+  parseAsArrayOf,
+  parseAsInteger,
+  parseAsJson,
+  parseAsString
+} from './parsers'
 import { useQueryStates } from './useQueryStates'
 
 describe('useQueryStates', () => {
@@ -314,5 +319,66 @@ describe('useQueryStates: clearOnDefault', () => {
     )
     expect(onUrlUpdate).toHaveBeenCalledOnce()
     expect(onUrlUpdate.mock.calls[0]![0].queryString).toEqual('')
+  })
+})
+
+describe('useQueryStates: dynamic keys', () => {
+  it('supports dynamic keys', () => {
+    const useTestHook = (keys: [string, string] = ['a', 'b']) =>
+      useQueryStates({
+        [keys[0]]: parseAsInteger,
+        [keys[1]]: parseAsInteger
+      })
+    const { result, rerender } = renderHook(useTestHook, {
+      wrapper: withNuqsTestingAdapter({
+        searchParams: '?a=1&b=2&c=3&d=4'
+      })
+    })
+    expect(result.current[0].a).toEqual(1)
+    expect(result.current[0].b).toEqual(2)
+    expect(result.current[0].c).toBeUndefined()
+    expect(result.current[0].d).toBeUndefined()
+    rerender(['c', 'd'])
+    expect(result.current[0].a).toBeUndefined()
+    expect(result.current[0].b).toBeUndefined()
+    expect(result.current[0].c).toEqual(3)
+    expect(result.current[0].d).toEqual(4)
+  })
+
+  it('supports dynamic keys with remapping', () => {
+    const useTestHook = (keys: [string, string] = ['a', 'b']) =>
+      useQueryStates(
+        {
+          [keys[0]]: parseAsInteger,
+          [keys[1]]: parseAsInteger
+        },
+        {
+          urlKeys: {
+            a: 'x',
+            b: 'y',
+            c: 'z'
+          }
+        }
+      )
+    const { result, rerender } = renderHook(useTestHook, {
+      wrapper: withNuqsTestingAdapter({
+        searchParams: '?x=1&y=2&z=3'
+      })
+    })
+    expect(result.current[0].a).toEqual(1)
+    expect(result.current[0].b).toEqual(2)
+    expect(result.current[0].c).toBeUndefined()
+    expect(result.current[0].d).toBeUndefined()
+    expect(result.current[0].x).toBeUndefined()
+    expect(result.current[0].y).toBeUndefined()
+    expect(result.current[0].z).toBeUndefined()
+    rerender(['c', 'd'])
+    expect(result.current[0].a).toBeUndefined()
+    expect(result.current[0].b).toBeUndefined()
+    expect(result.current[0].c).toEqual(3)
+    expect(result.current[0].d).toBeNull()
+    expect(result.current[0].x).toBeUndefined()
+    expect(result.current[0].y).toBeUndefined()
+    expect(result.current[0].z).toBeUndefined()
   })
 })

@@ -81,20 +81,11 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
       Object.fromEntries(
         Object.keys(keyMap).map(key => [key, urlKeys[key] ?? key])
       ),
-    [stateKeys, urlKeys]
+    [stateKeys, JSON.stringify(urlKeys)]
   )
   const adapter = useAdapter()
   const initialSearchParams = adapter.searchParams
   const queryRef = useRef<Record<string, string | null>>({})
-  // Initialise the queryRef with the initial values
-  if (Object.keys(queryRef.current).length !== Object.keys(keyMap).length) {
-    queryRef.current = Object.fromEntries(
-      Object.values(resolvedUrlKeys).map(urlKey => [
-        urlKey,
-        initialSearchParams?.get(urlKey) ?? null
-      ])
-    )
-  }
   const defaultValues = useMemo(
     () =>
       Object.fromEntries(
@@ -119,6 +110,29 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
     internalState,
     initialSearchParams
   )
+  // Initialise the refs with the initial values
+  if (
+    Object.keys(queryRef.current).join('&') !==
+    Object.values(resolvedUrlKeys).join('&')
+  ) {
+    const { state, hasChanged } = parseMap(
+      keyMap,
+      urlKeys,
+      initialSearchParams,
+      queryRef.current,
+      stateRef.current
+    )
+    if (hasChanged) {
+      stateRef.current = state
+      setInternalState(state)
+    }
+    queryRef.current = Object.fromEntries(
+      Object.values(resolvedUrlKeys).map(urlKey => [
+        urlKey,
+        initialSearchParams?.get(urlKey) ?? null
+      ])
+    )
+  }
 
   useEffect(() => {
     const { state, hasChanged } = parseMap(
