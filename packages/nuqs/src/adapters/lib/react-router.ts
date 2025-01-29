@@ -148,7 +148,7 @@ export function createReactRouterBasedAdapter({
         emitter.off('update', onEmitterUpdate)
         window.removeEventListener('popstate', onPopState)
       }
-    }, [])
+    }, [watchKeys.join('&')])
     return searchParams
   }
   /**
