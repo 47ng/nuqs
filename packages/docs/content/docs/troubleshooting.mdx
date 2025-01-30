@@ -51,8 +51,7 @@ from Next.js:
 Missing Suspense boundary with useSearchParams
 ```
 
-Components using hooks like useQueryState should be wrapped in `<Suspense>` when
-rendered within a page component:
+Components using hooks like `useQueryState` should be wrapped in `<Suspense>` when rendered within a page component. Adding the 'use client' directive to the page.tsx file is the immediate fix to get things working if you are defining components that use client-side features (like nuqs or React Hooks):
 
 ```tsx
 'use client'
@@ -70,6 +69,8 @@ function Client() {
   // ...
 }
 ```
+
+However, the steps below indicate the optimal approach to get better UX: separating server and client files (and moving client side code as low down the tree as possible to pre-render the outer shell).
 
 The recommended approach is:
 
