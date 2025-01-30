@@ -16,7 +16,7 @@ env:
 jobs:
   lint:
     name: Linting
-    runs-on: ubuntu-24.04-arm
+    runs-on: ubuntu-24-04
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
       - uses: pnpm/action-setup@fe02b34f77f8bc703788d5817da081398fad5dd2
@@ -45,7 +45,7 @@ jobs:
 
   ci-core:
     name: CI (core)
-    runs-on: ubuntu-24.04-arm
+    runs-on: ubuntu-24-04
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
       - uses: pnpm/action-setup@fe02b34f77f8bc703788d5817da081398fad5dd2
@@ -67,7 +67,7 @@ jobs:
     # update the required checks in GitHub
     # branch protection settings for `next`.
     name: E2E (next@${{ matrix.next-version }}${{ matrix.base-path && ' basePath' || ''}})
-    runs-on: ubuntu-24.04-arm
+    runs-on: ubuntu-24-04
     needs: [ci-core]
     strategy:
       fail-fast: false
@@ -122,7 +122,7 @@ jobs:
 
   e2e-react:
     name: E2E (react)
-    runs-on: ubuntu-24.04-arm
+    runs-on: ubuntu-24-04
     needs: [ci-core]
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
@@ -156,7 +156,7 @@ jobs:
 
   e2e-react-router:
     name: E2E (react-router ${{ matrix.react-router-version }})
-    runs-on: ubuntu-24.04-arm
+    runs-on: ubuntu-24-04
     needs: [ci-core]
     strategy:
       fail-fast: false
@@ -196,7 +196,7 @@ jobs:
 
   e2e-remix:
     name: E2E (remix)
-    runs-on: ubuntu-24.04-arm
+    runs-on: ubuntu-24-04
     needs: [ci-core]
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
@@ -230,7 +230,7 @@ jobs:
 
   ci-notify:
     name: Notify on Slack
-    runs-on: ubuntu-24.04-arm
+    runs-on: ubuntu-24-04
     needs:
       - lint
       - ci-core
@@ -248,7 +248,7 @@ jobs:
 
   cd:
     name: Deployment
-    runs-on: ubuntu-24.04-arm
+    runs-on: ubuntu-24-04
     permissions:
       contents: write # to be able to publish a GitHub release
       issues: write # to be able to comment on released issues
