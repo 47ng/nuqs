@@ -18,19 +18,5 @@ export const testConditionalRendering = createTest(
       cy.get('button#mount').click()
       cy.get('#state').should('have.text', 'pass')
     })
-    // it('should pick up state changes that occur in the same tick as the mount', () => {
-    //   cy.visit(path)
-    //   cy.contains('#hydration-marker', 'hydrated').should('be.hidden')
-    //   cy.get('button#mount-and-set').click()
-    //   cy.get('#state').should('have.text', 'pass')
-    // })
-    // it('should pick up state changes that occur in the same tick as the unmount when remounting', () => {
-    //   cy.visit(path)
-    //   cy.contains('#hydration-marker', 'hydrated').should('be.hidden')
-    //   cy.get('button#mount').click()
-    //   cy.get('button#unmount-and-set').click()
-    //   cy.get('button#mount').click()
-    //   cy.get('#state').should('have.text', 'pass')
-    // })
   }
 )
