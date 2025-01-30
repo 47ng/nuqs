@@ -14,7 +14,7 @@ This monorepo contains:
 
 - The source code for the `nuqs` NPM package, in [`packages/nuqs`](./packages/nuqs).
 - A Next.js app under [`packages/docs`](./packages/docs) that serves the documentation and as a playground deployed at <https://nuqs.47ng.com>
-- A test bench for [end-to-end tests](./packages/e2e) for each supported framework, driven by Cypress
+- Test benches for [end-to-end tests](./packages/e2e) for each supported framework, driven by Cypress
 
 When running `next dev`, this will:
 
@@ -29,13 +29,14 @@ When running `next dev`, this will:
 
 ## Testing
 
-You can run the complete integration test suite with `pnpm test`.
+You can run the complete integration test suite with `pnpm test` from the root of the repository.
 
 It will build the library, run unit tests and typing tests against it, and then
-run the end-to-end tests against the test bench Next.js app (which uses the built library).
+run the end-to-end tests against the test bench apps (which uses the built library).
 
-When proposing changes or showcasing a bug, adding a minimal reproduction in the
-playground can be very helpful.
+When proposing changes or fixing a bug, adding tests (unit or in the
+appropriate e2e test environment) can help tremendously to validate and
+understand the changes.
 
 ## Opening issues
 
