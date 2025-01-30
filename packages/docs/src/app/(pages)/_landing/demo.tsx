@@ -1,5 +1,6 @@
 import { CodeBlock } from '@/src/components/code-block'
 import fs from 'node:fs/promises'
+import { format } from 'prettier'
 import { Suspense } from 'react'
 import { Demo } from './demo.client'
 
@@ -7,13 +8,15 @@ export async function LandingDemo() {
   const demoFilePath =
     process.cwd() + '/src/app/(pages)/_landing/demo.client.tsx'
   const demoFile = await fs.readFile(demoFilePath, 'utf8')
+  // Poor man's AST manipulation
   const demoCode = demoFile
+    .replace(/className=".+"/g, '') // Strip styling
     .split('\n')
-    .filter(
-      line =>
-        !line.includes('className="') && !line.includes('data-interacted=')
-    )
+    .filter(line => !line.includes('data-interacted='))
     .join('\n')
+  const formattedCode = await format(demoCode, {
+    parser: 'typescript'
+  })
   return (
     <>
       <Suspense
@@ -21,12 +24,12 @@ export async function LandingDemo() {
           <div className="mb-4 h-[136px] animate-pulse rounded bg-zinc-50 dark:bg-zinc-900 sm:h-10" />
         }
       >
-        <div className="mb-4 flex flex-col gap-4 items-start sm:flex-row">
+        <div className="mb-4 flex flex-col gap-4 sm:flex-row sm:items-center">
           <Demo />
           <LookAtTheURL />
         </div>
       </Suspense>
-      <CodeBlock code={demoCode} />
+      <CodeBlock code={formattedCode} />
     </>
   )
 }
