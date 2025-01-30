@@ -41,6 +41,8 @@ const router = createBrowserRouter(
       <Route path="form/useQueryStates"                   lazy={load(import('./routes/form.useQueryStates'))} />
       <Route path="referential-stability/useQueryState"   lazy={load(import('./routes/referential-stability.useQueryState'))} />
       <Route path="referential-stability/useQueryStates"  lazy={load(import('./routes/referential-stability.useQueryStates'))} />
+      <Route path="fog-of-war"                            lazy={load(import('./routes/fog-of-war._index'))} />
+      <Route path="fog-of-war/result"                     lazy={load(import('./routes/fog-of-war.result'))} />
       <Route path="conditional-rendering/useQueryState"   lazy={load(import('./routes/conditional-rendering.useQueryState'))} />
       <Route path="conditional-rendering/useQueryStates"  lazy={load(import('./routes/conditional-rendering.useQueryStates'))} />
 
