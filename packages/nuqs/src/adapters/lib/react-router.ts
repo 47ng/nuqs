@@ -20,8 +20,7 @@ type NavigateOptions = {
 }
 type NavigateFn = (url: NavigateUrl, options: NavigateOptions) => void
 type UseNavigate = () => NavigateFn
-
-type UseSearchParams = () => [URLSearchParams, {}]
+type UseSearchParams = (initial: URLSearchParams) => [URLSearchParams, {}]
 
 // --
 
@@ -78,7 +77,11 @@ export function createReactRouterBasedAdapter(
     }
   }
   function useOptimisticSearchParams() {
-    const [serverSearchParams] = useSearchParams()
+    const [serverSearchParams] = useSearchParams(
+      typeof location === 'undefined'
+        ? new URLSearchParams()
+        : new URLSearchParams(location.search)
+    )
     const [searchParams, setSearchParams] = useState(serverSearchParams)
     useEffect(() => {
       function onPopState() {
