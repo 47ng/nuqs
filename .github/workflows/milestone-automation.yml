@@ -9,7 +9,7 @@ on:
 jobs:
   update_milestones:
     name: Update Milestones
-    runs-on: ubuntu-24-04-arm
+    runs-on: ubuntu-latest
     if: github.event.pull_request.merged == true
 
     steps:
