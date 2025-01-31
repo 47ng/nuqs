@@ -160,3 +160,40 @@ describe('useQueryState: clearOnDefault', () => {
     expect(onUrlUpdate.mock.calls[0]![0].queryString).toEqual('?a=default')
   })
 })
+
+describe('useQueryState: update sequencing', () => {
+  it('should combine updates for a single key made in the same event loop tick', async () => {
+    const onUrlUpdate = vi.fn<OnUrlUpdateFunction>()
+    const { result } = renderHook(() => useQueryState('test'), {
+      wrapper: withNuqsTestingAdapter({
+        onUrlUpdate
+      })
+    })
+    await act(() => {
+      result.current[1]('a')
+      return result.current[1]('b')
+    })
+    expect(onUrlUpdate).toHaveBeenCalledOnce()
+    expect(onUrlUpdate.mock.calls[0]![0].queryString).toEqual('?test=b')
+  })
+  it('should combine updtes for multiple keys made in the same event loop tick', async () => {
+    const onUrlUpdate = vi.fn<OnUrlUpdateFunction>()
+    const { result } = renderHook(
+      () => ({
+        a: useQueryState('a', parseAsString),
+        b: useQueryState('b', parseAsString)
+      }),
+      {
+        wrapper: withNuqsTestingAdapter({
+          onUrlUpdate
+        })
+      }
+    )
+    await act(() => {
+      result.current.a[1]('a')
+      return result.current.b[1]('b')
+    })
+    expect(onUrlUpdate).toHaveBeenCalledOnce()
+    expect(onUrlUpdate.mock.calls[0]![0].queryString).toEqual('?a=a&b=b')
+  })
+})

@@ -382,3 +382,62 @@ describe('useQueryStates: dynamic keys', () => {
     expect(result.current[0].z).toBeUndefined()
   })
 })
+
+describe('useQueryStates: update sequencing', () => {
+  it('should combine updates for a single key made in the same event loop tick', async () => {
+    const onUrlUpdate = vi.fn<OnUrlUpdateFunction>()
+    const { result } = renderHook(
+      () => useQueryStates({ test: parseAsString }),
+      {
+        wrapper: withNuqsTestingAdapter({
+          onUrlUpdate
+        })
+      }
+    )
+    await act(() => {
+      result.current[1]({ test: 'a' })
+      return result.current[1]({ test: 'b' })
+    })
+    expect(onUrlUpdate).toHaveBeenCalledOnce()
+    expect(onUrlUpdate.mock.calls[0]![0].queryString).toEqual('?test=b')
+  })
+
+  it('should combine updates for multiple keys in the same hook made in the same event loop tick', async () => {
+    const onUrlUpdate = vi.fn<OnUrlUpdateFunction>()
+    const { result } = renderHook(
+      () => useQueryStates({ a: parseAsString, b: parseAsString }),
+      {
+        wrapper: withNuqsTestingAdapter({
+          onUrlUpdate
+        })
+      }
+    )
+    await act(() => {
+      result.current[1]({ a: 'a' })
+      return result.current[1](() => ({ b: 'b' }))
+    })
+    expect(onUrlUpdate).toHaveBeenCalledOnce()
+    expect(onUrlUpdate.mock.calls[0]![0].queryString).toEqual('?a=a&b=b')
+  })
+
+  it('should combine updates for multiple keys in different hook made in the same event loop tick', async () => {
+    const onUrlUpdate = vi.fn<OnUrlUpdateFunction>()
+    const { result } = renderHook(
+      () => ({
+        a: useQueryStates({ a: parseAsString }),
+        b: useQueryStates({ b: parseAsString })
+      }),
+      {
+        wrapper: withNuqsTestingAdapter({
+          onUrlUpdate
+        })
+      }
+    )
+    await act(() => {
+      result.current.a[1]({ a: 'a' })
+      return result.current.b[1](() => ({ b: 'b' }))
+    })
+    expect(onUrlUpdate).toHaveBeenCalledOnce()
+    expect(onUrlUpdate.mock.calls[0]![0].queryString).toEqual('?a=a&b=b')
+  })
+})
