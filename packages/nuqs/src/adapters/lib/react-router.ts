@@ -1,10 +1,11 @@
 import mitt from 'mitt'
 import { startTransition, useCallback, useEffect, useState } from 'react'
 import { renderQueryString } from '../../url-encoding'
+import { createAdapterProvider } from './context'
 import type { AdapterInterface, AdapterOptions } from './defs'
 import {
+  patchHistory as applyHistoryPatch,
   historyUpdateMarker,
-  patchHistory,
   type SearchParamsSyncEmitter
 } from './patch-history'
 
@@ -24,11 +25,17 @@ type UseSearchParams = (initial: URLSearchParams) => [URLSearchParams, {}]
 
 // --
 
-export function createReactRouterBasedAdapter(
-  adapter: string,
-  useNavigate: UseNavigate,
+type CreateReactRouterBasedAdapterArgs = {
+  adapter: string
+  useNavigate: UseNavigate
   useSearchParams: UseSearchParams
-) {
+}
+
+export function createReactRouterBasedAdapter({
+  adapter,
+  useNavigate,
+  useSearchParams
+}: CreateReactRouterBasedAdapterArgs) {
   const emitter: SearchParamsSyncEmitter = mitt()
   function useNuqsReactRouterBasedAdapter(): AdapterInterface {
     const navigate = useNavigate()
@@ -112,19 +119,18 @@ export function createReactRouterBasedAdapter(
     return searchParams
   }
   /**
-   * Opt-in to syncing shallow updates of the URL with the useOptimisticSearchParams hook.
+   * Sync shallow updates of the URL with the useOptimisticSearchParams hook.
    *
    * By default, the useOptimisticSearchParams hook will only react to internal nuqs updates.
    * If third party code updates the History API directly, use this function to
    * enable useOptimisticSearchParams to react to those changes.
+   *
+   * Note: this is actually required in React Router frameworks to follow Link navigations.
    */
-  function enableHistorySync() {
-    patchHistory(emitter, adapter)
-  }
+  applyHistoryPatch(emitter, adapter)
 
   return {
-    useNuqsReactRouterBasedAdapter,
-    useOptimisticSearchParams,
-    enableHistorySync
+    NuqsAdapter: createAdapterProvider(useNuqsReactRouterBasedAdapter),
+    useOptimisticSearchParams
   }
 }
