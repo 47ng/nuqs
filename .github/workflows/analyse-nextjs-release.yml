@@ -14,7 +14,7 @@ env:
 
 jobs:
   analyse-release:
-    runs-on: ubuntu-24-04
+    runs-on: ubuntu-24.04
     name: Check for relevant Next.js core changes
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
