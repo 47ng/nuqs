@@ -1,10 +1,11 @@
 import mitt from 'mitt'
 import { startTransition, useCallback, useEffect, useState } from 'react'
 import { renderQueryString } from '../../url-encoding'
+import { createAdapterProvider } from './context'
 import type { AdapterInterface, AdapterOptions } from './defs'
 import {
+  patchHistory as applyHistoryPatch,
   historyUpdateMarker,
-  patchHistory,
   type SearchParamsSyncEmitter
 } from './patch-history'
 
@@ -24,11 +25,17 @@ type UseSearchParams = (initial: URLSearchParams) => [URLSearchParams, {}]
 
 // --
 
-export function createReactRouterBasedAdapter(
-  adapter: string,
-  useNavigate: UseNavigate,
+type CreateReactRouterBasedAdapterArgs = {
+  adapter: string
+  useNavigate: UseNavigate
   useSearchParams: UseSearchParams
-) {
+}
+
+export function createReactRouterBasedAdapter({
+  adapter,
+  useNavigate,
+  useSearchParams
+}: CreateReactRouterBasedAdapterArgs) {
   const emitter: SearchParamsSyncEmitter = mitt()
   function useNuqsReactRouterBasedAdapter(): AdapterInterface {
     const navigate = useNavigate()
@@ -78,11 +85,23 @@ export function createReactRouterBasedAdapter(
   }
   function useOptimisticSearchParams() {
     const [serverSearchParams] = useSearchParams(
+      // Note: this will only be taken into account the first time the hook is called,
+      // and cached for subsequent calls, causing problems when mounting components
+      // after shallow updates have occurred.
       typeof location === 'undefined'
         ? new URLSearchParams()
         : new URLSearchParams(location.search)
     )
-    const [searchParams, setSearchParams] = useState(serverSearchParams)
+    const [searchParams, setSearchParams] = useState(() => {
+      if (typeof location === 'undefined') {
+        // We use this on the server to SSR with the correct search params.
+        return serverSearchParams
+      }
+      // Since useSearchParams isn't reactive to shallow changes,
+      // it doesn't pick up changes in the URL on mount, so we need to initialise
+      // the reactive state with the current URL instead.
+      return new URLSearchParams(location.search)
+    })
     useEffect(() => {
       function onPopState() {
         setSearchParams(new URLSearchParams(location.search))
@@ -100,19 +119,18 @@ export function createReactRouterBasedAdapter(
     return searchParams
   }
   /**
-   * Opt-in to syncing shallow updates of the URL with the useOptimisticSearchParams hook.
+   * Sync shallow updates of the URL with the useOptimisticSearchParams hook.
    *
    * By default, the useOptimisticSearchParams hook will only react to internal nuqs updates.
    * If third party code updates the History API directly, use this function to
    * enable useOptimisticSearchParams to react to those changes.
+   *
+   * Note: this is actually required in React Router frameworks to follow Link navigations.
    */
-  function enableHistorySync() {
-    patchHistory(emitter, adapter)
-  }
+  applyHistoryPatch(emitter, adapter)
 
   return {
-    useNuqsReactRouterBasedAdapter,
-    useOptimisticSearchParams,
-    enableHistorySync
+    NuqsAdapter: createAdapterProvider(useNuqsReactRouterBasedAdapter),
+    useOptimisticSearchParams
   }
 }

@@ -18,5 +18,14 @@ export const testConditionalRendering = createTest(
       cy.get('button#mount').click()
       cy.get('#state').should('have.text', 'pass')
     })
+    it('should keep the correct state after unmounting and remounting with a different state', () => {
+      cy.visit(path + '?test=init')
+      cy.contains('#hydration-marker', 'hydrated').should('be.hidden')
+      cy.get('button#mount').click()
+      cy.get('button#set').click()
+      cy.get('button#unmount').click()
+      cy.get('button#mount').click()
+      cy.get('#state').should('have.text', 'pass')
+    })
   }
 )
