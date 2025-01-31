@@ -78,11 +78,23 @@ export function createReactRouterBasedAdapter(
   }
   function useOptimisticSearchParams() {
     const [serverSearchParams] = useSearchParams(
+      // Note: this will only be taken into account the first time the hook is called,
+      // and cached for subsequent calls, causing problems when mounting components
+      // after shallow updates have occurred.
       typeof location === 'undefined'
         ? new URLSearchParams()
         : new URLSearchParams(location.search)
     )
-    const [searchParams, setSearchParams] = useState(serverSearchParams)
+    const [searchParams, setSearchParams] = useState(() => {
+      if (typeof location === 'undefined') {
+        // We use this on the server to SSR with the correct search params.
+        return serverSearchParams
+      }
+      // Since useSearchParams isn't reactive to shallow changes,
+      // it doesn't pick up changes in the URL on mount, so we need to initialise
+      // the reactive state with the current URL instead.
+      return new URLSearchParams(location.search)
+    })
     useEffect(() => {
       function onPopState() {
         setSearchParams(new URLSearchParams(location.search))
