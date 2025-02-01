@@ -14,6 +14,9 @@ jobs:
           # path between next and master
           fetch-depth: 0
           ref: next
+          # This is required to allow the final push to trigger dependent workflows
+          # (does token need write access to workflows? Let's find out)
+          # See https://stackoverflow.com/a/64078507/1618881
           token: ${{ secrets.SHIP_IT_TOKEN }}
 
       - name: Checkout master branch
@@ -33,5 +36,4 @@ jobs:
 
       - name: Push updated master to origin
         if: steps.commits-to-ship.outputs.count != '0'
-        run: |
-          git push origin master
+        run: git push origin master
