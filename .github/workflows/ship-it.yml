@@ -15,7 +15,9 @@ jobs:
           fetch-depth: 0
           ref: next
           # This is required to allow the final push to trigger dependent workflows
-          # (does token need write access to workflows? Let's find out)
+          # The token is a PAT with the following permissions:
+          # - Read access to metadata
+          # - Read and Write access to code
           # See https://stackoverflow.com/a/64078507/1618881
           token: ${{ secrets.SHIP_IT_TOKEN }}
 
