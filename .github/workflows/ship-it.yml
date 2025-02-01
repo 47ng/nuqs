@@ -33,6 +33,5 @@ jobs:
       - name: Push updated master to origin
         if: steps.commits-to-ship.outputs.count != '0'
         run: |
+          git remote set-url origin https://${{secrets.SHIP_IT_TOKEN}}@github.com/47ng/nuqs.git
           git push origin master
-        env:
-          GITHUB_TOKEN: ${{ secrets.SHIP_IT_TOKEN }}
