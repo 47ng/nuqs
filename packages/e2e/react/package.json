@@ -19,7 +19,7 @@
     "react-dom": "catalog:react19"
   },
   "devDependencies": {
-    "@types/node": "^22.10.7",
+    "@types/node": "^22.13.1",
     "@types/react": "catalog:react19",
     "@types/react-dom": "catalog:react19",
     "@vitejs/plugin-react": "^4.3.4",
