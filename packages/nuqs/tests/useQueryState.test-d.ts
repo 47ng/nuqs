@@ -1,5 +1,5 @@
 import { describe, expectTypeOf, it } from 'vitest'
-import { parseAsString, useQueryState } from '../../dist'
+import { parseAsString, useQueryState } from '../dist'
 
 describe('types/useQueryState', () => {
   it('has a nullable string state by default', () => {

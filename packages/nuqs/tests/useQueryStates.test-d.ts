@@ -1,5 +1,5 @@
 import { describe, expectTypeOf, it } from 'vitest'
-import { parseAsInteger, parseAsString, useQueryStates } from '../../dist'
+import { parseAsInteger, parseAsString, useQueryStates } from '../dist'
 
 describe('types/useQueryStates', () => {
   const parsers = {

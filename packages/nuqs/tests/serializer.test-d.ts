@@ -1,5 +1,5 @@
 import { assertType, describe, it } from 'vitest'
-import { createSerializer, parseAsInteger, parseAsString } from '../../dist'
+import { createSerializer, parseAsInteger, parseAsString } from '../dist'
 
 describe('types/serializer', () => {
   const serialize = createSerializer({
