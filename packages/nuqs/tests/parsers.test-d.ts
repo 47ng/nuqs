@@ -14,7 +14,7 @@ import {
   parseAsStringLiteral,
   parseAsTimestamp,
   type inferParserType
-} from '../../dist'
+} from '../dist'
 
 describe('types/parsers', () => {
   test('parseAsString', () => {

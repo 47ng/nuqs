@@ -4,7 +4,7 @@ import {
   parseAsBoolean,
   parseAsInteger,
   parseAsString
-} from '../../dist/server'
+} from '../dist/server'
 
 describe('types/cache', () => {
   const cache = createSearchParamsCache({
