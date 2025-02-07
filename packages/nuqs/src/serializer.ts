@@ -1,19 +1,16 @@
-import type { Nullable, Options } from './defs'
-import type { inferParserType, ParserBuilder } from './parsers'
+import type { Nullable, Options, UrlKeys } from './defs'
+import type { inferParserType, ParserMap } from './parsers'
 import { renderQueryString } from './url-encoding'
 
 type Base = string | URLSearchParams | URL
-type ParserWithOptionalDefault<T> = ParserBuilder<T> & { defaultValue?: T }
 
-export function createSerializer<
-  Parsers extends Record<string, ParserWithOptionalDefault<any>>
->(
+export function createSerializer<Parsers extends ParserMap>(
   parsers: Parsers,
   {
     clearOnDefault = true,
     urlKeys = {}
   }: Pick<Options, 'clearOnDefault'> & {
-    urlKeys?: Partial<Record<keyof Parsers, string>>
+    urlKeys?: UrlKeys<Parsers>
   } = {}
 ) {
   type Values = Partial<Nullable<inferParserType<Parsers>>>
@@ -81,8 +78,8 @@ function isBase(base: any): base is Base {
 
 function splitBase(base: Base) {
   if (typeof base === 'string') {
-    const [path = '', search] = base.split('?')
-    return [path, new URLSearchParams(search)] as const
+    const [path = '', ...search] = base.split('?')
+    return [path, new URLSearchParams(search.join('?'))] as const
   } else if (base instanceof URLSearchParams) {
     return ['', new URLSearchParams(base)] as const // Operate on a copy of URLSearchParams, as derived classes may restrict its allowed methods
   } else {

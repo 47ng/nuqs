@@ -66,3 +66,35 @@ export type Options = {
 export type Nullable<T> = {
   [K in keyof T]: T[K] | null
 }
+
+/**
+ * Helper type to define and reuse urlKey options to rename search params keys
+ *
+ * Usage:
+ * ```ts
+ * import { type UrlKeys } from 'nuqs' // or 'nuqs/server'
+ *
+ * export const coordinatesSearchParams = {
+ *   latitude: parseAsFloat.withDefault(0),
+ *   longitude: parseAsFloat.withDefault(0),
+ * }
+ * export const coordinatesUrlKeys: UrlKeys<typeof coordinatesSearchParams> = {
+ *   latitude: 'lat',
+ *   longitude: 'lng',
+ * }
+ *
+ * // Later in the code:
+ * useQueryStates(coordinatesSearchParams, {
+ *   urlKeys: coordinatesUrlKeys
+ * })
+ * createSerializer(coordinatesSearchParams, {
+ *   urlKeys: coordinatesUrlKeys
+ * })
+ * createSearchParamsCache(coordinatesSearchParams, {
+ *   urlKeys: coordinatesUrlKeys
+ * })
+ * ```
+ */
+export type UrlKeys<Parsers extends Record<string, any>> = Partial<
+  Record<keyof Parsers, string>
+>

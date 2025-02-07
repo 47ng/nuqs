@@ -15,7 +15,7 @@ env:
 jobs:
   test_against_nextjs_release:
     name: CI (next@${{ inputs.version }}${{ matrix.base-path && ' basePath' || ''}}${{ matrix.react-compiler && ' ⚛️⚡️' || ''}})
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
@@ -24,7 +24,7 @@ jobs:
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
       - uses: pnpm/action-setup@fe02b34f77f8bc703788d5817da081398fad5dd2
-      - uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af
+      - uses: actions/setup-node@1d0ff469b7ec7b3cb9d8673fde0c81c44821de2a
         with:
           node-version-file: .node-version
           cache: pnpm
@@ -41,7 +41,7 @@ jobs:
           TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
           E2E_NO_CACHE_ON_RERUN: ${{ github.run_attempt }}
       - name: Save Cypress artifacts
-        uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882
+        uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08
         if: failure()
         with:
           path: packages/e2e-next/cypress/screenshots
@@ -57,7 +57,7 @@ jobs:
 
   invalidate-isr-cache:
     name: Invalidate ISR cache
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs: test_against_nextjs_release
     if: ${{ always() }}
     steps:

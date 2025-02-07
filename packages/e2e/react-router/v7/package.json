@@ -1,0 +1,40 @@
+{
+  "name": "e2e-react-router-v7",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "react-router build",
+    "dev": "react-router dev --port 3007",
+    "start": "cross-env NODE_ENV=production ./server.mjs",
+    "test": "pnpm run --stream '/^test:/'",
+    "test:types": "react-router typegen && tsc",
+    "test:e2e": "start-server-and-test start http://localhost:3007 cypress:run",
+    "cypress:open": "cypress open",
+    "cypress:run": "cross-env FORCE_COLOR=3 cypress run --headless"
+  },
+  "dependencies": {
+    "@react-router/node": "^7.1.5",
+    "@react-router/serve": "^7.1.5",
+    "isbot": "^5.1.22",
+    "nuqs": "workspace:*",
+    "react": "catalog:react19",
+    "react-dom": "catalog:react19",
+    "react-router": "^7.1.5"
+  },
+  "devDependencies": {
+    "@react-router/dev": "^7.1.5",
+    "@react-router/express": "^7.1.5",
+    "@types/node": "^22.13.1",
+    "@types/react": "catalog:react19",
+    "@types/react-dom": "catalog:react19",
+    "compression": "^1.7.5",
+    "cross-env": "^7.0.3",
+    "cypress": "catalog:e2e",
+    "e2e-shared": "workspace:*",
+    "express": "^4.21.2",
+    "start-server-and-test": "catalog:e2e",
+    "typescript": "^5.7.3",
+    "vite": "^6.0.11",
+    "vite-tsconfig-paths": "^5.1.4"
+  }
+}

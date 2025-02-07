@@ -8,7 +8,6 @@ import {
   parseAsString,
   useQueryState
 } from 'nuqs'
-import { HydrationMarker } from '../../../components/hydration-marker'
 
 export const getServerSideProps = (async ctx => {
   const string = parseAsString.parseServerSide(ctx.query.string)
@@ -34,7 +33,6 @@ const IntegrationPage = () => {
   const pathname = usePathname()
   return (
     <main>
-      <HydrationMarker />
       <h1>useQueryState</h1>
       <nav>
         Links&nbsp;

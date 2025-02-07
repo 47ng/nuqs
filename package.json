@@ -22,16 +22,25 @@
     "lint:sherif": "sherif"
   },
   "devDependencies": {
-    "@commitlint/config-conventional": "^19.5.0",
-    "commitlint": "^19.5.0",
-    "husky": "^9.1.6",
-    "prettier": "3.3.3",
-    "semantic-release": "^24.2.0",
-    "sherif": "^1.0.1",
-    "turbo": "^2.2.3",
-    "typescript": "^5.6.3"
+    "@commitlint/config-conventional": "^19.7.1",
+    "commitlint": "^19.7.1",
+    "husky": "^9.1.7",
+    "prettier": "3.4.2",
+    "semantic-release": "^24.2.1",
+    "sherif": "^1.2.0",
+    "turbo": "^2.4.0",
+    "typescript": "^5.7.3"
   },
-  "packageManager": "pnpm@9.13.0+sha512.beb9e2a803db336c10c9af682b58ad7181ca0fbd0d4119f2b33d5f2582e96d6c0d93c85b23869295b765170fbdaa92890c0da6ada457415039769edf3c959efe",
+  "packageManager": "pnpm@10.0.0",
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@sentry/cli",
+      "@swc/core",
+      "cypress",
+      "esbuild",
+      "sharp"
+    ]
+  },
   "resolutions": {
     "@headlessui/react": "2.2.0"
   },

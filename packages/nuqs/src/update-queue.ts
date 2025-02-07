@@ -1,4 +1,4 @@
-import type { UpdateUrlFunction } from './adapters/defs'
+import type { AdapterInterface } from './adapters/lib/defs'
 import { debug } from './debug'
 import type { Options } from './defs'
 import { error } from './errors'
@@ -66,6 +66,10 @@ export function enqueueQueryStringUpdate<Value>(
   return serializedOrNull
 }
 
+function getSearchParamsSnapshotFromLocation() {
+  return new URLSearchParams(location.search)
+}
+
 /**
  * Eventually flush the update queue to the URL query string.
  *
@@ -76,15 +80,19 @@ export function enqueueQueryStringUpdate<Value>(
  *
  * @returns a Promise to the URLSearchParams that have been applied.
  */
-export function scheduleFlushToURL(
-  updateUrl: UpdateUrlFunction,
-  rateLimitFactor: number
-) {
+export function scheduleFlushToURL({
+  getSearchParamsSnapshot = getSearchParamsSnapshotFromLocation,
+  updateUrl,
+  rateLimitFactor = 1
+}: Pick<
+  AdapterInterface,
+  'updateUrl' | 'getSearchParamsSnapshot' | 'rateLimitFactor'
+>) {
   if (flushPromiseCache === null) {
     flushPromiseCache = new Promise<URLSearchParams>((resolve, reject) => {
       if (!Number.isFinite(queueOptions.throttleMs)) {
         debug('[nuqs queue] Skipping flush due to throttleMs=Infinity')
-        resolve(new URLSearchParams(location.search))
+        resolve(getSearchParamsSnapshot())
         // Let the promise be returned before clearing the cached value
         setTimeout(() => {
           flushPromiseCache = null
@@ -93,7 +101,10 @@ export function scheduleFlushToURL(
       }
       function flushNow() {
         lastFlushTimestamp = performance.now()
-        const [search, error] = flushUpdateQueue(updateUrl)
+        const [search, error] = flushUpdateQueue({
+          updateUrl,
+          getSearchParamsSnapshot
+        })
         if (error === null) {
           resolve(search)
         } else {
@@ -129,10 +140,14 @@ export function scheduleFlushToURL(
   return flushPromiseCache
 }
 
-function flushUpdateQueue(
-  updateUrl: UpdateUrlFunction
-): [URLSearchParams, null | unknown] {
-  const search = new URLSearchParams(location.search)
+function flushUpdateQueue({
+  updateUrl,
+  getSearchParamsSnapshot
+}: Pick<Required<AdapterInterface>, 'updateUrl' | 'getSearchParamsSnapshot'>): [
+  URLSearchParams,
+  null | unknown
+] {
+  const search = getSearchParamsSnapshot()
   if (updateQueue.size === 0) {
     return [search, null]
   }

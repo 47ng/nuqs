@@ -24,7 +24,7 @@ export function Demo() {
 				onChange={e => setHello(e.target.value || null)}
 				data-interacted={Boolean(hello)}
 			/>
-			<p>Hello, {hello || 'anonymous visitor'}!</p>
+			<p className="break-all">Hello, {hello || 'anonymous visitor'}!</p>
 		</>
 	)
 }

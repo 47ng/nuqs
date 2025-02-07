@@ -1,4 +1,6 @@
 {
+  "editor.tabSize": 2,
+  "editor.insertSpaces": true,
   "githubPullRequests.queries": [
     {
       "label": "Backlog",
@@ -23,5 +25,8 @@
       "label": "Internal",
       "query": "repo:47ng/nuqs is:issue label:internal"
     }
+  ],
+  "typescript.preferences.autoImportSpecifierExcludeRegexes": [
+    "^node:test$" // We use Vitest
   ]
 }

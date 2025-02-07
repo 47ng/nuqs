@@ -1,6 +1,6 @@
 'use client'
 
-// [!code word:useQueryState:4]
+// [!code word:useQueryState]
 import { parseAsInteger, useQueryState } from 'nuqs'
 
 export function Demo() {
@@ -25,7 +25,9 @@ export function Demo() {
         onChange={e => setHello(e.target.value || null)}
         data-interacted={Boolean(hello)}
       />
-      <p>Hello, {hello || 'anonymous visitor'}!</p>
+      <p className="sm:overflow-x-auto sm:text-ellipsis sm:text-nowrap">
+        Hello, {hello || 'anonymous visitor'}!
+      </p>
     </>
   )
 }

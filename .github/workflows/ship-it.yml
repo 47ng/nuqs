@@ -6,7 +6,7 @@ on:
 jobs:
   ship-it:
     name: Ship it
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
@@ -14,6 +14,12 @@ jobs:
           # path between next and master
           fetch-depth: 0
           ref: next
+          # This is required to allow the final push to trigger dependent workflows
+          # The token is a PAT with the following permissions:
+          # - Read access to metadata
+          # - Read and Write access to code
+          # See https://stackoverflow.com/a/64078507/1618881
+          token: ${{ secrets.SHIP_IT_TOKEN }}
 
       - name: Checkout master branch
         run: |
@@ -32,7 +38,4 @@ jobs:
 
       - name: Push updated master to origin
         if: steps.commits-to-ship.outputs.count != '0'
-        run: |
-          git push origin master
-        env:
-          GITHUB_TOKEN: ${{ secrets.SHIP_IT_TOKEN }}
+        run: git push origin master

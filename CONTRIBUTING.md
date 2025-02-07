@@ -14,27 +14,29 @@ This monorepo contains:
 
 - The source code for the `nuqs` NPM package, in [`packages/nuqs`](./packages/nuqs).
 - A Next.js app under [`packages/docs`](./packages/docs) that serves the documentation and as a playground deployed at <https://nuqs.47ng.com>
-- A test bench for [end-to-end tests](./packages/e2e) for each supported framework, driven by Cypress
+- Test benches for [end-to-end tests](./packages/e2e) for each supported framework, driven by Cypress
 
 When running `next dev`, this will:
 
 - Build the library and watch for changes using [`tsup`](https://tsup.egoist.dev/)
 - Start the docs app, which will be available at <http://localhost:3000>.
 - Start the end-to-end test benches:
-  - Next.js: http://localhost:3001
-  - Remix: http://localhost:3002
-  - React Router: http://localhost:3003
-  - React SPA: http://localhost:3004
+  - http://localhost:3001 - Next.js
+  - http://localhost:3002 - React SPA
+  - http://localhost:3003 - Remix
+  - http://localhost:3006 - React Router v6
+  - http://localhost:3007 - React Router v7
 
 ## Testing
 
-You can run the complete integration test suite with `pnpm test`.
+You can run the complete integration test suite with `pnpm test` from the root of the repository.
 
 It will build the library, run unit tests and typing tests against it, and then
-run the end-to-end tests against the test bench Next.js app (which uses the built library).
+run the end-to-end tests against the test bench apps (which uses the built library).
 
-When proposing changes or showcasing a bug, adding a minimal reproduction in the
-playground can be very helpful.
+When proposing changes or fixing a bug, adding tests (unit or in the
+appropriate e2e test environment) can help tremendously to validate and
+understand the changes.
 
 ## Opening issues
 

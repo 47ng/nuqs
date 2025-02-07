@@ -2,8 +2,8 @@ import { useSearchParams } from 'next/navigation.js'
 import type { NextRouter } from 'next/router'
 import { useCallback } from 'react'
 import { debug } from '../../debug'
-import type { AdapterInterface, UpdateUrlFunction } from '../defs'
-import { createAdapterProvider } from '../internal.context'
+import { createAdapterProvider } from '../lib/context'
+import type { AdapterInterface, UpdateUrlFunction } from '../lib/defs'
 import { renderURL } from './shared'
 
 declare global {

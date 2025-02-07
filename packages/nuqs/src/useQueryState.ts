@@ -1,11 +1,5 @@
-import {
-  useCallback,
-  useEffect,
-  useInsertionEffect,
-  useRef,
-  useState
-} from 'react'
-import { useAdapter } from './adapters/internal.context'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { useAdapter } from './adapters/lib/context'
 import { debug } from './debug'
 import type { Options } from './defs'
 import type { Parser } from './parsers'
@@ -228,12 +222,8 @@ export function useQueryState<T = string>(
     defaultValue: undefined
   }
 ) {
-  // Not reactive, but available on the server and on page load
-  const {
-    searchParams: initialSearchParams,
-    updateUrl,
-    rateLimitFactor = 1
-  } = useAdapter()
+  const adapter = useAdapter()
+  const initialSearchParams = adapter.searchParams
   const queryRef = useRef<string | null>(initialSearchParams?.get(key) ?? null)
   const [internalState, setInternalState] = useState<T | null>(() => {
     const queuedQuery = getQueuedValue(key)
@@ -264,7 +254,7 @@ export function useQueryState<T = string>(
   }, [initialSearchParams?.get(key), key])
 
   // Sync all hooks together & with external URL changes
-  useInsertionEffect(() => {
+  useEffect(() => {
     function updateInternalState({ state, query }: CrossHookSyncPayload) {
       debug('[nuqs `%s`] updateInternalState %O', key, state)
       stateRef.current = state
@@ -292,7 +282,7 @@ export function useQueryState<T = string>(
       ) {
         newValue = null
       }
-      queryRef.current = enqueueQueryStringUpdate(key, newValue, serialize, {
+      const query = enqueueQueryStringUpdate(key, newValue, serialize, {
         // Call-level options take precedence over hook declaration options.
         history: options.history ?? history,
         shallow: options.shallow ?? shallow,
@@ -301,8 +291,8 @@ export function useQueryState<T = string>(
         startTransition: options.startTransition ?? startTransition
       })
       // Sync all hooks state (including this one)
-      emitter.emit(key, { state: newValue, query: queryRef.current })
-      return scheduleFlushToURL(updateUrl, rateLimitFactor)
+      emitter.emit(key, { state: newValue, query })
+      return scheduleFlushToURL(adapter)
     },
     [
       key,
@@ -311,8 +301,9 @@ export function useQueryState<T = string>(
       scroll,
       throttleMs,
       startTransition,
-      updateUrl,
-      rateLimitFactor
+      adapter.updateUrl,
+      adapter.getSearchParamsSnapshot,
+      adapter.rateLimitFactor
     ]
   )
   return [internalState ?? defaultValue ?? null, update]

@@ -1,14 +1,17 @@
-import { NuqsAdapter } from 'nuqs/adapters/next'
+import { NuqsAdapter, enableHistorySync } from 'nuqs/adapters/react'
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import { CounterButton } from './components/counter-button'
-import { SearchInput } from './components/search-input'
+import { RootLayout } from './layout'
+import { Router } from './routes'
+
+enableHistorySync()
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <NuqsAdapter>
-      <CounterButton />
-      <SearchInput />
+      <RootLayout>
+        <Router />
+      </RootLayout>
     </NuqsAdapter>
   </StrictMode>
 )

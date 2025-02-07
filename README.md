@@ -119,13 +119,13 @@ export default function App() {
 
 </details>
 
-<details><summary><img style="width:1em;height:1em;" src="https://reactrouter.com/_brand/React%20Router%20Brand%20Assets/React%20Router%20Logo/Dark.svg" /> React Router
+<details><summary><img style="width:1em;height:1em;" src="https://reactrouter.com/_brand/React%20Router%20Brand%20Assets/React%20Router%20Logo/Dark.svg" /> React Router v6
 </summary>
 
-> Supported React Router versions: `react-router-dom@>=6`
+> Supported React Router versions: `react-router-dom@^6`
 
 ```tsx
-import { NuqsAdapter } from 'nuqs/adapters/react-router'
+import { NuqsAdapter } from 'nuqs/adapters/react-router/v6'
 import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 import App from './App'
 
@@ -140,6 +140,29 @@ export function ReactRouter() {
   return (
     <NuqsAdapter>
       <RouterProvider router={router} />
+    </NuqsAdapter>
+  )
+}
+```
+
+</details>
+
+<details><summary><img style="width:1em;height:1em;" src="https://reactrouter.com/_brand/React%20Router%20Brand%20Assets/React%20Router%20Logo/Dark.svg" /> React Router v7
+</summary>
+
+> Supported React Router versions: `react-router@^7`
+
+```tsx
+// app/root.tsx
+import { NuqsAdapter } from 'nuqs/adapters/react-router/v7'
+import { Outlet } from 'react-router'
+
+// ...
+
+export default function App() {
+  return (
+    <NuqsAdapter>
+      <Outlet />
     </NuqsAdapter>
   )
 }
@@ -598,6 +621,25 @@ const search = await setCoordinates({
   lng: Math.random() * 360 - 180
 })
 ```
+
+## Loaders
+
+To parse search params as a one-off operation, you can use a **loader function**:
+
+```tsx
+import { createLoader } from 'nuqs' // or 'nuqs/server'
+
+const searchParams = {
+  q: parseAsString,
+  page: parseAsInteger.withDefault(1)
+}
+
+const loadSearchParams = createLoader(searchParams)
+
+const { q, page } = loadSearchParams('?q=hello&page=2')
+```
+
+It accepts various types of inputs (strings, URL, URLSearchParams, Request, Promises, etc.). [Read more](https://nuqs.47ng.com/docs/server-side#loaders)
 
 ## Accessing searchParams in Server Components
 

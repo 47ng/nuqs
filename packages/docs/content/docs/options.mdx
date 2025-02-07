@@ -64,14 +64,53 @@ no network calls to the server.
 
 This is equivalent to the `shallow` option of the Next.js router set to `true{:ts}`.
 
-To opt-in to query updates notifying the server (to re-render Server Components
-on the app router and re-run `getServerSideProps` in the pages router),
-you can set `shallow` to `false{:ts}`:
+To opt-in to notifying the server on query updates, you can set `shallow` to `false{:ts}`:
 
 ```ts /shallow: false/
 useQueryState('foo', { shallow: false })
 ```
 
+Note that the shallow option only makes sense if your page can be server-side rendered.
+Therefore, it's a no-op in React SPA.
+
+For server-side renderable frameworks, you would pair `shallow: false{:ts}` with:
+
+- In Next.js app router: the `searchParams` page prop to render the RSC tree based on the updated query state.
+- In Next.js pages router: the `getServerSideProps` function
+- In Remix & React Router: a `loader` function
+
+### In React Router based frameworks
+
+While the `shallow: false` default behaviour is uncommon for Remix and React Router,
+where loaders are always supposed to run on URL changes, nuqs gives you control
+of this behaviour, by opting in to running loaders only if they do need to access
+the relevant search params.
+
+One caveat is that the stock `useSearchParams` hook from those frameworks doesn't
+reflect shallow-updated search params, so we provide you with one that does:
+
+```tsx
+import { useOptimisticSearchParams } from 'nuqs/adapters/remix' // or '…/react-router/v6' or '…/react-router/v7'
+
+function Component() {
+  // Note: this is read-only, but reactive to all URL changes
+  const searchParams = useOptimisticSearchParams()
+  return <div>{searchParams.get('foo')}</div>
+}
+```
+
+This concept of _"shallow routing"_ is done via updates to the browser's
+[History API](https://developer.mozilla.org/en-US/docs/Web/API/History_API/Working_with_the_History_API).
+
+<Callout title="Why not using shouldRevalidate?">
+ [`shouldRevalidate`](https://reactrouter.com/start/framework/route-module#shouldrevalidate)
+ is the idomatic way of opting out of running loaders on navigation, but nuqs uses
+ the opposite approach: opting in to running loaders only when needed.
+
+ In order to avoid specifying `shouldRevalidate` for every route, nuqs chose to
+ patch the history methods to enable shallow routing by default (on its own updates)
+ in React Router based frameworks.
+</Callout>
 
 ## Scroll
 
@@ -131,10 +170,6 @@ the updated URL.
 
 Pass in the `startTransition{:ts}` function from `useTransition{:ts}` to the options
 to enable this behaviour:
-
-<Callout title="Upcoming changes" type="warn">
-  In `nuqs@2.0.0`, passing `startTransition` will no longer automatically set `shallow: false{:ts}`.
-</Callout>
 
 ```tsx /startTransition/1,3#2
 'use client'

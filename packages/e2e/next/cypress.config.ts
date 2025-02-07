@@ -1,5 +1,4 @@
-import { defineConfig } from 'cypress'
-import cypressTerminalReport from 'cypress-terminal-report/src/installLogsPrinter'
+import { defineConfig } from 'e2e-shared/cypress.config'
 import fs from 'node:fs'
 import semver from 'semver'
 
@@ -9,20 +8,11 @@ const basePath =
 const nextJsVersion = readNextJsVersion()
 
 export default defineConfig({
-  e2e: {
-    baseUrl: `http://localhost:3001${basePath}`,
-    video: false,
-    fixturesFolder: false,
-    testIsolation: true,
-    setupNodeEvents(on) {
-      cypressTerminalReport(on)
-    },
-    retries: 2,
-    env: {
-      basePath,
-      supportsShallowRouting: supportsShallowRouting(nextJsVersion),
-      nextJsVersion
-    }
+  baseUrl: `http://localhost:3001${basePath}`,
+  env: {
+    basePath,
+    supportsShallowRouting: supportsShallowRouting(nextJsVersion),
+    nextJsVersion
   }
 })
 

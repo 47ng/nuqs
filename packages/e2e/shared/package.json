@@ -1,0 +1,29 @@
+{
+  "name": "e2e-shared",
+  "description": "Shared code (fixture components & spec files) for e2e tests",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "files": [
+    "cypress.config.ts",
+    "cypress/support/e2e.ts",
+    "cypress/e2e/fixtures"
+  ],
+  "peerDependencies": {
+    "cypress": "catalog:e2e",
+    "nuqs": "workspace:*"
+  },
+  "dependencies": {
+    "cypress-terminal-report": "^7.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.1",
+    "@types/react": "catalog:react19",
+    "@types/react-dom": "catalog:react19",
+    "cypress": "catalog:e2e",
+    "nuqs": "workspace:*",
+    "react": "catalog:react19",
+    "react-dom": "catalog:react19",
+    "typescript": "^5.7.3"
+  }
+}

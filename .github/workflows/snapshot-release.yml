@@ -6,15 +6,17 @@ on:
     inputs:
       version:
         description: Base version to use for the release
-        required: true
         type: string
+        default: '0.0.0'
 env:
   FORCE_COLOR: 3 # Diplay chalk colors
 
 jobs:
   snapshot:
     name: Deployment
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    permissions:
+      id-token: write # to enable use of OIDC for NPM provenance
     steps:
       - name: Generate snapshot version
         id: version
@@ -24,12 +26,12 @@ jobs:
           echo "::notice title=Version::${version}"
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
       - uses: pnpm/action-setup@fe02b34f77f8bc703788d5817da081398fad5dd2
-      - uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af
+      - uses: actions/setup-node@1d0ff469b7ec7b3cb9d8673fde0c81c44821de2a
         with:
           node-version-file: .node-version
           cache: pnpm
       - name: Install dependencies
-        run: pnpm install --ignore-scripts --frozen-lockfile
+        run: pnpm install --ignore-scripts --frozen-lockfile --filter nuqs...
       - name: Build package
         run: pnpm build --filter nuqs
       - name: Publish package
@@ -37,7 +39,7 @@ jobs:
         run: |
           pnpm pkg set version=${{ steps.version.outputs.version }}
           echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > .npmrc
-          pnpm publish --access public --tag snapshot --no-git-checks
+          pnpm publish --access public --provenance --tag snapshot --no-git-checks
           rm -f .npmrc
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}

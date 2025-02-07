@@ -1,4 +1,5 @@
 import type { SearchParams } from 'nuqs/server'
+import { Suspense } from 'react'
 import { Client } from './client'
 import { searchParamsCache } from './searchParams'
 
@@ -13,7 +14,9 @@ export default async function Page({
       <p>
         Server side: <span id="server-side">{server}</span>
       </p>
-      <Client />
+      <Suspense>
+        <Client />
+      </Suspense>
     </>
   )
 }

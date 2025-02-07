@@ -1,19 +1,12 @@
-import {
-  useCallback,
-  useEffect,
-  useInsertionEffect,
-  useMemo,
-  useRef,
-  useState
-} from 'react'
-import { useAdapter } from './adapters/internal.context'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useAdapter } from './adapters/lib/context'
 import { debug } from './debug'
-import type { Nullable, Options } from './defs'
+import type { Nullable, Options, UrlKeys } from './defs'
 import type { Parser } from './parsers'
 import { emitter, type CrossHookSyncPayload } from './sync'
 import {
-  FLUSH_RATE_LIMIT_MS,
   enqueueQueryStringUpdate,
+  FLUSH_RATE_LIMIT_MS,
   getQueuedValue,
   scheduleFlushToURL
 } from './update-queue'
@@ -30,7 +23,7 @@ export type UseQueryStatesKeysMap<Map = any> = {
 
 export type UseQueryStatesOptions<KeyMap extends UseQueryStatesKeysMap> =
   Options & {
-    urlKeys: Partial<Record<keyof KeyMap, string>>
+    urlKeys: UrlKeys<KeyMap>
   }
 
 export type Values<T extends UseQueryStatesKeysMap> = {
@@ -44,7 +37,7 @@ type NullableValues<T extends UseQueryStatesKeysMap> = Nullable<Values<T>>
 
 type UpdaterFn<T extends UseQueryStatesKeysMap> = (
   old: Values<T>
-) => Partial<Nullable<Values<T>>>
+) => Partial<Nullable<Values<T>>> | null
 
 export type SetValues<T extends UseQueryStatesKeysMap> = (
   values: Partial<Nullable<Values<T>>> | UpdaterFn<T> | null,
@@ -88,18 +81,11 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
       Object.fromEntries(
         Object.keys(keyMap).map(key => [key, urlKeys[key] ?? key])
       ),
-    [stateKeys, urlKeys]
+    [stateKeys, JSON.stringify(urlKeys)]
   )
-  const {
-    searchParams: initialSearchParams,
-    updateUrl,
-    rateLimitFactor = 1
-  } = useAdapter()
+  const adapter = useAdapter()
+  const initialSearchParams = adapter.searchParams
   const queryRef = useRef<Record<string, string | null>>({})
-  // Initialise the queryRef with the initial values
-  if (Object.keys(queryRef.current).length !== Object.keys(keyMap).length) {
-    queryRef.current = Object.fromEntries(initialSearchParams?.entries() ?? [])
-  }
   const defaultValues = useMemo(
     () =>
       Object.fromEntries(
@@ -114,7 +100,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
 
   const [internalState, setInternalState] = useState<V>(() => {
     const source = initialSearchParams ?? new URLSearchParams()
-    return parseMap(keyMap, urlKeys, source)
+    return parseMap(keyMap, urlKeys, source).state
   })
 
   const stateRef = useRef(internalState)
@@ -124,25 +110,50 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
     internalState,
     initialSearchParams
   )
-
-  useEffect(() => {
-    const state = parseMap(
+  // Initialise the refs with the initial values
+  if (
+    Object.keys(queryRef.current).join('&') !==
+    Object.values(resolvedUrlKeys).join('&')
+  ) {
+    const { state, hasChanged } = parseMap(
       keyMap,
       urlKeys,
       initialSearchParams,
       queryRef.current,
       stateRef.current
     )
-    stateRef.current = state
-    setInternalState(state)
+    if (hasChanged) {
+      stateRef.current = state
+      setInternalState(state)
+    }
+    queryRef.current = Object.fromEntries(
+      Object.values(resolvedUrlKeys).map(urlKey => [
+        urlKey,
+        initialSearchParams?.get(urlKey) ?? null
+      ])
+    )
+  }
+
+  useEffect(() => {
+    const { state, hasChanged } = parseMap(
+      keyMap,
+      urlKeys,
+      initialSearchParams,
+      queryRef.current,
+      stateRef.current
+    )
+    if (hasChanged) {
+      stateRef.current = state
+      setInternalState(state)
+    }
   }, [
     Object.values(resolvedUrlKeys)
-      .map(key => initialSearchParams?.get(key))
+      .map(key => `${key}=${initialSearchParams?.get(key)}`)
       .join('&')
   ])
 
   // Sync all hooks together & with external URL changes
-  useInsertionEffect(() => {
+  useEffect(() => {
     function updateInternalState(state: V) {
       debug('[nuq+ `%s`] updateInternalState %O', stateKeys, state)
       stateRef.current = state
@@ -190,18 +201,19 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
         emitter.off(urlKey, handlers[stateKey])
       }
     }
-  }, [keyMap, resolvedUrlKeys])
+  }, [stateKeys, resolvedUrlKeys])
 
   const update = useCallback<SetValues<KeyMap>>(
     (stateUpdater, callOptions = {}) => {
+      const nullMap = Object.fromEntries(
+        Object.keys(keyMap).map(key => [key, null])
+      ) as Nullable<KeyMap>
       const newState: Partial<Nullable<KeyMap>> =
         typeof stateUpdater === 'function'
-          ? stateUpdater(applyDefaultValues(stateRef.current, defaultValues))
-          : stateUpdater === null
-            ? (Object.fromEntries(
-                Object.keys(keyMap).map(key => [key, null])
-              ) as Nullable<KeyMap>)
-            : stateUpdater
+          ? (stateUpdater(
+              applyDefaultValues(stateRef.current, defaultValues)
+            ) ?? nullMap)
+          : (stateUpdater ?? nullMap)
       debug('[nuq+ `%s`] setState: %O', stateKeys, newState)
       for (let [stateKey, value] of Object.entries(newState)) {
         const parser = keyMap[stateKey]
@@ -219,8 +231,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
         ) {
           value = null
         }
-
-        queryRef.current[urlKey] = enqueueQueryStringUpdate(
+        const query = enqueueQueryStringUpdate(
           urlKey,
           value,
           parser.serialize ?? String,
@@ -238,23 +249,21 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
               startTransition
           }
         )
-        emitter.emit(urlKey, {
-          state: value,
-          query: queryRef.current[urlKey] ?? null
-        })
+        emitter.emit(urlKey, { state: value, query })
       }
-      return scheduleFlushToURL(updateUrl, rateLimitFactor)
+      return scheduleFlushToURL(adapter)
     },
     [
-      keyMap,
+      stateKeys,
       history,
       shallow,
       scroll,
       throttleMs,
       startTransition,
       resolvedUrlKeys,
-      updateUrl,
-      rateLimitFactor,
+      adapter.updateUrl,
+      adapter.getSearchParamsSnapshot,
+      adapter.rateLimitFactor,
       defaultValues
     ]
   )
@@ -274,8 +283,12 @@ function parseMap<KeyMap extends UseQueryStatesKeysMap>(
   searchParams: URLSearchParams,
   cachedQuery?: Record<string, string | null>,
   cachedState?: NullableValues<KeyMap>
-): NullableValues<KeyMap> {
-  return Object.keys(keyMap).reduce((out, stateKey) => {
+): {
+  state: NullableValues<KeyMap>
+  hasChanged: boolean
+} {
+  let hasChanged = false
+  const state = Object.keys(keyMap).reduce((out, stateKey) => {
     const urlKey = urlKeys?.[stateKey] ?? stateKey
     const { parse } = keyMap[stateKey]!
     const queuedQuery = getQueuedValue(urlKey)
@@ -283,10 +296,13 @@ function parseMap<KeyMap extends UseQueryStatesKeysMap>(
       queuedQuery === undefined
         ? (searchParams?.get(urlKey) ?? null)
         : queuedQuery
-    if (cachedQuery && cachedState && cachedQuery[urlKey] === query) {
+    if (cachedQuery && cachedState && (cachedQuery[urlKey] ?? null) === query) {
+      // Cache hit
       out[stateKey as keyof KeyMap] = cachedState[stateKey] ?? null
       return out
     }
+    // Cache miss
+    hasChanged = true
     const value = query === null ? null : safeParse(parse, query, stateKey)
     out[stateKey as keyof KeyMap] = value ?? null
     if (cachedQuery) {
@@ -294,6 +310,7 @@ function parseMap<KeyMap extends UseQueryStatesKeysMap>(
     }
     return out
   }, {} as NullableValues<KeyMap>)
+  return { state, hasChanged }
 }
 
 function applyDefaultValues<KeyMap extends UseQueryStatesKeysMap>(
