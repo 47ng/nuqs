@@ -1,6 +1,6 @@
 import mitt from 'mitt'
 import { startTransition, useCallback, useEffect, useState } from 'react'
-import { renderQueryString } from '../../url-encoding'
+import { renderQueryString } from '../../lib/url-encoding'
 import { createAdapterProvider } from './context'
 import type { AdapterInterface, AdapterOptions } from './defs'
 import {
