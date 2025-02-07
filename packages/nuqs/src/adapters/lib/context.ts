@@ -7,8 +7,8 @@ import {
   type ReactElement,
   type ReactNode
 } from 'react'
-import { debugEnabled } from '../../debug'
-import { error } from '../../errors'
+import { debugEnabled } from '../../lib/debug'
+import { error } from '../../lib/errors'
 import type { AdapterInterface, UseAdapterHook } from './defs'
 
 export type AdapterContext = {

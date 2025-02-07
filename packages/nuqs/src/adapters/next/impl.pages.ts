@@ -1,8 +1,8 @@
 import { useRouter } from 'next/compat/router.js'
 import type { NextRouter } from 'next/router'
 import { useCallback, useMemo } from 'react'
-import { debug } from '../../debug'
-import { renderQueryString } from '../../url-encoding'
+import { debug } from '../../lib/debug'
+import { renderQueryString } from '../../lib/url-encoding'
 import type { AdapterInterface, UpdateUrlFunction } from '../lib/defs'
 
 declare global {

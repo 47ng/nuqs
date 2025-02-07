@@ -1,13 +1,13 @@
-import { describe, expect, test, vi } from 'vitest'
-import { compose } from './update-queue'
+import { describe, expect, it, vi } from 'vitest'
+import { compose } from './compose'
 
-describe('update-queue/compose', () => {
-  test('empty array', () => {
+describe('queues: compose', () => {
+  it('handles an empty array', () => {
     const final = vi.fn()
     compose([], final)
     expect(final).toHaveBeenCalledOnce()
   })
-  test('one item', () => {
+  it('handles one item, calling it before the final', () => {
     const a = vi
       .fn()
       .mockImplementation(x => x())
@@ -20,7 +20,7 @@ describe('update-queue/compose', () => {
       final.mock.invocationCallOrder[0]!
     )
   })
-  test('several items', () => {
+  it('composes several items, calling them in order', () => {
     const a = vi.fn().mockImplementation(x => x())
     const b = vi.fn().mockImplementation(x => x())
     const c = vi.fn().mockImplementation(x => x())

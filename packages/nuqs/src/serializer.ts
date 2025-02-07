@@ -1,6 +1,6 @@
 import type { Nullable, Options, UrlKeys } from './defs'
+import { renderQueryString } from './lib/url-encoding'
 import type { inferParserType, ParserMap } from './parsers'
-import { renderQueryString } from './url-encoding'
 
 type Base = string | URLSearchParams | URL
 
