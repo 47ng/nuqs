@@ -8,9 +8,9 @@ import {
   useState,
   type ReactNode
 } from 'react'
-import { renderQueryString } from '../url-encoding'
+import { renderQueryString } from '../lib/url-encoding'
 import { createAdapterProvider } from './lib/context'
-import type { AdapterOptions } from './lib/defs'
+import type { AdapterInterface, AdapterOptions } from './lib/defs'
 import { patchHistory, type SearchParamsSyncEmitter } from './lib/patch-history'
 
 const emitter: SearchParamsSyncEmitter = mitt()
@@ -39,7 +39,7 @@ const NuqsReactAdapterContext = createContext({
   fullPageNavigationOnShallowFalseUpdates: false
 })
 
-function useNuqsReactAdapter() {
+function useNuqsReactAdapter(): AdapterInterface {
   const { fullPageNavigationOnShallowFalseUpdates } = useContext(
     NuqsReactAdapterContext
   )

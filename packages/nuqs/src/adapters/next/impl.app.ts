@@ -1,7 +1,7 @@
 import { useRouter, useSearchParams } from 'next/navigation.js'
 import { startTransition, useCallback, useOptimistic } from 'react'
-import { debug } from '../../debug'
-import { renderQueryString } from '../../url-encoding'
+import { debug } from '../../lib/debug'
+import { renderQueryString } from '../../lib/url-encoding'
 import type { AdapterInterface, UpdateUrlFunction } from '../lib/defs'
 
 export function useNuqsNextAppRouterAdapter(): AdapterInterface {

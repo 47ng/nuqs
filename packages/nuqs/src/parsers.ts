@@ -1,5 +1,5 @@
 import type { Options } from './defs'
-import { safeParse } from './utils'
+import { safeParse } from './lib/safe-parse'
 
 type Require<T, Keys extends keyof T> = Pick<Required<T>, Keys> & Omit<T, Keys>
 
