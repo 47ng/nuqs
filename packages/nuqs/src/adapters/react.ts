@@ -1,8 +1,8 @@
 import mitt from 'mitt'
 import { useEffect, useState } from 'react'
-import { renderQueryString } from '../url-encoding'
+import { renderQueryString } from '../lib/url-encoding'
 import { createAdapterProvider } from './lib/context'
-import type { AdapterOptions } from './lib/defs'
+import type { AdapterInterface, AdapterOptions } from './lib/defs'
 import { patchHistory, type SearchParamsSyncEmitter } from './lib/patch-history'
 
 const emitter: SearchParamsSyncEmitter = mitt()
@@ -16,7 +16,7 @@ function updateUrl(search: URLSearchParams, options: AdapterOptions) {
   emitter.emit('update', search)
 }
 
-function useNuqsReactAdapter() {
+function useNuqsReactAdapter(): AdapterInterface {
   const [searchParams, setSearchParams] = useState(() => {
     if (typeof location === 'undefined') {
       return new URLSearchParams()

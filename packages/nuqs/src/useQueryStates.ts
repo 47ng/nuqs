@@ -1,16 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useAdapter } from './adapters/lib/context'
-import { debug } from './debug'
 import type { Nullable, Options, UrlKeys } from './defs'
+import { debug } from './lib/debug'
+import { FLUSH_RATE_LIMIT_MS, globalThrottleQueue } from './lib/queues/throttle'
+import { safeParse } from './lib/safe-parse'
+import { emitter, type CrossHookSyncPayload } from './lib/sync'
 import type { Parser } from './parsers'
-import { emitter, type CrossHookSyncPayload } from './sync'
-import {
-  enqueueQueryStringUpdate,
-  FLUSH_RATE_LIMIT_MS,
-  getQueuedValue,
-  scheduleFlushToURL
-} from './update-queue'
-import { safeParse } from './utils'
 
 type KeyMapValue<Type> = Parser<Type> &
   Options & {
@@ -231,27 +226,27 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
         ) {
           value = null
         }
-        const query = enqueueQueryStringUpdate(
-          urlKey,
-          value,
-          parser.serialize ?? String,
-          {
+        const query =
+          value === null ? null : (parser.serialize ?? String)(value)
+        globalThrottleQueue.push({
+          key: urlKey,
+          query,
+          options: {
             // Call-level options take precedence over individual parser options
             // which take precedence over global options
             history: callOptions.history ?? parser.history ?? history,
             shallow: callOptions.shallow ?? parser.shallow ?? shallow,
             scroll: callOptions.scroll ?? parser.scroll ?? scroll,
-            throttleMs:
-              callOptions.throttleMs ?? parser.throttleMs ?? throttleMs,
             startTransition:
               callOptions.startTransition ??
               parser.startTransition ??
               startTransition
-          }
-        )
+          },
+          throttleMs: callOptions.throttleMs ?? parser.throttleMs ?? throttleMs
+        })
         emitter.emit(urlKey, { state: value, query })
       }
-      return scheduleFlushToURL(adapter)
+      return globalThrottleQueue.flush(adapter)
     },
     [
       stateKeys,
@@ -291,7 +286,7 @@ function parseMap<KeyMap extends UseQueryStatesKeysMap>(
   const state = Object.keys(keyMap).reduce((out, stateKey) => {
     const urlKey = urlKeys?.[stateKey] ?? stateKey
     const { parse } = keyMap[stateKey]!
-    const queuedQuery = getQueuedValue(urlKey)
+    const queuedQuery = globalThrottleQueue.getQueuedQuery(urlKey)
     const query =
       queuedQuery === undefined
         ? (searchParams?.get(urlKey) ?? null)

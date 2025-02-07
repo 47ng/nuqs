@@ -1,16 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useAdapter } from './adapters/lib/context'
-import { debug } from './debug'
 import type { Options } from './defs'
+import { debug } from './lib/debug'
+import { FLUSH_RATE_LIMIT_MS, globalThrottleQueue } from './lib/queues/throttle'
+import { safeParse } from './lib/safe-parse'
+import { emitter, type CrossHookSyncPayload } from './lib/sync'
 import type { Parser } from './parsers'
-import { emitter, type CrossHookSyncPayload } from './sync'
-import {
-  FLUSH_RATE_LIMIT_MS,
-  enqueueQueryStringUpdate,
-  getQueuedValue,
-  scheduleFlushToURL
-} from './update-queue'
-import { safeParse } from './utils'
 
 export interface UseQueryStateOptions<T> extends Parser<T>, Options {}
 
@@ -226,7 +221,7 @@ export function useQueryState<T = string>(
   const initialSearchParams = adapter.searchParams
   const queryRef = useRef<string | null>(initialSearchParams?.get(key) ?? null)
   const [internalState, setInternalState] = useState<T | null>(() => {
-    const queuedQuery = getQueuedValue(key)
+    const queuedQuery = globalThrottleQueue.getQueuedQuery(key)
     const query =
       queuedQuery === undefined
         ? (initialSearchParams?.get(key) ?? null)
@@ -282,17 +277,21 @@ export function useQueryState<T = string>(
       ) {
         newValue = null
       }
-      const query = enqueueQueryStringUpdate(key, newValue, serialize, {
-        // Call-level options take precedence over hook declaration options.
-        history: options.history ?? history,
-        shallow: options.shallow ?? shallow,
-        scroll: options.scroll ?? scroll,
-        throttleMs: options.throttleMs ?? throttleMs,
-        startTransition: options.startTransition ?? startTransition
+      const query = newValue === null ? null : serialize(newValue)
+      globalThrottleQueue.push({
+        key,
+        query,
+        options: {
+          history: options.history ?? history,
+          shallow: options.shallow ?? shallow,
+          scroll: options.scroll ?? scroll,
+          startTransition: options.startTransition ?? startTransition
+        },
+        throttleMs: options.throttleMs ?? throttleMs
       })
       // Sync all hooks state (including this one)
       emitter.emit(key, { state: newValue, query })
-      return scheduleFlushToURL(adapter)
+      return globalThrottleQueue.flush(adapter)
     },
     [
       key,

@@ -1,7 +1,7 @@
 // @ts-ignore
 import { cache } from 'react'
 import type { SearchParams, UrlKeys } from './defs'
-import { error } from './errors'
+import { error } from './lib/errors'
 import { createLoader } from './loader'
 import type { inferParserType, ParserMap } from './parsers'
 

@@ -1,6 +1,6 @@
 import { useRouter, useSearchParams } from 'next/navigation'
 import { startTransition, useCallback, useOptimistic } from 'react'
-import { debug } from '../../debug'
+import { debug } from '../../lib/debug'
 import type { AdapterInterface, UpdateUrlFunction } from '../lib/defs'
 import { renderURL } from './shared'
 
