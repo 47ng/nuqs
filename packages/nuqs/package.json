@@ -41,6 +41,8 @@
     "adapters/next/pages.d.ts",
     "adapters/remix.d.ts",
     "adapters/react-router.d.ts",
+    "adapters/react-router/v6.d.ts",
+    "adapters/react-router/v7.d.ts",
     "adapters/custom.d.ts",
     "adapters/testing.d.ts",
     "esm-only.cjs"
