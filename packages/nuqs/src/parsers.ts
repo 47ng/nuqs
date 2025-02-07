@@ -155,8 +155,8 @@ export const parseAsInteger = createParser({
   serialize: v => Math.round(v).toFixed()
 })
 
-export const parseAsPageIndex = createParser({
-  parse: (v) => {
+export const parseAsIndex = createParser({
+  parse: v => {
     const int = parseInt(v);
     if (Number.isNaN(int)) {
       return null;
