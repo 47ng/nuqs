@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useAdapter } from './adapters/lib/context'
 import type { Nullable, Options, UrlKeys } from './defs'
 import { debug } from './lib/debug'
-import { FLUSH_RATE_LIMIT_MS, globalThrottleQueue } from './lib/queues/throttle'
+import { defaultRateLimit, globalThrottleQueue } from './lib/queues/throttle'
 import { safeParse } from './lib/safe-parse'
 import { emitter, type CrossHookSyncPayload } from './lib/sync'
 import type { Parser } from './parsers'
@@ -63,7 +63,8 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
     history = 'replace',
     scroll = false,
     shallow = true,
-    throttleMs = FLUSH_RATE_LIMIT_MS,
+    throttleMs = defaultRateLimit.timeMs,
+    limitUrlUpdates,
     clearOnDefault = true,
     startTransition,
     urlKeys = defaultUrlKeys
@@ -210,6 +211,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
             ) ?? nullMap)
           : (stateUpdater ?? nullMap)
       debug('[nuq+ `%s`] setState: %O', stateKeys, newState)
+      let returnedPromise: Promise<URLSearchParams> | undefined = undefined
       for (let [stateKey, value] of Object.entries(newState)) {
         const parser = keyMap[stateKey]
         const urlKey = resolvedUrlKeys[stateKey]!
@@ -228,25 +230,36 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
         }
         const query =
           value === null ? null : (parser.serialize ?? String)(value)
-        globalThrottleQueue.push({
-          key: urlKey,
-          query,
-          options: {
-            // Call-level options take precedence over individual parser options
-            // which take precedence over global options
-            history: callOptions.history ?? parser.history ?? history,
-            shallow: callOptions.shallow ?? parser.shallow ?? shallow,
-            scroll: callOptions.scroll ?? parser.scroll ?? scroll,
-            startTransition:
-              callOptions.startTransition ??
-              parser.startTransition ??
-              startTransition
-          },
-          throttleMs: callOptions.throttleMs ?? parser.throttleMs ?? throttleMs
-        })
         emitter.emit(urlKey, { state: value, query })
+        if (limitUrlUpdates?.method === 'debounce') {
+          // todo: implement debounce
+        } else {
+          globalThrottleQueue.push({
+            key: urlKey,
+            query,
+            options: {
+              // Call-level options take precedence over individual parser options
+              // which take precedence over global options
+              history: callOptions.history ?? parser.history ?? history,
+              shallow: callOptions.shallow ?? parser.shallow ?? shallow,
+              scroll: callOptions.scroll ?? parser.scroll ?? scroll,
+              startTransition:
+                callOptions.startTransition ??
+                parser.startTransition ??
+                startTransition
+            },
+            throttleMs:
+              callOptions?.limitUrlUpdates?.timeMs ??
+              parser?.limitUrlUpdates?.timeMs ??
+              limitUrlUpdates?.timeMs ??
+              callOptions.throttleMs ??
+              parser.throttleMs ??
+              throttleMs
+          })
+        }
       }
-      return globalThrottleQueue.flush(adapter)
+      returnedPromise ??= globalThrottleQueue.flush(adapter)
+      return returnedPromise
     },
     [
       stateKeys,
@@ -254,6 +267,8 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
       shallow,
       scroll,
       throttleMs,
+      limitUrlUpdates?.method,
+      limitUrlUpdates?.timeMs,
       startTransition,
       resolvedUrlKeys,
       adapter.updateUrl,
