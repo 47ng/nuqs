@@ -2,6 +2,7 @@ import Link from 'next/link'
 import {
   parseAsBoolean,
   parseAsFloat,
+  parseAsIndex,
   parseAsInteger,
   parseAsString,
   useQueryStates
@@ -12,6 +13,7 @@ const IntegrationPage = () => {
     string: parseAsString,
     int: parseAsInteger,
     float: parseAsFloat,
+    index: parseAsIndex,
     bool: parseAsBoolean
   })
   return (
@@ -19,6 +21,7 @@ const IntegrationPage = () => {
       <button onClick={() => setState({ string: 'Hello' })}>Set string</button>
       <button onClick={() => setState({ int: 42 })}>Set int</button>
       <button onClick={() => setState({ float: 3.14159 })}>Set float</button>
+      <button onClick={() => setState({ index: 8 })}>Set index</button>
       <button onClick={() => setState(old => ({ bool: !old.bool }))}>
         Toggle bool
       </button>
@@ -35,6 +38,7 @@ const IntegrationPage = () => {
             string: null,
             int: null,
             float: null,
+            index: null,
             bool: null
           }))
         }
@@ -49,6 +53,7 @@ const IntegrationPage = () => {
       <p id="string">{state.string}</p>
       <p id="int">{state.int}</p>
       <p id="float">{state.float}</p>
+      <p id="index">{state.index}</p>
       <p id="bool">
         {state.bool === null ? null : state.bool ? 'true' : 'false'}
       </p>

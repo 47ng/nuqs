@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import {
   parseAsBoolean,
   parseAsFloat,
+  parseAsIndex,
   parseAsInteger,
   parseAsString,
   useQueryState
@@ -64,6 +65,7 @@ const Pane = () => {
       <StringSection />
       <IntSection />
       <FloatSection />
+      <IndexSection />
       <BoolSection />
       <TextSection />
     </div>
@@ -140,6 +142,31 @@ const FloatSection = () => {
         Clear
       </button>
       <p id="float_value">{float}</p>
+    </section>
+  )
+}
+
+const IndexSection = () => {
+  const [index, setIndex] = useQueryState('index', parseAsIndex)
+  return (
+    <section>
+      <h2>Index</h2>
+      <button
+        id="index_decrement"
+        onClick={() => setIndex(old => (old ?? 0) - 1)}
+      >
+        -1
+      </button>
+      <button
+        id="index_increment"
+        onClick={() => setIndex(old => (old ?? 0) + 1)}
+      >
+        +1
+      </button>
+      <button id="index_clear" onClick={() => setIndex(null)}>
+        Clear
+      </button>
+      <p id="index_value">{index}</p>
     </section>
   )
 }

@@ -10,7 +10,7 @@ type Props = {
 }
 
 export default async function Page({ searchParams }: Props) {
-  const { str, bool, num, def, nope } = await cache.parse(searchParams)
+  const { str, bool, num, def, nope, idx } = await cache.parse(searchParams)
   return (
     <>
       <h1>Root page</h1>
@@ -18,6 +18,7 @@ export default async function Page({ searchParams }: Props) {
       <p style={{ display: 'flex', gap: '1rem' }}>
         <span id="parse-str">{str}</span>
         <span id="parse-num">{num}</span>
+        <span id="parse-idx">{String(idx)}</span>
         <span id="parse-bool">{String(bool)}</span>
         <span id="parse-def">{def}</span>
         <span id="parse-nope">{String(nope)}</span>

@@ -4,6 +4,7 @@ import { usePathname } from 'next/navigation'
 import {
   parseAsBoolean,
   parseAsFloat,
+  parseAsIndex,
   parseAsInteger,
   parseAsString,
   useQueryState
@@ -25,6 +26,7 @@ const IntegrationPage = () => {
   const [string, setString] = useQueryState('string')
   const [int, setInt] = useQueryState('int', parseAsInteger)
   const [float, setFloat] = useQueryState('float', parseAsFloat)
+  const [index, setIndex] = useQueryState('index', parseAsIndex)
   const [bool, setBool] = useQueryState('bool', parseAsBoolean)
   const [text, setText] = useQueryState(
     'text',
@@ -111,6 +113,25 @@ const IntegrationPage = () => {
           step={0.0001}
         />
         <p id="float_value">{float}</p>
+      </section>
+      <section>
+        <h2>Index</h2>
+        <button
+          id="index_increment"
+          onClick={() => setIndex(old => (old ?? 0) + 1)}
+        >
+          Increment
+        </button>
+        <button
+          id="index_decrement"
+          onClick={() => setIndex(old => (old ?? 0) - 1)}
+        >
+          Decrement
+        </button>
+        <button id="index_clear" onClick={() => setIndex(null)}>
+          Clear
+        </button>
+        <p id="index_value">{index}</p>
       </section>
       <section>
         <h2>Boolean</h2>
