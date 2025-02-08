@@ -25,7 +25,10 @@ export function getDefaultThrottle() {
   }
 }
 
-export const FLUSH_RATE_LIMIT_MS = getDefaultThrottle()
+export const defaultRateLimit: NonNullable<Options['limitUrlUpdates']> = {
+  method: 'throttle',
+  timeMs: getDefaultThrottle()
+}
 
 // --
 
@@ -76,7 +79,7 @@ export class ThrottledQueue {
       this.transitions.add(options.startTransition)
     }
     this.throttleMs = Math.max(
-      throttleMs ?? FLUSH_RATE_LIMIT_MS,
+      throttleMs ?? defaultRateLimit.timeMs,
       Number.isFinite(this.throttleMs) ? this.throttleMs : 0
     )
   }
@@ -145,7 +148,7 @@ export class ThrottledQueue {
     this.options.history = 'replace'
     this.options.scroll = false
     this.options.shallow = true
-    this.throttleMs = FLUSH_RATE_LIMIT_MS
+    this.throttleMs = defaultRateLimit.timeMs
   }
 
   // --
