@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useAdapter } from './adapters/lib/context'
 import type { Options } from './defs'
 import { debug } from './lib/debug'
-import { FLUSH_RATE_LIMIT_MS, globalThrottleQueue } from './lib/queues/throttle'
+import { defaultRateLimit, globalThrottleQueue } from './lib/queues/throttle'
 import { safeParse } from './lib/safe-parse'
 import { emitter, type CrossHookSyncPayload } from './lib/sync'
 import type { Parser } from './parsers'
@@ -196,7 +196,8 @@ export function useQueryState<T = string>(
     history = 'replace',
     shallow = true,
     scroll = false,
-    throttleMs = FLUSH_RATE_LIMIT_MS,
+    throttleMs = defaultRateLimit.timeMs,
+    limitUrlUpdates,
     parse = x => x as unknown as T,
     serialize = String,
     eq = (a, b) => a === b,
@@ -209,7 +210,7 @@ export function useQueryState<T = string>(
     history: 'replace',
     scroll: false,
     shallow: true,
-    throttleMs: FLUSH_RATE_LIMIT_MS,
+    throttleMs: defaultRateLimit.timeMs,
     parse: x => x as unknown as T,
     serialize: String,
     eq: (a, b) => a === b,
@@ -278,20 +279,28 @@ export function useQueryState<T = string>(
         newValue = null
       }
       const query = newValue === null ? null : serialize(newValue)
-      globalThrottleQueue.push({
-        key,
-        query,
-        options: {
-          history: options.history ?? history,
-          shallow: options.shallow ?? shallow,
-          scroll: options.scroll ?? scroll,
-          startTransition: options.startTransition ?? startTransition
-        },
-        throttleMs: options.throttleMs ?? throttleMs
-      })
       // Sync all hooks state (including this one)
       emitter.emit(key, { state: newValue, query })
-      return globalThrottleQueue.flush(adapter)
+      if (limitUrlUpdates?.method === 'debounce') {
+        // todo: implement debounce
+      } else {
+        globalThrottleQueue.push({
+          key,
+          query,
+          options: {
+            history: options.history ?? history,
+            shallow: options.shallow ?? shallow,
+            scroll: options.scroll ?? scroll,
+            startTransition: options.startTransition ?? startTransition
+          },
+          throttleMs:
+            options.limitUrlUpdates?.timeMs ??
+            limitUrlUpdates?.timeMs ??
+            options.throttleMs ??
+            throttleMs
+        })
+        return globalThrottleQueue.flush(adapter)
+      }
     },
     [
       key,
@@ -299,6 +308,8 @@ export function useQueryState<T = string>(
       shallow,
       scroll,
       throttleMs,
+      limitUrlUpdates?.method,
+      limitUrlUpdates?.timeMs,
       startTransition,
       adapter.updateUrl,
       adapter.getSearchParamsSnapshot,
