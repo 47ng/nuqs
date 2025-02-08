@@ -157,14 +157,14 @@ export const parseAsInteger = createParser({
 
 export const parseAsIndex = createParser({
   parse: v => {
-    const int = parseInt(v);
+    const int = parseInt(v)
     if (Number.isNaN(int)) {
-      return null;
+      return null
     }
-    return int - 1;
+    return int - 1
   },
-  serialize: (v) => Math.round(v + 1).toFixed(),
-});
+  serialize: v => Math.round(v + 1).toFixed()
+})
 
 export const parseAsHex = createParser({
   parse: v => {
