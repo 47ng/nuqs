@@ -1,9 +1,5 @@
-import {
-  createSearchParamsCache,
-  parseAsBoolean,
-  parseAsInteger,
-  parseAsString
-} from 'nuqs/server'
+import { parseAsBoolean, parseAsInteger, parseAsString } from 'nuqs/server'
+import { createSearchParamsCache } from 'nuqs/server/cache'
 
 export const parsers = {
   str: parseAsString,

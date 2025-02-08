@@ -124,7 +124,7 @@ The loader function will accept the following input types to parse search params
 ## Cache
 
 <Callout>
-  This feature is available for Next.js only.
+  The `next/server/cache` feature is available for Next.js app router only.
 </Callout>
 
 If you wish to access the searchParams in a deeply nested Server Component
@@ -135,12 +135,9 @@ Think of it as a loader combined with a way to propagate the parsed values down
 the RSC tree, like Context would on the client.
 
 ```ts title="searchParams.ts"
-import {
-  createSearchParamsCache,
-  parseAsInteger,
-  parseAsString
-} from 'nuqs/server'
-// Note: import from 'nuqs/server' to avoid the "use client" directive
+import { createSearchParamsCache } from 'nuqs/server/cache'
+import { parseAsInteger, parseAsString } from 'nuqs/server'
+// Note: import parsers from 'nuqs/server' to avoid the "use client" directive
 
 export const searchParamsCache = createSearchParamsCache({
   // List your search param keys and associated parsers here:
@@ -176,6 +173,15 @@ function Results() {
 }
 ```
 
+<Callout type="warn" title="Deprecation notice">
+  The cache feature is also accessible from `nuqs/server` in nuqs@^2, but
+  will be removed from that import in nuqs@3.0.0.
+  Please update your imports to `nuqs/server/cache` for a smoother transition.
+
+  This is to allow non-Next.js server code to use the `nuqs/server` import
+  without having to install React canary for the `cache` function.
+</Callout>
+
 The cache will only be valid for the current page render
 (see React's [`cache`](https://react.dev/reference/react/cache) function).
 
@@ -183,10 +189,8 @@ Note: the cache only works for **server components**, but you may share your
 parser declaration with `useQueryStates` for type-safety in client components:
 
 ```ts title="searchParams.ts"
-import {
-  parseAsFloat,
-  createSearchParamsCache
-} from 'nuqs/server'
+import { parseAsFloat } from 'nuqs/server'
+import { createSearchParamsCache } from 'nuqs/server/cache'
 
 export const coordinatesParsers = {
   lat: parseAsFloat.withDefault(45.18),

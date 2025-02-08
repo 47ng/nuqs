@@ -34,7 +34,9 @@ const entrypoints = {
     'adapters/testing': 'src/adapters/testing.ts'
   },
   server: {
-    server: 'src/index.server.ts'
+    server: 'src/index.server.ts',
+    'server/cache': 'src/index.server.cache.ts',
+    'server/temporary-react-agnostic': 'src/index.temporary-react-agnostic.ts'
   }
 }
 
