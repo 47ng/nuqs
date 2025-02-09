@@ -3,12 +3,12 @@ import {
   parseAsArrayOf,
   parseAsFloat,
   parseAsHex,
+  parseAsIndex,
   parseAsInteger,
-  parseAsIsoDateTime,
   parseAsIsoDate,
+  parseAsIsoDateTime,
   parseAsString,
-  parseAsTimestamp,
-  parseAsIndex
+  parseAsTimestamp
 } from './parsers'
 
 describe('parsers', () => {
@@ -33,6 +33,8 @@ describe('parsers', () => {
     expect(parseAsIndex.parse('1')).toBe(0)
     expect(parseAsIndex.parse('3.14')).toBe(2)
     expect(parseAsIndex.parse('3,14')).toBe(2)
+    expect(parseAsIndex.parse('0')).toBeNull()
+    expect(parseAsIndex.parse('-1')).toBeNull()
     expect(parseAsIndex.serialize(0)).toBe('1')
     expect(parseAsIndex.serialize(3.14)).toBe('4')
   })
