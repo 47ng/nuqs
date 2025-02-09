@@ -158,7 +158,7 @@ export const parseAsInteger = createParser({
 export const parseAsIndex = createParser({
   parse: v => {
     const int = parseAsInteger.parse(v)
-    if (int === null || int <= 0) {
+    if (int === null) {
       return null
     }
     return int - 1
