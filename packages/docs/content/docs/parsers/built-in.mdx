@@ -9,6 +9,7 @@ import {
   StringParserDemo,
   FloatParserDemo,
   HexParserDemo,
+  IndexParserDemo,
   BooleanParserDemo,
   StringLiteralParserDemo,
   DateISOParserDemo,
@@ -104,6 +105,20 @@ useQueryState('hex', parseAsHex.withDefault(0x00))
 <Callout title="Going further">
   Check out the [Hex Colors](/playground/hex-colors) playground for a demo.
 </Callout>
+
+### Index
+
+Same as integer, but adds a `+1` offset to the query value. Useful for pagination indexes.
+
+```ts
+import { parseAsIndex } from 'nuqs'
+
+useQueryState('page', parseAsIndex.withDefault(0))
+```
+
+<Suspense fallback={<DemoFallback />}>
+  <IndexParserDemo />
+</Suspense>
 
 ## Boolean
 
@@ -203,8 +218,9 @@ import { parseAsIsoDate } from 'nuqs'
 </Suspense>
 
 <Callout>
-  The Date is parsed without the time zone offset, making it at 00:00:00 UTC.<br/>
-  <span className='block mt-1.5'>_Support: introduced in version 2.1.0._</span>
+  The Date is parsed without the time zone offset, making it at 00:00:00 UTC.
+  <br />
+  <span className="mt-1.5 block">_Support: introduced in version 2.1.0._</span>
 </Callout>
 
 ### Timestamp

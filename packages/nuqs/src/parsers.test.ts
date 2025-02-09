@@ -3,9 +3,10 @@ import {
   parseAsArrayOf,
   parseAsFloat,
   parseAsHex,
+  parseAsIndex,
   parseAsInteger,
-  parseAsIsoDateTime,
   parseAsIsoDate,
+  parseAsIsoDateTime,
   parseAsString,
   parseAsTimestamp
 } from './parsers'
@@ -26,6 +27,16 @@ describe('parsers', () => {
     expect(parseAsFloat.serialize(3.14)).toBe('3.14')
     // https://0.30000000000000004.com/
     expect(parseAsFloat.serialize(0.1 + 0.2)).toBe('0.30000000000000004')
+  })
+  test('parseAsIndex', () => {
+    expect(parseAsIndex.parse('')).toBeNull()
+    expect(parseAsIndex.parse('1')).toBe(0)
+    expect(parseAsIndex.parse('3.14')).toBe(2)
+    expect(parseAsIndex.parse('3,14')).toBe(2)
+    expect(parseAsIndex.parse('0')).toBe(-1)
+    expect(parseAsIndex.parse('-1')).toBe(-2)
+    expect(parseAsIndex.serialize(0)).toBe('1')
+    expect(parseAsIndex.serialize(3.14)).toBe('4')
   })
   test('parseAsHex', () => {
     expect(parseAsHex.parse('')).toBeNull()

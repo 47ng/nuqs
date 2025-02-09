@@ -20,7 +20,7 @@ import {
 } from '@/src/components/ui/select'
 import { Separator } from '@/src/components/ui/separator'
 import {
-  createParser,
+  parseAsIndex,
   parseAsInteger,
   parseAsString,
   useQueryState
@@ -28,19 +28,6 @@ import {
 import { useDeferredValue } from 'react'
 
 const NUM_PAGES = 5
-
-// The page index parser is zero-indexed internally,
-// but one-indexed when rendered in the URL,
-// to align with your UI and what users might expect.
-const pageIndexParser = createParser({
-  parse: query => {
-    const page = parseAsInteger.parse(query)
-    return page === null ? null : page - 1
-  },
-  serialize: value => {
-    return parseAsInteger.serialize(value + 1)
-  }
-})
 
 export function TanStackTablePagination() {
   const [pageIndexUrlKey, setPageIndexUrlKey] = useQueryState(
@@ -53,7 +40,7 @@ export function TanStackTablePagination() {
   )
   const [page, setPage] = useQueryState(
     pageIndexUrlKey,
-    pageIndexParser.withDefault(0)
+    parseAsIndex.withDefault(0)
   )
   const [pageSize, setPageSize] = useQueryState(
     pageSizeUrlKey,
@@ -61,27 +48,14 @@ export function TanStackTablePagination() {
   )
 
   const parserCode = useDeferredValue(`import {
-  createParser,
+  parseAsIndex,
   parseAsInteger,
   parseAsString,
   useQueryStates
 } from 'nuqs'
 
-// The page index parser is zero-indexed internally,
-// but one-indexed when rendered in the URL,
-// to align with your UI and what users might expect.
-const pageIndexParser = createParser({
-  parse: query => {
-    const page = parseAsInteger.parse(query)
-    return page === null ? null : page - 1
-  },
-  serialize: value => {
-    return parseAsInteger.serialize(value + 1)
-  }
-})
-
 const paginationParsers = {
-  pageIndex: pageIndexParser.withDefault(0),
+  pageIndex: parseAsIndex.withDefault(0),
   pageSize: parseAsInteger.withDefault(10)
 }
 const paginationUrlKeys = {

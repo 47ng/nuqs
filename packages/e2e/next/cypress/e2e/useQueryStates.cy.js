@@ -4,11 +4,12 @@ function runTest() {
   cy.contains('#hydration-marker', 'hydrated').should('be.hidden')
   cy.get('#json').should(
     'have.text',
-    '{"string":null,"int":null,"float":null,"bool":null}'
+    '{"string":null,"int":null,"float":null,"index":null,"bool":null}'
   )
   cy.get('#string').should('be.empty')
   cy.get('#int').should('be.empty')
   cy.get('#float').should('be.empty')
+  cy.get('#index').should('be.empty')
   cy.get('#bool').should('be.empty')
   cy.location('search').should('be.empty')
 
@@ -17,7 +18,7 @@ function runTest() {
   cy.get('#string').should('have.text', 'Hello')
   cy.get('#json').should(
     'have.text',
-    '{"string":"Hello","int":null,"float":null,"bool":null}'
+    '{"string":"Hello","int":null,"float":null,"index":null,"bool":null}'
   )
 
   cy.contains('Set int').click()
@@ -25,7 +26,7 @@ function runTest() {
   cy.get('#int').should('have.text', '42')
   cy.get('#json').should(
     'have.text',
-    '{"string":"Hello","int":42,"float":null,"bool":null}'
+    '{"string":"Hello","int":42,"float":null,"index":null,"bool":null}'
   )
 
   cy.contains('Set float').click()
@@ -33,7 +34,15 @@ function runTest() {
   cy.get('#float').should('have.text', '3.14159')
   cy.get('#json').should(
     'have.text',
-    '{"string":"Hello","int":42,"float":3.14159,"bool":null}'
+    '{"string":"Hello","int":42,"float":3.14159,"index":null,"bool":null}'
+  )
+
+  cy.contains('Set index').click()
+  cy.location('search').should('include', 'index=9')
+  cy.get('#index').should('have.text', '8')
+  cy.get('#json').should(
+    'have.text',
+    '{"string":"Hello","int":42,"float":3.14159,"index":8,"bool":null}'
   )
 
   cy.contains('Toggle bool').click()
@@ -41,14 +50,14 @@ function runTest() {
   cy.get('#bool').should('have.text', 'true')
   cy.get('#json').should(
     'have.text',
-    '{"string":"Hello","int":42,"float":3.14159,"bool":true}'
+    '{"string":"Hello","int":42,"float":3.14159,"index":8,"bool":true}'
   )
   cy.contains('Toggle bool').click()
   cy.location('search').should('include', 'bool=false')
   cy.get('#bool').should('have.text', 'false')
   cy.get('#json').should(
     'have.text',
-    '{"string":"Hello","int":42,"float":3.14159,"bool":false}'
+    '{"string":"Hello","int":42,"float":3.14159,"index":8,"bool":false}'
   )
 
   cy.get('#clear-string').click()
@@ -56,21 +65,23 @@ function runTest() {
   cy.get('#string').should('be.empty')
   cy.get('#json').should(
     'have.text',
-    '{"string":null,"int":42,"float":3.14159,"bool":false}'
+    '{"string":null,"int":42,"float":3.14159,"index":8,"bool":false}'
   )
 
   cy.get('#clear').click()
   cy.location('search').should('not.include', 'string')
   cy.location('search').should('not.include', 'int')
   cy.location('search').should('not.include', 'float')
+  cy.location('search').should('not.include', 'index')
   cy.location('search').should('not.include', 'bool')
   cy.get('#json').should(
     'have.text',
-    '{"string":null,"int":null,"float":null,"bool":null}'
+    '{"string":null,"int":null,"float":null,"index":null,"bool":null}'
   )
   cy.get('#string').should('be.empty')
   cy.get('#int').should('be.empty')
   cy.get('#float').should('be.empty')
+  cy.get('#index').should('be.empty')
   cy.get('#bool').should('be.empty')
   cy.location('search').should('be.empty')
 }

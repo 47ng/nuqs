@@ -155,6 +155,17 @@ export const parseAsInteger = createParser({
   serialize: v => Math.round(v).toFixed()
 })
 
+export const parseAsIndex = createParser({
+  parse: v => {
+    const int = parseAsInteger.parse(v)
+    if (int === null) {
+      return null
+    }
+    return int - 1
+  },
+  serialize: v => parseAsInteger.serialize(v + 1)
+})
+
 export const parseAsHex = createParser({
   parse: v => {
     const int = parseInt(v, 16)
