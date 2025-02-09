@@ -2,7 +2,12 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useAdapter } from './adapters/lib/context'
 import type { Options } from './defs'
 import { debug } from './lib/debug'
-import { defaultRateLimit, globalThrottleQueue } from './lib/queues/throttle'
+import { debounceController } from './lib/queues/debounce'
+import {
+  defaultRateLimit,
+  globalThrottleQueue,
+  type UpdateQueuePushArgs
+} from './lib/queues/throttle'
 import { safeParse } from './lib/safe-parse'
 import { emitter, type CrossHookSyncPayload } from './lib/sync'
 import type { Parser } from './parsers'
@@ -222,7 +227,7 @@ export function useQueryState<T = string>(
   const initialSearchParams = adapter.searchParams
   const queryRef = useRef<string | null>(initialSearchParams?.get(key) ?? null)
   const [internalState, setInternalState] = useState<T | null>(() => {
-    const queuedQuery = globalThrottleQueue.getQueuedQuery(key)
+    const queuedQuery = debounceController.getQueuedQuery(key)
     const query =
       queuedQuery === undefined
         ? (initialSearchParams?.get(key) ?? null)
@@ -281,24 +286,32 @@ export function useQueryState<T = string>(
       const query = newValue === null ? null : serialize(newValue)
       // Sync all hooks state (including this one)
       emitter.emit(key, { state: newValue, query })
-      if (limitUrlUpdates?.method === 'debounce') {
-        // todo: implement debounce
+      const update: UpdateQueuePushArgs = {
+        key,
+        query,
+        options: {
+          history: options.history ?? history,
+          shallow: options.shallow ?? shallow,
+          scroll: options.scroll ?? scroll,
+          startTransition: options.startTransition ?? startTransition
+        }
+      }
+      if (
+        options.limitUrlUpdates?.method === 'debounce' ||
+        limitUrlUpdates?.method === 'debounce'
+      ) {
+        const timeMs =
+          options.limitUrlUpdates?.timeMs ??
+          limitUrlUpdates?.timeMs ??
+          defaultRateLimit.timeMs
+        return debounceController.push(update, timeMs, adapter)
       } else {
-        globalThrottleQueue.push({
-          key,
-          query,
-          options: {
-            history: options.history ?? history,
-            shallow: options.shallow ?? shallow,
-            scroll: options.scroll ?? scroll,
-            startTransition: options.startTransition ?? startTransition
-          },
-          throttleMs:
-            options.limitUrlUpdates?.timeMs ??
-            limitUrlUpdates?.timeMs ??
-            options.throttleMs ??
-            throttleMs
-        })
+        update.throttleMs =
+          options.limitUrlUpdates?.timeMs ??
+          limitUrlUpdates?.timeMs ??
+          options.throttleMs ??
+          throttleMs
+        globalThrottleQueue.push(update)
         return globalThrottleQueue.flush(adapter)
       }
     },
