@@ -2,7 +2,12 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useAdapter } from './adapters/lib/context'
 import type { Nullable, Options, UrlKeys } from './defs'
 import { debug } from './lib/debug'
-import { defaultRateLimit, globalThrottleQueue } from './lib/queues/throttle'
+import { debounceController } from './lib/queues/debounce'
+import {
+  defaultRateLimit,
+  globalThrottleQueue,
+  type UpdateQueuePushArgs
+} from './lib/queues/throttle'
 import { safeParse } from './lib/safe-parse'
 import { emitter, type CrossHookSyncPayload } from './lib/sync'
 import type { Parser } from './parsers'
@@ -212,6 +217,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
           : (stateUpdater ?? nullMap)
       debug('[nuq+ `%s`] setState: %O', stateKeys, newState)
       let returnedPromise: Promise<URLSearchParams> | undefined = undefined
+      let maxDebounceTime = 0
       for (let [stateKey, value] of Object.entries(newState)) {
         const parser = keyMap[stateKey]
         const urlKey = resolvedUrlKeys[stateKey]!
@@ -231,35 +237,54 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
         const query =
           value === null ? null : (parser.serialize ?? String)(value)
         emitter.emit(urlKey, { state: value, query })
-        if (limitUrlUpdates?.method === 'debounce') {
-          // todo: implement debounce
+        const update: UpdateQueuePushArgs = {
+          key: urlKey,
+          query,
+          options: {
+            // Call-level options take precedence over individual parser options
+            // which take precedence over global options
+            history: callOptions.history ?? parser.history ?? history,
+            shallow: callOptions.shallow ?? parser.shallow ?? shallow,
+            scroll: callOptions.scroll ?? parser.scroll ?? scroll,
+            startTransition:
+              callOptions.startTransition ??
+              parser.startTransition ??
+              startTransition
+          }
+        }
+        if (
+          callOptions?.limitUrlUpdates?.method === 'debounce' ||
+          limitUrlUpdates?.method === 'debounce' ||
+          parser.limitUrlUpdates?.method === 'debounce'
+        ) {
+          const timeMs =
+            callOptions?.limitUrlUpdates?.timeMs ??
+            limitUrlUpdates?.timeMs ??
+            parser.limitUrlUpdates?.timeMs ??
+            defaultRateLimit.timeMs
+          const debouncedPromise = debounceController.push(
+            update,
+            timeMs,
+            adapter
+          )
+          if (maxDebounceTime < timeMs) {
+            // The largest debounce is likely to be the last URL update:
+            returnedPromise = debouncedPromise
+            maxDebounceTime = timeMs
+          }
         } else {
-          globalThrottleQueue.push({
-            key: urlKey,
-            query,
-            options: {
-              // Call-level options take precedence over individual parser options
-              // which take precedence over global options
-              history: callOptions.history ?? parser.history ?? history,
-              shallow: callOptions.shallow ?? parser.shallow ?? shallow,
-              scroll: callOptions.scroll ?? parser.scroll ?? scroll,
-              startTransition:
-                callOptions.startTransition ??
-                parser.startTransition ??
-                startTransition
-            },
-            throttleMs:
-              callOptions?.limitUrlUpdates?.timeMs ??
-              parser?.limitUrlUpdates?.timeMs ??
-              limitUrlUpdates?.timeMs ??
-              callOptions.throttleMs ??
-              parser.throttleMs ??
-              throttleMs
-          })
+          update.throttleMs =
+            callOptions?.limitUrlUpdates?.timeMs ??
+            parser?.limitUrlUpdates?.timeMs ??
+            limitUrlUpdates?.timeMs ??
+            callOptions.throttleMs ??
+            parser.throttleMs ??
+            throttleMs
+          globalThrottleQueue.push(update)
         }
       }
-      returnedPromise ??= globalThrottleQueue.flush(adapter)
-      return returnedPromise
+      const globalPromise = globalThrottleQueue.flush(adapter)
+      return returnedPromise ?? globalPromise
     },
     [
       stateKeys,
@@ -301,7 +326,7 @@ function parseMap<KeyMap extends UseQueryStatesKeysMap>(
   const state = Object.keys(keyMap).reduce((out, stateKey) => {
     const urlKey = urlKeys?.[stateKey] ?? stateKey
     const { parse } = keyMap[stateKey]!
-    const queuedQuery = globalThrottleQueue.getQueuedQuery(urlKey)
+    const queuedQuery = debounceController.getQueuedQuery(urlKey)
     const query =
       queuedQuery === undefined
         ? (searchParams?.get(urlKey) ?? null)

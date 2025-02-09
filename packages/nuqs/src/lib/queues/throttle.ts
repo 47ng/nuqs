@@ -43,7 +43,7 @@ export type UpdateQueuePushArgs = {
   key: string
   query: string | null
   options: AdapterOptions & Pick<Options, 'startTransition'>
-  throttleMs: number
+  throttleMs?: number
 }
 
 function getSearchParamsSnapshotFromLocation() {
@@ -62,7 +62,12 @@ export class ThrottledQueue {
   resolvers: Resolvers<URLSearchParams> | null = null
   lastFlushedAt = 0
 
-  public push({ key, query, options, throttleMs }: UpdateQueuePushArgs) {
+  public push({
+    key,
+    query,
+    options,
+    throttleMs = defaultRateLimit.timeMs
+  }: UpdateQueuePushArgs) {
     debug('[nuqs queue] Enqueueing %s=%s %O', key, query, options)
     // Enqueue update
     this.updateMap.set(key, query)
@@ -79,7 +84,7 @@ export class ThrottledQueue {
       this.transitions.add(options.startTransition)
     }
     this.throttleMs = Math.max(
-      throttleMs ?? defaultRateLimit.timeMs,
+      throttleMs,
       Number.isFinite(this.throttleMs) ? this.throttleMs : 0
     )
   }
