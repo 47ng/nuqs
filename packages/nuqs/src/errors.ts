@@ -1,4 +1,5 @@
 export const errors = {
+  303: 'Multiple adapter contexts detected. This might happen in monorepos.',
   404: 'nuqs requires an adapter to work with your framework.',
   409: 'Multiple versions of the library are loaded. This may lead to unexpected behavior. Currently using `%s`, but `%s` (via the %s adapter) was about to load on top.',
   414: 'Max safe URL length exceeded. Some browsers may not be able to accept this URL. Consider limiting the amount of state stored in the URL.',
