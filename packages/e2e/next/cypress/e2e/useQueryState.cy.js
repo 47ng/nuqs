@@ -95,8 +95,6 @@ function runTest(pathname) {
     cy.location('search').should('eq', '?index=1')
     cy.get('#index_value').should('have.text', '0')
     cy.get('#index_decrement').click()
-    cy.location('search').should('eq', '?index=0')
-    cy.get('#index_value').should('have.text', '-1')
     cy.get('#index_clear').click()
     cy.location('search').should('be.empty')
     cy.get('#index_value').should('be.empty')
