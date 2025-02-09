@@ -28,6 +28,8 @@ export default [
     route('/fog-of-war/result',                     './routes/fog-of-war.result.tsx'),
     route('/conditional-rendering/useQueryState',   './routes/conditional-rendering.useQueryState.tsx'),
     route('/conditional-rendering/useQueryStates',  './routes/conditional-rendering.useQueryStates.tsx'),
+    route('/key-isolation/useQueryState',           './routes/key-isolation.useQueryState.tsx'),
+    route('/key-isolation/useQueryStates',          './routes/key-isolation.useQueryStates.tsx'),
 
     route('/render-count/:hook/:shallow/:history/:startTransition/no-loader',    './routes/render-count.$hook.$shallow.$history.$startTransition.no-loader.tsx'),
     route('/render-count/:hook/:shallow/:history/:startTransition/sync-loader',  './routes/render-count.$hook.$shallow.$history.$startTransition.sync-loader.tsx'),

@@ -3,7 +3,12 @@ import { useEffect, useState } from 'react'
 import { renderQueryString } from '../url-encoding'
 import { createAdapterProvider } from './lib/context'
 import type { AdapterOptions } from './lib/defs'
-import { patchHistory, type SearchParamsSyncEmitter } from './lib/patch-history'
+import { applyChange, filterSearchParams } from './lib/key-isolation'
+import {
+  historyUpdateMarker,
+  patchHistory,
+  type SearchParamsSyncEmitter
+} from './lib/patch-history'
 
 const emitter: SearchParamsSyncEmitter = mitt()
 
@@ -12,30 +17,40 @@ function updateUrl(search: URLSearchParams, options: AdapterOptions) {
   url.search = renderQueryString(search)
   const method =
     options.history === 'push' ? history.pushState : history.replaceState
-  method.call(history, history.state, '', url)
+  method.call(history, history.state, historyUpdateMarker, url)
   emitter.emit('update', search)
 }
 
-function useNuqsReactAdapter() {
+function useNuqsReactAdapter(watchKeys: string[]) {
   const [searchParams, setSearchParams] = useState(() => {
     if (typeof location === 'undefined') {
       return new URLSearchParams()
     }
-    return new URLSearchParams(location.search)
+    return filterSearchParams(
+      new URLSearchParams(location.search),
+      watchKeys,
+      false
+    )
   })
   useEffect(() => {
     // Popstate event is only fired when the user navigates
     // via the browser's back/forward buttons.
     const onPopState = () => {
-      setSearchParams(new URLSearchParams(location.search))
+      setSearchParams(
+        applyChange(new URLSearchParams(location.search), watchKeys, false)
+      )
     }
-    emitter.on('update', setSearchParams)
+    const onEmitterUpdate = (search: URLSearchParams) => {
+      setSearchParams(applyChange(search, watchKeys, true))
+    }
+    emitter.on('update', onEmitterUpdate)
     window.addEventListener('popstate', onPopState)
     return () => {
-      emitter.off('update', setSearchParams)
+      emitter.off('update', onEmitterUpdate)
       window.removeEventListener('popstate', onPopState)
     }
-  }, [])
+  }, [watchKeys.join('&')])
+
   return {
     searchParams,
     updateUrl
