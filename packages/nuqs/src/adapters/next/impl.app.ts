@@ -16,7 +16,7 @@ export function useNuqsNextAppRouterAdapter(): AdapterInterface {
         setOptimisticSearchParams(search)
       }
       const url = renderURL(location.origin + location.pathname, search)
-      debug('[nuqs queue (app)] Updating url: %s', url)
+      debug('[nuqs next/app] Updating url: %s', url)
       // First, update the URL locally without triggering a network request,
       // this allows keeping a reactive URL if the network is slow.
       const updateMethod =
