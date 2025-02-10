@@ -7,30 +7,7 @@ import { compose } from '../compose'
 import { debug } from '../debug'
 import { error } from '../errors'
 import { withResolvers, type Resolvers } from '../with-resolvers'
-
-// edit: Safari 17 now allows 100 calls per 10 seconds, a bit better.
-export function getDefaultThrottle() {
-  if (typeof window === 'undefined') return 50
-  // https://stackoverflow.com/questions/7944460/detect-safari-browser
-  // @ts-expect-error
-  const isSafari = Boolean(window.GestureEvent)
-  if (!isSafari) {
-    return 50
-  }
-  try {
-    const match = navigator.userAgent?.match(/version\/([\d\.]+) safari/i)
-    return parseFloat(match![1]!) >= 17 ? 120 : 320
-  } catch {
-    return 320
-  }
-}
-
-export const defaultRateLimit: NonNullable<Options['limitUrlUpdates']> = {
-  method: 'throttle',
-  timeMs: getDefaultThrottle()
-}
-
-// --
+import { defaultRateLimit } from './rate-limiting'
 
 type UpdateMap = Map<string, string | null>
 type TransitionSet = Set<React.TransitionStartFunction>
