@@ -3,8 +3,8 @@ import { useAdapter } from './adapters/lib/context'
 import type { Options } from './defs'
 import { debug } from './lib/debug'
 import { debounceController } from './lib/queues/debounce'
+import { defaultRateLimit } from './lib/queues/rate-limiting'
 import {
-  defaultRateLimit,
   globalThrottleQueue,
   type UpdateQueuePushArgs
 } from './lib/queues/throttle'
