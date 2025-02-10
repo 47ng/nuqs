@@ -20,7 +20,7 @@ export type UpdateQueuePushArgs = {
   key: string
   query: string | null
   options: AdapterOptions & Pick<Options, 'startTransition'>
-  throttleMs?: number
+  timeMs?: number
 }
 
 function getSearchParamsSnapshotFromLocation() {
@@ -34,7 +34,7 @@ export class ThrottledQueue {
     scroll: false,
     shallow: true
   }
-  throttleMs = 0
+  timeMs = defaultRateLimit.timeMs
   transitions: TransitionSet = new Set()
   resolvers: Resolvers<URLSearchParams> | null = null
   lastFlushedAt = 0
@@ -43,7 +43,7 @@ export class ThrottledQueue {
     key,
     query,
     options,
-    throttleMs = defaultRateLimit.timeMs
+    timeMs = defaultRateLimit.timeMs
   }: UpdateQueuePushArgs) {
     debug('[nuqs queue] Enqueueing %s=%s %O', key, query, options)
     // Enqueue update
@@ -60,9 +60,9 @@ export class ThrottledQueue {
     if (options.startTransition) {
       this.transitions.add(options.startTransition)
     }
-    this.throttleMs = Math.max(
-      throttleMs,
-      Number.isFinite(this.throttleMs) ? this.throttleMs : 0
+    this.timeMs = Math.max(
+      timeMs,
+      Number.isFinite(this.timeMs) ? this.timeMs : 0
     )
   }
 
@@ -75,7 +75,7 @@ export class ThrottledQueue {
     rateLimitFactor = 1,
     ...adapter
   }: UpdateQueueAdapterContext): Promise<URLSearchParams> {
-    if (!Number.isFinite(this.throttleMs)) {
+    if (!Number.isFinite(this.timeMs)) {
       debug('[nuqs queue] Skipping flush due to throttleMs=Infinity')
       return Promise.resolve(getSearchParamsSnapshot())
     }
@@ -107,14 +107,14 @@ export class ThrottledQueue {
     const runOnNextTick = () => {
       const now = performance.now()
       const timeSinceLastFlush = now - this.lastFlushedAt
-      const throttleMs = this.throttleMs
+      const timeMs = this.timeMs
       const flushInMs =
         rateLimitFactor *
-        Math.max(0, Math.min(throttleMs, throttleMs - timeSinceLastFlush))
+        Math.max(0, Math.min(timeMs, timeMs - timeSinceLastFlush))
       debug(
         `[nuqs queue] Scheduling flush in %f ms. Throttled at %f ms (x%f)`,
         flushInMs,
-        throttleMs,
+        timeMs,
         rateLimitFactor
       )
       if (flushInMs === 0) {
@@ -135,7 +135,7 @@ export class ThrottledQueue {
     this.options.history = 'replace'
     this.options.scroll = false
     this.options.shallow = true
-    this.throttleMs = defaultRateLimit.timeMs
+    this.timeMs = defaultRateLimit.timeMs
   }
 
   applyPendingUpdates(
