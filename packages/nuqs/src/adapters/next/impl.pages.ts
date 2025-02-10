@@ -54,7 +54,7 @@ export function useNuqsNextPagesRouterAdapter(): AdapterInterface {
       getAsPathPathname(nextRouter.asPath) +
       renderQueryString(search) +
       location.hash
-    debug('[nuqs queue (pages)] Updating url: %s', asPath)
+    debug('[nuqs next/pages] Updating url: %s', asPath)
     const method =
       options.history === 'push' ? nextRouter.push : nextRouter.replace
     method.call(
