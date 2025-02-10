@@ -52,7 +52,7 @@ export class DebouncedPromiseQueue<ValueType, OutputType> {
 // --
 
 type DebouncedUpdateQueue = DebouncedPromiseQueue<
-  Omit<UpdateQueuePushArgs, 'throttleMs'>,
+  Omit<UpdateQueuePushArgs, 'timeMs'>,
   URLSearchParams
 >
 
@@ -65,13 +65,13 @@ export class DebounceController {
   }
 
   push(
-    update: Omit<UpdateQueuePushArgs, 'throttleMs'>,
+    update: Omit<UpdateQueuePushArgs, 'timeMs'>,
     timeMs: number,
     adapter: UpdateQueueAdapterContext
   ): Promise<URLSearchParams> {
     if (!this.queues.has(update.key)) {
       const queue = new DebouncedPromiseQueue<
-        Omit<UpdateQueuePushArgs, 'throttleMs'>,
+        Omit<UpdateQueuePushArgs, 'timeMs'>,
         URLSearchParams
       >(update => {
         this.throttleQueue.push(update)
