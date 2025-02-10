@@ -18,26 +18,28 @@ export class DebouncedPromiseQueue<ValueType, OutputType> {
     this.callback = callback
   }
 
-  public push(value: ValueType, timeMs: number) {
+  push(value: ValueType, timeMs: number) {
     this.queuedValue = value
     this.controller.abort()
     this.controller = new AbortController()
     timeout(
       () => {
+        // Keep the resolvers in a separate variable to reset the queue
+        // while the callback is pending, so that the next push can be
+        // assigned to a new Promise (and not dropped).
+        const outputResolvers = this.resolvers
         try {
           debug('[nuqs queue] Flushing debounce queue', value)
-          const p = this.callback(value)
+          const callbackPromise = this.callback(value)
           debug('[nuqs queue] Reset debounced queue %O', this.queuedValue)
           this.queuedValue = undefined
-          p.then(output => this.resolvers.resolve(output))
-            .catch(error => this.resolvers.reject(error))
-            .finally(() => {
-              // Reset Promise for next use
-              this.resolvers = withResolvers<OutputType>()
-            })
+          this.resolvers = withResolvers<OutputType>()
+          callbackPromise
+            .then(output => outputResolvers.resolve(output))
+            .catch(error => outputResolvers.reject(error))
         } catch (error) {
           this.queuedValue = undefined
-          this.resolvers.reject(error)
+          outputResolvers.reject(error)
         }
       },
       timeMs,
@@ -62,7 +64,7 @@ export class DebounceController {
     this.throttleQueue = throttleQueue
   }
 
-  public push(
+  push(
     update: Omit<UpdateQueuePushArgs, 'throttleMs'>,
     timeMs: number,
     adapter: UpdateQueueAdapterContext
@@ -73,11 +75,13 @@ export class DebounceController {
         URLSearchParams
       >(update => {
         this.throttleQueue.push(update)
-        return this.throttleQueue.flush(adapter)
-        // todo: Figure out cleanup strategy
-        // .finally(() => {
-        //   this.queues.delete(update.key)
-        // })
+        return this.throttleQueue.flush(adapter).finally(() => {
+          const queuedValue = this.queues.get(update.key)?.queuedValue
+          if (queuedValue === undefined) {
+            // Cleanup empty queues
+            this.queues.delete(update.key)
+          }
+        })
       })
       this.queues.set(update.key, queue)
     }
@@ -85,7 +89,7 @@ export class DebounceController {
     return queue.push(update, timeMs)
   }
 
-  public getQueuedQuery(key: string) {
+  getQueuedQuery(key: string) {
     // The debounced queued values are more likely to be up-to-date
     // than any updates pending in the throttle queue, which comes last
     // in the update chain.

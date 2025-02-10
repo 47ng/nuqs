@@ -87,9 +87,23 @@ describe('debounce: DebouncedPromiseQueue', () => {
     expect(queue.queuedValue).toBeUndefined()
     await expect(p).rejects.toThrowError('error')
   })
+  it('returns a new Promise when an update is pushed while the callback is pending', async () => {
+    vi.useFakeTimers()
+    const queue = new DebouncedPromiseQueue(async input => {
+      await setTimeout(100)
+      return input
+    })
+    const p1 = queue.push('a', 100)
+    vi.advanceTimersByTime(150) // 100ms debounce + half the callback settle time
+    const p2 = queue.push('b', 100)
+    expect(p1).not.toBe(p2)
+    vi.advanceTimersToNextTimer()
+    await expect(p1).resolves.toBe('a')
+    await expect(p2).resolves.toBe('b')
+  })
 })
 
-describe.only('debounce: DebounceController', () => {
+describe('debounce: DebounceController', () => {
   it('schedules an update and calls the adapter with it', async () => {
     vi.useFakeTimers()
     const fakeAdapter: UpdateQueueAdapterContext = {

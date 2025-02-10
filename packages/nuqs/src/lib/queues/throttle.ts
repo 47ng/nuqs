@@ -62,7 +62,7 @@ export class ThrottledQueue {
   resolvers: Resolvers<URLSearchParams> | null = null
   lastFlushedAt = 0
 
-  public push({
+  push({
     key,
     query,
     options,
@@ -89,11 +89,11 @@ export class ThrottledQueue {
     )
   }
 
-  public getQueuedQuery(key: string): string | null | undefined {
+  getQueuedQuery(key: string): string | null | undefined {
     return this.updateMap.get(key)
   }
 
-  public flush({
+  flush({
     getSearchParamsSnapshot = getSearchParamsSnapshotFromLocation,
     rateLimitFactor = 1,
     ...adapter
@@ -152,7 +152,7 @@ export class ThrottledQueue {
     return this.resolvers.promise
   }
 
-  public reset() {
+  reset() {
     this.updateMap.clear()
     this.transitions.clear()
     this.options.history = 'replace'
@@ -161,9 +161,7 @@ export class ThrottledQueue {
     this.throttleMs = defaultRateLimit.timeMs
   }
 
-  // --
-
-  private applyPendingUpdates(
+  applyPendingUpdates(
     adapter: Required<Omit<UpdateQueueAdapterContext, 'rateLimitFactor'>>
   ): [URLSearchParams, null | unknown] {
     const { updateUrl, getSearchParamsSnapshot } = adapter
