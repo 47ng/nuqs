@@ -106,6 +106,10 @@ export class ThrottledQueue {
       // Flush already scheduled
       return this.resolvers.promise
     }
+    if (this.updateMap.size === 0) {
+      // Nothing to flush
+      return Promise.resolve(getSearchParamsSnapshot())
+    }
     this.resolvers = withResolvers<URLSearchParams>()
     const flushNow = () => {
       this.lastFlushedAt = performance.now()
@@ -131,9 +135,10 @@ export class ThrottledQueue {
         rateLimitFactor *
         Math.max(0, Math.min(throttleMs, throttleMs - timeSinceLastFlush))
       debug(
-        '[nuqs queue] Scheduling flush in %f ms. Throttled at %f ms',
+        `[nuqs queue] Scheduling flush in %f ms. Throttled at %f ms (x%f)`,
         flushInMs,
-        throttleMs
+        throttleMs,
+        rateLimitFactor
       )
       if (flushInMs === 0) {
         // Since we're already in the "next tick" from queued updates,
@@ -172,7 +177,11 @@ export class ThrottledQueue {
     const transitions = Array.from(this.transitions)
     // Restore defaults
     this.reset()
-    debug('[nuqs queue] Flushing queue %O with options %O', items, options)
+    debug(
+      '[nuqs queue] Flushing throttle queue %O with options %O',
+      items,
+      options
+    )
     for (const [key, value] of items) {
       if (value === null) {
         search.delete(key)
