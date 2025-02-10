@@ -8,6 +8,7 @@ import {
   useState,
   type ReactNode
 } from 'react'
+import { debug } from '../lib/debug'
 import { renderQueryString } from '../lib/url-encoding'
 import { createAdapterProvider } from './lib/context'
 import type { AdapterInterface, AdapterOptions } from './lib/defs'
@@ -19,6 +20,7 @@ function generateUpdateUrlFn(fullPageNavigationOnShallowFalseUpdates: boolean) {
   return function updateUrl(search: URLSearchParams, options: AdapterOptions) {
     const url = new URL(location.href)
     url.search = renderQueryString(search)
+    debug('[nuqs react] Updating url: %s', url)
     if (fullPageNavigationOnShallowFalseUpdates && options.shallow === false) {
       const method =
         options.history === 'push' ? location.assign : location.replace
