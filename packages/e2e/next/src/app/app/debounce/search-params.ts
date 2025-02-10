@@ -6,9 +6,7 @@ import {
 } from 'nuqs/server'
 
 export const searchParams = {
-  search: parseAsString.withDefault('').withOptions({
-    limitUrlUpdates: { method: 'debounce', timeMs: 2000 }
-  }),
+  search: parseAsString.withDefault(''),
   pageIndex: parseAsInteger.withDefault(0)
 }
 export const urlKeys: UrlKeys<typeof searchParams> = {
