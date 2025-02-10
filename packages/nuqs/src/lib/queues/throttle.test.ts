@@ -94,22 +94,22 @@ describe('throttle: ThrottleQueue option combination logic', () => {
   })
   it('keeps the maximum value for timeMs', () => {
     const queue = new ThrottledQueue()
-    queue.push({ key: 'a', query: null, options: {}, timeMs: 100 })
-    queue.push({ key: 'b', query: null, options: {}, timeMs: 200 })
-    queue.push({ key: 'c', query: null, options: {}, timeMs: 300 })
+    queue.push({ key: 'a', query: null, options: {} }, 100)
+    queue.push({ key: 'b', query: null, options: {} }, 200)
+    queue.push({ key: 'c', query: null, options: {} }, 300)
     expect(queue.timeMs).toEqual(300)
   })
   it('clamps the minimum value for timeMs to the default rate limit', () => {
     expect(defaultRateLimit.timeMs).toBeGreaterThan(10) // precondition
     const queue = new ThrottledQueue()
-    queue.push({ key: 'a', query: null, options: {}, timeMs: 10 })
+    queue.push({ key: 'a', query: null, options: {} }, 10)
     expect(queue.timeMs).toEqual(defaultRateLimit.timeMs)
   })
   it('supports passing Infinity to the timeMs option (but can be cleared)', () => {
     const queue = new ThrottledQueue()
-    queue.push({ key: 'a', query: null, options: {}, timeMs: Infinity })
+    queue.push({ key: 'a', query: null, options: {} }, Infinity)
     expect(queue.timeMs).toBe(Infinity)
-    queue.push({ key: 'b', query: null, options: {}, timeMs: 100 })
+    queue.push({ key: 'b', query: null, options: {} }, 100)
     expect(queue.timeMs).toBe(100)
   })
 })
