@@ -33,7 +33,7 @@ export function useNuqsNextPagesRouterAdapter(): AdapterInterface {
     // passing an asPath, causing issues in dynamic routes in the pages router.
     const nextRouter = window.next?.router!
     const url = renderURL(nextRouter.state.asPath.split('?')[0] ?? '', search)
-    debug('[nuqs queue (pages)] Updating url: %s', url)
+    debug('[nuqs next/pages] Updating url: %s', url)
     const method =
       options.history === 'push' ? nextRouter.push : nextRouter.replace
     method.call(nextRouter, url, url, {

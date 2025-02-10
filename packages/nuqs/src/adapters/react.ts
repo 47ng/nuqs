@@ -1,5 +1,6 @@
 import mitt from 'mitt'
 import { useEffect, useState } from 'react'
+import { debug } from '../lib/debug'
 import { renderQueryString } from '../lib/url-encoding'
 import { createAdapterProvider } from './lib/context'
 import type { AdapterInterface, AdapterOptions } from './lib/defs'
@@ -10,6 +11,7 @@ const emitter: SearchParamsSyncEmitter = mitt()
 function updateUrl(search: URLSearchParams, options: AdapterOptions) {
   const url = new URL(location.href)
   url.search = renderQueryString(search)
+  debug('[nuqs react] Updating url: %s', url)
   const method =
     options.history === 'push' ? history.pushState : history.replaceState
   method.call(history, history.state, '', url)
