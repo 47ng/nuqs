@@ -1,4 +1,4 @@
-import { renderQueryString } from '../../url-encoding'
+import { renderQueryString } from '../../lib/url-encoding'
 
 export function renderURL(base: string, search: URLSearchParams) {
   const hashlessBase = base.split('#')[0] ?? ''
