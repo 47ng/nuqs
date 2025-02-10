@@ -20,7 +20,6 @@ export type UpdateQueuePushArgs = {
   key: string
   query: string | null
   options: AdapterOptions & Pick<Options, 'startTransition'>
-  timeMs?: number
 }
 
 function getSearchParamsSnapshotFromLocation() {
@@ -39,12 +38,10 @@ export class ThrottledQueue {
   resolvers: Resolvers<URLSearchParams> | null = null
   lastFlushedAt = 0
 
-  push({
-    key,
-    query,
-    options,
+  push(
+    { key, query, options }: UpdateQueuePushArgs,
     timeMs = defaultRateLimit.timeMs
-  }: UpdateQueuePushArgs) {
+  ) {
     debug('[nuqs queue] Enqueueing %s=%s %O', key, query, options)
     // Enqueue update
     this.updateMap.set(key, query)

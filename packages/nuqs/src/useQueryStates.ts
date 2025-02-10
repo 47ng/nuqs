@@ -274,14 +274,14 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
             maxDebounceTime = timeMs
           }
         } else {
-          update.throttleMs =
+          const timeMs =
             callOptions?.limitUrlUpdates?.timeMs ??
             parser?.limitUrlUpdates?.timeMs ??
             limitUrlUpdates?.timeMs ??
             callOptions.throttleMs ??
             parser.throttleMs ??
             throttleMs
-          globalThrottleQueue.push(update)
+          globalThrottleQueue.push(update, timeMs)
         }
       }
       // We need to flush the throttle queue, but we may have a pending
