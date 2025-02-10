@@ -1,16 +1,20 @@
 'use client'
 
-import { parseAsInteger, useQueryState, useQueryStates } from 'nuqs'
+import {
+  debounce,
+  parseAsInteger,
+  throttle,
+  useQueryState,
+  useQueryStates
+} from 'nuqs'
 import { searchParams, urlKeys } from './search-params'
 
 export function Client() {
   const [timeMs, setTimeMs] = useQueryState(
     'debounceTime',
     parseAsInteger.withDefault(100).withOptions({
-      limitUrlUpdates: {
-        method: 'throttle',
-        timeMs: 200
-      }
+      // No real need to throttle this one, but it showcases usage:
+      limitUrlUpdates: throttle(200)
     })
   )
   const [{ search, pageIndex }, setSearchParams] = useQueryStates(
@@ -28,30 +32,23 @@ export function Client() {
           setSearchParams(
             { search: e.target.value },
             {
-              limitUrlUpdates: {
-                method: e.target.value === '' ? 'throttle' : 'debounce',
-                timeMs: e.target.value === '' ? 50 : timeMs
-              }
+              // Instant update when clearing the input, otherwise debounce
+              limitUrlUpdates:
+                e.target.value === '' ? undefined : debounce(timeMs)
             }
           )
         }
+        onKeyDown={e => {
+          if (e.key === 'Enter') {
+            // Send the search immediately when pressing Enter
+            setSearchParams({ search: e.currentTarget.value })
+          }
+        }}
       />
       <button onClick={() => setSearchParams({ pageIndex: pageIndex + 1 })}>
         Next Page
       </button>
-      <button
-        onClick={() => {
-          setTimeMs(null)
-          setSearchParams(null, {
-            limitUrlUpdates: {
-              method: 'throttle',
-              timeMs: 50
-            }
-          })
-        }}
-      >
-        Reset
-      </button>
+      <button onClick={() => setSearchParams(null)}>Reset</button>
       <div style={{ marginTop: '1rem' }}>
         <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           <input
