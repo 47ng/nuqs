@@ -7,6 +7,11 @@ export type {
   UrlKeys
 } from './defs'
 export {
+  debounce,
+  defaultRateLimit,
+  throttle
+} from './lib/queues/rate-limiting'
+export {
   createLoader,
   type LoaderFunction,
   type LoaderInput,
