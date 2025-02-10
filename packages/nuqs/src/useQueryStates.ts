@@ -268,7 +268,8 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
             adapter
           )
           if (maxDebounceTime < timeMs) {
-            // The largest debounce is likely to be the last URL update:
+            // The largest debounce is likely to be the last URL update,
+            // so we keep that Promise to return it.
             returnedPromise = debouncedPromise
             maxDebounceTime = timeMs
           }
@@ -283,6 +284,8 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
           globalThrottleQueue.push(update)
         }
       }
+      // We need to flush the throttle queue, but we may have a pending
+      // debounced update that will resolve afterwards.
       const globalPromise = globalThrottleQueue.flush(adapter)
       return returnedPromise ?? globalPromise
     },
