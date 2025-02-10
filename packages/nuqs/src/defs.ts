@@ -2,6 +2,9 @@ import type { TransitionStartFunction } from 'react'
 
 export type SearchParams = Record<string, string | string[] | undefined>
 export type HistoryOptions = 'replace' | 'push'
+export type LimitUrlUpdates =
+  | { method: 'debounce'; timeMs: number }
+  | { method: 'throttle'; timeMs: number }
 
 export type Options = {
   /**
@@ -55,10 +58,7 @@ export type Options = {
    * If both `throttleMs` and `limitUrlUpdates` are set, `limitUrlUpdates` will
    * take precedence.
    */
-  limitUrlUpdates?: {
-    method: 'debounce' | 'throttle'
-    timeMs: number
-  }
+  limitUrlUpdates?: LimitUrlUpdates
 
   /**
    * In RSC frameworks, opt-in to observing Server Component loading states when
