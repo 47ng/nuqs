@@ -306,12 +306,12 @@ export function useQueryState<T = string>(
           defaultRateLimit.timeMs
         return debounceController.push(update, timeMs, adapter)
       } else {
-        update.throttleMs =
+        const timeMs =
           options.limitUrlUpdates?.timeMs ??
           limitUrlUpdates?.timeMs ??
           options.throttleMs ??
           throttleMs
-        globalThrottleQueue.push(update)
+        globalThrottleQueue.push(update, timeMs)
         return globalThrottleQueue.flush(adapter)
       }
     },
