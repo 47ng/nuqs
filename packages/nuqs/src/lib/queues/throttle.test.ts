@@ -1,7 +1,18 @@
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { UpdateUrlFunction } from '../../adapters/lib/defs'
 import { defaultRateLimit } from './rate-limiting'
 import { ThrottledQueue, type UpdateQueueAdapterContext } from './throttle'
+
+const mockAdapter = {
+  updateUrl: vi.fn<UpdateUrlFunction>(),
+  getSearchParamsSnapshot() {
+    return new URLSearchParams()
+  }
+} satisfies UpdateQueueAdapterContext
+
+afterEach(() => {
+  mockAdapter.updateUrl.mockReset()
+})
 
 describe('throttle: ThrottleQueue value queueing', () => {
   it('should enqueue key & values', () => {
@@ -70,12 +81,6 @@ describe('throttle: ThrottleQueue option combination logic', () => {
     }
     const startTransitionA = vi.fn().mockImplementation(mockStartTransition)
     const startTransitionB = vi.fn().mockImplementation(mockStartTransition)
-    const mockAdapter: UpdateQueueAdapterContext = {
-      updateUrl: vi.fn<UpdateUrlFunction>(),
-      getSearchParamsSnapshot() {
-        return new URLSearchParams()
-      }
-    }
     const queue = new ThrottledQueue()
     queue.push({
       key: 'a',
@@ -111,5 +116,89 @@ describe('throttle: ThrottleQueue option combination logic', () => {
     expect(queue.timeMs).toBe(Infinity)
     queue.push({ key: 'b', query: null, options: {} }, 100)
     expect(queue.timeMs).toBe(100)
+  })
+})
+
+describe('throttle: flush', () => {
+  it('returns a Promise of updated URL search params', async () => {
+    const throttle = new ThrottledQueue()
+    throttle.push({ key: 'a', query: 'a', options: {} })
+    const promise = throttle.flush(mockAdapter)
+    await expect(promise).resolves.toEqual(new URLSearchParams('?a=a'))
+    expect(mockAdapter.updateUrl).toHaveBeenCalledExactlyOnceWith(
+      new URLSearchParams('?a=a'),
+      {
+        history: 'replace',
+        scroll: false,
+        shallow: true
+      }
+    )
+  })
+  it('combines updates in order of push', async () => {
+    const throttle = new ThrottledQueue()
+    throttle.push({ key: 'b', query: 'b', options: {} })
+    throttle.push({ key: 'a', query: 'a', options: {} })
+    const promise = throttle.flush(mockAdapter)
+    await expect(promise).resolves.toEqual(new URLSearchParams('?b=b&a=a'))
+    expect(mockAdapter.updateUrl).toHaveBeenCalledExactlyOnceWith(
+      new URLSearchParams('?b=b&a=a'),
+      {
+        history: 'replace',
+        scroll: false,
+        shallow: true
+      }
+    )
+  })
+  it('returns the same Promise for multiple flushes in the same tick', () => {
+    vi.useFakeTimers()
+    const throttle = new ThrottledQueue()
+    throttle.push({ key: 'b', query: 'b', options: {} })
+    const p1 = throttle.flush(mockAdapter)
+    throttle.push({ key: 'a', query: 'a', options: {} })
+    const p2 = throttle.flush(mockAdapter)
+    expect(p1).toBe(p2)
+    vi.runAllTimers()
+    expect(mockAdapter.updateUrl).toHaveBeenCalledExactlyOnceWith(
+      new URLSearchParams('?b=b&a=a'),
+      {
+        history: 'replace',
+        scroll: false,
+        shallow: true
+      }
+    )
+  })
+  it('returns the same Promise if the initial flush has no updates', () => {
+    vi.useFakeTimers()
+    const throttle = new ThrottledQueue()
+    const p1 = throttle.flush(mockAdapter)
+    throttle.push({ key: 'a', query: 'a', options: {} })
+    const p2 = throttle.flush(mockAdapter)
+    expect(p1).toBe(p2)
+    vi.runAllTimers()
+    expect(mockAdapter.updateUrl).toHaveBeenCalledExactlyOnceWith(
+      new URLSearchParams('?a=a'),
+      {
+        history: 'replace',
+        scroll: false,
+        shallow: true
+      }
+    )
+  })
+  it('returns the same Promise if the second flush has no updates', () => {
+    vi.useFakeTimers()
+    const throttle = new ThrottledQueue()
+    throttle.push({ key: 'a', query: 'a', options: {} })
+    const p1 = throttle.flush(mockAdapter)
+    const p2 = throttle.flush(mockAdapter)
+    expect(p1).toBe(p2)
+    vi.runAllTimers()
+    expect(mockAdapter.updateUrl).toHaveBeenCalledExactlyOnceWith(
+      new URLSearchParams('?a=a'),
+      {
+        history: 'replace',
+        scroll: false,
+        shallow: true
+      }
+    )
   })
 })
