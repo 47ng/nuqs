@@ -10,6 +10,7 @@ import {
   parseAsJson,
   parseAsString
 } from './parsers'
+import { useQueryState } from './useQueryState'
 import { useQueryStates } from './useQueryStates'
 
 describe('useQueryStates', () => {
@@ -439,5 +440,122 @@ describe('useQueryStates: update sequencing', () => {
     })
     expect(onUrlUpdate).toHaveBeenCalledOnce()
     expect(onUrlUpdate.mock.calls[0]![0].queryString).toEqual('?a=a&b=b')
+  })
+
+  it('should return a stable Promise when pushing multiple updates in the same tick', async () => {
+    const { result } = renderHook(
+      () =>
+        useQueryStates({
+          a: parseAsString,
+          b: parseAsString
+        }),
+      {
+        wrapper: withNuqsTestingAdapter()
+      }
+    )
+    let p1: Promise<URLSearchParams> | undefined = undefined
+    let p2: Promise<URLSearchParams> | undefined = undefined
+    await act(() => {
+      p1 = result.current[1]({ a: 'a' })
+      p2 = result.current[1]({ b: 'b' })
+      return p2
+    })
+    expect(p1).toBeInstanceOf(Promise)
+    expect(p2).toBeInstanceOf(Promise)
+    expect(p1).toBe(p2)
+    await expect(p1).resolves.toEqual(new URLSearchParams('?a=a&b=b'))
+  })
+
+  it('should return a stable Promise when pushing multiple updates in the same tick (multiple useQueryStates)', async () => {
+    const { result } = renderHook(
+      () => ({
+        foo: useQueryStates({ a: parseAsString }),
+        bar: useQueryStates({ b: parseAsString })
+      }),
+      {
+        wrapper: withNuqsTestingAdapter()
+      }
+    )
+    let p1: Promise<URLSearchParams> | undefined = undefined
+    let p2: Promise<URLSearchParams> | undefined = undefined
+    await act(() => {
+      p1 = result.current.foo[1]({ a: 'a' })
+      p2 = result.current.bar[1]({ b: 'b' })
+      return p2
+    })
+    expect(p1).toBeInstanceOf(Promise)
+    expect(p2).toBeInstanceOf(Promise)
+    expect(p1).toBe(p2)
+    await expect(p1).resolves.toEqual(new URLSearchParams('?a=a&b=b'))
+  })
+
+  it('should return a stable Promise when pushing updates before the throttle period times out', async () => {
+    const { result } = renderHook(
+      () => ({
+        foo: useQueryStates({ a: parseAsString }),
+        bar: useQueryStates({ b: parseAsString })
+      }),
+      {
+        wrapper: withNuqsTestingAdapter({
+          rateLimitFactor: 1
+        })
+      }
+    )
+    let p0: Promise<URLSearchParams> | undefined = undefined
+    let p1: Promise<URLSearchParams> | undefined = undefined
+    let p2: Promise<URLSearchParams> | undefined = undefined
+    // prettier-ignore
+    await act(async () => {
+        // Flush the queue from previous tests
+        await new Promise(r => setTimeout(r, 60))
+        // First, push an update to a to be emitted "immediately"
+        p0 = result.current.foo[1]({ a: 'init' })
+        // Then two updates before the end of the throttle timeout
+        setTimeout(() => { p1 = result.current.foo[1]({a:'a'}) }, 10)
+        setTimeout(() => { p2 = result.current.bar[1]({b:'b'}) }, 20)
+        return new Promise((resolve) => setTimeout(resolve, 30))
+      })
+    expect(p0).toBeInstanceOf(Promise)
+    expect(p1).toBeInstanceOf(Promise)
+    expect(p2).toBeInstanceOf(Promise)
+    expect(p0).not.toBe(p1)
+    expect(p1).toBe(p2)
+    await expect(p0).resolves.toEqual(new URLSearchParams('?a=init'))
+    await expect(p1).resolves.toEqual(new URLSearchParams('?a=a&b=b'))
+  })
+
+  it('should return the same Promise as useQueryState', async () => {
+    const { result } = renderHook(
+      () => ({
+        foo: useQueryStates({ a: parseAsString }),
+        bar: useQueryState('b')
+      }),
+      {
+        wrapper: withNuqsTestingAdapter({
+          rateLimitFactor: 1
+        })
+      }
+    )
+    let p0: Promise<URLSearchParams> | undefined = undefined
+    let p1: Promise<URLSearchParams> | undefined = undefined
+    let p2: Promise<URLSearchParams> | undefined = undefined
+    // prettier-ignore
+    await act(async () => {
+        // Flush the queue from previous tests
+        await new Promise(r => setTimeout(r, 60))
+        // First, push an update to a to be emitted "immediately"
+        p0 = result.current.foo[1]({ a: 'init' })
+        // Then two updates before the end of the throttle timeout
+        setTimeout(() => { p1 = result.current.foo[1]({a:'a'}) }, 10)
+        setTimeout(() => { p2 = result.current.bar[1]('b') }, 20)
+        return new Promise((resolve) => setTimeout(resolve, 30))
+      })
+    expect(p0).toBeInstanceOf(Promise)
+    expect(p1).toBeInstanceOf(Promise)
+    expect(p2).toBeInstanceOf(Promise)
+    expect(p0).not.toBe(p1)
+    expect(p1).toBe(p2)
+    await expect(p0).resolves.toEqual(new URLSearchParams('?a=init'))
+    await expect(p1).resolves.toEqual(new URLSearchParams('?a=a&b=b'))
   })
 })
