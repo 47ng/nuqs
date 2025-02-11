@@ -80,10 +80,6 @@ export class ThrottledQueue {
       // Flush already scheduled
       return this.resolvers.promise
     }
-    if (this.updateMap.size === 0) {
-      // Nothing to flush
-      return Promise.resolve(getSearchParamsSnapshot())
-    }
     this.resolvers = withResolvers<URLSearchParams>()
     const flushNow = () => {
       this.lastFlushedAt = performance.now()
