@@ -1,6 +1,6 @@
 # Contribution Guidelines
 
-First off, thanks for your help!
+First off, thanks for your help! 🙏
 
 ## Getting started
 
@@ -47,7 +47,18 @@ inspect it locally.
 
 ## Proposing changes
 
+Make sure your changes:
+
+1. Pass the tests: `pnpm test`
+2. Pass linting checks: `pnpm lint`
+3. Have relevant documentation additions / updates (in the `packages/docs/content` and the README.md file).
+
 This repository uses [`semantic-release`](https://semantic-release.gitbook.io/semantic-release/)
 to automatically publish new versions of the package to NPM.
 To do this, the Git history follows the
 [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) format.
+
+Pull requests should target the `next` branch.
+
+If your changes impact the `nuqs` package, you'll get a comment from [pkg.pr.new](https://pkg.pr.new)
+with a preview deployment of the package you can install in your application.
