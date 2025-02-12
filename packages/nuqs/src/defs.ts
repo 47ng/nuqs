@@ -41,7 +41,14 @@ export type Options = {
    *
    * Note: the value will be limited to a minimum of 50ms, anything lower
    * will not have any effect.
-   * @deprecated use limitUrlUpdates: { 'method': 'throttle', timeMs: number }
+   *
+   * @deprecated use `limitUrlUpdates: { 'method': 'throttle', timeMs: number }`
+   * or use the shorthand:
+   * ```ts
+   * import { throttle } from 'nuqs'
+   *
+   * limitUrlUpdates: throttle(100) // time in ms
+   * ```
    */
   throttleMs?: number
 
