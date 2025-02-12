@@ -45,6 +45,7 @@ const router = createBrowserRouter(
       <Route path="fog-of-war/result"                     lazy={load(import('./routes/fog-of-war.result'))} />
       <Route path="conditional-rendering/useQueryState"   lazy={load(import('./routes/conditional-rendering.useQueryState'))} />
       <Route path="conditional-rendering/useQueryStates"  lazy={load(import('./routes/conditional-rendering.useQueryStates'))} />
+      <Route path="scroll"                                lazy={load(import('./routes/scroll'))} />
 
       <Route path="render-count/:hook/:shallow/:history/:startTransition/no-loader"     lazy={load(import('./routes/render-count.$hook.$shallow.$history.$startTransition.no-loader'))} />
       <Route path="render-count/:hook/:shallow/:history/:startTransition/sync-loader"   lazy={load(import('./routes/render-count.$hook.$shallow.$history.$startTransition.sync-loader'))} />
