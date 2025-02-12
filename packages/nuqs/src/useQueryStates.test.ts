@@ -346,6 +346,25 @@ describe('useQueryStates: dynamic keys', () => {
     expect(result.current[0].d).toEqual(4)
   })
 
+  it('updating keys also updates the result structure', () => {
+    const useTestHook = (keys: string[] = ['a', 'b']) =>
+      useQueryStates(
+        keys.reduce((acc, key) => ({ ...acc, [key]: parseAsInteger }), {})
+      )
+    const { result, rerender } = renderHook(useTestHook, {
+      wrapper: withNuqsTestingAdapter({
+        searchParams: ''
+      })
+    })
+    expect(result.current[0]).toStrictEqual({ a: null, b: null })
+    rerender(['a']) // remove b
+    expect(result.current[0]).toStrictEqual({ a: null })
+    rerender(['a', 'b', 'c']) // add c
+    expect(result.current[0]).toStrictEqual({ a: null, b: null, c: null })
+    rerender(['a', 'b', 'd']) // remove c, add d
+    expect(result.current[0]).toStrictEqual({ a: null, b: null, d: null })
+  })
+
   it('supports dynamic keys with remapping', () => {
     const useTestHook = (keys: [string, string] = ['a', 'b']) =>
       useQueryStates(

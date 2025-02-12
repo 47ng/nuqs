@@ -310,6 +310,16 @@ function parseMap<KeyMap extends UseQueryStatesKeysMap>(
     }
     return out
   }, {} as NullableValues<KeyMap>)
+
+  if (!hasChanged) {
+    // check that keyMap keys have not changed
+    const keyMapKeys = Object.keys(keyMap)
+    const cachedStateKeys = Object.keys(cachedState ?? {})
+    hasChanged =
+      keyMapKeys.length !== cachedStateKeys.length ||
+      keyMapKeys.some(key => !cachedStateKeys.includes(key))
+  }
+
   return { state, hasChanged }
 }
 
