@@ -4,6 +4,7 @@ import {
   withNuqsTestingAdapter,
   type OnUrlUpdateFunction
 } from './adapters/testing'
+import { debounce } from './lib/queues/rate-limiting'
 import {
   parseAsArrayOf,
   parseAsInteger,
@@ -576,5 +577,42 @@ describe('useQueryStates: update sequencing', () => {
     expect(p1).toBe(p2)
     await expect(p0).resolves.toEqual(new URLSearchParams('?a=init'))
     await expect(p1).resolves.toEqual(new URLSearchParams('?a=a&b=b'))
+  })
+
+  it('should return a new Promise when using debounce', async () => {
+    const onUrlUpdate = vi.fn<OnUrlUpdateFunction>()
+    const { result } = renderHook(
+      () => ({
+        foo: useQueryStates({
+          a: parseAsString.withOptions({ limitUrlUpdates: debounce(100) })
+        }),
+        bar: useQueryStates({
+          b: parseAsString
+        })
+      }),
+      {
+        wrapper: withNuqsTestingAdapter({
+          onUrlUpdate,
+          rateLimitFactor: 1
+        })
+      }
+    )
+    let p1: Promise<URLSearchParams> | undefined = undefined
+    let p2: Promise<URLSearchParams> | undefined = undefined
+    await act(async () => {
+      p1 = result.current.foo[1]({ a: 'a' })
+      p2 = result.current.bar[1]({ b: 'b' })
+      return p1 // p1 will resolve last, so await it before moving on
+    })
+    expect(p1).toBeInstanceOf(Promise)
+    expect(p2).toBeInstanceOf(Promise)
+    expect(p1).not.toBe(p2)
+    // Note: our mock adapter does not save search params, so there is no merge
+    await expect(p1).resolves.toEqual(new URLSearchParams('?a=a'))
+    await expect(p2).resolves.toEqual(new URLSearchParams('?b=b'))
+    expect(onUrlUpdate).toHaveBeenCalledTimes(2)
+    // b updates first, then a
+    expect(onUrlUpdate.mock.calls[0]![0].queryString).toEqual('?b=b')
+    expect(onUrlUpdate.mock.calls[1]![0].queryString).toEqual('?a=a')
   })
 })
