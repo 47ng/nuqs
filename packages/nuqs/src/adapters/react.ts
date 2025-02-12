@@ -14,6 +14,9 @@ function updateUrl(search: URLSearchParams, options: AdapterOptions) {
     options.history === 'push' ? history.pushState : history.replaceState
   method.call(history, history.state, '', url)
   emitter.emit('update', search)
+  if (options.scroll === true) {
+    window.scrollTo({ top: 0 })
+  }
 }
 
 function useNuqsReactAdapter() {
