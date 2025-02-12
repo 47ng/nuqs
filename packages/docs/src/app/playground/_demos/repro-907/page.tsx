@@ -6,7 +6,9 @@ import { parseAsString, useQueryStates } from 'nuqs'
 import { useState } from 'react'
 
 export default function Home() {
-  const [nuqsConfig, setNuqsConfig] = useState({
+  const [nuqsConfig, setNuqsConfig] = useState<
+    Record<string, typeof parseAsString>
+  >({
     p1: parseAsString,
     p2: parseAsString
   })
