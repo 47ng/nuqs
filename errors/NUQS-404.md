@@ -27,3 +27,18 @@ If you encounter this error outside of the browser, like in a test
 runner (eg: Vitest or Jest), you may use the [testing adapter](https://nuqs.47ng.com/docs/testing)
 from `nuqs/adapters/testing` to mock the initial search params and access
 setup/assertion testing facilities.
+
+### Monorepo setups
+
+This error can also occur in monorepo setups where components using nuqs hooks
+are in different packages resolving to different `nuqs` versions,
+leading to different context references being used.
+
+If you [enable debugging](https://nuqs.47ng.com/docs/debugging), you might see a
+[`NUQS-303 - Multiple adapter contexts detected`](./NUQS-303) error, confirming
+this hypothesis.
+
+For additional clarification, ensure that all packages use compatible versions
+of `nuqs` to prevent this issue from arising. See issue
+[#798](https://github.com/your-repo/issues/798) for more details and
+possible solutions.
