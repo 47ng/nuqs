@@ -11,7 +11,7 @@ export async function SponsorsSection() {
       <h2 className="mb-12 text-center text-3xl font-bold tracking-tighter dark:text-white md:text-4xl xl:text-5xl">
         Sponsors
       </h2>
-      <ul className="container grid grid-cols-2 gap-y-12 md:grid-cols-3 xl:grid-cols-6">
+      <ul className="container grid grid-cols-2 gap-y-12 md:grid-cols-3 xl:grid-cols-7">
         {sponsors.map(sponsor => (
           <li key={sponsor.handle} className="flex flex-col items-center">
             <a href={sponsor.url} className="h-32 w-32 rounded-full">
@@ -88,6 +88,12 @@ async function fetchSponsors(): Promise<Sponsors> {
       name: 'Vercel',
       url: 'https://vercel.com/',
       img: 'https://avatars.githubusercontent.com/u/14985020?v=4'
+    },
+    {
+      handle: 'unkey.com',
+      name: 'Unkey',
+      url: 'https://unkey.com',
+      img: 'https://avatars.githubusercontent.com/u/138932600?s=200&v=4'
     },
     {
       handle: 'ryanmagoon',

@@ -33,7 +33,12 @@ export const metadata = {
 export default function Layout({ children }: { children: ReactNode }) {
   const enableChiffreAnalytics = process.env.VERCEL_ENV === 'production'
   return (
-    <html lang="en" className={cn(inter.className, 'antialiased')}>
+    <html
+      lang="en"
+      className={cn(inter.className, 'antialiased')}
+      // https://github.com/shadcn-ui/ui/issues/5552#issuecomment-2435024526
+      suppressHydrationWarning
+    >
       <body>
         <Banner
           variant="rainbow"
