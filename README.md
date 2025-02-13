@@ -2,7 +2,8 @@
 
 [![NPM](https://img.shields.io/npm/v/nuqs?color=red)](https://www.npmjs.com/package/nuqs)
 [![MIT License](https://img.shields.io/github/license/47ng/nuqs.svg?color=blue)](https://github.com/47ng/nuqs/blob/next/LICENSE)
-[![Continuous Integration](https://github.com/47ng/nuqs/workflows/Continuous%20Integration/badge.svg?branch=next)](https://github.com/47ng/nuqs/actions)
+[![GitHub Sponsors](https://img.shields.io/github/sponsors/franky47?color=%23db61a2&label=Sponsors)](https://github.com/sponsors/franky47)
+[![CI/CD](https://github.com/47ng/nuqs/actions/workflows/ci-cd.yml/badge.svg?branch=next)](https://github.com/47ng/nuqs/actions/workflows/ci-cd.yml)
 [![Depfu](https://badges.depfu.com/badges/acad53fa2b09b1e435a19d6d18f29af4/count.svg)](https://depfu.com/github/47ng/nuqs?project_id=22104)
 
 Type-safe search params state manager for React frameworks. Like `useState`, but stored in the URL query string.
