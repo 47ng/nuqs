@@ -184,3 +184,37 @@ import { NuqsTestingAdapter } from 'nuqs/adapters/testing'
 ```
 
 It takes the same props as the arguments you can pass to `withNuqsTestingAdapter{:ts}`.
+
+## Testing custom parsers
+
+If you create custom parsers with `createParser{:ts}`, you will likely want to
+test them.
+
+Parsers should:
+1. Define pure functions for `parse`, `serialize`, and `eq`.
+2. Be bijective: `parse(serialize(x)) === x` and `serialize(parse(x)) === x`.
+
+To help test bijectivity, you can use helpers defined in `nuqs/testing`:
+
+```ts /isParserBijective/
+import {
+  isParserBijective,
+  testParseThenSerialize,
+  testSerializeThenParse
+} from 'nuqs/testing'
+
+it('is bijective', () => {
+  // Passing tests return true
+  expect(isParserBijective(parseAsInteger, '42', 42)).toBe(true)
+  // Failing test throws an error
+  expect(() => isParserBijective(parseAsInteger, '42', 47)).toThrowError()
+
+  // You can also test either side separately:
+  expect(testParseThenSerialize(parseAsInteger, '42')).toBe(true)
+  expect(testSerializeThenParse(parseAsInteger, 42)).toBe(true)
+  // Those will also throw an error if the test fails,
+  // which makes it easier to isolate which side failed:
+  expect(() => testParseThenSerialize(parseAsInteger, 'not a number')).toThrowError()
+  expect(() => testSerializeThenParse(parseAsInteger, NaN)).toThrowError()
+})
+```

@@ -1,4 +1,4 @@
-import { describe, expect, test } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import {
   parseAsArrayOf,
   parseAsBoolean,
@@ -14,39 +14,40 @@ import {
   parseAsStringLiteral,
   parseAsTimestamp
 } from './parsers'
-import { testParseThenSerialize, testSerializeThenParse } from './testing'
+import {
+  isParserBijective,
+  testParseThenSerialize,
+  testSerializeThenParse
+} from './testing'
 
 describe('parsers', () => {
-  test('parseAsString', () => {
+  it('parseAsString', () => {
     expect(parseAsString.parse('')).toBe('')
     expect(parseAsString.parse('foo')).toBe('foo')
-    testParseThenSerialize(parseAsString, 'foo')
-    testSerializeThenParse(parseAsString, 'foo')
+    expect(isParserBijective(parseAsString, 'foo', 'foo')).toBe(true)
   })
-  test('parseAsInteger', () => {
+  it('parseAsInteger', () => {
     expect(parseAsInteger.parse('')).toBeNull()
     expect(parseAsInteger.parse('1')).toBe(1)
     expect(parseAsInteger.parse('3.14')).toBe(3)
     expect(parseAsInteger.parse('3,14')).toBe(3)
     expect(parseAsInteger.serialize(3.14)).toBe('3')
-    testParseThenSerialize(parseAsInteger, '3')
-    testSerializeThenParse(parseAsInteger, 3)
+    expect(isParserBijective(parseAsInteger, '3', 3)).toBe(true)
     expect(() => testParseThenSerialize(parseAsInteger, '3.14')).toThrow()
     expect(() => testSerializeThenParse(parseAsInteger, 3.14)).toThrow()
   })
-  test('parseAsHex', () => {
+  it('parseAsHex', () => {
     expect(parseAsHex.parse('')).toBeNull()
     expect(parseAsHex.parse('1')).toBe(1)
     expect(parseAsHex.parse('a')).toBe(0xa)
     expect(parseAsHex.parse('g')).toBeNull()
     expect(parseAsHex.serialize(0xa)).toBe('0a')
-    for (let i = 0; i < 256; i++) {
-      const hex = i.toString(16).padStart(2, '0')
-      testParseThenSerialize(parseAsHex, hex)
-      testSerializeThenParse(parseAsHex, i)
+    for (let byte = 0; byte < 256; byte++) {
+      const hexString = byte.toString(16).padStart(2, '0')
+      expect(isParserBijective(parseAsHex, hexString, byte)).toBe(true)
     }
   })
-  test('parseAsFloat', () => {
+  it('parseAsFloat', () => {
     expect(parseAsFloat.parse('')).toBeNull()
     expect(parseAsFloat.parse('1')).toBe(1)
     expect(parseAsFloat.parse('3.14')).toBe(3.14)
@@ -54,10 +55,9 @@ describe('parsers', () => {
     expect(parseAsFloat.serialize(3.14)).toBe('3.14')
     // https://0.30000000000000004.com/
     expect(parseAsFloat.serialize(0.1 + 0.2)).toBe('0.30000000000000004')
-    testParseThenSerialize(parseAsFloat, '3.14')
-    testSerializeThenParse(parseAsFloat, 3.14)
+    expect(isParserBijective(parseAsFloat, '3.14', 3.14)).toBe(true)
   })
-  test('parseAsIndex', () => {
+  it('parseAsIndex', () => {
     expect(parseAsIndex.parse('')).toBeNull()
     expect(parseAsIndex.parse('1')).toBe(0)
     expect(parseAsIndex.parse('3.14')).toBe(2)
@@ -66,22 +66,20 @@ describe('parsers', () => {
     expect(parseAsIndex.parse('-1')).toBe(-2)
     expect(parseAsIndex.serialize(0)).toBe('1')
     expect(parseAsIndex.serialize(3.14)).toBe('4')
-    testParseThenSerialize(parseAsIndex, '0')
-    testParseThenSerialize(parseAsIndex, '1')
-    testSerializeThenParse(parseAsIndex, 0)
-    testSerializeThenParse(parseAsIndex, 1)
+    expect(isParserBijective(parseAsIndex, '1', 0)).toBe(true)
+    expect(isParserBijective(parseAsIndex, '2', 1)).toBe(true)
   })
-  test('parseAsHex', () => {
+  it('parseAsHex', () => {
     expect(parseAsHex.parse('')).toBeNull()
     expect(parseAsHex.parse('1')).toBe(1)
     expect(parseAsHex.parse('a')).toBe(0xa)
     expect(parseAsHex.parse('g')).toBeNull()
     expect(parseAsHex.serialize(0x0a)).toBe('0a')
     expect(parseAsHex.serialize(0x2a)).toBe('2a')
-    testParseThenSerialize(parseAsHex, '2a')
-    testSerializeThenParse(parseAsHex, 0x2a)
+    expect(isParserBijective(parseAsHex, '0a', 0x0a)).toBe(true)
+    expect(isParserBijective(parseAsHex, '2a', 0x2a)).toBe(true)
   })
-  test('parseAsBoolean', () => {
+  it('parseAsBoolean', () => {
     expect(parseAsBoolean.parse('')).toBe(false)
     // In only triggers on 'true', everything else is false
     expect(parseAsBoolean.parse('true')).toBe(true)
@@ -92,19 +90,23 @@ describe('parsers', () => {
     expect(parseAsBoolean.parse('no')).toBe(false)
     expect(parseAsBoolean.serialize(true)).toBe('true')
     expect(parseAsBoolean.serialize(false)).toBe('false')
-    testParseThenSerialize(parseAsBoolean, 'true')
-    testSerializeThenParse(parseAsBoolean, true)
-    testParseThenSerialize(parseAsBoolean, 'false')
-    testSerializeThenParse(parseAsBoolean, false)
+    expect(isParserBijective(parseAsBoolean, 'true', true)).toBe(true)
+    expect(isParserBijective(parseAsBoolean, 'false', false)).toBe(true)
   })
 
-  test('parseAsTimestamp', () => {
+  it('parseAsTimestamp', () => {
     expect(parseAsTimestamp.parse('')).toBeNull()
     expect(parseAsTimestamp.parse('0')).toStrictEqual(new Date(0))
-    testParseThenSerialize(parseAsTimestamp, '0')
-    testSerializeThenParse(parseAsTimestamp, new Date(1234567890))
+    expect(testParseThenSerialize(parseAsTimestamp, '0')).toBe(true)
+    expect(testSerializeThenParse(parseAsTimestamp, new Date(1234567890))).toBe(
+      true
+    )
+    expect(isParserBijective(parseAsTimestamp, '0', new Date(0))).toBe(true)
+    expect(
+      isParserBijective(parseAsTimestamp, '1234567890', new Date(1234567890))
+    ).toBe(true)
   })
-  test('parseAsIsoDateTime', () => {
+  it('parseAsIsoDateTime', () => {
     expect(parseAsIsoDateTime.parse('')).toBeNull()
     expect(parseAsIsoDateTime.parse('not-a-date')).toBeNull()
     const moment = '2020-01-01T00:00:00.000Z'
@@ -114,20 +116,22 @@ describe('parsers', () => {
     expect(parseAsIsoDateTime.parse(moment.slice(0, 16) + 'Z')).toStrictEqual(
       ref
     )
-    testParseThenSerialize(parseAsIsoDateTime, moment)
-    testSerializeThenParse(parseAsIsoDateTime, ref)
+    expect(testParseThenSerialize(parseAsIsoDateTime, moment)).toBe(true)
+    expect(testSerializeThenParse(parseAsIsoDateTime, ref)).toBe(true)
+    expect(isParserBijective(parseAsIsoDateTime, moment, ref)).toBe(true)
   })
-  test('parseAsIsoDate', () => {
+  it('parseAsIsoDate', () => {
     expect(parseAsIsoDate.parse('')).toBeNull()
     expect(parseAsIsoDate.parse('not-a-date')).toBeNull()
     const moment = '2020-01-01'
     const ref = new Date(moment)
     expect(parseAsIsoDate.parse(moment)).toStrictEqual(ref)
     expect(parseAsIsoDate.serialize(ref)).toEqual(moment)
-    testParseThenSerialize(parseAsIsoDate, moment)
-    testSerializeThenParse(parseAsIsoDate, ref)
+    expect(testParseThenSerialize(parseAsIsoDate, moment)).toBe(true)
+    expect(testSerializeThenParse(parseAsIsoDate, ref)).toBe(true)
+    expect(isParserBijective(parseAsIsoDate, moment, ref)).toBe(true)
   })
-  test('parseAsStringEnum', () => {
+  it('parseAsStringEnum', () => {
     enum Test {
       A = 'a',
       B = 'b',
@@ -142,10 +146,11 @@ describe('parsers', () => {
     expect(parser.serialize(Test.A)).toBe('a')
     expect(parser.serialize(Test.B)).toBe('b')
     expect(parser.serialize(Test.C)).toBe('c')
-    testParseThenSerialize(parser, 'a')
-    testSerializeThenParse(parser, Test.A)
+    expect(testParseThenSerialize(parser, 'a')).toBe(true)
+    expect(testSerializeThenParse(parser, Test.A)).toBe(true)
+    expect(isParserBijective(parser, 'b', Test.B)).toBe(true)
   })
-  test('parseAsStringLiteral', () => {
+  it('parseAsStringLiteral', () => {
     const parser = parseAsStringLiteral(['a', 'b', 'c'] as const)
     expect(parser.parse('')).toBeNull()
     expect(parser.parse('a')).toBe('a')
@@ -155,10 +160,13 @@ describe('parsers', () => {
     expect(parser.serialize('a')).toBe('a')
     expect(parser.serialize('b')).toBe('b')
     expect(parser.serialize('c')).toBe('c')
-    testParseThenSerialize(parser, 'a')
-    testSerializeThenParse(parser, 'a')
+    expect(testParseThenSerialize(parser, 'a')).toBe(true)
+    expect(testSerializeThenParse(parser, 'a')).toBe(true)
+    expect(isParserBijective(parser, 'a', 'a')).toBe(true)
+    expect(isParserBijective(parser, 'b', 'b')).toBe(true)
+    expect(isParserBijective(parser, 'c', 'c')).toBe(true)
   })
-  test('parseAsNumberLiteral', () => {
+  it('parseAsNumberLiteral', () => {
     const parser = parseAsNumberLiteral([1, 2, 3] as const)
     expect(parser.parse('')).toBeNull()
     expect(parser.parse('1')).toBe(1)
@@ -168,20 +176,27 @@ describe('parsers', () => {
     expect(parser.serialize(1)).toBe('1')
     expect(parser.serialize(2)).toBe('2')
     expect(parser.serialize(3)).toBe('3')
-    testParseThenSerialize(parser, '1')
-    testSerializeThenParse(parser, 1)
+    expect(testParseThenSerialize(parser, '1')).toBe(true)
+    expect(testSerializeThenParse(parser, 1)).toBe(true)
+    expect(isParserBijective(parser, '1', 1)).toBe(true)
+    expect(isParserBijective(parser, '2', 2)).toBe(true)
+    expect(isParserBijective(parser, '3', 3)).toBe(true)
   })
 
-  test('parseAsArrayOf', () => {
+  it('parseAsArrayOf', () => {
     const parser = parseAsArrayOf(parseAsString)
     expect(parser.serialize([])).toBe('')
     // It encodes its separator
     expect(parser.serialize(['a', ',', 'b'])).toBe('a,%2C,b')
-    testParseThenSerialize(parser, 'a,b')
-    testSerializeThenParse(parser, ['a', 'b'])
+    expect(testParseThenSerialize(parser, 'a,b')).toBe(true)
+    expect(testSerializeThenParse(parser, ['a', 'b'])).toBe(true)
+    expect(isParserBijective(parser, 'a,b', ['a', 'b'])).toBe(true)
+    expect(() =>
+      isParserBijective(parser, 'not-an-array', ['a', 'b'])
+    ).toThrow()
   })
 
-  test('parseServerSide with default (#384)', () => {
+  it('parseServerSide with default (#384)', () => {
     const p = parseAsString.withDefault('default')
     const searchParams = {
       string: 'foo',
@@ -195,18 +210,18 @@ describe('parsers', () => {
     expect(p.parseServerSide(searchParams.nope)).toBe('default')
   })
 
-  test('chaining options does not reset them', () => {
+  it('does not reset options when chaining them', () => {
     const p = parseAsString.withOptions({ scroll: true }).withOptions({})
     expect(p.scroll).toBe(true)
   })
-  test('chaining options merges them', () => {
+  it('merges options when chaining them', () => {
     const p = parseAsString
       .withOptions({ scroll: true })
       .withOptions({ history: 'push' })
     expect(p.scroll).toBe(true)
     expect(p.history).toBe('push')
   })
-  test('chaining options & default value', () => {
+  it('merges default values when chaining options', () => {
     const p = parseAsString
       .withOptions({ scroll: true })
       .withDefault('default')
@@ -216,7 +231,7 @@ describe('parsers', () => {
     expect(p.defaultValue).toBe('default')
     expect(p.parseServerSide(undefined)).toBe('default')
   })
-  test('changing default value', () => {
+  it('allows changing the default value', () => {
     const p = parseAsString.withDefault('foo').withDefault('bar')
     expect(p.defaultValue).toBe('bar')
     expect(p.parseServerSide(undefined)).toBe('bar')
@@ -224,7 +239,7 @@ describe('parsers', () => {
 })
 
 describe('parsers/equality', () => {
-  test('parseAsArrayOf', () => {
+  it('parseAsArrayOf', () => {
     const eq = parseAsArrayOf(parseAsString).eq!
     expect(eq([], [])).toBe(true)
     expect(eq(['foo'], ['foo'])).toBe(true)
