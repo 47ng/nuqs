@@ -6,7 +6,12 @@ export function debug(message: string, ...args: any[]) {
   }
   const msg = sprintf(message, ...args)
   performance.mark(msg)
-  console.log(message, ...args)
+  try {
+    // Handle React Devtools not being able to console.log('%s', null)
+    console.log(message, ...args)
+  } catch (error) {
+    console.log(msg)
+  }
 }
 
 export function warn(message: string, ...args: any[]) {
