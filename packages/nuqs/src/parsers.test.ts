@@ -76,7 +76,10 @@ describe('parsers', () => {
     expect(parseAsHex.parse('1')).toBe(1)
     expect(parseAsHex.parse('a')).toBe(0xa)
     expect(parseAsHex.parse('g')).toBeNull()
-    expect(parseAsHex.serialize(0xa)).toBe('0a')
+    expect(parseAsHex.serialize(0x0a)).toBe('0a')
+    expect(parseAsHex.serialize(0x2a)).toBe('2a')
+    testParseThenSerialize(parseAsHex, '2a')
+    testSerializeThenParse(parseAsHex, 0x2a)
   })
   test('parseAsBoolean', () => {
     expect(parseAsBoolean.parse('')).toBe(false)
