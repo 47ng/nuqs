@@ -9,12 +9,18 @@ export default async function middleware(req: NextRequest) {
   const tenant = 'david'
   const pathname = req.nextUrl.pathname
   if (pathname === '/app/multitenant') {
-    const url = new URL(`/app/multitenant/${tenant}`, req.url)
+    const url = new URL(
+      `${req.nextUrl.basePath}/app/multitenant/${tenant}`,
+      req.url
+    )
     url.search = req.nextUrl.search
     return NextResponse.rewrite(url)
   }
   if (pathname === '/pages/multitenant') {
-    const url = new URL(`/pages/multitenant/${tenant}`, req.url)
+    const url = new URL(
+      `${req.nextUrl.basePath}/pages/multitenant/${tenant}`,
+      req.url
+    )
     url.search = req.nextUrl.search
     return NextResponse.rewrite(url)
   }
