@@ -1,5 +1,5 @@
+import { Display } from 'e2e-shared/components/display'
 import { ShallowUseQueryStates } from 'e2e-shared/specs/shallow'
-import { ShallowDisplay } from 'e2e-shared/specs/shallow-display'
 import type { GetServerSidePropsContext, GetServerSidePropsResult } from 'next'
 
 type Props = {
@@ -10,7 +10,7 @@ export default function Page({ serverState }: Props) {
   return (
     <>
       <ShallowUseQueryStates />
-      <ShallowDisplay environment="server" state={serverState} />
+      <Display environment="server" state={serverState} />
     </>
   )
 }

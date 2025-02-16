@@ -2,9 +2,9 @@ import { useRouter } from 'next/compat/router'
 import type { NextRouter } from 'next/router'
 import { useCallback, useMemo } from 'react'
 import { debug } from '../../debug'
+import { renderQueryString } from '../../url-encoding'
 import { createAdapterProvider } from '../lib/context'
 import type { AdapterInterface, UpdateUrlFunction } from '../lib/defs'
-import { renderURL } from './shared'
 
 declare global {
   interface Window {
@@ -43,40 +43,41 @@ export function useNuqsNextPagesRouterAdapter(): AdapterInterface {
 
   const updateUrl: UpdateUrlFunction = useCallback((search, options) => {
     // While the Next.js team doesn't recommend using internals like this,
-    // we need access to the pages router here to let it know about non-shallow
-    // updates, as going through the window.history API directly will make it
-    // miss pushed history updates.
-    // The router adapter imported from next/navigation also doesn't support
-    // passing an asPath, causing issues in dynamic routes in the pages router.
+    // we need direct access to the pages router, as a bound/closured version from
+    // useRouter may be out of date by the time the updateUrl function is called,
+    // and would also cause updateUrl to not be referentially stable.
     const nextRouter = window.next?.router!
     const urlParams = extractDynamicUrlParams(
       nextRouter.pathname,
       nextRouter.query
     )
-    const query = Object.fromEntries(search.entries())
-    const asPath = renderURL(
-      nextRouter.state.asPath.split('?')[0] ?? '',
-      search
-    )
+    const asPath =
+      getAsPathPathname(nextRouter.asPath) +
+      renderQueryString(search) +
+      location.hash
     debug('[nuqs queue (pages)] Updating url: %s', asPath)
     const method =
       options.history === 'push' ? nextRouter.push : nextRouter.replace
-
     method.call(
       nextRouter,
+      // This is what makes the URL work (mapping dynamic segments placeholders
+      // in pathname to their values in query, plus search params in query too).
       {
         pathname: nextRouter.pathname,
         query: {
-          ...urlParams,
-          ...query
-        },
-        hash: location.hash
+          // Note: we put search params first so that one that conflicts
+          // with dynamic params will be overwritten.
+          // todo: Test this in practice.
+          ...Object.fromEntries(search.entries()),
+          ...urlParams
+        }
+        // For some reason we don't need to pass the hash here,
+        // it's preserved when passed as part of the asPath.
       },
-      {
-        pathname: nextRouter.state.asPath.split('?')[0] ?? '',
-        query,
-        hash: location.hash
-      },
+      // This is what makes the URL pretty (resolved dynamic segments
+      // and nuqs-formatted search params).
+      asPath, // todo: Test formatting
+      // And these are the options that are passed to the router.
       {
         scroll: options.scroll,
         shallow: options.shallow
@@ -85,15 +86,28 @@ export function useNuqsNextPagesRouterAdapter(): AdapterInterface {
   }, [])
   return {
     searchParams,
-    updateUrl,
-    // See: https://github.com/47ng/nuqs/issues/603#issuecomment-2317057128
-    rateLimitFactor: 1
+    updateUrl
   }
 }
 
 export const NuqsAdapter = createAdapterProvider(useNuqsNextPagesRouterAdapter)
 
-function extractDynamicUrlParams(
+export function getAsPathPathname(asPath: string): string {
+  return asPath
+    .replace(/#.*$/, '') // Remove hash
+    .replace(/\?.*$/, '') // Remove search
+}
+
+/**
+ * Next.js pages router merges dynamic URL params with search params in its
+ * internal state.
+ * However, we need to pass just the URL params to the href part of the router
+ * update functions.
+ * This function finds the dynamic URL params placeholders in the pathname
+ * (eg: `/path/[foo]/[bar]`) and extracts the corresponding values from the
+ * query state object, leaving out any other search params.
+ */
+export function extractDynamicUrlParams(
   pathname: string,
   values: Record<string, string | string[] | undefined>
 ): Record<string, string | string[] | undefined> {
@@ -114,12 +128,17 @@ function extractDynamicUrlParams(
   )
   const matchCatchAll = catchAllRegex.exec(pathname)
   const matchOptionalCatchAll = optionalCatchAllRegex.exec(pathname)
-  if (matchCatchAll) {
-    dynamicValues[matchCatchAll[1]!] = values[matchCatchAll[1]!] ?? []
+  if (matchCatchAll && matchCatchAll[1]) {
+    const key = matchCatchAll[1]
+    dynamicValues[key] = values[key] ?? []
   }
-  if (matchOptionalCatchAll) {
-    dynamicValues[matchOptionalCatchAll[1]!] =
-      values[matchOptionalCatchAll[1]!] ?? []
+  if (matchOptionalCatchAll && matchOptionalCatchAll[1]) {
+    const key = matchOptionalCatchAll[1]
+    // Note: while Next.js returns undefined if there are no values for the
+    // optional catch-all, passing undefined back when setting the state
+    // results in the value being set to an empty string.
+    // Passing an empty array instead results in the value remaining undefined.
+    dynamicValues[key] = values[key] ?? []
   }
   return dynamicValues
 }

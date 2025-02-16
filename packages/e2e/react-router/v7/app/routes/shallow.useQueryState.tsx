@@ -1,5 +1,5 @@
+import { Display } from 'e2e-shared/components/display'
 import { ShallowUseQueryState } from 'e2e-shared/specs/shallow'
-import { ShallowDisplay } from 'e2e-shared/specs/shallow-display'
 import { useLoaderData, type LoaderFunctionArgs } from 'react-router'
 
 export async function loader({ request }: LoaderFunctionArgs) {
@@ -14,7 +14,7 @@ export default function Page() {
   return (
     <>
       <ShallowUseQueryState />
-      <ShallowDisplay environment="server" state={serverState} />
+      <Display environment="server" state={serverState} />
     </>
   )
 }

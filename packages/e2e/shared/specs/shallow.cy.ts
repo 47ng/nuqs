@@ -1,5 +1,5 @@
 import { createTest, type TestConfig } from '../create-test'
-import { getShallowUrl } from './shallow.defs'
+import { getOptionsUrl } from '../lib/options'
 
 type TestShallowOptions = TestConfig & {
   supportsSSR?: boolean
@@ -17,7 +17,7 @@ export function testShallow({
     for (const shallow of shallowOptions) {
       for (const history of historyOptions) {
         it(`Updates with ({ shallow: ${shallow}, history: ${history} })`, () => {
-          cy.visit(getShallowUrl(path, { shallow, history }))
+          cy.visit(getOptionsUrl(path, { shallow, history }))
           cy.contains('#hydration-marker', 'hydrated').should('be.hidden')
           cy.get('#client-state').should('be.empty')
           if (supportsSSR) {
