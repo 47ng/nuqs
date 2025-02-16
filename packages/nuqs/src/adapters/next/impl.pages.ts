@@ -67,7 +67,6 @@ export function useNuqsNextPagesRouterAdapter(): AdapterInterface {
         query: {
           // Note: we put search params first so that one that conflicts
           // with dynamic params will be overwritten.
-          // todo: Test this in practice.
           ...Object.fromEntries(search.entries()),
           ...urlParams
         }
@@ -76,7 +75,7 @@ export function useNuqsNextPagesRouterAdapter(): AdapterInterface {
       },
       // This is what makes the URL pretty (resolved dynamic segments
       // and nuqs-formatted search params).
-      asPath, // todo: Test formatting
+      asPath,
       // And these are the options that are passed to the router.
       {
         scroll: options.scroll,
@@ -127,11 +126,11 @@ export function extractDynamicUrlParams(
     Object.entries(values).filter(([key]) => paramNames.has(key))
   )
   const matchCatchAll = catchAllRegex.exec(pathname)
-  const matchOptionalCatchAll = optionalCatchAllRegex.exec(pathname)
   if (matchCatchAll && matchCatchAll[1]) {
     const key = matchCatchAll[1]
     dynamicValues[key] = values[key] ?? []
   }
+  const matchOptionalCatchAll = optionalCatchAllRegex.exec(pathname)
   if (matchOptionalCatchAll && matchOptionalCatchAll[1]) {
     const key = matchOptionalCatchAll[1]
     // Note: while Next.js returns undefined if there are no values for the
