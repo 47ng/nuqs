@@ -1,5 +1,5 @@
+import { Display } from 'e2e-shared/components/display'
 import { ShallowUseQueryState } from 'e2e-shared/specs/shallow'
-import { ShallowDisplay } from 'e2e-shared/specs/shallow-display'
 import {
   createSearchParamsCache,
   parseAsString,
@@ -36,7 +36,7 @@ export default async function TenantPage({ params, searchParams }: PageProps) {
       <Suspense>
         <ShallowUseQueryState />
       </Suspense>
-      <ShallowDisplay environment="server" state={cache.get('state')} />
+      <Display environment="server" state={cache.get('state')} />
       <p id="server-tenant">{tenant}</p>
       <Suspense>
         <TenantClient />

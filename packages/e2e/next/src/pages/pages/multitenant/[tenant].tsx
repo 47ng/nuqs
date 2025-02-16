@@ -1,5 +1,5 @@
+import { Display } from 'e2e-shared/components/display'
 import { ShallowUseQueryState } from 'e2e-shared/specs/shallow'
-import { ShallowDisplay } from 'e2e-shared/specs/shallow-display'
 import type { GetServerSidePropsContext, GetServerSidePropsResult } from 'next'
 import { useParams } from 'next/navigation'
 import { useRouter } from 'next/router'
@@ -15,7 +15,7 @@ export default function Page({ serverState, tenant }: Props) {
   return (
     <>
       <ShallowUseQueryState />
-      <ShallowDisplay environment="server" state={serverState} />
+      <Display environment="server" state={serverState} />
       <p id="server-tenant">{tenant}</p>
       <p id="client-tenant">{params?.tenant}</p>
       <p id="router-pathname">{router.pathname}</p>

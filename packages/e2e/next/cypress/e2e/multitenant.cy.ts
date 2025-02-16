@@ -1,12 +1,16 @@
 import { createTest, type TestConfig } from 'e2e-shared/create-test'
-import { getShallowUrl } from 'e2e-shared/specs/shallow.defs'
+import { getOptionsUrl } from 'e2e-shared/lib/options'
 
-function testMultiTenant(options: TestConfig) {
+function testMultiTenant(
+  options: TestConfig & {
+    expectedPathname: string
+  }
+) {
   const factory = createTest('Multitenant', ({ path }) => {
     for (const shallow of [true, false]) {
       for (const history of ['replace', 'push'] as const) {
         it(`Updates with ({ shallow: ${shallow}, history: ${history} })`, () => {
-          cy.visit(getShallowUrl(path, { shallow, history }))
+          cy.visit(getOptionsUrl(path, { shallow, history }))
           cy.contains('#hydration-marker', 'hydrated').should('be.hidden')
           cy.get('#client-state').should('be.empty')
           cy.get('#server-state').should('be.empty')
@@ -14,9 +18,7 @@ function testMultiTenant(options: TestConfig) {
           cy.get('#server-tenant').should('have.text', 'david')
           cy.get('#router-pathname').should(
             'have.text',
-            options.nextJsRouter === 'pages'
-              ? '/pages/multitenant/[tenant]'
-              : '/app/multitenant'
+            options.expectedPathname
           )
           cy.get('button').click()
           cy.get('#client-state').should('have.text', 'pass')
@@ -24,9 +26,7 @@ function testMultiTenant(options: TestConfig) {
           cy.get('#server-tenant').should('have.text', 'david')
           cy.get('#router-pathname').should(
             'have.text',
-            options.nextJsRouter === 'pages'
-              ? '/pages/multitenant/[tenant]'
-              : '/app/multitenant'
+            options.expectedPathname
           )
           if (shallow === false) {
             cy.get('#server-state').should('have.text', 'pass')
@@ -43,9 +43,7 @@ function testMultiTenant(options: TestConfig) {
           cy.get('#server-state').should('be.empty')
           cy.get('#router-pathname').should(
             'have.text',
-            options.nextJsRouter === 'pages'
-              ? '/pages/multitenant/[tenant]'
-              : '/app/multitenant'
+            options.expectedPathname
           )
         })
       }
@@ -57,10 +55,14 @@ function testMultiTenant(options: TestConfig) {
 
 testMultiTenant({
   path: '/app/multitenant',
-  nextJsRouter: 'app'
+  nextJsRouter: 'app',
+  description: 'Dynamic route',
+  expectedPathname: '/app/multitenant'
 })
 
 testMultiTenant({
   path: '/pages/multitenant',
-  nextJsRouter: 'pages'
+  nextJsRouter: 'pages',
+  description: 'Dynamic route',
+  expectedPathname: '/pages/multitenant/[tenant]'
 })
