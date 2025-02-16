@@ -47,6 +47,8 @@ const router = createBrowserRouter(
       <Route path="conditional-rendering/useQueryStates"  lazy={load(import('./routes/conditional-rendering.useQueryStates'))} />
       <Route path="scroll"                                lazy={load(import('./routes/scroll'))} />
       <Route path="pretty-urls"                           lazy={load(import('./routes/pretty-urls'))} />
+      <Route path="dynamic-segments/dynamic/:segment"     lazy={load(import('./routes/dynamic-segments.dynamic.$segment'))} />
+      <Route path="dynamic-segments/catch-all?*"          lazy={load(import('./routes/dynamic-segments.catch-all.$'))} />
 
       <Route path="render-count/:hook/:shallow/:history/:startTransition/no-loader"     lazy={load(import('./routes/render-count.$hook.$shallow.$history.$startTransition.no-loader'))} />
       <Route path="render-count/:hook/:shallow/:history/:startTransition/sync-loader"   lazy={load(import('./routes/render-count.$hook.$shallow.$history.$startTransition.sync-loader'))} />

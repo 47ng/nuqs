@@ -30,6 +30,8 @@ export default [
     route('/conditional-rendering/useQueryStates',  './routes/conditional-rendering.useQueryStates.tsx'),
     route('/scroll',                                './routes/scroll.tsx'),
     route('/pretty-urls',                           './routes/pretty-urls.tsx'),
+    route('/dynamic-segments/dynamic/:segment',     './routes/dynamic-segments.dynamic.$segment.tsx'),
+    route('/dynamic-segments/catch-all?/*',         './routes/dynamic-segments.catch-all.$.tsx'),
 
     route('/render-count/:hook/:shallow/:history/:startTransition/no-loader',    './routes/render-count.$hook.$shallow.$history.$startTransition.no-loader.tsx'),
     route('/render-count/:hook/:shallow/:history/:startTransition/sync-loader',  './routes/render-count.$hook.$shallow.$history.$startTransition.sync-loader.tsx'),
