@@ -1,8 +1,8 @@
 import { useRouter, useSearchParams } from 'next/navigation'
 import { startTransition, useCallback, useOptimistic } from 'react'
 import { debug } from '../../debug'
+import { renderQueryString } from '../../url-encoding'
 import type { AdapterInterface, UpdateUrlFunction } from '../lib/defs'
-import { renderURL } from './shared'
 
 export function useNuqsNextAppRouterAdapter(): AdapterInterface {
   const router = useRouter()
@@ -47,4 +47,11 @@ export function useNuqsNextAppRouterAdapter(): AdapterInterface {
     // See: https://github.com/47ng/nuqs/issues/603#issuecomment-2317057128
     rateLimitFactor: 2
   }
+}
+
+function renderURL(base: string, search: URLSearchParams) {
+  const hashlessBase = base.split('#')[0] ?? ''
+  const query = renderQueryString(search)
+  const hash = location.hash
+  return hashlessBase + query + hash
 }

@@ -1,5 +1,5 @@
+import { Display } from 'e2e-shared/components/display'
 import { ShallowUseQueryStates } from 'e2e-shared/specs/shallow'
-import { ShallowDisplay } from 'e2e-shared/specs/shallow-display'
 import {
   createSearchParamsCache,
   parseAsString,
@@ -29,7 +29,7 @@ export default async function Page({ searchParams }: PageProps) {
       <Suspense>
         <ShallowUseQueryStates />
       </Suspense>
-      <ShallowDisplay environment="server" state={cache.get('state')} />
+      <Display environment="server" state={cache.get('state')} />
     </>
   )
 }

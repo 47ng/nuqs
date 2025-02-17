@@ -1,22 +1,22 @@
 'use client'
 
 import { parseAsString, useQueryState, useQueryStates } from 'nuqs'
-import { ShallowDisplay } from './shallow-display'
-import { shallowSearchParams } from './shallow.defs'
+import { Display } from '../components/display'
+import { optionsSearchParams } from '../lib/options'
 
 export function ShallowUseQueryState() {
-  const [{ shallow, history }] = useQueryStates(shallowSearchParams)
+  const [{ shallow, history }] = useQueryStates(optionsSearchParams)
   const [state, setState] = useQueryState('test', { shallow, history })
   return (
     <>
       <button onClick={() => setState('pass')}>Test</button>
-      <ShallowDisplay environment="client" state={state} />
+      <Display environment="client" state={state} />
     </>
   )
 }
 
 export function ShallowUseQueryStates() {
-  const [{ shallow, history }] = useQueryStates(shallowSearchParams)
+  const [{ shallow, history }] = useQueryStates(optionsSearchParams)
   const [{ state }, setSearchParams] = useQueryStates(
     {
       state: parseAsString.withOptions({ shallow, history })
@@ -30,7 +30,7 @@ export function ShallowUseQueryStates() {
   return (
     <>
       <button onClick={() => setSearchParams({ state: 'pass' })}>Test</button>
-      <ShallowDisplay environment="client" state={state} />
+      <Display environment="client" state={state} />
     </>
   )
 }
