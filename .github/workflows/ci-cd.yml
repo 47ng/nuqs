@@ -121,13 +121,13 @@ jobs:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
   e2e-react:
-    name: E2E (react-reload-${{ matrix.reload-on-shallow-false }})
+    name: E2E (react-fpn-${{ matrix.full-page-nav-on-shallow-false }})
     runs-on: ubuntu-22.04-arm
     needs: [ci-core]
     strategy:
       fail-fast: false
       matrix:
-        reload-on-shallow-false: [false, true]
+        full-page-nav-on-shallow-false: [false, true]
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
       - uses: pnpm/action-setup@fe02b34f77f8bc703788d5817da081398fad5dd2
@@ -143,19 +143,19 @@ jobs:
           TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
           TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
           E2E_NO_CACHE_ON_RERUN: ${{ github.run_attempt }}
-          RELOAD_ON_SHALLOW_FALSE: ${{ matrix.reload-on-shallow-false }}
+          FULL_PAGE_NAV_ON_SHALLOW_FALSE: ${{ matrix.full-page-nav-on-shallow-false }}
       - name: Save Cypress artifacts
         uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08
         if: failure()
         with:
           path: packages/e2e/react/cypress/screenshots
-          name: ci-react-reload-${{ matrix.reload-on-shallow-false }}
+          name: ci-react-fpn-${{ matrix.full-page-nav-on-shallow-false }}
       - uses: 47ng/actions-slack-notify@main
         name: Notify on Slack
         if: failure()
         with:
           status: ${{ job.status }}
-          jobName: react-reload-${{ matrix.reload-on-shallow-false }}
+          jobName: react-fpn-${{ matrix.full-page-nav-on-shallow-false }}
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 

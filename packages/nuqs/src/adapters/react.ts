@@ -15,11 +15,11 @@ import { patchHistory, type SearchParamsSyncEmitter } from './lib/patch-history'
 
 const emitter: SearchParamsSyncEmitter = mitt()
 
-function generateUpdateUrlFn(reloadPageOnShallowFalseUpdates: boolean) {
+function generateUpdateUrlFn(fullPageNavigationOnShallowFalseUpdates: boolean) {
   return function updateUrl(search: URLSearchParams, options: AdapterOptions) {
     const url = new URL(location.href)
     url.search = renderQueryString(search)
-    if (reloadPageOnShallowFalseUpdates && options.shallow === false) {
+    if (fullPageNavigationOnShallowFalseUpdates && options.shallow === false) {
       const method =
         options.history === 'push' ? location.assign : location.replace
       method.call(location, url)
@@ -36,11 +36,11 @@ function generateUpdateUrlFn(reloadPageOnShallowFalseUpdates: boolean) {
 }
 
 const NuqsReactAdapterContext = createContext({
-  reloadPageOnShallowFalseUpdates: false
+  fullPageNavigationOnShallowFalseUpdates: false
 })
 
 function useNuqsReactAdapter() {
-  const { reloadPageOnShallowFalseUpdates } = useContext(
+  const { fullPageNavigationOnShallowFalseUpdates } = useContext(
     NuqsReactAdapterContext
   )
   const [searchParams, setSearchParams] = useState(() => {
@@ -63,8 +63,8 @@ function useNuqsReactAdapter() {
     }
   }, [])
   const updateUrl = useMemo(
-    () => generateUpdateUrlFn(reloadPageOnShallowFalseUpdates),
-    [reloadPageOnShallowFalseUpdates]
+    () => generateUpdateUrlFn(fullPageNavigationOnShallowFalseUpdates),
+    [fullPageNavigationOnShallowFalseUpdates]
   )
   return {
     searchParams,
@@ -76,14 +76,14 @@ const NuqsReactAdapter = createAdapterProvider(useNuqsReactAdapter)
 
 export function NuqsAdapter({
   children,
-  reloadPageOnShallowFalseUpdates = false
+  fullPageNavigationOnShallowFalseUpdates = false
 }: {
   children: ReactNode
-  reloadPageOnShallowFalseUpdates?: boolean
+  fullPageNavigationOnShallowFalseUpdates?: boolean
 }) {
   return createElement(
     NuqsReactAdapterContext.Provider,
-    { value: { reloadPageOnShallowFalseUpdates } },
+    { value: { fullPageNavigationOnShallowFalseUpdates } },
     createElement(NuqsReactAdapter, null, children)
   )
 }

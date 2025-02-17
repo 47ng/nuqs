@@ -11,8 +11,8 @@ export default defineConfig(({ mode }) => {
       sourcemap: true
     },
     define: {
-      'process.env.RELOAD_ON_SHALLOW_FALSE': JSON.stringify(
-        env.RELOAD_ON_SHALLOW_FALSE
+      'process.env.FULL_PAGE_NAV_ON_SHALLOW_FALSE': JSON.stringify(
+        env.FULL_PAGE_NAV_ON_SHALLOW_FALSE
       )
     }
   }

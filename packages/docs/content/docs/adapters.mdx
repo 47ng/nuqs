@@ -94,9 +94,9 @@ updating query state configured with `shallow: false{:ts}`, to notify the web se
 that the URL state has changed, if it needs it for server-side rendering other
 parts of the application than the static React bundle:
 
-```tsx title="src/main.tsx" /reloadPageOnShallowFalseUpdates/
+```tsx title="src/main.tsx" /fullPageNavigationOnShallowFalseUpdates/
 createRoot(document.getElementById('root')!).render(
-  <NuqsAdapter reloadPageOnShallowFalseUpdates>
+  <NuqsAdapter fullPageNavigationOnShallowFalseUpdates>
     <App />
   </NuqsAdapter>
 )
