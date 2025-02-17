@@ -1,4 +1,4 @@
-import { useRouter } from 'next/compat/router'
+import { useRouter } from 'next/compat/router.js'
 import type { NextRouter } from 'next/router'
 import { useCallback, useMemo } from 'react'
 import { debug } from '../../debug'
