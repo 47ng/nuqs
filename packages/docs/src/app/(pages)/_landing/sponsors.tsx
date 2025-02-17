@@ -11,7 +11,7 @@ export async function SponsorsSection() {
       <h2 className="mb-12 text-center text-3xl font-bold tracking-tighter dark:text-white md:text-4xl xl:text-5xl">
         Sponsors
       </h2>
-      <ul className="container grid grid-cols-2 gap-y-12 md:grid-cols-3 xl:grid-cols-7">
+      <ul className="container grid grid-cols-2 gap-y-12 md:grid-cols-4">
         {sponsors.map(sponsor => (
           <li key={sponsor.handle} className="flex flex-col items-center">
             <a href={sponsor.url} className="h-32 w-32 rounded-full">
@@ -38,9 +38,9 @@ export async function SponsorsSection() {
         ))}
       </ul>
       <div className="mt-16 flex justify-center">
-        <Button className="mx-auto" asChild>
+        <Button className="text-md mx-auto font-semibold" asChild size="lg">
           <a href="https://github.com/sponsors/franky47">
-            <Heart className="mr-2 text-pink-500" size={16} /> Sponsor my work
+            <Heart className="mr-2 stroke-pink-500" size={18} /> Sponsor my work
           </a>
         </Button>
       </div>
@@ -94,6 +94,12 @@ async function fetchSponsors(): Promise<Sponsors> {
       name: 'Unkey',
       url: 'https://unkey.com',
       img: 'https://avatars.githubusercontent.com/u/138932600?s=200&v=4'
+    },
+    {
+      handle: 'openstatus.dev',
+      name: 'OpenStatus',
+      url: 'https://openstatus.dev',
+      img: 'https://avatars.githubusercontent.com/u/136892265?s=200&v=4'
     },
     {
       handle: 'ryanmagoon',
