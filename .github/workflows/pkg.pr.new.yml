@@ -53,4 +53,4 @@ jobs:
           echo "::notice title=Version::0.0.0-preview.${{ github.event.pull_request.head.sha }}"
         working-directory: packages/nuqs
       - name: Publish to pkg.pr.new
-        run: pnpx pkg-pr-new publish --compact './packages/nuqs'
+        run: pnpx pkg-pr-new publish --compact './packages/nuqs' --no-template --packageManager=pnpm --pnpm
