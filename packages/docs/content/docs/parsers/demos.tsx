@@ -1,9 +1,18 @@
 'use client'
 
+import { CodeBlock } from '@/src/components/code-block.client'
 import { QuerySpy } from '@/src/components/query-spy'
 import { ContainerQueryHelper } from '@/src/components/responsive-helpers'
 import { Button } from '@/src/components/ui/button'
 import { Checkbox } from '@/src/components/ui/checkbox'
+import {
+  Pagination,
+  PaginationButton,
+  PaginationContent,
+  PaginationItem,
+  PaginationNext,
+  PaginationPrevious
+} from '@/src/components/ui/pagination'
 import { Slider } from '@/src/components/ui/slider'
 import { cn } from '@/src/lib/utils'
 import { ChevronDown, ChevronUp, Minus, Star } from 'lucide-react'
@@ -173,25 +182,46 @@ export function HexParserDemo() {
 }
 
 export function IndexParserDemo() {
-  const [value, setValue] = useQueryState('page', parseAsIndex)
+  const numPages = 5
+  const [pageIndex, setPageIndex] = useQueryState(
+    'page',
+    parseAsIndex.withDefault(0).withOptions({ clearOnDefault: false })
+  )
   return (
     <DemoContainer demoKey="page">
-      <input
-        type="number"
-        className="flex h-10 flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-        value={value ?? ''} // Handle empty input
-        onChange={e => {
-          if (e.target.value === '') {
-            setValue(null)
-          } else {
-            setValue(e.target.valueAsNumber)
-          }
-        }}
-        placeholder="What page are you on?"
+      <Pagination className="not-prose items-center gap-2">
+        <PaginationContent>
+          <PaginationItem>
+            <PaginationPrevious
+              disabled={pageIndex === 0}
+              onClick={() => setPageIndex(p => Math.max(0, p - 1))}
+            />
+          </PaginationItem>
+          {Array.from({ length: numPages }, (_, i) => (
+            <PaginationItem key={i}>
+              <PaginationButton
+                isActive={pageIndex === i}
+                onClick={() => setPageIndex(i)}
+              >
+                {i + 1}
+              </PaginationButton>
+            </PaginationItem>
+          ))}
+          <PaginationItem>
+            <PaginationNext
+              disabled={pageIndex === numPages - 1}
+              onClick={() => setPageIndex(p => Math.min(numPages - 1, p + 1))}
+            />
+          </PaginationItem>
+        </PaginationContent>
+      </Pagination>
+      <CodeBlock
+        className="my-0 flex-1 [&_pre]:py-1"
+        code={`pageIndex: ${pageIndex} // internal state is zero-indexed`}
       />
       <Button
         variant="secondary"
-        onClick={() => setValue(null)}
+        onClick={() => setPageIndex(null)}
         className="ml-auto"
       >
         Clear

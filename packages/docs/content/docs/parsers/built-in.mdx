@@ -108,12 +108,13 @@ useQueryState('hex', parseAsHex.withDefault(0x00))
 
 ### Index
 
-Same as integer, but adds a `+1` offset to the query value. Useful for pagination indexes.
+Same as integer, but adds a `+1` offset to the serialized querystring (and `-1` when parsing).
+Useful for pagination indexes.
 
 ```ts
 import { parseAsIndex } from 'nuqs'
 
-useQueryState('page', parseAsIndex.withDefault(0))
+const [pageIndex] = useQueryState('page', parseAsIndex.withDefault(0))
 ```
 
 <Suspense fallback={<DemoFallback />}>
