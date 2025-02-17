@@ -8,7 +8,11 @@ enableHistorySync()
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <NuqsAdapter>
+    <NuqsAdapter
+      fullPageNavigationOnShallowFalseUpdates={
+        process.env.FULL_PAGE_NAV_ON_SHALLOW_FALSE === 'true'
+      }
+    >
       <RootLayout>
         <Router />
       </RootLayout>
