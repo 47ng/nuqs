@@ -196,6 +196,10 @@ export const parseAsBoolean = createParser({
   serialize: v => (v ? 'true' : 'false')
 })
 
+function compareDates(a: Date, b: Date) {
+  return a.valueOf() === b.valueOf()
+}
+
 /**
  * Querystring encoded as the number of milliseconds since epoch,
  * and returned as a Date object.
@@ -208,7 +212,8 @@ export const parseAsTimestamp = createParser({
     }
     return new Date(ms)
   },
-  serialize: (v: Date) => v.valueOf().toString()
+  serialize: (v: Date) => v.valueOf().toString(),
+  eq: compareDates
 })
 
 /**
@@ -223,7 +228,8 @@ export const parseAsIsoDateTime = createParser({
     }
     return date
   },
-  serialize: (v: Date) => v.toISOString()
+  serialize: (v: Date) => v.toISOString(),
+  eq: compareDates
 })
 
 /**
@@ -242,7 +248,8 @@ export const parseAsIsoDate = createParser({
     }
     return date
   },
-  serialize: (v: Date) => v.toISOString().slice(0, 10)
+  serialize: (v: Date) => v.toISOString().slice(0, 10),
+  eq: compareDates
 })
 
 /**
