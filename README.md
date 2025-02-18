@@ -654,12 +654,9 @@ to do so in a type-safe manner.
 
 ```tsx
 // searchParams.ts
-import {
-  createSearchParamsCache,
-  parseAsInteger,
-  parseAsString
-} from 'nuqs/server'
-// Note: import from 'nuqs/server' to avoid the "use client" directive
+import { createSearchParamsCache } from 'nuqs/server/cache'
+import { parseAsInteger, parseAsString } from 'nuqs/server'
+// Note: import parsers from 'nuqs/server' to avoid the "use client" directive
 
 export const searchParamsCache = createSearchParamsCache({
   // List your search param keys and associated parsers here:
@@ -701,7 +698,8 @@ parser declaration with `useQueryStates` for type-safety in client components:
 
 ```tsx
 // searchParams.ts
-import { parseAsFloat, createSearchParamsCache } from 'nuqs/server'
+import { parseAsFloat } from 'nuqs/server'
+import { createSearchParamsCache } from 'nuqs/server/cache'
 
 export const coordinatesParsers = {
   lat: parseAsFloat.withDefault(45.18),
