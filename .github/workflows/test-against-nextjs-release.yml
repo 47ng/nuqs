@@ -73,6 +73,6 @@ jobs:
       - uses: 47ng/actions-slack-notify@main
         with:
           status: ${{ job.status }}
-          jobName: Test against Next.js ${{ inputs.version }}
+          jobName: ${{ inputs.version }}
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
