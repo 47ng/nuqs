@@ -1,8 +1,8 @@
 import { useRouter } from 'next/compat/router.js'
 import type { NextRouter } from 'next/router'
 import { useCallback, useMemo } from 'react'
-import { debug } from '../../debug'
-import { renderQueryString } from '../../url-encoding'
+import { debug } from '../../lib/debug'
+import { renderQueryString } from '../../lib/url-encoding'
 import { createAdapterProvider } from '../lib/context'
 import type { AdapterInterface, UpdateUrlFunction } from '../lib/defs'
 
@@ -55,7 +55,7 @@ export function useNuqsNextPagesRouterAdapter(): AdapterInterface {
       getAsPathPathname(nextRouter.asPath) +
       renderQueryString(search) +
       location.hash
-    debug('[nuqs queue (pages)] Updating url: %s', asPath)
+    debug('[nuqs next/pages] Updating url: %s', asPath)
     const method =
       options.history === 'push' ? nextRouter.push : nextRouter.replace
     method.call(
