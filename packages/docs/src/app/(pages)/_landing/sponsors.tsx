@@ -1,6 +1,5 @@
 import { Button } from '@/src/components/ui/button'
 import { Heart } from 'lucide-react'
-import Image from 'next/image'
 import { ReactNode } from 'react'
 import { z } from 'zod'
 
@@ -15,7 +14,7 @@ export async function SponsorsSection() {
         {sponsors.map(sponsor => (
           <li key={sponsor.handle} className="flex flex-col items-center">
             <a href={sponsor.url} className="h-32 w-32 rounded-full">
-              <Image
+              <img
                 src={sponsor.img}
                 alt={sponsor.name ?? sponsor.handle}
                 className="mx-auto size-28 rounded-full"

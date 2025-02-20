@@ -3,8 +3,6 @@
  * @see https://v0.dev/t/3bPRztjwG1M
  */
 
-import Image from 'next/image'
-
 type QuoteProps = {
   author: {
     name: string
@@ -19,7 +17,7 @@ export function Quote({ text, author, url }: QuoteProps) {
   return (
     <div className="mx-auto flex w-full max-w-md flex-col gap-4 rounded-lg bg-white p-6 shadow-md dark:bg-zinc-900">
       <div className="flex items-center gap-3">
-        <Image
+        <img
           src={author.avatar}
           alt={author.name}
           width={36}
