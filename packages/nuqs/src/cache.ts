@@ -1,5 +1,4 @@
-// @ts-ignore
-import { cache } from 'react'
+import * as React from 'react'
 import type { SearchParams, UrlKeys } from './defs'
 import { error } from './errors'
 import { createLoader } from './loader'
@@ -27,7 +26,7 @@ export function createSearchParamsCache<Parsers extends ParserMap>(
   // whereas a simple object would be bound to the lifecycle of the process,
   // which may be reused between requests in a serverless environment
   // (warm lambdas on Vercel or AWS).
-  const getCache = cache<() => Cache>(() => ({
+  const getCache = React.cache<() => Cache>(() => ({
     searchParams: {}
   }))
 
