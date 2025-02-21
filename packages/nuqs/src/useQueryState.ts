@@ -222,7 +222,7 @@ export function useQueryState<T = string>(
     defaultValue: undefined
   }
 ) {
-  const adapter = useAdapter()
+  const adapter = useAdapter([key])
   const initialSearchParams = adapter.searchParams
   const queryRef = useRef<string | null>(initialSearchParams?.get(key) ?? null)
   const [internalState, setInternalState] = useState<T | null>(() => {
