@@ -1,12 +1,8 @@
-/// <reference types="cypress" />
+import { expectPathname } from 'e2e-shared/lib/assertions'
 
 function waitForHydration() {
   cy.contains('#hydration-marker', 'hydrated').should('be.hidden')
   cy.wait(50)
-}
-
-function expectPathname(pathname) {
-  cy.location('pathname').should('eq', Cypress.env('basePath') + pathname)
 }
 
 describe('routing-tour', () => {
