@@ -12,7 +12,6 @@ import {
 
 export const getServerSideProps = (async ctx => {
   const string = parseAsString.parseServerSide(ctx.query.string)
-  console.dir({ string })
   return {
     props: {
       string
