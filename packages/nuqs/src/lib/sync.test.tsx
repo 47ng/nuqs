@@ -2,8 +2,8 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import React from 'react'
 import { describe, expect, it } from 'vitest'
-import { withNuqsTestingAdapter } from './adapters/testing'
-import { parseAsInteger, useQueryState, useQueryStates } from './index'
+import { withNuqsTestingAdapter } from '../adapters/testing'
+import { parseAsInteger, useQueryState, useQueryStates } from '../index'
 
 type TestComponentProps = {
   testId: string
