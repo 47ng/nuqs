@@ -1,4 +1,5 @@
 import { createTest } from '../create-test'
+import { expectPathname } from '../lib/assertions'
 import { getUrl } from './flush-after-navigate.defs'
 
 export const testFlushAfterNavigate = createTest(
@@ -9,7 +10,7 @@ export const testFlushAfterNavigate = createTest(
       cy.contains('#hydration-marker', 'hydrated').should('be.hidden')
       cy.get('#test').click()
       cy.get('a').click()
-      cy.location('pathname').should('eq', path + '/end')
+      expectPathname(path + '/end')
       cy.get('#client-state').should('have.text', 'pass')
       cy.location('search').should('be.empty')
       cy.location('search').should('eq', '?test=pass') // Then it flushes
@@ -19,7 +20,7 @@ export const testFlushAfterNavigate = createTest(
       cy.contains('#hydration-marker', 'hydrated').should('be.hidden')
       cy.get('#test').click()
       cy.get('a').click()
-      cy.location('pathname').should('eq', path + '/end')
+      expectPathname(path + '/end')
       cy.get('#client-state').should('have.text', 'pass')
       cy.location('search').should('eq', '?test=nav')
       cy.location('search').should('eq', '?test=pass') // Then it flushes
@@ -30,7 +31,7 @@ export const testFlushAfterNavigate = createTest(
       cy.get('#preflush').click() // Trigger an immediate flush to enable the throttling queue
       cy.get('#test').click() // Queue the change
       cy.get('a').click() // Navigate
-      cy.location('pathname').should('eq', path + '/end')
+      expectPathname(path + '/end')
       cy.get('#client-state').should('have.text', 'pass')
       cy.location('search').should('be.empty')
       cy.location('search').should('eq', '?test=pass') // Then it flushes again
@@ -41,7 +42,7 @@ export const testFlushAfterNavigate = createTest(
       cy.get('#preflush').click() // Trigger an immediate flush to enable the throttling queue
       cy.get('#test').click() // Queue the change
       cy.get('a').click() // Navigate
-      cy.location('pathname').should('eq', path + '/end')
+      expectPathname(path + '/end')
       cy.get('#client-state').should('have.text', 'pass')
       cy.location('search').should('eq', '?test=nav')
       cy.location('search').should('eq', '?test=pass') // Then it flushes again
