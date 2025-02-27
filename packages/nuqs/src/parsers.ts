@@ -42,10 +42,17 @@ export type ParserBuilder<T> = Required<Parser<T>> &
 
     /**
      * Specifying a default value makes the hook state non-nullable when the
-     * query is missing from the URL.
+     * query is missing from the URL: the default value is returned instead
+     * of `null`.
      *
-     * Note: if you wish to specify options as well, you need to call
-     * `withOptions` **before** `withDefault`.
+     * Setting the state to the default value¹ will clear the query string key
+     * from the URL, unless `clearOnDefault` is set to `false`.
+     *
+     * Setting the state to `null` will always clear the query string key
+     * from the URL, and return the default value.
+     *
+     * ¹: Equality is checked with the parser's `eq` function, or referential
+     * equality if not provided.
      *
      * @param defaultValue
      */
