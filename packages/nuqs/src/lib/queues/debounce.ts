@@ -89,6 +89,32 @@ export class DebounceController {
     return queue.push(update, timeMs)
   }
 
+  abort(
+    key: string
+  ): (promise: Promise<URLSearchParams>) => Promise<URLSearchParams> {
+    const queue = this.queues.get(key)
+    if (!queue) {
+      return passThrough => passThrough
+    }
+    debug(
+      '[nuqs queue] Aborting debounced queue %s=%s',
+      key,
+      queue.queuedValue?.query
+    )
+    this.queues.delete(key)
+    queue.controller.abort() // Don't run to completion
+    return function attachAbortedDebouncedResolvers(
+      promise: Promise<URLSearchParams>
+    ) {
+      promise.then(
+        value => queue.resolvers.resolve(value),
+        error => queue.resolvers.reject(error)
+      )
+      // Don't chain: keep reference equality
+      return promise
+    }
+  }
+
   getQueuedQuery(key: string) {
     // The debounced queued values are more likely to be up-to-date
     // than any updates pending in the throttle queue, which comes last
