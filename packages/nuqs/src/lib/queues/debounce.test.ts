@@ -202,4 +202,34 @@ describe('debounce: DebounceController', () => {
     const controller = new DebounceController(throttleQueue)
     expect(controller.getQueuedQuery('key')).toEqual('value')
   })
+  it('aborts an update and chains the Promise onto another one that overrides it', async () => {
+    vi.useFakeTimers()
+    const fakeAdapter: UpdateQueueAdapterContext = {
+      updateUrl: vi.fn<UpdateUrlFunction>(),
+      getSearchParamsSnapshot() {
+        return new URLSearchParams()
+      }
+    }
+    const controller = new DebounceController()
+    const debouncedPromise = controller.push(
+      {
+        key: 'key',
+        query: 'value',
+        options: {}
+      },
+      100,
+      fakeAdapter
+    )
+    const attach = controller.abort('key')
+    expect(attach).toBeInstanceOf(Function)
+    vi.runAllTimers()
+    const resolvedPromise = Promise.resolve(
+      new URLSearchParams('?key=override')
+    )
+    const attachedPromise = attach(resolvedPromise)
+    expect(attachedPromise).toBe(resolvedPromise) // Referential equality
+    await expect(debouncedPromise).resolves.toEqual(
+      new URLSearchParams('?key=override')
+    )
+  })
 })
