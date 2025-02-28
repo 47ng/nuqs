@@ -301,4 +301,27 @@ describe('useQueryState: update sequencing', () => {
     expect(onUrlUpdate.mock.calls[0]![0].queryString).toEqual('?b=b')
     expect(onUrlUpdate.mock.calls[1]![0].queryString).toEqual('?a=a')
   })
+  it('aborts a debounced update when pushing a throttled one', async () => {
+    const onUrlUpdate = vi.fn<OnUrlUpdateFunction>()
+    const { result } = renderHook(() => useQueryState('test'), {
+      wrapper: withNuqsTestingAdapter({
+        onUrlUpdate,
+        rateLimitFactor: 1
+      })
+    })
+    let p1: Promise<URLSearchParams> | undefined = undefined
+    let p2: Promise<URLSearchParams> | undefined = undefined
+    await act(async () => {
+      p1 = result.current[1]('a', { limitUrlUpdates: debounce(100) })
+      p2 = result.current[1]('b')
+      return Promise.allSettled([p1, p2])
+    })
+    expect(p1).toBeInstanceOf(Promise)
+    expect(p2).toBeInstanceOf(Promise)
+    expect(p1).not.toBe(p2)
+    await expect(p1).resolves.toEqual(new URLSearchParams('?test=b'))
+    await expect(p2).resolves.toEqual(new URLSearchParams('?test=b'))
+    expect(onUrlUpdate).toHaveBeenCalledTimes(1)
+    expect(onUrlUpdate.mock.calls[0]![0].queryString).toEqual('?test=b')
+  })
 })
