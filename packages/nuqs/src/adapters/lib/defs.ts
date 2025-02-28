@@ -7,7 +7,7 @@ export type UpdateUrlFunction = (
   options: Required<AdapterOptions>
 ) => void
 
-export type UseAdapterHook = () => AdapterInterface
+export type UseAdapterHook = (watchKeys: string[]) => AdapterInterface
 
 export type AdapterInterface = {
   searchParams: URLSearchParams
