@@ -311,8 +311,9 @@ export function useQueryState<T = string>(
           limitUrlUpdates?.timeMs ??
           options.throttleMs ??
           throttleMs
+        const handleAbortedDebounce = debounceController.abort(key)
         globalThrottleQueue.push(update, timeMs)
-        return globalThrottleQueue.flush(adapter)
+        return handleAbortedDebounce(globalThrottleQueue.flush(adapter))
       }
     },
     [

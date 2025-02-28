@@ -218,6 +218,9 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
       debug('[nuq+ `%s`] setState: %O', stateKeys, newState)
       let returnedPromise: Promise<URLSearchParams> | undefined = undefined
       let maxDebounceTime = 0
+      const debounceAborts: Array<
+        (p: Promise<URLSearchParams>) => Promise<URLSearchParams>
+      > = []
       for (let [stateKey, value] of Object.entries(newState)) {
         const parser = keyMap[stateKey]
         const urlKey = resolvedUrlKeys[stateKey]!
@@ -281,12 +284,16 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
             callOptions.throttleMs ??
             parser.throttleMs ??
             throttleMs
+          debounceAborts.push(debounceController.abort(urlKey))
           globalThrottleQueue.push(update, timeMs)
         }
       }
       // We need to flush the throttle queue, but we may have a pending
       // debounced update that will resolve afterwards.
-      const globalPromise = globalThrottleQueue.flush(adapter)
+      const globalPromise = debounceAborts.reduce(
+        (previous, fn) => fn(previous),
+        globalThrottleQueue.flush(adapter)
+      )
       return returnedPromise ?? globalPromise
     },
     [
