@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-22.04-arm
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
-      - uses: pnpm/action-setup@fe02b34f77f8bc703788d5817da081398fad5dd2
+      - uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda
       - uses: actions/setup-node@1d0ff469b7ec7b3cb9d8673fde0c81c44821de2a
         with:
           node-version-file: .node-version
@@ -48,7 +48,7 @@ jobs:
     runs-on: ubuntu-22.04-arm
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
-      - uses: pnpm/action-setup@fe02b34f77f8bc703788d5817da081398fad5dd2
+      - uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda
       - uses: actions/setup-node@1d0ff469b7ec7b3cb9d8673fde0c81c44821de2a
         with:
           node-version-file: .node-version
@@ -88,7 +88,7 @@ jobs:
           - latest
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
-      - uses: pnpm/action-setup@fe02b34f77f8bc703788d5817da081398fad5dd2
+      - uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda
       - uses: actions/setup-node@1d0ff469b7ec7b3cb9d8673fde0c81c44821de2a
         with:
           node-version-file: .node-version
@@ -130,7 +130,7 @@ jobs:
         full-page-nav-on-shallow-false: [false, true]
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
-      - uses: pnpm/action-setup@fe02b34f77f8bc703788d5817da081398fad5dd2
+      - uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda
       - uses: actions/setup-node@1d0ff469b7ec7b3cb9d8673fde0c81c44821de2a
         with:
           node-version-file: .node-version
@@ -171,7 +171,7 @@ jobs:
           - 'v7'
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
-      - uses: pnpm/action-setup@fe02b34f77f8bc703788d5817da081398fad5dd2
+      - uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda
       - uses: actions/setup-node@1d0ff469b7ec7b3cb9d8673fde0c81c44821de2a
         with:
           node-version-file: .node-version
@@ -205,7 +205,7 @@ jobs:
     needs: [ci-core]
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
-      - uses: pnpm/action-setup@fe02b34f77f8bc703788d5817da081398fad5dd2
+      - uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda
       - uses: actions/setup-node@1d0ff469b7ec7b3cb9d8673fde0c81c44821de2a
         with:
           node-version-file: .node-version
@@ -269,7 +269,7 @@ jobs:
     if: ${{ github.ref_name == 'master' || github.ref_name == 'beta' }}
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
-      - uses: pnpm/action-setup@fe02b34f77f8bc703788d5817da081398fad5dd2
+      - uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda
       - uses: actions/setup-node@1d0ff469b7ec7b3cb9d8673fde0c81c44821de2a
         with:
           node-version-file: .node-version
