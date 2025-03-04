@@ -7,6 +7,11 @@ export default defineConfig({
     include: ['**/*.test.?(c|m)[jt]s?(x)'],
     env: {
       IS_REACT_ACT_ENVIRONMENT: 'true'
+    },
+    server: {
+      deps: {
+        inline: ['vitest-package-exports']
+      }
     }
   }
 })

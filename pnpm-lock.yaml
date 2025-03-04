@@ -576,6 +576,9 @@ importers:
       vitest:
         specifier: ^3.0.5
         version: 3.0.5(@types/debug@4.1.12)(@types/node@22.13.1)(jiti@2.4.2)(jsdom@26.0.0)(terser@5.37.0)(yaml@2.7.0)
+      vitest-package-exports:
+        specifier: ^0.1.0
+        version: 0.1.0
 
   packages/res: {}
 
@@ -6193,6 +6196,9 @@ packages:
   pathe@2.0.2:
     resolution: {integrity: sha512-15Ztpk+nov8DR524R4BF7uEuzESgzUEAV4Ah7CUMNGXdE5ELuvxElxGXndBl32vMSsWa1jpNf22Z+Er3sKwq+w==}
 
+  pathe@2.0.3:
+    resolution: {integrity: sha512-WUjGcAqP1gQacoQe+OBJsFA7Ld4DyXuUIjZ5cc75cLHvJ7dtNsTugphxIADwspS+AraAUePCKrSVtPLFj/F88w==}
+
   pathval@2.0.0:
     resolution: {integrity: sha512-vE7JKRyES09KiunauX7nd2Q9/L7lhok4smP9RZTDeD4MVs72Dp2qNFVz39Nz5a0FVEW0BJR6C0DYrq6unoziZA==}
     engines: {node: '>= 14.16'}
@@ -7866,6 +7872,9 @@ packages:
         optional: true
       yaml:
         optional: true
+
+  vitest-package-exports@0.1.0:
+    resolution: {integrity: sha512-h83R5dqOstC0xNPLJUqvtu4yx83l7Eu4gMQJZfTYjP7eqvOoVUPK3hMBEQMzndleUygRatr7/kBHOeINEvz1OQ==}
 
   vitest@3.0.5:
     resolution: {integrity: sha512-4dof+HvqONw9bvsYxtkfUp2uHsTN9bV2CZIi1pWgoFpL1Lld8LA1ka9q/ONSsoScAKG7NVGf2stJTI7XRkXb2Q==}
@@ -14567,6 +14576,8 @@ snapshots:
 
   pathe@2.0.2: {}
 
+  pathe@2.0.3: {}
+
   pathval@2.0.0: {}
 
   pause-stream@0.0.11:
@@ -16376,6 +16387,11 @@ snapshots:
       jiti: 2.4.2
       terser: 5.37.0
       yaml: 2.7.0
+
+  vitest-package-exports@0.1.0:
+    dependencies:
+      find-up-simple: 1.0.0
+      pathe: 2.0.3
 
   vitest@3.0.5(@types/debug@4.1.12)(@types/node@22.13.1)(jiti@2.4.2)(jsdom@26.0.0)(terser@5.37.0)(yaml@2.7.0):
     dependencies:
