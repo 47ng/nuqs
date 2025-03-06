@@ -129,3 +129,9 @@
     fill: currentColor;
   }
 }
+
+@layer components {
+  number-flow-react::part(suffix) {
+    @apply ml-0.5 text-sm font-medium text-muted-foreground;
+  }
+}
