@@ -3,6 +3,7 @@ import { startTransition, useCallback, useEffect, useState } from 'react'
 import { renderQueryString } from '../../url-encoding'
 import { createAdapterProvider } from './context'
 import type { AdapterInterface, AdapterOptions } from './defs'
+import { applyChange, filterSearchParams } from './key-isolation'
 import {
   patchHistory as applyHistoryPatch,
   historyUpdateMarker,
@@ -37,9 +38,11 @@ export function createReactRouterBasedAdapter({
   useSearchParams
 }: CreateReactRouterBasedAdapterArgs) {
   const emitter: SearchParamsSyncEmitter = mitt()
-  function useNuqsReactRouterBasedAdapter(): AdapterInterface {
+  function useNuqsReactRouterBasedAdapter(
+    watchKeys: string[]
+  ): AdapterInterface {
     const navigate = useNavigate()
-    const searchParams = useOptimisticSearchParams()
+    const searchParams = useOptimisticSearchParams(watchKeys)
     const updateUrl = useCallback(
       (search: URLSearchParams, options: AdapterOptions) => {
         startTransition(() => {
@@ -83,7 +86,7 @@ export function createReactRouterBasedAdapter({
       updateUrl
     }
   }
-  function useOptimisticSearchParams() {
+  function useOptimisticSearchParams(watchKeys: string[] = []) {
     const [serverSearchParams] = useSearchParams(
       // Note: this will only be taken into account the first time the hook is called,
       // and cached for subsequent calls, causing problems when mounting components
@@ -93,21 +96,26 @@ export function createReactRouterBasedAdapter({
         : new URLSearchParams(location.search)
     )
     const [searchParams, setSearchParams] = useState(() => {
-      if (typeof location === 'undefined') {
-        // We use this on the server to SSR with the correct search params.
-        return serverSearchParams
-      }
-      // Since useSearchParams isn't reactive to shallow changes,
-      // it doesn't pick up changes in the URL on mount, so we need to initialise
-      // the reactive state with the current URL instead.
-      return new URLSearchParams(location.search)
+      return typeof location === 'undefined'
+        ? // We use this on the server to SSR with the correct search params.
+          filterSearchParams(serverSearchParams, watchKeys, true)
+        : // Since useSearchParams isn't reactive to shallow changes,
+          // it doesn't pick up changes in the URL on mount, so we need to initialise
+          // the reactive state with the current URL instead.
+          filterSearchParams(
+            new URLSearchParams(location.search),
+            watchKeys,
+            false // No need for a copy here
+          )
     })
     useEffect(() => {
       function onPopState() {
-        setSearchParams(new URLSearchParams(location.search))
+        setSearchParams(
+          applyChange(new URLSearchParams(location.search), watchKeys, false)
+        )
       }
       function onEmitterUpdate(search: URLSearchParams) {
-        setSearchParams(search)
+        setSearchParams(applyChange(search, watchKeys, true))
       }
       emitter.on('update', onEmitterUpdate)
       window.addEventListener('popstate', onPopState)
@@ -115,7 +123,7 @@ export function createReactRouterBasedAdapter({
         emitter.off('update', onEmitterUpdate)
         window.removeEventListener('popstate', onPopState)
       }
-    }, [])
+    }, [watchKeys.join('&')])
     return searchParams
   }
   /**
