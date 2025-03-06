@@ -8,9 +8,10 @@ import {
   useState,
   type ReactNode
 } from 'react'
-import { renderQueryString } from '../url-encoding'
+import { debug } from '../lib/debug'
+import { renderQueryString } from '../lib/url-encoding'
 import { createAdapterProvider } from './lib/context'
-import type { AdapterOptions } from './lib/defs'
+import type { AdapterInterface, AdapterOptions } from './lib/defs'
 import { patchHistory, type SearchParamsSyncEmitter } from './lib/patch-history'
 
 const emitter: SearchParamsSyncEmitter = mitt()
@@ -19,6 +20,7 @@ function generateUpdateUrlFn(fullPageNavigationOnShallowFalseUpdates: boolean) {
   return function updateUrl(search: URLSearchParams, options: AdapterOptions) {
     const url = new URL(location.href)
     url.search = renderQueryString(search)
+    debug('[nuqs react] Updating url: %s', url)
     if (fullPageNavigationOnShallowFalseUpdates && options.shallow === false) {
       const method =
         options.history === 'push' ? location.assign : location.replace
@@ -39,7 +41,7 @@ const NuqsReactAdapterContext = createContext({
   fullPageNavigationOnShallowFalseUpdates: false
 })
 
-function useNuqsReactAdapter() {
+function useNuqsReactAdapter(): AdapterInterface {
   const { fullPageNavigationOnShallowFalseUpdates } = useContext(
     NuqsReactAdapterContext
   )
