@@ -1,5 +1,4 @@
 import { Card } from '@tremor/react'
-import Image from 'next/image'
 import { SearchParams } from 'nuqs/server'
 import { Suspense } from 'react'
 import { NPMDownloads, NPMStats } from './_components/downloads'
@@ -33,7 +32,7 @@ export default async function StatsPage({ searchParams }: StatsPageProps) {
           <StarHistoryGraph />
         </Suspense>
         <Card className="flex flex-col gap-2 p-2 dark:bg-background">
-          <Image
+          <img
             width={814}
             height={318}
             alt="Project analytics and stats"

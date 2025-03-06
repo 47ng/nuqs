@@ -1,5 +1,8 @@
 import { Banner } from 'fumadocs-ui/components/banner'
 import Link from 'next/link'
+import { Suspense } from 'react'
+import { Countdown } from '../components/countdown'
+import { ReactParisLogo } from '../components/react-paris'
 
 export function NuqsV2AnnouncementTopBanner() {
   return (
@@ -33,6 +36,43 @@ export function NuqsV2AnnouncementSidebarBanner() {
         Announcing nuqs v2 !
       </Link>
       <span aria-hidden>🎉</span>
+    </div>
+  )
+}
+
+export function ReactParis2025SideBanner() {
+  return (
+    <div className="my-2 flex flex-col items-center gap-1.5 rounded-lg border border-gray-500/40 bg-gray-100/50 px-2 py-4 dark:bg-gray-700/10">
+      <p className="text-muted-foreground">🗣️ nuqs will be featured at</p>
+      <div className="flex gap-2">
+        <ReactParisLogo className="h-12" />
+        <p className="mr-1">
+          <span className="text-lg font-bold uppercase text-[#002654] dark:text-[#00acff]">
+            React
+          </span>{' '}
+          <span className="text-lg uppercase text-[#cd1126] dark:text-[#fe6497]">
+            Paris
+          </span>{' '}
+          <span className="text-lg">'25</span>
+          <br />
+          <a
+            href="https://react.paris/#tickets"
+            className="text-sm hover:underline"
+          >
+            Get your ticket now!
+          </a>
+        </p>
+      </div>
+      <Suspense>
+        <Countdown
+          targetDate={new Date('2025-03-20T15:00:00+01:00')}
+          className="my-2"
+        />
+      </Suspense>
+      <p className="text-center text-xs text-muted-foreground">
+        Use the code <code>Francois_Paris</code> for a 20% discount on your
+        ticket.
+      </p>
     </div>
   )
 }
