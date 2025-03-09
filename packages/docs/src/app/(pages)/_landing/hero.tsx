@@ -4,6 +4,7 @@ import { cn } from '@/src/lib/utils'
 import { ChevronDown, Github, Library } from 'lucide-react'
 import Link from 'next/link'
 import { LandingDemo } from './demo'
+import { WorksWith } from './works-with'
 
 export function HeroSection() {
   return (
@@ -17,6 +18,7 @@ export function HeroSection() {
           <br />
           state manager for React
         </p>
+        <WorksWith className="mb-10" />
         <nav className="flex flex-wrap gap-4">
           <Link
             href="/docs"
