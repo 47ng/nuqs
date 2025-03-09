@@ -18,7 +18,6 @@ export function HeroSection() {
           <br />
           state manager for React
         </p>
-        <WorksWith className="mb-10" />
         <nav className="flex flex-wrap gap-4">
           <Link
             href="/docs"
@@ -46,6 +45,7 @@ export function HeroSection() {
             GitHub
           </a>
         </nav>
+        <WorksWith className="mt-10" />
       </aside>
       <aside className="relative my-4 xl:my-auto xl:flex-1 xl:pt-4">
         <LandingDemo />

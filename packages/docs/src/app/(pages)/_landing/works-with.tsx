@@ -4,10 +4,7 @@ import { ComponentProps } from 'react'
 export function WorksWith({ className, ...props }: ComponentProps<'div'>) {
   return (
     <div
-      className={cn(
-        'flex items-center justify-center gap-6 text-4xl',
-        className
-      )}
+      className={cn('flex items-center gap-6 text-3xl', className)}
       {...props}
     >
       <p className="sr-only">Works with</p>

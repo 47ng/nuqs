@@ -17,7 +17,7 @@ export async function SponsorsSection() {
               <img
                 src={sponsor.img}
                 alt={sponsor.name ?? sponsor.handle}
-                className="mx-auto size-28 rounded-full"
+                className="mx-auto size-32 rounded-full"
                 width={128}
                 height={128}
               />
