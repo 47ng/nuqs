@@ -94,7 +94,7 @@ const links: LinkTreeItemProps[] = [
     icon: <Twitter className="size-5" />,
     label: (
       <>
-        <span className="line-through">Twitter</span>{' '}
+        Twitter{' '}
         <span className="text-sm text-muted-foreground">
           @fortysevenfx (archived)
         </span>
