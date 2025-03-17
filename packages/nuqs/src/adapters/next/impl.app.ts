@@ -1,4 +1,4 @@
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation.js'
 import { startTransition, useCallback, useOptimistic } from 'react'
 import { debug } from '../../debug'
 import { renderQueryString } from '../../url-encoding'
