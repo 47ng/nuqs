@@ -1,0 +1,79 @@
+---
+title: Inertia
+description: Integrate nuqs with Inertia
+---
+
+[Inertia](https://inertiajs.com/) is supported as a community-contributed adapter.
+
+## Step 1: Add the adapter code
+
+<Callout type="warn">
+  The custom adapters APIs are not yet stable and may change in the future in a
+  minor or patch release (not following SemVer).
+</Callout>
+
+```tsx title="resources/js/lib/nuqs-inertia-adapter.ts"
+import mitt from 'mitt'
+import { useEffect, useState } from 'react'
+import {
+  type unstable_AdapterOptions as AdapterOptions,
+  unstable_createAdapterProvider as createAdapterProvider,
+  renderQueryString
+} from 'nuqs/adapters/custom'
+import { router } from '@inertiajs/react'
+
+const emitter = mitt<{ update: URLSearchParams }>()
+
+function updateUrl(search: URLSearchParams, options: AdapterOptions) {
+  const url = new URL(location.href)
+  url.search = renderQueryString(search)
+  router.visit(url, {
+    replace: options.history === 'replace',
+    preserveScroll: !options.scroll,
+    preserveState: options.shallow
+  })
+  emitter.emit('update', search)
+}
+
+function useNuqsInertiaAdapter() {
+  const [searchParams, setSearchParams] = useState(() => {
+    if (typeof location === 'undefined') {
+      return new URLSearchParams()
+    }
+    return new URLSearchParams(location.search)
+  })
+  useEffect(() => {
+    // Popstate event is only fired when the user navigates
+    // via the browser's back/forward buttons.
+    const onPopState = () => {
+      setSearchParams(new URLSearchParams(location.search))
+    }
+    emitter.on('update', setSearchParams)
+    window.addEventListener('popstate', onPopState)
+    return () => {
+      emitter.off('update', setSearchParams)
+      window.removeEventListener('popstate', onPopState)
+    }
+  }, [])
+  return {
+    searchParams,
+    updateUrl
+  }
+}
+
+export const NuqsAdapter = createAdapterProvider(useNuqsInertiaAdapter)
+```
+
+## Step 2: Create a new global app layout
+
+Integrate the adapter into the root layout file, by wrapping it around the children
+of the layout component:
+
+```tsx title="resources/js/Layouts/AppLayout.tsx" /NuqsAdapter/
+import { NuqsAdapter } from '.@/lib/nuqs-inertia-adapter'
+import { PropsWithChildren } from 'react'
+
+export default function Layout({ children }: PropsWithChildren) {
+  return <NuqsAdapter>{children}</NuqsAdapter>
+}
+```
