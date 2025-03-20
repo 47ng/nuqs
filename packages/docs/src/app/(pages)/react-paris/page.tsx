@@ -14,7 +14,7 @@ import { LinkTree, LinkTreeItemProps } from './link-tree'
 
 const links: LinkTreeItemProps[] = [
   {
-    href: '#todo-add-feedback-link',
+    href: 'https://discord.com/channels/723276276072317098/1352179917680283743',
     icon: <SiDiscord className="size-5" />,
     label: <>Questions & Feedback 🙏</>
   },
