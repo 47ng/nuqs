@@ -44,7 +44,7 @@
     "fumadocs-mdx": "^11.4.1",
     "fumadocs-ui": "^14.7.7",
     "lucide-react": "^0.473.0",
-    "next": "15.1.5",
+    "next": "15.2.3",
     "nuqs": "workspace:*",
     "pretty-bytes": "^6.1.1",
     "react": "catalog:react19",
