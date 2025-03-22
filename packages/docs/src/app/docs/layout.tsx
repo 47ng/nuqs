@@ -2,7 +2,6 @@ import { source } from '@/src/app/source'
 import { getSharedLayoutProps } from '@/src/components/shared-layout'
 import { DocsLayout } from 'fumadocs-ui/layouts/docs'
 import { Suspense, type ReactNode } from 'react'
-import { ReactParis2025SideBanner } from '../banners'
 
 export default function RootDocsLayout({ children }: { children: ReactNode }) {
   return (
@@ -11,7 +10,7 @@ export default function RootDocsLayout({ children }: { children: ReactNode }) {
       {...getSharedLayoutProps()}
       sidebar={{
         collapsible: false,
-        banner: <ReactParis2025SideBanner />,
+        // banner: <ReactParis2025SideBanner />,
         footer: (
           <Suspense>
             <SidebarFooter />

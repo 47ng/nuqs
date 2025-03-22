@@ -2,7 +2,6 @@ import { getSharedLayoutProps } from '@/src/components/shared-layout'
 import { DocsLayout } from 'fumadocs-ui/layouts/docs'
 import { DocsBody, DocsPage } from 'fumadocs-ui/page'
 import React, { Suspense } from 'react'
-import { ReactParis2025SideBanner } from '../banners'
 import { getPlaygroundTree } from './(demos)/demos'
 import { DebugControl } from './debug-control'
 
@@ -25,7 +24,7 @@ export default function PlaygroundLayout({
         {...getSharedLayoutProps()}
         sidebar={{
           collapsible: false,
-          banner: <ReactParis2025SideBanner />,
+          // banner: <ReactParis2025SideBanner />,
           footer: (
             <Suspense fallback={<DebugControlsSkeleton />}>
               <DebugControl />
