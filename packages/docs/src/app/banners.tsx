@@ -4,6 +4,9 @@ import { Suspense } from 'react'
 import { Countdown } from '../components/countdown'
 import { ReactParisLogo } from '../components/react-paris'
 
+// Note: top-level banners go into src/app/layout.tsx
+// Note: sidebar banners go into src/app/docs/layout.tsx & playground/layout.tsx
+
 export function NuqsV2AnnouncementTopBanner() {
   return (
     <Banner
