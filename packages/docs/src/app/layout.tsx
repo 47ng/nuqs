@@ -6,7 +6,6 @@ import { NuqsAdapter } from 'nuqs/adapters/next'
 import type { ReactNode } from 'react'
 import { ResponsiveHelper } from '../components/responsive-helpers'
 import { cn } from '../lib/utils'
-import { NuqsV2AnnouncementTopBanner } from './banners'
 import './globals.css'
 
 const inter = Inter({
@@ -39,7 +38,7 @@ export default function Layout({ children }: { children: ReactNode }) {
       suppressHydrationWarning
     >
       <body>
-        <NuqsV2AnnouncementTopBanner />
+        {/* Top-level banners go here */}
         <RootProvider>
           <NuqsAdapter>{children}</NuqsAdapter>
         </RootProvider>
