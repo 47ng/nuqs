@@ -1,6 +1,7 @@
 import mitt from 'mitt'
 import { startTransition, useCallback, useEffect, useState } from 'react'
-import { renderQueryString } from '../../url-encoding'
+import { debug } from '../../lib/debug'
+import { renderQueryString } from '../../lib/url-encoding'
 import { createAdapterProvider } from './context'
 import type { AdapterInterface, AdapterOptions } from './defs'
 import {
@@ -47,6 +48,7 @@ export function createReactRouterBasedAdapter({
         })
         const url = new URL(location.href)
         url.search = renderQueryString(search)
+        debug(`[nuqs ${adapter}] Updating url: %s`, url)
         // First, update the URL locally without triggering a network request,
         // this allows keeping a reactive URL if the network is slow.
         const updateMethod =

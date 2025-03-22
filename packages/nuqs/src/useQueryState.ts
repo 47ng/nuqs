@@ -1,16 +1,16 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useAdapter } from './adapters/lib/context'
-import { debug } from './debug'
 import type { Options } from './defs'
-import type { Parser } from './parsers'
-import { emitter, type CrossHookSyncPayload } from './sync'
+import { debug } from './lib/debug'
+import { debounceController } from './lib/queues/debounce'
+import { defaultRateLimit } from './lib/queues/rate-limiting'
 import {
-  FLUSH_RATE_LIMIT_MS,
-  enqueueQueryStringUpdate,
-  getQueuedValue,
-  scheduleFlushToURL
-} from './update-queue'
-import { safeParse } from './utils'
+  globalThrottleQueue,
+  type UpdateQueuePushArgs
+} from './lib/queues/throttle'
+import { safeParse } from './lib/safe-parse'
+import { emitter, type CrossHookSyncPayload } from './lib/sync'
+import type { Parser } from './parsers'
 
 export interface UseQueryStateOptions<T> extends Parser<T>, Options {}
 
@@ -201,7 +201,8 @@ export function useQueryState<T = string>(
     history = 'replace',
     shallow = true,
     scroll = false,
-    throttleMs = FLUSH_RATE_LIMIT_MS,
+    throttleMs = defaultRateLimit.timeMs,
+    limitUrlUpdates,
     parse = x => x as unknown as T,
     serialize = String,
     eq = (a, b) => a === b,
@@ -214,7 +215,7 @@ export function useQueryState<T = string>(
     history: 'replace',
     scroll: false,
     shallow: true,
-    throttleMs: FLUSH_RATE_LIMIT_MS,
+    throttleMs: defaultRateLimit.timeMs,
     parse: x => x as unknown as T,
     serialize: String,
     eq: (a, b) => a === b,
@@ -226,7 +227,7 @@ export function useQueryState<T = string>(
   const initialSearchParams = adapter.searchParams
   const queryRef = useRef<string | null>(initialSearchParams?.get(key) ?? null)
   const [internalState, setInternalState] = useState<T | null>(() => {
-    const queuedQuery = getQueuedValue(key)
+    const queuedQuery = debounceController.getQueuedQuery(key)
     const query =
       queuedQuery === undefined
         ? (initialSearchParams?.get(key) ?? null)
@@ -282,17 +283,38 @@ export function useQueryState<T = string>(
       ) {
         newValue = null
       }
-      const query = enqueueQueryStringUpdate(key, newValue, serialize, {
-        // Call-level options take precedence over hook declaration options.
-        history: options.history ?? history,
-        shallow: options.shallow ?? shallow,
-        scroll: options.scroll ?? scroll,
-        throttleMs: options.throttleMs ?? throttleMs,
-        startTransition: options.startTransition ?? startTransition
-      })
+      const query = newValue === null ? null : serialize(newValue)
       // Sync all hooks state (including this one)
       emitter.emit(key, { state: newValue, query })
-      return scheduleFlushToURL(adapter)
+      const update: UpdateQueuePushArgs = {
+        key,
+        query,
+        options: {
+          history: options.history ?? history,
+          shallow: options.shallow ?? shallow,
+          scroll: options.scroll ?? scroll,
+          startTransition: options.startTransition ?? startTransition
+        }
+      }
+      if (
+        options.limitUrlUpdates?.method === 'debounce' ||
+        limitUrlUpdates?.method === 'debounce'
+      ) {
+        const timeMs =
+          options.limitUrlUpdates?.timeMs ??
+          limitUrlUpdates?.timeMs ??
+          defaultRateLimit.timeMs
+        return debounceController.push(update, timeMs, adapter)
+      } else {
+        const timeMs =
+          options.limitUrlUpdates?.timeMs ??
+          limitUrlUpdates?.timeMs ??
+          options.throttleMs ??
+          throttleMs
+        const handleAbortedDebounce = debounceController.abort(key)
+        globalThrottleQueue.push(update, timeMs)
+        return handleAbortedDebounce(globalThrottleQueue.flush(adapter))
+      }
     },
     [
       key,
@@ -300,6 +322,8 @@ export function useQueryState<T = string>(
       shallow,
       scroll,
       throttleMs,
+      limitUrlUpdates?.method,
+      limitUrlUpdates?.timeMs,
       startTransition,
       adapter.updateUrl,
       adapter.getSearchParamsSnapshot,
