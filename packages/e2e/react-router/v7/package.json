@@ -13,28 +13,28 @@
     "cypress:run": "cross-env FORCE_COLOR=3 cypress run --headless"
   },
   "dependencies": {
-    "@react-router/node": "^7.3.0",
-    "@react-router/serve": "^7.3.0",
-    "isbot": "^5.1.22",
+    "@react-router/node": "^7.4.0",
+    "@react-router/serve": "^7.4.0",
+    "isbot": "^5.1.25",
     "nuqs": "workspace:*",
     "react": "catalog:react19",
     "react-dom": "catalog:react19",
-    "react-router": "^7.3.0"
+    "react-router": "^7.4.0"
   },
   "devDependencies": {
-    "@react-router/dev": "^7.3.0",
-    "@react-router/express": "^7.3.0",
-    "@types/node": "^22.13.1",
+    "@react-router/dev": "^7.4.0",
+    "@react-router/express": "^7.4.0",
+    "@types/node": "^22.13.13",
     "@types/react": "catalog:react19",
     "@types/react-dom": "catalog:react19",
-    "compression": "^1.7.5",
+    "compression": "^1.8.0",
     "cross-env": "^7.0.3",
     "cypress": "catalog:e2e",
     "e2e-shared": "workspace:*",
     "express": "^4.21.2",
     "start-server-and-test": "catalog:e2e",
-    "typescript": "^5.7.3",
-    "vite": "^6.0.11",
+    "typescript": "^5.8.2",
+    "vite": "^6.2.3",
     "vite-tsconfig-paths": "^5.1.4"
   }
 }
