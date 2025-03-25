@@ -22,14 +22,14 @@
     "lint:sherif": "sherif"
   },
   "devDependencies": {
-    "@commitlint/config-conventional": "^19.7.1",
-    "commitlint": "^19.7.1",
+    "@commitlint/config-conventional": "^19.8.0",
+    "commitlint": "^19.8.0",
     "husky": "^9.1.7",
     "prettier": "3.4.2",
-    "semantic-release": "^24.2.1",
-    "sherif": "^1.2.0",
-    "turbo": "^2.4.0",
-    "typescript": "^5.7.3"
+    "semantic-release": "^24.2.3",
+    "sherif": "^1.4.0",
+    "turbo": "^2.4.4",
+    "typescript": "^5.8.2"
   },
   "packageManager": "pnpm@10.0.0",
   "pnpm": {
