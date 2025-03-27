@@ -22,7 +22,7 @@ export type UpdateQueuePushArgs = {
   options: AdapterOptions & Pick<Options, 'startTransition'>
 }
 
-function getSearchParamsSnapshotFromLocation() {
+export function getSearchParamsSnapshotFromLocation() {
   return new URLSearchParams(location.search)
 }
 
