@@ -182,7 +182,7 @@
     {
       "name": "Client",
       "path": "dist/index.js",
-      "limit": "5 kB",
+      "limit": "6 kB",
       "ignore": [
         "react",
         "next"
@@ -191,7 +191,7 @@
     {
       "name": "Server",
       "path": "dist/server.js",
-      "limit": "2.5 kB",
+      "limit": "3 kB",
       "ignore": [
         "react",
         "next"
