@@ -287,14 +287,17 @@ when the data is invalid (eg: Valibot, Yup, etc).
 
 ## Using parsers server-side
 
-You may import parsers from `nuqs/server` to use them in your server code,
+For shared code that may be imported in the Next.js app router, you should import
+parsers from `nuqs/server` to use them in both server & client code,
 as it doesn't include the `'use client'{:ts}` directive.
 
 ```ts
 import { parseAsString } from 'nuqs/server'
 ```
 
-<Callout title="Note">
-  It used to be available under the alias import `nuqs/parsers`, which will be
-  dropped in the next major version.
-</Callout>
+Importing from `nuqs` will only work in client code, and will throw bundling errors
+when using functions (like `.withDefault{:ts}` & `.withOptions{:ts}`)
+across shared code.
+
+For all other frameworks, you can use either interchangeably, as they don't
+care about the `'use client'{:ts}` directive.

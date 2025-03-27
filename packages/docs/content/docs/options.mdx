@@ -15,7 +15,8 @@ These behaviours can be configured, along with a few additional options.
 
 Options can be passed at the hook level via the builder pattern:
 
-```ts /withOptions/
+```ts
+// [!code word:withOptions]
 const [state, setState] = useQueryState(
   'foo',
   parseAsString.withOptions({ history: 'push' })
@@ -24,7 +25,8 @@ const [state, setState] = useQueryState(
 
 Or when calling the state updater function, as a second parameter:
 
-```ts /{ scroll: true }/
+```ts
+// [!code word:scroll]
 setState('foo', { scroll: true })
 ```
 
@@ -43,8 +45,9 @@ You can also opt-in to **push** a new history entry for each state change,
 per key, which will let you use the Back button to navigate state
 updates:
 
-```ts /history: /history: 'push'/
+```ts
 // Append state changes to history:
+// [!code word:history]
 useQueryState('foo', { history: 'push' })
 ```
 
@@ -66,12 +69,13 @@ This is equivalent to the `shallow` option of the Next.js router set to `true{:t
 
 To opt-in to notifying the server on query updates, you can set `shallow` to `false{:ts}`:
 
-```ts /shallow: false/
+```ts
+// [!code word:shallow]
 useQueryState('foo', { shallow: false })
 ```
 
 Note that the shallow option only makes sense if your page can be server-side rendered.
-Therefore, it's a no-op in React SPA.
+Therefore, it has no effect in React SPA.
 
 For server-side renderable frameworks, you would pair `shallow: false{:ts}` with:
 
@@ -81,12 +85,12 @@ For server-side renderable frameworks, you would pair `shallow: false{:ts}` with
 
 ### In React Router based frameworks
 
-While the `shallow: false` default behaviour is uncommon for Remix and React Router,
+While the `shallow: false{:ts}` default behaviour is uncommon for Remix and React Router,
 where loaders are always supposed to run on URL changes, nuqs gives you control
 of this behaviour, by opting in to running loaders only if they do need to access
 the relevant search params.
 
-One caveat is that the stock `useSearchParams` hook from those frameworks doesn't
+One caveat is that the stock `useSearchParams{:ts}` hook from those frameworks doesn't
 reflect shallow-updated search params, so we provide you with one that does:
 
 ```tsx
@@ -120,7 +124,8 @@ which may not be desirable when updating the query string with local state.
 Query state updates won't scroll to the top of the page by default, but you
 can opt-in to this behaviour:
 
-```ts /scroll: true/
+```ts
+// [!code word:scroll]
 useQueryState('foo', { scroll: true })
 ```
 
@@ -139,7 +144,8 @@ If you want to opt-in to a larger throttle time -- for example to reduce the amo
 of requests sent to the server when paired with `shallow: false{:ts}` -- you can
 specify it under the `throttleMs` option:
 
-```ts /throttleMs: 1000/
+```tsx
+// [!code word:throttleMs]
 useQueryState('foo', {
   // Send updates to the server maximum once every second
   shallow: false,
@@ -149,7 +155,7 @@ useQueryState('foo', {
 
 <Callout title="Note">
 the state returned by the hook is always updated **instantly**, to keep UI responsive.
-Only changes to the URL, and server requests when using `shallow: false`, are throttled.
+Only changes to the URL, and server requests when using `shallow: false{:ts}`, are throttled.
 </Callout>
 
 If multiple hooks set different throttle values on the same event loop tick,
@@ -157,7 +163,7 @@ the highest value will be used. Also, values lower than 50ms will be ignored,
 to avoid rate-limiting issues.
 [Read more](https://francoisbest.com/posts/2023/storing-react-state-in-the-url-with-nextjs#batching--throttling).
 
-Specifying a `+Infinity{:ts}` value for `throttleMs` will **disable** updates to the
+Specifying a `+Infinity{:ts}` value for `throttleMs{:ts}` will **disable** updates to the
 URL or the server, but all `useQueryState(s)` hooks will still update their
 internal state and stay in sync with each other.
 
@@ -220,9 +226,10 @@ because **default values _can_ change**, and the meaning of the URL along with i
 </Callout>
 
 If you want to keep the search parameter in the URL when it's set to the default
-value, you can set `clearOnDefault` to `false{:ts}`:
+value, you can set `clearOnDefault{:ts}` to `false{:ts}`:
 
-```ts /clearOnDefault: true/
+```ts
+// [!code word:clearOnDefault]
 useQueryState('search', {
   defaultValue: '',
   clearOnDefault: false
