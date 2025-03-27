@@ -2,6 +2,7 @@ import { debug } from '../debug'
 import { timeout } from '../timeout'
 import { withResolvers } from '../with-resolvers'
 import {
+  getSearchParamsSnapshotFromLocation,
   globalThrottleQueue,
   ThrottledQueue,
   type UpdateQueueAdapterContext,
@@ -69,6 +70,11 @@ export class DebounceController {
     timeMs: number,
     adapter: UpdateQueueAdapterContext
   ): Promise<URLSearchParams> {
+    if (!Number.isFinite(timeMs)) {
+      const getSnapshot =
+        adapter.getSearchParamsSnapshot ?? getSearchParamsSnapshotFromLocation
+      return Promise.resolve(getSnapshot())
+    }
     if (!this.queues.has(update.key)) {
       const queue = new DebouncedPromiseQueue<
         Omit<UpdateQueuePushArgs, 'timeMs'>,
