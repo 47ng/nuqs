@@ -232,4 +232,24 @@ describe('debounce: DebounceController', () => {
       new URLSearchParams('?key=override')
     )
   })
+  it('does not queue an update with a timeout of Infinity', async () => {
+    const fakeAdapter: UpdateQueueAdapterContext = {
+      updateUrl: vi.fn<UpdateUrlFunction>(),
+      getSearchParamsSnapshot() {
+        return new URLSearchParams('?test=init')
+      }
+    }
+    const controller = new DebounceController()
+    const promise = controller.push(
+      {
+        key: 'key',
+        query: 'value',
+        options: {}
+      },
+      Infinity,
+      fakeAdapter
+    )
+    expect(controller.getQueuedQuery('key')).toBeUndefined()
+    await expect(promise).resolves.toEqual(new URLSearchParams('?test=init'))
+  })
 })
