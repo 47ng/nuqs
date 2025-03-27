@@ -151,7 +151,7 @@ withNuqsTestingAdapter({
 - `onUrlUpdate{:ts}`: a function that will be called when the URL is updated
   by the component. It receives an object with:
   - the new search params as an instance of `URLSearchParams{:ts}`
-  - the new renderd query string (for convenience)
+  - the new rendered query string (for convenience)
   - the options used to update the URL.
 
 <details>
@@ -191,8 +191,8 @@ If you create custom parsers with `createParser{:ts}`, you will likely want to
 test them.
 
 Parsers should:
-1. Define pure functions for `parse`, `serialize`, and `eq`.
-2. Be bijective: `parse(serialize(x)) === x` and `serialize(parse(x)) === x`.
+1. Define pure functions for `parse{:ts}`, `serialize{:ts}`, and `eq{:ts}`.
+2. Be bijective: `parse(serialize(x)) === x{:ts}` and `serialize(parse(x)) === x{:ts}`.
 
 To help test bijectivity, you can use helpers defined in `nuqs/testing`:
 
