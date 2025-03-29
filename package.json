@@ -31,16 +31,7 @@
     "turbo": "^2.4.4",
     "typescript": "^5.8.2"
   },
-  "packageManager": "pnpm@10.0.0",
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "@sentry/cli",
-      "@swc/core",
-      "cypress",
-      "esbuild",
-      "sharp"
-    ]
-  },
+  "packageManager": "pnpm@10.7.0",
   "resolutions": {
     "@headlessui/react": "2.2.0"
   },
