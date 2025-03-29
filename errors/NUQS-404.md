@@ -35,7 +35,7 @@ are in different packages resolving to different `nuqs` versions,
 leading to different context references being used.
 
 If you [enable debugging](https://nuqs.47ng.com/docs/debugging), you might see a
-[`NUQS-303 - Multiple adapter contexts detected`](./NUQS-303) error, confirming
+[`NUQS-303 - Multiple adapter contexts detected`](./NUQS-303.md) error, confirming
 this hypothesis.
 
 For additional clarification, ensure that all packages use compatible versions
