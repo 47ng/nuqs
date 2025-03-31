@@ -19,11 +19,10 @@ function useNuqsTanstackRouterAdapter(): AdapterInterface {
         router.navigate({
           from: state.location.pathname,
           to: url,
-          search: search
+          search: search,
+          replace: options.history === 'replace',
+          resetScroll: options.scroll
         })
-        if (options.scroll) {
-          window.scrollTo(0, 0)
-        }
       })
     },
     [router.navigate]
