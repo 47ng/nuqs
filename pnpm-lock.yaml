@@ -510,7 +510,7 @@ importers:
   packages/nuqs:
     dependencies:
       '@tanstack/react-router':
-        specifier: '>=1'
+        specifier: ^1
         version: 1.114.29(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       mitt:
         specifier: ^3.0.1
