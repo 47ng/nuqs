@@ -27,7 +27,8 @@
     "nextjs",
     "react",
     "remix",
-    "react-router"
+    "react-router",
+    "tanstack-router"
   ],
   "publishConfig": {
     "access": "public",
@@ -111,8 +112,8 @@
       "require": "./esm-only.cjs"
     },
     "./adapters/tanstack-router": {
-      "types": "./dist/adapters/tanstack-router/index.d.ts",
-      "import": "./dist/adapters/tanstack-router/index.js",
+      "types": "./dist/adapters/tanstack-router.d.ts",
+      "import": "./dist/adapters/tanstack-router.js",
       "require": "./esm-only.cjs"
     },
     "./adapters/custom": {
