@@ -30,6 +30,7 @@ const entrypoints = {
     'adapters/react-router': 'src/adapters/react-router.ts',
     'adapters/react-router/v6': 'src/adapters/react-router/v6.ts',
     'adapters/react-router/v7': 'src/adapters/react-router/v7.ts',
+    'adapters/tanstack-router': 'src/adapters/tanstack-router/index.ts',
     'adapters/custom': 'src/adapters/custom.ts',
     'adapters/testing': 'src/adapters/testing.ts'
   },
