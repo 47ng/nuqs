@@ -60,6 +60,9 @@ const exports = `
     "NuqsAdapter": "function",
     "useOptimisticSearchParams": "function",
   },
+  "./adapters/tanstack-router": {
+    "NuqsAdapter": "function",
+  },
   "./adapters/testing": {
     "NuqsTestingAdapter": "function",
     "withNuqsTestingAdapter": "function",
