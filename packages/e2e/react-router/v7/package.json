@@ -23,7 +23,7 @@
   },
   "devDependencies": {
     "@react-router/dev": "^7.4.0",
-    "@react-router/express": "^7.4.0",
+    "@react-router/express": "^7.4.1",
     "@types/node": "^22.13.13",
     "@types/react": "catalog:react19",
     "@types/react-dom": "catalog:react19",
