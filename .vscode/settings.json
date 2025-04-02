@@ -29,5 +29,15 @@
   ],
   "typescript.preferences.autoImportSpecifierExcludeRegexes": [
     "^node:test$" // We use Vitest
-  ]
+  ],
+  // TanStack Router settings
+  "files.watcherExclude": {
+    "**/routeTree.gen.ts": true
+  },
+  "search.exclude": {
+    "**/routeTree.gen.ts": true
+  },
+  "files.readonlyInclude": {
+    "**/routeTree.gen.ts": true
+  }
 }
