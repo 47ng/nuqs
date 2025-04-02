@@ -24,6 +24,7 @@ When running `next dev`, this will:
   - http://localhost:3001 - Next.js
   - http://localhost:3002 - React SPA
   - http://localhost:3003 - Remix
+  - http://localhost:3004 - TanStack Router
   - http://localhost:3006 - React Router v6
   - http://localhost:3007 - React Router v7
 
