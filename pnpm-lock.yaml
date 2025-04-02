@@ -382,8 +382,8 @@ importers:
         specifier: ^7.4.0
         version: 7.4.0(@react-router/serve@7.4.0(react-router@7.4.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(typescript@5.8.2))(@types/node@22.13.13)(jiti@2.4.2)(react-router@7.4.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(terser@5.39.0)(typescript@5.8.2)(vite@6.2.3(@types/node@22.13.13)(jiti@2.4.2)(terser@5.39.0)(yaml@2.7.0))(yaml@2.7.0)
       '@react-router/express':
-        specifier: ^7.4.0
-        version: 7.4.0(express@4.21.2)(react-router@7.4.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(typescript@5.8.2)
+        specifier: ^7.4.1
+        version: 7.4.1(express@4.21.2)(react-router@7.4.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(typescript@5.8.2)
       '@types/node':
         specifier: ^22.13.13
         version: 22.13.13
@@ -2422,11 +2422,32 @@ packages:
       typescript:
         optional: true
 
+  '@react-router/express@7.4.1':
+    resolution: {integrity: sha512-L2JwyDTQqPDBeWzH/wpns1SBM4jmbuAJlY8X6SeoLIA54aiuDaJ6wzrEFh05Oo15xCciZMejFNVp2WnWXrZSRg==}
+    engines: {node: '>=20.0.0'}
+    peerDependencies:
+      express: ^4.17.1 || ^5
+      react-router: 7.4.1
+      typescript: ^5.1.0
+    peerDependenciesMeta:
+      typescript:
+        optional: true
+
   '@react-router/node@7.4.0':
     resolution: {integrity: sha512-Y+2CXCPmnxcBbdTNGYO7pDusP+1xSlInbFXhsgjsM5WPH+5aDKHKYmDDrOT7fkg0l3b/SkzfwVsJg5XT9qjb/A==}
     engines: {node: '>=20.0.0'}
     peerDependencies:
       react-router: 7.4.0
+      typescript: ^5.1.0
+    peerDependenciesMeta:
+      typescript:
+        optional: true
+
+  '@react-router/node@7.4.1':
+    resolution: {integrity: sha512-CLJes6FGylwRnrCDg+nnBlBraD2iuiillx5JDhonIbMajsBJwTc7NVF3AkpNW45S8J0czGGvz19WDIe1cxbAlQ==}
+    engines: {node: '>=20.0.0'}
+    peerDependencies:
+      react-router: 7.4.1
       typescript: ^5.1.0
     peerDependenciesMeta:
       typescript:
@@ -10042,7 +10063,25 @@ snapshots:
     optionalDependencies:
       typescript: 5.8.2
 
+  '@react-router/express@7.4.1(express@4.21.2)(react-router@7.4.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(typescript@5.8.2)':
+    dependencies:
+      '@react-router/node': 7.4.1(react-router@7.4.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(typescript@5.8.2)
+      express: 4.21.2
+      react-router: 7.4.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+    optionalDependencies:
+      typescript: 5.8.2
+
   '@react-router/node@7.4.0(react-router@7.4.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(typescript@5.8.2)':
+    dependencies:
+      '@mjackson/node-fetch-server': 0.2.0
+      react-router: 7.4.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      source-map-support: 0.5.21
+      stream-slice: 0.1.2
+      undici: 6.21.2
+    optionalDependencies:
+      typescript: 5.8.2
+
+  '@react-router/node@7.4.1(react-router@7.4.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(typescript@5.8.2)':
     dependencies:
       '@mjackson/node-fetch-server': 0.2.0
       react-router: 7.4.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
