@@ -2,6 +2,9 @@ import type { TransitionStartFunction } from 'react'
 
 export type SearchParams = Record<string, string | string[] | undefined>
 export type HistoryOptions = 'replace' | 'push'
+export type LimitUrlUpdates =
+  | { method: 'debounce'; timeMs: number }
+  | { method: 'throttle'; timeMs: number }
 
 export type Options = {
   /**
@@ -34,12 +37,35 @@ export type Options = {
    * Maximum amount of time (ms) to wait between updates of the URL query string.
    *
    * This is to alleviate rate-limiting of the Web History API in browsers,
-   * and defaults to 50ms. Safari requires a much higher value of around 340ms.
+   * and defaults to 50ms. Safari requires a higher value of around 120ms.
    *
    * Note: the value will be limited to a minimum of 50ms, anything lower
    * will not have any effect.
+   *
+   * @deprecated use `limitUrlUpdates: { 'method': 'throttle', timeMs: number }`
+   * or use the shorthand:
+   * ```ts
+   * import { throttle } from 'nuqs'
+   *
+   * limitUrlUpdates: throttle(100) // time in ms
+   * ```
    */
   throttleMs?: number
+
+  /**
+   * Limit the rate of URL updates to prevent spamming the browser history,
+   * and the server if `shallow: false`.
+   *
+   * This is to alleviate rate-limiting of the Web History API in browsers,
+   * and defaults to 50ms. Safari requires a higher value of around 120ms.
+   *
+   * Note: the value will be limited to a minimum of 50ms, anything lower
+   * will not have any effect.
+   *
+   * If both `throttleMs` and `limitUrlUpdates` are set, `limitUrlUpdates` will
+   * take precedence.
+   */
+  limitUrlUpdates?: LimitUrlUpdates
 
   /**
    * In RSC frameworks, opt-in to observing Server Component loading states when
