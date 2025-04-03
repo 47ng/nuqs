@@ -1,3 +1,4 @@
+import fc from 'fast-check'
 import { describe, expect, test, vi } from 'vitest'
 import { encodeQueryValue, renderQueryString } from './url-encoding'
 
@@ -46,6 +47,24 @@ describe('url-encoding/encodeQueryValue', () => {
     expect(e('100%')).toBe('100%25')
     expect(e('kool&thegang')).toBe('kool%26thegang')
     expect(e('a&b=c')).toBe('a%26b=c')
+  })
+
+  test.each([
+    { label: 'ASCII', unit: 'binary-ascii' },
+    { label: 'Printable characters', unit: 'grapheme' },
+    { label: 'Full Unicode range', unit: 'binary' },
+    {
+      label: 'Special ASCII characters',
+      unit: fc.constantFrom(...'-._~!$()*,;=:@/?[]{}\\|^')
+    }
+  ] as const)('Property-based fuzzy testing - $label', ({ unit }) => {
+    fc.assert(
+      fc.property(fc.string({ unit }), str => {
+        const search = `?key=${encodeQueryValue(str)}`
+        const expected = new URLSearchParams(search).get('key')
+        expect(expected).toBe(str)
+      })
+    )
   })
 })
 
