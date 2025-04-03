@@ -32,6 +32,8 @@ export default [
     route('/pretty-urls',                           './routes/pretty-urls.tsx'),
     route('/dynamic-segments/dynamic/:segment',     './routes/dynamic-segments.dynamic.$segment.tsx'),
     route('/dynamic-segments/catch-all?/*',         './routes/dynamic-segments.catch-all.$.tsx'),
+    route('/key-isolation/useQueryState',           './routes/key-isolation.useQueryState.tsx'),
+    route('/key-isolation/useQueryStates',          './routes/key-isolation.useQueryStates.tsx'),
 
     route('/render-count/:hook/:shallow/:history/:startTransition/no-loader',    './routes/render-count.$hook.$shallow.$history.$startTransition.no-loader.tsx'),
     route('/render-count/:hook/:shallow/:history/:startTransition/sync-loader',  './routes/render-count.$hook.$shallow.$history.$startTransition.sync-loader.tsx'),
