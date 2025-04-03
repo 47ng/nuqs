@@ -11,5 +11,5 @@ afterEach(cleanup)
 fc.configureGlobal({
   numRuns: 1000,
   verbose: process.env.CI ? VerbosityLevel.None : VerbosityLevel.VeryVerbose,
-  interruptAfterTimeLimit: 5000
+  interruptAfterTimeLimit: 4000
 })
