@@ -20,7 +20,7 @@ import {
   unstable_createAdapterProvider as createAdapterProvider,
   renderQueryString,
 } from "nuqs/adapters/custom";
-import { useRouter_UNSTABLE as useRouter } from "waku";
+import { useRouter } from "waku";
 
 function useNuqsAdapter() {
   const { path, query, push, replace } = useRouter();
