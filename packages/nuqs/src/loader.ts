@@ -98,7 +98,7 @@ export function createLoader<Parsers extends ParserMap>(
       const urlKey = urlKeys[key] ?? key
       const query = searchParams.get(urlKey)
       if (query === null) {
-        result[key] = null
+        result[key] = parser.defaultValue ?? null
         continue
       }
       try {
