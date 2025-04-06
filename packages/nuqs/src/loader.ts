@@ -8,8 +8,20 @@ export type LoaderInput =
   | Record<string, string | string[] | undefined>
   | string
 
+/**
+ * @deprecated Use `CreateLoaderOptions` instead.
+ */
 export type LoaderOptions<Parsers extends ParserMap> = {
   urlKeys?: UrlKeys<Parsers>
+}
+export type CreateLoaderOptions<P extends ParserMap> = LoaderOptions<P>
+export type LoaderFunctionOptions = {
+  /**
+   * Whether to use strict parsing. If true, the loader will throw an error if
+   * any of the parsers fail to parse their respective values. If false, the
+   * loader will return null or their default value for any failed parsers.
+   */
+  strict?: boolean
 }
 
 export type LoaderFunction<Parsers extends ParserMap> = {
@@ -23,7 +35,7 @@ export type LoaderFunction<Parsers extends ParserMap> = {
    */
   (
     input: LoaderInput,
-    options?: LoaderOptions<Parsers>
+    options?: LoaderFunctionOptions
   ): inferParserType<Parsers>
   /**
    * Load & parse search params from (almost) any input.
@@ -53,36 +65,57 @@ export type LoaderFunction<Parsers extends ParserMap> = {
    */
   (
     input: Promise<LoaderInput>,
-    options?: LoaderOptions<Parsers>
+    options?: LoaderFunctionOptions
   ): Promise<inferParserType<Parsers>>
 }
 
 export function createLoader<Parsers extends ParserMap>(
   parsers: Parsers,
-  { urlKeys = {} }: LoaderOptions<Parsers> = {}
+  { urlKeys = {} }: CreateLoaderOptions<Parsers> = {}
 ): LoaderFunction<Parsers> {
   type ParsedSearchParams = inferParserType<Parsers>
 
   function loadSearchParams(
     input: LoaderInput,
-    options?: LoaderOptions<Parsers>
+    options?: LoaderFunctionOptions
   ): ParsedSearchParams
 
   function loadSearchParams(
     input: Promise<LoaderInput>,
-    options?: LoaderOptions<Parsers>
+    options?: LoaderFunctionOptions
   ): Promise<ParsedSearchParams>
 
-  function loadSearchParams(input: LoaderInput | Promise<LoaderInput>) {
+  function loadSearchParams(
+    input: LoaderInput | Promise<LoaderInput>,
+    { strict = false }: LoaderFunctionOptions = {}
+  ) {
     if (input instanceof Promise) {
-      return input.then(i => loadSearchParams(i))
+      return input.then(i => loadSearchParams(i, { strict }))
     }
     const searchParams = extractSearchParams(input)
     const result = {} as any
     for (const [key, parser] of Object.entries(parsers)) {
       const urlKey = urlKeys[key] ?? key
-      const value = searchParams.get(urlKey)
-      result[key] = parser.parseServerSide(value ?? undefined)
+      const query = searchParams.get(urlKey)
+      if (query === null) {
+        result[key] = null
+        continue
+      }
+      try {
+        const parsedValue = parser.parse(query)
+        if (strict && query && parsedValue === null) {
+          throw new Error(
+            `[nuqs] Failed to parse query \`${query}\` for key \`${key}\` (got null)`
+          )
+        }
+        result[key] = parsedValue ?? parser.defaultValue ?? null
+      } catch (error) {
+        if (strict) {
+          throw new Error(
+            `[nuqs] Error while parsing query \`${query}\` for key \`${key}\`: ${error}`
+          )
+        }
+      }
     }
     return result
   }

@@ -531,6 +531,9 @@ importers:
 
   packages/nuqs:
     dependencies:
+      '@standard-schema/spec':
+        specifier: 1.0.0
+        version: 1.0.0
       mitt:
         specifier: ^3.0.1
         version: 3.0.1

@@ -131,6 +131,7 @@
     "prepack": "./scripts/prepack.sh"
   },
   "dependencies": {
+    "@standard-schema/spec": "1.0.0",
     "mitt": "^3.0.1"
   },
   "peerDependencies": {
