@@ -19,7 +19,7 @@ type KeyMapValue<Type> = Parser<Type> &
 
 export type UseQueryStatesKeysMap<Map = any> = {
   [Key in keyof Map]: KeyMapValue<Map[Key]>
-}
+} & {}
 
 export type UseQueryStatesOptions<KeyMap extends UseQueryStatesKeysMap> =
   Options & {

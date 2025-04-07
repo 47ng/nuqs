@@ -12,9 +12,7 @@ export function createSearchParamsCache<Parsers extends ParserMap>(
 ) {
   const load = createLoader(parsers, { urlKeys })
   type Keys = keyof Parsers
-  type ParsedSearchParams = {
-    readonly [K in Keys]: inferParserType<Parsers[K]>
-  }
+  type ParsedSearchParams = inferParserType<Parsers>
 
   type Cache = {
     searchParams: Partial<ParsedSearchParams>
