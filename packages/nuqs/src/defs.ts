@@ -65,7 +65,7 @@ export type Options = {
 
 export type Nullable<T> = {
   [K in keyof T]: T[K] | null
-}
+} & {}
 
 /**
  * Helper type to define and reuse urlKey options to rename search params keys

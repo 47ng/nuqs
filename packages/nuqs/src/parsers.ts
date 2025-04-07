@@ -457,7 +457,7 @@ type inferSingleParserType<Parser> = Parser extends ParserBuilder<
 
 type inferParserRecordType<Map extends Record<string, ParserBuilder<any>>> = {
   [Key in keyof Map]: inferSingleParserType<Map[Key]>
-}
+} & {}
 
 /**
  * Type helper to extract the underlying returned data type of a parser
