@@ -75,6 +75,9 @@ export type ParserBuilder<T> = Required<Parser<T>> &
        * https://url.spec.whatwg.org/#dom-urlsearchparams-get
        *
        * @param value as coming from page props
+       *
+       * @deprecated prefer using loaders instead, as they enforce a strong
+       * bond between the data type and the search param key.
        */
       parseServerSide(value: string | string[] | undefined): NonNullable<T>
     }
@@ -92,6 +95,9 @@ export type ParserBuilder<T> = Required<Parser<T>> &
      * https://url.spec.whatwg.org/#dom-urlsearchparams-get
      *
      * @param value as coming from page props
+     *
+     * @deprecated prefer using loaders instead, as they enforce a strong
+     * bond between the data type and the search param key.
      */
     parseServerSide(value: string | string[] | undefined): T | null
   }
