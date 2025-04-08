@@ -101,21 +101,23 @@ export function createLoader<Parsers extends ParserMap>(
         result[key] = parser.defaultValue ?? null
         continue
       }
+      let parsedValue
       try {
-        const parsedValue = parser.parse(query)
-        if (strict && query && parsedValue === null) {
-          throw new Error(
-            `[nuqs] Failed to parse query \`${query}\` for key \`${key}\` (got null)`
-          )
-        }
-        result[key] = parsedValue ?? parser.defaultValue ?? null
+        parsedValue = parser.parse(query)
       } catch (error) {
         if (strict) {
           throw new Error(
             `[nuqs] Error while parsing query \`${query}\` for key \`${key}\`: ${error}`
           )
         }
+        parsedValue = null
       }
+      if (strict && query && parsedValue === null) {
+        throw new Error(
+          `[nuqs] Failed to parse query \`${query}\` for key \`${key}\` (got null)`
+        )
+      }
+      result[key] = parsedValue ?? parser.defaultValue ?? null
     }
     return result
   }

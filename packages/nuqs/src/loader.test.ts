@@ -102,10 +102,13 @@ describe('loader', () => {
     })
     it('throws errors in strict mode when the parser returns null on non-empty queries', () => {
       const load = createLoader({
-        test: parseAsInteger
+        test: createParser({
+          parse: () => null,
+          serialize: String
+        })
       })
-      expect(() => load('?test=not-a-number', { strict: true })).toThrow(
-        '[nuqs] Failed to parse query `not-a-number` for key `test` (got null)'
+      expect(() => load('?test=will-be-null', { strict: true })).toThrow(
+        '[nuqs] Failed to parse query `will-be-null` for key `test` (got null)'
       )
     })
     it('throws errors in strict mode when the parser throws an error', () => {
@@ -114,7 +117,7 @@ describe('loader', () => {
           parse: (): any => {
             throw new Error('Boom')
           },
-          serialize: () => ''
+          serialize: String
         })
       })
       expect(() => load('?test=will-throw', { strict: true })).toThrow(
