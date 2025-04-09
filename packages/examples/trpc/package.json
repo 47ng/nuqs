@@ -6,8 +6,7 @@
     "build": "react-router build",
     "dev": "react-router dev --port 4000",
     "start": "cross-env NODE_ENV=production ./server.mjs",
-    "test": "pnpm run --stream '/^test:/'",
-    "test:types": "react-router typegen && tsc"
+    "test": "react-router typegen && tsc"
   },
   "dependencies": {
     "@react-router/node": "^7.4.0",
