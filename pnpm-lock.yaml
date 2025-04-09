@@ -507,6 +507,81 @@ importers:
         specifier: ^5.8.3
         version: 5.8.3
 
+  packages/examples: {}
+
+  packages/examples/trpc:
+    dependencies:
+      '@react-router/node':
+        specifier: ^7.4.0
+        version: 7.4.1(react-router@7.4.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(typescript@5.8.2)
+      '@react-router/serve':
+        specifier: ^7.4.0
+        version: 7.4.0(react-router@7.4.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(typescript@5.8.2)
+      '@tanstack/react-query':
+        specifier: ^5.72.1
+        version: 5.72.1(react@19.1.0)
+      '@tanstack/react-query-devtools':
+        specifier: ^5.72.1
+        version: 5.72.1(@tanstack/react-query@5.72.1(react@19.1.0))(react@19.1.0)
+      '@trpc/client':
+        specifier: ^11.0.3
+        version: 11.0.3(@trpc/server@11.0.3(typescript@5.8.2))(typescript@5.8.2)
+      '@trpc/server':
+        specifier: ^11.0.3
+        version: 11.0.3(typescript@5.8.2)
+      '@trpc/tanstack-react-query':
+        specifier: ^11.0.3
+        version: 11.0.3(@tanstack/react-query@5.72.1(react@19.1.0))(@trpc/client@11.0.3(@trpc/server@11.0.3(typescript@5.8.2))(typescript@5.8.2))(@trpc/server@11.0.3(typescript@5.8.2))(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(typescript@5.8.2)
+      isbot:
+        specifier: ^5.1.25
+        version: 5.1.25
+      nuqs:
+        specifier: workspace:*
+        version: link:../../nuqs
+      react:
+        specifier: catalog:react19
+        version: 19.1.0
+      react-dom:
+        specifier: catalog:react19
+        version: 19.1.0(react@19.1.0)
+      react-router:
+        specifier: ^7.4.0
+        version: 7.4.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+    devDependencies:
+      '@react-router/dev':
+        specifier: ^7.4.0
+        version: 7.4.0(@react-router/serve@7.4.0(react-router@7.4.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(typescript@5.8.2))(@types/node@22.13.13)(jiti@2.4.2)(react-router@7.4.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(terser@5.39.0)(typescript@5.8.2)(vite@6.2.5(@types/node@22.13.13)(jiti@2.4.2)(terser@5.39.0)(yaml@2.7.0))(yaml@2.7.0)
+      '@react-router/express':
+        specifier: ^7.4.1
+        version: 7.4.1(express@4.21.2)(react-router@7.4.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(typescript@5.8.2)
+      '@types/node':
+        specifier: ^22.13.13
+        version: 22.13.13
+      '@types/react':
+        specifier: catalog:react19
+        version: 19.0.12
+      '@types/react-dom':
+        specifier: catalog:react19
+        version: 19.0.4(@types/react@19.0.12)
+      compression:
+        specifier: ^1.8.0
+        version: 1.8.0
+      cross-env:
+        specifier: ^7.0.3
+        version: 7.0.3
+      express:
+        specifier: ^4.21.2
+        version: 4.21.2
+      typescript:
+        specifier: ^5.8.2
+        version: 5.8.2
+      vite:
+        specifier: ^6.2.5
+        version: 6.2.5(@types/node@22.13.13)(jiti@2.4.2)(terser@5.39.0)(yaml@2.7.0)
+      vite-tsconfig-paths:
+        specifier: ^5.1.4
+        version: 5.1.4(typescript@5.8.2)(vite@6.2.5(@types/node@22.13.13)(jiti@2.4.2)(terser@5.39.0)(yaml@2.7.0))
+
   packages/nuqs:
     dependencies:
       '@standard-schema/spec':
@@ -3432,6 +3507,23 @@ packages:
     peerDependencies:
       tailwindcss: '>=3.2.0'
 
+  '@tanstack/query-core@5.72.1':
+    resolution: {integrity: sha512-nOu0EEkZuJ0BZnYgeaEfo44+psq1jBO7/zp3KudixD4dvgOVerrhAhDEKsWx2N7MxB59mjO4r0ddP/VqWGPK+Q==}
+
+  '@tanstack/query-devtools@5.72.1':
+    resolution: {integrity: sha512-D0vEoQaiVq9ayCqvvxA9XkDq7TIesyPpvgP69arRtt5FQF6n/Hrta4SlkfXC4m9BCvFLlhLDcKGYa2eMQ4ZIIA==}
+
+  '@tanstack/react-query-devtools@5.72.1':
+    resolution: {integrity: sha512-ckNRgABst3MLjpM2nD/CzQToCiaT3jb3Xhtf+GP/0/9ij9SPT/SC+lc3wUDSkT0OupnHobBBF5E1/Xp6B+XZLg==}
+    peerDependencies:
+      '@tanstack/react-query': ^5.72.1
+      react: ^18 || ^19
+
+  '@tanstack/react-query@5.72.1':
+    resolution: {integrity: sha512-4UEMyRx54xj144D2nDvDIMiXSG5BrqyCJrmyNoGbymNS+VWODcBDFrmRk9p2fe12UGZ4JtKPTNuW2Jg0aisUgQ==}
+    peerDependencies:
+      react: ^18 || ^19
+
   '@tanstack/react-virtual@3.13.5':
     resolution: {integrity: sha512-MzSSMGkFWCDSb2xXqmdbfQqBG4wcRI3JKVjpYGZG0CccnViLpfRW4tGU97ImfBbSYzvEWJ/2SK/OiIoSmcUBAA==}
     peerDependencies:
@@ -3475,6 +3567,27 @@ packages:
     peerDependencies:
       react: ^18.0.0
       react-dom: '>=16.6.0'
+
+  '@trpc/client@11.0.3':
+    resolution: {integrity: sha512-nUhRo/Ml3LQzs2USs5pfquNqETEQOMS6o9IR30cwn32oj4NuXXSqe9UqUc3hIBALtVzcfg6mLK43hGQA9O3X/Q==}
+    peerDependencies:
+      '@trpc/server': 11.0.3
+      typescript: '>=5.7.2'
+
+  '@trpc/server@11.0.3':
+    resolution: {integrity: sha512-/qlaFITZ5a9OCI5mZiW94C8q9mr/wxCmb8GfP3k7VF9RuY4ql+M1UWrzS7xAj8bHekqG9PcR8qEWlOJ6NnXbQg==}
+    peerDependencies:
+      typescript: '>=5.7.2'
+
+  '@trpc/tanstack-react-query@11.0.3':
+    resolution: {integrity: sha512-4U3oagLmWBQ1nxbfyvQInImWHoIGx8AQcSaB+wrynFN8u+VAk2AvYNXpSolsdbmkTH1IJlofp+NlsvU4kPW7wA==}
+    peerDependencies:
+      '@tanstack/react-query': ^5.67.1
+      '@trpc/client': 11.0.3
+      '@trpc/server': 11.0.3
+      react: '>=18.2.0'
+      react-dom: '>=18.2.0'
+      typescript: '>=5.7.2'
 
   '@types/acorn@4.0.6':
     resolution: {integrity: sha512-veQTnWP+1D/xbxVrPC3zHnCZRjSrKfhbMUlEA43iMZLu7EsnTtkJklIuwrCPbOi8YkvDQAiW05VQQFvvz9oieQ==}
@@ -11581,6 +11694,21 @@ snapshots:
     dependencies:
       tailwindcss: 3.4.17(ts-node@9.1.1(typescript@5.8.3))
 
+  '@tanstack/query-core@5.72.1': {}
+
+  '@tanstack/query-devtools@5.72.1': {}
+
+  '@tanstack/react-query-devtools@5.72.1(@tanstack/react-query@5.72.1(react@19.1.0))(react@19.1.0)':
+    dependencies:
+      '@tanstack/query-devtools': 5.72.1
+      '@tanstack/react-query': 5.72.1(react@19.1.0)
+      react: 19.1.0
+
+  '@tanstack/react-query@5.72.1(react@19.1.0)':
+    dependencies:
+      '@tanstack/query-core': 5.72.1
+      react: 19.1.0
+
   '@tanstack/react-virtual@3.13.5(react-dom@19.1.0(react@19.1.0))(react@19.1.0)':
     dependencies:
       '@tanstack/virtual-core': 3.13.5
@@ -11635,6 +11763,24 @@ snapshots:
       react-transition-state: 2.3.1(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       recharts: 2.15.2(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       tailwind-merge: 2.6.0
+
+  '@trpc/client@11.0.3(@trpc/server@11.0.3(typescript@5.8.2))(typescript@5.8.2)':
+    dependencies:
+      '@trpc/server': 11.0.3(typescript@5.8.2)
+      typescript: 5.8.2
+
+  '@trpc/server@11.0.3(typescript@5.8.2)':
+    dependencies:
+      typescript: 5.8.2
+
+  '@trpc/tanstack-react-query@11.0.3(@tanstack/react-query@5.72.1(react@19.1.0))(@trpc/client@11.0.3(@trpc/server@11.0.3(typescript@5.8.2))(typescript@5.8.2))(@trpc/server@11.0.3(typescript@5.8.2))(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(typescript@5.8.2)':
+    dependencies:
+      '@tanstack/react-query': 5.72.1(react@19.1.0)
+      '@trpc/client': 11.0.3(@trpc/server@11.0.3(typescript@5.8.2))(typescript@5.8.2)
+      '@trpc/server': 11.0.3(typescript@5.8.2)
+      react: 19.1.0
+      react-dom: 19.1.0(react@19.1.0)
+      typescript: 5.8.2
 
   '@types/acorn@4.0.6':
     dependencies:
