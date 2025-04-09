@@ -6,8 +6,8 @@ import { createSerializer } from './serializer'
 export function createStandardSchemaV1<Parsers extends ParserMap>(
   parsers: Parsers,
   { urlKeys }: CreateLoaderOptions<Parsers> = {}
-): StandardSchemaV1<unknown, inferParserType<Parsers>> {
-  const serialize = createSerializer(parsers, {})
+): StandardSchemaV1<inferParserType<Parsers>, inferParserType<Parsers>> {
+  const serialize = createSerializer(parsers, { urlKeys })
   const load = createLoader(parsers, { urlKeys })
   return {
     '~standard': {
