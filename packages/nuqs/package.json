@@ -169,7 +169,7 @@
     "@vitest/coverage-v8": "^3.0.9",
     "fast-check": "^4.0.1",
     "jsdom": "^26.0.0",
-    "next": "15.2.4",
+    "next": "15.3.0",
     "react": "catalog:react19",
     "react-dom": "catalog:react19",
     "react-router-dom": "6.28.2",

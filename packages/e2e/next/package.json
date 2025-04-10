@@ -12,7 +12,7 @@
   "type": "module",
   "scripts": {
     "dev": "next dev --port 3001",
-    "build": "next build",
+    "build": "next build --turbopack",
     "start": "NODE_OPTIONS='--enable-source-maps=true' next start --port 3001",
     "pretest": "cypress install",
     "test": "start-server-and-test start http://localhost:3001${BASE_PATH} cypress:run",
@@ -20,7 +20,7 @@
     "cypress:run": "cypress run --headless"
   },
   "dependencies": {
-    "next": "15.2.4",
+    "next": "15.3.0",
     "nuqs": "workspace:*",
     "react": "catalog:react19",
     "react-dom": "catalog:react19"
