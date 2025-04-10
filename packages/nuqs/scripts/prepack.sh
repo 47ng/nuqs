@@ -9,7 +9,7 @@ cd "$(dirname "$0")/.."
 cp -f ../../README.md ../../LICENSE ./
 
 # Read the version from package.json
-VERSION=$(cat package.json | jq -r '.version')
+VERSION=$(jq -r '.version' < package.json)
 
 if [[ "$(uname)" == "Darwin" ]]; then
   # macOS requires an empty string as the backup extension
