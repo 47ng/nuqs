@@ -45,7 +45,8 @@ export function useNuqsNextAppRouterAdapter(): AdapterInterface {
     searchParams: optimisticSearchParams,
     updateUrl,
     // See: https://github.com/47ng/nuqs/issues/603#issuecomment-2317057128
-    rateLimitFactor: 2
+    // and https://github.com/47ng/nuqs/discussions/960#discussioncomment-12699171
+    rateLimitFactor: 3
   }
 }
 
