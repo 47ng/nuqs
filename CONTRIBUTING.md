@@ -62,3 +62,7 @@ Pull requests should target the `next` branch.
 
 If your changes impact the `nuqs` package, you'll get a comment from [pkg.pr.new](https://pkg.pr.new)
 with a preview deployment of the package you can install in your application.
+
+If you are proposing a bug fix, pushing a failing test first (with a note in the
+PR description) is very helpful in showcasing the issue and validating the fix in
+a follow-up commit (test-driven development).
