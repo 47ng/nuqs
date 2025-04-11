@@ -71,7 +71,9 @@ function reducer(state: ReducerState, action: ReducerAction): ReducerState {
           ? 'successfulUpdates'
           : 'failedUpdates'
       if (
-        state[key].findLastIndex(u => u.time === action.payload.time) !== -1
+        state[key].findIndex(
+          (u: UpdateOutcome) => u.time === action.payload.time
+        ) !== -1
       ) {
         return state
       }
