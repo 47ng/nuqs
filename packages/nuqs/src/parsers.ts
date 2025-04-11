@@ -384,6 +384,7 @@ export function parseAsJson<T>(runtimeParser: (value: unknown) => T) {
         return null
       }
     },
+    defaultValue: runtimeParser(undefined),
     serialize: value => JSON.stringify(value),
     eq(a, b) {
       // Check for referential equality first
