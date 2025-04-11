@@ -1,6 +1,7 @@
 packages:
   - 'packages/**'
 
+enablePrePostScripts: true
 onlyBuiltDependencies:
   - '@sentry/cli'
   - '@swc/core'
