@@ -14,3 +14,4 @@ export {
 } from './loader'
 export * from './parsers'
 export { createSerializer } from './serializer'
+export { createStandardSchemaV1 } from './standard-schema'
