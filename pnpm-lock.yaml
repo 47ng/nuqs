@@ -560,7 +560,7 @@ importers:
         version: 26.1.0
       next:
         specifier: 15.3.0
-        version: 15.3.0(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@19.0.0-beta-201e55d-20241215)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+        version: 15.3.0(@babel/core@7.26.10)(@opentelemetry/api@1.9.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       react:
         specifier: catalog:react19
         version: 19.1.0

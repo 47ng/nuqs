@@ -52,11 +52,7 @@ export default function Component() {
                 </Link>
               </li>
               <li>
-                <Link
-                  href="/blog/nuqs-2"
-                  className="hover:underline"
-                  prefetch={false}
-                >
+                <Link href="/blog" className="hover:underline" prefetch={false}>
                   Blog
                 </Link>
               </li>
