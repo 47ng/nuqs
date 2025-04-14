@@ -17,13 +17,13 @@
     "cypress-terminal-report": "^7.1.0"
   },
   "devDependencies": {
-    "@types/node": "^22.13.13",
+    "@types/node": "^22.14.1",
     "@types/react": "catalog:react19",
     "@types/react-dom": "catalog:react19",
     "cypress": "catalog:e2e",
     "nuqs": "workspace:*",
     "react": "catalog:react19",
     "react-dom": "catalog:react19",
-    "typescript": "^5.8.2"
+    "typescript": "^5.8.3"
   }
 }

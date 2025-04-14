@@ -17,10 +17,10 @@
     "nuqs": "workspace:*",
     "react": "catalog:react19",
     "react-dom": "catalog:react19",
-    "react-router-dom": "6.28.2"
+    "react-router-dom": "6.30.0"
   },
   "devDependencies": {
-    "@types/node": "^22.13.13",
+    "@types/node": "^22.14.1",
     "@types/react": "catalog:react19",
     "@types/react-dom": "catalog:react19",
     "@vitejs/plugin-react": "^4.3.4",
@@ -28,7 +28,7 @@
     "cypress": "catalog:e2e",
     "e2e-shared": "workspace:*",
     "start-server-and-test": "catalog:e2e",
-    "typescript": "^5.8.2",
+    "typescript": "^5.8.3",
     "vite": "^6.2.6"
   }
 }
