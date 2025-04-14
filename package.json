@@ -25,11 +25,11 @@
     "@commitlint/config-conventional": "^19.8.0",
     "commitlint": "^19.8.0",
     "husky": "^9.1.7",
-    "prettier": "3.4.2",
+    "prettier": "3.5.3",
     "semantic-release": "^24.2.3",
-    "sherif": "^1.4.0",
-    "turbo": "^2.4.4",
-    "typescript": "^5.8.2"
+    "sherif": "^1.5.0",
+    "turbo": "^2.5.0",
+    "typescript": "^5.8.3"
   },
   "packageManager": "pnpm@10.7.0",
   "resolutions": {

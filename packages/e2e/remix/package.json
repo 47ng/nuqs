@@ -14,23 +14,23 @@
     "cypress:run": "cross-env FORCE_COLOR=3 cypress run --headless"
   },
   "dependencies": {
-    "@remix-run/node": "^2.16.2",
-    "@remix-run/react": "^2.16.2",
-    "@remix-run/serve": "^2.16.2",
-    "isbot": "^5.1.25",
+    "@remix-run/node": "^2.16.5",
+    "@remix-run/react": "^2.16.5",
+    "@remix-run/serve": "^2.16.5",
+    "isbot": "^5.1.26",
     "nuqs": "workspace:*",
     "react": "catalog:react19",
     "react-dom": "catalog:react19"
   },
   "devDependencies": {
-    "@remix-run/dev": "^2.16.2",
+    "@remix-run/dev": "^2.16.5",
     "@types/react": "catalog:react19",
     "@types/react-dom": "catalog:react19",
     "cross-env": "^7.0.3",
     "cypress": "catalog:e2e",
     "e2e-shared": "workspace:*",
     "start-server-and-test": "catalog:e2e",
-    "typescript": "^5.8.2",
+    "typescript": "^5.8.3",
     "vite": "^6.2.6",
     "vite-tsconfig-paths": "^5.1.4"
   }

@@ -26,10 +26,10 @@
     "react-dom": "catalog:react19"
   },
   "devDependencies": {
-    "@types/node": "^22.13.13",
+    "@types/node": "^22.14.1",
     "@types/react": "catalog:react19",
     "@types/react-dom": "catalog:react19",
-    "@types/semver": "^7.5.8",
+    "@types/semver": "^7.7.0",
     "@types/webpack": "^5.28.5",
     "babel-plugin-react-compiler": "19.0.0-beta-201e55d-20241215",
     "cypress": "catalog:e2e",
@@ -37,6 +37,6 @@
     "e2e-shared": "workspace:*",
     "semver": "^7.7.1",
     "start-server-and-test": "catalog:e2e",
-    "typescript": "^5.8.2"
+    "typescript": "^5.8.3"
   }
 }
