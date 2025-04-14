@@ -72,9 +72,6 @@
     "shiki": "^2.5.0",
     "typescript": "^5.8.3"
   },
-  "engines": {
-    "node": "22.x"
-  },
   "postcss": {
     "plugins": {
       "tailwindcss": {},
