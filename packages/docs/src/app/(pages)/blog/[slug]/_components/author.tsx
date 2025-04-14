@@ -1,5 +1,3 @@
-import { Logo } from './47ng'
-
 export function Author() {
   return (
     <a
@@ -7,7 +5,11 @@ export function Author() {
       className="flex items-center gap-3 rounded-lg px-2 py-1 hover:bg-foreground/5"
       aria-description="Author"
     >
-      <Logo size={8} />
+      <img
+        src="/avatar-128.jpeg"
+        role="presentation"
+        className="size-9 rounded-full"
+      />
       <div>
         <p className="font-semibold">François Best</p>
         <p className="text-xs text-fd-muted-foreground">@francoisbest.com</p>
