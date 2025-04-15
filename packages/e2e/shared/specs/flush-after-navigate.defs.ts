@@ -2,13 +2,15 @@ import {
   createLoader,
   createSerializer,
   parseAsInteger,
-  parseAsString
+  parseAsString,
+  parseAsStringLiteral
 } from 'nuqs/server'
 
 export const searchParams = {
   debounce: parseAsInteger,
   throttle: parseAsInteger,
-  linkState: parseAsString
+  linkState: parseAsString,
+  linkPath: parseAsStringLiteral(['/end', '/start']).withDefault('/end')
 }
 
 export const loadSearchParams = createLoader(searchParams)
