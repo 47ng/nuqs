@@ -15,10 +15,11 @@ const getLink = createSerializer({
 })
 
 export function FlushAfterNavigateStart({ path }: { path: string }) {
-  const [{ debounce, throttle, linkState }] = useQueryStates(searchParams)
+  const [{ debounce, throttle, linkState, linkPath }] =
+    useQueryStates(searchParams)
   const Link = useLink()
   const [, preflush] = useQueryState('preflush')
-  const [, setState] = useQueryState('test', {
+  const [state, setState] = useQueryState('test', {
     limitUrlUpdates:
       debounce !== null
         ? { method: 'debounce', timeMs: debounce }
@@ -28,13 +29,16 @@ export function FlushAfterNavigateStart({ path }: { path: string }) {
   })
   return (
     <>
-      <button id="test" onClick={() => setState('pass')}>
+      <button id="test" onClick={() => setState('fail')}>
         Test
       </button>
       <button id="preflush" onClick={() => preflush(null)}>
         Preflush
       </button>
-      <Link href={getLink(`${path}/end`, { test: linkState })}>Link</Link>
+      <Link href={getLink(`${path}${linkPath}`, { test: linkState })}>
+        Link
+      </Link>
+      <Display environment="client" state={state} />
     </>
   )
 }
