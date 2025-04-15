@@ -121,6 +121,18 @@ export class DebounceController {
     }
   }
 
+  abortAll() {
+    for (const [key, queue] of this.queues.entries()) {
+      debug(
+        '[nuqs queue] Aborting debounced queue %s=%s',
+        key,
+        queue.queuedValue?.query
+      )
+      queue.controller.abort()
+    }
+    this.queues.clear()
+  }
+
   getQueuedQuery(key: string) {
     // The debounced queued values are more likely to be up-to-date
     // than any updates pending in the throttle queue, which comes last

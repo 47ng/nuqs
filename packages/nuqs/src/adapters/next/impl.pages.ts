@@ -1,9 +1,14 @@
+import mitt from 'mitt'
 import { useRouter } from 'next/compat/router.js'
 import type { NextRouter } from 'next/router'
 import { useCallback, useMemo } from 'react'
 import { debug } from '../../lib/debug'
 import { renderQueryString } from '../../lib/url-encoding'
 import type { AdapterInterface, UpdateUrlFunction } from '../lib/defs'
+import {
+  type SearchParamsSyncEmitter,
+  patchHistory
+} from '../lib/patch-history'
 
 declare global {
   interface Window {
@@ -16,6 +21,10 @@ declare global {
     }
   }
 }
+
+const dummyEmitter: SearchParamsSyncEmitter = mitt()
+
+patchHistory(dummyEmitter, 'next/pages')
 
 export function isPagesRouter(): boolean {
   return typeof window.next?.router?.state?.asPath === 'string'
