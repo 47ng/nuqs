@@ -1,14 +1,11 @@
-import mitt from 'mitt'
 import { useRouter } from 'next/compat/router.js'
 import type { NextRouter } from 'next/router'
-import { useCallback, useMemo } from 'react'
+import { useCallback, useEffect, useMemo } from 'react'
 import { debug } from '../../lib/debug'
+import { debounceController } from '../../lib/queues/debounce'
+import { globalThrottleQueue } from '../../lib/queues/throttle'
 import { renderQueryString } from '../../lib/url-encoding'
 import type { AdapterInterface, UpdateUrlFunction } from '../lib/defs'
-import {
-  type SearchParamsSyncEmitter,
-  patchHistory
-} from '../lib/patch-history'
 
 declare global {
   interface Window {
@@ -22,16 +19,26 @@ declare global {
   }
 }
 
-const dummyEmitter: SearchParamsSyncEmitter = mitt()
-
-patchHistory(dummyEmitter, 'next/pages')
-
 export function isPagesRouter(): boolean {
   return typeof window.next?.router?.state?.asPath === 'string'
 }
 
 export function useNuqsNextPagesRouterAdapter(): AdapterInterface {
   const router = useRouter()
+
+  useEffect(() => {
+    function onNavigation() {
+      debounceController.abortAll()
+      globalThrottleQueue.reset()
+    }
+    router?.events.on('routeChangeStart', onNavigation)
+    router?.events.on('beforeHistoryChange', onNavigation)
+    return () => {
+      router?.events.off('routeChangeStart', onNavigation)
+      router?.events.off('beforeHistoryChange', onNavigation)
+    }
+  }, [])
+
   const searchParams = useMemo(() => {
     const searchParams = new URLSearchParams()
     if (router === null) {
