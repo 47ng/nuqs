@@ -2,39 +2,34 @@
 
 'use client'
 
-import Link from 'next/link'
 import {
+  createSerializer,
   parseAsString,
   parseAsStringLiteral,
   useQueryState,
   useQueryStates
 } from 'nuqs'
-import { Suspense } from 'react'
+import { useLink } from '../components/link'
 
 const paramParser = parseAsString.withDefault('null')
 const components = ['comp1', 'comp2'] as const
 const componentParser = parseAsStringLiteral(components)
+const searchParams = {
+  param: paramParser,
+  component: componentParser
+}
+const href = createSerializer(searchParams)
 
 const Component = (props: React.ComponentProps<'span'>) => {
   const [param] = useQueryState('param', paramParser)
   return <span {...props}>{param}</span>
 }
 
-export default function Page() {
-  return (
-    <Suspense>
-      <Client />
-    </Suspense>
-  )
-}
-
-function Client() {
+export function Repro359() {
+  const Link = useLink()
   const [param, setParam] = useQueryState('param', paramParser)
   const [component, seComponent] = useQueryState('component', componentParser)
-  const [multiple, setMultiple] = useQueryStates({
-    param: paramParser,
-    component: componentParser
-  })
+  const [multiple, setMultiple] = useQueryStates(searchParams)
   return (
     <>
       <div>
@@ -87,8 +82,8 @@ function Client() {
         </button>
       </div>
       <nav>
-        <Link href="?param=comp1&component=comp1">Comp 1</Link>
-        <Link href="?param=comp2&component=comp2">Comp 2</Link>
+        <Link href={href({ component: 'comp1', param: 'comp1' })}>Comp 1</Link>
+        <Link href={href({ component: 'comp2', param: 'comp2' })}>Comp 2</Link>
       </nav>
     </>
   )
