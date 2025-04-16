@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest'
-import { extractDynamicUrlParams, getAsPathPathname } from './impl.pages'
+import {
+  extractDynamicUrlParams,
+  getAsPathPathname,
+  urlSearchParamsToObject
+} from './impl.pages'
 
 describe('Next Pages Adapter: getAsPathPathname', () => {
   it('returns a pure pathname', () => {
@@ -100,5 +104,34 @@ describe('Next Pages Adapter: extractDynamicUrlParams', () => {
       ignored: 'gone'
     })
     expect(result).toEqual({ foo: 'a', bar: 'b', params: ['baz'] })
+  })
+})
+
+describe('Next Pages Adapter: urlSearchParamsToObject', () => {
+  it('returns an empty object when no search params are present', () => {
+    const result = urlSearchParamsToObject(new URLSearchParams())
+    expect(result).toEqual({})
+  })
+  it('returns an object with a single search param', () => {
+    const result = urlSearchParamsToObject(new URLSearchParams('?foo=bar'))
+    expect(result).toEqual({ foo: 'bar' })
+  })
+  it('returns an object with multiple search params', () => {
+    const result = urlSearchParamsToObject(
+      new URLSearchParams('?foo=bar&baz=qux')
+    )
+    expect(result).toEqual({ foo: 'bar', baz: 'qux' })
+  })
+  it('returns an object with multiple values for a single search param', () => {
+    const result = urlSearchParamsToObject(
+      new URLSearchParams('?foo=bar&foo=baz')
+    )
+    expect(result).toEqual({ foo: ['bar', 'baz'] })
+  })
+  it('returns an object with multiple values for multiple search params', () => {
+    const result = urlSearchParamsToObject(
+      new URLSearchParams('?foo=bar&baz=qux&foo=baz')
+    )
+    expect(result).toEqual({ foo: ['bar', 'baz'], baz: 'qux' })
   })
 })
