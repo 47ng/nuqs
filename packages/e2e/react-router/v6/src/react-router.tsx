@@ -52,6 +52,7 @@ const router = createBrowserRouter(
       <Route path="rate-limits"                           lazy={load(import('./routes/rate-limits'))} />
       <Route path="flush-after-navigate/start"            lazy={load(import('./routes/flush-after-navigate.start'))} />
       <Route path="flush-after-navigate/end"              lazy={load(import('./routes/flush-after-navigate.end'))} />
+      <Route path="repro-359"                             lazy={load(import('./routes/repro-359'))} />
       <Route path="repro-982"                             lazy={load(import('./routes/repro-982'))} />
 
       <Route path="render-count/:hook/:shallow/:history/:startTransition/no-loader"     lazy={load(import('./routes/render-count.$hook.$shallow.$history.$startTransition.no-loader'))} />

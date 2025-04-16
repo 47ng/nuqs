@@ -1,0 +1,50 @@
+import { createTest } from '../create-test'
+
+export const testRepro359 = createTest('repro-359', ({ path }) => {
+  it('should follow cross-link updates & conditional mounting', () => {
+    cy.visit(path)
+    cy.contains('#hydration-marker', 'hydrated').should('be.hidden')
+
+    cy.location('search').should('eq', '')
+    cy.get('#nuqs-param').should('have.text', 'null')
+    cy.get('#nuqs-component').should('have.text', '')
+    cy.get('#nuqss-param').should('have.text', 'null')
+    cy.get('#nuqss-component').should('have.text', '')
+
+    cy.contains('Component 1 (nuqs)').click()
+    cy.location('search').should('eq', '?param=comp1&component=comp1')
+    cy.get('#comp1').should('have.text', 'comp1')
+    cy.get('#comp2').should('not.exist')
+    cy.get('#nuqs-param').should('have.text', 'comp1')
+    cy.get('#nuqs-component').should('have.text', 'comp1')
+    cy.get('#nuqss-param').should('have.text', 'comp1')
+    cy.get('#nuqss-component').should('have.text', 'comp1')
+
+    cy.contains('Component 2 (nuqs)').click()
+    cy.location('search').should('eq', '?param=comp2&component=comp2')
+    cy.get('#comp1').should('not.exist')
+    cy.get('#comp2').should('have.text', 'comp2')
+    cy.get('#nuqs-param').should('have.text', 'comp2')
+    cy.get('#nuqs-component').should('have.text', 'comp2')
+    cy.get('#nuqss-param').should('have.text', 'comp2')
+    cy.get('#nuqss-component').should('have.text', 'comp2')
+
+    cy.contains('Component 1 (nuq+)').click()
+    cy.location('search').should('eq', '?param=comp1&component=comp1')
+    cy.get('#comp1').should('have.text', 'comp1')
+    cy.get('#comp2').should('not.exist')
+    cy.get('#nuqs-param').should('have.text', 'comp1')
+    cy.get('#nuqs-component').should('have.text', 'comp1')
+    cy.get('#nuqss-param').should('have.text', 'comp1')
+    cy.get('#nuqss-component').should('have.text', 'comp1')
+
+    cy.contains('Component 2 (nuq+)').click()
+    cy.location('search').should('eq', '?param=comp2&component=comp2')
+    cy.get('#comp1').should('not.exist')
+    cy.get('#comp2').should('have.text', 'comp2')
+    cy.get('#nuqs-param').should('have.text', 'comp2')
+    cy.get('#nuqs-component').should('have.text', 'comp2')
+    cy.get('#nuqss-param').should('have.text', 'comp2')
+    cy.get('#nuqss-component').should('have.text', 'comp2')
+  })
+})
