@@ -15,7 +15,7 @@ export function useNuqsNextAppRouterAdapter(): AdapterInterface {
       if (!options.shallow) {
         setOptimisticSearchParams(search)
       }
-      const url = renderURL(location.origin + location.pathname, search)
+      const url = renderURL(search)
       debug('[nuqs next/app] Updating url: %s', url)
       // First, update the URL locally without triggering a network request,
       // this allows keeping a reactive URL if the network is slow.
@@ -50,9 +50,7 @@ export function useNuqsNextAppRouterAdapter(): AdapterInterface {
   }
 }
 
-function renderURL(base: string, search: URLSearchParams) {
-  const hashlessBase = base.split('#')[0] ?? ''
-  const query = renderQueryString(search)
-  const hash = location.hash
-  return hashlessBase + query + hash
+function renderURL(search: URLSearchParams) {
+  const { origin, pathname, hash } = location
+  return origin + pathname + renderQueryString(search) + hash
 }
