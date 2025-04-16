@@ -51,11 +51,6 @@ export function useNuqsNextPagesRouterAdapter(): AdapterInterface {
       nextRouter.pathname,
       nextRouter.query
     )
-    console.dir({
-      urlParams,
-      nextRouterQuery: nextRouter.query,
-      search
-    })
     const asPath =
       getAsPathPathname(nextRouter.asPath) +
       renderQueryString(search) +
