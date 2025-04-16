@@ -51,6 +51,11 @@ export function useNuqsNextPagesRouterAdapter(): AdapterInterface {
       nextRouter.pathname,
       nextRouter.query
     )
+    console.dir({
+      urlParams,
+      nextRouterQuery: nextRouter.query,
+      search
+    })
     const asPath =
       getAsPathPathname(nextRouter.asPath) +
       renderQueryString(search) +
@@ -67,7 +72,7 @@ export function useNuqsNextPagesRouterAdapter(): AdapterInterface {
         query: {
           // Note: we put search params first so that one that conflicts
           // with dynamic params will be overwritten.
-          ...Object.fromEntries(search.entries()),
+          ...urlSearchParamsToObject(search),
           ...urlParams
         }
         // For some reason we don't need to pass the hash here,
@@ -95,6 +100,21 @@ export function getAsPathPathname(asPath: string): string {
   return asPath
     .replace(/#.*$/, '') // Remove hash
     .replace(/\?.*$/, '') // Remove search
+}
+
+export function urlSearchParamsToObject(
+  search: URLSearchParams
+): Record<string, string | string[]> {
+  const out: Record<string, string | string[]> = {}
+  for (const key of search.keys()) {
+    const values = search.getAll(key)
+    if (values.length === 1) {
+      out[key] = values[0]!
+    } else if (values.length > 1) {
+      out[key] = values
+    }
+  }
+  return out
 }
 
 /**
