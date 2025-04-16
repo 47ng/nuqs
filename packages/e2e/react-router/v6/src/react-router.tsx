@@ -50,6 +50,7 @@ const router = createBrowserRouter(
       <Route path="dynamic-segments/dynamic/:segment"     lazy={load(import('./routes/dynamic-segments.dynamic.$segment'))} />
       <Route path="dynamic-segments/catch-all?*"          lazy={load(import('./routes/dynamic-segments.catch-all.$'))} />
       <Route path="rate-limits"                           lazy={load(import('./routes/rate-limits'))} />
+      <Route path="repro-982"                             lazy={load(import('./routes/repro-982'))} />
 
       <Route path="render-count/:hook/:shallow/:history/:startTransition/no-loader"     lazy={load(import('./routes/render-count.$hook.$shallow.$history.$startTransition.no-loader'))} />
       <Route path="render-count/:hook/:shallow/:history/:startTransition/sync-loader"   lazy={load(import('./routes/render-count.$hook.$shallow.$history.$startTransition.sync-loader'))} />
