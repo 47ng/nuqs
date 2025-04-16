@@ -1,8 +1,7 @@
 import type { Emitter } from 'mitt'
 import { debug } from '../../lib/debug'
 import { error } from '../../lib/errors'
-import { debounceController } from '../../lib/queues/debounce'
-import { globalThrottleQueue } from '../../lib/queues/throttle'
+import { resetQueues } from '../../lib/queues/reset'
 
 export type SearchParamsSyncEmitter = Emitter<{ update: URLSearchParams }>
 
@@ -72,8 +71,7 @@ export function patchHistory(
         return
       }
     } catch {}
-    debounceController.abortAll()
-    globalThrottleQueue.reset()
+    resetQueues()
     try {
       emitter.emit('update', getSearchParams(url))
     } catch (e) {
