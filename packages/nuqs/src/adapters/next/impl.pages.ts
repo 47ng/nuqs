@@ -22,15 +22,24 @@ export function isPagesRouter(): boolean {
   return typeof window.next?.router?.state?.asPath === 'string'
 }
 
+let isNuqsUpdateMutex: boolean = false
+
+function onNavigation() {
+  if (isNuqsUpdateMutex) {
+    return
+  }
+  resetQueues()
+}
+
 export function useNuqsNextPagesRouterAdapter(): AdapterInterface {
   const router = useRouter()
 
   useEffect(() => {
-    router?.events.on('routeChangeStart', resetQueues)
-    router?.events.on('beforeHistoryChange', resetQueues)
+    router?.events.on('routeChangeStart', onNavigation)
+    router?.events.on('beforeHistoryChange', onNavigation)
     return () => {
-      router?.events.off('routeChangeStart', resetQueues)
-      router?.events.off('beforeHistoryChange', resetQueues)
+      router?.events.off('routeChangeStart', onNavigation)
+      router?.events.off('beforeHistoryChange', onNavigation)
     }
   }, [])
 
@@ -68,31 +77,37 @@ export function useNuqsNextPagesRouterAdapter(): AdapterInterface {
     debug('[nuqs next/pages] Updating url: %s', asPath)
     const method =
       options.history === 'push' ? nextRouter.push : nextRouter.replace
-    method.call(
-      nextRouter,
-      // This is what makes the URL work (mapping dynamic segments placeholders
-      // in pathname to their values in query, plus search params in query too).
-      {
-        pathname: nextRouter.pathname,
-        query: {
-          // Note: we put search params first so that one that conflicts
-          // with dynamic params will be overwritten.
-          ...urlSearchParamsToObject(search),
-          ...urlParams
+    isNuqsUpdateMutex = true
+    method
+      .call(
+        nextRouter,
+        // This is what makes the URL work (mapping dynamic segments placeholders
+        // in pathname to their values in query, plus search params in query too).
+        {
+          pathname: nextRouter.pathname,
+          query: {
+            // Note: we put search params first so that one that conflicts
+            // with dynamic params will be overwritten.
+            ...urlSearchParamsToObject(search),
+            ...urlParams
+          }
+          // For some reason we don't need to pass the hash here,
+          // it's preserved when passed as part of the asPath.
+        },
+        // This is what makes the URL pretty (resolved dynamic segments
+        // and nuqs-formatted search params).
+        asPath,
+        // And these are the options that are passed to the router.
+        {
+          scroll: options.scroll,
+          shallow: options.shallow
         }
-        // For some reason we don't need to pass the hash here,
-        // it's preserved when passed as part of the asPath.
-      },
-      // This is what makes the URL pretty (resolved dynamic segments
-      // and nuqs-formatted search params).
-      asPath,
-      // And these are the options that are passed to the router.
-      {
-        scroll: options.scroll,
-        shallow: options.shallow
-      }
-    )
+      )
+      .finally(() => {
+        isNuqsUpdateMutex = false
+      })
   }, [])
+
   return {
     searchParams,
     updateUrl

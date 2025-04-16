@@ -26,6 +26,7 @@ const routes: Record<string, React.LazyExoticComponent<() => JSX.Element>> = {
   '/scroll':                                lazy(() => import('./routes/scroll')),
   '/pretty-urls':                           lazy(() => import('./routes/pretty-urls')),
   '/rate-limits':                           lazy(() => import('./routes/rate-limits')),
+  '/stitching':                             lazy(() => import('./routes/stitching')),
   '/repro-359':                             lazy(() => import('./routes/repro-359')),
   '/repro-982':                             lazy(() => import('./routes/repro-982')),
 
