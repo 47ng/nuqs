@@ -35,6 +35,7 @@ export default [
     route('/rate-limits',                           './routes/rate-limits.tsx'),
     route('/flush-after-navigate/start',            './routes/flush-after-navigate.start.tsx'),
     route('/flush-after-navigate/end',              './routes/flush-after-navigate.end.tsx'),
+    route('/stitching',                             './routes/stitching.tsx'),
     route('/repro-359',                             './routes/repro-359.tsx'),
     route('/repro-982',                             './routes/repro-982.tsx'),
 
