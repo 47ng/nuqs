@@ -2,8 +2,7 @@ import { useRouter } from 'next/compat/router.js'
 import type { NextRouter } from 'next/router'
 import { useCallback, useEffect, useMemo } from 'react'
 import { debug } from '../../lib/debug'
-import { debounceController } from '../../lib/queues/debounce'
-import { globalThrottleQueue } from '../../lib/queues/throttle'
+import { resetQueues } from '../../lib/queues/reset'
 import { renderQueryString } from '../../lib/url-encoding'
 import type { AdapterInterface, UpdateUrlFunction } from '../lib/defs'
 
@@ -27,15 +26,11 @@ export function useNuqsNextPagesRouterAdapter(): AdapterInterface {
   const router = useRouter()
 
   useEffect(() => {
-    function onNavigation() {
-      debounceController.abortAll()
-      globalThrottleQueue.reset()
-    }
-    router?.events.on('routeChangeStart', onNavigation)
-    router?.events.on('beforeHistoryChange', onNavigation)
+    router?.events.on('routeChangeStart', resetQueues)
+    router?.events.on('beforeHistoryChange', resetQueues)
     return () => {
-      router?.events.off('routeChangeStart', onNavigation)
-      router?.events.off('beforeHistoryChange', onNavigation)
+      router?.events.off('routeChangeStart', resetQueues)
+      router?.events.off('beforeHistoryChange', resetQueues)
     }
   }, [])
 
