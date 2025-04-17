@@ -59,6 +59,11 @@ export function patchHistory(
     lastSearchSeen = searchString.length ? '?' + searchString : ''
   })
 
+  window.addEventListener('popstate', () => {
+    lastSearchSeen = location.search
+    resetQueues()
+  })
+
   debug(
     '[nuqs %s] Patching history (%s adapter)',
     '0.0.0-inject-version-here',
