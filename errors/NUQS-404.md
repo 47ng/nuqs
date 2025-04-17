@@ -38,7 +38,7 @@ If you [enable debugging](https://nuqs.47ng.com/docs/debugging), you might see a
 [`NUQS-303 - Multiple adapter contexts detected`](./NUQS-303.md) error, confirming
 this hypothesis.
 
-For additional clarification, ensure that all packages use compatible versions
+Make sure that all packages resolve to the same version
 of `nuqs` to prevent this issue from arising. See issue
 [#798](https://github.com/your-repo/issues/798) for more details and
 possible solutions.
