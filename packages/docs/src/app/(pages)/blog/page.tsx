@@ -95,8 +95,11 @@ function RssFeedLink() {
       href="/blog/rss.xml"
       className="flex items-center gap-1 text-sm text-muted-foreground hover:underline"
     >
-      <RssIcon className="size-4 text-orange-500" role="presentation" />
-      RSS Feed
+      <RssIcon
+        className="size-4 text-orange-600 dark:text-orange-400"
+        role="presentation"
+      />
+      RSS
     </a>
   )
 }
