@@ -1,6 +1,6 @@
 import { blog } from '@/src/app/source'
 // import { createMetadata } from '@/utils/metadata'
-import Footer from '@/src/app/(pages)/_landing/footer'
+import { PageFooter } from '@/src/app/(pages)/_landing/page-footer'
 import { Description } from '@/src/components/typography'
 import {
   Breadcrumb,
@@ -69,7 +69,7 @@ export default async function Page(props: {
           <page.data.body components={defaultMdxComponents} />
         </div>
       </article>
-      <Footer />
+      <PageFooter />
     </>
   )
 }
@@ -82,7 +82,6 @@ export async function generateMetadata(props: {
 
   if (!page) notFound()
 
-  // todo: Add og:images etc
   return {
     title: page.data.title,
     description:

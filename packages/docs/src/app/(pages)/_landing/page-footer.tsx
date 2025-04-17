@@ -2,9 +2,9 @@ import { NuqsWordmark } from '@/src/components/logo'
 import { SiBluesky, SiGithub, SiYoutube } from '@icons-pack/react-simple-icons'
 import Link from 'next/link'
 
-export default function Component() {
+export function PageFooter() {
   return (
-    <footer className="w-full border-t bg-zinc-50/50 py-12 dark:bg-zinc-900/50">
+    <footer className="mt-auto w-full border-t bg-zinc-50/50 py-12 dark:bg-zinc-900/50">
       <nav className="container px-4 md:px-6">
         <div className="grid gap-12 lg:grid-cols-3">
           <div className="space-y-4">

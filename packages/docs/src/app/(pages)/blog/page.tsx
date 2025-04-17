@@ -12,6 +12,7 @@ import { Card } from 'fumadocs-ui/components/card'
 import { RssIcon } from 'lucide-react'
 import Link from 'next/link'
 import { ComponentProps } from 'react'
+import { PageFooter } from '../_landing/page-footer'
 import { getBlogPosts } from './_lib/source'
 
 export const dynamic = 'force-static'
@@ -47,6 +48,7 @@ export default async function BlogIndexPage() {
           <BlogPostLink post={post} key={post.url} />
         ))}
       </ul>
+      <PageFooter />
     </>
   )
 }
