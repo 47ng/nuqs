@@ -1,3 +1,3 @@
 import Image from './opengraph-image'
 export default Image
-export * from './opengraph-image'
+export { contentType, dynamic, size } from './opengraph-image'

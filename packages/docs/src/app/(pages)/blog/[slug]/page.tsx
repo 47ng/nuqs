@@ -10,6 +10,7 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator
 } from '@/src/components/ui/breadcrumb'
+import { SiBluesky, SiGithub } from '@icons-pack/react-simple-icons'
 import defaultMdxComponents from 'fumadocs-ui/mdx'
 import type { Metadata } from 'next'
 import Link from 'next/link'
@@ -23,6 +24,9 @@ export default async function Page(props: {
   const page = blog.getPage([params.slug])
 
   if (!page) notFound()
+  const blueskyShareIntent = encodeURIComponent(
+    `"${page.data.title}" by @francoisbest.com on the @nuqs.47ng.com blog • https://nuqs.47ng.com/blog/${params.slug}`
+  )
 
   return (
     <>
@@ -69,6 +73,30 @@ export default async function Page(props: {
           <page.data.body components={defaultMdxComponents} />
         </div>
       </article>
+      <nav
+        aria-label="Share this post"
+        className="container flex max-w-[900px] items-center justify-center gap-4 px-0 pb-24 lg:px-4"
+      >
+        <a
+          href={`https://github.com/47ng/nuqs/edit/next/packages/docs/content/blog/${params.slug}.mdx`}
+          className="flex items-center gap-1.5 hover:underline"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <SiGithub role="presentation" className="size-4" />
+          Edit on GitHub
+        </a>
+        <span aria-hidden>•</span>
+        <a
+          href={`https://bsky.app/intent/compose?text=${blueskyShareIntent}`}
+          className="flex items-center gap-1.5 hover:underline"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <SiBluesky role="presentation" className="size-4" />
+          Comment on Bluesky
+        </a>
+      </nav>
       <PageFooter />
     </>
   )
