@@ -1,3 +1,4 @@
+import { Logo47ng } from '@/src/components/47ng'
 import { ReactParisLogo } from '@/src/components/react-paris'
 import { SiBluesky, SiDiscord } from '@icons-pack/react-simple-icons'
 import {
@@ -9,7 +10,6 @@ import {
   Twitter,
   Youtube
 } from 'lucide-react'
-import { Logo } from '../blog/[slug]/_components/47ng'
 import { LinkTree, LinkTreeItemProps } from './link-tree'
 
 const links: LinkTreeItemProps[] = [
@@ -107,7 +107,7 @@ export default function Page() {
   return (
     <section className="container max-w-lg py-12">
       <div className="flex items-center justify-center gap-12">
-        <Logo className="size-16" />
+        <Logo47ng className="size-16" />
         <ReactParisLogo className="-mx-4 mb-4 size-24 translate-y-1.5" />
       </div>
       <p className="mb-2 text-center">Thanks for attending my talk! 🫶</p>

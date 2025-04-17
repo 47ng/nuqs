@@ -7,17 +7,17 @@ const sizes = {
   16: 'w-16 h-16'
 } as const
 
-type LogoProps = React.ComponentProps<'svg'> & {
+type Logo47ngProps = React.ComponentProps<'svg'> & {
   size?: keyof typeof sizes
   background?: boolean
 }
 
-export const Logo: React.FC<LogoProps> = ({
+export function Logo47ng({
   size = 8,
   background = true,
   className,
   ...props
-}) => {
+}: Logo47ngProps) {
   const wh = sizes[size]
   return (
     <svg
