@@ -1,3 +1,5 @@
+import type { Emitter } from 'mitt'
+import mitt from 'mitt'
 import { debug } from '../debug'
 import { timeout } from '../timeout'
 import { withResolvers } from '../with-resolvers'
@@ -8,6 +10,7 @@ import {
   type UpdateQueueAdapterContext,
   type UpdateQueuePushArgs
 } from './throttle'
+import { useSyncExternalStores } from './useSyncExternalStores'
 
 export class DebouncedPromiseQueue<ValueType, OutputType> {
   callback: (value: ValueType) => Promise<OutputType>
@@ -17,6 +20,11 @@ export class DebouncedPromiseQueue<ValueType, OutputType> {
 
   constructor(callback: (value: ValueType) => Promise<OutputType>) {
     this.callback = callback
+  }
+
+  abort() {
+    this.controller.abort()
+    this.queuedValue = undefined
   }
 
   push(value: ValueType, timeMs: number) {
@@ -60,9 +68,21 @@ type DebouncedUpdateQueue = DebouncedPromiseQueue<
 export class DebounceController {
   throttleQueue: ThrottledQueue
   queues: Map<string, DebouncedUpdateQueue> = new Map()
+  queuedQuerySync: Emitter<Record<string, undefined>> = mitt()
 
   constructor(throttleQueue: ThrottledQueue = new ThrottledQueue()) {
     this.throttleQueue = throttleQueue
+  }
+
+  useQueuedQueries(keys: string[]) {
+    return useSyncExternalStores(
+      keys,
+      (key, callback) => {
+        this.queuedQuerySync.on(key, callback)
+        return () => this.queuedQuerySync.off(key, callback)
+      },
+      (key: string) => this.getQueuedQuery(key)
+    )
   }
 
   push(
@@ -92,7 +112,9 @@ export class DebounceController {
       this.queues.set(update.key, queue)
     }
     const queue = this.queues.get(update.key)!
-    return queue.push(update, timeMs)
+    const promise = queue.push(update, timeMs)
+    this.queuedQuerySync.emit(update.key)
+    return promise
   }
 
   abort(
@@ -108,7 +130,8 @@ export class DebounceController {
       queue.queuedValue?.query
     )
     this.queues.delete(key)
-    queue.controller.abort() // Don't run to completion
+    queue.abort() // Don't run to completion
+    this.queuedQuerySync.emit(key)
     return function attachAbortedDebouncedResolvers(
       promise: Promise<URLSearchParams>
     ) {
@@ -128,7 +151,8 @@ export class DebounceController {
         key,
         queue.queuedValue?.query
       )
-      queue.controller.abort()
+      queue.abort()
+      this.queuedQuerySync.emit(key)
     }
     this.queues.clear()
   }

@@ -98,10 +98,12 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
         .join(',')
     ]
   )
-
+  const queuedQueries = debounceController.useQueuedQueries(
+    Object.values(resolvedUrlKeys)
+  )
   const [internalState, setInternalState] = useState<V>(() => {
     const source = initialSearchParams ?? new URLSearchParams()
-    return parseMap(keyMap, urlKeys, source).state
+    return parseMap(keyMap, urlKeys, source, queuedQueries).state
   })
 
   const stateRef = useRef(internalState)
@@ -120,6 +122,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
       keyMap,
       urlKeys,
       initialSearchParams,
+      queuedQueries,
       queryRef.current,
       stateRef.current
     )
@@ -140,6 +143,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
       keyMap,
       urlKeys,
       initialSearchParams,
+      queuedQueries,
       queryRef.current,
       stateRef.current
     )
@@ -150,7 +154,8 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
   }, [
     Object.values(resolvedUrlKeys)
       .map(key => `${key}=${initialSearchParams?.get(key)}`)
-      .join('&')
+      .join('&'),
+    JSON.stringify(queuedQueries)
   ])
 
   // Sync all hooks together & with external URL changes
@@ -326,6 +331,7 @@ function parseMap<KeyMap extends UseQueryStatesKeysMap>(
   keyMap: KeyMap,
   urlKeys: Partial<Record<keyof KeyMap, string>>,
   searchParams: URLSearchParams,
+  queuedQueries: Record<string, string | null | undefined>,
   cachedQuery?: Record<string, string | null>,
   cachedState?: NullableValues<KeyMap>
 ): {
@@ -336,7 +342,7 @@ function parseMap<KeyMap extends UseQueryStatesKeysMap>(
   const state = Object.keys(keyMap).reduce((out, stateKey) => {
     const urlKey = urlKeys?.[stateKey] ?? stateKey
     const { parse } = keyMap[stateKey]!
-    const queuedQuery = debounceController.getQueuedQuery(urlKey)
+    const queuedQuery = queuedQueries[urlKey]
     const query =
       queuedQuery === undefined
         ? (searchParams?.get(urlKey) ?? null)

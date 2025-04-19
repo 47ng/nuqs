@@ -224,10 +224,10 @@ export function useQueryState<T = string>(
   }
 ) {
   const adapter = useAdapter()
+  const { [key]: queuedQuery } = debounceController.useQueuedQueries([key])
   const initialSearchParams = adapter.searchParams
   const queryRef = useRef<string | null>(initialSearchParams?.get(key) ?? null)
   const [internalState, setInternalState] = useState<T | null>(() => {
-    const queuedQuery = debounceController.getQueuedQuery(key)
     const query =
       queuedQuery === undefined
         ? (initialSearchParams?.get(key) ?? null)
@@ -243,7 +243,10 @@ export function useQueryState<T = string>(
   )
 
   useEffect(() => {
-    const query = initialSearchParams?.get(key) ?? null
+    const query =
+      queuedQuery === undefined
+        ? (initialSearchParams?.get(key) ?? null)
+        : queuedQuery
     if (query === queryRef.current) {
       return
     }
@@ -252,7 +255,7 @@ export function useQueryState<T = string>(
     stateRef.current = state
     queryRef.current = query
     setInternalState(state)
-  }, [initialSearchParams?.get(key), key])
+  }, [key, initialSearchParams?.get(key), queuedQuery])
 
   // Sync all hooks together & with external URL changes
   useEffect(() => {
