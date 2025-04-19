@@ -1,16 +1,16 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useAdapter } from './adapters/lib/context'
-import { debug } from './debug'
 import type { Nullable, Options, UrlKeys } from './defs'
-import type { Parser } from './parsers'
-import { emitter, type CrossHookSyncPayload } from './sync'
+import { debug } from './lib/debug'
+import { debounceController } from './lib/queues/debounce'
+import { defaultRateLimit } from './lib/queues/rate-limiting'
 import {
-  enqueueQueryStringUpdate,
-  FLUSH_RATE_LIMIT_MS,
-  getQueuedValue,
-  scheduleFlushToURL
-} from './update-queue'
-import { safeParse } from './utils'
+  globalThrottleQueue,
+  type UpdateQueuePushArgs
+} from './lib/queues/throttle'
+import { safeParse } from './lib/safe-parse'
+import { emitter, type CrossHookSyncPayload } from './lib/sync'
+import type { Parser } from './parsers'
 
 type KeyMapValue<Type> = Parser<Type> &
   Options & {
@@ -68,7 +68,8 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
     history = 'replace',
     scroll = false,
     shallow = true,
-    throttleMs = FLUSH_RATE_LIMIT_MS,
+    throttleMs = defaultRateLimit.timeMs,
+    limitUrlUpdates,
     clearOnDefault = true,
     startTransition,
     urlKeys = defaultUrlKeys
@@ -97,10 +98,12 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
         .join(',')
     ]
   )
-
+  const queuedQueries = debounceController.useQueuedQueries(
+    Object.values(resolvedUrlKeys)
+  )
   const [internalState, setInternalState] = useState<V>(() => {
     const source = initialSearchParams ?? new URLSearchParams()
-    return parseMap(keyMap, urlKeys, source).state
+    return parseMap(keyMap, urlKeys, source, queuedQueries).state
   })
 
   const stateRef = useRef(internalState)
@@ -119,6 +122,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
       keyMap,
       urlKeys,
       initialSearchParams,
+      queuedQueries,
       queryRef.current,
       stateRef.current
     )
@@ -139,6 +143,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
       keyMap,
       urlKeys,
       initialSearchParams,
+      queuedQueries,
       queryRef.current,
       stateRef.current
     )
@@ -149,7 +154,8 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
   }, [
     Object.values(resolvedUrlKeys)
       .map(key => `${key}=${initialSearchParams?.get(key)}`)
-      .join('&')
+      .join('&'),
+    JSON.stringify(queuedQueries)
   ])
 
   // Sync all hooks together & with external URL changes
@@ -215,6 +221,11 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
             ) ?? nullMap)
           : (stateUpdater ?? nullMap)
       debug('[nuq+ `%s`] setState: %O', stateKeys, newState)
+      let returnedPromise: Promise<URLSearchParams> | undefined = undefined
+      let maxDebounceTime = 0
+      const debounceAborts: Array<
+        (p: Promise<URLSearchParams>) => Promise<URLSearchParams>
+      > = []
       for (let [stateKey, value] of Object.entries(newState)) {
         const parser = keyMap[stateKey]
         const urlKey = resolvedUrlKeys[stateKey]!
@@ -231,27 +242,64 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
         ) {
           value = null
         }
-        const query = enqueueQueryStringUpdate(
-          urlKey,
-          value,
-          parser.serialize ?? String,
-          {
+        const query =
+          value === null ? null : (parser.serialize ?? String)(value)
+        emitter.emit(urlKey, { state: value, query })
+        const update: UpdateQueuePushArgs = {
+          key: urlKey,
+          query,
+          options: {
             // Call-level options take precedence over individual parser options
             // which take precedence over global options
             history: callOptions.history ?? parser.history ?? history,
             shallow: callOptions.shallow ?? parser.shallow ?? shallow,
             scroll: callOptions.scroll ?? parser.scroll ?? scroll,
-            throttleMs:
-              callOptions.throttleMs ?? parser.throttleMs ?? throttleMs,
             startTransition:
               callOptions.startTransition ??
               parser.startTransition ??
               startTransition
           }
-        )
-        emitter.emit(urlKey, { state: value, query })
+        }
+        if (
+          callOptions?.limitUrlUpdates?.method === 'debounce' ||
+          limitUrlUpdates?.method === 'debounce' ||
+          parser.limitUrlUpdates?.method === 'debounce'
+        ) {
+          const timeMs =
+            callOptions?.limitUrlUpdates?.timeMs ??
+            limitUrlUpdates?.timeMs ??
+            parser.limitUrlUpdates?.timeMs ??
+            defaultRateLimit.timeMs
+          const debouncedPromise = debounceController.push(
+            update,
+            timeMs,
+            adapter
+          )
+          if (maxDebounceTime < timeMs) {
+            // The largest debounce is likely to be the last URL update,
+            // so we keep that Promise to return it.
+            returnedPromise = debouncedPromise
+            maxDebounceTime = timeMs
+          }
+        } else {
+          const timeMs =
+            callOptions?.limitUrlUpdates?.timeMs ??
+            parser?.limitUrlUpdates?.timeMs ??
+            limitUrlUpdates?.timeMs ??
+            callOptions.throttleMs ??
+            parser.throttleMs ??
+            throttleMs
+          debounceAborts.push(debounceController.abort(urlKey))
+          globalThrottleQueue.push(update, timeMs)
+        }
       }
-      return scheduleFlushToURL(adapter)
+      // We need to flush the throttle queue, but we may have a pending
+      // debounced update that will resolve afterwards.
+      const globalPromise = debounceAborts.reduce(
+        (previous, fn) => fn(previous),
+        globalThrottleQueue.flush(adapter)
+      )
+      return returnedPromise ?? globalPromise
     },
     [
       stateKeys,
@@ -259,6 +307,8 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
       shallow,
       scroll,
       throttleMs,
+      limitUrlUpdates?.method,
+      limitUrlUpdates?.timeMs,
       startTransition,
       resolvedUrlKeys,
       adapter.updateUrl,
@@ -281,6 +331,7 @@ function parseMap<KeyMap extends UseQueryStatesKeysMap>(
   keyMap: KeyMap,
   urlKeys: Partial<Record<keyof KeyMap, string>>,
   searchParams: URLSearchParams,
+  queuedQueries: Record<string, string | null | undefined>,
   cachedQuery?: Record<string, string | null>,
   cachedState?: NullableValues<KeyMap>
 ): {
@@ -291,7 +342,7 @@ function parseMap<KeyMap extends UseQueryStatesKeysMap>(
   const state = Object.keys(keyMap).reduce((out, stateKey) => {
     const urlKey = urlKeys?.[stateKey] ?? stateKey
     const { parse } = keyMap[stateKey]!
-    const queuedQuery = getQueuedValue(urlKey)
+    const queuedQuery = queuedQueries[urlKey]
     const query =
       queuedQuery === undefined
         ? (searchParams?.get(urlKey) ?? null)

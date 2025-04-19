@@ -1,7 +1,7 @@
 import { useRouter, useSearchParams } from 'next/navigation.js'
 import { startTransition, useCallback, useOptimistic } from 'react'
-import { debug } from '../../debug'
-import { renderQueryString } from '../../url-encoding'
+import { debug } from '../../lib/debug'
+import { renderQueryString } from '../../lib/url-encoding'
 import type { AdapterInterface, UpdateUrlFunction } from '../lib/defs'
 
 export function useNuqsNextAppRouterAdapter(): AdapterInterface {
@@ -15,8 +15,8 @@ export function useNuqsNextAppRouterAdapter(): AdapterInterface {
       if (!options.shallow) {
         setOptimisticSearchParams(search)
       }
-      const url = renderURL(location.origin + location.pathname, search)
-      debug('[nuqs queue (app)] Updating url: %s', url)
+      const url = renderURL(search)
+      debug('[nuqs next/app] Updating url: %s', url)
       // First, update the URL locally without triggering a network request,
       // this allows keeping a reactive URL if the network is slow.
       const updateMethod =
@@ -50,9 +50,7 @@ export function useNuqsNextAppRouterAdapter(): AdapterInterface {
   }
 }
 
-function renderURL(base: string, search: URLSearchParams) {
-  const hashlessBase = base.split('#')[0] ?? ''
-  const query = renderQueryString(search)
-  const hash = location.hash
-  return hashlessBase + query + hash
+function renderURL(search: URLSearchParams) {
+  const { origin, pathname, hash } = location
+  return origin + pathname + renderQueryString(search) + hash
 }

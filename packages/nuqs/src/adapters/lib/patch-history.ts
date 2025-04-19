@@ -1,6 +1,7 @@
 import type { Emitter } from 'mitt'
-import { debug } from '../../debug'
-import { error } from '../../errors'
+import { debug } from '../../lib/debug'
+import { error } from '../../lib/errors'
+import { resetQueues } from '../../lib/queues/reset'
 
 export type SearchParamsSyncEmitter = Emitter<{ update: URLSearchParams }>
 
@@ -58,6 +59,11 @@ export function patchHistory(
     lastSearchSeen = searchString.length ? '?' + searchString : ''
   })
 
+  window.addEventListener('popstate', () => {
+    lastSearchSeen = location.search
+    resetQueues()
+  })
+
   debug(
     '[nuqs %s] Patching history (%s adapter)',
     '0.0.0-inject-version-here',
@@ -70,6 +76,7 @@ export function patchHistory(
         return
       }
     } catch {}
+    resetQueues()
     try {
       emitter.emit('update', getSearchParams(url))
     } catch (e) {
