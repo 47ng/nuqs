@@ -1,6 +1,8 @@
 import { useRouter, useSearchParams } from 'next/navigation.js'
 import { startTransition, useCallback, useOptimistic } from 'react'
 import { debug } from '../../lib/debug'
+import { debounceController } from '../../lib/queues/debounce'
+import { globalThrottleQueue } from '../../lib/queues/throttle'
 import { renderQueryString } from '../../lib/url-encoding'
 import type { AdapterInterface, UpdateUrlFunction } from '../lib/defs'
 
@@ -10,10 +12,16 @@ export function useNuqsNextAppRouterAdapter(): AdapterInterface {
   const [optimisticSearchParams, setOptimisticSearchParams] =
     useOptimistic<URLSearchParams>(searchParams)
   const updateUrl: UpdateUrlFunction = useCallback((search, options) => {
-    // App router
+    globalThrottleQueue.reset()
+    const resetKeysToSync = Array.from(
+      debounceController.queuedQuerySync.all.keys()
+    )
     startTransition(() => {
       if (!options.shallow) {
         setOptimisticSearchParams(search)
+        for (const key of resetKeysToSync) {
+          debounceController.queuedQuerySync.emit(key)
+        }
       }
       const url = renderURL(search)
       debug('[nuqs next/app] Updating url: %s', url)

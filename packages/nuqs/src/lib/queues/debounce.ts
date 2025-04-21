@@ -107,6 +107,7 @@ export class DebounceController {
             // Cleanup empty queues
             this.queues.delete(update.key)
           }
+          this.queuedQuerySync.emit(update.key)
         })
       })
       this.queues.set(update.key, queue)

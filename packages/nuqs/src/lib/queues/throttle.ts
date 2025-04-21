@@ -143,8 +143,8 @@ export class ThrottledQueue {
     const items = Array.from(this.updateMap.entries())
     const options = { ...this.options }
     const transitions = Array.from(this.transitions)
-    // Restore defaults
-    this.reset()
+    // Don't reset here: let the adapters do it, as it depends
+    // on how they handle concurrent rendering (see repro-702).
     debug(
       '[nuqs queue] Flushing throttle queue %O with options %O',
       items,

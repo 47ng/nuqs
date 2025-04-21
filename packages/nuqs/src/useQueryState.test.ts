@@ -293,13 +293,12 @@ describe('useQueryState: update sequencing', () => {
     expect(p1).toBeInstanceOf(Promise)
     expect(p2).toBeInstanceOf(Promise)
     expect(p1).not.toBe(p2)
-    // Note: our mock adapter does not save search params, so there is no merge
-    await expect(p1).resolves.toEqual(new URLSearchParams('?a=a'))
     await expect(p2).resolves.toEqual(new URLSearchParams('?b=b'))
+    await expect(p1).resolves.toEqual(new URLSearchParams('?b=b&a=a'))
     expect(onUrlUpdate).toHaveBeenCalledTimes(2)
     // b updates first, then a
     expect(onUrlUpdate.mock.calls[0]![0].queryString).toEqual('?b=b')
-    expect(onUrlUpdate.mock.calls[1]![0].queryString).toEqual('?a=a')
+    expect(onUrlUpdate.mock.calls[1]![0].queryString).toEqual('?b=b&a=a')
   })
   it('aborts a debounced update when pushing a throttled one', async () => {
     const onUrlUpdate = vi.fn<OnUrlUpdateFunction>()

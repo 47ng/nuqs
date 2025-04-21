@@ -165,9 +165,7 @@ describe('debounce: DebounceController', () => {
     expect(promise1).not.toBe(promise2)
     vi.runAllTimers()
     await expect(promise1).resolves.toEqual(new URLSearchParams('?a=a'))
-    // Our snapshot always returns an empty search params object, so there is no
-    // merging of keys here.
-    await expect(promise2).resolves.toEqual(new URLSearchParams('?b=b'))
+    await expect(promise2).resolves.toEqual(new URLSearchParams('?a=a&b=b'))
     expect(fakeAdapter.updateUrl).toHaveBeenCalledTimes(2)
   })
   it('keeps a record of pending updates', async () => {
@@ -178,7 +176,8 @@ describe('debounce: DebounceController', () => {
         return new URLSearchParams()
       }
     }
-    const controller = new DebounceController()
+    const throttleQueue = new ThrottledQueue()
+    const controller = new DebounceController(throttleQueue)
     controller.push(
       {
         key: 'key',
@@ -190,6 +189,9 @@ describe('debounce: DebounceController', () => {
     )
     expect(controller.getQueuedQuery('key')).toEqual('value')
     vi.runAllTimers()
+    // Queued value is kept until the throttle queue is manually cleared
+    expect(controller.getQueuedQuery('key')).toEqual('value')
+    throttleQueue.reset()
     expect(controller.getQueuedQuery('key')).toBeUndefined()
   })
   it('falls back to the throttle queue pending values if nothing is debounced', () => {
