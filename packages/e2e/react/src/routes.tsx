@@ -28,6 +28,7 @@ const routes: Record<string, React.LazyExoticComponent<() => JSX.Element>> = {
   '/rate-limits':                           lazy(() => import('./routes/rate-limits')),
   '/stitching':                             lazy(() => import('./routes/stitching')),
   '/repro-359':                             lazy(() => import('./routes/repro-359')),
+  '/repro-702':                             lazy(() => import('./routes/repro-702')),
   '/repro-982':                             lazy(() => import('./routes/repro-982')),
 
   '/render-count/useQueryState/true/replace/false':   lazy(() => import('./routes/render-count')),

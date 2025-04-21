@@ -54,6 +54,7 @@ const router = createBrowserRouter(
       <Route path="flush-after-navigate/end"              lazy={load(import('./routes/flush-after-navigate.end'))} />
       <Route path="stitching"                             lazy={load(import('./routes/stitching'))} />
       <Route path="repro-359"                             lazy={load(import('./routes/repro-359'))} />
+      <Route path="repro-702"                             lazy={load(import('./routes/repro-702'))} />
       <Route path="repro-982"                             lazy={load(import('./routes/repro-982'))} />
 
       <Route path="render-count/:hook/:shallow/:history/:startTransition/no-loader"     lazy={load(import('./routes/render-count.$hook.$shallow.$history.$startTransition.no-loader'))} />

@@ -37,6 +37,7 @@ export default [
     route('/flush-after-navigate/end',              './routes/flush-after-navigate.end.tsx'),
     route('/stitching',                             './routes/stitching.tsx'),
     route('/repro-359',                             './routes/repro-359.tsx'),
+    route('/repro-702',                             './routes/repro-702.tsx'),
     route('/repro-982',                             './routes/repro-982.tsx'),
 
     route('/render-count/:hook/:shallow/:history/:startTransition/no-loader',    './routes/render-count.$hook.$shallow.$history.$startTransition.no-loader.tsx'),
