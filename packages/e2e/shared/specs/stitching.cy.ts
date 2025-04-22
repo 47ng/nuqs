@@ -1,9 +1,16 @@
 import { createTest, type TestConfig } from '../create-test'
 import { getUrl } from './stitching.defs'
 
-export function testStitching(config: TestConfig) {
+type Config = TestConfig & {
+  enableShallowFalse?: boolean
+}
+
+export function testStitching({
+  enableShallowFalse = true,
+  ...config
+}: Config) {
   const hooks = ['useQueryState', 'useQueryStates'] as const
-  const shallows = [true, false]
+  const shallows = enableShallowFalse ? [true, false] : [true]
   const histories = ['replace', 'push'] as const
   for (const hook of hooks) {
     for (const shallow of shallows) {
