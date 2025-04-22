@@ -1,14 +1,34 @@
 'use client'
 
-import { debounce, parseAsInteger, useQueryState } from 'nuqs'
+import { debounce, useQueryState, useQueryStates } from 'nuqs'
 import { Display } from '../components/display'
-
-const parser = parseAsInteger.withDefault(0)
+import { optionsSearchParams, searchParams } from './stitching.defs'
 
 export function Stitching() {
-  const [a, setA] = useQueryState('a', parser)
-  const [b, setB] = useQueryState('b', parser)
-  const [c, setC] = useQueryState('c', parser)
+  const [{ hook }] = useQueryStates(optionsSearchParams)
+  if (hook === 'useQueryState') {
+    return <StitchingUseQueryState />
+  }
+  if (hook === 'useQueryStates') {
+    return <StitchingUseQueryStates />
+  }
+  return <>Invalid hook</>
+}
+
+function StitchingUseQueryState() {
+  const [{ history, shallow }] = useQueryStates(optionsSearchParams)
+  const [a, setA] = useQueryState(
+    'a',
+    searchParams.a.withOptions({ history, shallow })
+  )
+  const [b, setB] = useQueryState(
+    'b',
+    searchParams.b.withOptions({ history, shallow })
+  )
+  const [c, setC] = useQueryState(
+    'c',
+    searchParams.c.withOptions({ history, shallow })
+  )
 
   const testOnSameTick = () => {
     setA(x => x + 1)
@@ -33,9 +53,51 @@ export function Stitching() {
       <button id="staggered" onClick={testStaggered}>
         Test staggered
       </button>
-      <Display environment="client" target="a" state={a} />
-      <Display environment="client" target="b" state={b} />
-      <Display environment="client" target="c" state={c} />
+      <Display environment="client" state={[a, b, c].join(',')} />
+    </>
+  )
+}
+
+function StitchingUseQueryStates() {
+  const [{ history, shallow }] = useQueryStates(optionsSearchParams)
+  const [{ a, b, c }, setSearchParams] = useQueryStates(searchParams, {
+    history,
+    shallow
+  })
+
+  const testOnSameTick = () => {
+    setSearchParams(old => ({ a: old.a + 1 }))
+    setSearchParams(old => ({ b: old.b + 1 }), {
+      limitUrlUpdates: debounce(100)
+    })
+    setSearchParams(old => ({ c: old.c + 1 }), {
+      limitUrlUpdates: debounce(200)
+    })
+  }
+  const testStaggered = () => {
+    // Shorter timeouts work but lead to race conditions with Cypress' URL detection
+    setSearchParams(old => ({ c: old.c + 1 }), {
+      limitUrlUpdates: debounce(300)
+    })
+    setTimeout(() => {
+      setSearchParams(old => ({ b: old.b + 1 }), {
+        limitUrlUpdates: debounce(150)
+      })
+      setTimeout(() => {
+        setSearchParams(old => ({ a: old.a + 1 }))
+      }, 0)
+    }, 0)
+  }
+
+  return (
+    <>
+      <button id="same-tick" onClick={testOnSameTick}>
+        Test on same tick
+      </button>
+      <button id="staggered" onClick={testStaggered}>
+        Test staggered
+      </button>
+      <Display environment="client" state={[a, b, c].join(',')} />
     </>
   )
 }
