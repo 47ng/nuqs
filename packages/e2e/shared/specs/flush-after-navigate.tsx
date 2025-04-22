@@ -1,25 +1,20 @@
 'use client'
 
-import {
-  createSerializer,
-  parseAsString,
-  useQueryState,
-  useQueryStates
-} from 'nuqs'
+import { createSerializer, useQueryState, useQueryStates } from 'nuqs'
 import { Display } from '../components/display'
 import { useLink } from '../components/link'
-import { searchParams } from './flush-after-navigate.defs'
+import { searchParams, testSearchParams } from './flush-after-navigate.defs'
 
-const getLink = createSerializer({
-  test: parseAsString
-})
+const getLink = createSerializer(testSearchParams)
 
 export function FlushAfterNavigateStart({ path }: { path: string }) {
-  const [{ debounce, throttle, linkState, linkPath }] =
+  const [{ debounce, throttle, linkState, linkPath, history, shallow }] =
     useQueryStates(searchParams)
   const Link = useLink()
   const [, preflush] = useQueryState('preflush')
   const [state, setState] = useQueryState('test', {
+    history,
+    shallow,
     limitUrlUpdates:
       debounce !== null
         ? { method: 'debounce', timeMs: debounce }
