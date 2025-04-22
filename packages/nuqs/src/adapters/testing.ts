@@ -1,4 +1,5 @@
 import { createElement, type ReactElement, type ReactNode } from 'react'
+import { resetQueues } from '../lib/queues/reset'
 import { globalThrottleQueue } from '../lib/queues/throttle'
 import { renderQueryString } from '../lib/url-encoding'
 import { context } from './lib/context'
@@ -25,11 +26,12 @@ export function NuqsTestingAdapter({
   ...props
 }: TestingAdapterProps): ReactElement {
   if (resetUrlUpdateQueueOnMount) {
-    globalThrottleQueue.reset()
+    resetQueues()
   }
   const useAdapter = (): AdapterInterface => ({
     searchParams: new URLSearchParams(props.searchParams),
     updateUrl(search, options) {
+      globalThrottleQueue.reset()
       props.onUrlUpdate?.({
         searchParams: search,
         queryString: renderQueryString(search),
