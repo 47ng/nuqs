@@ -77,11 +77,11 @@ function StitchingUseQueryStates() {
   const testStaggered = () => {
     // Shorter timeouts work but lead to race conditions with Cypress' URL detection
     setSearchParams(old => ({ c: old.c + 1 }), {
-      limitUrlUpdates: debounce(300)
+      limitUrlUpdates: debounce(400)
     })
     setTimeout(() => {
       setSearchParams(old => ({ b: old.b + 1 }), {
-        limitUrlUpdates: debounce(150)
+        limitUrlUpdates: debounce(200)
       })
       setTimeout(() => {
         setSearchParams(old => ({ a: old.a + 1 }))
