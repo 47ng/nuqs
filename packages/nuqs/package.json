@@ -131,6 +131,7 @@
     "prepack": "./scripts/prepack.sh"
   },
   "dependencies": {
+    "@standard-schema/spec": "1.0.0",
     "mitt": "^3.0.1"
   },
   "peerDependencies": {
@@ -192,7 +193,7 @@
     {
       "name": "Server",
       "path": "dist/server.js",
-      "limit": "2.5 kB",
+      "limit": "3 kB",
       "ignore": [
         "react",
         "next"
