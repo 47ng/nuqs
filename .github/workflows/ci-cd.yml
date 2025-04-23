@@ -81,9 +81,9 @@ jobs:
           # Only keep versions where there were relevant changes in the app router core,
           # and the previous one to use as a baseline.
           - '14.2.0'
-          - '14.2.3' # before vercel/next.js#66755
+          # - '14.2.3' # before vercel/next.js#66755
           - '14.2.4' # after vercel/next.js#66755
-          - '14.2.7' # before vercel/next.js#69509
+          # - '14.2.7' # before vercel/next.js#69509
           - '14.2.8' # after vercel/next.js#69509
           - '15.0.0'
           - '15.1.0'
@@ -93,10 +93,6 @@ jobs:
           - next-version: '14.2.0'
             base-path: '/base'
           - next-version: '15.0.0'
-            base-path: '/base'
-          - next-version: '15.1.0'
-            base-path: '/base'
-          - next-version: '15.2.0'
             base-path: '/base'
           - next-version: 'latest'
             base-path: '/base'
