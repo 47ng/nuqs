@@ -31,7 +31,7 @@
     "@types/react-dom": "catalog:react19",
     "@types/semver": "^7.7.0",
     "@types/webpack": "^5.28.5",
-    "babel-plugin-react-compiler": "19.0.0-beta-201e55d-20241215",
+    "babel-plugin-react-compiler": "19.1.0-rc.1",
     "cypress": "catalog:e2e",
     "cypress-terminal-report": "^7.1.0",
     "e2e-shared": "workspace:*",
