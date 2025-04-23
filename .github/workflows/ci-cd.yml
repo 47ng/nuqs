@@ -66,7 +66,7 @@ jobs:
     # Watch out! When changing the job name,
     # update the required checks in GitHub
     # branch protection settings for `next`.
-    name: E2E (next@${{ matrix.next-version }}${{ matrix.base-path && ' basePath' || ''}})
+    name: E2E (next@${{ matrix.next-version }}${{ matrix.base-path && ' ⚾' || ''}}${{ matrix.react-compiler && ' ⚛️' || ''}})
     runs-on: ubuntu-24.04-arm
     needs: [ci-core]
     strategy:
@@ -75,17 +75,32 @@ jobs:
         # Watch out! When changing the compat grid,
         # update the required checks in GitHub
         # branch protection settings for `next`.
-        base-path: [false, '/base']
+        base-path: [false]
+        react-compiler: [false]
         next-version:
           # Only keep versions where there were relevant changes in the app router core,
           # and the previous one to use as a baseline.
           - '14.2.0'
-          - '14.2.3' # before vercel/next.js#66755
+          # - '14.2.3' # before vercel/next.js#66755
           - '14.2.4' # after vercel/next.js#66755
-          - '14.2.7' # before vercel/next.js#69509
+          # - '14.2.7' # before vercel/next.js#69509
           - '14.2.8' # after vercel/next.js#69509
           - '15.0.0'
+          - '15.1.0'
+          - '15.2.0'
           - latest
+        include:
+          - next-version: '14.2.0'
+            base-path: '/base'
+          - next-version: '15.0.0'
+            base-path: '/base'
+          - next-version: 'latest'
+            base-path: '/base'
+          - next-version: 'latest'
+            react-compiler: true
+          - next-version: 'latest'
+            base-path: '/base'
+            react-compiler: true
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
       - uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda
@@ -102,6 +117,7 @@ jobs:
         run: pnpm run test ${{ github.event_name == 'workflow_dispatch' && '--force' || '' }} --filter e2e-next
         env:
           BASE_PATH: ${{ matrix.base-path && matrix.base-path || '/' }}
+          REACT_COMPILER: ${{ matrix.react-compiler }}
           TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
           TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
           E2E_NO_CACHE_ON_RERUN: ${{ github.run_attempt }}
@@ -110,13 +126,13 @@ jobs:
         if: failure()
         with:
           path: packages/e2e/next/cypress/screenshots
-          name: ci-${{ matrix.next-version }}${{ matrix.base-path && '-basePath' || ''}}
+          name: ci-${{ matrix.next-version }}${{ matrix.base-path && '-basePath' || ''}}${{ matrix.react-compiler && '-react-compiler' || ''}}
       - uses: 47ng/actions-slack-notify@main
         name: Notify on Slack
         if: failure()
         with:
           status: ${{ job.status }}
-          jobName: next@${{ matrix.next-version }}${{ matrix.base-path && ' basePath' || ''}}
+          jobName: next@${{ matrix.next-version }}${{ matrix.base-path && ' basePath' || ''}}${{ matrix.react-compiler && ' react-compiler' || ''}}
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
