@@ -6,6 +6,7 @@ import type { Options } from '../../defs'
 import { compose } from '../compose'
 import { debug } from '../debug'
 import { error } from '../errors'
+import { timeout } from '../timeout'
 import { withResolvers, type Resolvers } from '../with-resolvers'
 import { defaultRateLimit } from './rate-limiting'
 
@@ -36,6 +37,7 @@ export class ThrottledQueue {
   timeMs = defaultRateLimit.timeMs
   transitions: TransitionSet = new Set()
   resolvers: Resolvers<URLSearchParams> | null = null
+  controller = new AbortController()
   lastFlushedAt = 0
 
   push(
@@ -115,20 +117,31 @@ export class ThrottledQueue {
         // no need to do setTimeout(0) here.
         flushNow()
       } else {
-        setTimeout(flushNow, flushInMs)
+        timeout(flushNow, flushInMs, this.controller.signal)
       }
     }
     setTimeout(runOnNextTick, 0)
     return this.resolvers.promise
   }
 
+  abort() {
+    this.controller.abort()
+    this.controller = new AbortController()
+    // todo: Better error handling
+    this.resolvers?.resolve(new URLSearchParams())
+    this.resolvers = null
+    return this.reset()
+  }
+
   reset() {
+    const queuedKeys = Array.from(this.updateMap.keys())
     this.updateMap.clear()
     this.transitions.clear()
     this.options.history = 'replace'
     this.options.scroll = false
     this.options.shallow = true
     this.timeMs = defaultRateLimit.timeMs
+    return queuedKeys
   }
 
   applyPendingUpdates(
@@ -136,6 +149,11 @@ export class ThrottledQueue {
   ): [URLSearchParams, null | unknown] {
     const { updateUrl, getSearchParamsSnapshot } = adapter
     const search = getSearchParamsSnapshot()
+    debug(
+      `[nuqs queue] Applying %d pending update(s) on top of %s`,
+      this.updateMap.size,
+      search.toString()
+    )
     if (this.updateMap.size === 0) {
       return [search, null]
     }

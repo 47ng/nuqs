@@ -3,5 +3,6 @@ import { globalThrottleQueue } from './throttle'
 
 export function resetQueues() {
   debounceController.abortAll()
-  globalThrottleQueue.reset()
+  const abortedKeys = globalThrottleQueue.abort()
+  abortedKeys.forEach(key => debounceController.queuedQuerySync.emit(key))
 }

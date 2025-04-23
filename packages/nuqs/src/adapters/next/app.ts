@@ -1,4 +1,17 @@
+import { createElement, Suspense, type ReactNode } from 'react'
 import { createAdapterProvider } from '../lib/context'
-import { useNuqsNextAppRouterAdapter } from './impl.app'
+import { NavigationSpy, useNuqsNextAppRouterAdapter } from './impl.app'
 
-export const NuqsAdapter = createAdapterProvider(useNuqsNextAppRouterAdapter)
+const Provider = createAdapterProvider(useNuqsNextAppRouterAdapter)
+
+export function NuqsAdapter({ children }: { children: ReactNode }) {
+  return createElement(Provider, {
+    children: [
+      createElement(Suspense, {
+        key: 'nuqs-adapter-suspense-navspy',
+        children: createElement(NavigationSpy)
+      }),
+      children
+    ]
+  })
+}
