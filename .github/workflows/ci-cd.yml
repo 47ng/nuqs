@@ -66,7 +66,7 @@ jobs:
     # Watch out! When changing the job name,
     # update the required checks in GitHub
     # branch protection settings for `next`.
-    name: E2E (next@${{ matrix.next-version }}${{ matrix.base-path && ' ⚾🛣️' || ''}}${{ matrix.react-compiler && ' ⚛️⚡' || ''}})
+    name: E2E (next@${{ matrix.next-version }}${{ matrix.base-path && ' ⚾' || ''}}${{ matrix.react-compiler && ' ⚛️' || ''}})
     runs-on: ubuntu-24.04-arm
     needs: [ci-core]
     strategy:

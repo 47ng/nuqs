@@ -14,7 +14,7 @@ env:
 
 jobs:
   test_against_nextjs_release:
-    name: CI (next@${{ inputs.version }}${{ matrix.base-path && ' basePath' || ''}}${{ matrix.react-compiler && ' ⚛️⚡️' || ''}})
+    name: CI (next@${{ inputs.version }}${{ matrix.base-path && ' ⚾' || ''}}${{ matrix.react-compiler && ' ⚛️' || ''}})
     runs-on: ubuntu-24.04-arm
     strategy:
       fail-fast: false
@@ -51,7 +51,7 @@ jobs:
         if: failure()
         with:
           status: ${{ job.status }}
-          jobName: next@${{ inputs.version }}${{ matrix.base-path && ' basePath' || ''}}${{ matrix.react-compiler && ' ⚛️⚡️' || ''}}
+          jobName: next@${{ inputs.version }}${{ matrix.base-path && ' ⚾' || ''}}${{ matrix.react-compiler && ' ⚛️' || ''}}
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
