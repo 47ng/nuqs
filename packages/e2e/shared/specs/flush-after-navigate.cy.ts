@@ -23,10 +23,12 @@ export function testFlushAfterNavigate(config: TestConfig) {
               cy.get('#test').click()
               cy.get('a').click()
               expectPathname(path + '/end')
-              cy.get('#client-state').should('be.empty')
+              cy.get('#client-useQueryState').should('be.empty')
+              cy.get('#client-useQueryStates').should('be.empty')
               cy.location('search').should('be.empty')
               cy.wait(timeMs)
-              cy.get('#client-state').should('be.empty')
+              cy.get('#client-useQueryState').should('be.empty')
+              cy.get('#client-useQueryStates').should('be.empty')
               cy.location('search').should('be.empty')
             }
             runTest()
@@ -47,10 +49,12 @@ export function testFlushAfterNavigate(config: TestConfig) {
               cy.get('#test').click()
               cy.get('a').click()
               expectPathname(path + '/end')
-              cy.get('#client-state').should('have.text', 'nav')
+              cy.get('#client-useQueryState').should('have.text', 'nav')
+              cy.get('#client-useQueryStates').should('have.text', 'nav')
               cy.location('search').should('eq', '?test=nav')
               cy.wait(timeMs)
-              cy.get('#client-state').should('have.text', 'nav')
+              cy.get('#client-useQueryState').should('have.text', 'nav')
+              cy.get('#client-useQueryStates').should('have.text', 'nav')
               cy.location('search').should('eq', '?test=nav')
             }
             runTest()
@@ -92,10 +96,12 @@ export function testFlushAfterNavigate(config: TestConfig) {
               cy.get('#test').click() // Queue the change
               cy.get('a').click() // Navigate
               expectPathname(path + '/end')
-              cy.get('#client-state').should('be.empty')
+              cy.get('#client-useQueryState').should('be.empty')
+              cy.get('#client-useQueryStates').should('be.empty')
               cy.location('search').should('be.empty')
               cy.wait(timeMs)
-              cy.get('#client-state').should('be.empty')
+              cy.get('#client-useQueryState').should('be.empty')
+              cy.get('#client-useQueryStates').should('be.empty')
               cy.location('search').should('be.empty')
             }
             runTest()
@@ -116,6 +122,35 @@ export function testFlushAfterNavigate(config: TestConfig) {
               cy.get('#preflush').click() // Trigger an immediate flush to enable the throttling queue
               cy.get('#test').click() // Queue the change
               cy.get('a').click() // Navigate
+              expectPathname(path + '/end')
+              cy.get('#client-useQueryState').should('have.text', 'nav')
+              cy.get('#client-useQueryStates').should('have.text', 'nav')
+              cy.location('search').should('eq', '?test=nav')
+              cy.wait(timeMs)
+              cy.get('#client-useQueryState').should('have.text', 'nav')
+              cy.get('#client-useQueryStates').should('have.text', 'nav')
+              cy.location('search').should('eq', '?test=nav')
+            }
+            runTest()
+            cy.go('back')
+            runTest()
+          })
+          it('should not apply pending search params queued while throttled after navigation with link state to the same page', () => {
+            cy.visit(
+              getUrl(path + '/start', {
+                shallow,
+                history,
+                throttle: timeMs,
+                linkPath: '/start',
+                linkState: 'nav'
+              })
+            )
+            cy.contains('#hydration-marker', 'hydrated').should('be.hidden')
+            function runTest() {
+              cy.get('#preflush').click() // Trigger an immediate flush to enable the throttling queue
+              cy.get('#test').click() // Queue the change
+              cy.get('a').click() // Navigate
+              expectPathname(path + '/start')
               cy.get('#client-state').should('have.text', 'nav')
               cy.location('search').should('eq', '?test=nav')
               cy.wait(timeMs)
