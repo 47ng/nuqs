@@ -14,7 +14,10 @@ type UpdateMap = Map<string, string | null>
 type TransitionSet = Set<React.TransitionStartFunction>
 export type UpdateQueueAdapterContext = Pick<
   AdapterInterface,
-  'updateUrl' | 'getSearchParamsSnapshot' | 'rateLimitFactor'
+  | 'updateUrl'
+  | 'getSearchParamsSnapshot'
+  | 'rateLimitFactor'
+  | 'autoResetQueueOnUpdate'
 >
 
 export type UpdateQueuePushArgs = {
@@ -87,6 +90,7 @@ export class ThrottledQueue {
       this.lastFlushedAt = performance.now()
       const [search, error] = this.applyPendingUpdates({
         ...adapter,
+        autoResetQueueOnUpdate: adapter.autoResetQueueOnUpdate ?? true,
         getSearchParamsSnapshot
       })
       if (error === null) {
@@ -161,13 +165,11 @@ export class ThrottledQueue {
     const items = Array.from(this.updateMap.entries())
     const options = { ...this.options }
     const transitions = Array.from(this.transitions)
-    // Don't reset here: let the adapters do it, as it depends
-    // on how they handle concurrent rendering (see repro-702).
-    debug(
-      '[nuqs queue] Flushing throttle queue %O with options %O',
-      items,
-      options
-    )
+    // Let the adapters choose whether to reset, as it depends on how they
+    // handle concurrent rendering (see the life-and-death.cy.ts e2e test).
+    if (adapter.autoResetQueueOnUpdate) {
+      this.reset()
+    }
     for (const [key, value] of items) {
       if (value === null) {
         search.delete(key)
