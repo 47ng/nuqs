@@ -153,6 +153,8 @@ export class DebounceController {
         queue.queuedValue?.query
       )
       queue.abort()
+      // todo: Better abort handling
+      queue.resolvers.resolve(new URLSearchParams()) // Don't leave the Promise pending
       this.queuedQuerySync.emit(key)
     }
     this.queues.clear()

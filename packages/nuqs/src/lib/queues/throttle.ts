@@ -131,7 +131,7 @@ export class ThrottledQueue {
   abort() {
     this.controller.abort()
     this.controller = new AbortController()
-    // todo: Better error handling
+    // todo: Better abort handling
     this.resolvers?.resolve(new URLSearchParams())
     this.resolvers = null
     return this.reset()
