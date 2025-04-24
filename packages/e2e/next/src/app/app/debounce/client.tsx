@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import {
   debounce,
   parseAsInteger,
@@ -12,7 +13,7 @@ import { searchParams, urlKeys } from './search-params'
 export function Client() {
   const [timeMs, setTimeMs] = useQueryState(
     'debounceTime',
-    parseAsInteger.withDefault(100).withOptions({
+    parseAsInteger.withDefault(1000).withOptions({
       // No real need to throttle this one, but it showcases usage:
       limitUrlUpdates: throttle(200)
     })
@@ -49,6 +50,7 @@ export function Client() {
         Next Page
       </button>
       <button onClick={() => setSearchParams(null)}>Reset</button>
+      <Link href="/app/debounce/other">Navigate</Link>
       <div style={{ marginTop: '1rem' }}>
         <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           <input

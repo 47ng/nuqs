@@ -2,6 +2,7 @@
 
 import { parseAsString, useQueryState, useQueryStates } from 'nuqs'
 import { type FC, useState } from 'react'
+import { NullDetector } from '../components/null-detector'
 
 function ConditionalRenderer({ Component }: { Component: FC }) {
   const [mounted, setMounted] = useState(false)
@@ -28,6 +29,7 @@ function TestComponentUseQueryState() {
         Set
       </button>
       <pre id="state">{state}</pre>
+      <NullDetector state={state} />
     </>
   )
 }
@@ -45,6 +47,7 @@ function TestComponentUseQueryStates() {
         Set
       </button>
       <pre id="state">{state}</pre>
+      <NullDetector state={state} />
     </>
   )
 }

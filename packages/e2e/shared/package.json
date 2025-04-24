@@ -7,7 +7,8 @@
   "files": [
     "cypress.config.ts",
     "cypress/support/e2e.ts",
-    "cypress/e2e/fixtures"
+    "cypress/e2e/fixtures",
+    "shared.cy.ts"
   ],
   "peerDependencies": {
     "cypress": "catalog:e2e",
