@@ -156,9 +156,6 @@ importers:
       res:
         specifier: workspace:*
         version: link:../res
-      semver:
-        specifier: ^7.7.1
-        version: 7.7.1
       server-only:
         specifier: ^0.0.1
         version: 0.0.1
@@ -187,9 +184,6 @@ importers:
       '@types/react-dom':
         specifier: catalog:react19
         version: 19.1.2(@types/react@19.1.1)
-      '@types/semver':
-        specifier: ^7.7.0
-        version: 7.7.0
       autoprefixer:
         specifier: ^10.4.21
         version: 10.4.21(postcss@8.5.3)
@@ -3560,9 +3554,6 @@ packages:
 
   '@types/react@19.1.1':
     resolution: {integrity: sha512-ePapxDL7qrgqSF67s0h9m412d9DbXyC1n59O2st+9rjuuamWsZuD2w55rqY12CbzsZ7uVXb5Nw0gEp9Z8MMutQ==}
-
-  '@types/semver@7.7.0':
-    resolution: {integrity: sha512-k107IF4+Xr7UHjwDc7Cfd6PRQfbdkiRabXGRjo07b4WyPahFBZCZ1sE+BNxYIJPPg73UkfOsVOLwqVc/6ETrIA==}
 
   '@types/shimmer@1.2.0':
     resolution: {integrity: sha512-UE7oxhQLLd9gub6JKIAhDq06T0F6FnztwMNRvYgjeQSBeMc1ZG/tA47EwfduvkuQS8apbkM/lpLpWsaCeYsXVg==}
@@ -11755,8 +11746,6 @@ snapshots:
   '@types/react@19.1.1':
     dependencies:
       csstype: 3.1.3
-
-  '@types/semver@7.7.0': {}
 
   '@types/shimmer@1.2.0': {}
 
