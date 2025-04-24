@@ -38,9 +38,9 @@ export class DebouncedPromiseQueue<ValueType, OutputType> {
         // assigned to a new Promise (and not dropped).
         const outputResolvers = this.resolvers
         try {
-          debug('[nuqs queue] Flushing debounce queue', value)
+          debug('[nuqs dq] Flushing debounce queue', value)
           const callbackPromise = this.callback(value)
-          debug('[nuqs queue] Reset debounced queue %O', this.queuedValue)
+          debug('[nuqs dq] Reset debounced queue %O', this.queuedValue)
           this.queuedValue = undefined
           this.resolvers = withResolvers<OutputType>()
           callbackPromise
@@ -126,7 +126,7 @@ export class DebounceController {
       return passThrough => passThrough
     }
     debug(
-      '[nuqs queue] Aborting debounced queue %s=%s',
+      '[nuqs dqc] Aborting debounced queue %s=%s',
       key,
       queue.queuedValue?.query
     )
@@ -148,7 +148,7 @@ export class DebounceController {
   abortAll() {
     for (const [key, queue] of this.queues.entries()) {
       debug(
-        '[nuqs queue] Aborting debounced queue %s=%s',
+        '[nuqs dqc] Aborting debounced queue %s=%s',
         key,
         queue.queuedValue?.query
       )

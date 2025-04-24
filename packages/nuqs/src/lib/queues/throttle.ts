@@ -47,7 +47,7 @@ export class ThrottledQueue {
     { key, query, options }: UpdateQueuePushArgs,
     timeMs = defaultRateLimit.timeMs
   ) {
-    debug('[nuqs queue] Enqueueing %s=%s %O', key, query, options)
+    debug('[nuqs gtq] Enqueueing %s=%s %O', key, query, options)
     // Enqueue update
     this.updateMap.set(key, query)
     if (options.history === 'push') {
@@ -78,7 +78,7 @@ export class ThrottledQueue {
     ...adapter
   }: UpdateQueueAdapterContext): Promise<URLSearchParams> {
     if (!Number.isFinite(this.timeMs)) {
-      debug('[nuqs queue] Skipping flush due to throttleMs=Infinity')
+      debug('[nuqs gtq] Skipping flush due to throttleMs=Infinity')
       return Promise.resolve(getSearchParamsSnapshot())
     }
     if (this.resolvers) {
@@ -111,7 +111,7 @@ export class ThrottledQueue {
         rateLimitFactor *
         Math.max(0, Math.min(timeMs, timeMs - timeSinceLastFlush))
       debug(
-        `[nuqs queue] Scheduling flush in %f ms. Throttled at %f ms (x%f)`,
+        `[nuqs gtq] Scheduling flush in %f ms. Throttled at %f ms (x%f)`,
         flushInMs,
         timeMs,
         rateLimitFactor
@@ -139,6 +139,10 @@ export class ThrottledQueue {
 
   reset() {
     const queuedKeys = Array.from(this.updateMap.keys())
+    debug(
+      '[nuqs gtq] Resetting queue %s',
+      JSON.stringify(Object.fromEntries(this.updateMap))
+    )
     this.updateMap.clear()
     this.transitions.clear()
     this.options.history = 'replace'
@@ -154,7 +158,7 @@ export class ThrottledQueue {
     const { updateUrl, getSearchParamsSnapshot } = adapter
     const search = getSearchParamsSnapshot()
     debug(
-      `[nuqs queue] Applying %d pending update(s) on top of %s`,
+      `[nuqs gtq] Applying %d pending update(s) on top of %s`,
       this.updateMap.size,
       search.toString()
     )
@@ -170,6 +174,7 @@ export class ThrottledQueue {
     if (adapter.autoResetQueueOnUpdate) {
       this.reset()
     }
+    debug('[nuqs gtq] Flushing queue %O with options %O', items, options)
     for (const [key, value] of items) {
       if (value === null) {
         search.delete(key)
