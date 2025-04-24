@@ -82,7 +82,8 @@ export function createReactRouterBasedAdapter({
     )
     return {
       searchParams,
-      updateUrl
+      updateUrl,
+      autoResetQueueOnUpdate: false // done in the history patch
     }
   }
   function useOptimisticSearchParams() {

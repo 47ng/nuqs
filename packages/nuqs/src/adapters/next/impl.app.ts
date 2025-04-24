@@ -23,7 +23,13 @@ function onHistoryStateUpdate() {
   mutex--
   if (mutex <= 0) {
     mutex = 0 // Don't let values become too negatively large and wrap around
-    resetQueues()
+    // Doing this after the end of the current render work because of the error:
+    // "useInsertionEffect cannot schedule updates"
+    // (resetting the queue causes the useSyncExternalStore of queued queries
+    // to be marked for rendering)
+    // The useInsertionEffect in question is the one in the Next.js app router core
+    //  dealing with history API calls.
+    queueMicrotask(resetQueues)
   }
 }
 
@@ -102,7 +108,8 @@ export function useNuqsNextAppRouterAdapter(): AdapterInterface {
   return {
     searchParams: optimisticSearchParams,
     updateUrl,
-    rateLimitFactor: NUM_HISTORY_CALLS_PER_UPDATE
+    rateLimitFactor: NUM_HISTORY_CALLS_PER_UPDATE,
+    autoResetQueueOnUpdate: false
   }
 }
 

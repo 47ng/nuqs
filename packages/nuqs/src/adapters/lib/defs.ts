@@ -14,4 +14,5 @@ export type AdapterInterface = {
   updateUrl: UpdateUrlFunction
   getSearchParamsSnapshot?: () => URLSearchParams
   rateLimitFactor?: number
+  autoResetQueueOnUpdate?: boolean
 }

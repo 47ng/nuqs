@@ -14,7 +14,8 @@ function useNuqsNextAdapter(): AdapterInterface {
       } else {
         return appRouterImpl.updateUrl(search, options)
       }
-    }
+    },
+    autoResetQueueOnUpdate: false
   }
 }
 
