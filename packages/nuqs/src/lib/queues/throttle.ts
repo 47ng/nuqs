@@ -124,7 +124,7 @@ export class ThrottledQueue {
         timeout(flushNow, flushInMs, this.controller.signal)
       }
     }
-    setTimeout(runOnNextTick, 0)
+    timeout(runOnNextTick, 0, this.controller.signal)
     return this.resolvers.promise
   }
 
@@ -137,7 +137,7 @@ export class ThrottledQueue {
     return this.reset()
   }
 
-  reset() {
+  reset(): string[] {
     const queuedKeys = Array.from(this.updateMap.keys())
     debug(
       '[nuqs gtq] Resetting queue %s',

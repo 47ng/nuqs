@@ -1,18 +1,16 @@
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { UpdateUrlFunction } from '../../adapters/lib/defs'
 import { defaultRateLimit } from './rate-limiting'
 import { ThrottledQueue, type UpdateQueueAdapterContext } from './throttle'
 
-const mockAdapter = {
-  updateUrl: vi.fn<UpdateUrlFunction>(),
-  getSearchParamsSnapshot() {
-    return new URLSearchParams()
+function createMockAdapter(): UpdateQueueAdapterContext {
+  return {
+    updateUrl: vi.fn<UpdateUrlFunction>(),
+    getSearchParamsSnapshot() {
+      return new URLSearchParams()
+    }
   }
-} satisfies UpdateQueueAdapterContext
-
-afterEach(() => {
-  mockAdapter.updateUrl.mockReset()
-})
+}
 
 describe('throttle: ThrottleQueue value queueing', () => {
   it('should enqueue key & values', () => {
@@ -79,6 +77,7 @@ describe('throttle: ThrottleQueue option combination logic', () => {
     const mockStartTransition = (callback: () => void) => {
       callback()
     }
+    const mockAdapter = createMockAdapter()
     const startTransitionA = vi.fn().mockImplementation(mockStartTransition)
     const startTransitionB = vi.fn().mockImplementation(mockStartTransition)
     const queue = new ThrottledQueue()
@@ -119,11 +118,73 @@ describe('throttle: ThrottleQueue option combination logic', () => {
   })
 })
 
+describe('throttle: Abort & reset logic', () => {
+  beforeEach(() => {
+    vi.useFakeTimers()
+  })
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
+  it('does not abort pending flushes when resetting', async () => {
+    const queue = new ThrottledQueue()
+    const mockAdapter = createMockAdapter()
+    queue.push({ key: 'a', query: 'a', options: {} })
+    expect(queue.resolvers?.promise).toBeUndefined()
+    const promise = queue.flush(mockAdapter)
+    const controller = queue.controller
+    controller.signal.throwIfAborted()
+    expect(queue.resolvers!.promise).toBe(promise)
+    const abortedKeys = queue.reset()
+    expect(abortedKeys).toEqual(['a'])
+    // The promise should exist and be pending
+    expect(queue.resolvers!.promise).toBe(promise)
+    expect(queue.controller).toBe(controller)
+    vi.runAllTimers()
+    await expect(promise).resolves.toEqual(new URLSearchParams(''))
+    expect(mockAdapter.updateUrl).not.toHaveBeenCalled()
+    expect(queue.resolvers).toBeNull()
+  })
+  it('does reset when aborting', async () => {
+    const queue = new ThrottledQueue()
+    const controller = queue.controller
+    const mockAdapter = createMockAdapter()
+    queue.push({ key: 'a', query: 'a', options: {} })
+    const promise = queue.flush(mockAdapter)
+    const abortedKeys = queue.abort()
+    expect(abortedKeys).toEqual(['a'])
+    vi.runAllTimers()
+    expect(mockAdapter.updateUrl).not.toHaveBeenCalled()
+    expect(queue.updateMap.size).toBe(0)
+    expect(queue.resolvers).toBeNull()
+    expect(queue.controller).not.toBe(controller) // Reassigned after abort
+    await expect(promise).resolves.toEqual(new URLSearchParams(''))
+  })
+})
+
 describe('throttle: flush', () => {
+  beforeEach(() => {
+    vi.useFakeTimers()
+  })
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
+  it('returns a Promise of the current search params if flushed without updates', async () => {
+    const throttle = new ThrottledQueue()
+    const mockAdapter = createMockAdapter()
+    const promise = throttle.flush(mockAdapter)
+    vi.runAllTimers()
+    await expect(promise).resolves.toEqual(new URLSearchParams())
+    expect(mockAdapter.updateUrl).not.toHaveBeenCalled()
+  })
+
   it('returns a Promise of updated URL search params', async () => {
     const throttle = new ThrottledQueue()
+    const mockAdapter = createMockAdapter()
     throttle.push({ key: 'a', query: 'a', options: {} })
     const promise = throttle.flush(mockAdapter)
+    vi.runAllTimers()
     await expect(promise).resolves.toEqual(new URLSearchParams('?a=a'))
     expect(mockAdapter.updateUrl).toHaveBeenCalledExactlyOnceWith(
       new URLSearchParams('?a=a'),
@@ -136,9 +197,11 @@ describe('throttle: flush', () => {
   })
   it('combines updates in order of push', async () => {
     const throttle = new ThrottledQueue()
+    const mockAdapter = createMockAdapter()
     throttle.push({ key: 'b', query: 'b', options: {} })
     throttle.push({ key: 'a', query: 'a', options: {} })
     const promise = throttle.flush(mockAdapter)
+    vi.runAllTimers()
     await expect(promise).resolves.toEqual(new URLSearchParams('?b=b&a=a'))
     expect(mockAdapter.updateUrl).toHaveBeenCalledExactlyOnceWith(
       new URLSearchParams('?b=b&a=a'),
@@ -150,8 +213,8 @@ describe('throttle: flush', () => {
     )
   })
   it('returns the same Promise for multiple flushes in the same tick', () => {
-    vi.useFakeTimers()
     const throttle = new ThrottledQueue()
+    const mockAdapter = createMockAdapter()
     throttle.push({ key: 'b', query: 'b', options: {} })
     const p1 = throttle.flush(mockAdapter)
     throttle.push({ key: 'a', query: 'a', options: {} })
@@ -168,8 +231,8 @@ describe('throttle: flush', () => {
     )
   })
   it('returns the same Promise if the initial flush has no updates', () => {
-    vi.useFakeTimers()
     const throttle = new ThrottledQueue()
+    const mockAdapter = createMockAdapter()
     const p1 = throttle.flush(mockAdapter)
     throttle.push({ key: 'a', query: 'a', options: {} })
     const p2 = throttle.flush(mockAdapter)
@@ -185,8 +248,8 @@ describe('throttle: flush', () => {
     )
   })
   it('returns the same Promise if the second flush has no updates', () => {
-    vi.useFakeTimers()
     const throttle = new ThrottledQueue()
+    const mockAdapter = createMockAdapter()
     throttle.push({ key: 'a', query: 'a', options: {} })
     const p1 = throttle.flush(mockAdapter)
     const p2 = throttle.flush(mockAdapter)
@@ -199,6 +262,37 @@ describe('throttle: flush', () => {
         scroll: false,
         shallow: true
       }
+    )
+  })
+  it('does not call the adapter when passing Infinity to timeMs', async () => {
+    const throttle = new ThrottledQueue()
+    const mockAdapter = createMockAdapter()
+    throttle.push({ key: 'a', query: 'a', options: {} }, Infinity)
+    const p = throttle.flush(mockAdapter)
+    vi.runAllTimers()
+    await expect(p).resolves.toEqual(new URLSearchParams(''))
+    expect(mockAdapter.updateUrl).not.toHaveBeenCalled()
+  })
+  it('rejects the Promise with what should have been applied if the updateUrl function throws', async () => {
+    const consoleErrorSpy = vi
+      .spyOn(console, 'error')
+      .mockImplementation(() => {})
+    const throttle = new ThrottledQueue()
+    throttle.push({ key: 'a', query: 'a', options: {} })
+    const p = throttle.flush({
+      getSearchParamsSnapshot() {
+        return new URLSearchParams('?initial=search')
+      },
+      updateUrl: vi.fn().mockImplementation(() => {
+        throw new Error('updateUrl error')
+      })
+    })
+    vi.runAllTimers()
+    await expect(p).rejects.toEqual(new URLSearchParams('?initial=search&a=a'))
+    expect(consoleErrorSpy).toHaveBeenCalledExactlyOnceWith(
+      '[nuqs] URL update rate-limited by the browser. Consider increasing `throttleMs` for key(s) `%s`. %O\n  See https://err.47ng.com/NUQS-429',
+      'a',
+      new Error('updateUrl error')
     )
   })
 })
