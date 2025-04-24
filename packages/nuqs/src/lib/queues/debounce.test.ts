@@ -165,7 +165,7 @@ describe('debounce: DebounceController', () => {
     expect(promise1).not.toBe(promise2)
     vi.runAllTimers()
     await expect(promise1).resolves.toEqual(new URLSearchParams('?a=a'))
-    await expect(promise2).resolves.toEqual(new URLSearchParams('?a=a&b=b'))
+    await expect(promise2).resolves.toEqual(new URLSearchParams('?b=b'))
     expect(fakeAdapter.updateUrl).toHaveBeenCalledTimes(2)
   })
   it('keeps a record of pending updates', async () => {
@@ -189,8 +189,7 @@ describe('debounce: DebounceController', () => {
     )
     expect(controller.getQueuedQuery('key')).toEqual('value')
     vi.runAllTimers()
-    // Queued value is kept until the throttle queue is manually cleared
-    expect(controller.getQueuedQuery('key')).toEqual('value')
+    expect(controller.getQueuedQuery('key')).toBeUndefined()
     throttleQueue.reset()
     expect(controller.getQueuedQuery('key')).toBeUndefined()
   })
@@ -253,5 +252,33 @@ describe('debounce: DebounceController', () => {
     )
     expect(controller.getQueuedQuery('key')).toBeUndefined()
     await expect(promise).resolves.toEqual(new URLSearchParams('?test=init'))
+  })
+  it('aborts all pending queues', async () => {
+    const fakeAdapter: UpdateQueueAdapterContext = {
+      updateUrl: vi.fn<UpdateUrlFunction>(),
+      getSearchParamsSnapshot() {
+        return new URLSearchParams('?test=init')
+      }
+    }
+    const throttleQueue = new ThrottledQueue()
+    const controller = new DebounceController(throttleQueue)
+    const promise = controller.push(
+      {
+        key: 'key',
+        query: 'value',
+        options: {}
+      },
+      100,
+      fakeAdapter
+    )
+    const queue = controller.queues.get('key')
+    expect(queue).toBeInstanceOf(DebouncedPromiseQueue)
+    controller.abortAll()
+    expect(controller.queues.size).toEqual(0)
+    expect(queue!.queuedValue).toBeUndefined()
+    await expect(promise).resolves.toEqual(new URLSearchParams())
+    await expect(queue!.resolvers.promise).resolves.toEqual(
+      new URLSearchParams()
+    )
   })
 })
