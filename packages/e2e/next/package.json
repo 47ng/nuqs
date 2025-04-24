@@ -29,13 +29,11 @@
     "@types/node": "^22.14.1",
     "@types/react": "catalog:react19",
     "@types/react-dom": "catalog:react19",
-    "@types/semver": "^7.7.0",
     "@types/webpack": "^5.28.5",
     "babel-plugin-react-compiler": "19.1.0-rc.1",
     "cypress": "catalog:e2e",
     "cypress-terminal-report": "^7.1.0",
     "e2e-shared": "workspace:*",
-    "semver": "^7.7.1",
     "start-server-and-test": "catalog:e2e",
     "typescript": "^5.8.3"
   }
