@@ -235,9 +235,6 @@ importers:
       '@types/react-dom':
         specifier: catalog:react19
         version: 19.1.2(@types/react@19.1.1)
-      '@types/semver':
-        specifier: ^7.7.0
-        version: 7.7.0
       '@types/webpack':
         specifier: ^5.28.5
         version: 5.28.5
@@ -253,9 +250,6 @@ importers:
       e2e-shared:
         specifier: workspace:*
         version: link:../shared
-      semver:
-        specifier: ^7.7.1
-        version: 7.7.1
       start-server-and-test:
         specifier: catalog:e2e
         version: 2.0.11
