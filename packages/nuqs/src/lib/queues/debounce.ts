@@ -96,6 +96,7 @@ export class DebounceController {
       return Promise.resolve(getSnapshot())
     }
     if (!this.queues.has(update.key)) {
+      debug('[nuqs dqc] Creating debounced queue for `%s`', update.key)
       const queue = new DebouncedPromiseQueue<
         Omit<UpdateQueuePushArgs, 'timeMs'>,
         URLSearchParams
@@ -104,7 +105,7 @@ export class DebounceController {
         return this.throttleQueue.flush(adapter).finally(() => {
           const queuedValue = this.queues.get(update.key)?.queuedValue
           if (queuedValue === undefined) {
-            // Cleanup empty queues
+            debug('[nuqs dqc] Cleaning up empty queue for `%s`', update.key)
             this.queues.delete(update.key)
           }
           this.queuedQuerySync.emit(update.key)
@@ -112,6 +113,12 @@ export class DebounceController {
       })
       this.queues.set(update.key, queue)
     }
+    debug(
+      '[nuqs dqc] Enqueueing debounced update %s=%s %O',
+      update.key,
+      update.query,
+      update.options
+    )
     const queue = this.queues.get(update.key)!
     const promise = queue.push(update, timeMs)
     this.queuedQuerySync.emit(update.key)
