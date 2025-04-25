@@ -27,6 +27,7 @@ export default [
 
     // Local tests
     route('/debounce',                                  './routes/debounce.tsx'),
+    route('/debounce/other',                            './routes/debounce.other.tsx'),
     route('/dynamic-segments/catch-all?/*',             './routes/dynamic-segments.catch-all.$.tsx'),
     route('/dynamic-segments/dynamic/:segment',         './routes/dynamic-segments.dynamic.$segment.tsx'),
     route('/flush-after-navigate/useQueryState/end',    './routes/flush-after-navigate.useQueryState.end.tsx'),

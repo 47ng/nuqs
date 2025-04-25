@@ -44,6 +44,7 @@ const router = createBrowserRouter(
 
       {/* Local tests */}
       <Route path="debounce"                                  lazy={load(import('./routes/debounce'))} />
+      <Route path="debounce/other"                            lazy={load(import('./routes/debounce.other'))} />
       <Route path="dynamic-segments/catch-all?*"              lazy={load(import('./routes/dynamic-segments.catch-all.$'))} />
       <Route path="dynamic-segments/dynamic/:segment"         lazy={load(import('./routes/dynamic-segments.dynamic.$segment'))} />
       <Route path="flush-after-navigate/useQueryState/end"    lazy={load(import('./routes/flush-after-navigate.useQueryState.end'))} />
