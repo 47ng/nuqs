@@ -15,7 +15,7 @@ export default function Page() {
   const serverState = useLoaderData<DemoSearchParams>()
   return (
     <DebounceServer state={serverState}>
-      <DebounceClient navigateHref="/debounce/other" />
+      <DebounceClient navigateHref="/debounce-other" />
     </DebounceServer>
   )
 }
