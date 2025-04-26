@@ -1,7 +1,7 @@
 import type { Emitter } from 'mitt'
 import { debug } from '../../lib/debug'
 import { error } from '../../lib/errors'
-import { resetQueues } from '../../lib/queues/reset'
+import { resetQueues, spinQueueResetMutex } from '../../lib/queues/reset'
 
 export type SearchParamsSyncEmitter = Emitter<{ update: URLSearchParams }>
 
@@ -86,13 +86,13 @@ export function patchHistory(
     adapter
   )
   function sync(url: URL | string) {
+    spinQueueResetMutex()
     try {
       const newSearch = new URL(url, location.origin).search
       if (newSearch === lastSearchSeen) {
         return
       }
     } catch {}
-    resetQueues()
     try {
       emitter.emit('update', getSearchParams(url))
     } catch (e) {
