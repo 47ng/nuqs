@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react'
 import { useAdapter } from './adapters/lib/context'
 import type { Nullable, Options, UrlKeys } from './defs'
 import { debug } from './lib/debug'
@@ -75,6 +75,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
     urlKeys = defaultUrlKeys
   }: Partial<UseQueryStatesOptions<KeyMap>> = {}
 ): UseQueryStatesReturn<KeyMap> {
+  const hookId = useId()
   type V = NullableValues<KeyMap>
   const stateKeys = Object.keys(keyMap).join(',')
   const resolvedUrlKeys = useMemo(
@@ -108,7 +109,8 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
 
   const stateRef = useRef(internalState)
   debug(
-    '[nuq+ `%s`] render - state: %O, iSP: %s',
+    '[nuq+ %s `%s`] render - state: %O, iSP: %s',
+    hookId,
     stateKeys,
     internalState,
     initialSearchParams
@@ -127,6 +129,13 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
       stateRef.current
     )
     if (hasChanged) {
+      debug('[nuq+ %s `%s`] State changed: %O', hookId, stateKeys, {
+        state,
+        initialSearchParams,
+        queuedQueries,
+        queryRef: queryRef.current,
+        stateRef: stateRef.current
+      })
       stateRef.current = state
       setInternalState(state)
     }
@@ -148,6 +157,13 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
       stateRef.current
     )
     if (hasChanged) {
+      debug('[nuq+ %s `%s`] State changed: %O', hookId, stateKeys, {
+        state,
+        initialSearchParams,
+        queuedQueries,
+        queryRef: queryRef.current,
+        stateRef: stateRef.current
+      })
       stateRef.current = state
       setInternalState(state)
     }
@@ -161,7 +177,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
   // Sync all hooks together & with external URL changes
   useEffect(() => {
     function updateInternalState(state: V) {
-      debug('[nuq+ `%s`] updateInternalState %O', stateKeys, state)
+      debug('[nuq+ %s `%s`] updateInternalState %O', hookId, stateKeys, state)
       stateRef.current = state
       setInternalState(state)
     }
@@ -181,7 +197,8 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
           }
           queryRef.current[urlKey] = query
           debug(
-            '[nuq+ `%s`] Cross-hook key sync %s: %O (default: %O). Resolved: %O',
+            '[nuq+ %s `%s`] Cross-hook key sync %s: %O (default: %O). Resolved: %O',
+            hookId,
             stateKeys,
             urlKey,
             state,
@@ -197,13 +214,23 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
 
     for (const stateKey of Object.keys(keyMap)) {
       const urlKey = resolvedUrlKeys[stateKey]!
-      debug('[nuq+ `%s`] Subscribing to sync for `%s`', stateKeys, urlKey)
+      debug(
+        '[nuq+ %s `%s`] Subscribing to sync for `%s`',
+        hookId,
+        urlKey,
+        stateKeys
+      )
       emitter.on(urlKey, handlers[stateKey]!)
     }
     return () => {
       for (const stateKey of Object.keys(keyMap)) {
         const urlKey = resolvedUrlKeys[stateKey]!
-        debug('[nuq+ `%s`] Unsubscribing to sync for `%s`', stateKeys, urlKey)
+        debug(
+          '[nuq+ %s `%s`] Unsubscribing to sync for `%s`',
+          hookId,
+          urlKey,
+          stateKeys
+        )
         emitter.off(urlKey, handlers[stateKey])
       }
     }
@@ -220,7 +247,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
               applyDefaultValues(stateRef.current, defaultValues)
             ) ?? nullMap)
           : (stateUpdater ?? nullMap)
-      debug('[nuq+ `%s`] setState: %O', stateKeys, newState)
+      debug('[nuq+ %s `%s`] setState: %O', hookId, stateKeys, newState)
       let returnedPromise: Promise<URLSearchParams> | undefined = undefined
       let maxDebounceTime = 0
       const debounceAborts: Array<

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useId, useRef, useState } from 'react'
 import { useAdapter } from './adapters/lib/context'
 import type { Options } from './defs'
 import { debug } from './lib/debug'
@@ -223,6 +223,7 @@ export function useQueryState<T = string>(
     defaultValue: undefined
   }
 ) {
+  const hookId = useId()
   const adapter = useAdapter()
   const { [key]: queuedQuery } = debounceController.useQueuedQueries([key])
   const initialSearchParams = adapter.searchParams
@@ -236,7 +237,8 @@ export function useQueryState<T = string>(
   })
   const stateRef = useRef(internalState)
   debug(
-    '[nuqs `%s`] render - state: %O, iSP: %s',
+    '[nuqs %s `%s`] render - state: %O, iSP: %s',
+    hookId,
     key,
     internalState,
     initialSearchParams?.get(key) ?? null
@@ -251,7 +253,7 @@ export function useQueryState<T = string>(
       return
     }
     const state = query === null ? null : safeParse(parse, query, key)
-    debug('[nuqs `%s`] syncFromUseSearchParams %O', key, state)
+    debug('[nuqs %s `%s`] syncFromUseSearchParams %O', hookId, key, state)
     stateRef.current = state
     queryRef.current = query
     setInternalState(state)
@@ -260,15 +262,15 @@ export function useQueryState<T = string>(
   // Sync all hooks together & with external URL changes
   useEffect(() => {
     function updateInternalState({ state, query }: CrossHookSyncPayload) {
-      debug('[nuqs `%s`] updateInternalState %O', key, state)
+      debug('[nuqs %s `%s`] updateInternalState %O', hookId, key, state)
       stateRef.current = state
       queryRef.current = query
       setInternalState(state)
     }
-    debug('[nuqs `%s`] subscribing to sync', key)
+    debug('[nuqs %s `%s`] subscribing to sync', hookId, key)
     emitter.on(key, updateInternalState)
     return () => {
-      debug('[nuqs `%s`] unsubscribing from sync', key)
+      debug('[nuqs %s `%s`] unsubscribing from sync', hookId, key)
       emitter.off(key, updateInternalState)
     }
   }, [key])
