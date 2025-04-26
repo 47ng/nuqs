@@ -1,6 +1,8 @@
 import mitt from 'mitt'
 import { startTransition, useCallback, useEffect, useState } from 'react'
 import { debug } from '../../lib/debug'
+import { setQueueResetMutex } from '../../lib/queues/reset'
+import { globalThrottleQueue } from '../../lib/queues/throttle'
 import { renderQueryString } from '../../lib/url-encoding'
 import { createAdapterProvider, type AdapterProvider } from './context'
 import type { AdapterInterface, AdapterOptions } from './defs'
@@ -46,6 +48,9 @@ export function createReactRouterBasedAdapter({
     const searchParams = useOptimisticSearchParams()
     const updateUrl = useCallback(
       (search: URLSearchParams, options: AdapterOptions) => {
+        requestAnimationFrame(() =>
+          requestAnimationFrame(() => globalThrottleQueue.reset())
+        )
         startTransition(() => {
           emitter.emit('update', search)
         })
@@ -56,6 +61,7 @@ export function createReactRouterBasedAdapter({
         // this allows keeping a reactive URL if the network is slow.
         const updateMethod =
           options.history === 'push' ? history.pushState : history.replaceState
+        setQueueResetMutex(options.shallow ? 1 : 2)
         updateMethod.call(
           history,
           history.state, // Maintain the history state
@@ -86,7 +92,7 @@ export function createReactRouterBasedAdapter({
     return {
       searchParams,
       updateUrl,
-      autoResetQueueOnUpdate: false // done in the history patch
+      autoResetQueueOnUpdate: false
     }
   }
   function useOptimisticSearchParams(): URLSearchParams {
