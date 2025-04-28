@@ -12,14 +12,55 @@ export type LoaderOptions<Parsers extends ParserMap> = {
   urlKeys?: UrlKeys<Parsers>
 }
 
-export type LoaderFunction<Parsers extends ParserMap> = ReturnType<
-  typeof createLoader<Parsers>
->
+export type LoaderFunction<Parsers extends ParserMap> = {
+  /**
+   * Load & parse search params from (almost) any input.
+   *
+   * While loaders are typically used in the context of a React Router / Remix
+   * loader function, it can also be used in Next.js API routes or
+   * getServerSideProps functions, or even with the app router `searchParams`
+   * page prop (sync or async), if you don't need the cache behaviours.
+   */
+  (
+    input: LoaderInput,
+    options?: LoaderOptions<Parsers>
+  ): inferParserType<Parsers>
+  /**
+   * Load & parse search params from (almost) any input.
+   *
+   * While loaders are typically used in the context of a React Router / Remix
+   * loader function, it can also be used in Next.js API routes or
+   * getServerSideProps functions, or even with the app router `searchParams`
+   * page prop (sync or async), if you don't need the cache behaviours.
+   *
+   * Note: this async overload makes it easier to use against the `searchParams`
+   * page prop in Next.js 15 app router:
+   *
+   * ```tsx
+   * export default async function Page({ searchParams }) {
+   *   const parsedSearchParamsPromise = loadSearchParams(searchParams)
+   *   return (
+   *     // Pre-render & stream the shell immediately
+   *     <StaticShell>
+   *       <Suspense>
+   *         // Stream the Promise down
+   *         <DynamicComponent searchParams={parsedSearchParamsPromise} />
+   *       </Suspense>
+   *      </StaticShell>
+   *   )
+   * }
+   * ```
+   */
+  (
+    input: Promise<LoaderInput>,
+    options?: LoaderOptions<Parsers>
+  ): Promise<inferParserType<Parsers>>
+}
 
 export function createLoader<Parsers extends ParserMap>(
   parsers: Parsers,
   { urlKeys = {} }: LoaderOptions<Parsers> = {}
-) {
+): LoaderFunction<Parsers> {
   type ParsedSearchParams = inferParserType<Parsers>
 
   /**

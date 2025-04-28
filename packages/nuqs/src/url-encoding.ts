@@ -1,6 +1,6 @@
 import { error } from './errors'
 
-export function renderQueryString(search: URLSearchParams) {
+export function renderQueryString(search: URLSearchParams): string {
   if (search.size === 0) {
     return ''
   }
@@ -21,7 +21,7 @@ export function renderQueryString(search: URLSearchParams) {
   return queryString
 }
 
-export function encodeQueryValue(input: string) {
+export function encodeQueryValue(input: string): string {
   return (
     input
       // Encode existing % signs first to avoid appearing
@@ -50,7 +50,7 @@ export function encodeQueryValue(input: string) {
 // Note: change error documentation (NUQS-414) when changing this value.
 export const URL_MAX_LENGTH = 2000
 
-export function warnIfURLIsTooLong(queryString: string) {
+export function warnIfURLIsTooLong(queryString: string): void {
   if (process.env.NODE_ENV === 'production') {
     return
   }
