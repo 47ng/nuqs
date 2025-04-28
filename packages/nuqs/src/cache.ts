@@ -6,10 +6,19 @@ import type { inferParserType, ParserMap } from './parsers'
 
 const $input: unique symbol = Symbol('Input')
 
+type CacheInterface<Parsers extends ParserMap> = {
+  parse: {
+    (searchParams: SearchParams): inferParserType<Parsers>
+    (searchParams: Promise<any>): Promise<inferParserType<Parsers>>
+  }
+  all: () => inferParserType<Parsers>
+  get: <Key extends keyof Parsers>(key: Key) => inferParserType<Parsers[Key]>
+}
+
 export function createSearchParamsCache<Parsers extends ParserMap>(
   parsers: Parsers,
   { urlKeys = {} }: { urlKeys?: UrlKeys<Parsers> } = {}
-) {
+): CacheInterface<Parsers> {
   const load = createLoader(parsers, { urlKeys })
   type Keys = keyof Parsers
   type ParsedSearchParams = inferParserType<Parsers>
@@ -98,7 +107,7 @@ export function createSearchParamsCache<Parsers extends ParserMap>(
   return { parse, get, all }
 }
 
-export function compareSearchParams(a: SearchParams, b: SearchParams) {
+export function compareSearchParams(a: SearchParams, b: SearchParams): boolean {
   if (a === b) {
     return true
   }
