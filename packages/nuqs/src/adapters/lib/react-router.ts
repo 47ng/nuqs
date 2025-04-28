@@ -1,5 +1,11 @@
 import mitt from 'mitt'
-import { startTransition, useCallback, useEffect, useState } from 'react'
+import {
+  startTransition,
+  useCallback,
+  useEffect,
+  useRef,
+  useState
+} from 'react'
 import { debug } from '../../lib/debug'
 import { setQueueResetMutex } from '../../lib/queues/reset'
 import { globalThrottleQueue } from '../../lib/queues/throttle'
@@ -41,13 +47,16 @@ export function createReactRouterBasedAdapter({
 }: CreateReactRouterBasedAdapterArgs) {
   const emitter: SearchParamsSyncEmitter = mitt()
   function useNuqsReactRouterBasedAdapter(): AdapterInterface {
+    const resetRef = useRef(false)
+    if (resetRef.current) {
+      resetRef.current = false
+      globalThrottleQueue.reset()
+    }
+
     const navigate = useNavigate()
     const searchParams = useOptimisticSearchParams()
     const updateUrl = useCallback(
       (search: URLSearchParams, options: AdapterOptions) => {
-        requestAnimationFrame(() =>
-          requestAnimationFrame(() => globalThrottleQueue.reset())
-        )
         startTransition(() => {
           emitter.emit('update', search)
         })
@@ -83,6 +92,7 @@ export function createReactRouterBasedAdapter({
         if (options.scroll) {
           window.scrollTo(0, 0)
         }
+        resetRef.current = true
       },
       [navigate]
     )
