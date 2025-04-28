@@ -1,11 +1,12 @@
 import { readFile, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { styleText } from 'node:util'
-import { defineConfig, type Options } from 'tsup'
+import { defineConfig, type Options, type UserConfig } from 'tsdown'
 
 const commonConfig = {
+  clean: true,
   format: ['esm'],
-  experimentalDts: true,
+  dts: true,
   outDir: 'dist',
   external: [
     'next',
@@ -14,8 +15,7 @@ const commonConfig = {
     'react-router-dom',
     'react-router'
   ],
-  splitting: true,
-  treeshake: true,
+  treeshake: false,
   tsconfig: 'tsconfig.build.json'
 } satisfies Options
 
@@ -39,7 +39,7 @@ const entrypoints = {
   }
 }
 
-export default defineConfig([
+const config: UserConfig = defineConfig([
   // Client bundles
   {
     ...commonConfig,
@@ -68,3 +68,5 @@ export default defineConfig([
     entry: entrypoints.server
   }
 ])
+
+export default config
