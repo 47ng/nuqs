@@ -38,11 +38,7 @@ export function createAdapterProvider(useAdapter: UseAdapterHook) {
   context.set({ useAdapter })
 
   return ({ children, ...props }: { children: ReactNode }) =>
-    createElement(
-      Fragment,
-      { ...props },
-      children
-    )
+    createElement(Fragment, { ...props }, children)
 }
 
 // Accessor for use within components
