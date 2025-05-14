@@ -44,11 +44,7 @@ export function NuqsTestingAdapter({
 
   context.set({ useAdapter })
 
-  return createElement(
-    Fragment,
-    null,
-    props.children
-  )
+  return createElement(Fragment, null, props.children)
 }
 
 /**
