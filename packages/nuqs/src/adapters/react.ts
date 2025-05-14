@@ -1,8 +1,8 @@
+import { useStore } from '@nanostores/react'
+import { map } from 'nanostores'
 import mitt from 'mitt'
 import {
-  createContext,
   createElement,
-  useContext,
   useEffect,
   useMemo,
   useState,
@@ -35,12 +35,12 @@ function generateUpdateUrlFn(fullPageNavigationOnShallowFalseUpdates: boolean) {
   }
 }
 
-const NuqsReactAdapterContext = createContext({
+const NuqsReactAdapterContext = map({
   fullPageNavigationOnShallowFalseUpdates: false
 })
 
 function useNuqsReactAdapter() {
-  const { fullPageNavigationOnShallowFalseUpdates } = useContext(
+  const { fullPageNavigationOnShallowFalseUpdates } = useStore(
     NuqsReactAdapterContext
   )
   const [searchParams, setSearchParams] = useState(() => {
@@ -81,11 +81,9 @@ export function NuqsAdapter({
   children: ReactNode
   fullPageNavigationOnShallowFalseUpdates?: boolean
 }) {
-  return createElement(
-    NuqsReactAdapterContext.Provider,
-    { value: { fullPageNavigationOnShallowFalseUpdates } },
-    createElement(NuqsReactAdapter, null, children)
-  )
+  NuqsReactAdapterContext.set({ fullPageNavigationOnShallowFalseUpdates })
+
+  return createElement(NuqsReactAdapter, null, children)
 }
 
 /**

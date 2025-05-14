@@ -1,18 +1,20 @@
-import { createContext, createElement, useContext, type ReactNode } from 'react'
+import { useStore } from '@nanostores/react'
+import { map } from 'nanostores'
 import { debugEnabled } from '../../debug'
 import { error } from '../../errors'
 import type { UseAdapterHook } from './defs'
+import { createElement, Fragment, type ReactNode } from 'react'
 
 export type AdapterContext = {
   useAdapter: UseAdapterHook
 }
 
-export const context = createContext<AdapterContext>({
-  useAdapter() {
+// Create a Nanostore to hold the adapter reference
+export const context = map<AdapterContext>({
+  useAdapter: () => {
     throw new Error(error(404))
   }
 })
-context.displayName = 'NuqsAdapterContext'
 
 declare global {
   interface Window {
@@ -21,6 +23,7 @@ declare global {
 }
 
 if (debugEnabled && typeof window !== 'undefined') {
+  // Optional: warn if multiple instances are detected in development
   if (window.__NuqsAdapterContext && window.__NuqsAdapterContext !== context) {
     console.error(error(303))
   }
@@ -28,26 +31,25 @@ if (debugEnabled && typeof window !== 'undefined') {
 }
 
 /**
- * Create a custom adapter (context provider) for nuqs to work with your framework / router.
- *
- * Adapters are based on React Context,
- *
- * @param useAdapter
- * @returns
+ * Set a custom adapter for Nuqs to integrate with your framework/router.
+ * @param useAdapter - Hook or function that returns adapter logic
  */
 export function createAdapterProvider(useAdapter: UseAdapterHook) {
+  context.set({ useAdapter })
+
   return ({ children, ...props }: { children: ReactNode }) =>
     createElement(
-      context.Provider,
-      { ...props, value: { useAdapter } },
+      Fragment,
+      { ...props },
       children
     )
 }
 
+// Accessor for use within components
 export function useAdapter() {
-  const value = useContext(context)
-  if (!('useAdapter' in value)) {
+  const { useAdapter } = useStore(context)
+  if (!useAdapter) {
     throw new Error(error(404))
   }
-  return value.useAdapter()
+  return useAdapter()
 }
