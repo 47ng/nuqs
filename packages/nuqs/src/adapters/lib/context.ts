@@ -1,4 +1,3 @@
-import { useStore } from '@nanostores/react'
 import { map } from 'nanostores'
 import { debugEnabled } from '../../debug'
 import { error } from '../../errors'
@@ -43,7 +42,7 @@ export function createAdapterProvider(useAdapter: UseAdapterHook) {
 
 // Accessor for use within components
 export function useAdapter() {
-  const { useAdapter } = useStore(context)
+  const { useAdapter } = context.get()
   if (!useAdapter) {
     throw new Error(error(404))
   }
