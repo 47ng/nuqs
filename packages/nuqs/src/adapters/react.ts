@@ -1,67 +1,23 @@
-import { useStore } from '@nanostores/react'
-import { map } from 'nanostores'
 import mitt from 'mitt'
 import {
+  createContext,
   createElement,
-  useEffect,
+  useContext,
   useMemo,
-  useState,
   type ReactNode
 } from 'react'
-import { renderQueryString } from '../url-encoding'
 import { createAdapterProvider } from './lib/context'
-import type { AdapterOptions } from './lib/defs'
-import { patchHistory, type SearchParamsSyncEmitter } from './lib/patch-history'
+import { generateUpdateUrlFn, useReactSearchParams } from './lib/react'
 
-const emitter: SearchParamsSyncEmitter = mitt()
-
-function generateUpdateUrlFn(fullPageNavigationOnShallowFalseUpdates: boolean) {
-  return function updateUrl(search: URLSearchParams, options: AdapterOptions) {
-    const url = new URL(location.href)
-    url.search = renderQueryString(search)
-    if (fullPageNavigationOnShallowFalseUpdates && options.shallow === false) {
-      const method =
-        options.history === 'push' ? location.assign : location.replace
-      method.call(location, url)
-    } else {
-      const method =
-        options.history === 'push' ? history.pushState : history.replaceState
-      method.call(history, history.state, '', url)
-    }
-    emitter.emit('update', search)
-    if (options.scroll === true) {
-      window.scrollTo({ top: 0 })
-    }
-  }
-}
-
-const NuqsReactAdapterContext = map({
+const NuqsReactAdapterContext = createContext({
   fullPageNavigationOnShallowFalseUpdates: false
 })
 
 function useNuqsReactAdapter() {
-  const { fullPageNavigationOnShallowFalseUpdates } = useStore(
+  const { fullPageNavigationOnShallowFalseUpdates } = useContext(
     NuqsReactAdapterContext
   )
-  const [searchParams, setSearchParams] = useState(() => {
-    if (typeof location === 'undefined') {
-      return new URLSearchParams()
-    }
-    return new URLSearchParams(location.search)
-  })
-  useEffect(() => {
-    // Popstate event is only fired when the user navigates
-    // via the browser's back/forward buttons.
-    const onPopState = () => {
-      setSearchParams(new URLSearchParams(location.search))
-    }
-    emitter.on('update', setSearchParams)
-    window.addEventListener('popstate', onPopState)
-    return () => {
-      emitter.off('update', setSearchParams)
-      window.removeEventListener('popstate', onPopState)
-    }
-  }, [])
+  const searchParams = useReactSearchParams()
   const updateUrl = useMemo(
     () => generateUpdateUrlFn(fullPageNavigationOnShallowFalseUpdates),
     [fullPageNavigationOnShallowFalseUpdates]
@@ -81,9 +37,11 @@ export function NuqsAdapter({
   children: ReactNode
   fullPageNavigationOnShallowFalseUpdates?: boolean
 }) {
-  NuqsReactAdapterContext.set({ fullPageNavigationOnShallowFalseUpdates })
-
-  return createElement(NuqsReactAdapter, null, children)
+  return createElement(
+    NuqsReactAdapterContext.Provider,
+    { value: { fullPageNavigationOnShallowFalseUpdates } },
+    createElement(NuqsReactAdapter, null, children)
+  )
 }
 
 /**
@@ -93,6 +51,4 @@ export function NuqsAdapter({
  * If third party code updates the History API directly, use this function to
  * enable useOptimisticSearchParams to react to those changes.
  */
-export function enableHistorySync() {
-  patchHistory(emitter, 'react')
-}
+export { enableHistorySync } from './lib/react'

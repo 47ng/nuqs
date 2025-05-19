@@ -1,4 +1,4 @@
-import { createElement, Fragment, type ReactNode } from 'react'
+import { createElement, type ReactNode } from 'react'
 import { resetQueue } from '../update-queue'
 import { renderQueryString } from '../url-encoding'
 import { context } from './lib/context'
@@ -41,10 +41,11 @@ export function NuqsTestingAdapter({
     },
     rateLimitFactor: props.rateLimitFactor ?? 0
   })
-
-  context.set({ useAdapter })
-
-  return createElement(Fragment, null, props.children)
+  return createElement(
+    context.Provider,
+    { value: { useAdapter } },
+    props.children
+  )
 }
 
 /**

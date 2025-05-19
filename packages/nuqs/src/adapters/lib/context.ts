@@ -1,28 +1,26 @@
-import { map } from 'nanostores'
+import { createContext, createElement, useContext, type ReactNode } from 'react'
 import { debugEnabled } from '../../debug'
 import { error } from '../../errors'
 import type { UseAdapterHook } from './defs'
-import { createElement, Fragment, type ReactNode } from 'react'
 
 export type AdapterContext = {
   useAdapter: UseAdapterHook
 }
 
-// Create a Nanostore to hold the adapter reference
-export const context = map<AdapterContext>({
-  useAdapter: () => {
+export const context = createContext<AdapterContext>({
+  useAdapter() {
     throw new Error(error(404))
   }
 })
+context.displayName = 'NuqsAdapterContext'
 
 declare global {
   interface Window {
-    __NuqsAdapterContext?: typeof context
+    __NuqsAdapterContext?: unknown
   }
 }
 
 if (debugEnabled && typeof window !== 'undefined') {
-  // Optional: warn if multiple instances are detected in development
   if (window.__NuqsAdapterContext && window.__NuqsAdapterContext !== context) {
     console.error(error(303))
   }
@@ -30,21 +28,27 @@ if (debugEnabled && typeof window !== 'undefined') {
 }
 
 /**
- * Set a custom adapter for Nuqs to integrate with your framework/router.
- * @param useAdapter - Hook or function that returns adapter logic
+ * Create a custom adapter (context provider) for nuqs to work with your framework / router.
+ *
+ * Adapters are based on React Context,
+ *
+ * @param useAdapter
+ * @returns
  */
 export function createAdapterProvider(useAdapter: UseAdapterHook) {
-  context.set({ useAdapter })
-
   return ({ children, ...props }: { children: ReactNode }) =>
-    createElement(Fragment, { ...props }, children)
+    createElement(
+      context.Provider,
+      { ...props, value: { useAdapter } },
+      children
+    )
 }
 
-// Accessor for use within components
 export function useAdapter() {
-  const { useAdapter } = context.get()
-  if (!useAdapter) {
+  const value = useContext(context)
+  if (!('useAdapter' in value)) {
     throw new Error(error(404))
   }
-  return useAdapter()
+
+  return value.useAdapter()
 }
