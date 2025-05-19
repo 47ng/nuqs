@@ -1,18 +1,9 @@
-import { useAdapter } from './adapters/lib/context'
-import type { Options } from './defs'
-import { FLUSH_RATE_LIMIT_MS } from './update-queue'
+import type { Options } from '../../../defs'
 import {
-  useQueryStateCore,
-  type UseQueryStateCoreOptions,
-  type UseQueryStateCoreReturn
-} from './core/useQueryStateCore'
-
-export type UseQueryStateOptions<T> = UseQueryStateCoreOptions<T>
-
-export type UseQueryStateReturn<Parsed, Default> = UseQueryStateCoreReturn<
-  Parsed,
-  Default
->
+  FLUSH_RATE_LIMIT_MS,
+} from '../../../update-queue'
+import { useQueryStateCore, type UseQueryStateCoreOptions, type UseQueryStateCoreReturn } from '../../../core/useQueryStateCore'
+import { useAdapter } from '../context'
 
 // Overload type signatures ----------------------------------------------------
 // Note: the order of declaration matters (from the most specific to the least).
@@ -47,8 +38,8 @@ export type UseQueryStateReturn<Parsed, Default> = UseQueryStateCoreReturn<
  */
 export function useQueryState<T>(
   key: string,
-  options: UseQueryStateOptions<T> & { defaultValue: T }
-): UseQueryStateReturn<
+  options: UseQueryStateCoreOptions<T> & { defaultValue: T }
+): UseQueryStateCoreReturn<
   NonNullable<ReturnType<typeof options.parse>>,
   typeof options.defaultValue
 >
@@ -70,8 +61,8 @@ export function useQueryState<T>(
  */
 export function useQueryState<T>(
   key: string,
-  options: UseQueryStateOptions<T>
-): UseQueryStateReturn<NonNullable<ReturnType<typeof options.parse>>, undefined>
+  options: UseQueryStateCoreOptions<T>
+): UseQueryStateCoreReturn<NonNullable<ReturnType<typeof options.parse>>, undefined>
 
 /**
  * Default type string, limited options & default value
@@ -81,7 +72,7 @@ export function useQueryState(
   options: Options & {
     defaultValue: string
   }
-): UseQueryStateReturn<string, typeof options.defaultValue>
+): UseQueryStateCoreReturn<string, typeof options.defaultValue>
 
 /**
  * React state hook synchronized with a URL query string in Next.js
@@ -106,8 +97,8 @@ export function useQueryState(
  */
 export function useQueryState(
   key: string,
-  options: Pick<UseQueryStateOptions<string>, keyof Options>
-): UseQueryStateReturn<string, undefined>
+  options: Pick<UseQueryStateCoreOptions<string>, keyof Options>
+): UseQueryStateCoreReturn<string, undefined>
 
 /**
  * React state hook synchronized with a URL query string in Next.js
@@ -131,7 +122,7 @@ export function useQueryState(
  */
 export function useQueryState(
   key: string
-): UseQueryStateReturn<string, undefined>
+): UseQueryStateCoreReturn<string, undefined>
 
 /**
  * React state hook synchronized with a URL query string in Next.js
@@ -182,20 +173,21 @@ export function useQueryState(
  */
 export function useQueryState<T = string>(
   key: string,
-  options: Partial<UseQueryStateOptions<T>> & {
+  options: Partial<UseQueryStateCoreOptions<T>> & {
     defaultValue?: T
   } = {
-    history: 'replace',
-    scroll: false,
-    shallow: true,
-    throttleMs: FLUSH_RATE_LIMIT_MS,
-    parse: x => x as unknown as T,
-    serialize: String,
-    eq: (a, b) => a === b,
-    clearOnDefault: true,
-    defaultValue: undefined
-  }
+      history: 'replace',
+      scroll: false,
+      shallow: true,
+      throttleMs: FLUSH_RATE_LIMIT_MS,
+      parse: x => x as unknown as T,
+      serialize: String,
+      eq: (a, b) => a === b,
+      clearOnDefault: true,
+      defaultValue: undefined
+    }
 ) {
   const adapter = useAdapter()
   return useQueryStateCore(key, adapter, options)
 }
+
