@@ -986,11 +986,9 @@ Made with ❤️ by [François Best](https://francoisbest.com)
 Using this package at work ? [Sponsor me](https://github.com/sponsors/franky47)
 to help with support and maintenance.
 
-This project is part of the [Spring 2025 cohort](https://vercel.com/blog/spring25-oss-program) of the Vercel Open Source program.
-
-<a href="https://vercel.com/oss">
-  <img alt="Vercel OSS Program" src="https://vercel.com/oss/program-badge.svg" />
-</a>
+<div>
+nuqs is part of the &nbsp;<a href="https://vercel.com/oss"><img alt="Vercel OSS Program" src="https://vercel.com/oss/program-badge.svg" /></a>&nbsp;<small><a href="https://vercel.com/blog/spring25-oss-program">(spring 2025 cohort)</a></small>
+</div>
 
 <br/>
 
