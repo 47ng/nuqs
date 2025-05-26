@@ -50,6 +50,6 @@ const config: UserConfig = defineConfig([
     ...commonConfig,
     entry: entrypoints.server
   }
-])
+]) as UserConfig
 
 export default config
