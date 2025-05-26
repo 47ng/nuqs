@@ -85,9 +85,10 @@ loadSearchParams(new URLSearchParams(...))
 ```
 
 ```tsx tab="API routes"
+import { NextRequest } from "next/server";
 // App router, eg: app/api/location/route.ts
-export async function GET(request: Request) {
-  const { latitude, longitude } = loadSearchParams(request)
+export async function GET(request: NextRequest) {
+  const { latitude, longitude } = loadSearchParams(request.nextUrl.searchParams)
   // ...
 }
 
