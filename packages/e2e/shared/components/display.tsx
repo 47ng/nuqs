@@ -1,7 +1,9 @@
+import type { ReactNode } from 'react'
+
 export type DisplayProps = {
   environment: 'client' | 'server'
   target?: string
-  state: string | null
+  state: ReactNode
 }
 
 export function Display({

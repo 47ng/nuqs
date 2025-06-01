@@ -77,7 +77,11 @@
     },
     "e2e-react#test": {
       "dependsOn": ["build"],
-      "env": ["REACT_COMPILER", "E2E_NO_CACHE_ON_RERUN"]
+      "env": [
+        "FULL_PAGE_NAV_ON_SHALLOW_FALSE",
+        "REACT_COMPILER",
+        "E2E_NO_CACHE_ON_RERUN"
+      ]
     }
   }
 }
