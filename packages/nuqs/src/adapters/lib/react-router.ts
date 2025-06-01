@@ -46,9 +46,10 @@ export function createReactRouterBasedAdapter({
   useSearchParams
 }: CreateReactRouterBasedAdapterArgs) {
   const emitter: SearchParamsSyncEmitter = mitt()
+  const enableQueueReset = adapter !== 'react-router-v6'
   function useNuqsReactRouterBasedAdapter(): AdapterInterface {
     const resetRef = useRef(false)
-    if (resetRef.current) {
+    if (enableQueueReset && resetRef.current) {
       resetRef.current = false
       globalThrottleQueue.reset()
     }
@@ -92,7 +93,7 @@ export function createReactRouterBasedAdapter({
         if (options.scroll) {
           window.scrollTo(0, 0)
         }
-        resetRef.current = true
+        resetRef.current = enableQueueReset
       },
       [navigate]
     )
