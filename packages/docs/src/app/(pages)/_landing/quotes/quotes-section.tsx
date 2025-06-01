@@ -25,14 +25,14 @@ export function QuotesSection() {
         url="https://twitter.com/nathanbrachotte/status/1747244520163397659"
       />
       <Quote
-        text="The DX improvement using nuqs for me has been amazing."
+        text="nuqs is fkn dope"
         author={{
-          name: 'Kingsley O.',
-          handle: '@Kingsley_codes',
+          name: 'kitze',
+          handle: '@thekitze',
           avatar:
-            'https://pbs.twimg.com/profile_images/1679549288689352704/RqDBl9w1_400x400.jpg'
+            'https://pbs.twimg.com/profile_images/1926916598155132928/uE88B1Rz_400x400.jpg'
         }}
-        url="https://twitter.com/Kingsley_codes/status/1748123036543316075"
+        url="https://x.com/thekitze/status/1909576710179471466"
       />
       <Quote
         author={{
