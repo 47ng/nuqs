@@ -11,6 +11,7 @@ import {
 import { renderQueryString } from '../url-encoding'
 import { createAdapterProvider } from './lib/context'
 import type { AdapterOptions } from './lib/defs'
+import { applyChange, filterSearchParams } from './lib/key-isolation'
 import { patchHistory, type SearchParamsSyncEmitter } from './lib/patch-history'
 
 const emitter: SearchParamsSyncEmitter = mitt()
@@ -39,7 +40,7 @@ const NuqsReactAdapterContext = createContext({
   fullPageNavigationOnShallowFalseUpdates: false
 })
 
-function useNuqsReactAdapter() {
+function useNuqsReactAdapter(watchKeys: string[]) {
   const { fullPageNavigationOnShallowFalseUpdates } = useContext(
     NuqsReactAdapterContext
   )
@@ -47,21 +48,30 @@ function useNuqsReactAdapter() {
     if (typeof location === 'undefined') {
       return new URLSearchParams()
     }
-    return new URLSearchParams(location.search)
+    return filterSearchParams(
+      new URLSearchParams(location.search),
+      watchKeys,
+      false
+    )
   })
   useEffect(() => {
     // Popstate event is only fired when the user navigates
     // via the browser's back/forward buttons.
     const onPopState = () => {
-      setSearchParams(new URLSearchParams(location.search))
+      setSearchParams(
+        applyChange(new URLSearchParams(location.search), watchKeys, false)
+      )
     }
-    emitter.on('update', setSearchParams)
+    const onEmitterUpdate = (search: URLSearchParams) => {
+      setSearchParams(applyChange(search, watchKeys, true))
+    }
+    emitter.on('update', onEmitterUpdate)
     window.addEventListener('popstate', onPopState)
     return () => {
-      emitter.off('update', setSearchParams)
+      emitter.off('update', onEmitterUpdate)
       window.removeEventListener('popstate', onPopState)
     }
-  }, [])
+  }, [watchKeys.join('&')])
   const updateUrl = useMemo(
     () => generateUpdateUrlFn(fullPageNavigationOnShallowFalseUpdates),
     [fullPageNavigationOnShallowFalseUpdates]
