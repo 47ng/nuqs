@@ -19,16 +19,16 @@ That's **read** type-safety, and it is fairly easy to achieve.
 
 You could stop here and wonder why you'd need another third party library, until
 you need to **write** search params with _complex_ state. Anything that doesn't
-trivially serialise using `.toString(){:ts}` will need a _serialisation_ step that matches
+trivially stringify using `.toString(){:ts}` will need a _serialisation_ step that matches
 the parsing <small>(math nerds call this property _bijectivity_)</small>.
 
 Validation libraries don't provide the reverse transform from an object or data type
 back to the string it got transformed from. To address this, nuqs comes with [built-in parsers](/docs/parsers/built-in)
 for common data types, but you can also [make your own](docs/parsers/making-your-own)
-for giving a beautiful, compact representation in the URL to your complex data types
-<small>(because URL-encoded JSON is kinda ugly)</small>.
+to give your complex data types a beautiful, **compact** representation in the URL
+<small>(because URL-encoded JSON is verbose and rather ugly)</small>.
 
-**Compact** here is also an important property: URLs have a size limit, much like local storage
+Compacity here is the important property: URLs have a size limit, much like local storage
 or cookies.
 
 While 2000 characters is safe, the HTTP spec allows a bit more headroom at 8KB, but
@@ -36,6 +36,14 @@ practical limitations will be those of the medium you share your URL through, an
 the (un)willingness of users to click very long links. Remember:
 
 > The URL is the first piece of UI your users will see. Design it as such.
+
+<Callout title="Tip: what state goes in the URL?">
+  Only store state in the URL that you want to **share with others** (including your future self, with bookmarks
+  and history navigation).
+
+  Putting state there only because it's convenient for it to persist across page reloads will likely
+  make you overuse this pattern.
+</Callout>
 
 ## Deserialise, parse, validate
 
@@ -64,7 +72,7 @@ One of the lesser known issues with the
 (that most routers use to update the URL without doing a full page load) is that
 **browsers rate-limit URL updates**, for security reasons.
 
-Call updates too quickly and it will throw an error, potentially crashing your app
+Calling updates too quickly will throw an error, potentially crashing your app
 in the process.
 
 Not all browsers are equal on this rate limiting: Chrome and Firefox allow about 50ms between calls
@@ -77,13 +85,13 @@ You could solve this by keeping inputs _uncontrolled_ and deferring the URL upda
 a later time (after a debounce timeout or the press of a button), but controlled inputs have their
 purpose. If you want to follow external URL updates to reset their state, or if other
 parts of the React tree need this state, call `useQueryState(s){:ts}` anywhere you need
-access to that shared state, and nuqs will **lift the state _out_** into the URL for you,
-the same way you would use a global state manager like Zustand, Jotai etc.
+access to that shared state (the same way you would use a global state manager like Zustand, Jotai etc.),
+and nuqs will **lift the state _out_** into the URL for you.
 
 Rather than requiring rigidity in userland, nuqs embraces browser limits and solves the time safety
 problem with a **throttled queue** and **optimistic URL updates**.
 
-This also allows batching state updates from different sources, and stitching them together
+This also allows **batching** state updates from different sources, and **stitching** them together
 automatically, which is one of the most encountered pain points when doing this manually.
 
 ```ts
