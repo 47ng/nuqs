@@ -12,7 +12,7 @@ const commonConfig = {
     'react-router-dom',
     'react-router'
   ],
-  treeshake: false,
+  treeshake: true,
   tsconfig: 'tsconfig.build.json'
 } satisfies Options
 
