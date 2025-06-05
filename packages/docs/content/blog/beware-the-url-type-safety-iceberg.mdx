@@ -1,18 +1,18 @@
 ---
-title: 'The URL Type-Safety Iceberg'
+title: Beware The URL Type-Safety Iceberg
 description: Type-safe URL state is only the visible part. There are more dangers below.
 author: François Best
-date: 2025-06-04
+date: 2025-06-05
 ---
 
-The nuqs tagline, _"type-safe search params state manager for React"_, only represents
-a small fraction of what nuqs does under the hood. Type-safety is only the tip of the iceberg,
-and there are dangers hidden under the water line that you (or better, your tools) need to be aware of.
+The nuqs tagline, _"**type-safe search params** state manager for React"_, only represents
+a small fraction of what nuqs does under the hood. Type-safety is only the tip of the iceberg.
+There are hidden dangers beneath the surface that you (or better, your tools) need to be aware of.
 
 ## Read vs Write
 
 One of the first things people do when they want type-safe URL state is to
-bring in validation libraries (Zod, Valibot, ArkType, anything Standard Schema)
+bring in validation libraries (Zod, Valibot, ArkType, anything [Standard Schema](https://standardschema.dev/) compliant)
 to parse `URLSearchParams{:ts}` into valid data types they can use in their apps.
 
 That's **read** type-safety, and it is fairly easy to achieve.
@@ -111,19 +111,18 @@ const randomCoordinates = () => {
 </Callout>
 
 The upcoming [debounce feature](https://github.com/47ng/nuqs/pull/900) makes this process
-even more apparent, with the additionnal complexity of having to handle aborting pending updates
+even more apparent, with the additional complexity of having to handle aborting pending updates
 when the user navigates away from the page they're on, to avoid stale state updates being
 applied on the wrong pathname or overriding link state (last user action wins).
 
 ## Immutability
 
-Once you've shared URLs out in the wild, they become **immutable**.
+Once you've shared URLs out in the wild, they become **immutable**. But your application is anything but immutable.
 
-But your application is anything but immutable. The statefulness you introduce by adding
-URL state makes it akin to a database schema. Each shared URL is an immutable database
-snapshot that your app needs to be able to process throughout its lifetime, to honor the promise
-encoded in those links. But it should not prevent you from making changes in the expected
-schema your app accepts.
+The statefulness you introduce by adding URL state makes it akin to a database schema.
+Each shared URL is an immutable database snapshot that your app needs to be able to process
+throughout its lifetime, to honor the promise encoded in those links. But it should not
+prevent you from making changes in the expected schema your app accepts.
 
 Just like database schemas, we can handle this with **migrations**:
 
@@ -185,18 +184,18 @@ export function middleware(request: NextRequest) {
 
 ## Conclusion
 
-Achieving type-safety for URL state is not the endgame: there are other things
-that URL state management libraries need to deal with to provide truly
+Achieving type-safety for URL state is not the endgame, but it's the beginning of a journey:
+there are other things that URL state management libraries need to deal with to provide truly
 safe and durable state management.
 
 This post is an excerpt of my talk at React Paris, watch it here for more details and tips:
 
 <iframe
-  className='aspect-video w-full mx-auto'
   src="https://www.youtube-nocookie.com/embed/U__Rwsp8v78?si=sQgg-HJTMoy_mt7K&amp;start=34"
   title="YouTube video player"
   frameBorder="0"
   allow="autoplay; encrypted-media; picture-in-picture; web-share"
   referrerPolicy="strict-origin-when-cross-origin"
   allowFullScreen
+  className='aspect-video w-full max-w-2xl mx-auto'
 />
