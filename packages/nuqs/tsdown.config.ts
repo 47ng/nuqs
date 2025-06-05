@@ -1,11 +1,9 @@
-import { readFile, writeFile } from 'node:fs/promises'
-import { join } from 'node:path'
-import { styleText } from 'node:util'
-import { defineConfig, type Options } from 'tsup'
+import { defineConfig, type Options, type UserConfig } from 'tsdown'
 
 const commonConfig = {
+  clean: true,
   format: ['esm'],
-  experimentalDts: true,
+  dts: true,
   outDir: 'dist',
   external: [
     'next',
@@ -14,7 +12,6 @@ const commonConfig = {
     'react-router-dom',
     'react-router'
   ],
-  splitting: true,
   treeshake: true,
   tsconfig: 'tsconfig.build.json'
 } satisfies Options
@@ -39,27 +36,13 @@ const entrypoints = {
   }
 }
 
-export default defineConfig([
+const config: UserConfig = defineConfig([
   // Client bundles
   {
     ...commonConfig,
     entry: entrypoints.client,
-    async onSuccess() {
-      await Promise.all(
-        Object.keys(entrypoints.client).map(async entry => {
-          const filePath = join(commonConfig.outDir, `${entry}.js`)
-          const fileContents = await readFile(filePath, 'utf-8')
-          const withUseClientDirective = `'use client';\n\n${fileContents}`
-          await writeFile(filePath, withUseClientDirective)
-          console.info(
-            [
-              styleText('green', 'USE'),
-              styleText('bold', filePath.padEnd(29)),
-              styleText('dim', 'prepended "use client"')
-            ].join(' ')
-          )
-        })
-      )
+    outputOptions: {
+      intro: ({ isEntry }) => (isEntry ? "'use client';\n" : '')
     }
   },
   // Server bundle
@@ -67,4 +50,6 @@ export default defineConfig([
     ...commonConfig,
     entry: entrypoints.server
   }
-])
+]) as UserConfig
+
+export default config

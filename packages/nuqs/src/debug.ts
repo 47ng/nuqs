@@ -1,6 +1,6 @@
-export const debugEnabled = isDebugEnabled()
+export const debugEnabled: boolean = isDebugEnabled()
 
-export function debug(message: string, ...args: any[]) {
+export function debug(message: string, ...args: any[]): void {
   if (!debugEnabled) {
     return
   }
@@ -14,14 +14,14 @@ export function debug(message: string, ...args: any[]) {
   }
 }
 
-export function warn(message: string, ...args: any[]) {
+export function warn(message: string, ...args: any[]): void {
   if (!debugEnabled) {
     return
   }
   console.warn(message, ...args)
 }
 
-export function sprintf(base: string, ...args: any[]) {
+export function sprintf(base: string, ...args: any[]): string {
   return base.replace(/%[sfdO]/g, match => {
     const arg = args.shift()
     if (match === '%O' && arg) {

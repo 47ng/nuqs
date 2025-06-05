@@ -4,7 +4,7 @@ import type { Options } from './defs'
 import { error } from './errors'
 import { getDefaultThrottle } from './utils'
 
-export const FLUSH_RATE_LIMIT_MS = getDefaultThrottle()
+export const FLUSH_RATE_LIMIT_MS: number = getDefaultThrottle()
 
 type UpdateMap = Map<string, string | null>
 const updateQueue: UpdateMap = new Map()
@@ -21,11 +21,11 @@ const transitionsQueue: Set<React.TransitionStartFunction> = new Set()
 let lastFlushTimestamp = 0
 let flushPromiseCache: Promise<URLSearchParams> | null = null
 
-export function getQueuedValue(key: string) {
+export function getQueuedValue(key: string): string | null | undefined {
   return updateQueue.get(key)
 }
 
-export function resetQueue() {
+export function resetQueue(): void {
   updateQueue.clear()
   transitionsQueue.clear()
   queueOptions.history = 'replace'
@@ -42,7 +42,7 @@ export function enqueueQueryStringUpdate<Value>(
     Options,
     'history' | 'scroll' | 'shallow' | 'startTransition' | 'throttleMs'
   >
-) {
+): string | null {
   const serializedOrNull = value === null ? null : serialize(value)
   debug('[nuqs queue] Enqueueing %s=%s %O', key, serializedOrNull, options)
   updateQueue.set(key, serializedOrNull)
@@ -87,7 +87,7 @@ export function scheduleFlushToURL({
 }: Pick<
   AdapterInterface,
   'updateUrl' | 'getSearchParamsSnapshot' | 'rateLimitFactor'
->) {
+>): Promise<URLSearchParams> {
   if (flushPromiseCache === null) {
     flushPromiseCache = new Promise<URLSearchParams>((resolve, reject) => {
       if (!Number.isFinite(queueOptions.throttleMs)) {
@@ -185,7 +185,7 @@ function flushUpdateQueue({
 export function compose(
   fns: React.TransitionStartFunction[],
   final: () => void
-) {
+): void {
   const recursiveCompose = (index: number) => {
     if (index === fns.length) {
       return final()

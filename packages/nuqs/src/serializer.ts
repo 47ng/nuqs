@@ -4,6 +4,25 @@ import { renderQueryString } from './url-encoding'
 
 type Base = string | URLSearchParams | URL
 
+type SerializeFunction<Parsers extends ParserMap> = {
+  /**
+   * Generate a query string for the given values.
+   */
+  (values: Partial<Nullable<inferParserType<Parsers>>>): string
+  /**
+   * Append/amend the query string of the given base with the given values.
+   *
+   * Existing search param values will kept, unless:
+   * - the value is null, in which case the search param will be deleted
+   * - another value is given for an existing key, in which case the
+   *  search param will be updated
+   */
+  (
+    base: Base,
+    values: Partial<Nullable<inferParserType<Parsers>>> | null
+  ): string
+}
+
 export function createSerializer<Parsers extends ParserMap>(
   parsers: Parsers,
   {
@@ -12,7 +31,7 @@ export function createSerializer<Parsers extends ParserMap>(
   }: Pick<Options, 'clearOnDefault'> & {
     urlKeys?: UrlKeys<Parsers>
   } = {}
-) {
+): SerializeFunction<Parsers> {
   type Values = Partial<Nullable<inferParserType<Parsers>>>
 
   /**
