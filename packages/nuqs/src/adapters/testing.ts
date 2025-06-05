@@ -27,25 +27,26 @@ export function NuqsTestingAdapter({
   if (resetUrlUpdateQueueOnMount) {
     resetQueue()
   }
-  const useAdapter = (): AdapterInterface => ({
-    searchParams: new URLSearchParams(props.searchParams),
-    updateUrl(search, options) {
-      props.onUrlUpdate?.({
-        searchParams: search,
-        queryString: renderQueryString(search),
-        options
-      })
-    },
-    getSearchParamsSnapshot() {
-      return new URLSearchParams(props.searchParams)
-    },
-    rateLimitFactor: props.rateLimitFactor ?? 0
-  })
-  return createElement(
-    context.Provider,
-    { value: { useAdapter } },
-    props.children
+
+  context.setKey(
+    'useAdapter',
+    (): AdapterInterface => ({
+      searchParams: new URLSearchParams(props.searchParams),
+      updateUrl(search, options) {
+        props.onUrlUpdate?.({
+          searchParams: search,
+          queryString: renderQueryString(search),
+          options
+        })
+      },
+      getSearchParamsSnapshot() {
+        return new URLSearchParams(props.searchParams)
+      },
+      rateLimitFactor: props.rateLimitFactor ?? 0
+    })
   )
+
+  return props.children
 }
 
 /**

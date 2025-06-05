@@ -131,7 +131,8 @@
     "prepack": "./scripts/prepack.sh"
   },
   "dependencies": {
-    "mitt": "^3.0.1"
+    "mitt": "^3.0.1",
+    "nanostores": "^1.0.1"
   },
   "peerDependencies": {
     "@remix-run/react": ">=2",

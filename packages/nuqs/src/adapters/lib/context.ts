@@ -1,4 +1,5 @@
-import { createContext, createElement, useContext, type ReactNode } from 'react'
+import { map } from 'nanostores'
+import { createElement, Fragment, type ReactNode } from 'react'
 import { debugEnabled } from '../../debug'
 import { error } from '../../errors'
 import type { UseAdapterHook } from './defs'
@@ -7,12 +8,11 @@ export type AdapterContext = {
   useAdapter: UseAdapterHook
 }
 
-export const context = createContext<AdapterContext>({
+export const context = map<AdapterContext>({
   useAdapter() {
     throw new Error(error(404))
   }
 })
-context.displayName = 'NuqsAdapterContext'
 
 declare global {
   interface Window {
@@ -36,16 +36,14 @@ if (debugEnabled && typeof window !== 'undefined') {
  * @returns
  */
 export function createAdapterProvider(useAdapter: UseAdapterHook) {
+  context.setKey('useAdapter', useAdapter)
+
   return ({ children, ...props }: { children: ReactNode }) =>
-    createElement(
-      context.Provider,
-      { ...props, value: { useAdapter } },
-      children
-    )
+    createElement(Fragment, { ...props }, children)
 }
 
 export function useAdapter() {
-  const value = useContext(context)
+  const value = context.get()
   if (!('useAdapter' in value)) {
     throw new Error(error(404))
   }
