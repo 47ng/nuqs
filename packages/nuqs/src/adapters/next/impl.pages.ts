@@ -3,7 +3,6 @@ import type { NextRouter } from 'next/router'
 import { useCallback, useMemo } from 'react'
 import { debug } from '../../debug'
 import { renderQueryString } from '../../url-encoding'
-import { createAdapterProvider, type AdapterProvider } from '../lib/context'
 import type { AdapterInterface, UpdateUrlFunction } from '../lib/defs'
 
 declare global {
@@ -88,10 +87,6 @@ export function useNuqsNextPagesRouterAdapter(): AdapterInterface {
     updateUrl
   }
 }
-
-export const NuqsAdapter: AdapterProvider = createAdapterProvider(
-  useNuqsNextPagesRouterAdapter
-)
 
 export function getAsPathPathname(asPath: string): string {
   return asPath
