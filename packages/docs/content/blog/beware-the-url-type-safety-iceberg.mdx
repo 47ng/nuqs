@@ -229,10 +229,9 @@ This is often encountered with a `?modalOpen=true` state, where the Back/Forward
 can conflict with the X button to close the modal. Depending on whether the user opened the
 modal through the UI or landed on it via a link, the Back button might have different behaviours.
 
-This is called **breaking the Back button**, and it leads to a frustrating user experience.
-Handling it properly involves a few steps:
+**Breaking the Back button** leads to a frustrating user experience, and handling it properly involves a few steps:
 
-- Being aware that the users can enter your app **at any state**
+- Being aware that users can enter your app **at any state**
 - From that state, they can use **either** the Back button or your UI
 - Remember that Back/Forward is a contract for **navigation-like interactions**
 
