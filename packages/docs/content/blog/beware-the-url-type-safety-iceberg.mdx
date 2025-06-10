@@ -1,0 +1,258 @@
+---
+title: Beware The URL Type-Safety Iceberg
+description: Type-safe URL state is only the visible part. There are more dangers below.
+author: François Best
+date: 2025-06-05
+---
+
+The nuqs tagline, _"**type-safe search params** state manager for React"_, only represents
+a small fraction of what nuqs does under the hood. Type-safety is only the tip of the iceberg.
+There are hidden dangers beneath the surface that you (or, better, your tools) need to be aware of.
+
+## Read vs Write
+
+One of the first things people do when they want type-safe URL state is to
+bring in validation libraries (Zod, Valibot, ArkType, anything [Standard Schema](https://standardschema.dev/) compliant)
+to parse `URLSearchParams{:ts}` into valid data types they can use in their apps.
+
+That's **read** type-safety, and it is fairly easy to achieve.
+
+You could stop here and wonder why you'd need another third-party library, until
+you need to **write** search params with _complex_ state. Anything that doesn't
+trivially stringify using `.toString(){:ts}` will need a _serialisation_ step that matches
+the parsing <small>(math nerds call this property _bijectivity_)</small>.
+
+Validation libraries don't provide the reverse transform from an object or data type
+back to the string it got transformed from. To address this, nuqs comes with [built-in parsers](/docs/parsers/built-in)
+for common data types, but you can also [make your own](docs/parsers/making-your-own)
+to give your complex data types a beautiful, **compact** representation in the URL.
+
+Compactness here is the important property: URLs have a size limit, much like local storage
+or cookies.
+
+While 2000 characters is generally considered safe, the HTTP spec allows a bit more headroom at 8KB, but
+practical limitations will be those of the medium you share your URL through, and
+the (un)willingness of users to click very long links. Remember:
+
+> The URL is the first piece of UI your users will see. Design it as such.
+
+See for yourself: which link would you rather click on?
+
+import { URLComparison } from './beware-the-url-type-safety-iceberg.components'
+import { Suspense } from 'react'
+
+<Suspense fallback={
+  <div className="rounded-md border border-dashed px-2 pt-2">
+    <div className="flex gap-4 pl-1 text-sm text-gray-600 dark:text-gray-400 animate-pulse">
+      <label className='flex gap-2'>
+        <input type="checkbox" disabled />
+        Highlighting
+      </label>
+      <label className="flex gap-2">
+        <input type="checkbox" disabled checked />
+        Encoding
+      </label>
+    </div>
+    <ol className="space-y-4">
+      <li className="break-all">
+        {'https://example.com?page=1&size=50&filters=genre:fantasy&sort=releaseYear:asc'}
+      </li>
+      <li className="break-all">
+        {'https://example.com?pagination=%7B%22pageIndex%22%3A1%2C%22pageSize%22%3A50%7D&filters=%5B%7B%22id%22%3A%22genre%22%2C%22value%22%3A%22fantasy%22%7D%5D&orderBy=%7B%22id%22%3A%22releaseYear%22%2C%22desc%22%3Afalse%7D'}
+      </li>
+    </ol>
+  </div>
+}>
+  <URLComparison/>
+</Suspense>
+
+<Callout title="Tip: what state goes in the URL?">
+  Only store state in the URL that you want to **share with others** (including your future self, with bookmarks
+  and history navigation).
+
+  Putting state there only because it's convenient for it to persist across page reloads will likely
+  make you overuse this pattern.
+</Callout>
+
+## Deserialise, parse, validate
+
+Validation libraries still have a very important purpose: making sure your state is
+**runtime-safe**. Even after deserialisation into the correct data type,
+there may be invalid _values_ you want to avoid, and that you cannot represent with
+static typing alone. Things like:
+
+- A number between -90/+90 or -180/+180 for latitude/longitude coordinates
+- A string formatted in a certain way (like an email or a UUID)
+- A date greater than a given epoch
+
+On read, validation should occur **after** deserialisation, on a data type relatively close
+to the desired output (which is ensured by parsing).
+
+Similarly, on write, validation should occur **before** serialisation, to
+make sure invalid states don't get persisted to the URL.
+
+
+## Time Safety
+
+80% of the nuqs codebase does not deal with _type safety_, but **time safety**.
+
+One of the lesser known issues with the
+[History API](https://developer.mozilla.org/en-US/docs/Web/API/History_API/Working_with_the_History_API)
+(that most routers use to update the URL without doing a full page load) is that
+**browsers rate-limit URL updates**, for security reasons.
+
+Calling updates too quickly will throw an error, potentially crashing your app
+in the process.
+
+Not all browsers are equal on this rate limiting: Chrome and Firefox allow about 50ms between calls
+to be safe, but Safari has much higher limits, and requires about 120ms between calls.
+
+This issue surfaces when binding URL state to a high-frequency input, like a text box
+`<input type="text">{:html}` or a slider `<input type="range">{:html}`.
+
+You could solve this by keeping inputs _uncontrolled_ and deferring the URL update to
+a later time (after a debounce timeout or the press of a button), but controlled inputs have their
+purpose. If you want to follow external URL updates to reset their state, or if other
+parts of the React tree need this state, call `useQueryState(s){:ts}` anywhere you need
+access to that shared state (the same way you would use a global state manager like Zustand, Jotai, etc.),
+and nuqs will **lift the state _out_** into the URL for you.
+
+Rather than requiring rigidity in userland, nuqs embraces browser limits and solves the time safety
+problem with a **throttled queue** and **optimistic URL updates**.
+
+This also allows **batching** state updates from different sources, and **stitching** them together
+automatically, which is one of the most encountered pain points when doing this manually.
+
+```ts
+const [lat, setLat] = useQueryState('lat', parseAsFloat)
+const [lng, setLng] = useQueryState('lng', parseAsFloat)
+
+const randomCoordinates = () => {
+  // These will be batched into a single URL update
+  setLat(Math.random() * 180 - 90)
+  setLng(Math.random() * 360 - 180)
+}
+```
+
+<Callout>
+  You might want to use [`useQueryStates{:ts}`](/docs/batching) for better type-safety when using
+  related states.
+</Callout>
+
+The upcoming [debounce feature](https://github.com/47ng/nuqs/pull/900) makes this process
+even more apparent, with the additional complexity of having to handle aborting pending updates
+when the user navigates away from the page they're on. This prevents stale state updates from being
+applied on the wrong pathname or overriding link state (last user action wins).
+
+## Immutability
+
+Once you've shared URLs out in the wild, they become **immutable**. But your application is anything but immutable.
+
+The statefulness you introduce by adding URL state makes it akin to a database schema.
+Each shared URL is an immutable database snapshot that your app needs to be able to process
+throughout its lifetime, to honour the promise encoded in those links. But it should not
+prevent you from making changes in the expected schema your app accepts.
+
+Just like database schemas, we can handle this with **migrations**:
+
+1. Capture old URLs with a middleware
+2. Migrate the old state schema into what the app currently expects
+3. Redirect to the updated URL to continue
+
+We've [explored declarative ways](https://x.com/fortysevenfx/status/1842162844613112081) to do this,
+but this is something that could benefit more than just nuqs users, so it may materialise
+as a complementary package.
+
+```ts
+// Note: this is a hypothetical API.
+
+const applyMigrations = createURLMigration([
+  {
+    // Transform /?hello=world to /?name=world
+    type: "rename-key",
+    from: "hello",
+    to: "name",
+  },
+  {
+    // Transform /?hello=world&bye-bye=gone to /?hello=world
+    type: "remove-key",
+    key: "bye-bye",
+  },
+  {
+    // Convert /?date=2022-01-01T00:00:00Z to /?date=1640995200000
+    type: "update-value",
+    key: "date",
+    action: (value) => {
+      const date = parseAsIsoDateTime.parse(value);
+      if (date === null) {
+        return null;
+      }
+      return parseAsTimestamp.serialize(date);
+    },
+  },
+  {
+    type: "custom", // Full control (with great power…)
+    action: (request) => {
+      const searchParams = new URLSearchParams(request.nextUrl.searchParams);
+      const value = parseAsFoo.parse(searchParams.get('foo'))
+      searchParams.delete('foo')
+      searchParams.set('bar', parseAsBar.serialize(value))
+      return { applied: true, searchParams }
+    },
+  },
+]);
+
+export function middleware(request: NextRequest) {
+  const result = applyMigrations(request);
+  if (result.applied) {
+    return result.response;
+  }
+  return NextReponse.next();
+}
+```
+
+## Time Travel
+
+When updating the URL, you can choose to either **replace** the current history entry with
+the updated state, or **push** a new one (this is done with the
+`history: 'push' | 'replace'{:ts}` [option](/docs/options#history) in nuqs).
+
+Pushing a new history entry allows you to use the Back/Forward buttons of the browser as an
+undo-redo feature, which looks like Redux Devtools' time travel state debugging.
+
+But this comes at a price: you now have two sources of updates that can manipulate history:
+
+1. The original UI element that triggered the update
+2. The Back/Forward buttons
+
+This is often encountered with a `?modalOpen=true` state, where the Back/Forward buttons
+can conflict with the X button to close the modal. Depending on whether the user opened the
+modal through the UI or landed on it via a link, the Back button might have different behaviours.
+
+This is called **breaking the Back button**, and it leads to a frustrating user experience.
+Handling it properly involves a few steps:
+
+- Being aware that the users can enter your app **at any state**
+- From that state, they can use **either** the Back button or your UI
+- Remember that Back/Forward is a contract for **navigation-like interactions**
+
+The experimental [Navigation API](https://developer.mozilla.org/en-US/docs/Web/API/Navigation_API)
+should hopefully make it easier to handle these cases in the future.
+
+## Conclusion
+
+Achieving type-safety for URL state is not the endgame, but it's the beginning of a journey:
+there are other things that URL state management libraries and application code need to deal
+with, to provide truly safe and durable state management.
+
+This post is an excerpt of my talk at React Paris, watch it here for more details and tips:
+
+<iframe
+  src="https://www.youtube-nocookie.com/embed/U__Rwsp8v78?si=sQgg-HJTMoy_mt7K&amp;start=34"
+  title="YouTube video player"
+  frameBorder="0"
+  allow="autoplay; encrypted-media; picture-in-picture; web-share"
+  referrerPolicy="strict-origin-when-cross-origin"
+  allowFullScreen
+  className='aspect-video w-full max-w-2xl mx-auto'
+/>
