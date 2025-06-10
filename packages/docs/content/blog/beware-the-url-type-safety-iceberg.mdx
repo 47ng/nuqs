@@ -211,11 +211,39 @@ export function middleware(request: NextRequest) {
 }
 ```
 
+## Time Travel
+
+When updating the URL, you can choose to either **replace** the current history entry with
+the updated state, or **push** a new one (this is done with the
+`history: 'push' | 'replace'{:ts}` [option](/docs/options#history) in nuqs).
+
+Pushing a new history entry allows you to use the Back/Forward buttons of the browser as an
+undo-redo feature, which looks like Redux Devtools' time travel state debugging.
+
+But this comes at a price: you now have two sources of updates that can manipulate history:
+
+1. The original UI element that triggered the update
+2. The Back/Forward buttons
+
+This is often encountered with a `?modalOpen=true` state, where the Back/Forward buttons
+can conflict with the X button to close the modal. Depending on whether the user opened the
+modal through the UI or landed on it via a link, the Back button might have different behaviours.
+
+This is called **breaking the Back button**, and it leads to a frustrating user experience.
+Handling it properly involves a few steps:
+
+- Being aware that the users can enter your app **at any state**
+- From that state, they can use **either** the Back button or your UI
+- Remember that Back/Forward is a contract for **navigation-like interactions**
+
+The experimental [Navigation API](https://developer.mozilla.org/en-US/docs/Web/API/Navigation_API)
+should hopefully make it easier to handle these cases in the future.
+
 ## Conclusion
 
 Achieving type-safety for URL state is not the endgame, but it's the beginning of a journey:
-there are other things that URL state management libraries need to deal with to provide truly
-safe and durable state management.
+there are other things that URL state management libraries and application code need to deal
+with, to provide truly safe and durable state management.
 
 This post is an excerpt of my talk at React Paris, watch it here for more details and tips:
 
