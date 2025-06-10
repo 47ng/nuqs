@@ -25,8 +25,7 @@ the parsing <small>(math nerds call this property _bijectivity_)</small>.
 Validation libraries don't provide the reverse transform from an object or data type
 back to the string it got transformed from. To address this, nuqs comes with [built-in parsers](/docs/parsers/built-in)
 for common data types, but you can also [make your own](docs/parsers/making-your-own)
-to give your complex data types a beautiful, **compact** representation in the URL
-<small>(because URL-encoded JSON is verbose and rather ugly)</small>.
+to give your complex data types a beautiful, **compact** representation in the URL.
 
 Compacity here is the important property: URLs have a size limit, much like local storage
 or cookies.
@@ -36,6 +35,36 @@ practical limitations will be those of the medium you share your URL through, an
 the (un)willingness of users to click very long links. Remember:
 
 > The URL is the first piece of UI your users will see. Design it as such.
+
+See for yourself: which link would you rather click on?
+
+import { URLComparison } from './beware-the-url-type-safety-iceberg.components'
+import { Suspense } from 'react'
+
+<Suspense fallback={
+  <div className="rounded-md border border-dashed px-2 pt-2">
+    <div className="flex gap-4 pl-1 text-sm text-gray-600 dark:text-gray-400 animate-pulse">
+      <label className='flex gap-2'>
+        <input type="checkbox" disabled />
+        Highlighting
+      </label>
+      <label className="flex gap-2">
+        <input type="checkbox" disabled checked />
+        Encoding
+      </label>
+    </div>
+    <ol className="space-y-4">
+      <li className="break-all">
+        {'https://example.com?page=1&size=50&filters=genre:fantasy&sort=releaseYear:asc'}
+      </li>
+      <li className="break-all">
+        {'https://example.com?pagination=%7B%22pageIndex%22%3A1%2C%22pageSize%22%3A50%7D&filters=%5B%7B%22id%22%3A%22genre%22%2C%22value%22%3A%22fantasy%22%7D%5D&orderBy=%7B%22id%22%3A%22releaseYear%22%2C%22desc%22%3Afalse%7D'}
+      </li>
+    </ol>
+  </div>
+}>
+  <URLComparison/>
+</Suspense>
 
 <Callout title="Tip: what state goes in the URL?">
   Only store state in the URL that you want to **share with others** (including your future self, with bookmarks
