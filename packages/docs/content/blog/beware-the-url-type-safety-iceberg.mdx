@@ -7,7 +7,7 @@ date: 2025-06-05
 
 The nuqs tagline, _"**type-safe search params** state manager for React"_, only represents
 a small fraction of what nuqs does under the hood. Type-safety is only the tip of the iceberg.
-There are hidden dangers beneath the surface that you (or better, your tools) need to be aware of.
+There are hidden dangers beneath the surface that you (or, better, your tools) need to be aware of.
 
 ## Read vs Write
 
@@ -17,7 +17,7 @@ to parse `URLSearchParams{:ts}` into valid data types they can use in their apps
 
 That's **read** type-safety, and it is fairly easy to achieve.
 
-You could stop here and wonder why you'd need another third party library, until
+You could stop here and wonder why you'd need another third-party library, until
 you need to **write** search params with _complex_ state. Anything that doesn't
 trivially stringify using `.toString(){:ts}` will need a _serialisation_ step that matches
 the parsing <small>(math nerds call this property _bijectivity_)</small>.
@@ -27,10 +27,10 @@ back to the string it got transformed from. To address this, nuqs comes with [bu
 for common data types, but you can also [make your own](docs/parsers/making-your-own)
 to give your complex data types a beautiful, **compact** representation in the URL.
 
-Compacity here is the important property: URLs have a size limit, much like local storage
+Compactness here is the important property: URLs have a size limit, much like local storage
 or cookies.
 
-While 2000 characters is safe, the HTTP spec allows a bit more headroom at 8KB, but
+While 2000 characters is generally considered safe, the HTTP spec allows a bit more headroom at 8KB, but
 practical limitations will be those of the medium you share your URL through, and
 the (un)willingness of users to click very long links. Remember:
 
@@ -82,7 +82,7 @@ there may be invalid _values_ you want to avoid, and that you cannot represent w
 static typing alone. Things like:
 
 - A number between -90/+90 or -180/+180 for latitude/longitude coordinates
-- A string formatted in a certain way (eg: email, UUID)
+- A string formatted in a certain way (like an email or a UUID)
 - A date greater than a given epoch
 
 On read, validation should occur **after** deserialisation, on a data type relatively close
@@ -114,7 +114,7 @@ You could solve this by keeping inputs _uncontrolled_ and deferring the URL upda
 a later time (after a debounce timeout or the press of a button), but controlled inputs have their
 purpose. If you want to follow external URL updates to reset their state, or if other
 parts of the React tree need this state, call `useQueryState(s){:ts}` anywhere you need
-access to that shared state (the same way you would use a global state manager like Zustand, Jotai etc.),
+access to that shared state (the same way you would use a global state manager like Zustand, Jotai, etc.),
 and nuqs will **lift the state _out_** into the URL for you.
 
 Rather than requiring rigidity in userland, nuqs embraces browser limits and solves the time safety
@@ -141,7 +141,7 @@ const randomCoordinates = () => {
 
 The upcoming [debounce feature](https://github.com/47ng/nuqs/pull/900) makes this process
 even more apparent, with the additional complexity of having to handle aborting pending updates
-when the user navigates away from the page they're on, to avoid stale state updates being
+when the user navigates away from the page they're on. This prevents stale state updates from being
 applied on the wrong pathname or overriding link state (last user action wins).
 
 ## Immutability
@@ -150,7 +150,7 @@ Once you've shared URLs out in the wild, they become **immutable**. But your app
 
 The statefulness you introduce by adding URL state makes it akin to a database schema.
 Each shared URL is an immutable database snapshot that your app needs to be able to process
-throughout its lifetime, to honor the promise encoded in those links. But it should not
+throughout its lifetime, to honour the promise encoded in those links. But it should not
 prevent you from making changes in the expected schema your app accepts.
 
 Just like database schemas, we can handle this with **migrations**:
@@ -160,7 +160,7 @@ Just like database schemas, we can handle this with **migrations**:
 3. Redirect to the updated URL to continue
 
 We've [explored declarative ways](https://x.com/fortysevenfx/status/1842162844613112081) to do this,
-but this is something that could benefit more than nuqs users, so it may materialise
+but this is something that could benefit more than just nuqs users, so it may materialise
 as a complementary package.
 
 ```ts
