@@ -63,45 +63,11 @@ export function createLoader<Parsers extends ParserMap>(
 ): LoaderFunction<Parsers> {
   type ParsedSearchParams = inferParserType<Parsers>
 
-  /**
-   * Load & parse search params from (almost) any input.
-   *
-   * While loaders are typically used in the context of a React Router / Remix
-   * loader function, it can also be used in Next.js API routes or
-   * getServerSideProps functions, or even with the app router `searchParams`
-   * page prop (sync or async), if you don't need the cache behaviours.
-   */
   function loadSearchParams(
     input: LoaderInput,
     options?: LoaderOptions<Parsers>
   ): ParsedSearchParams
 
-  /**
-   * Load & parse search params from (almost) any input.
-   *
-   * While loaders are typically used in the context of a React Router / Remix
-   * loader function, it can also be used in Next.js API routes or
-   * getServerSideProps functions, or even with the app router `searchParams`
-   * page prop (sync or async), if you don't need the cache behaviours.
-   *
-   * Note: this async overload makes it easier to use against the `searchParams`
-   * page prop in Next.js 15 app router:
-   *
-   * ```tsx
-   * export default async function Page({ searchParams }) {
-   *   const parsedSearchParamsPromise = loadSearchParams(searchParams)
-   *   return (
-   *     // Pre-render & stream the shell immediately
-   *     <StaticShell>
-   *       <Suspense>
-   *         // Stream the Promise down
-   *         <DynamicComponent searchParams={parsedSearchParamsPromise} />
-   *       </Suspense>
-   *      </StaticShell>
-   *   )
-   * }
-   * ```
-   */
   function loadSearchParams(
     input: Promise<LoaderInput>,
     options?: LoaderOptions<Parsers>
