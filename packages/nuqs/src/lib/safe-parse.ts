@@ -5,7 +5,7 @@ export function safeParse<T>(
   parser: Parser<T>['parse'],
   value: string,
   key?: string
-) {
+): T | null {
   try {
     return parser(value)
   } catch (error) {

@@ -26,7 +26,7 @@ export type UpdateQueuePushArgs = {
   options: AdapterOptions & Pick<Options, 'startTransition'>
 }
 
-export function getSearchParamsSnapshotFromLocation() {
+export function getSearchParamsSnapshotFromLocation(): URLSearchParams {
   return new URLSearchParams(location.search)
 }
 
@@ -37,16 +37,16 @@ export class ThrottledQueue {
     scroll: false,
     shallow: true
   }
-  timeMs = defaultRateLimit.timeMs
+  timeMs: number = defaultRateLimit.timeMs
   transitions: TransitionSet = new Set()
   resolvers: Resolvers<URLSearchParams> | null = null
-  controller = new AbortController()
+  controller: AbortController = new AbortController()
   lastFlushedAt = 0
 
   push(
     { key, query, options }: UpdateQueuePushArgs,
-    timeMs = defaultRateLimit.timeMs
-  ) {
+    timeMs: number = defaultRateLimit.timeMs
+  ): void {
     debug('[nuqs gtq] Enqueueing %s=%s %O', key, query, options)
     // Enqueue update
     this.updateMap.set(key, query)
@@ -128,7 +128,7 @@ export class ThrottledQueue {
     return this.resolvers.promise
   }
 
-  abort() {
+  abort(): string[] {
     this.controller.abort()
     this.controller = new AbortController()
     // todo: Better abort handling
@@ -200,4 +200,4 @@ export class ThrottledQueue {
   }
 }
 
-export const globalThrottleQueue = new ThrottledQueue()
+export const globalThrottleQueue: ThrottledQueue = new ThrottledQueue()

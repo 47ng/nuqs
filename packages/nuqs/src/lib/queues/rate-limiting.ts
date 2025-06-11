@@ -25,4 +25,4 @@ export function debounce(timeMs: number): LimitUrlUpdates {
   return { method: 'debounce', timeMs }
 }
 
-export const defaultRateLimit = throttle(getDefaultThrottle())
+export const defaultRateLimit: LimitUrlUpdates = throttle(getDefaultThrottle())

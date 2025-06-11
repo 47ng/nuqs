@@ -2,7 +2,7 @@ import type { Emitter } from 'mitt'
 import mitt from 'mitt'
 import { debug } from '../debug'
 import { timeout } from '../timeout'
-import { withResolvers } from '../with-resolvers'
+import { withResolvers, type Resolvers } from '../with-resolvers'
 import {
   getSearchParamsSnapshotFromLocation,
   globalThrottleQueue,
@@ -14,20 +14,20 @@ import { useSyncExternalStores } from './useSyncExternalStores'
 
 export class DebouncedPromiseQueue<ValueType, OutputType> {
   callback: (value: ValueType) => Promise<OutputType>
-  resolvers = withResolvers<OutputType>()
-  controller = new AbortController()
+  resolvers: Resolvers<OutputType> = withResolvers<OutputType>()
+  controller: AbortController = new AbortController()
   queuedValue: ValueType | undefined = undefined
 
   constructor(callback: (value: ValueType) => Promise<OutputType>) {
     this.callback = callback
   }
 
-  abort() {
+  abort(): void {
     this.controller.abort()
     this.queuedValue = undefined
   }
 
-  push(value: ValueType, timeMs: number) {
+  push(value: ValueType, timeMs: number): Promise<OutputType> {
     this.queuedValue = value
     this.controller.abort()
     this.controller = new AbortController()
@@ -74,7 +74,7 @@ export class DebounceController {
     this.throttleQueue = throttleQueue
   }
 
-  useQueuedQueries(keys: string[]) {
+  useQueuedQueries(keys: string[]): Record<string, string | null | undefined> {
     return useSyncExternalStores(
       keys,
       (key, callback) => {
@@ -152,7 +152,7 @@ export class DebounceController {
     }
   }
 
-  abortAll() {
+  abortAll(): void {
     for (const [key, queue] of this.queues.entries()) {
       debug(
         '[nuqs dqc] Aborting debounced queue %s=%s',
@@ -167,7 +167,7 @@ export class DebounceController {
     this.queues.clear()
   }
 
-  getQueuedQuery(key: string) {
+  getQueuedQuery(key: string): string | null | undefined {
     // The debounced queued values are more likely to be up-to-date
     // than any updates pending in the throttle queue, which comes last
     // in the update chain.
@@ -179,4 +179,6 @@ export class DebounceController {
   }
 }
 
-export const debounceController = new DebounceController(globalThrottleQueue)
+export const debounceController: DebounceController = new DebounceController(
+  globalThrottleQueue
+)

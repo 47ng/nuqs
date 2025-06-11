@@ -1,7 +1,7 @@
 export function compose(
   fns: React.TransitionStartFunction[],
   final: () => void
-) {
+): void {
   const recursiveCompose = (index: number) => {
     if (index === fns.length) {
       return final()
