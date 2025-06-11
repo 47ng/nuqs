@@ -1,4 +1,4 @@
-import { createAdapterProvider } from './lib/context'
+import { createAdapterProvider, type AdapterProvider } from './lib/context'
 import type { AdapterInterface } from './lib/defs'
 import { useNuqsNextAppRouterAdapter } from './next/impl.app'
 import { isPagesRouter, useNuqsNextPagesRouterAdapter } from './next/impl.pages'
@@ -18,4 +18,5 @@ function useNuqsNextAdapter(): AdapterInterface {
   }
 }
 
-export const NuqsAdapter = createAdapterProvider(useNuqsNextAdapter)
+export const NuqsAdapter: AdapterProvider =
+  createAdapterProvider(useNuqsNextAdapter)

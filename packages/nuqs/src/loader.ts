@@ -12,16 +12,7 @@ export type LoaderOptions<Parsers extends ParserMap> = {
   urlKeys?: UrlKeys<Parsers>
 }
 
-export type LoaderFunction<Parsers extends ParserMap> = ReturnType<
-  typeof createLoader<Parsers>
->
-
-export function createLoader<Parsers extends ParserMap>(
-  parsers: Parsers,
-  { urlKeys = {} }: LoaderOptions<Parsers> = {}
-) {
-  type ParsedSearchParams = inferParserType<Parsers>
-
+export type LoaderFunction<Parsers extends ParserMap> = {
   /**
    * Load & parse search params from (almost) any input.
    *
@@ -30,11 +21,10 @@ export function createLoader<Parsers extends ParserMap>(
    * getServerSideProps functions, or even with the app router `searchParams`
    * page prop (sync or async), if you don't need the cache behaviours.
    */
-  function loadSearchParams(
+  (
     input: LoaderInput,
     options?: LoaderOptions<Parsers>
-  ): ParsedSearchParams
-
+  ): inferParserType<Parsers>
   /**
    * Load & parse search params from (almost) any input.
    *
@@ -61,6 +51,23 @@ export function createLoader<Parsers extends ParserMap>(
    * }
    * ```
    */
+  (
+    input: Promise<LoaderInput>,
+    options?: LoaderOptions<Parsers>
+  ): Promise<inferParserType<Parsers>>
+}
+
+export function createLoader<Parsers extends ParserMap>(
+  parsers: Parsers,
+  { urlKeys = {} }: LoaderOptions<Parsers> = {}
+): LoaderFunction<Parsers> {
+  type ParsedSearchParams = inferParserType<Parsers>
+
+  function loadSearchParams(
+    input: LoaderInput,
+    options?: LoaderOptions<Parsers>
+  ): ParsedSearchParams
+
   function loadSearchParams(
     input: Promise<LoaderInput>,
     options?: LoaderOptions<Parsers>

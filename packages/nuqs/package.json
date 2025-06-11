@@ -121,9 +121,9 @@
     }
   },
   "scripts": {
-    "dev": "tsup --watch",
+    "dev": "tsdown --watch",
     "prebuild": "rm -rf dist",
-    "build": "tsup",
+    "build": "tsdown",
     "postbuild": "size-limit --json > size.json",
     "test": "pnpm run --stream '/^test:/'",
     "test:unit": "vitest run --typecheck",
@@ -156,7 +156,6 @@
     }
   },
   "devDependencies": {
-    "@microsoft/api-extractor": "7.52.3",
     "@remix-run/react": "^2.16.5",
     "@size-limit/preset-small-lib": "^11.2.0",
     "@testing-library/dom": "^10.4.0",
@@ -175,7 +174,7 @@
     "react-dom": "catalog:react19",
     "react-router-dom": "6.30.0",
     "size-limit": "^11.2.0",
-    "tsup": "^8.4.0",
+    "tsdown": "^0.12.7",
     "typescript": "^5.8.3",
     "vitest": "^3.1.1",
     "vitest-package-exports": "^0.1.1"

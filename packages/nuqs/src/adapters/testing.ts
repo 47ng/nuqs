@@ -1,4 +1,4 @@
-import { createElement, type ReactNode } from 'react'
+import { createElement, type ReactElement, type ReactNode } from 'react'
 import { resetQueue } from '../update-queue'
 import { renderQueryString } from '../url-encoding'
 import { context } from './lib/context'
@@ -23,7 +23,7 @@ type TestingAdapterProps = {
 export function NuqsTestingAdapter({
   resetUrlUpdateQueueOnMount = true,
   ...props
-}: TestingAdapterProps) {
+}: TestingAdapterProps): ReactElement {
   if (resetUrlUpdateQueueOnMount) {
     resetQueue()
   }
@@ -69,7 +69,7 @@ export function withNuqsTestingAdapter(
     children
   }: {
     children: ReactNode
-  }) {
+  }): ReactElement {
     return createElement(
       NuqsTestingAdapter,
       // @ts-expect-error - Ignore missing children error

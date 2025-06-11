@@ -2,7 +2,7 @@ import { map } from 'nanostores'
 import { createElement, Fragment, type ReactNode } from 'react'
 import { debugEnabled } from '../../debug'
 import { error } from '../../errors'
-import type { UseAdapterHook } from './defs'
+import type { AdapterInterface, UseAdapterHook } from './defs'
 
 export type AdapterContext = {
   useAdapter: UseAdapterHook
@@ -27,6 +27,12 @@ if (debugEnabled && typeof window !== 'undefined') {
   window.__NuqsAdapterContext = context
 }
 
+export type AdapterProvider = ({
+  children
+}: {
+  children: ReactNode
+}) => ReactElement<ProviderProps<AdapterContext>>
+
 /**
  * Create a custom adapter (context provider) for nuqs to work with your framework / router.
  *
@@ -38,9 +44,6 @@ if (debugEnabled && typeof window !== 'undefined') {
 export function createAdapterProvider(useAdapter: UseAdapterHook) {
   context.setKey('useAdapter', useAdapter)
 
-  return ({ children, ...props }: { children: ReactNode }) =>
-    createElement(Fragment, { ...props }, children)
-}
 
 export function useAdapter() {
   const value = context.get()

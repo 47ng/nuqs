@@ -15,7 +15,7 @@ declare global {
   }
 }
 
-export function getSearchParams(url: string | URL) {
+export function getSearchParams(url: string | URL): URLSearchParams {
   if (url instanceof URL) {
     return url.searchParams
   }
@@ -32,7 +32,7 @@ export function getSearchParams(url: string | URL) {
 export function patchHistory(
   emitter: SearchParamsSyncEmitter,
   adapter: string
-) {
+): void {
   if (typeof history === 'undefined') {
     return
   }
