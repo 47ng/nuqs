@@ -986,4 +986,10 @@ Made with ❤️ by [François Best](https://francoisbest.com)
 Using this package at work ? [Sponsor me](https://github.com/sponsors/franky47)
 to help with support and maintenance.
 
+<div>
+nuqs is part of the &nbsp;<a href="https://vercel.com/oss"><img alt="Vercel OSS Program" src="https://vercel.com/oss/program-badge.svg" /></a>&nbsp;<small><a href="https://vercel.com/blog/spring25-oss-program">(spring 2025 cohort)</a></small>
+</div>
+
+<br/>
+
 ![Project analytics and stats](https://repobeats.axiom.co/api/embed/3ee740e4729dce3992bfa8c74645cfebad8ba034.svg 'Repobeats analytics image')
