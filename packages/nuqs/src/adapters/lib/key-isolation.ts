@@ -4,7 +4,7 @@ export function applyChange(
   newValue: URLSearchParams,
   keys: string[],
   copy: boolean
-) {
+): (oldValue: URLSearchParams) => URLSearchParams {
   return (oldValue: URLSearchParams) => {
     const hasChanged =
       keys.length === 0
@@ -35,7 +35,7 @@ export function filterSearchParams(
   search: URLSearchParams,
   keys: string[],
   copy: boolean
-) {
+): URLSearchParams {
   if (keys.length === 0) {
     return search
   }
