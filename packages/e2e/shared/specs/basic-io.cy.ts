@@ -5,6 +5,7 @@ export const testBasicIO = createTest('Basic I/O', ({ path }) => {
     cy.visit(path + '?test=init')
     cy.contains('#hydration-marker', 'hydrated').should('be.hidden')
     cy.get('#state').should('have.text', 'init')
+    cy.get('#null-detector').should('have.text', 'pass')
   })
 
   it('writes the value to the URL', () => {
@@ -23,6 +24,7 @@ export const testBasicIO = createTest('Basic I/O', ({ path }) => {
     cy.get('button#set-pass').click()
     cy.get('#state').should('have.text', 'pass')
     cy.location('search').should('eq', '?test=pass')
+    cy.get('#null-detector').should('have.text', 'pass')
   })
 
   it('removes the value from the URL', () => {

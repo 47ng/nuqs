@@ -1,0 +1,51 @@
+import { describe, expect, it, vi } from 'vitest'
+import { timeout } from './timeout'
+
+describe('utils: timeout', () => {
+  it('should resolve after the timeout if no signal is triggered', () => {
+    vi.useFakeTimers()
+    const spy = vi.fn()
+    const controller = new AbortController()
+    timeout(() => spy(), 100, controller.signal)
+    vi.advanceTimersToNextTimer()
+    expect(spy).toHaveBeenCalledOnce()
+  })
+  it('should abort the timeout if the signal is triggered', () => {
+    vi.useFakeTimers()
+    const spy = vi.fn()
+    const controller = new AbortController()
+    timeout(() => spy(), 100, controller.signal)
+    controller.abort()
+    vi.advanceTimersToNextTimer()
+    expect(spy).not.toHaveBeenCalled()
+  })
+  it('does not throw when aborting after timeout', () => {
+    vi.useFakeTimers()
+    const spy = vi.fn()
+    const controller = new AbortController()
+    timeout(() => spy(), 100, controller.signal)
+    vi.advanceTimersToNextTimer()
+    expect(() => controller.abort()).not.toThrow()
+    expect(spy).toHaveBeenCalledOnce()
+  })
+  it('reuses the same signal to abort multiple timeouts', () => {
+    vi.useFakeTimers()
+    const spy = vi.fn()
+    const controller = new AbortController()
+    timeout(() => spy(), 100, controller.signal)
+    timeout(() => spy(), 100, controller.signal)
+    controller.abort()
+    vi.advanceTimersToNextTimer()
+    expect(spy).not.toHaveBeenCalled()
+  })
+  it('aborts when using a signal already used before', () => {
+    vi.useFakeTimers()
+    const spy = vi.fn()
+    const controller = new AbortController()
+    timeout(() => spy(), 100, controller.signal)
+    controller.abort()
+    timeout(() => spy(), 100, controller.signal)
+    vi.advanceTimersToNextTimer()
+    expect(spy).toHaveBeenCalledOnce()
+  })
+})

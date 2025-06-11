@@ -9,10 +9,15 @@ import {
   type ReactElement,
   type ReactNode
 } from 'react'
-import { renderQueryString } from '../url-encoding'
+import { debug } from '../lib/debug'
+import { renderQueryString } from '../lib/url-encoding'
 import { createAdapterProvider } from './lib/context'
-import type { AdapterOptions } from './lib/defs'
-import { patchHistory, type SearchParamsSyncEmitter } from './lib/patch-history'
+import type { AdapterInterface, AdapterOptions } from './lib/defs'
+import {
+  historyUpdateMarker,
+  patchHistory,
+  type SearchParamsSyncEmitter
+} from './lib/patch-history'
 
 const emitter: SearchParamsSyncEmitter = mitt()
 
@@ -20,6 +25,7 @@ function generateUpdateUrlFn(fullPageNavigationOnShallowFalseUpdates: boolean) {
   return function updateUrl(search: URLSearchParams, options: AdapterOptions) {
     const url = new URL(location.href)
     url.search = renderQueryString(search)
+    debug('[nuqs react] Updating url: %s', url)
     if (fullPageNavigationOnShallowFalseUpdates && options.shallow === false) {
       const method =
         options.history === 'push' ? location.assign : location.replace
@@ -27,7 +33,7 @@ function generateUpdateUrlFn(fullPageNavigationOnShallowFalseUpdates: boolean) {
     } else {
       const method =
         options.history === 'push' ? history.pushState : history.replaceState
-      method.call(history, history.state, '', url)
+      method.call(history, history.state, historyUpdateMarker, url)
     }
     emitter.emit('update', search)
     if (options.scroll === true) {
@@ -40,7 +46,7 @@ const NuqsReactAdapterContext = createContext({
   fullPageNavigationOnShallowFalseUpdates: false
 })
 
-function useNuqsReactAdapter() {
+function useNuqsReactAdapter(): AdapterInterface {
   const { fullPageNavigationOnShallowFalseUpdates } = useContext(
     NuqsReactAdapterContext
   )

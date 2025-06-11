@@ -1,5 +1,11 @@
 import { describe, expectTypeOf, it } from 'vitest'
-import { parseAsString, useQueryState } from '../dist'
+import {
+  debounce,
+  defaultRateLimit,
+  parseAsString,
+  throttle,
+  useQueryState
+} from '../dist'
 
 describe('types/useQueryState', () => {
   it('has a nullable string state by default', () => {
@@ -116,5 +122,55 @@ describe('types/useQueryState', () => {
     setBar(undefined)
     // @ts-expect-error
     setBar(() => undefined)
+  })
+  it('accepts a limitUrlUpdates option', () => {
+    useQueryState('foo', {
+      limitUrlUpdates: {
+        method: 'throttle',
+        timeMs: 100
+      }
+    })
+    useQueryState('foo', {
+      limitUrlUpdates: {
+        method: 'debounce',
+        timeMs: 100
+      }
+    })
+    useQueryState('foo', { limitUrlUpdates: throttle(100) })
+    useQueryState('foo', { limitUrlUpdates: debounce(100) })
+    useQueryState('foo', { limitUrlUpdates: defaultRateLimit })
+    // Using parsers options (builder pattern)
+    parseAsString.withOptions({
+      limitUrlUpdates: {
+        method: 'throttle',
+        timeMs: 100
+      }
+    })
+    parseAsString.withOptions({
+      limitUrlUpdates: {
+        method: 'debounce',
+        timeMs: 100
+      }
+    })
+    parseAsString.withOptions({ limitUrlUpdates: throttle(100) })
+    parseAsString.withOptions({ limitUrlUpdates: debounce(100) })
+    parseAsString.withOptions({ limitUrlUpdates: defaultRateLimit })
+    // State updater function
+    const [, setState] = useQueryState('foo')
+    setState(null, {
+      limitUrlUpdates: {
+        method: 'throttle',
+        timeMs: 100
+      }
+    })
+    setState(null, {
+      limitUrlUpdates: {
+        method: 'debounce',
+        timeMs: 100
+      }
+    })
+    setState(null, { limitUrlUpdates: throttle(100) })
+    setState(null, { limitUrlUpdates: debounce(100) })
+    setState(null, { limitUrlUpdates: defaultRateLimit })
   })
 })

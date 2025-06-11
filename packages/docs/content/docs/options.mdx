@@ -130,42 +130,144 @@ useQueryState('foo', { scroll: true })
 ```
 
 
-## Throttling URL updates
+## Rate-limiting URL updates
 
 Because of browsers rate-limiting the History API, updates **to the
 URL** are queued and throttled to a default of 50ms, which seems to satisfy
 most browsers even when sending high-frequency query updates, like binding
 to a text input or a slider.
 
-Safari's rate limits are much higher and require a throttle of 120ms (320ms for older
-versions of Safari).
-
-If you want to opt-in to a larger throttle time -- for example to reduce the amount
-of requests sent to the server when paired with `shallow: false{:ts}` -- you can
-specify it under the `throttleMs` option:
-
-```tsx
-// [!code word:throttleMs]
-useQueryState('foo', {
-  // Send updates to the server maximum once every second
-  shallow: false,
-  throttleMs: 1000
-})
-```
+Safari's rate limits are much higher and use a default throttle of 120ms
+(320ms for older versions of Safari).
 
 <Callout title="Note">
 the state returned by the hook is always updated **instantly**, to keep UI responsive.
 Only changes to the URL, and server requests when using `shallow: false{:ts}`, are throttled.
 </Callout>
 
+This throttle time is configurable, and also allows you to debounce updates
+instead.
+
+<Callout title="Which one should I use?">
+Throttle will emit the first update immediately, then batch updates at a slower
+pace **regularly**. This is recommended for most low-frequency updates.
+
+Debounce will push back the moment when the URL is updated when you set your state,
+making it **eventually consistent**. This is recommended for high-frequency
+updates where the last value is more interesting than the intermediate ones,
+like a search input or moving a slider.
+
+Read more about [debounce vs throttle](https://kettanaito.com/blog/debounce-vs-throttle).
+</Callout>
+
+### Throttle
+
+If you want to increase the throttle time -- for example to reduce the amount
+of requests sent to the server when paired with `shallow: false{:ts}` -- you can
+specify it under the `limitUrlUpdates` option:
+
+```ts /limitUrlUpdates/
+useQueryState('foo', {
+  // Send updates to the server maximum once every second
+  shallow: false,
+  limitUrlUpdates: {
+    method: 'throttle',
+    timeMs: 1000
+  }
+})
+
+// or using the shorthand:
+import { throttle } from 'nuqs'
+
+useQueryState('foo', {
+  shallow: false,
+  limitUrlUpdates: throttle(1000)
+})
+```
+
 If multiple hooks set different throttle values on the same event loop tick,
 the highest value will be used. Also, values lower than 50ms will be ignored,
 to avoid rate-limiting issues.
 [Read more](https://francoisbest.com/posts/2023/storing-react-state-in-the-url-with-nextjs#batching--throttling).
 
-Specifying a `+Infinity{:ts}` value for `throttleMs{:ts}` will **disable** updates to the
+Specifying a `+Infinity{:ts}` value for throttle time will **disable** updates to the
 URL or the server, but all `useQueryState(s)` hooks will still update their
 internal state and stay in sync with each other.
+
+<Callout title="Deprecation notice">
+The `throttleMs` option has been deprecated in `nuqs@2.4.0` and will be removed
+in a later major upgrade.
+
+To migrate:
+1. `import { throttle } from 'nuqs' {:ts}`
+2.  Replace `{ throttleMs: 100 }{:ts}` with `{ limitUrlUpdates: throttle(100) }{:ts}` in your options.
+</Callout>
+
+### Debounce
+
+In addition to throttling, you can apply a debouncing mechanism to state updates,
+to delay the moment where the URL gets updated with the latest value.
+
+This can be useful for high frequency state updates where you only care about
+the final value, not all the intermediary ones while typing in a search input
+or moving a slider.
+
+We recommend you opt-in to debouncing on specific state updates, rather than
+defining it for the whole search param.
+
+Let's take the example of a search input. You'll want to update it:
+
+1. When the user is typing text, with debouncing
+2. When the user clears the input, by sending an immediate update
+3. When the user presses Enter, by sending an immediate update
+
+You can see the debounce case is the outlier here, and actually conditioned on
+the set value, so we can specify it using the state updater function:
+
+```tsx
+import { useQueryState, parseAsString, debounce } from 'nuqs';
+
+function Search() {
+  const [search, setSearch] = useQueryState(
+    'q',
+    parseAsString.withDefault('').withOptions({ shallow: false })
+  )
+
+  return (
+    <input
+      value={search}
+      onChange={(e) =>
+        setSearch(e.target.value, {
+          // Send immediate update if resetting, otherwise debounce at 500ms
+          limitUrlUpdates: e.target.value === '' ? undefined : debounce(500)
+        })
+      }
+      onKeyPress={(e) => {
+        if (e.key === 'Enter') {
+          // Send immediate update
+          setSearch(e.target.value)
+        }
+      }}
+    />
+  )
+}
+```
+
+### Resetting
+
+You can use the `defaultRateLimit{:ts}` import to reset debouncing or throttling to
+the default:
+
+```ts /defaultRateLimit/
+import { debounce, defaultRateLimit } from 'nuqs'
+
+const [, setState] = useQueryState('foo', {
+  limitUrlUpdates: debounce(1000)
+})
+
+// This state update isn't debounced
+setState('bar', { limitUrlUpdates: defaultRateLimit })
+```
 
 
 ## Transitions

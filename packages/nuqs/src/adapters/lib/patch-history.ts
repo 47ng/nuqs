@@ -1,6 +1,7 @@
 import type { Emitter } from 'mitt'
-import { debug } from '../../debug'
-import { error } from '../../errors'
+import { debug } from '../../lib/debug'
+import { error } from '../../lib/errors'
+import { resetQueues, spinQueueResetMutex } from '../../lib/queues/reset'
 
 export type SearchParamsSyncEmitter = Emitter<{ update: URLSearchParams }>
 
@@ -29,12 +30,9 @@ export function getSearchParams(url: string | URL): URLSearchParams {
   }
 }
 
-export function patchHistory(
-  emitter: SearchParamsSyncEmitter,
-  adapter: string
-): void {
+export function shouldPatchHistory(adapter: string): boolean {
   if (typeof history === 'undefined') {
-    return
+    return false
   }
   if (
     history.nuqs?.version &&
@@ -46,9 +44,28 @@ export function patchHistory(
       `0.0.0-inject-version-here`,
       adapter
     )
-    return
+    return false
   }
   if (history.nuqs?.adapters?.includes(adapter)) {
+    return false
+  }
+  return true
+}
+
+export function markHistoryAsPatched(adapter: string): void {
+  history.nuqs = history.nuqs ?? {
+    // This will be replaced by the prepack script
+    version: '0.0.0-inject-version-here',
+    adapters: []
+  }
+  history.nuqs.adapters.push(adapter)
+}
+
+export function patchHistory(
+  emitter: SearchParamsSyncEmitter,
+  adapter: string
+): void {
+  if (!shouldPatchHistory(adapter)) {
     return
   }
   let lastSearchSeen = typeof location === 'object' ? location.search : ''
@@ -58,12 +75,18 @@ export function patchHistory(
     lastSearchSeen = searchString.length ? '?' + searchString : ''
   })
 
+  window.addEventListener('popstate', () => {
+    lastSearchSeen = location.search
+    resetQueues()
+  })
+
   debug(
     '[nuqs %s] Patching history (%s adapter)',
     '0.0.0-inject-version-here',
     adapter
   )
   function sync(url: URL | string) {
+    spinQueueResetMutex()
     try {
       const newSearch = new URL(url, location.origin).search
       if (newSearch === lastSearchSeen) {
@@ -90,11 +113,5 @@ export function patchHistory(
       sync(url)
     }
   }
-  // Mark as patched
-  history.nuqs = history.nuqs ?? {
-    // This will be replaced by the prepack script
-    version: '0.0.0-inject-version-here',
-    adapters: []
-  }
-  history.nuqs.adapters.push(adapter)
+  markHistoryAsPatched(adapter)
 }
