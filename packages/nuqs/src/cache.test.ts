@@ -101,6 +101,17 @@ describe('cache', () => {
       expect(parseOutput.foo).toBe('foo')
       expect(parseOutput.bar).toBe('bar')
     })
+
+    it('supports a Promise as input', async () => {
+      const cache = createSearchParamsCache({
+        string: parseAsString
+      })
+      expect((await cache.parse(Promise.resolve(input))).string).toBe(
+        input.string
+      )
+      const all = cache.all()
+      expect(all.string).toBe(input.string)
+    })
   })
 
   describe('compareSearchParams', () => {
