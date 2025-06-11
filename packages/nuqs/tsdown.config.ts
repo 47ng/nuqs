@@ -1,3 +1,5 @@
+import { readFile, writeFile } from 'node:fs/promises'
+import { resolve } from 'node:path'
 import { defineConfig, type Options, type UserConfig } from 'tsdown'
 
 const commonConfig = {
@@ -43,6 +45,48 @@ const config: UserConfig = defineConfig([
     entry: entrypoints.client,
     outputOptions: {
       intro: ({ isEntry }) => (isEntry ? "'use client';\n" : '')
+    },
+    async onSuccess() {
+      // Mark the un-versionned React Router adapter as deprecated
+      // (will be removed in nuqs@3.0.0).
+      const filePath = resolve(
+        import.meta.dirname,
+        'dist',
+        'adapters',
+        'react-router.d.ts'
+      )
+      try {
+        const fileContents = await readFile(filePath, 'utf-8')
+        const updatedContents = fileContents.replace(
+          'export { NuqsAdapter, useOptimisticSearchParams };',
+          `export {
+  /**
+   * @deprecated This import will be removed in nuqs@3.0.0.
+   *
+   * Please pin your version of React Router in the import:
+   * - \`nuqs/adapters/react-router/v6\`
+   * - \`nuqs/adapters/react-router/v7\`.
+   *
+   * Note: this deprecated import (\`nuqs/adapters/react-router\`) is for React Router v6 only.
+   */
+  NuqsAdapter,
+  /**
+   * @deprecated This import will be removed in nuqs@3.0.0.
+   *
+   * Please pin your version of React Router in the import:
+   * - \`nuqs/adapters/react-router/v6\`
+   * - \`nuqs/adapters/react-router/v7\`.
+   *
+   * Note: this deprecated import (\`nuqs/adapters/react-router\`) is for React Router v6 only.
+   */
+  useOptimisticSearchParams
+};`
+        )
+        await writeFile(filePath, updatedContents, 'utf-8')
+      } catch (error) {
+        console.error('Error updating react-router barrel adapter:', error)
+        return
+      }
     }
   },
   // Server bundle
