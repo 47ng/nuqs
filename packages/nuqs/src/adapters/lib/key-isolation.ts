@@ -1,4 +1,4 @@
-import { debug } from '../../debug'
+import { debug } from '../../lib/debug'
 
 export function applyChange(
   newValue: URLSearchParams,
