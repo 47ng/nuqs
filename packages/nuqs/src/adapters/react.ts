@@ -6,6 +6,7 @@ import {
   useEffect,
   useMemo,
   useState,
+  type ReactElement,
   type ReactNode
 } from 'react'
 import { renderQueryString } from '../url-encoding'
@@ -80,7 +81,7 @@ export function NuqsAdapter({
 }: {
   children: ReactNode
   fullPageNavigationOnShallowFalseUpdates?: boolean
-}) {
+}): ReactElement {
   return createElement(
     NuqsReactAdapterContext.Provider,
     { value: { fullPageNavigationOnShallowFalseUpdates } },
@@ -95,6 +96,6 @@ export function NuqsAdapter({
  * If third party code updates the History API directly, use this function to
  * enable useOptimisticSearchParams to react to those changes.
  */
-export function enableHistorySync() {
+export function enableHistorySync(): void {
   patchHistory(emitter, 'react')
 }

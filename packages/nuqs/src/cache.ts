@@ -6,10 +6,38 @@ import type { inferParserType, ParserMap } from './parsers'
 
 const $input: unique symbol = Symbol('Input')
 
+type CacheInterface<Parsers extends ParserMap> = {
+  parse: {
+    /**
+     * Parse the incoming `searchParams` page prop using the parsers provided,
+     * and make it available to the RSC tree.
+     *
+     * @returns The parsed search params for direct use in the page component.
+     *
+     * Note: Next.js 15 introduced a breaking change in making their
+     * `searchParam` prop a Promise. You will need to await this function
+     * to use the Promise version in Next.js 15.
+     */
+    (searchParams: SearchParams): inferParserType<Parsers>
+
+    /**
+     * Parse the incoming `searchParams` page prop using the parsers provided,
+     * and make it available to the RSC tree.
+     *
+     * @returns The parsed search params for direct use in the page component.
+     *
+     * Note: this async version requires Next.js 15 or later.
+     */
+    (searchParams: Promise<any>): Promise<inferParserType<Parsers>>
+  }
+  all: () => inferParserType<Parsers>
+  get: <Key extends keyof Parsers>(key: Key) => inferParserType<Parsers[Key]>
+}
+
 export function createSearchParamsCache<Parsers extends ParserMap>(
   parsers: Parsers,
   { urlKeys = {} }: { urlKeys?: UrlKeys<Parsers> } = {}
-) {
+): CacheInterface<Parsers> {
   const load = createLoader(parsers, { urlKeys })
   type Keys = keyof Parsers
   type ParsedSearchParams = inferParserType<Parsers>
@@ -47,28 +75,8 @@ export function createSearchParamsCache<Parsers extends ParserMap>(
     return Object.freeze(c.searchParams) as ParsedSearchParams
   }
 
-  /**
-   * Parse the incoming `searchParams` page prop using the parsers provided,
-   * and make it available to the RSC tree.
-   *
-   * @returns The parsed search params for direct use in the page component.
-   *
-   * Note: Next.js 15 introduced a breaking change in making their
-   * `searchParam` prop a Promise. You will need to await this function
-   * to use the Promise version in Next.js 15.
-   */
   function parse(searchParams: SearchParams): ParsedSearchParams
-
-  /**
-   * Parse the incoming `searchParams` page prop using the parsers provided,
-   * and make it available to the RSC tree.
-   *
-   * @returns The parsed search params for direct use in the page component.
-   *
-   * Note: this async version requires Next.js 15 or later.
-   */
   function parse(searchParams: Promise<any>): Promise<ParsedSearchParams>
-
   function parse(searchParams: SearchParams | Promise<any>) {
     if (searchParams instanceof Promise) {
       return searchParams.then(parseSync)
@@ -98,7 +106,7 @@ export function createSearchParamsCache<Parsers extends ParserMap>(
   return { parse, get, all }
 }
 
-export function compareSearchParams(a: SearchParams, b: SearchParams) {
+export function compareSearchParams(a: SearchParams, b: SearchParams): boolean {
   if (a === b) {
     return true
   }

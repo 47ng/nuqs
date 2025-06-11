@@ -1,7 +1,7 @@
 import mitt from 'mitt'
 import { startTransition, useCallback, useEffect, useState } from 'react'
 import { renderQueryString } from '../../url-encoding'
-import { createAdapterProvider } from './context'
+import { createAdapterProvider, type AdapterProvider } from './context'
 import type { AdapterInterface, AdapterOptions } from './defs'
 import {
   patchHistory as applyHistoryPatch,
@@ -35,7 +35,10 @@ export function createReactRouterBasedAdapter({
   adapter,
   useNavigate,
   useSearchParams
-}: CreateReactRouterBasedAdapterArgs) {
+}: CreateReactRouterBasedAdapterArgs): {
+  NuqsAdapter: AdapterProvider
+  useOptimisticSearchParams: () => URLSearchParams
+} {
   const emitter: SearchParamsSyncEmitter = mitt()
   function useNuqsReactRouterBasedAdapter(): AdapterInterface {
     const navigate = useNavigate()
@@ -83,7 +86,7 @@ export function createReactRouterBasedAdapter({
       updateUrl
     }
   }
-  function useOptimisticSearchParams() {
+  function useOptimisticSearchParams(): URLSearchParams {
     const [serverSearchParams] = useSearchParams(
       // Note: this will only be taken into account the first time the hook is called,
       // and cached for subsequent calls, causing problems when mounting components
