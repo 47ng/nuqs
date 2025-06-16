@@ -1,3 +1,4 @@
+import type { StandardSchemaV1 } from '@standard-schema/spec'
 import type { Options } from './defs'
 import { safeParse } from './lib/safe-parse'
 
@@ -380,16 +381,25 @@ export function parseAsNumberLiteral<Literal extends number>(
  * Note: you may want to use `useQueryStates` for finer control over
  * multiple related query keys.
  *
- * @param runtimeParser Runtime parser (eg: Zod schema) to validate after JSON.parse
+ * @param runtimeParser Runtime parser (eg: Zod schema or Standard Schema) to validate after JSON.parse
  */
 export function parseAsJson<T>(
-  runtimeParser: (value: unknown) => T
+  validator: ((value: unknown) => T | null) | StandardSchemaV1<T>
 ): ParserBuilder<T> {
   return createParser({
     parse: query => {
       try {
         const obj = JSON.parse(query)
-        return runtimeParser(obj)
+        if ('~standard' in validator) {
+          const result = validator['~standard'].validate(obj)
+          if (result instanceof Promise) {
+            throw new Error(
+              '[nuqs] Only synchronous Standard Schemas are supported in parseAsJson.'
+            )
+          }
+          return result.issues ? null : result.value
+        }
+        return validator(obj)
       } catch {
         return null
       }
