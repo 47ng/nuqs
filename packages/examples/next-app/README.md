@@ -1,5 +1,7 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+<span style="display: flex; align-items: center; gap: 1rem; line-height: 1">Deploy it on Vercel: [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2F47ng%2Fnuqs%2Ftree%2Fnext%2Fpackages%2Fexamples%2Fnext-app&project-name=nuqs-example-next-app&repository-name=nuqs-example-next-app)</span>
+
 ## Getting Started
 
 First, run the development server:
@@ -31,6 +33,6 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 
 ## Deploy on Vercel
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2F47ng%2Fnuqs%2Ftree%2Fnext%2Fpackages%2Fexamples%2Fnext-app&project-name=nuqs-example-next-app&repository-name=nuqs-example-next-app) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
