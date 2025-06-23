@@ -266,10 +266,10 @@ const schema = z.object({
   worksWith: z.array(z.string())
 })
 
-// This parser is a function, don't forget to call it with the parse function
+// This parser is a function, don't forget to call it with your schema
 // as an argument.
 // [!code word:parseAsJson()]
-const [json, setJson] = useQueryState('json', parseAsJson(schema.parse))
+const [json, setJson] = useQueryState('json', parseAsJson(schema))
 
 setJson({
   pkg: 'nuqs',
@@ -282,8 +282,24 @@ setJson({
   <JsonParserDemo />
 </Suspense>
 
-Using other validation libraries is possible, as long as they throw an error
-when the data is invalid (eg: Valibot, Yup, etc).
+Using other validation libraries is possible: `parseAsJson{:ts}` accepts
+a [Standard Schema](https://standardschema.dev) input (eg: ArkType, Valibot),
+or a custom validation function (eg: Yup, Joi, etc):
+
+```ts
+import { object, string, number } from 'yup';
+
+let userSchema = object({
+  name: string().required(),
+  age: number().required().positive().integer(),
+});
+
+parseAsJson(userSchema.validateSync)
+```
+
+<Callout title="Note">
+  Only **synchronous** validation is supported.
+</Callout>
 
 ## Using parsers server-side
 
