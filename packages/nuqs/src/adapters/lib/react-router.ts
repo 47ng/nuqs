@@ -1,7 +1,16 @@
 import mitt from 'mitt'
-import { startTransition, useCallback, useEffect, useState } from 'react'
-import { renderQueryString } from '../../url-encoding'
-import { createAdapterProvider } from './context'
+import {
+  startTransition,
+  useCallback,
+  useEffect,
+  useRef,
+  useState
+} from 'react'
+import { debug } from '../../lib/debug'
+import { setQueueResetMutex } from '../../lib/queues/reset'
+import { globalThrottleQueue } from '../../lib/queues/throttle'
+import { renderQueryString } from '../../lib/url-encoding'
+import { createAdapterProvider, type AdapterProvider } from './context'
 import type { AdapterInterface, AdapterOptions } from './defs'
 import {
   patchHistory as applyHistoryPatch,
@@ -35,9 +44,19 @@ export function createReactRouterBasedAdapter({
   adapter,
   useNavigate,
   useSearchParams
-}: CreateReactRouterBasedAdapterArgs) {
+}: CreateReactRouterBasedAdapterArgs): {
+  NuqsAdapter: AdapterProvider
+  useOptimisticSearchParams: () => URLSearchParams
+} {
   const emitter: SearchParamsSyncEmitter = mitt()
+  const enableQueueReset = adapter !== 'react-router-v6'
   function useNuqsReactRouterBasedAdapter(): AdapterInterface {
+    const resetRef = useRef(false)
+    if (enableQueueReset && resetRef.current) {
+      resetRef.current = false
+      globalThrottleQueue.reset()
+    }
+
     const navigate = useNavigate()
     const searchParams = useOptimisticSearchParams()
     const updateUrl = useCallback(
@@ -47,10 +66,12 @@ export function createReactRouterBasedAdapter({
         })
         const url = new URL(location.href)
         url.search = renderQueryString(search)
+        debug(`[nuqs ${adapter}] Updating url: %s`, url)
         // First, update the URL locally without triggering a network request,
         // this allows keeping a reactive URL if the network is slow.
         const updateMethod =
           options.history === 'push' ? history.pushState : history.replaceState
+        setQueueResetMutex(options.shallow ? 1 : 2)
         updateMethod.call(
           history,
           history.state, // Maintain the history state
@@ -75,15 +96,17 @@ export function createReactRouterBasedAdapter({
         if (options.scroll) {
           window.scrollTo(0, 0)
         }
+        resetRef.current = enableQueueReset
       },
       [navigate]
     )
     return {
       searchParams,
-      updateUrl
+      updateUrl,
+      autoResetQueueOnUpdate: false
     }
   }
-  function useOptimisticSearchParams() {
+  function useOptimisticSearchParams(): URLSearchParams {
     const [serverSearchParams] = useSearchParams(
       // Note: this will only be taken into account the first time the hook is called,
       // and cached for subsequent calls, causing problems when mounting components

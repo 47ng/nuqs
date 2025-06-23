@@ -1,5 +1,12 @@
 import { describe, expectTypeOf, it } from 'vitest'
-import { parseAsInteger, parseAsString, useQueryStates } from '../dist'
+import {
+  debounce,
+  defaultRateLimit,
+  parseAsInteger,
+  parseAsString,
+  throttle,
+  useQueryStates
+} from '../dist'
 
 describe('types/useQueryStates', () => {
   const parsers = {
@@ -92,5 +99,41 @@ describe('types/useQueryStates', () => {
         notInTheList: 'should-error'
       }
     })
+  })
+  it('accepts a limitUrlUpdates option', () => {
+    // Hook-level definition
+    const parsers = { foo: parseAsString }
+    useQueryStates(parsers, {
+      limitUrlUpdates: {
+        method: 'throttle',
+        timeMs: 100
+      }
+    })
+    useQueryStates(parsers, {
+      limitUrlUpdates: {
+        method: 'debounce',
+        timeMs: 100
+      }
+    })
+    useQueryStates(parsers, { limitUrlUpdates: throttle(100) })
+    useQueryStates(parsers, { limitUrlUpdates: debounce(100) })
+    useQueryStates(parsers, { limitUrlUpdates: defaultRateLimit })
+    // State updater function
+    const [, setState] = useQueryStates(parsers)
+    setState(null, {
+      limitUrlUpdates: {
+        method: 'throttle',
+        timeMs: 100
+      }
+    })
+    setState(null, {
+      limitUrlUpdates: {
+        method: 'debounce',
+        timeMs: 100
+      }
+    })
+    setState(null, { limitUrlUpdates: throttle(100) })
+    setState(null, { limitUrlUpdates: debounce(100) })
+    setState(null, { limitUrlUpdates: defaultRateLimit })
   })
 })

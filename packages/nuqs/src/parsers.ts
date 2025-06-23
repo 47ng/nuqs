@@ -1,5 +1,5 @@
 import type { Options } from './defs'
-import { safeParse } from './utils'
+import { safeParse } from './lib/safe-parse'
 
 type Require<T, Keys extends keyof T> = Pick<Required<T>, Keys> & Omit<T, Keys>
 
@@ -146,12 +146,12 @@ export function createParser<T>(
 
 // Parsers implementations -----------------------------------------------------
 
-export const parseAsString = createParser({
+export const parseAsString: ParserBuilder<string> = createParser({
   parse: v => v,
   serialize: v => `${v}`
 })
 
-export const parseAsInteger = createParser({
+export const parseAsInteger: ParserBuilder<number> = createParser({
   parse: v => {
     const int = parseInt(v)
     if (Number.isNaN(int)) {
@@ -162,7 +162,7 @@ export const parseAsInteger = createParser({
   serialize: v => Math.round(v).toFixed()
 })
 
-export const parseAsIndex = createParser({
+export const parseAsIndex: ParserBuilder<number> = createParser({
   parse: v => {
     const int = parseAsInteger.parse(v)
     if (int === null) {
@@ -173,7 +173,7 @@ export const parseAsIndex = createParser({
   serialize: v => parseAsInteger.serialize(v + 1)
 })
 
-export const parseAsHex = createParser({
+export const parseAsHex: ParserBuilder<number> = createParser({
   parse: v => {
     const int = parseInt(v, 16)
     if (Number.isNaN(int)) {
@@ -187,7 +187,7 @@ export const parseAsHex = createParser({
   }
 })
 
-export const parseAsFloat = createParser({
+export const parseAsFloat: ParserBuilder<number> = createParser({
   parse: v => {
     const float = parseFloat(v)
     if (Number.isNaN(float)) {
@@ -198,7 +198,7 @@ export const parseAsFloat = createParser({
   serialize: v => v.toString()
 })
 
-export const parseAsBoolean = createParser({
+export const parseAsBoolean: ParserBuilder<boolean> = createParser({
   parse: v => v === 'true',
   serialize: v => (v ? 'true' : 'false')
 })
@@ -211,7 +211,7 @@ function compareDates(a: Date, b: Date) {
  * Querystring encoded as the number of milliseconds since epoch,
  * and returned as a Date object.
  */
-export const parseAsTimestamp = createParser({
+export const parseAsTimestamp: ParserBuilder<Date> = createParser({
   parse: v => {
     const ms = parseInt(v)
     if (Number.isNaN(ms)) {
@@ -227,7 +227,7 @@ export const parseAsTimestamp = createParser({
  * Querystring encoded as an ISO-8601 string (UTC),
  * and returned as a Date object.
  */
-export const parseAsIsoDateTime = createParser({
+export const parseAsIsoDateTime: ParserBuilder<Date> = createParser({
   parse: v => {
     const date = new Date(v)
     if (Number.isNaN(date.valueOf())) {
@@ -247,7 +247,7 @@ export const parseAsIsoDateTime = createParser({
  * The Date is parsed without the time zone offset,
  * making it at 00:00:00 UTC.
  */
-export const parseAsIsoDate = createParser({
+export const parseAsIsoDate: ParserBuilder<Date> = createParser({
   parse: v => {
     const date = new Date(v.slice(0, 10))
     if (Number.isNaN(date.valueOf())) {
@@ -286,7 +286,9 @@ export const parseAsIsoDate = createParser({
  *
  * @param validValues The values you want to accept
  */
-export function parseAsStringEnum<Enum extends string>(validValues: Enum[]) {
+export function parseAsStringEnum<Enum extends string>(
+  validValues: Enum[]
+): ParserBuilder<Enum> {
   return createParser({
     parse: (query: string) => {
       const asEnum = query as unknown as Enum
@@ -320,7 +322,7 @@ export function parseAsStringEnum<Enum extends string>(validValues: Enum[]) {
  */
 export function parseAsStringLiteral<Literal extends string>(
   validValues: readonly Literal[]
-) {
+): ParserBuilder<Literal> {
   return createParser({
     parse: (query: string) => {
       const asConst = query as unknown as Literal
@@ -354,7 +356,7 @@ export function parseAsStringLiteral<Literal extends string>(
  */
 export function parseAsNumberLiteral<Literal extends number>(
   validValues: readonly Literal[]
-) {
+): ParserBuilder<Literal> {
   return createParser({
     parse: (query: string) => {
       const asConst = parseFloat(query) as unknown as Literal
@@ -374,7 +376,9 @@ export function parseAsNumberLiteral<Literal extends number>(
  *
  * @param runtimeParser Runtime parser (eg: Zod schema) to validate after JSON.parse
  */
-export function parseAsJson<T>(runtimeParser: (value: unknown) => T) {
+export function parseAsJson<T>(
+  runtimeParser: (value: unknown) => T
+): ParserBuilder<T> {
   return createParser({
     parse: query => {
       try {
@@ -402,7 +406,7 @@ export function parseAsJson<T>(runtimeParser: (value: unknown) => T) {
 export function parseAsArrayOf<ItemType>(
   itemParser: Parser<ItemType>,
   separator = ','
-) {
+): ParserBuilder<ItemType[]> {
   const itemEq = itemParser.eq ?? ((a: ItemType, b: ItemType) => a === b)
   const encodedSeparator = encodeURIComponent(separator)
   // todo: Handle default item values and make return type non-nullable

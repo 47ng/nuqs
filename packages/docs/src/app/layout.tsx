@@ -37,6 +37,14 @@ export default function Layout({ children }: { children: ReactNode }) {
       // https://github.com/shadcn-ui/ui/issues/5552#issuecomment-2435024526
       suppressHydrationWarning
     >
+      <head>
+        <link
+          rel="alternate"
+          type="application/rss+xml"
+          href="/blog/rss.xml"
+          title="nuqs blog RSS feed"
+        />
+      </head>
       <body>
         {/* Top-level banners go here */}
         <RootProvider>

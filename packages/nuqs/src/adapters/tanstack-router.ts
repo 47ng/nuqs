@@ -1,7 +1,7 @@
 import { useLocation, useMatches, useNavigate } from '@tanstack/react-router'
 import { startTransition, useCallback, useMemo } from 'react'
-import { renderQueryString } from '../url-encoding'
-import { createAdapterProvider } from './lib/context'
+import { renderQueryString } from '../lib/url-encoding'
+import { createAdapterProvider, type AdapterProvider } from './lib/context'
 import type { AdapterInterface, UpdateUrlFunction } from './lib/defs'
 
 function useNuqsTanstackRouterAdapter(): AdapterInterface {
@@ -65,4 +65,6 @@ function useNuqsTanstackRouterAdapter(): AdapterInterface {
   }
 }
 
-export const NuqsAdapter = createAdapterProvider(useNuqsTanstackRouterAdapter)
+export const NuqsAdapter: AdapterProvider = createAdapterProvider(
+  useNuqsTanstackRouterAdapter
+)

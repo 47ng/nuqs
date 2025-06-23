@@ -1,9 +1,10 @@
 import { useRouter } from 'next/compat/router.js'
 import type { NextRouter } from 'next/router'
-import { useCallback, useMemo } from 'react'
-import { debug } from '../../debug'
-import { renderQueryString } from '../../url-encoding'
-import { createAdapterProvider } from '../lib/context'
+import { useCallback, useEffect, useMemo } from 'react'
+import { debug } from '../../lib/debug'
+import { resetQueues } from '../../lib/queues/reset'
+import { globalThrottleQueue } from '../../lib/queues/throttle'
+import { renderQueryString } from '../../lib/url-encoding'
 import type { AdapterInterface, UpdateUrlFunction } from '../lib/defs'
 
 declare global {
@@ -22,8 +23,27 @@ export function isPagesRouter(): boolean {
   return typeof window.next?.router?.state?.asPath === 'string'
 }
 
+let isNuqsUpdateMutex: boolean = false
+
+function onNavigation() {
+  if (isNuqsUpdateMutex) {
+    return
+  }
+  resetQueues()
+}
+
 export function useNuqsNextPagesRouterAdapter(): AdapterInterface {
   const router = useRouter()
+
+  useEffect(() => {
+    router?.events.on('routeChangeStart', onNavigation)
+    router?.events.on('beforeHistoryChange', onNavigation)
+    return () => {
+      router?.events.off('routeChangeStart', onNavigation)
+      router?.events.off('beforeHistoryChange', onNavigation)
+    }
+  }, [])
+
   const searchParams = useMemo(() => {
     const searchParams = new URLSearchParams()
     if (router === null) {
@@ -55,41 +75,51 @@ export function useNuqsNextPagesRouterAdapter(): AdapterInterface {
       getAsPathPathname(nextRouter.asPath) +
       renderQueryString(search) +
       location.hash
-    debug('[nuqs queue (pages)] Updating url: %s', asPath)
+    debug('[nuqs next/pages] Updating url: %s', asPath)
     const method =
       options.history === 'push' ? nextRouter.push : nextRouter.replace
-    method.call(
-      nextRouter,
-      // This is what makes the URL work (mapping dynamic segments placeholders
-      // in pathname to their values in query, plus search params in query too).
-      {
-        pathname: nextRouter.pathname,
-        query: {
-          // Note: we put search params first so that one that conflicts
-          // with dynamic params will be overwritten.
-          ...urlSearchParamsToObject(search),
-          ...urlParams
-        }
-        // For some reason we don't need to pass the hash here,
-        // it's preserved when passed as part of the asPath.
-      },
-      // This is what makes the URL pretty (resolved dynamic segments
-      // and nuqs-formatted search params).
-      asPath,
-      // And these are the options that are passed to the router.
-      {
-        scroll: options.scroll,
-        shallow: options.shallow
-      }
+    isNuqsUpdateMutex = true
+    // A single requestAnimationFrame causes flakiness in the render count,
+    // but two nested ones seem to do the trick.
+    requestAnimationFrame(() =>
+      requestAnimationFrame(() => globalThrottleQueue.reset())
     )
+    method
+      .call(
+        nextRouter,
+        // This is what makes the URL work (mapping dynamic segments placeholders
+        // in pathname to their values in query, plus search params in query too).
+        {
+          pathname: nextRouter.pathname,
+          query: {
+            // Note: we put search params first so that one that conflicts
+            // with dynamic params will be overwritten.
+            ...urlSearchParamsToObject(search),
+            ...urlParams
+          }
+          // For some reason we don't need to pass the hash here,
+          // it's preserved when passed as part of the asPath.
+        },
+        // This is what makes the URL pretty (resolved dynamic segments
+        // and nuqs-formatted search params).
+        asPath,
+        // And these are the options that are passed to the router.
+        {
+          scroll: options.scroll,
+          shallow: options.shallow
+        }
+      )
+      .finally(() => {
+        isNuqsUpdateMutex = false
+      })
   }, [])
+
   return {
     searchParams,
-    updateUrl
+    updateUrl,
+    autoResetQueueOnUpdate: false
   }
 }
-
-export const NuqsAdapter = createAdapterProvider(useNuqsNextPagesRouterAdapter)
 
 export function getAsPathPathname(asPath: string): string {
   return asPath

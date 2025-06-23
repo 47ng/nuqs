@@ -10,7 +10,6 @@ type Props = {
 
 export default function Page({ serverState, serverSegments }: Props) {
   const router = useRouter()
-  console.dir({ client: router.query.segments, server: serverSegments })
   return (
     <>
       <UrlControls>

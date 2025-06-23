@@ -27,6 +27,8 @@ When running `next dev`, this will:
   - http://localhost:3004 - TanStack Router
   - http://localhost:3006 - React Router v6
   - http://localhost:3007 - React Router v7
+- Start the examples:
+  - http://localhost:4001 - [Next.js - App router](./packages/examples/next-app)
 
 ## Testing
 
