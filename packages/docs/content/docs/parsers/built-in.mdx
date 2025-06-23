@@ -298,7 +298,8 @@ parseAsJson(userSchema.validateSync)
 ```
 
 <Callout title="Note">
-  Only **synchronous** validation is supported.
+  Validation functions must either throw an error or
+  return `null{:ts}` for invalid data. Only **synchronous** validation is supported.
 </Callout>
 
 ## Using parsers server-side
