@@ -253,10 +253,11 @@ parseAsArrayOf(parseAsInteger, ';')
 
 If primitive types are not enough, you can encode JSON in the query string.
 
-Pass it a validation function to validate and infer the type of the parsed data,
-like a [Zod](https://zod.dev) schema:
+Pass it a [Standard Schema](https://standardschema.dev) (eg: a Zod schema)
+to validate and infer the type of the parsed data:
 
 ```ts
+// [!code word:parseAsJson]
 import { parseAsJson } from 'nuqs'
 import { z } from 'zod'
 
@@ -266,9 +267,8 @@ const schema = z.object({
   worksWith: z.array(z.string())
 })
 
-// This parser is a function, don't forget to call it with your schema
-// as an argument.
-// [!code word:parseAsJson()]
+// This parser is a function, don't forget to call it
+// with your schema as an argument.
 const [json, setJson] = useQueryState('json', parseAsJson(schema))
 
 setJson({
@@ -283,7 +283,7 @@ setJson({
 </Suspense>
 
 Using other validation libraries is possible: `parseAsJson{:ts}` accepts
-a [Standard Schema](https://standardschema.dev) input (eg: ArkType, Valibot),
+any Standard Schema compatible input (eg: ArkType, Valibot),
 or a custom validation function (eg: Yup, Joi, etc):
 
 ```ts
