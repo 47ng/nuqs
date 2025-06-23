@@ -14,6 +14,7 @@ to call with values, that generates a query string serialized as the hooks would
 Example:
 
 ```ts
+// [!code word:createSerializer]
 import {
   createSerializer,
   parseAsInteger,
@@ -130,3 +131,37 @@ const parsers = {
 inferParserType<typeof parsers>
 // { a: number | null, b: boolean }
 ```
+
+## Standard Schema
+
+Search param definitions can be turned into a [Standard Schema](https://standardschema.dev)
+for validating external sources and passing on type inference to other tools.
+
+```ts
+// [!code word:validateSearchParams]
+import {
+  createStandardSchemaV1,
+  parseAsInteger,
+  parseAsString,
+} from 'nuqs' // or 'nuqs/server'
+
+// 1. Define your search params as usual
+export const searchParams = {
+  searchTerm: parseAsString.withDefault(''),
+  maxResults: parseAsInteger.withDefault(10)
+}
+
+// 2. Then create a Standard Schema compatible validator
+export const validateSearchParams = createStandardSchemaV1(searchParams)
+
+// 3. Use it with other tools, like tRPC:
+router({
+  search: publicProcedure.input(validateSearchParams).query(...)
+})
+
+// Or TanStack Router (experimental):
+export const Route = createFileRoute('/search')({
+  validateSearch: validateSearchParams
+})
+```
+
