@@ -160,8 +160,32 @@ router({
 })
 
 // Or TanStack Router (experimental):
+
+```
+
+### TanStack Router & validateSearch
+
+<Callout title="Note">
+ TanStack Router support is still experimental, see PR [#953](https://github.com/47ng/nuqs/pull/953) for progress and feedback 🙏
+</Callout>
+
+You can pass the standard schema validator to
+[TanStack Router](https://tanstack.com/router/)'s `validateSearch{:ts}` for type-safe
+linking to nuqs URL state, but in order to keep those
+values optional (as nuqs uses different defaults strategies
+than TSR), you need to mark the output as `Partial{:ts}`,
+using the `partialOutput{:ts}` option:
+
+```ts title="src/routes/search.tsx"
+// [!code word:partialOutput]
+import { createStandardSchemaV1 } from 'nuqs'
+
+const validateSearch = createStandardSchemaV1(searchParams, {
+  partialOutput: true
+})
+
 export const Route = createFileRoute('/search')({
-  validateSearch: validateSearchParams
+  validateSearch
 })
 ```
 
