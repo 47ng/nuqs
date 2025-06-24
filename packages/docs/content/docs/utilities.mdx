@@ -158,9 +158,6 @@ export const validateSearchParams = createStandardSchemaV1(searchParams)
 router({
   search: publicProcedure.input(validateSearchParams).query(...)
 })
-
-// Or TanStack Router (experimental):
-
 ```
 
 ### TanStack Router & validateSearch
