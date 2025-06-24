@@ -111,4 +111,21 @@ describe('standard schema', () => {
       '[nuqs] Error while parsing query `should-not-parse` for key `test`: Error: Boom'
     )
   })
+  it('allows for partial outputs', async () => {
+    const schema = {
+      foo: parseAsString,
+      bar: parseAsInteger.withDefault(0),
+      egg: parseAsBoolean.withDefault(false)
+    }
+    const validator = createStandardSchemaV1(schema, { partialOutput: true })
+    const input = {}
+    const resultMaybePromise = validator['~standard'].validate(input)
+    expect(resultMaybePromise).not.toBeInstanceOf(Promise)
+    // But we have to await it for TypeScript to understand
+    const result = await resultMaybePromise
+    expect(result.issues).toBeUndefined()
+    if (result.issues === undefined) {
+      expect(result.value).toEqual({})
+    }
+  })
 })
