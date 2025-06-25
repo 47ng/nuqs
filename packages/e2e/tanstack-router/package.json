@@ -13,9 +13,9 @@
     "cypress:run": "cross-env FORCE_COLOR=3 cypress run --headless"
   },
   "dependencies": {
-    "@tanstack/react-router": "^1.114.3",
-    "@tanstack/react-router-devtools": "^1.114.3",
-    "@tanstack/router-plugin": "^1.114.3",
+    "@tanstack/react-router": "^1.121.34",
+    "@tanstack/react-router-devtools": "^1.121.34",
+    "@tanstack/router-plugin": "^1.121.34",
     "nuqs": "workspace:*",
     "react": "catalog:react19",
     "react-dom": "catalog:react19"
