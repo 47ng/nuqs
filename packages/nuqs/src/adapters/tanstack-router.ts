@@ -47,7 +47,7 @@ function useNuqsTanstackRouterAdapter(): AdapterInterface {
           // in other parts of the app.
           //
           // When we clear the search, passing an empty string causes
-          // the basepath to be dropped, so we replace it with '.'.
+          // a type error and possible basepath issues, so we switch it to '.' instead.
           // See https://github.com/47ng/nuqs/pull/953#issuecomment-3003583471
           to: renderQueryString(search) || '.',
           // `from` will be handled by tanstack router match resolver, code snippet:
