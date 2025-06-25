@@ -45,8 +45,12 @@ function useNuqsTanstackRouterAdapter(): AdapterInterface {
           // the custom URL encoding.
           // TBC if it causes issues with consuming those search params
           // in other parts of the app.
-          to: renderQueryString(search),
-          // from will be handled by tanstack router match resolver, code snippet:
+          //
+          // When we clear the search, passing an empty string causes
+          // the basepath to be dropped, so we replace it with '.'.
+          // See https://github.com/47ng/nuqs/pull/953#issuecomment-3003583471
+          to: renderQueryString(search) || '.',
+          // `from` will be handled by tanstack router match resolver, code snippet:
           // https://github.com/TanStack/router/blob/5d940e2d8bdb12e213eede0abe8012855433ec4b/packages/react-router/src/link.tsx#L108-L112
           ...(from ? { from } : {}),
           replace: options.history === 'replace',
