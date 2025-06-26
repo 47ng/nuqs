@@ -222,7 +222,8 @@ import { Server } from './server'
 import { Client } from './client'
 
 export default async function Page({ searchParams }) {
-  await coordinatesCache.parse(searchParams)
+  // Note: you can also use strict mode here:
+  await coordinatesCache.parse(searchParams, { strict: true })
   return (
     <>
       <Server />
