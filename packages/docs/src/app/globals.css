@@ -121,6 +121,11 @@
       padding-block: 1rem;
     }
   }
+
+  /* Fix the mobile top navbar collapsing */
+  #nd-subnav {
+    flex-shrink: 0;
+  }
 }
 
 @layer components {
