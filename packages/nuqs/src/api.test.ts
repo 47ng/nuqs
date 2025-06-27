@@ -100,14 +100,6 @@ const exports = `
 }
 `
 
-it('has a stable exported API (package.json)', async () => {
-  const manifest = await getPackageExportsManifest({
-    importMode: 'package',
-    cwd: fileURLToPath(import.meta.url)
-  })
-  expect(manifest.exports).toMatchInlineSnapshot(exports)
-})
-
 it('has a stable exported API (dist)', async () => {
   const manifest = await getPackageExportsManifest({
     importMode: 'dist',
