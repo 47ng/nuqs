@@ -285,45 +285,6 @@ export default () => {
 }
 ```
 
-### Using parsers in Server Components
-
-> Note: see the [Accessing searchParams in server components](#accessing-searchparams-in-server-components)
-> section for a more user-friendly way to achieve type-safety.
-
-If you wish to parse the searchParams in server components, you'll need to
-import the parsers from `nuqs/server`, which doesn't include
-the `"use client"` directive.
-
-You can then use the `parseServerSide` method:
-
-```tsx
-import { parseAsInteger } from 'nuqs/server'
-
-type PageProps = {
-  searchParams: {
-    counter?: string | string[]
-  }
-}
-
-const counterParser = parseAsInteger.withDefault(1)
-
-export default function ServerPage({ searchParams }: PageProps) {
-  const counter = counterParser.parseServerSide(searchParams.counter)
-  console.log('Server side counter: %d', counter)
-  return (
-    ...
-  )
-}
-```
-
-See the [server-side parsing demo](<./packages/docs/src/app/playground/(demos)/pagination>)
-for a live example showing how to reuse parser configurations between
-client and server code.
-
-> Note: parsers **don't validate** your data. If you expect positive integers
-> or JSON-encoded objects of a particular shape, you'll need to feed the result
-> of the parser to a schema validation library, like [Zod](https://zod.dev).
-
 ## Default value
 
 When the query string is not present in the URL, the default behaviour is to
@@ -642,6 +603,10 @@ const { q, page } = loadSearchParams('?q=hello&page=2')
 
 It accepts various types of inputs (strings, URL, URLSearchParams, Request, Promises, etc.). [Read more](https://nuqs.47ng.com/docs/server-side#loaders)
 
+See the [server-side parsing demo](<./packages/docs/src/app/playground/(demos)/pagination>)
+for a live example showing how to reuse parser configurations between
+client and server code.
+
 ## Accessing searchParams in Server Components
 
 If you wish to access the searchParams in a deeply nested Server Component
@@ -930,25 +895,62 @@ export const metadata: Metadata = {
 If however the query string is defining what content the page is displaying
 (eg: YouTube's watch URLs, like `https://www.youtube.com/watch?v=dQw4w9WgXcQ`),
 your canonical URL should contain relevant query strings, and you can still
-use `useQueryState` to read it:
+use your parsers to read it, and to serialize the canonical URL:
 
 ```ts
 // page.tsx
 import type { Metadata, ResolvingMetadata } from 'next'
-import { useQueryState } from 'nuqs'
-import { parseAsString } from 'nuqs/server'
+import { notFound } from 'next/navigation'
+import {
+  createParser,
+  parseAsString,
+  createLoader,
+  createSerializer,
+  type SearchParams,
+  type UrlKeys
+} from 'nuqs/server'
+
+const youTubeVideoIdRegex = /^[^"&?\/\s]{11}$/i
+const youTubeSearchParams = {
+  videoId: createParser({
+    parse(query) {
+      if (!youTubeVideoIdRegex.test(query)) {
+        return null
+      }
+      return query
+    },
+    serialize(videoId) {
+      return videoId
+    }
+  })
+}
+const youTubeUrlKeys: UrlKeys<typeof youTubeSearchParams> = {
+  videoId: 'v'
+}
+const loadYouTubeSearchParams = createLoader(youTubeSearchParams, {
+  urlKeys: youTubeUrlKeys
+})
+const serializeYouTubeSearchParams = createSerializer(youTubeSearchParams, {
+  urlKeys: youTubeUrlKeys
+})
+
+// --
 
 type Props = {
-  searchParams: { [key: string]: string | string[] | undefined }
+  searchParams: Promise<SearchParams>
 }
 
 export async function generateMetadata({
   searchParams
 }: Props): Promise<Metadata> {
-  const videoId = parseAsString.parseServerSide(searchParams.v)
+  const { videoId } = await loadYouTubeSearchParams(searchParams)
+  if (!videoId) {
+    notFound()
+  }
   return {
     alternates: {
-      canonical: `/watch?v=${videoId}`
+      canonical: serializeYouTubeSearchParams('/watch', { videoId })
+      // /watch?v=dQw4w9WgXcQ
     }
   }
 }

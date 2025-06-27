@@ -388,10 +388,7 @@ const jsonParserSchema = z.object({
 })
 
 export function JsonParserDemo() {
-  const [value, setValue] = useQueryState(
-    'json',
-    parseAsJson(jsonParserSchema.parse)
-  )
+  const [value, setValue] = useQueryState('json', parseAsJson(jsonParserSchema))
   return (
     <DemoContainer demoKey="json" className="items-start">
       <pre className="flex-1 rounded-md border bg-background p-2 text-sm text-zinc-500">
