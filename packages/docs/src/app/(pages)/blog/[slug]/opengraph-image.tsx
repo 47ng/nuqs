@@ -169,19 +169,15 @@ export default async function Image({ params }: PageProps) {
 
 // --
 
-function getFont(weight: string) {
-  return readFile(
-    resolve(process.cwd(), `src/assets/fonts/Inter_24pt-${weight}.ttf`)
-  )
-}
-
 async function loadResources() {
   const [light, regular, medium, semibold, bold] = await Promise.all([
-    getFont('Light'),
-    getFont('Regular'),
-    getFont('Medium'),
-    getFont('SemiBold'),
-    getFont('Bold')
+    readFile(resolve(process.cwd(), 'src/assets/fonts/Inter_24pt-Light.ttf')),
+    readFile(resolve(process.cwd(), 'src/assets/fonts/Inter_24pt-Regular.ttf')),
+    readFile(resolve(process.cwd(), 'src/assets/fonts/Inter_24pt-Medium.ttf')),
+    readFile(
+      resolve(process.cwd(), 'src/assets/fonts/Inter_24pt-SemiBold.ttf')
+    ),
+    readFile(resolve(process.cwd(), 'src/assets/fonts/Inter_24pt-Bold.ttf'))
   ])
   const bg =
     'data:image/png;base64,' +
