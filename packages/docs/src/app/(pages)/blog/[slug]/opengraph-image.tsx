@@ -13,8 +13,6 @@ export const size = {
 export const contentType = 'image/png'
 export const dynamic = 'force-static'
 
-const { fonts, images } = await loadResources()
-
 type PageProps = {
   params: Promise<{ slug: string }>
 }
@@ -41,6 +39,7 @@ export default async function Image({ params }: PageProps) {
     )
   }
   // Fallback to generated image
+  const { fonts, images } = await loadResources()
   const title = page.data.title
   const description = page.data.description
   return new ImageResponse(
