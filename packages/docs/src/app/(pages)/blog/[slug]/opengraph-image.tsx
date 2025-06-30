@@ -96,7 +96,7 @@ export default async function Image({ params }: PageProps) {
               fontWeight: 500
             }}
           >
-            {new Date().toISOString()}
+            Type-Safe Search Params State Manager for React
           </p>
         </header>
         <h1

@@ -49,7 +49,6 @@ export default async function Page(props: {
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>
-
       <div className="container max-w-[900px] py-12 md:px-8">
         <h1 className="mb-4 text-4xl font-bold text-foreground sm:text-5xl">
           {page.data.title}
