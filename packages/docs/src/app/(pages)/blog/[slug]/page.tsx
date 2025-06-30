@@ -15,7 +15,9 @@ import defaultMdxComponents from 'fumadocs-ui/mdx'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
+import { Suspense } from 'react'
 import { Author } from './_components/author'
+import { RevalidateBlogOpenGraphImages } from './revalidate.client'
 
 export default async function Page(props: {
   params: Promise<{ slug: string }>
@@ -30,6 +32,9 @@ export default async function Page(props: {
 
   return (
     <>
+      <Suspense>
+        <RevalidateBlogOpenGraphImages />
+      </Suspense>
       <Breadcrumb className="container mt-8 max-w-[900px] md:px-8">
         <BreadcrumbList>
           <BreadcrumbItem>
@@ -49,6 +54,7 @@ export default async function Page(props: {
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>
+
       <div className="container max-w-[900px] py-12 md:px-8">
         <h1 className="mb-4 text-4xl font-bold text-foreground sm:text-5xl">
           {page.data.title}
