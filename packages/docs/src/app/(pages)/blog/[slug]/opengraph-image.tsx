@@ -14,8 +14,6 @@ export const size = {
 export const contentType = 'image/png'
 export const dynamic = 'force-static'
 
-const { fonts, images } = await loadResources()
-
 type PageProps = {
   params: Promise<{ slug: string }>
 }
@@ -23,6 +21,7 @@ type PageProps = {
 // Image generation
 export default async function Image({ params }: PageProps) {
   const { slug } = await params
+  const { fonts, images } = await loadResources()
   const page = blog.getPage([slug])
   if (!page) notFound()
   const customImage = await getCustomImage(slug)
