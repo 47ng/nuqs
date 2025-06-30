@@ -2,8 +2,9 @@ import { blog } from '@/src/app/source'
 import { notFound } from 'next/navigation'
 import { ImageResponse } from 'next/og'
 import { readFile } from 'node:fs/promises'
-import { join, resolve } from 'node:path'
+import { join } from 'node:path'
 import { ComponentProps } from 'react'
+import { inter } from './fonts'
 
 // Image metadata
 export const size = {
@@ -170,15 +171,6 @@ export default async function Image({ params }: PageProps) {
 // --
 
 async function loadResources() {
-  const [light, regular, medium, semibold, bold] = await Promise.all([
-    readFile(resolve(process.cwd(), 'src/assets/fonts/Inter_24pt-Light.ttf')),
-    readFile(resolve(process.cwd(), 'src/assets/fonts/Inter_24pt-Regular.ttf')),
-    readFile(resolve(process.cwd(), 'src/assets/fonts/Inter_24pt-Medium.ttf')),
-    readFile(
-      resolve(process.cwd(), 'src/assets/fonts/Inter_24pt-SemiBold.ttf')
-    ),
-    readFile(resolve(process.cwd(), 'src/assets/fonts/Inter_24pt-Bold.ttf'))
-  ])
   const bg =
     'data:image/png;base64,' +
     (
@@ -186,13 +178,7 @@ async function loadResources() {
     ).toString('base64')
   return {
     fonts: {
-      inter: {
-        light,
-        regular,
-        medium,
-        semibold,
-        bold
-      }
+      inter
     },
     images: {
       bg
