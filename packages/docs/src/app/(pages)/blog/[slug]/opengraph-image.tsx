@@ -2,7 +2,7 @@ import { blog } from '@/src/app/source'
 import { notFound } from 'next/navigation'
 import { ImageResponse } from 'next/og'
 import { readFile } from 'node:fs/promises'
-import { join } from 'node:path'
+import { join, resolve } from 'node:path'
 import { ComponentProps } from 'react'
 
 // Image metadata
@@ -171,7 +171,7 @@ export default async function Image({ params }: PageProps) {
 
 function getFont(weight: string) {
   return readFile(
-    join(process.cwd(), `src/assets/fonts/Inter_24pt-${weight}.ttf`)
+    resolve(process.cwd(), `src/assets/fonts/Inter_24pt-${weight}.ttf`)
   )
 }
 
