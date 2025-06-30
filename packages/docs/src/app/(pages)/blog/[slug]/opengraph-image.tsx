@@ -21,26 +21,26 @@ type PageProps = {
 // Image generation
 export default async function Image({ params }: PageProps) {
   const { slug } = await params
-  const { fonts, images } = await loadResources()
   const page = blog.getPage([slug])
   if (!page) notFound()
-  const customImage = await getCustomImage(slug)
-  if (customImage) {
-    return new ImageResponse(
-      (
-        <img
-          src={customImage}
-          alt="Open Graph Image"
-          style={{
-            position: 'absolute',
-            inset: 0
-          }}
-        />
-      ),
-      size
-    )
-  }
+  // const customImage = await getCustomImage(slug)
+  // if (customImage) {
+  //   return new ImageResponse(
+  //     (
+  //       <img
+  //         src={customImage}
+  //         alt="Open Graph Image"
+  //         style={{
+  //           position: 'absolute',
+  //           inset: 0
+  //         }}
+  //       />
+  //     ),
+  //     size
+  //   )
+  // }
   // Fallback to generated image
+  const { fonts, images } = await loadResources()
   const title = page.data.title
   const description = page.data.description
   return new ImageResponse(
@@ -97,7 +97,7 @@ export default async function Image({ params }: PageProps) {
               fontWeight: 500
             }}
           >
-            Type-Safe Search Params State Manager for React
+            {new Date().toISOString()}
           </p>
         </header>
         <h1
