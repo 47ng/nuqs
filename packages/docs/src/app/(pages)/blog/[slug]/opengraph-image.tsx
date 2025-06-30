@@ -11,7 +11,7 @@ export const size = {
   height: 675
 }
 export const contentType = 'image/png'
-export const dynamic = 'force-static'
+export const dynamic = 'force-dynamic'
 
 const { fonts, images } = await loadResources()
 
