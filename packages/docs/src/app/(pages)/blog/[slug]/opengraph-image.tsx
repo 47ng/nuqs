@@ -4,7 +4,6 @@ import { ImageResponse } from 'next/og'
 import { readFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { ComponentProps } from 'react'
-import { inter } from './fonts'
 
 // Image metadata
 export const size = {
@@ -169,7 +168,20 @@ export default async function Image({ params }: PageProps) {
 
 // --
 
+function getFont(weight: string) {
+  return readFile(
+    join(process.cwd(), `src/assets/fonts/Inter_24pt-${weight}.ttf`)
+  )
+}
+
 async function loadResources() {
+  const [light, regular, medium, semibold, bold] = await Promise.all([
+    getFont('Light'),
+    getFont('Regular'),
+    getFont('Medium'),
+    getFont('SemiBold'),
+    getFont('Bold')
+  ])
   const bg =
     'data:image/png;base64,' +
     (
@@ -177,7 +189,13 @@ async function loadResources() {
     ).toString('base64')
   return {
     fonts: {
-      inter
+      inter: {
+        light,
+        regular,
+        medium,
+        semibold,
+        bold
+      }
     },
     images: {
       bg
