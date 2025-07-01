@@ -20,4 +20,4 @@ jobs:
       - name: Install dependencies
         run: pnpm install --ignore-scripts --frozen-lockfile --workspace-root
       - name: Lint PR title
-        run: echo "${{ github.event.pull_request.title }}" | ./node_modules/bin/commitlint > $GITHUB_STEP_SUMMARY
+        run: echo "${{ github.event.pull_request.title }}" | ./node_modules/.bin/commitlint > $GITHUB_STEP_SUMMARY
