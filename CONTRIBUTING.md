@@ -25,6 +25,7 @@ When running `next dev`, this will:
   - http://localhost:3001 - [Next.js](./packages/e2e/next)
   - http://localhost:3002 - [React SPA](./packages/e2e/react)
   - http://localhost:3003 - [Remix](./packages/e2e/remix)
+  - http://localhost:3004 - [TanStack Router](./packages/e2e/tanstack-router)
   - http://localhost:3006 - [React Router v6](./packages/e2e/react-router/v6)
   - http://localhost:3007 - [React Router v7](./packages/e2e/react-router/v7)
 - Start the examples:

@@ -40,6 +40,11 @@
         "E2E_NO_CACHE_ON_RERUN"
       ]
     },
+    "e2e-tanstack-router#build": {
+      "outputs": ["dist/**", "cypress/**"],
+      "dependsOn": ["^build"],
+      "env": ["REACT_COMPILER", "E2E_NO_CACHE_ON_RERUN"]
+    },
     "docs#build": {
       "outputs": [".next/**", "!.next/cache/**"],
       "dependsOn": ["^build"],
@@ -82,6 +87,10 @@
         "REACT_COMPILER",
         "E2E_NO_CACHE_ON_RERUN"
       ]
+    },
+    "e2e-tanstack-router#test": {
+      "dependsOn": ["build"],
+      "env": ["REACT_COMPILER", "E2E_NO_CACHE_ON_RERUN"]
     }
   }
 }

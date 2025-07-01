@@ -12,7 +12,8 @@ const commonConfig = {
     'react',
     '@remix-run/react',
     'react-router-dom',
-    'react-router'
+    'react-router',
+    '@tanstack/react-router'
   ],
   treeshake: true,
   tsconfig: 'tsconfig.build.json'
@@ -29,6 +30,7 @@ const entrypoints = {
     'adapters/react-router': 'src/adapters/react-router.ts',
     'adapters/react-router/v6': 'src/adapters/react-router/v6.ts',
     'adapters/react-router/v7': 'src/adapters/react-router/v7.ts',
+    'adapters/tanstack-router': 'src/adapters/tanstack-router.ts',
     'adapters/custom': 'src/adapters/custom.ts',
     'adapters/testing': 'src/adapters/testing.ts'
   },
