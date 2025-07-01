@@ -121,6 +121,26 @@ The loader function will accept the following input types to parse search params
 - A `Record<string, string | string[] | undefined>{:ts}` (eg: `{ foo: 'bar' }{:ts}`)
 - A `Promise{:ts}` of any of the above, in which case it also returns a Promise.
 
+### Strict mode
+
+If a search param contains an invalid value for the associated parser (eg: `?count=banana` for `parseAsInteger{:ts}`),
+the default behaviour is to return the [default value](/docs/basic-usage#default-values) if specified, or `null{:ts}` otherwise.
+
+You can turn on **strict mode** to instead throw an error on invalid values when running the loader:
+
+```ts
+const loadSearchParams = createLoader({
+  count: parseAsInteger.withDefault(0)
+})
+
+// Default: will return { count: 0 }
+loadSearchParams('?count=banana')
+
+// Strict mode: will throw an error
+loadSearchParams('?count=banana', { strict: true })
+// [nuqs] Error while parsing query `banana` for key `count`
+```
+
 ## Cache
 
 <Callout>
@@ -202,7 +222,8 @@ import { Server } from './server'
 import { Client } from './client'
 
 export default async function Page({ searchParams }) {
-  await coordinatesCache.parse(searchParams)
+  // Note: you can also use strict mode here:
+  await coordinatesCache.parse(searchParams, { strict: true })
   return (
     <>
       <Server />
