@@ -743,7 +743,7 @@ const searchParams = {
   limit: parseAsInteger,
   from: parseAsIsoDateTime,
   to: parseAsIsoDateTime,
-  sortBy: parseAsStringLiteral(['asc', 'desc'] as const)
+  sortBy: parseAsStringLiteral(['asc', 'desc'])
 }
 
 // Create a serializer function by passing the description of the search params to accept
