@@ -4,17 +4,9 @@
   "githubPullRequests.ignoredPullRequestBranches": ["next", "master"],
   "githubPullRequests.queries": [
     {
-      "label": "Local Pull Request Branches",
-      "query": "default"
-    },
-    {
       "label": "Backlog",
       "query": "repo:47ng/nuqs is:pr is:open milestone:\"🪵 Backlog\""
     },
-    {
-      "label": "All Open",
-      "query": "default"
-    }
   ],
   "githubIssues.queries": [
     {
