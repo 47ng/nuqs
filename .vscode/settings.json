@@ -6,7 +6,7 @@
     {
       "label": "Backlog",
       "query": "repo:47ng/nuqs is:pr is:open milestone:\"🪵 Backlog\""
-    },
+    }
   ],
   "githubIssues.queries": [
     {
