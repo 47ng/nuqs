@@ -10,7 +10,7 @@ export async function SponsorsSection() {
       <h2 className="mb-12 text-center text-3xl font-bold tracking-tighter dark:text-white md:text-4xl xl:text-5xl">
         Sponsors
       </h2>
-      <ul className="container grid grid-cols-2 gap-y-12 md:grid-cols-3 lg:grid-cols-5">
+      <ul className="container grid grid-cols-2 gap-y-12 md:grid-cols-3 lg:grid-cols-6">
         {sponsors.map(sponsor => (
           <li key={sponsor.handle} className="flex flex-col items-center">
             <a href={sponsor.url} className="h-32 w-32 rounded-full">
@@ -161,11 +161,24 @@ async function fetchSponsors(): Promise<Sponsors> {
       )
     },
     {
+      handle: 'aurorascharff',
+      name: 'Aurora Scharff',
+      url: 'https://aurorascharff.no/',
+      img: 'https://avatars.githubusercontent.com/u/66901228?s=200&v=4',
+      title: 'Queen of RSCs 👸'
+    },
+    {
       handle: 'YoannFleuryDev',
       name: 'Yoann Fleury',
       url: 'https://www.yoannfleury.dev/',
       img: 'https://pbs.twimg.com/profile_images/1594632934245498880/CJTKNRCO_400x400.jpg',
       title: 'Front end developer'
+    },
+    {
+      handle: 'lpbonomi',
+      name: 'Luis Pedro Bonomi',
+      url: 'https://github.com/lpbonomi',
+      img: 'https://avatars.githubusercontent.com/u/38361000?s=200&v=4'
     }
   ]
 }

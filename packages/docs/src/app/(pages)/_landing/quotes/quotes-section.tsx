@@ -50,7 +50,7 @@ export function QuotesSection() {
           name: 'kitze',
           handle: '@thekitze',
           avatar:
-            'https://pbs.twimg.com/profile_images/1926916598155132928/uE88B1Rz_400x400.jpg'
+            'https://pbs.twimg.com/profile_images/1939977592423038976/gtX703YQ_400x400.jpg'
         }}
         url="https://x.com/thekitze/status/1909576710179471466"
       />
