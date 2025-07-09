@@ -148,8 +148,13 @@ const parser = parseAsStringLiteral(['asc', 'desc'])
 type SortOrder = inferParserType<typeof parser> // 'asc' | 'desc'
 ```
 
-<Callout title="Note">
-If declaring your expected values outside of the parser, don't forget to add `as const{:ts}`.
+<Callout title="Should I declare values inline or outside the parser?">
+  It depends®. Declaring them inline is shorter, and makes the parser
+  the source of truth for type inference with `inferParserType{:ts}`,
+  but it locks the values inside the parser.
+
+  Declaring them outside allows reading and iterating over the values at runtime.
+  Don't forget to add `as const{:ts}` though, otherwise the type will widen as a `string{:ts}`.
 </Callout>
 
 ### String literals
@@ -187,14 +192,6 @@ const diceSides = [1, 2, 3, 4, 5, 6] as const
 // Then pass it to the parser
 parseAsNumberLiteral(diceSides)
 ```
-
-<Callout title="Should I declare values inline or outside the parser?">
-  It depends®. Declaring them inline is shorter, and makes the parser
-  the source of truth for type inference with `inferParserType{:ts}`,
-  but it locks the values inside the parser.
-
-  Declaring them outside allows reading and iterating over the values at runtime.
-</Callout>
 
 ## Enums
 
