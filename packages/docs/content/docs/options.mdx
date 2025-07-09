@@ -293,7 +293,7 @@ function ClientComponent({ data }) {
     'query',
     // 2. Pass the `startTransition` as an option:
     // [!code word:startTransition:1]
-    parseAsString().withOptions({ startTransition, shallow: false })
+    parseAsString.withOptions({ startTransition, shallow: false })
   )
   // 3. `isLoading` will be true while the server is re-rendering
   // and streaming RSC payloads, when the query is updated via `setQuery`.
