@@ -105,6 +105,20 @@
     border-radius: 4px;
   }
 
+  /* Remove the corner radius on adjacent highlighted words */
+  .fd-codeblock .highlighted-word + .highlighted-word {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+    margin-left: 1px;
+    padding-left: 0;
+  }
+  .fd-codeblock .highlighted-word:has(+ .highlighted-word) {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+    margin-right: 1px;
+    padding-right: 0;
+  }
+
   /* By default, every code block should expand to fit its contents.
     Fumadocs uses a max-height to prevent this behaviour, that we override by default
     but we can still use custom="compact" in the meta string in MDX to enable it back.

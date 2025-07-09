@@ -138,10 +138,6 @@ useQueryState('bool', parseAsBoolean.withDefault(false))
 These parsers extend the basic integer and float parsers, but validate against
 some expected values, defined as [TypeScript literals](https://www.typescriptlang.org/docs/handbook/2/everyday-types.html#literal-types).
 
-<Callout title="Note">
-If declaring your expected values outside of the parser, don't forget to add `as const{:ts}`.
-</Callout>
-
 ```ts
 import { parseAsStringLiteral, inferParserType } from 'nuqs'
 
@@ -152,9 +148,14 @@ const parser = parseAsStringLiteral(['asc', 'desc'])
 type SortOrder = inferParserType<typeof parser> // 'asc' | 'desc'
 ```
 
+<Callout title="Note">
+If declaring your expected values outside of the parser, don't forget to add `as const{:ts}`.
+</Callout>
+
 ### String literals
 
-```ts /as const/
+```ts
+// [!code word:as const]
 import { parseAsStringLiteral } from 'nuqs'
 
 // List accepted values
@@ -176,7 +177,8 @@ import { parseAsNumberLiteral } from 'nuqs'
 parseAsNumberLiteral([1, 2, 3, 4, 5, 6])
 ```
 
-```ts /as const/
+```ts
+// [!code word:as const]
 import { parseAsNumberLiteral } from 'nuqs'
 
 // List accepted values
@@ -185,6 +187,14 @@ const diceSides = [1, 2, 3, 4, 5, 6] as const
 // Then pass it to the parser
 parseAsNumberLiteral(diceSides)
 ```
+
+<Callout title="Should I declare values inline or outside the parser?">
+  It depends®. Declaring them inline is shorter, and makes the parser
+  the source of truth for type inference with `inferParserType{:ts}`,
+  but it locks the values inside the parser.
+
+  Declaring them outside allows reading and iterating over the values at runtime.
+</Callout>
 
 ## Enums
 
