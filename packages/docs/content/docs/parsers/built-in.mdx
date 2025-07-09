@@ -135,8 +135,8 @@ useQueryState('bool', parseAsBoolean.withDefault(false))
 
 ## Literals
 
-These parsers extend the basic integer and float parsers, but test against
-some expected valid values, defined as [TypeScript literals](https://www.typescriptlang.org/docs/handbook/2/everyday-types.html#literal-types).
+These parsers extend the basic integer and float parsers, but validate against
+some expected values, defined as [TypeScript literals](https://www.typescriptlang.org/docs/handbook/2/everyday-types.html#literal-types).
 
 <Callout title="Note">
 If declaring your expected values outside of the parser, don't forget to add `as const{:ts}`.
