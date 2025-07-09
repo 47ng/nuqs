@@ -76,13 +76,13 @@ describe('types/parsers', () => {
     assertType<Test | null>(p.parseServerSide(undefined))
   })
   test('parseAsStringLiteral', () => {
-    const p = parseAsStringLiteral(['a', 'b'] as const)
+    const p = parseAsStringLiteral(['a', 'b'])
     assertType<'a' | 'b' | null>(p.parse('a'))
     assertType<string>(p.serialize('a'))
     assertType<'a' | 'b' | null>(p.parseServerSide(undefined))
   })
   test('parseAsNumberLiteral', () => {
-    const p = parseAsNumberLiteral([1, 2, 3] as const)
+    const p = parseAsNumberLiteral([1, 2, 3])
     assertType<1 | 2 | 3 | null>(p.parse('42'))
     assertType<string>(p.serialize(1))
     assertType<1 | 2 | 3 | null>(p.parseServerSide(undefined))

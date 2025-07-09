@@ -155,7 +155,7 @@ describe('parsers', () => {
     expect(isParserBijective(parser, 'b', Test.B)).toBe(true)
   })
   it('parseAsStringLiteral', () => {
-    const parser = parseAsStringLiteral(['a', 'b', 'c'] as const)
+    const parser = parseAsStringLiteral(['a', 'b', 'c'])
     expect(parser.parse('')).toBeNull()
     expect(parser.parse('a')).toBe('a')
     expect(parser.parse('b')).toBe('b')
@@ -171,7 +171,7 @@ describe('parsers', () => {
     expect(isParserBijective(parser, 'c', 'c')).toBe(true)
   })
   it('parseAsNumberLiteral', () => {
-    const parser = parseAsNumberLiteral([1, 2, 3] as const)
+    const parser = parseAsNumberLiteral([1, 2, 3])
     expect(parser.parse('')).toBeNull()
     expect(parser.parse('1')).toBe(1)
     expect(parser.parse('2')).toBe(2)
