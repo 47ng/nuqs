@@ -140,7 +140,11 @@
   #nd-subnav {
     flex-shrink: 0;
     /* https://github.com/47ng/nuqs/pull/1027#issuecomment-3007455946 */
-    @apply z-30 w-full;
+    @apply fixed z-30 w-full;
+  }
+
+  #nd-page {
+    @apply pt-14 md:pt-0;
   }
 }
 
