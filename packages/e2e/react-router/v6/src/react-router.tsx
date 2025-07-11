@@ -53,6 +53,8 @@ const router = createBrowserRouter(
       <Route path="flush-after-navigate/useQueryStates/start" lazy={load(import('./routes/flush-after-navigate.useQueryStates.start'))} />
       <Route path="fog-of-war"                                lazy={load(import('./routes/fog-of-war._index'))} />
       <Route path="fog-of-war/result"                         lazy={load(import('./routes/fog-of-war.result'))} />
+      <Route path="key-isolation/useQueryState"               lazy={load(import('./routes/key-isolation.useQueryState'))} />
+      <Route path="key-isolation/useQueryStates"              lazy={load(import('./routes/key-isolation.useQueryStates'))} />
       <Route path='push/useQueryState'                        lazy={load(import('./routes/push.useQueryState'))} />
       <Route path='push/useQueryStates'                       lazy={load(import('./routes/push.useQueryStates'))} />
       <Route path="rate-limits"                               lazy={load(import('./routes/rate-limits'))} />
