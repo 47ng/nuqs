@@ -454,7 +454,7 @@ function ClientComponent({ data }) {
   const [query, setQuery] = useQueryState(
     'query',
     // 2. Pass the `startTransition` as an option:
-    parseAsString().withOptions({
+    parseAsString.withOptions({
       startTransition,
       shallow: false // opt-in to notify the server (Next.js only)
     })
@@ -766,7 +766,7 @@ const searchParams = {
   limit: parseAsInteger,
   from: parseAsIsoDateTime,
   to: parseAsIsoDateTime,
-  sortBy: parseAsStringLiteral(['asc', 'desc'] as const)
+  sortBy: parseAsStringLiteral(['asc', 'desc'])
 }
 
 // Create a serializer function by passing the description of the search params to accept

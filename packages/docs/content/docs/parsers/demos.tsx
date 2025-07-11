@@ -263,7 +263,7 @@ export function BooleanParserDemo() {
 export function StringLiteralParserDemo() {
   const [value, setValue] = useQueryState(
     'sort',
-    parseAsStringLiteral(['asc', 'desc'] as const)
+    parseAsStringLiteral(['asc', 'desc'])
   )
   return (
     <DemoContainer demoKey="sort">

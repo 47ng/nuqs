@@ -135,16 +135,32 @@ useQueryState('bool', parseAsBoolean.withDefault(false))
 
 ## Literals
 
-These parsers extend the basic integer and float parsers, but test against
-some expected valid values, defined as [TypeScript literals](https://www.typescriptlang.org/docs/handbook/2/everyday-types.html#literal-types).
+These parsers extend the basic integer and float parsers, but validate against
+some expected values, defined as [TypeScript literals](https://www.typescriptlang.org/docs/handbook/2/everyday-types.html#literal-types).
 
-<Callout title="Note">
-Don't forget the `as const{:ts}` when declaring your expected values.
+```ts
+import { parseAsStringLiteral, type inferParserType } from 'nuqs'
+
+// Create parser
+const parser = parseAsStringLiteral(['asc', 'desc'])
+
+// Optional: extract the type
+type SortOrder = inferParserType<typeof parser> // 'asc' | 'desc'
+```
+
+<Callout title="Should I declare values inline or outside the parser?">
+  It depends®. Declaring them inline is shorter, and makes the parser
+  the source of truth for type inference with `inferParserType{:ts}`,
+  but it locks the values inside the parser.
+
+  Declaring them outside allows reading and iterating over the values at runtime.
+  Don't forget to add `as const{:ts}` though, otherwise the type will widen as a `string{:ts}`.
 </Callout>
 
 ### String literals
 
-```ts /as const/
+```ts
+// [!code word:as const]
 import { parseAsStringLiteral } from 'nuqs'
 
 // List accepted values
@@ -152,9 +168,6 @@ const sortOrder = ['asc', 'desc'] as const
 
 // Then pass it to the parser
 parseAsStringLiteral(sortOrder)
-
-// Optional: extract the type from them
-type SortOrder = (typeof sortOrder)[number] // 'asc' | 'desc'
 ```
 
 <Suspense fallback={<DemoFallback />}>
@@ -163,7 +176,14 @@ type SortOrder = (typeof sortOrder)[number] // 'asc' | 'desc'
 
 ### Numeric literals
 
-```ts /as const/
+```ts
+import { parseAsNumberLiteral } from 'nuqs'
+
+parseAsNumberLiteral([1, 2, 3, 4, 5, 6])
+```
+
+```ts
+// [!code word:as const]
 import { parseAsNumberLiteral } from 'nuqs'
 
 // List accepted values

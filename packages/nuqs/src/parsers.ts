@@ -327,7 +327,7 @@ export function parseAsStringEnum<Enum extends string>(
  *
  * @param validValues The values you want to accept
  */
-export function parseAsStringLiteral<Literal extends string>(
+export function parseAsStringLiteral<const Literal extends string>(
   validValues: readonly Literal[]
 ): ParserBuilder<Literal> {
   return createParser({
@@ -361,7 +361,7 @@ export function parseAsStringLiteral<Literal extends string>(
  *
  * @param validValues The values you want to accept
  */
-export function parseAsNumberLiteral<Literal extends number>(
+export function parseAsNumberLiteral<const Literal extends number>(
   validValues: readonly Literal[]
 ): ParserBuilder<Literal> {
   return createParser({

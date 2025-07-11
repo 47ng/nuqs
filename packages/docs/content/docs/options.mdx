@@ -164,9 +164,10 @@ Read more about [debounce vs throttle](https://kettanaito.com/blog/debounce-vs-t
 
 If you want to increase the throttle time -- for example to reduce the amount
 of requests sent to the server when paired with `shallow: false{:ts}` -- you can
-specify it under the `limitUrlUpdates` option:
+specify it under the `limitUrlUpdates{:ts}` option:
 
-```ts /limitUrlUpdates/
+```ts
+// [!code word:limitUrlUpdates]
 useQueryState('foo', {
   // Send updates to the server maximum once every second
   shallow: false,
@@ -191,11 +192,11 @@ to avoid rate-limiting issues.
 [Read more](https://francoisbest.com/posts/2023/storing-react-state-in-the-url-with-nextjs#batching--throttling).
 
 Specifying a `+Infinity{:ts}` value for throttle time will **disable** updates to the
-URL or the server, but all `useQueryState(s)` hooks will still update their
+URL or the server, but all `useQueryState(s){:ts}` hooks will still update their
 internal state and stay in sync with each other.
 
 <Callout title="Deprecation notice">
-The `throttleMs` option has been deprecated in `nuqs@2.5.0` and will be removed
+The `throttleMs{:ts}` option has been deprecated in `nuqs@2.5.0` and will be removed
 in a later major upgrade.
 
 To migrate:
@@ -225,6 +226,7 @@ You can see the debounce case is the outlier here, and actually conditioned on
 the set value, so we can specify it using the state updater function:
 
 ```tsx
+// [!code word:debounce:1]
 import { useQueryState, parseAsString, debounce } from 'nuqs';
 
 function Search() {
@@ -239,6 +241,7 @@ function Search() {
       onChange={(e) =>
         setSearch(e.target.value, {
           // Send immediate update if resetting, otherwise debounce at 500ms
+          // [!code word:debounce:1]
           limitUrlUpdates: e.target.value === '' ? undefined : debounce(500)
         })
       }
@@ -258,7 +261,8 @@ function Search() {
 You can use the `defaultRateLimit{:ts}` import to reset debouncing or throttling to
 the default:
 
-```ts /defaultRateLimit/
+```ts
+// [!code word:defaultRateLimit]
 import { debounce, defaultRateLimit } from 'nuqs'
 
 const [, setState] = useQueryState('foo', {
@@ -279,7 +283,7 @@ the updated URL.
 Pass in the `startTransition{:ts}` function from `useTransition{:ts}` to the options
 to enable this behaviour:
 
-```tsx /startTransition/1,3#2
+```tsx
 'use client'
 
 import React from 'react'
@@ -293,7 +297,7 @@ function ClientComponent({ data }) {
     'query',
     // 2. Pass the `startTransition` as an option:
     // [!code word:startTransition:1]
-    parseAsString().withOptions({ startTransition, shallow: false })
+    parseAsString.withOptions({ startTransition, shallow: false })
   )
   // 3. `isLoading` will be true while the server is re-rendering
   // and streaming RSC payloads, when the query is updated via `setQuery`.
@@ -307,7 +311,7 @@ function ClientComponent({ data }) {
 ```
 
 <Callout>
-  In `nuqs@1.x.x`, passing `startTransition` as an option automatically sets
+  In `nuqs@1.x.x`, passing `startTransition{:ts}` as an option automatically sets
   `shallow: false{:ts}`.
 
   This is no longer the case in `nuqs@>=2.0.0`: you'll need to set it explicitly.
