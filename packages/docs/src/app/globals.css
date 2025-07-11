@@ -142,6 +142,13 @@
     /* https://github.com/47ng/nuqs/pull/1027#issuecomment-3007455946 */
     @apply fixed z-30 w-full;
   }
+
+  /* Fix titles being hidden behind the headers:
+    https://github.com/47ng/nuqs/pull/1043
+  */
+  #nd-page {
+    @apply pt-14 md:pt-0;
+  }
 }
 
 @layer components {
