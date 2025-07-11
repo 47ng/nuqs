@@ -1,0 +1,35 @@
+{
+  "name": "e2e-tanstack-router",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --port 3004",
+    "build": "vite build",
+    "start": "vite preview --port 3004",
+    "test": "pnpm run --stream '/^test:/'",
+    "test:types": "tsc",
+    "test:e2e": "start-server-and-test start http://localhost:3004 cypress:run",
+    "cypress:open": "cypress open",
+    "cypress:run": "cross-env FORCE_COLOR=3 cypress run --headless"
+  },
+  "dependencies": {
+    "@tanstack/react-router": "^1.121.34",
+    "@tanstack/react-router-devtools": "^1.121.34",
+    "@tanstack/router-plugin": "^1.121.34",
+    "nuqs": "workspace:*",
+    "react": "catalog:react19",
+    "react-dom": "catalog:react19"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.13",
+    "@types/react": "catalog:react19",
+    "@types/react-dom": "catalog:react19",
+    "@vitejs/plugin-react": "^4.3.4",
+    "cross-env": "^7.0.3",
+    "cypress": "catalog:e2e",
+    "e2e-shared": "workspace:*",
+    "start-server-and-test": "catalog:e2e",
+    "typescript": "^5.8.2",
+    "vite": "^6.2.3"
+  }
+}
