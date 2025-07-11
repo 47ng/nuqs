@@ -12,6 +12,7 @@ wrapping it with a `NuqsAdapter` context provider:
 - [Remix](#remix)
 - [React Router v6](#react-router-v6)
 - [React Router v7](#react-router-v7)
+- [TanStack Router](#tanstack-router)
 
 ## Next.js
 
@@ -181,6 +182,30 @@ export default function App() {
 
   The main difference is where the React Router hooks are imported from:
   `react-router-dom` for v6, and `react-router` for v7.
+</Callout>
+
+## TanStack Router
+
+```tsx title="src/routes/__root.tsx"
+// [!code word:NuqsAdapter]
+import { NuqsAdapter } from 'nuqs/adapters/tanstack-router'
+import { Outlet, createRootRoute } from '@tanstack/react-router'
+
+export const Route = createRootRoute({
+  component: () => (
+    <>
+      <NuqsAdapter>
+        <Outlet />
+      </NuqsAdapter>
+    </>
+  ),
+})
+```
+
+<Callout>
+
+TanStack Router support is experimental and does not yet cover TanStack Start.
+
 </Callout>
 
 ## Testing
