@@ -123,7 +123,7 @@
     Fumadocs uses a max-height to prevent this behaviour, that we override by default
     but we can still use custom="compact" in the meta string in MDX to enable it back.
   */
-  .fd-codeblock:not([custom~='compact']) pre.max-h-\[400px\] {
+  .fd-codeblock:not([custom~='compact']) div.max-h-\[600px\] {
     max-height: unset;
   }
   /* Fix bottom padding of compact code blocks (applied at the wrong level) */
