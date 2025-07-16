@@ -8,7 +8,8 @@ const config = {
   experimental: {
     clientRouterFilter: false,
     ...(process.env.REACT_COMPILER === 'true' ? { reactCompiler: true } : {}),
-    serverSourceMaps: true
+    serverSourceMaps: true,
+    clientSegmentCache: true
   },
   transpilePackages: ['e2e-shared'],
   rewrites: async () => [
