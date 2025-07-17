@@ -162,10 +162,6 @@ router({
 
 ### TanStack Router & validateSearch
 
-<Callout title="Note">
- TanStack Router support is still experimental, see PR [#953](https://github.com/47ng/nuqs/pull/953) for progress and feedback 🙏
-</Callout>
-
 You can pass the standard schema validator to
 [TanStack Router](https://tanstack.com/router/)'s `validateSearch{:ts}` for type-safe
 linking to nuqs URL state, but in order to keep those
@@ -186,3 +182,8 @@ export const Route = createFileRoute('/search')({
 })
 ```
 
+<Callout title="Note" type="warn">
+ TanStack Router support is still experimental and comes with caveats,
+ see the [adapter documentation](/docs/adapters#tanstack-router) for more
+ information about what is supported.
+</Callout>
