@@ -145,7 +145,7 @@ the state returned by the hook is always updated **instantly**, to keep UI respo
 Only changes to the URL, and server requests when using `shallow: false{:ts}`, are throttled.
 </Callout>
 
-This throttle time is configurable, and also allows you to debounce updates
+This [throttle](#throttle) time is configurable, and also allows you to [debounce](#debounce) updates
 instead.
 
 <Callout title="Which one should I use?">
@@ -156,6 +156,10 @@ Debounce will push back the moment when the URL is updated when you set your sta
 making it **eventually consistent**. This is recommended for high-frequency
 updates where the last value is more interesting than the intermediate ones,
 like a search input or moving a slider.
+
+Debounce only makes sense for server-aware updates (when combined with [`shallow: false{:ts}`](#shallow)),
+to control when requests are made to the server. For example: it lets you avoid sending the first
+character on its own when typing in a search input, by waiting for the user to finish typing.
 
 Read more about [debounce vs throttle](https://kettanaito.com/blog/debounce-vs-throttle).
 </Callout>
