@@ -213,7 +213,7 @@ To migrate:
 In addition to throttling, you can apply a debouncing mechanism to state updates,
 to delay the moment where the URL gets updated with the latest value.
 
-This can be useful for high frequency state updates where you only care about
+This can be useful for high frequency state updates where the server only cares about
 the final value, not all the intermediary ones while typing in a search input
 or moving a slider.
 
@@ -236,7 +236,9 @@ import { useQueryState, parseAsString, debounce } from 'nuqs';
 function Search() {
   const [search, setSearch] = useQueryState(
     'q',
-    parseAsString.withDefault('').withOptions({ shallow: false })
+    parseAsString
+      .withDefault('')
+      .withOptions({ shallow: false })
   )
 
   return (
