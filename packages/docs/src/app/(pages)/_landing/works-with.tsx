@@ -13,6 +13,7 @@ export function WorksWith({ className, ...props }: ComponentProps<'div'>) {
       <ReactRouter />
       <NextJS />
       <Remix />
+      <TanStackRouter />
       <Vitest />
     </div>
   )
@@ -230,5 +231,17 @@ function Remix() {
         fillRule="nonzero"
       />
     </svg>
+  )
+}
+
+function TanStackRouter() {
+  return (
+    <img
+      src="/tanstack-logo.png"
+      alt="TanStack Router"
+      width="1em"
+      height="1em"
+      style={{ width: '1em', height: '1em' }}
+    />
   )
 }

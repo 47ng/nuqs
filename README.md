@@ -10,7 +10,7 @@ Type-safe search params state manager for React frameworks. Like `useState`, but
 
 ## Features
 
-- 🔀 **new:** Supports Next.js (`app` and `pages` routers), plain React (SPA), Remix, React Router, and custom routers via [adapters](#adapters)
+- 🔀 **new:** Supports Next.js (`app` and `pages` routers), plain React (SPA), Remix, React Router, TanStack Router, and custom routers via [adapters](#adapters)
 - 🧘‍♀️ Simple: the URL is the source of truth
 - 🕰 Replace history or [append](#history) to use the Back button to navigate state updates
 - ⚡️ Built-in [parsers](#parsing) for common state types (integer, float, boolean, Date, and more). Create your own parsers for custom types & pretty URLs
@@ -167,6 +167,29 @@ export default function App() {
     </NuqsAdapter>
   )
 }
+```
+
+</details>
+
+<details><summary>🏝️ TanStack Router</summary>
+
+> Supported TanStack Router versions: `@tanstack/react-router@^1`
+> Note: TanStack Router support is experimental and does not yet cover TanStack Start.
+
+```tsx
+// src/routes/__root.tsx
+import { NuqsAdapter } from 'nuqs/adapters/tanstack-router'
+import { Outlet, createRootRoute } from '@tanstack/react-router'
+
+export const Route = createRootRoute({
+  component: () => (
+    <>
+      <NuqsAdapter>
+        <Outlet />
+      </NuqsAdapter>
+    </>
+  )
+})
 ```
 
 </details>
