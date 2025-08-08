@@ -41,5 +41,5 @@ this hypothesis.
 
 Make sure that all packages resolve to the same version
 of `nuqs` to prevent this issue from arising. See issue
-[#798](https://github.com/your-repo/issues/798) for more details and
+[#798](https://github.com/47ng/nuqs/issues/798) for more details and
 possible solutions.

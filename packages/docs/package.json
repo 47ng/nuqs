@@ -40,6 +40,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "dayjs": "^1.11.13",
+    "effect": "^3.17.2",
     "fumadocs-core": "^14.7.7",
     "fumadocs-mdx": "^11.5.7",
     "fumadocs-ui": "^14.7.7",
