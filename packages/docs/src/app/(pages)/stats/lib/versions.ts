@@ -105,7 +105,7 @@ const versionsData = `
 const versionLineSchema = z.object({
   package: z.union([z.literal('nuqs'), z.literal('next-usequerystate')]),
   date: z.string().length(10),
-  downloads: z.record(z.number())
+  downloads: z.record(z.string(), z.number())
 })
 
 // const creationDateSchema = z.record(

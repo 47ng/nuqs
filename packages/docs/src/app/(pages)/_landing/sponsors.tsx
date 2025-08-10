@@ -7,7 +7,7 @@ export async function SponsorsSection() {
   const sponsors = await fetchSponsors()
   return (
     <section className="mb-24">
-      <h2 className="mb-12 text-center text-3xl font-bold tracking-tighter dark:text-white md:text-4xl xl:text-5xl">
+      <h2 className="mb-12 text-center text-3xl font-bold tracking-tighter md:text-4xl xl:text-5xl dark:text-white">
         Sponsors
       </h2>
       <ul className="container grid grid-cols-2 gap-y-12 md:grid-cols-3 lg:grid-cols-6">
@@ -54,7 +54,7 @@ const sponsorSchema = z.object({
   handle: z.string(),
   url: z.string().url(),
   img: z.string().url(),
-  title: z.custom<ReactNode>()
+  title: z.custom<ReactNode>().optional()
 })
 type Sponsors = z.infer<typeof sponsorSchema>[]
 
