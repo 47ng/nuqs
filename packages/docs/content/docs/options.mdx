@@ -85,7 +85,7 @@ For server-side renderable frameworks, you would pair `shallow: false{:ts}` with
 
 ### In React Router based frameworks
 
-While the `shallow: false{:ts}` default behaviour is uncommon for Remix and React Router,
+While the `shallow: true{:ts}` default behaviour is uncommon for Remix and React Router,
 where loaders are always supposed to run on URL changes, nuqs gives you control
 of this behaviour, by opting in to running loaders only if they do need to access
 the relevant search params.
