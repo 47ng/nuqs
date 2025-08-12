@@ -176,33 +176,24 @@ describe('types/useQueryState', () => {
   })
   it('accepts defaultValue depending on parser when used with object syntax', () => {
     const issueTypes = ['open', 'closed'] as const
-    const [issueType] = useQueryState(
-      'issueType',
-      {
-        ...parseAsStringLiteral(issueTypes),
-        defaultValue: 'open'
-      }
-    );
+    const [issueType] = useQueryState('issueType', {
+      ...parseAsStringLiteral(issueTypes),
+      defaultValue: 'open'
+    })
 
     expectTypeOf(issueType).toEqualTypeOf<'open' | 'closed'>()
 
-    useQueryState(
-      'issueType',
-      {
-        ...parseAsStringLiteral(issueTypes),
-        // @ts-expect-error - defaultValue must be one of the issueTypes
-        defaultValue: 'thisiswrong'
-      }
-    );
+    useQueryState('issueType', {
+      ...parseAsStringLiteral(issueTypes),
+      // @ts-expect-error - defaultValue must be one of the issueTypes
+      defaultValue: 'thisiswrong'
+    })
 
     // let's check if order matters (it shouldn't)
-    useQueryState(
-      'issueType',
-      {
-        // @ts-expect-error - defaultValue must be one of the issueTypes
-        defaultValue: 'thisiswrong',
-        ...parseAsStringLiteral(issueTypes)
-      }
-    );
+    useQueryState('issueType', {
+      // @ts-expect-error - defaultValue must be one of the issueTypes
+      defaultValue: 'thisiswrong',
+      ...parseAsStringLiteral(issueTypes)
+    })
   })
 })
