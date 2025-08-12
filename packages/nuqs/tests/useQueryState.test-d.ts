@@ -4,7 +4,8 @@ import {
   defaultRateLimit,
   parseAsString,
   throttle,
-  useQueryState
+  useQueryState,
+  parseAsStringLiteral
 } from '../dist'
 
 describe('types/useQueryState', () => {
@@ -172,5 +173,36 @@ describe('types/useQueryState', () => {
     setState(null, { limitUrlUpdates: throttle(100) })
     setState(null, { limitUrlUpdates: debounce(100) })
     setState(null, { limitUrlUpdates: defaultRateLimit })
+  })
+  it('accepts defaultValue depending on parser when used with object syntax', () => {
+    const issueTypes = ['open', 'closed'] as const
+    const [issueType] = useQueryState(
+      'issueType',
+      {
+        ...parseAsStringLiteral(issueTypes),
+        defaultValue: 'open'
+      }
+    );
+
+    expectTypeOf(issueType).toEqualTypeOf<'open' | 'closed'>()
+
+    useQueryState(
+      'issueType',
+      {
+        ...parseAsStringLiteral(issueTypes),
+        // @ts-expect-error - defaultValue must be one of the issueTypes
+        defaultValue: 'thisiswrong'
+      }
+    );
+
+    // let's check if order matters (it shouldn't)
+    useQueryState(
+      'issueType',
+      {
+        // @ts-expect-error - defaultValue must be one of the issueTypes
+        defaultValue: 'thisiswrong',
+        ...parseAsStringLiteral(issueTypes)
+      }
+    );
   })
 })

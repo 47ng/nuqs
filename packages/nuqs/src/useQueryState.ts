@@ -10,7 +10,7 @@ import {
 } from './lib/queues/throttle'
 import { safeParse } from './lib/safe-parse'
 import { emitter, type CrossHookSyncPayload } from './lib/sync'
-import type { Parser } from './parsers'
+import type { NoParser, Parser } from './parsers'
 
 export interface UseQueryStateOptions<T> extends Parser<T>, Options {}
 
@@ -95,7 +95,7 @@ export function useQueryState(
   key: string,
   options: Options & {
     defaultValue: string
-  }
+  } & NoParser
 ): UseQueryStateReturn<string, typeof options.defaultValue>
 
 /**
