@@ -113,7 +113,7 @@
     "./adapters/tanstack-router": {
       "types": "./dist/adapters/tanstack-router.d.ts",
       "import": "./dist/adapters/tanstack-router.js",
-      "require": "./esm-only.cjs"
+      "default": "./dist/adapters/tanstack-router.js"
     },
     "./adapters/custom": {
       "types": "./dist/adapters/custom.d.ts",
