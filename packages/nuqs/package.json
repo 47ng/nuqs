@@ -48,8 +48,7 @@
     "adapters/react-router/v7.d.ts",
     "adapters/tanstack-router.d.ts",
     "adapters/custom.d.ts",
-    "adapters/testing.d.ts",
-    "esm-only.cjs"
+    "adapters/testing.d.ts"
   ],
   "type": "module",
   "sideEffects": false,
@@ -60,57 +59,57 @@
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
-      "require": "./esm-only.cjs"
+      "default": "./dist/index.js"
     },
     "./server": {
       "types": "./dist/server.d.ts",
       "import": "./dist/server.js",
-      "require": "./esm-only.cjs"
+      "default": "./dist/server.js"
     },
     "./testing": {
       "types": "./dist/testing.d.ts",
       "import": "./dist/testing.js",
-      "require": "./esm-only.cjs"
+      "default": "./dist/testing.js"
     },
     "./adapters/react": {
       "types": "./dist/adapters/react.d.ts",
       "import": "./dist/adapters/react.js",
-      "require": "./esm-only.cjs"
+      "default": "./dist/adapters/react.js"
     },
     "./adapters/next": {
       "types": "./dist/adapters/next.d.ts",
       "import": "./dist/adapters/next.js",
-      "require": "./esm-only.cjs"
+      "default": "./dist/adapters/next.js"
     },
     "./adapters/next/app": {
       "types": "./dist/adapters/next/app.d.ts",
       "import": "./dist/adapters/next/app.js",
-      "require": "./esm-only.cjs"
+      "default": "./dist/adapters/next/app.js"
     },
     "./adapters/next/pages": {
       "types": "./dist/adapters/next/pages.d.ts",
       "import": "./dist/adapters/next/pages.js",
-      "require": "./esm-only.cjs"
+      "default": "./dist/adapters/next/pages.js"
     },
     "./adapters/remix": {
       "types": "./dist/adapters/remix.d.ts",
       "import": "./dist/adapters/remix.js",
-      "require": "./esm-only.cjs"
+      "default": "./dist/adapters/remix.js"
     },
     "./adapters/react-router": {
       "types": "./dist/adapters/react-router.d.ts",
       "import": "./dist/adapters/react-router.js",
-      "require": "./esm-only.cjs"
+      "default": "./dist/adapters/react-router.js"
     },
     "./adapters/react-router/v6": {
       "types": "./dist/adapters/react-router/v6.d.ts",
       "import": "./dist/adapters/react-router/v6.js",
-      "require": "./esm-only.cjs"
+      "default": "./dist/adapters/react-router/v6.js"
     },
     "./adapters/react-router/v7": {
       "types": "./dist/adapters/react-router/v7.d.ts",
       "import": "./dist/adapters/react-router/v7.js",
-      "require": "./esm-only.cjs"
+      "default": "./dist/adapters/react-router/v7.js"
     },
     "./adapters/tanstack-router": {
       "types": "./dist/adapters/tanstack-router.d.ts",
@@ -120,12 +119,12 @@
     "./adapters/custom": {
       "types": "./dist/adapters/custom.d.ts",
       "import": "./dist/adapters/custom.js",
-      "require": "./esm-only.cjs"
+      "default": "./dist/adapters/custom.js"
     },
     "./adapters/testing": {
       "types": "./dist/adapters/testing.d.ts",
       "import": "./dist/adapters/testing.js",
-      "require": "./esm-only.cjs"
+      "default": "./dist/adapters/testing.js"
     }
   },
   "scripts": {
