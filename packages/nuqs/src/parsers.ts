@@ -4,10 +4,6 @@ import { safeParse } from './lib/safe-parse'
 
 type Require<T, Keys extends keyof T> = Pick<Required<T>, Keys> & Omit<T, Keys>
 
-export type NoParser = {
-  [K in keyof Parser<unknown>]?: never
-}
-
 export type Parser<T> = {
   /**
    * Convert a query string value into a state value.

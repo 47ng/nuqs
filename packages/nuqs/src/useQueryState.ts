@@ -10,7 +10,7 @@ import {
 } from './lib/queues/throttle'
 import { safeParse } from './lib/safe-parse'
 import { emitter, type CrossHookSyncPayload } from './lib/sync'
-import type { NoParser, Parser } from './parsers'
+import type { Parser } from './parsers'
 
 export interface UseQueryStateOptions<T> extends Parser<T>, Options {}
 
@@ -95,7 +95,12 @@ export function useQueryState(
   key: string,
   options: Options & {
     defaultValue: string
-  } & NoParser
+  } & {
+    // Note: Ensure this overload isn't picked when specifying a default
+    // value and spreading a parser for which the default would be invalid.
+    // See https://github.com/47ng/nuqs/pull/1057
+    [K in keyof Parser<unknown>]?: never
+  }
 ): UseQueryStateReturn<string, typeof options.defaultValue>
 
 /**
