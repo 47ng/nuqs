@@ -95,6 +95,11 @@ export function useQueryState(
   key: string,
   options: Options & {
     defaultValue: string
+  } & {
+    // Note: Ensure this overload isn't picked when specifying a default
+    // value and spreading a parser for which the default would be invalid.
+    // See https://github.com/47ng/nuqs/pull/1057
+    [K in keyof Parser<unknown>]?: never
   }
 ): UseQueryStateReturn<string, typeof options.defaultValue>
 
