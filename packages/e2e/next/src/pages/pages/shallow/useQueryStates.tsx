@@ -20,7 +20,7 @@ export function getServerSideProps(
 ): GetServerSidePropsResult<Props> {
   return {
     props: {
-      serverState: ctx.query.test as string | null
+      serverState: (ctx.query.test ?? null) as string | null
     }
   }
 }

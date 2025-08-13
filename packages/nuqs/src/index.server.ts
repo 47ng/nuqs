@@ -7,6 +7,11 @@ export type {
   UrlKeys
 } from './defs'
 export {
+  debounce,
+  defaultRateLimit,
+  throttle
+} from './lib/queues/rate-limiting'
+export {
   createLoader,
   type LoaderFunction,
   type LoaderInput,
@@ -14,3 +19,4 @@ export {
 } from './loader'
 export * from './parsers'
 export { createSerializer } from './serializer'
+export { createStandardSchemaV1 } from './standard-schema'

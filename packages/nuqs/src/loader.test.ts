@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { createLoader } from './loader'
-import { parseAsInteger } from './parsers'
+import { createParser, parseAsInteger } from './parsers'
 
 describe('loader', () => {
   describe('sync', () => {
@@ -88,6 +88,41 @@ describe('loader', () => {
       expect(result).toEqual({
         urlKey: 1
       })
+    })
+    it('supports default values', () => {
+      const load = createLoader({
+        a: parseAsInteger,
+        b: parseAsInteger.withDefault(2)
+      })
+      const result = load('')
+      expect(result).toEqual({
+        a: null,
+        b: 2
+      })
+    })
+    it('throws errors in strict mode when the parser returns null on non-empty queries', () => {
+      const load = createLoader({
+        test: createParser({
+          parse: () => null,
+          serialize: String
+        })
+      })
+      expect(() => load('?test=will-be-null', { strict: true })).toThrow(
+        '[nuqs] Failed to parse query `will-be-null` for key `test` (got null)'
+      )
+    })
+    it('throws errors in strict mode when the parser throws an error', () => {
+      const load = createLoader({
+        test: createParser({
+          parse: (): any => {
+            throw new Error('Boom')
+          },
+          serialize: String
+        })
+      })
+      expect(() => load('?test=will-throw', { strict: true })).toThrow(
+        '[nuqs] Error while parsing query `will-throw` for key `test`: Error: Boom'
+      )
     })
   })
 

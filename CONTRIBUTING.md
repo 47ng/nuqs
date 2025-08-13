@@ -15,17 +15,22 @@ This monorepo contains:
 - The source code for the `nuqs` NPM package, in [`packages/nuqs`](./packages/nuqs).
 - A Next.js app under [`packages/docs`](./packages/docs) that serves the documentation and as a playground deployed at <https://nuqs.47ng.com>
 - Test benches for [end-to-end tests](./packages/e2e) for each supported framework, driven by Cypress
+- Examples of integration with other tools.
 
 When running `next dev`, this will:
 
 - Build the library and watch for changes using [`tsup`](https://tsup.egoist.dev/)
 - Start the docs app, which will be available at <http://localhost:3000>.
 - Start the end-to-end test benches:
-  - http://localhost:3001 - Next.js
-  - http://localhost:3002 - React SPA
-  - http://localhost:3003 - Remix
-  - http://localhost:3006 - React Router v6
-  - http://localhost:3007 - React Router v7
+  - http://localhost:3001 - [Next.js](./packages/e2e/next)
+  - http://localhost:3002 - [React SPA](./packages/e2e/react)
+  - http://localhost:3003 - [Remix](./packages/e2e/remix)
+  - http://localhost:3004 - [TanStack Router](./packages/e2e/tanstack-router)
+  - http://localhost:3006 - [React Router v6](./packages/e2e/react-router/v6)
+  - http://localhost:3007 - [React Router v7](./packages/e2e/react-router/v7)
+- Start the examples:
+  - http://localhost:4000 - [tRPC](./packages/examples/trpc)
+  - http://localhost:4001 - [Next.js - App router](./packages/examples/next-app)
 
 ## Testing
 

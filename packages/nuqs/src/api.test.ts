@@ -10,6 +10,9 @@ const exports = `
     "createLoader": "function",
     "createParser": "function",
     "createSerializer": "function",
+    "createStandardSchemaV1": "function",
+    "debounce": "function",
+    "defaultRateLimit": "object",
     "parseAsArrayOf": "function",
     "parseAsBoolean": "object",
     "parseAsFloat": "object",
@@ -24,6 +27,7 @@ const exports = `
     "parseAsStringEnum": "function",
     "parseAsStringLiteral": "function",
     "parseAsTimestamp": "object",
+    "throttle": "function",
     "useQueryState": "function",
     "useQueryStates": "function",
   },
@@ -60,6 +64,9 @@ const exports = `
     "NuqsAdapter": "function",
     "useOptimisticSearchParams": "function",
   },
+  "./adapters/tanstack-router": {
+    "NuqsAdapter": "function",
+  },
   "./adapters/testing": {
     "NuqsTestingAdapter": "function",
     "withNuqsTestingAdapter": "function",
@@ -69,6 +76,9 @@ const exports = `
     "createParser": "function",
     "createSearchParamsCache": "function",
     "createSerializer": "function",
+    "createStandardSchemaV1": "function",
+    "debounce": "function",
+    "defaultRateLimit": "object",
     "parseAsArrayOf": "function",
     "parseAsBoolean": "object",
     "parseAsFloat": "object",
@@ -83,6 +93,7 @@ const exports = `
     "parseAsStringEnum": "function",
     "parseAsStringLiteral": "function",
     "parseAsTimestamp": "object",
+    "throttle": "function",
   },
   "./testing": {
     "isParserBijective": "function",
@@ -91,14 +102,6 @@ const exports = `
   },
 }
 `
-
-it('has a stable exported API (package.json)', async () => {
-  const manifest = await getPackageExportsManifest({
-    importMode: 'package',
-    cwd: fileURLToPath(import.meta.url)
-  })
-  expect(manifest.exports).toMatchInlineSnapshot(exports)
-})
 
 it('has a stable exported API (dist)', async () => {
   const manifest = await getPackageExportsManifest({

@@ -10,9 +10,9 @@ const params = {
   hook: parseAsStringLiteral([
     'useQueryState',
     'useQueryStates'
-  ] as const).withDefault('useQueryState'),
+  ]).withDefault('useQueryState'),
   shallow: parseAsBoolean.withDefault(true),
-  history: parseAsStringLiteral(['push', 'replace'] as const).withDefault(
+  history: parseAsStringLiteral(['push', 'replace']).withDefault(
     'replace'
   ),
   startTransition: parseAsBoolean.withDefault(false)

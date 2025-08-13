@@ -1,0 +1,63 @@
+---
+title: Effect Schema Parsers
+description: Use Effect Schema to parse and serialize URL state.
+---
+
+[Effect](https://effect.website) is a popular TypeScript framework, with its own schema validation library: [Effect Schema](https://effect.website/docs/schema/introduction/)
+
+Effect Schemas have the unique property of encoding two way transformations between different types. This makes them a perfect fit for using in a nuqs parser.
+
+
+```ts
+import { createParser } from 'nuqs'
+import { Schema, Either, Equal } from 'effect'
+
+function createSchemaParser<T, E extends string>(schema: Schema.Schema<T, E>) {
+  const encoder = Schema.encodeUnknownEither(schema);
+  const decoder = Schema.decodeUnknownEither(schema);
+  return createParser({
+    parse: (queryValue) => {
+      const result = decoder(queryValue);
+      return Either.getOrNull(result);
+    },
+    serialize: (value) => {
+      const result = encoder(value);
+      return Either.getOrThrowWith(
+        result,
+        (cause) =>
+          new Error(`Failed to encode value: ${value}`, {
+            cause,
+          }),
+      );
+    },
+    eq: (a, b) => Equal.equals(a, b),
+  });
+}
+```
+
+## Example
+
+```ts
+import { Schema } from 'effect'
+
+class User extends Schema.Class<User>('User')({
+  name: Schema.String,
+  age: Schema.Positive
+}) {}
+
+const ToBase64UrlEncodedJson = Schema.compose(Schema.StringFromBase64Url, Schema.parseJson())
+const schema = Schema.compose(ToBase64UrlEncodedJson, User)
+
+const parser = createSchemaParser(schema).withDefault(new User({ name: 'John Vim', age: 25 }))
+
+const [user, setUser] = useQueryState('user', parser)
+```
+
+## Interactive Demo
+
+import { Suspense } from 'react'
+import { EffectSchemaDemo } from './effect-schema-demo'
+
+<Suspense>
+  <EffectSchemaDemo />
+</Suspense>

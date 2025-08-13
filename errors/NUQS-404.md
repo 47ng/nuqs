@@ -20,6 +20,7 @@ using a suitable adapter:
 - [Remix](https://nuqs.47ng.com/docs/adapters#remix)
 - [React Router v6](https://nuqs.47ng.com/docs/adapters#react-router-v6)
 - [React Router v7](https://nuqs.47ng.com/docs/adapters#react-router-v7)
+- [TanStack Router](https://nuqs.47ng.com/docs/adapters#tanstack-router)
 
 ### Test adapter
 
@@ -40,5 +41,5 @@ this hypothesis.
 
 Make sure that all packages resolve to the same version
 of `nuqs` to prevent this issue from arising. See issue
-[#798](https://github.com/your-repo/issues/798) for more details and
+[#798](https://github.com/47ng/nuqs/issues/798) for more details and
 possible solutions.

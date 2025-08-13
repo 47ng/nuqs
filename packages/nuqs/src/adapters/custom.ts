@@ -1,4 +1,4 @@
-export { renderQueryString } from '../url-encoding'
+export { renderQueryString } from '../lib/url-encoding'
 export {
   createAdapterProvider as unstable_createAdapterProvider,
   type AdapterContext as unstable_AdapterContext

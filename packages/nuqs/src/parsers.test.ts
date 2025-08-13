@@ -1,4 +1,7 @@
+import { type } from 'arktype'
+import * as v from 'valibot'
 import { describe, expect, it } from 'vitest'
+import { z } from 'zod'
 import {
   parseAsArrayOf,
   parseAsBoolean,
@@ -8,6 +11,7 @@ import {
   parseAsInteger,
   parseAsIsoDate,
   parseAsIsoDateTime,
+  parseAsJson,
   parseAsNumberLiteral,
   parseAsString,
   parseAsStringEnum,
@@ -151,7 +155,7 @@ describe('parsers', () => {
     expect(isParserBijective(parser, 'b', Test.B)).toBe(true)
   })
   it('parseAsStringLiteral', () => {
-    const parser = parseAsStringLiteral(['a', 'b', 'c'] as const)
+    const parser = parseAsStringLiteral(['a', 'b', 'c'])
     expect(parser.parse('')).toBeNull()
     expect(parser.parse('a')).toBe('a')
     expect(parser.parse('b')).toBe('b')
@@ -167,7 +171,7 @@ describe('parsers', () => {
     expect(isParserBijective(parser, 'c', 'c')).toBe(true)
   })
   it('parseAsNumberLiteral', () => {
-    const parser = parseAsNumberLiteral([1, 2, 3] as const)
+    const parser = parseAsNumberLiteral([1, 2, 3])
     expect(parser.parse('')).toBeNull()
     expect(parser.parse('1')).toBe(1)
     expect(parser.parse('2')).toBe(2)
@@ -181,6 +185,106 @@ describe('parsers', () => {
     expect(isParserBijective(parser, '1', 1)).toBe(true)
     expect(isParserBijective(parser, '2', 2)).toBe(true)
     expect(isParserBijective(parser, '3', 3)).toBe(true)
+  })
+
+  it('parseAsJson (validator: ArkType)', () => {
+    const schema = type({
+      foo: 'string',
+      bar: 'number'
+    })
+    const parser = parseAsJson(schema) // note: using the schema directly
+    expect(parser.parse('')).toBeNull()
+    expect(parser.parse('{"foo":"abc","bar":42}')).toEqual({
+      foo: 'abc',
+      bar: 42
+    })
+    expect(parser.parse('{"foo":"abc","bar":"not-a-number"}')).toBeNull()
+    expect(parser.serialize({ foo: 'abc', bar: 42 })).toBe(
+      '{"foo":"abc","bar":42}'
+    )
+    expect(testParseThenSerialize(parser, '{"foo":"abc","bar":42}')).toBe(true)
+    expect(testSerializeThenParse(parser, { foo: 'abc', bar: 42 })).toBe(true)
+    expect(
+      isParserBijective(parser, '{"foo":"abc","bar":42}', {
+        foo: 'abc',
+        bar: 42
+      })
+    ).toBe(true)
+  })
+
+  it('parseAsJson (validator: Valibot)', () => {
+    const schema = v.object({
+      foo: v.string(),
+      bar: v.number()
+    })
+    const parser = parseAsJson(schema) // note: using the schema directly
+    expect(parser.parse('')).toBeNull()
+    expect(parser.parse('{"foo":"abc","bar":42}')).toEqual({
+      foo: 'abc',
+      bar: 42
+    })
+    expect(parser.parse('{"foo":"abc","bar":"not-a-number"}')).toBeNull()
+    expect(parser.serialize({ foo: 'abc', bar: 42 })).toBe(
+      '{"foo":"abc","bar":42}'
+    )
+    expect(testParseThenSerialize(parser, '{"foo":"abc","bar":42}')).toBe(true)
+    expect(testSerializeThenParse(parser, { foo: 'abc', bar: 42 })).toBe(true)
+    expect(
+      isParserBijective(parser, '{"foo":"abc","bar":42}', {
+        foo: 'abc',
+        bar: 42
+      })
+    ).toBe(true)
+  })
+
+  it('parseAsJson (validator: Zod parse function)', () => {
+    const schema = z.object({
+      foo: z.string(),
+      bar: z.number()
+    })
+    const parser = parseAsJson(schema.parse)
+    expect(parser.parse('')).toBeNull()
+    expect(parser.parse('{"foo":"abc","bar":42}')).toEqual({
+      foo: 'abc',
+      bar: 42
+    })
+    expect(parser.parse('{"foo":"abc","bar":"not-a-number"}')).toBeNull()
+    expect(parser.serialize({ foo: 'abc', bar: 42 })).toBe(
+      '{"foo":"abc","bar":42}'
+    )
+    expect(testParseThenSerialize(parser, '{"foo":"abc","bar":42}')).toBe(true)
+    expect(testSerializeThenParse(parser, { foo: 'abc', bar: 42 })).toBe(true)
+    expect(
+      isParserBijective(parser, '{"foo":"abc","bar":42}', {
+        foo: 'abc',
+        bar: 42
+      })
+    ).toBe(true)
+  })
+
+  it('parseAsJson (validator: Zod schema via Standard Schema)', () => {
+    const schema = z.object({
+      foo: z.string(),
+      bar: z.number()
+    })
+    const parser = parseAsJson(schema) // note: using the schema directly
+    expect(parser.parse('')).toBeNull()
+    expect(parser.parse('{"foo":"abc","bar":42}')).toEqual({
+      foo: 'abc',
+      bar: 42
+    })
+    expect(parser.parse('{"foo":"abc","bar":"not-a-number"}')).toBeNull()
+    expect(parser.serialize({ foo: 'abc', bar: 42 })).toBe(
+      '{"foo":"abc","bar":42}'
+    )
+    expect(testParseThenSerialize(parser, '{"foo":"abc","bar":42}')).toBe(true)
+    expect(testSerializeThenParse(parser, { foo: 'abc', bar: 42 })).toBe(true)
+    expect(
+      isParserBijective(parser, '{"foo":"abc","bar":42}', {
+        foo: 'abc',
+        bar: 42
+      })
+    ).toBe(true)
   })
 
   it('parseAsArrayOf', () => {

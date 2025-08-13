@@ -27,7 +27,8 @@
     "nextjs",
     "react",
     "remix",
-    "react-router"
+    "react-router",
+    "tanstack-router"
   ],
   "publishConfig": {
     "access": "public",
@@ -45,6 +46,7 @@
     "adapters/react-router.d.ts",
     "adapters/react-router/v6.d.ts",
     "adapters/react-router/v7.d.ts",
+    "adapters/tanstack-router.d.ts",
     "adapters/custom.d.ts",
     "adapters/testing.d.ts"
   ],
@@ -108,6 +110,11 @@
       "import": "./dist/adapters/react-router/v7.js",
       "default": "./dist/adapters/react-router/v7.js"
     },
+    "./adapters/tanstack-router": {
+      "types": "./dist/adapters/tanstack-router.d.ts",
+      "import": "./dist/adapters/tanstack-router.js",
+      "require": "./esm-only.cjs"
+    },
     "./adapters/custom": {
       "types": "./dist/adapters/custom.d.ts",
       "import": "./dist/adapters/custom.js",
@@ -120,9 +127,9 @@
     }
   },
   "scripts": {
-    "dev": "tsup --watch",
+    "dev": "tsdown --watch",
     "prebuild": "rm -rf dist",
-    "build": "tsup",
+    "build": "tsdown",
     "postbuild": "size-limit --json > size.json",
     "test": "pnpm run --stream '/^test:/'",
     "test:unit": "vitest run --typecheck",
@@ -130,10 +137,12 @@
     "prepack": "./scripts/prepack.sh"
   },
   "dependencies": {
+    "@standard-schema/spec": "1.0.0",
     "mitt": "^3.0.1"
   },
   "peerDependencies": {
     "@remix-run/react": ">=2",
+    "@tanstack/react-router": "^1",
     "next": ">=14.2.0",
     "react": ">=18.2.0 || ^19.0.0-0",
     "react-router": "^6 || ^7",
@@ -141,6 +150,9 @@
   },
   "peerDependenciesMeta": {
     "@remix-run/react": {
+      "optional": true
+    },
+    "@tanstack/react-router": {
       "optional": true
     },
     "next": {
@@ -154,7 +166,6 @@
     }
   },
   "devDependencies": {
-    "@microsoft/api-extractor": "7.52.3",
     "@remix-run/react": "^2.16.5",
     "@size-limit/preset-small-lib": "^11.2.0",
     "@testing-library/dom": "^10.4.0",
@@ -166,23 +177,26 @@
     "@types/react-dom": "catalog:react19",
     "@vitejs/plugin-react": "^4.3.4",
     "@vitest/coverage-v8": "^3.1.1",
+    "arktype": "^2.1.20",
     "fast-check": "^4.1.1",
     "jsdom": "^26.1.0",
-    "next": "15.3.0",
+    "next": "15.3.5",
     "react": "catalog:react19",
     "react-dom": "catalog:react19",
     "react-router-dom": "6.30.0",
     "size-limit": "^11.2.0",
-    "tsup": "^8.4.0",
+    "tsdown": "^0.12.7",
     "typescript": "^5.8.3",
+    "valibot": "^1.1.0",
     "vitest": "^3.1.1",
-    "vitest-package-exports": "^0.1.1"
+    "vitest-package-exports": "^0.1.1",
+    "zod": "^3.24.2"
   },
   "size-limit": [
     {
       "name": "Client",
       "path": "dist/index.js",
-      "limit": "5 kB",
+      "limit": "6 kB",
       "ignore": [
         "react",
         "next"
@@ -191,7 +205,7 @@
     {
       "name": "Server",
       "path": "dist/server.js",
-      "limit": "2.5 kB",
+      "limit": "3 kB",
       "ignore": [
         "react",
         "next"
