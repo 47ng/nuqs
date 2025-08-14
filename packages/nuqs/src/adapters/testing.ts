@@ -1,7 +1,7 @@
 import { createElement, type ReactElement, type ReactNode } from 'react'
 import { resetQueues } from '../lib/queues/reset'
 import { renderQueryString } from '../lib/url-encoding'
-import { type AdapterDefaultOptions, context } from './lib/context'
+import { type AdapterProps, context } from './lib/context'
 import type { AdapterInterface, AdapterOptions } from './lib/defs'
 
 export type UrlUpdateEvent = {
@@ -18,7 +18,7 @@ type TestingAdapterProps = {
   rateLimitFactor?: number
   resetUrlUpdateQueueOnMount?: boolean
   children: ReactNode
-} & AdapterDefaultOptions
+} & AdapterProps
 
 export function NuqsTestingAdapter({
   resetUrlUpdateQueueOnMount = true,

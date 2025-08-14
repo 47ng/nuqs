@@ -11,13 +11,13 @@ import { debugEnabled } from '../../lib/debug'
 import { error } from '../../lib/errors'
 import type { AdapterInterface, UseAdapterHook } from './defs'
 
-export type AdapterDefaultOptions = {
+export type AdapterProps = {
   defaultOptions?: {
     shallow?: boolean
   }
 }
 
-export type AdapterContext = AdapterDefaultOptions & {
+export type AdapterContext = AdapterProps & {
   useAdapter: UseAdapterHook
 }
 
@@ -42,7 +42,7 @@ if (debugEnabled && typeof window !== 'undefined') {
 }
 
 export type AdapterProvider = (
-  props: AdapterDefaultOptions & {
+  props: AdapterProps & {
     children: ReactNode
   }
 ) => ReactElement<ProviderProps<AdapterContext>>
@@ -74,6 +74,5 @@ export function useAdapter(): AdapterInterface {
   return value.useAdapter()
 }
 
-export const useAdapterDefaultOptions =
-  (): AdapterDefaultOptions['defaultOptions'] =>
-    useContext(context).defaultOptions
+export const useAdapterDefaultOptions = (): AdapterProps['defaultOptions'] =>
+  useContext(context).defaultOptions
