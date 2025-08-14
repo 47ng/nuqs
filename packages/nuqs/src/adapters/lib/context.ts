@@ -11,7 +11,13 @@ import { debugEnabled } from '../../lib/debug'
 import { error } from '../../lib/errors'
 import type { AdapterInterface, UseAdapterHook } from './defs'
 
-export type AdapterContext = {
+export type AdapterDefaultOptions = {
+  defaultOptions?: {
+    shallow?: boolean
+  }
+}
+
+export type AdapterContext = AdapterDefaultOptions & {
   useAdapter: UseAdapterHook
 }
 
@@ -35,11 +41,11 @@ if (debugEnabled && typeof window !== 'undefined') {
   window.__NuqsAdapterContext = context
 }
 
-export type AdapterProvider = ({
-  children
-}: {
-  children: ReactNode
-}) => ReactElement<ProviderProps<AdapterContext>>
+export type AdapterProvider = (
+  props: AdapterDefaultOptions & {
+    children: ReactNode
+  }
+) => ReactElement<ProviderProps<AdapterContext>>
 
 /**
  * Create a custom adapter (context provider) for nuqs to work with your framework / router.
@@ -52,10 +58,10 @@ export type AdapterProvider = ({
 export function createAdapterProvider(
   useAdapter: UseAdapterHook
 ): AdapterProvider {
-  return ({ children, ...props }: { children: ReactNode }) =>
+  return ({ children, defaultOptions, ...props }) =>
     createElement(
       context.Provider,
-      { ...props, value: { useAdapter } },
+      { ...props, value: { useAdapter, defaultOptions } },
       children
     )
 }
@@ -67,3 +73,7 @@ export function useAdapter(): AdapterInterface {
   }
   return value.useAdapter()
 }
+
+export const useAdapterDefaultOptions =
+  (): AdapterDefaultOptions['defaultOptions'] =>
+    useContext(context).defaultOptions
