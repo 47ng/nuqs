@@ -25,7 +25,7 @@ export function DownloadsGraph({
         curveType="monotone"
         index="date"
         tickGap={40}
-        yAxisWidth={40}
+        yAxisWidth={45}
         categories={dataKeys}
         colors={['red-500', 'zinc-500/50']}
         valueFormatter={v => formatStatNumber(v)}
