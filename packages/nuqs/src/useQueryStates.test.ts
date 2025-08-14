@@ -683,3 +683,26 @@ describe('useQueryStates: update sequencing', () => {
     expect(onUrlUpdate.mock.calls[1]![0].queryString).toEqual('?a=debounced')
   })
 })
+
+describe('useQueryStates: adapter defaults', () => {
+  it('should use adapter default value for `shallow` when provided', async () => {
+    const onUrlUpdate = vi.fn<OnUrlUpdateFunction>()
+    const useTestHook = () => useQueryStates({ test: parseAsString })
+    const { result } = renderHook(useTestHook, {
+      wrapper: withNuqsTestingAdapter({
+        searchParams: '?test=default',
+        defaultOptions: {
+          shallow: false
+        },
+        onUrlUpdate
+      })
+    })
+
+    expect(result.current[0]).toEqual({ test: 'default' })
+
+    await act(() => result.current[1]({ test: 'update' }))
+
+    expect(onUrlUpdate).toHaveBeenCalledOnce()
+    expect(onUrlUpdate.mock.calls[0]![0].options.shallow).toBe(false)
+  })
+})

@@ -32,6 +32,16 @@ setState('foo', { scroll: true })
 
 Call-level options will override hook level options.
 
+Default values for some options can also be configured globally via the `defaultOptions{:ts}`
+[adapter](/docs/adapters) prop:
+
+```tsx
+// [!code word:defaultOptions]
+<NuqsAdapter defaultOptions={{ shallow: false }}>
+  {children}
+</NuqsAdapter>
+```
+
 
 ## History
 
