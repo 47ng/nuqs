@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useId, useRef, useState } from 'react'
-import { useAdapter } from './adapters/lib/context'
+import { useAdapter, useAdapterDefaultOptions } from './adapters/lib/context'
 import type { Options } from './defs'
 import { debug } from './lib/debug'
 import { debounceController } from './lib/queues/debounce'
@@ -202,9 +202,14 @@ export function useQueryState(
  */
 export function useQueryState<T = string>(
   key: string,
-  {
+  options: Partial<UseQueryStateOptions<T>> & {
+    defaultValue?: T
+  } = {}
+) {
+  const defaultOptions = useAdapterDefaultOptions()
+  const {
     history = 'replace',
-    shallow = true,
+    shallow = defaultOptions?.shallow ?? true,
     scroll = false,
     throttleMs = defaultRateLimit.timeMs,
     limitUrlUpdates,
@@ -214,20 +219,7 @@ export function useQueryState<T = string>(
     defaultValue = undefined,
     clearOnDefault = true,
     startTransition
-  }: Partial<UseQueryStateOptions<T>> & {
-    defaultValue?: T
-  } = {
-    history: 'replace',
-    scroll: false,
-    shallow: true,
-    throttleMs: defaultRateLimit.timeMs,
-    parse: x => x as unknown as T,
-    serialize: String,
-    eq: (a, b) => a === b,
-    clearOnDefault: true,
-    defaultValue: undefined
-  }
-) {
+  } = options
   const hookId = useId()
   const adapter = useAdapter()
   const { [key]: queuedQuery } = debounceController.useQueuedQueries([key])
