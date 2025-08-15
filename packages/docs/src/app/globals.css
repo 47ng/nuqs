@@ -1,55 +1,56 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss';
+@import 'fumadocs-ui/css/black.css';
+@import 'fumadocs-ui/css/preset.css';
+@source './node_modules/@tremor/**/*.{js,ts,jsx,tsx}';
+@plugin 'tailwindcss-animate';
+@plugin '@tailwindcss/container-queries';
+@plugin '@headlessui/tailwindcss';
 
-@layer base {
-  :root {
-    --radius: 0.5rem;
-  }
+:root {
+  --fd-layout-width: 1600px;
 
-  :root {
-    --background: 0 0% 100%;
-    --foreground: 240 10% 3.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 240 10% 3.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 3.9%;
-    --primary: 240 5.9% 10%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 240 4.8% 95.9%;
-    --secondary-foreground: 240 5.9% 10%;
-    --muted: 240 4.8% 95.9%;
-    --muted-foreground: 240 3.8% 46.1%;
-    --accent: 240 4.8% 95.9%;
-    --accent-foreground: 240 5.9% 10%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 240 5.9% 90%;
-    --input: 240 5.9% 90%;
-    --ring: 240 5.9% 10%;
-  }
+  --radius: 0.5rem;
+  --background: 0 0% 100%;
+  --foreground: 240 10% 3.9%;
+  --card: 0 0% 100%;
+  --card-foreground: 240 10% 3.9%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 240 10% 3.9%;
+  --primary: 240 5.9% 10%;
+  --primary-foreground: 0 0% 98%;
+  --secondary: 240 4.8% 95.9%;
+  --secondary-foreground: 240 5.9% 10%;
+  --muted: 240 4.8% 95.9%;
+  --muted-foreground: 240 3.8% 46.1%;
+  --accent: 240 4.8% 95.9%;
+  --accent-foreground: 240 5.9% 10%;
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 0 0% 98%;
+  --border: 240 5.9% 90%;
+  --input: 240 5.9% 90%;
+  --ring: 240 5.9% 10%;
+}
 
-  .dark {
-    --background: 240 10% 3.9%;
-    --foreground: 0 0% 98%;
-    --card: 240 10% 3.9%;
-    --card-foreground: 0 0% 98%;
-    --popover: 240 10% 3.9%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 0 0% 98%;
-    --primary-foreground: 240 5.9% 10%;
-    --secondary: 240 3.7% 15.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 240 3.7% 15.9%;
-    --muted-foreground: 240 5% 64.9%;
-    --accent: 240 3.7% 15.9%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 240 3.7% 15.9%;
-    --input: 240 3.7% 15.9%;
-    --ring: 240 4.9% 83.9%;
-  }
+.dark {
+  --background: 240 10% 3.9%;
+  --foreground: 0 0% 98%;
+  --card: 240 10% 3.9%;
+  --card-foreground: 0 0% 98%;
+  --popover: 240 10% 3.9%;
+  --popover-foreground: 0 0% 98%;
+  --primary: 0 0% 98%;
+  --primary-foreground: 240 5.9% 10%;
+  --secondary: 240 3.7% 15.9%;
+  --secondary-foreground: 0 0% 98%;
+  --muted: 240 3.7% 15.9%;
+  --muted-foreground: 240 5% 64.9%;
+  --accent: 240 3.7% 15.9%;
+  --accent-foreground: 0 0% 98%;
+  --destructive: 0 62.8% 30.6%;
+  --destructive-foreground: 0 0% 98%;
+  --border: 240 3.7% 15.9%;
+  --input: 240 3.7% 15.9%;
+  --ring: 240 4.9% 83.9%;
 }
 
 @layer base {
@@ -68,92 +69,9 @@
   * {
     @apply border-border;
   }
+
   body {
     @apply bg-background text-foreground;
-  }
-}
-
-@layer utilities {
-  .bg-fd-card {
-    --fd-card: var(--fd-secondary);
-    --tw-bg-opacity: 0.25;
-  }
-}
-
-@layer components {
-  /* Remove the background color on title bar */
-  .fd-codeblock div:has(> figcaption) {
-    background-color: transparent;
-  }
-
-  /* Fix height of empty lines */
-  .fd-codeblock .line:empty:not(:last-child) {
-    height: 1.5em;
-  }
-
-  /* Line & word highlighing */
-  .fd-codeblock .highlighted-word,
-  .fd-codeblock .line.highlighted {
-    --highlight-color: var(--foreground);
-    --highlight-opacity: 5%;
-    background-color: hsl(var(--highlight-color) / var(--highlight-opacity));
-  }
-  .fd-codeblock .highlighted-word {
-    border: none;
-    box-shadow: 0 0 0 1.25px
-      hsl(var(--highlight-color) / var(--highlight-opacity));
-    border-radius: 4px;
-  }
-
-  /* Remove the corner radius on adjacent highlighted words */
-  .fd-codeblock .highlighted-word + .highlighted-word {
-    border-top-left-radius: 0;
-    border-bottom-left-radius: 0;
-    margin-left: 1px;
-    padding-left: 0;
-  }
-  .fd-codeblock .highlighted-word:has(+ .highlighted-word) {
-    border-top-right-radius: 0;
-    border-bottom-right-radius: 0;
-    margin-right: 1px;
-    padding-right: 0;
-  }
-
-  /* By default, every code block should expand to fit its contents.
-    Fumadocs uses a max-height to prevent this behaviour, that we override by default
-    but we can still use custom="compact" in the meta string in MDX to enable it back.
-  */
-  .fd-codeblock:not([custom~='compact']) div.max-h-\[600px\] {
-    max-height: unset;
-  }
-  /* Fix bottom padding of compact code blocks (applied at the wrong level) */
-  .fd-codeblock[custom~='compact'] {
-    pre {
-      padding-block: 0;
-    }
-    code {
-      padding-block: 1rem;
-    }
-  }
-
-  /* Fix the mobile top navbar collapsing */
-  #nd-subnav {
-    flex-shrink: 0;
-    /* https://github.com/47ng/nuqs/pull/1027#issuecomment-3007455946 */
-    @apply fixed z-30 w-full;
-  }
-
-  /* Fix titles being hidden behind the headers:
-    https://github.com/47ng/nuqs/pull/1043
-  */
-  #nd-page {
-    @apply pt-14 md:pt-0;
-  }
-}
-
-@layer components {
-  #nd-nav[aria-label='Main'] {
-    @apply lg:rounded-full;
   }
 }
 
@@ -172,6 +90,141 @@
 
 @layer components {
   number-flow-react::part(suffix) {
-    @apply ml-0.5 text-sm font-medium text-muted-foreground;
+    @apply text-muted-foreground ml-0.5 text-sm font-medium;
   }
+}
+
+@theme {
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
+
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+
+  --color-popover: hsl(var(--popover));
+  --color-popover-foreground: hsl(var(--popover-foreground));
+
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+
+  --radius-lg: var(--radius);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 4px);
+
+  --font-sans:
+    var(--font-sans), ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
+    'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+
+  @keyframes accordion-down {
+    from {
+      height: 0;
+    }
+    to {
+      height: var(--radix-accordion-content-height);
+    }
+  }
+
+  @keyframes accordion-up {
+    from {
+      height: var(--radix-accordion-content-height);
+    }
+    to {
+      height: 0;
+    }
+  }
+
+  --animation-accordion-down: accordion-down 0.2s ease-out;
+  --animation-accordion-up: accordion-up 0.2s ease-out;
+}
+
+@theme {
+  /* Light mode colors */
+  --color-tremor-brand-faint: #eff6ff;
+  --color-tremor-brand-muted: #bfdbfe;
+  --color-tremor-brand-subtle: #60a5fa;
+  --color-tremor-brand: #3b82f6;
+  --color-tremor-brand-emphasis: #1d4ed8;
+  --color-tremor-brand-inverted: #ffffff;
+
+  --color-tremor-background-muted: #fafafa;
+  --color-tremor-background-subtle: #f4f4f5;
+  --color-tremor-background: #ffffff;
+  --color-tremor-background-emphasis: #3f3f46;
+
+  --color-tremor-border: #e4e4e7;
+  --color-tremor-ring: #e4e4e7;
+
+  --color-tremor-content-subtle: #a1a1aa;
+  --color-tremor-content: #71717a;
+  --color-tremor-content-emphasis: #3f3f46;
+  --color-tremor-content-strong: #18181b;
+  --color-tremor-content-inverted: #ffffff;
+
+  /* Dark mode colors */
+  --color-dark-tremor-brand-faint: #0b1229;
+  --color-dark-tremor-brand-muted: #172554;
+  --color-dark-tremor-brand-subtle: #1e40af;
+  --color-dark-tremor-brand: #3b82f6;
+  --color-dark-tremor-brand-emphasis: #60a5fa;
+  --color-dark-tremor-brand-inverted: #172554;
+
+  --color-dark-tremor-background-muted: #131a2b;
+  --color-dark-tremor-background-subtle: #3f3f46;
+  --color-dark-tremor-background: #18181b;
+  --color-dark-tremor-background-emphasis: #d4d4d8;
+
+  --color-dark-tremor-border: #3f3f46;
+  --color-dark-tremor-ring: #3f3f46;
+
+  --color-dark-tremor-content-subtle: #52525b;
+  --color-dark-tremor-content: #71717a;
+  --color-dark-tremor-content-emphasis: #e4e4e7;
+  --color-dark-tremor-content-strong: #fafafa;
+  --color-dark-tremor-content-inverted: #18181b;
+
+  /* Box shadows */
+  --shadow-tremor-input: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-tremor-card:
+    0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  --shadow-tremor-dropdown:
+    0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+
+  --shadow-dark-tremor-input: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-dark-tremor-card:
+    0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  --shadow-dark-tremor-dropdown:
+    0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+
+  /* Border radius */
+  --radius-tremor-small: 0.375rem;
+  --radius-tremor-default: 0.5rem;
+  --radius-tremor-full: 9999px;
+
+  /* Font sizes */
+  --font-size-tremor-label: 0.75rem;
+  --line-height-tremor-label: 1rem;
+
+  --font-size-tremor-default: 0.875rem;
+  --line-height-tremor-default: 1.25rem;
+
+  --font-size-tremor-title: 1.125rem;
+  --line-height-tremor-title: 1.75rem;
+
+  --font-size-tremor-metric: 1.875rem;
+  --line-height-tremor-metric: 2.25rem;
 }
