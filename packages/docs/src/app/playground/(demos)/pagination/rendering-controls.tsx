@@ -46,7 +46,7 @@ export function RenderingControls() {
             value={delay.toFixed()}
             onValueChange={value =>
               setControls({
-                delay: value === '0' ? null : parseInt(value)
+                delay: value && value !== '0' ? parseInt(value) : null
               })
             }
           >
