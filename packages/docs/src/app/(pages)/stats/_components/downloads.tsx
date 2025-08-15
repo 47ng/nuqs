@@ -45,31 +45,39 @@ export async function NPMDownloads() {
         title={
           <>
             <Download size={20} /> Last 90 days
-            <span aria-label="combined" className="ml-auto">
-              {formatStatNumber(
-                both.last90Days.reduce(
-                  (sum, { nuqs, ['next-usequerystate']: n_uqs }) =>
-                    sum + nuqs + n_uqs,
-                  0
-                )
-              )}
-            </span>
-            <span aria-label="nuqs" className="mx-1 text-red-500">
-              {formatStatNumber(
-                nuqs.last90Days.reduce(
-                  (sum, { downloads }) => sum + downloads,
-                  0
-                )
-              )}
-            </span>
-            <span aria-label="next-usequerystate" className="text-zinc-500/50">
-              {formatStatNumber(
-                nextUseQueryState.last90Days.reduce(
-                  (sum, { downloads }) => sum + downloads,
-                  0
-                )
-              )}
-            </span>
+            <dl className="ml-auto flex gap-2">
+              <dt className="sr-only">combined</dt>
+              <dd>
+                {formatStatNumber(
+                  both.last90Days.reduce(
+                    (sum, { nuqs, ['next-usequerystate']: n_uqs }) =>
+                      sum + nuqs + n_uqs,
+                    0
+                  )
+                )}
+              </dd>
+              <span className="font-light text-zinc-500" aria-hidden>
+                |
+              </span>
+              <dt className="sr-only">nuqs</dt>
+              <dd className="text-red-500">
+                {formatStatNumber(
+                  nuqs.last90Days.reduce(
+                    (sum, { downloads }) => sum + downloads,
+                    0
+                  )
+                )}
+              </dd>
+              <dt className="sr-only">next-usequerystate</dt>
+              <dd className="text-zinc-500/50">
+                {formatStatNumber(
+                  nextUseQueryState.last90Days.reduce(
+                    (sum, { downloads }) => sum + downloads,
+                    0
+                  )
+                )}
+              </dd>
+            </dl>
           </>
         }
       />
@@ -79,31 +87,39 @@ export async function NPMDownloads() {
         title={
           <>
             <Download size={20} /> Last 30 days
-            <span aria-label="combined" className="ml-auto">
-              {formatStatNumber(
-                both.last30Days.reduce(
-                  (sum, { nuqs, ['next-usequerystate']: n_uqs }) =>
-                    sum + nuqs + n_uqs,
-                  0
-                )
-              )}
-            </span>
-            <span aria-label="nuqs" className="mx-1 text-red-500">
-              {formatStatNumber(
-                nuqs.last30Days.reduce(
-                  (sum, { downloads }) => sum + downloads,
-                  0
-                )
-              )}
-            </span>
-            <span aria-label="next-usequerystate" className="text-zinc-500/50">
-              {formatStatNumber(
-                nextUseQueryState.last30Days.reduce(
-                  (sum, { downloads }) => sum + downloads,
-                  0
-                )
-              )}
-            </span>
+            <dl className="ml-auto flex gap-2">
+              <dt className="sr-only">combined</dt>
+              <dd>
+                {formatStatNumber(
+                  both.last30Days.reduce(
+                    (sum, { nuqs, ['next-usequerystate']: n_uqs }) =>
+                      sum + nuqs + n_uqs,
+                    0
+                  )
+                )}
+              </dd>
+              <span className="font-light text-zinc-500" aria-hidden>
+                |
+              </span>
+              <dt className="sr-only">nuqs</dt>
+              <dd className="text-red-500">
+                {formatStatNumber(
+                  nuqs.last30Days.reduce(
+                    (sum, { downloads }) => sum + downloads,
+                    0
+                  )
+                )}
+              </dd>
+              <dt className="sr-only">next-usequerystate</dt>
+              <dd className="text-zinc-500/50">
+                {formatStatNumber(
+                  nextUseQueryState.last30Days.reduce(
+                    (sum, { downloads }) => sum + downloads,
+                    0
+                  )
+                )}
+              </dd>
+            </dl>
           </>
         }
       />
