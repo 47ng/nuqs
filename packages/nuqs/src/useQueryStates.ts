@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react'
-import { useAdapter } from './adapters/lib/context'
+import { useAdapter, useAdapterDefaultOptions } from './adapters/lib/context'
 import type { Nullable, Options, UrlKeys } from './defs'
 import { debug } from './lib/debug'
 import { debounceController } from './lib/queues/debounce'
@@ -64,18 +64,22 @@ const defaultUrlKeys = {}
  */
 export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
   keyMap: KeyMap,
-  {
+  options: Partial<UseQueryStatesOptions<KeyMap>> = {}
+): UseQueryStatesReturn<KeyMap> {
+  const hookId = useId()
+  const defaultOptions = useAdapterDefaultOptions()
+
+  const {
     history = 'replace',
     scroll = false,
-    shallow = true,
+    shallow = defaultOptions?.shallow ?? true,
     throttleMs = defaultRateLimit.timeMs,
     limitUrlUpdates,
     clearOnDefault = true,
     startTransition,
-    urlKeys = defaultUrlKeys
-  }: Partial<UseQueryStatesOptions<KeyMap>> = {}
-): UseQueryStatesReturn<KeyMap> {
-  const hookId = useId()
+    urlKeys = defaultUrlKeys as UrlKeys<KeyMap>
+  } = options
+
   type V = NullableValues<KeyMap>
   const stateKeys = Object.keys(keyMap).join(',')
   const resolvedUrlKeys = useMemo(
