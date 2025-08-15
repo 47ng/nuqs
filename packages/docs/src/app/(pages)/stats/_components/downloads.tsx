@@ -45,7 +45,16 @@ export async function NPMDownloads() {
         title={
           <>
             <Download size={20} /> Last 90 days
-            <span aria-label="nuqs" className="ml-auto text-red-500">
+            <span aria-label="combined" className="ml-auto">
+              {formatStatNumber(
+                both.last90Days.reduce(
+                  (sum, { nuqs, ['next-usequerystate']: n_uqs }) =>
+                    sum + nuqs + n_uqs,
+                  0
+                )
+              )}
+            </span>
+            <span aria-label="nuqs" className="mx-1 text-red-500">
               {formatStatNumber(
                 nuqs.last90Days.reduce(
                   (sum, { downloads }) => sum + downloads,
@@ -53,22 +62,10 @@ export async function NPMDownloads() {
                 )
               )}
             </span>
-            <span
-              aria-label="next-usequerystate"
-              className="mx-1 text-zinc-500/50"
-            >
+            <span aria-label="next-usequerystate" className="text-zinc-500/50">
               {formatStatNumber(
                 nextUseQueryState.last90Days.reduce(
                   (sum, { downloads }) => sum + downloads,
-                  0
-                )
-              )}
-            </span>
-            <span aria-label="combined">
-              {formatStatNumber(
-                both.last90Days.reduce(
-                  (sum, { nuqs, ['next-usequerystate']: n_uqs }) =>
-                    sum + nuqs + n_uqs,
                   0
                 )
               )}
@@ -82,7 +79,16 @@ export async function NPMDownloads() {
         title={
           <>
             <Download size={20} /> Last 30 days
-            <span aria-label="nuqs" className="ml-auto text-red-500">
+            <span aria-label="combined" className="ml-auto">
+              {formatStatNumber(
+                both.last30Days.reduce(
+                  (sum, { nuqs, ['next-usequerystate']: n_uqs }) =>
+                    sum + nuqs + n_uqs,
+                  0
+                )
+              )}
+            </span>
+            <span aria-label="nuqs" className="mx-1 text-red-500">
               {formatStatNumber(
                 nuqs.last30Days.reduce(
                   (sum, { downloads }) => sum + downloads,
@@ -90,22 +96,10 @@ export async function NPMDownloads() {
                 )
               )}
             </span>
-            <span
-              aria-label="next-usequerystate"
-              className="mx-1 text-zinc-500/50"
-            >
+            <span aria-label="next-usequerystate" className="text-zinc-500/50">
               {formatStatNumber(
                 nextUseQueryState.last30Days.reduce(
                   (sum, { downloads }) => sum + downloads,
-                  0
-                )
-              )}
-            </span>
-            <span aria-label="combined">
-              {formatStatNumber(
-                both.last30Days.reduce(
-                  (sum, { nuqs, ['next-usequerystate']: n_uqs }) =>
-                    sum + nuqs + n_uqs,
                   0
                 )
               )}
