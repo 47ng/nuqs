@@ -58,7 +58,7 @@ export function Versions({ records, versions }: VersionProps) {
         data={records}
         curveType="monotone"
         tickGap={40}
-        yAxisWidth={30}
+        yAxisWidth={40}
         categories={versions}
         index="date"
         colors={['green-500', 'amber-500', 'red-500', 'blue-500', 'purple-500']}
