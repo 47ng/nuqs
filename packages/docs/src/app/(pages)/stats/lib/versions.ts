@@ -328,10 +328,13 @@ export function sumVersions(versions: VersionDatum[]) {
   return versions.map(v => ({
     date: v.date,
     both: Object.fromEntries(
-      Object.entries(v['next-usequerystate'])
+      Object.entries(v.nuqs)
         .map(
           ([version, downloads]) =>
-            [version, downloads + (v.nuqs[version] ?? 0)] as const
+            [
+              version,
+              downloads + (v['next-usequerystate'][version] ?? 0)
+            ] as const
         )
         .sort(([, a], [, b]) => b - a)
     )
