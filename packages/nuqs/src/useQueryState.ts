@@ -1,16 +1,7 @@
-import { useCallback, useEffect, useId, useRef, useState } from 'react'
-import { useAdapter, useAdapterDefaultOptions } from './adapters/lib/context'
+import { useCallback } from 'react'
 import type { Options } from './defs'
-import { debug } from './lib/debug'
-import { debounceController } from './lib/queues/debounce'
-import { defaultRateLimit } from './lib/queues/rate-limiting'
-import {
-  globalThrottleQueue,
-  type UpdateQueuePushArgs
-} from './lib/queues/throttle'
-import { safeParse } from './lib/safe-parse'
-import { emitter, type CrossHookSyncPayload } from './lib/sync'
 import type { Parser } from './parsers'
+import { useQueryStates } from './useQueryStates'
 
 export interface UseQueryStateOptions<T> extends Parser<T>, Options {}
 
@@ -206,137 +197,37 @@ export function useQueryState<T = string>(
     defaultValue?: T
   } = {}
 ) {
-  const defaultOptions = useAdapterDefaultOptions()
   const {
-    history = 'replace',
-    shallow = defaultOptions?.shallow ?? true,
-    scroll = defaultOptions?.scroll ?? false,
-    throttleMs = defaultRateLimit.timeMs,
-    limitUrlUpdates = defaultOptions?.limitUrlUpdates,
     parse = x => x as unknown as T,
-    serialize = String,
-    eq = (a, b) => a === b,
-    defaultValue = undefined,
-    clearOnDefault = defaultOptions?.clearOnDefault ?? true,
-    startTransition
+    serialize,
+    eq,
+    defaultValue,
+    ...hookOptions
   } = options
-  const hookId = useId()
-  const adapter = useAdapter([key])
-  const { [key]: queuedQuery } = debounceController.useQueuedQueries([key])
-  const initialSearchParams = adapter.searchParams
-  const queryRef = useRef<string | null>(initialSearchParams?.get(key) ?? null)
-  const [internalState, setInternalState] = useState<T | null>(() => {
-    const query =
-      queuedQuery === undefined
-        ? (initialSearchParams?.get(key) ?? null)
-        : queuedQuery
-    return query === null ? null : safeParse(parse, query, key)
-  })
-  const stateRef = useRef(internalState)
-  debug(
-    '[nuqs %s `%s`] render - state: %O, iSP: %s',
-    hookId,
-    key,
-    internalState,
-    initialSearchParams?.get(key) ?? null
-  )
-
-  useEffect(() => {
-    const query =
-      queuedQuery === undefined
-        ? (initialSearchParams?.get(key) ?? null)
-        : queuedQuery
-    if (query === queryRef.current) {
-      return
-    }
-    const state = query === null ? null : safeParse(parse, query, key)
-    debug('[nuqs %s `%s`] syncFromUseSearchParams %O', hookId, key, state)
-    stateRef.current = state
-    queryRef.current = query
-    setInternalState(state)
-  }, [key, initialSearchParams?.get(key), queuedQuery])
-
-  // Sync all hooks together & with external URL changes
-  useEffect(() => {
-    function updateInternalState({ state, query }: CrossHookSyncPayload) {
-      debug('[nuqs %s `%s`] updateInternalState %O', hookId, key, state)
-      stateRef.current = state
-      queryRef.current = query
-      setInternalState(state)
-    }
-    debug('[nuqs %s `%s`] subscribing to sync', hookId, key)
-    emitter.on(key, updateInternalState)
-    return () => {
-      debug('[nuqs %s `%s`] unsubscribing from sync', hookId, key)
-      emitter.off(key, updateInternalState)
-    }
-  }, [key])
-
-  const update = useCallback(
-    (stateUpdater: React.SetStateAction<T | null>, options: Options = {}) => {
-      let newValue: T | null = isUpdaterFunction(stateUpdater)
-        ? stateUpdater(stateRef.current ?? defaultValue ?? null)
-        : stateUpdater
-      if (
-        (options.clearOnDefault ?? clearOnDefault) &&
-        newValue !== null &&
-        defaultValue !== undefined &&
-        eq(newValue, defaultValue)
-      ) {
-        newValue = null
-      }
-      const query = newValue === null ? null : serialize(newValue)
-      // Sync all hooks state (including this one)
-      emitter.emit(key, { state: newValue, query })
-      const update: UpdateQueuePushArgs = {
-        key,
-        query,
-        options: {
-          history: options.history ?? history,
-          shallow: options.shallow ?? shallow,
-          scroll: options.scroll ?? scroll,
-          startTransition: options.startTransition ?? startTransition
-        }
-      }
-      if (
-        options.limitUrlUpdates?.method === 'debounce' ||
-        limitUrlUpdates?.method === 'debounce'
-      ) {
-        const timeMs =
-          options.limitUrlUpdates?.timeMs ??
-          limitUrlUpdates?.timeMs ??
-          defaultRateLimit.timeMs
-        return debounceController.push(update, timeMs, adapter)
-      } else {
-        const timeMs =
-          options.limitUrlUpdates?.timeMs ??
-          limitUrlUpdates?.timeMs ??
-          options.throttleMs ??
-          throttleMs
-        const handleAbortedDebounce = debounceController.abort(key)
-        globalThrottleQueue.push(update, timeMs)
-        return handleAbortedDebounce(globalThrottleQueue.flush(adapter))
+  const [{ [key]: state }, setState] = useQueryStates(
+    {
+      [key]: {
+        parse,
+        serialize,
+        eq,
+        defaultValue
       }
     },
-    [
-      key,
-      history,
-      shallow,
-      scroll,
-      throttleMs,
-      limitUrlUpdates?.method,
-      limitUrlUpdates?.timeMs,
-      startTransition,
-      adapter.updateUrl,
-      adapter.getSearchParamsSnapshot,
-      adapter.rateLimitFactor
-    ]
+    hookOptions
   )
-  return [internalState ?? defaultValue ?? null, update]
-}
-
-function isUpdaterFunction<T>(
-  stateUpdater: React.SetStateAction<T>
-): stateUpdater is (prevState: T) => T {
-  return typeof stateUpdater === 'function'
+  const update = useCallback(
+    (stateUpdater: React.SetStateAction<T | null>, callOptions: Options = {}) =>
+      setState(
+        old => ({
+          [key]:
+            typeof stateUpdater === 'function'
+              ? // @ts-expect-error
+                stateUpdater(old[key]!)
+              : stateUpdater
+        }),
+        callOptions
+      ),
+    [key, setState]
+  )
+  return [state, update]
 }
