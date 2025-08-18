@@ -1,9 +1,9 @@
-import type { Emitter } from 'mitt'
 import { debug } from '../../lib/debug'
+import type { Emitter } from '../../lib/emitter'
 import { error } from '../../lib/errors'
 import { resetQueues, spinQueueResetMutex } from '../../lib/queues/reset'
 
-export type SearchParamsSyncEmitter = Emitter<{ update: URLSearchParams }>
+export type SearchParamsSyncEmitterEvents = { update: URLSearchParams }
 
 export const historyUpdateMarker = '__nuqs__'
 
@@ -62,7 +62,7 @@ export function markHistoryAsPatched(adapter: string): void {
 }
 
 export function patchHistory(
-  emitter: SearchParamsSyncEmitter,
+  emitter: Emitter<SearchParamsSyncEmitterEvents>,
   adapter: string
 ): void {
   if (!shouldPatchHistory(adapter)) {

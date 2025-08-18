@@ -1,6 +1,5 @@
-import type { Emitter } from 'mitt'
-import mitt from 'mitt'
 import { debug } from '../debug'
+import { createEmitter, type Emitter } from '../emitter'
 import { timeout } from '../timeout'
 import { withResolvers, type Resolvers } from '../with-resolvers'
 import {
@@ -68,7 +67,7 @@ type DebouncedUpdateQueue = DebouncedPromiseQueue<
 export class DebounceController {
   throttleQueue: ThrottledQueue
   queues: Map<string, DebouncedUpdateQueue> = new Map()
-  queuedQuerySync: Emitter<Record<string, undefined>> = mitt()
+  queuedQuerySync: Emitter<Record<string, undefined>> = createEmitter()
 
   constructor(throttleQueue: ThrottledQueue = new ThrottledQueue()) {
     this.throttleQueue = throttleQueue
@@ -77,10 +76,7 @@ export class DebounceController {
   useQueuedQueries(keys: string[]): Record<string, string | null | undefined> {
     return useSyncExternalStores(
       keys,
-      (key, callback) => {
-        this.queuedQuerySync.on(key, callback)
-        return () => this.queuedQuerySync.off(key, callback)
-      },
+      (key, callback) => this.queuedQuerySync.on(key, callback),
       (key: string) => this.getQueuedQuery(key)
     )
   }
