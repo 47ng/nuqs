@@ -9,11 +9,11 @@
     },
     {
       "label": "Docs",
-      "query": "repo:47ng/nuqs is:pr is:open label:documentation"
+      "query": "repo:47ng/nuqs is:pr is:open label:documentation draft:false"
     },
     {
-      "label": "All",
-      "query": "repo:47ng/nuqs is:pr is:open",
+      "label": "All reviewable",
+      "query": "repo:47ng/nuqs is:pr is:open draft:false",
       "groupBy": ["milestone"]
     }
   ],
