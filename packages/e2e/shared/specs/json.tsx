@@ -24,11 +24,10 @@ const defaultValue: Schema = {
   age: schema.age.defaultValue
 }
 
+export const parser = parseAsJson(validate).withDefault(defaultValue)
+
 export function Json() {
-  const [{ name, age }, setState] = useQueryState(
-    'test',
-    parseAsJson(validate).withDefault(defaultValue)
-  )
+  const [{ name, age }, setState] = useQueryState('test', parser)
   return (
     <>
       <input
