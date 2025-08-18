@@ -60,9 +60,6 @@
         "ISR_TOKEN"
       ]
     },
-    "docs#test": {
-      "dependsOn": ["^build"]
-    },
     "nuqs#test": {
       "outputs": ["dist/**", "coverage/**"],
       "dependsOn": ["build"]

@@ -15,7 +15,6 @@
   },
   "scripts": {
     "dev": "next dev --turbo",
-    "test": "tsc",
     "build": "next build",
     "start": "next start",
     "postinstall": "fumadocs-mdx"
