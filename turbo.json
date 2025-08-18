@@ -61,7 +61,7 @@
       ]
     },
     "docs#test": {
-      "dependsOn": []
+      "dependsOn": ["^build"]
     },
     "nuqs#test": {
       "outputs": ["dist/**", "coverage/**"],
