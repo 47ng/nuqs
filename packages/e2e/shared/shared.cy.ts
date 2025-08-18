@@ -3,6 +3,7 @@ import { testBasicIO } from './specs/basic-io.cy'
 import { testConditionalRendering } from './specs/conditional-rendering.cy'
 import { testForm } from './specs/form.cy'
 import { testHashPreservation } from './specs/hash-preservation.cy'
+import { testJson } from './specs/json.cy'
 import { testLifeAndDeath } from './specs/life-and-death.cy'
 import { testLinking } from './specs/linking.cy'
 import { testPrettyUrls } from './specs/pretty-urls.cy'
@@ -22,6 +23,13 @@ export function runSharedTests(
   testBasicIO({
     path: `${pathPrefix}/basic-io/useQueryStates`,
     hook: 'useQueryStates',
+    ...config
+  })
+
+  // --
+
+  testJson({
+    path: `${pathPrefix}/json`,
     ...config
   })
 
