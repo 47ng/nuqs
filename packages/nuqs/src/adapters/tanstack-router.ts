@@ -4,8 +4,13 @@ import { renderQueryString } from '../lib/url-encoding'
 import { createAdapterProvider, type AdapterProvider } from './lib/context'
 import type { AdapterInterface, UpdateUrlFunction } from './lib/defs'
 
-function useNuqsTanstackRouterAdapter(): AdapterInterface {
-  const search = useLocation({ select: state => state.search })
+function useNuqsTanstackRouterAdapter(watchKeys: string[]): AdapterInterface {
+  const search = useLocation({
+    select: state =>
+      Object.fromEntries(
+        Object.entries(state.search).filter(([key]) => watchKeys.includes(key))
+      )
+  })
   const navigate = useNavigate()
   const from = useMatches({
     select: matches =>
@@ -34,7 +39,7 @@ function useNuqsTanstackRouterAdapter(): AdapterInterface {
           }
         })
       ),
-    [search]
+    [search, watchKeys.join(',')]
   )
 
   const updateUrl: UpdateUrlFunction = useCallback(

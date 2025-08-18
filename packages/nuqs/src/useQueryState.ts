@@ -221,7 +221,7 @@ export function useQueryState<T = string>(
     startTransition
   } = options
   const hookId = useId()
-  const adapter = useAdapter()
+  const adapter = useAdapter([key])
   const { [key]: queuedQuery } = debounceController.useQueuedQueries([key])
   const initialSearchParams = adapter.searchParams
   const queryRef = useRef<string | null>(initialSearchParams?.get(key) ?? null)
