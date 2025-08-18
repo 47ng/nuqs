@@ -10,6 +10,7 @@ const routes: Record<string, React.LazyExoticComponent<() => JSX.Element>> = {
   '/form/useQueryState':                    lazy(() => import('./routes/form.useQueryState')),
   '/form/useQueryStates':                   lazy(() => import('./routes/form.useQueryStates')),
   '/hash-preservation':                     lazy(() => import('./routes/hash-preservation')),
+  '/json':                                  lazy(() => import('./routes/json')),
   '/life-and-death':                        lazy(() => import('./routes/life-and-death')),
   '/linking/useQueryState':                 lazy(() => import('./routes/linking.useQueryState')),
   '/linking/useQueryState/other':           lazy(() => import('./routes/linking.useQueryState.other')),
