@@ -15,7 +15,7 @@ function useNuqsTanstackRouterAdapter(): AdapterInterface {
   })
   const searchParams = useMemo(
     () =>
-      // search is a Record<string, string | string[]>,
+      // search is a Record<string, string | number | object | Array<string | number>>,
       // so we need to flatten it into a list of key/value pairs,
       // replicating keys that have multiple values before passing it
       // to URLSearchParams, otherwise { foo: ['bar', 'baz'] }
@@ -24,6 +24,11 @@ function useNuqsTanstackRouterAdapter(): AdapterInterface {
         Object.entries(search).flatMap(([key, value]) => {
           if (Array.isArray(value)) {
             return value.map(v => [key, v])
+          } else if (typeof value === 'object' && value !== null) {
+            // TSR JSON.parses objects in the search params,
+            // but parseAsJson expects a JSON string,
+            // so we need to re-stringify it first.
+            return [[key, JSON.stringify(value)]]
           } else {
             return [[key, value]]
           }
