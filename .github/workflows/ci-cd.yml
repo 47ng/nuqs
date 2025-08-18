@@ -62,6 +62,27 @@ jobs:
           TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
           E2E_NO_CACHE_ON_RERUN: ${{ github.run_attempt }}
 
+  docs:
+    name: CI (docs)
+    runs-on: ubuntu-24.04-arm
+    needs: [ci-core]
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - name: Install dependencies
+        run: pnpm install --ignore-scripts --frozen-lockfile --filter docs...
+      - name: Run tests
+        run: pnpm run test ${{ github.event_name == 'workflow_dispatch' && '--force' || '' }} --filter docs
+      - name: Build docs
+        run: pnpm run build --filter docs
+        env:
+          TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+          TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
+
   e2e-next:
     # Watch out! When changing the job name,
     # update the required checks in GitHub
