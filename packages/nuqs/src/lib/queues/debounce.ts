@@ -39,7 +39,7 @@ export class DebouncedPromiseQueue<ValueType, OutputType> {
         try {
           debug('[nuqs dq] Flushing debounce queue', value)
           const callbackPromise = this.callback(value)
-          debug('[nuqs dq] Reset debounced queue %O', this.queuedValue)
+          debug('[nuqs dq] Reset debounce queue %O', this.queuedValue)
           this.queuedValue = undefined
           this.resolvers = withResolvers<OutputType>()
           callbackPromise
@@ -92,7 +92,7 @@ export class DebounceController {
       return Promise.resolve(getSnapshot())
     }
     if (!this.queues.has(update.key)) {
-      debug('[nuqs dqc] Creating debounced queue for `%s`', update.key)
+      debug('[nuqs dqc] Creating debounce queue for `%s`', update.key)
       const queue = new DebouncedPromiseQueue<
         Omit<UpdateQueuePushArgs, 'timeMs'>,
         URLSearchParams
@@ -110,7 +110,7 @@ export class DebounceController {
       this.queues.set(update.key, queue)
     }
     debug(
-      '[nuqs dqc] Enqueueing debounced update %s=%s %O',
+      '[nuqs dqc] Enqueueing debounce update %s=%s %O',
       update.key,
       update.query,
       update.options
@@ -129,7 +129,7 @@ export class DebounceController {
       return passThrough => passThrough
     }
     debug(
-      '[nuqs dqc] Aborting debounced queue %s=%s',
+      '[nuqs dqc] Aborting debounce queue %s=%s',
       key,
       queue.queuedValue?.query
     )
@@ -151,7 +151,7 @@ export class DebounceController {
   abortAll(): void {
     for (const [key, queue] of this.queues.entries()) {
       debug(
-        '[nuqs dqc] Aborting debounced queue %s=%s',
+        '[nuqs dqc] Aborting debounce queue %s=%s',
         key,
         queue.queuedValue?.query
       )
