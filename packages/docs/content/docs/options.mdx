@@ -37,7 +37,14 @@ Default values for some options can also be configured globally via the `default
 
 ```tsx
 // [!code word:defaultOptions]
-<NuqsAdapter defaultOptions={{ shallow: false }}>
+<NuqsAdapter
+  defaultOptions={{
+    shallow: false,
+    scroll: true,
+    clearOnDefault: false,
+    limitUrlUpdates: throttle(250),
+  }}
+>
   {children}
 </NuqsAdapter>
 ```
