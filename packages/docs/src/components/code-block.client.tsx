@@ -36,6 +36,7 @@ export function CodeBlock({
         dangerouslySetInnerHTML={{
           __html: html ?? renderCodeSkeleton(code)
         }}
+        className="px-2"
       />
     </FumaDocsCodeBlock>
   )

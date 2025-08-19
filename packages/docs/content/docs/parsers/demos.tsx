@@ -62,7 +62,6 @@ function DemoContainer({
     >
       <QuerySpy className="rounded-md" keepKeys={[demoKey]} />
       {children}
-      <ContainerQueryHelper />
     </section>
   )
 }
@@ -72,13 +71,13 @@ export function BasicUsageDemo() {
   return (
     <DemoContainer className="flex-col items-stretch" demoKey="name">
       <input
-        className="h-10 flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+        className="border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring h-10 flex-1 rounded-md border px-3 py-2 text-sm file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
         value={name}
         placeholder="Enter your name..."
         onChange={e => setName(e.target.value || null)}
       />
       <div className="flex flex-1 items-center gap-2">
-        <span className="ml-2 mr-auto text-sm text-zinc-500">
+        <span className="mr-auto ml-2 text-sm text-zinc-500">
           {`Hello, ${name || 'anonymous visitor'}!`}
         </span>
         <Button variant="secondary" onClick={() => setName(null)}>
@@ -94,7 +93,7 @@ export function StringParserDemo() {
   return (
     <DemoContainer demoKey="string">
       <input
-        className="h-10 flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+        className="border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring h-10 flex-1 rounded-md border px-3 py-2 text-sm file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
         value={value}
         placeholder="Type something here..."
         onChange={e => setValue(e.target.value || null)}
@@ -116,7 +115,7 @@ export function IntegerParserDemo() {
     <DemoContainer demoKey="int">
       <input
         type="number"
-        className="flex h-10 flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+        className="border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring flex h-10 flex-1 rounded-md border px-3 py-2 text-sm file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
         value={value ?? ''} // Handle empty input
         onChange={e => {
           if (e.target.value === '') {
@@ -216,8 +215,9 @@ export function IndexParserDemo() {
         </PaginationContent>
       </Pagination>
       <CodeBlock
-        className="my-0 flex-1 [&_pre]:py-1"
+        className="-mx-1 my-0 -mb-1 flex-1 border-none"
         code={`pageIndex: ${pageIndex} // internal state is zero-indexed`}
+        allowCopy={false}
       />
       <Button
         variant="secondary"
@@ -245,7 +245,7 @@ export function BooleanParserDemo() {
       />
       <label
         htmlFor="boolean-demo"
-        className="select-none text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+        className="text-sm leading-none font-medium select-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
       >
         Checked: <code>{String(value)}</code>
       </label>
@@ -315,12 +315,13 @@ export function DateParserDemo({
 }) {
   const [value, setValue] = useQueryState(queryKey, parser)
   return (
-    <DemoContainer className="@container" demoKey={queryKey}>
+    <DemoContainer className="@container relative" demoKey={queryKey}>
+      <ContainerQueryHelper />
       <div className="flex w-full flex-col items-stretch gap-2 @md:flex-row">
         <div className="flex flex-1 items-center gap-2">
           <input
             type={type}
-            className="flex h-10 flex-[2] rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+            className="border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring flex h-10 flex-[2] rounded-md border px-3 py-2 text-sm file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
             value={
               value?.toISOString().slice(0, type === 'date' ? 10 : 19) ?? ''
             }
@@ -391,7 +392,7 @@ export function JsonParserDemo() {
   const [value, setValue] = useQueryState('json', parseAsJson(jsonParserSchema))
   return (
     <DemoContainer demoKey="json" className="items-start">
-      <pre className="flex-1 rounded-md border bg-background p-2 text-sm text-zinc-500">
+      <pre className="bg-background flex-1 rounded-md border p-2 text-sm text-zinc-500">
         {JSON.stringify(value, null, 2)}
       </pre>
       <Button

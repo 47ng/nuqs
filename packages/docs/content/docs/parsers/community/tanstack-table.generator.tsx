@@ -154,9 +154,9 @@ export function usePaginationSearchParams() {
             value={`?${pageIndexUrlKey}=${page + 1}&${pageSizeUrlKey}=${pageSize}`}
           />
           <CodeBlock
-            allowCopy={false}
             title="Internal state"
             code={internalState}
+            allowCopy={false}
           />
           <Separator className="my-8" />
           <div className="space-y-2">
