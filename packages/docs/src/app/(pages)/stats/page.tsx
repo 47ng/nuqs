@@ -5,7 +5,7 @@ import { NPMDownloads, NPMStats } from './_components/downloads'
 import { StarHistoryGraph } from './_components/stars'
 import { Versions } from './_components/versions'
 import { getVersions, sumVersions } from './lib/versions'
-import { searchParamsCache } from './searchParams'
+import { loadSearchParams } from './searchParams'
 
 export const dynamic = 'force-dynamic'
 
@@ -14,8 +14,8 @@ type StatsPageProps = {
 }
 
 export default async function StatsPage({ searchParams }: StatsPageProps) {
-  const { pkg } = await searchParamsCache.parse(searchParams)
-  const allVersions = await getVersions()
+  const { pkg, beta } = await loadSearchParams(searchParams)
+  const allVersions = await getVersions(beta)
   const pkgVersions = pkg === 'both' ? sumVersions(allVersions) : allVersions
   // @ts-expect-error
   const versionsToShow = Object.entries(pkgVersions.at(-1)?.[pkg] ?? {})
