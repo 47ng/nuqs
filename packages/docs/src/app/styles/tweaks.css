@@ -9,6 +9,7 @@
   /* Line up the Callout left coloured border with the outer border */
   .bg-\(--callout-color\)\/50[role='none'] {
     margin-left: -5.5px;
+    margin-right: 5.5px;
   }
 }
 
