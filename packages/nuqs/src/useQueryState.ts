@@ -210,14 +210,14 @@ export function useQueryState<T = string>(
   const {
     history = 'replace',
     shallow = defaultOptions?.shallow ?? true,
-    scroll = false,
+    scroll = defaultOptions?.scroll ?? false,
     throttleMs = defaultRateLimit.timeMs,
-    limitUrlUpdates,
+    limitUrlUpdates = defaultOptions?.limitUrlUpdates,
     parse = x => x as unknown as T,
     serialize = String,
     eq = (a, b) => a === b,
     defaultValue = undefined,
-    clearOnDefault = true,
+    clearOnDefault = defaultOptions?.clearOnDefault ?? true,
     startTransition
   } = options
   const hookId = useId()

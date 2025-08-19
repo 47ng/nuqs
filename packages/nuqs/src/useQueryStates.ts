@@ -71,11 +71,11 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
 
   const {
     history = 'replace',
-    scroll = false,
+    scroll = defaultOptions?.scroll ?? false,
     shallow = defaultOptions?.shallow ?? true,
     throttleMs = defaultRateLimit.timeMs,
-    limitUrlUpdates,
-    clearOnDefault = true,
+    limitUrlUpdates = defaultOptions?.limitUrlUpdates,
+    clearOnDefault = defaultOptions?.clearOnDefault ?? true,
     startTransition,
     urlKeys = defaultUrlKeys as UrlKeys<KeyMap>
   } = options

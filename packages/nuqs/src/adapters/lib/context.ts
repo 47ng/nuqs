@@ -7,14 +7,15 @@ import {
   type ReactElement,
   type ReactNode
 } from 'react'
+import type { Options } from '../../defs'
 import { debugEnabled } from '../../lib/debug'
 import { error } from '../../lib/errors'
 import type { AdapterInterface, UseAdapterHook } from './defs'
 
 export type AdapterProps = {
-  defaultOptions?: {
-    shallow?: boolean
-  }
+  defaultOptions?: Partial<
+    Pick<Options, 'shallow' | 'clearOnDefault' | 'scroll' | 'limitUrlUpdates'>
+  >
 }
 
 export type AdapterContext = AdapterProps & {
