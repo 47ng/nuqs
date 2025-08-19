@@ -271,7 +271,7 @@ export type VersionDatum = {
   'next-usequerystate': Record<string, number>
 }
 
-export async function getVersions() {
+export async function getVersions(beta: boolean): Promise<VersionDatum[]> {
   // const dates = await getVersionsPublicationDates()
   return Object.values(
     versionsData
@@ -295,6 +295,16 @@ export async function getVersions() {
           }
           acc[line.date][line.package] = Object.fromEntries(
             Object.entries(line.downloads)
+              .filter(([version]) => {
+                if (beta) {
+                  return (
+                    version.includes('beta') || version.includes('snapshot')
+                  )
+                }
+                return (
+                  !version.includes('beta') && !version.includes('snapshot')
+                )
+              })
               .sort(([, a], [, b]) => b - a)
               .map(([key, value]) => [key, Math.round(value / 7)]) // Normalise to average daily downloads
           )
