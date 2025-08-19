@@ -29,7 +29,7 @@ export default async function Page(props: PageProps) {
       <DocsTitle>{page.data.title}</DocsTitle>
       <DocsDescription>{page.data.description}</DocsDescription>
       <DocsBody>
-        <MDX components={{ ...useMDXComponents({}) }} />
+        <MDX components={useMDXComponents()} />
       </DocsBody>
     </DocsPage>
   )

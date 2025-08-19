@@ -6,6 +6,15 @@
     {
       "label": "Backlog",
       "query": "repo:47ng/nuqs is:pr is:open milestone:\"🪵 Backlog\""
+    },
+    {
+      "label": "Docs",
+      "query": "repo:47ng/nuqs is:pr is:open label:documentation draft:false"
+    },
+    {
+      "label": "All reviewable",
+      "query": "repo:47ng/nuqs is:pr is:open draft:false",
+      "groupBy": ["milestone"]
     }
   ],
   "githubIssues.queries": [
