@@ -9,7 +9,7 @@
       "dependsOn": ["^build"]
     },
     "nuqs#build": {
-      "outputs": ["dist/**", "size.json", ".tsup"]
+      "outputs": ["dist/**", "size.json", ".tsup/**", ".tsbuildinfo"]
     },
     "e2e-next#build": {
       "outputs": [".next/**", "!.next/cache/**", "cypress/**"],
@@ -17,16 +17,30 @@
       "env": ["BASE_PATH", "REACT_COMPILER", "E2E_NO_CACHE_ON_RERUN"]
     },
     "e2e-remix#build": {
+      "outputs": ["build/**", "cypress/**"],
+      "dependsOn": ["^build"],
+      "env": ["REACT_COMPILER", "E2E_NO_CACHE_ON_RERUN"]
+    },
+    "e2e-react-router-v6#build": {
       "outputs": ["dist/**", "cypress/**"],
       "dependsOn": ["^build"],
       "env": ["REACT_COMPILER", "E2E_NO_CACHE_ON_RERUN"]
     },
-    "e2e-react-router#build": {
-      "outputs": ["dist/**", "cypress/**"],
+    "e2e-react-router-v7#build": {
+      "outputs": [".react-router/**", "build/**", "cypress/**"],
       "dependsOn": ["^build"],
       "env": ["REACT_COMPILER", "E2E_NO_CACHE_ON_RERUN"]
     },
     "e2e-react#build": {
+      "outputs": ["dist/**", "cypress/**"],
+      "dependsOn": ["^build"],
+      "env": [
+        "FULL_PAGE_NAV_ON_SHALLOW_FALSE",
+        "REACT_COMPILER",
+        "E2E_NO_CACHE_ON_RERUN"
+      ]
+    },
+    "e2e-tanstack-router#build": {
       "outputs": ["dist/**", "cypress/**"],
       "dependsOn": ["^build"],
       "env": ["REACT_COMPILER", "E2E_NO_CACHE_ON_RERUN"]
@@ -58,11 +72,23 @@
       "dependsOn": ["build"],
       "env": ["REACT_COMPILER", "E2E_NO_CACHE_ON_RERUN"]
     },
-    "e2e-react-router#test": {
+    "e2e-react-router-v6#test": {
+      "dependsOn": ["build"],
+      "env": ["REACT_COMPILER", "E2E_NO_CACHE_ON_RERUN"]
+    },
+    "e2e-react-router-v7#test": {
       "dependsOn": ["build"],
       "env": ["REACT_COMPILER", "E2E_NO_CACHE_ON_RERUN"]
     },
     "e2e-react#test": {
+      "dependsOn": ["build"],
+      "env": [
+        "FULL_PAGE_NAV_ON_SHALLOW_FALSE",
+        "REACT_COMPILER",
+        "E2E_NO_CACHE_ON_RERUN"
+      ]
+    },
+    "e2e-tanstack-router#test": {
       "dependsOn": ["build"],
       "env": ["REACT_COMPILER", "E2E_NO_CACHE_ON_RERUN"]
     }

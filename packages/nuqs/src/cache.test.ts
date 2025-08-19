@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 import { compareSearchParams, createSearchParamsCache } from './cache'
-import { parseAsString } from './parsers'
+import { parseAsInteger, parseAsString } from './parsers'
 
 // provide a simple mock for React cache
 vi.mock('react', () => {
@@ -100,6 +100,47 @@ describe('cache', () => {
       })
       expect(parseOutput.foo).toBe('foo')
       expect(parseOutput.bar).toBe('bar')
+    })
+
+    it('supports a Promise as input', async () => {
+      const cache = createSearchParamsCache({
+        string: parseAsString
+      })
+      expect((await cache.parse(Promise.resolve(input))).string).toBe(
+        input.string
+      )
+      const all = cache.all()
+      expect(all.string).toBe(input.string)
+    })
+
+    it('does not throw on invalid values when not using strict mode', () => {
+      const cache = createSearchParamsCache({
+        count: parseAsInteger.withDefault(0)
+      })
+      expect(() => cache.parse({ count: 'not-a-number' })).not.toThrow()
+    })
+    it('does not throw on invalid values when not using strict mode', () => {
+      const cache = createSearchParamsCache({
+        count: parseAsInteger.withDefault(0)
+      })
+      expect(() =>
+        cache.parse({ count: 'not-a-number' }, { strict: true })
+      ).toThrow(
+        '[nuqs] Failed to parse query `not-a-number` for key `count` (got null)'
+      )
+    })
+
+    it('supports strict mode for async parsing', async () => {
+      const cache = createSearchParamsCache({
+        count: parseAsInteger.withDefault(0)
+      })
+      await expect(
+        cache.parse(Promise.resolve({ count: 'not-a-number' }), {
+          strict: true
+        })
+      ).rejects.toThrow(
+        '[nuqs] Failed to parse query `not-a-number` for key `count` (got null)'
+      )
     })
   })
 

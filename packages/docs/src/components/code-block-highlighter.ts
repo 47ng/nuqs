@@ -11,8 +11,12 @@ export async function highlight(code: string, lang: BundledLanguage) {
     ...rehypeCodeOptions,
     lang,
     transformers: [
-      transformerNotationHighlight(),
-      transformerNotationWordHighlight()
+      transformerNotationHighlight({
+        matchAlgorithm: 'v3'
+      }),
+      transformerNotationWordHighlight({
+        matchAlgorithm: 'v3'
+      })
     ]
   })
 }

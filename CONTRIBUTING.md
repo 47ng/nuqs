@@ -1,6 +1,6 @@
 # Contribution Guidelines
 
-First off, thanks for your help!
+First off, thanks for your help! 🙏
 
 ## Getting started
 
@@ -14,27 +14,34 @@ This monorepo contains:
 
 - The source code for the `nuqs` NPM package, in [`packages/nuqs`](./packages/nuqs).
 - A Next.js app under [`packages/docs`](./packages/docs) that serves the documentation and as a playground deployed at <https://nuqs.47ng.com>
-- A test bench for [end-to-end tests](./packages/e2e) for each supported framework, driven by Cypress
+- Test benches for [end-to-end tests](./packages/e2e) for each supported framework, driven by Cypress
+- Examples of integration with other tools.
 
 When running `next dev`, this will:
 
 - Build the library and watch for changes using [`tsup`](https://tsup.egoist.dev/)
 - Start the docs app, which will be available at <http://localhost:3000>.
 - Start the end-to-end test benches:
-  - Next.js: http://localhost:3001
-  - Remix: http://localhost:3002
-  - React Router: http://localhost:3003
-  - React SPA: http://localhost:3004
+  - http://localhost:3001 - [Next.js](./packages/e2e/next)
+  - http://localhost:3002 - [React SPA](./packages/e2e/react)
+  - http://localhost:3003 - [Remix](./packages/e2e/remix)
+  - http://localhost:3004 - [TanStack Router](./packages/e2e/tanstack-router)
+  - http://localhost:3006 - [React Router v6](./packages/e2e/react-router/v6)
+  - http://localhost:3007 - [React Router v7](./packages/e2e/react-router/v7)
+- Start the examples:
+  - http://localhost:4000 - [tRPC](./packages/examples/trpc)
+  - http://localhost:4001 - [Next.js - App router](./packages/examples/next-app)
 
 ## Testing
 
-You can run the complete integration test suite with `pnpm test`.
+You can run the complete integration test suite with `pnpm test` from the root of the repository.
 
 It will build the library, run unit tests and typing tests against it, and then
-run the end-to-end tests against the test bench Next.js app (which uses the built library).
+run the end-to-end tests against the test bench apps (which uses the built library).
 
-When proposing changes or showcasing a bug, adding a minimal reproduction in the
-playground can be very helpful.
+When proposing changes or fixing a bug, adding tests (unit or in the
+appropriate e2e test environment) can help tremendously to validate and
+understand the changes.
 
 ## Opening issues
 
@@ -45,7 +52,22 @@ inspect it locally.
 
 ## Proposing changes
 
+Make sure your changes:
+
+1. Pass the tests: `pnpm test`
+2. Pass linting checks: `pnpm lint`
+3. Have relevant documentation additions / updates (in the `packages/docs/content` and the README.md file).
+
 This repository uses [`semantic-release`](https://semantic-release.gitbook.io/semantic-release/)
 to automatically publish new versions of the package to NPM.
 To do this, the Git history follows the
 [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) format.
+
+Pull requests should target the `next` branch.
+
+If your changes impact the `nuqs` package, you'll get a comment from [pkg.pr.new](https://pkg.pr.new)
+with a preview deployment of the package you can install in your application.
+
+If you are proposing a bug fix, pushing a failing test first (with a note in the
+PR description) is very helpful in showcasing the issue and validating the fix in
+a follow-up commit (test-driven development).

@@ -1,26 +1,13 @@
 import { useNavigate, useSearchParams } from '@remix-run/react'
-import { renderQueryString } from '../url-encoding'
-import type { AdapterOptions } from './defs'
-import { createAdapterProvider } from './internal.context'
+import type { AdapterProvider } from './lib/context'
+import { createReactRouterBasedAdapter } from './lib/react-router'
 
-function useNuqsRemixAdapter() {
-  const navigate = useNavigate()
-  const [searchParams] = useSearchParams()
-  const updateUrl = (search: URLSearchParams, options: AdapterOptions) => {
-    navigate(
-      {
-        search: renderQueryString(search)
-      },
-      {
-        replace: options.history === 'replace',
-        preventScrollReset: !options.scroll
-      }
-    )
-  }
-  return {
-    searchParams,
-    updateUrl
-  }
-}
+const adapter = createReactRouterBasedAdapter({
+  adapter: 'remix',
+  useNavigate,
+  useSearchParams
+})
 
-export const NuqsAdapter = createAdapterProvider(useNuqsRemixAdapter)
+export const NuqsAdapter: AdapterProvider = adapter.NuqsAdapter
+export const useOptimisticSearchParams: () => URLSearchParams =
+  adapter.useOptimisticSearchParams

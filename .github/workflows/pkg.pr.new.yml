@@ -12,7 +12,7 @@ jobs:
       github.event.review.state == 'APPROVED' ||
       contains(github.event.pull_request.author_association, 'MEMBER') ||
       contains(github.event.pull_request.labels.*.name, 'deploy:preview')
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04-arm
     outputs:
       enable: ${{ steps.check-for-changes.outputs.enable }}
     steps:
@@ -33,11 +33,11 @@ jobs:
     name: Deploy to pkg.pr.new
     needs: check-changes
     if: needs.check-changes.outputs.enable == 'true'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04-arm
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
-      - uses: pnpm/action-setup@fe02b34f77f8bc703788d5817da081398fad5dd2
-      - uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af
+      - uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
           node-version-file: .node-version
           cache: pnpm
@@ -53,4 +53,4 @@ jobs:
           echo "::notice title=Version::0.0.0-preview.${{ github.event.pull_request.head.sha }}"
         working-directory: packages/nuqs
       - name: Publish to pkg.pr.new
-        run: pnpx pkg-pr-new publish --compact './packages/nuqs'
+        run: pnpx pkg-pr-new publish --compact './packages/nuqs' --no-template --packageManager=pnpm --pnpm

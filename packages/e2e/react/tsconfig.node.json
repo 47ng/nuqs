@@ -2,7 +2,7 @@
   "compilerOptions": {
     "target": "ES2022",
     "lib": ["ES2023"],
-    "types": ["node", "@testing-library/jest-dom"],
+    "types": ["node"],
     "module": "ESNext",
     "skipLibCheck": true,
 
@@ -19,5 +19,5 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["vite.config.ts"]
+  "include": ["vite.config.ts", "cypress.config.ts"]
 }

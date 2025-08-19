@@ -1,14 +1,20 @@
-import { NuqsAdapter } from 'nuqs/adapters/next'
-import { StrictMode } from 'react'
+import { NuqsAdapter, enableHistorySync } from 'nuqs/adapters/react'
 import { createRoot } from 'react-dom/client'
-import { CounterButton } from './components/counter-button'
-import { SearchInput } from './components/search-input'
+import { RootLayout } from './layout'
+import { Router } from './routes'
+
+enableHistorySync()
 
 createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <NuqsAdapter>
-      <CounterButton />
-      <SearchInput />
-    </NuqsAdapter>
-  </StrictMode>
+  // <StrictMode>
+  <NuqsAdapter
+    fullPageNavigationOnShallowFalseUpdates={
+      process.env.FULL_PAGE_NAV_ON_SHALLOW_FALSE === 'true'
+    }
+  >
+    <RootLayout>
+      <Router />
+    </RootLayout>
+  </NuqsAdapter>
+  // </StrictMode>
 )

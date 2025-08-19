@@ -1,8 +1,20 @@
 {
+  "editor.tabSize": 2,
+  "editor.insertSpaces": true,
+  "githubPullRequests.ignoredPullRequestBranches": ["next", "master"],
   "githubPullRequests.queries": [
     {
       "label": "Backlog",
       "query": "repo:47ng/nuqs is:pr is:open milestone:\"🪵 Backlog\""
+    },
+    {
+      "label": "Docs",
+      "query": "repo:47ng/nuqs is:pr is:open label:documentation draft:false"
+    },
+    {
+      "label": "All reviewable",
+      "query": "repo:47ng/nuqs is:pr is:open draft:false",
+      "groupBy": ["milestone"]
     }
   ],
   "githubIssues.queries": [
@@ -23,5 +35,8 @@
       "label": "Internal",
       "query": "repo:47ng/nuqs is:issue label:internal"
     }
+  ],
+  "typescript.preferences.autoImportSpecifierExcludeRegexes": [
+    "^node:test$" // We use Vitest
   ]
 }

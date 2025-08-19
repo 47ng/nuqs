@@ -5,42 +5,33 @@
   "type": "module",
   "scripts": {
     "build": "remix vite:build",
-    "dev": "remix vite:dev --port 4001",
-    "lint": "eslint --ignore-path .gitignore --cache --cache-location ./node_modules/.cache/eslint .",
-    "start": "remix-serve ./build/server/index.js",
-    "test": "pnpm run '/^test:/'",
-    "test:e2e": "echo \"todo: Add e2e tests for Remix\"",
-    "test:types": "tsc"
+    "dev": "remix vite:dev --port 3003",
+    "start": "cross-env NODE_ENV=production PORT=3003 remix-serve ./build/server/index.js",
+    "test": "pnpm run --stream '/^test:/'",
+    "test:types": "tsc",
+    "test:e2e": "start-server-and-test start http://localhost:3003 cypress:run",
+    "cypress:open": "cypress open",
+    "cypress:run": "cross-env FORCE_COLOR=3 cypress run --headless"
   },
   "dependencies": {
-    "@remix-run/node": "^2.14.0",
-    "@remix-run/react": "^2.14.0",
-    "@remix-run/serve": "^2.14.0",
+    "@remix-run/node": "^2.16.5",
+    "@remix-run/react": "^2.16.5",
+    "@remix-run/serve": "^2.16.5",
+    "isbot": "^5.1.26",
     "nuqs": "workspace:*",
-    "isbot": "^5.1.17",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react": "catalog:react19",
+    "react-dom": "catalog:react19"
   },
   "devDependencies": {
-    "@remix-run/dev": "^2.14.0",
-    "@types/react": "^18.3.12",
-    "@types/react-dom": "^18.3.1",
-    "@typescript-eslint/eslint-plugin": "^8.14.0",
-    "@typescript-eslint/parser": "^8.14.0",
-    "autoprefixer": "^10.4.20",
-    "eslint": "^9.14.0",
-    "eslint-import-resolver-typescript": "^3.6.3",
-    "eslint-plugin-import": "^2.31.0",
-    "eslint-plugin-jsx-a11y": "^6.10.2",
-    "eslint-plugin-react": "^7.37.2",
-    "eslint-plugin-react-hooks": "^5.0.0",
-    "postcss": "^8.4.49",
-    "tailwindcss": "^3.4.14",
-    "typescript": "^5.6.3",
-    "vite": "^5.4.11",
-    "vite-tsconfig-paths": "^5.1.2"
-  },
-  "engines": {
-    "node": ">=20.0.0"
+    "@remix-run/dev": "^2.16.5",
+    "@types/react": "catalog:react19",
+    "@types/react-dom": "catalog:react19",
+    "cross-env": "^7.0.3",
+    "cypress": "catalog:e2e",
+    "e2e-shared": "workspace:*",
+    "start-server-and-test": "catalog:e2e",
+    "typescript": "^5.8.3",
+    "vite": "^6.2.7",
+    "vite-tsconfig-paths": "^5.1.4"
   }
 }

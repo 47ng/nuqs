@@ -16,6 +16,10 @@ export function getSharedLayoutProps(): HomeLayoutProps {
       {
         text: 'Playground',
         url: '/playground'
+      },
+      {
+        text: 'Blog',
+        url: '/blog'
       }
     ]
   }

@@ -53,11 +53,30 @@
 }
 
 @layer base {
+  html,
+  body {
+    height: 100%;
+  }
+  body {
+    display: flex;
+    flex-direction: column;
+  }
+  body > main {
+    flex: 1 0 auto;
+  }
+
   * {
     @apply border-border;
   }
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+@layer utilities {
+  .bg-fd-card {
+    --fd-card: var(--fd-secondary);
+    --tw-bg-opacity: 0.25;
   }
 }
 
@@ -86,11 +105,25 @@
     border-radius: 4px;
   }
 
+  /* Remove the corner radius on adjacent highlighted words */
+  .fd-codeblock .highlighted-word + .highlighted-word {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+    margin-left: 1px;
+    padding-left: 0;
+  }
+  .fd-codeblock .highlighted-word:has(+ .highlighted-word) {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+    margin-right: 1px;
+    padding-right: 0;
+  }
+
   /* By default, every code block should expand to fit its contents.
     Fumadocs uses a max-height to prevent this behaviour, that we override by default
     but we can still use custom="compact" in the meta string in MDX to enable it back.
   */
-  .fd-codeblock:not([custom~='compact']) pre.max-h-\[400px\] {
+  .fd-codeblock:not([custom~='compact']) div.max-h-\[600px\] {
     max-height: unset;
   }
   /* Fix bottom padding of compact code blocks (applied at the wrong level) */
@@ -101,6 +134,20 @@
     code {
       padding-block: 1rem;
     }
+  }
+
+  /* Fix the mobile top navbar collapsing */
+  #nd-subnav {
+    flex-shrink: 0;
+    /* https://github.com/47ng/nuqs/pull/1027#issuecomment-3007455946 */
+    @apply fixed z-30 w-full;
+  }
+
+  /* Fix titles being hidden behind the headers:
+    https://github.com/47ng/nuqs/pull/1043
+  */
+  #nd-page {
+    @apply pt-14 md:pt-0;
   }
 }
 
@@ -120,5 +167,11 @@
   button:has(~ :hover) .star,
   button:has(~ :focus) .star {
     fill: currentColor;
+  }
+}
+
+@layer components {
+  number-flow-react::part(suffix) {
+    @apply ml-0.5 text-sm font-medium text-muted-foreground;
   }
 }

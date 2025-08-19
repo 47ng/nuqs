@@ -94,7 +94,7 @@ setCoordinates(
     lat: 42,
     lng: 12
   },
-  // [!code highlight:4]
+  // [!code highlight:3]
   {
     shallow: false
   }
@@ -146,5 +146,26 @@ setCoordinates({
   latitude: 45.18,
   longitude: 5.72
 })
+```
+
+As your application grows, you may want to reuse these parsers and urlKeys
+definitions across multiple components or nuqs features
+(like [loaders](./server-side#loaders) or a [serializer](./utilities#serializer-helper)).
+
+You can use the `UrlKeys{:ts}` type helper for this:
+
+```ts
+// [!code word:UrlKeys]
+import { type UrlKeys } from 'nuqs' // or 'nuqs/server'
+
+export const coordinatesParsers = {
+  latitude: parseAsFloat.withDefault(45.18),
+  longitude: parseAsFloat.withDefault(5.72)
+}
+
+export const coordinatesUrlKeys: UrlKeys<typeof coordinatesParsers> = {
+  latitude: 'lat',
+  longitude: 'lng'
+}
 ```
 

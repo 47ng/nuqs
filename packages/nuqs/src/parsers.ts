@@ -1,5 +1,6 @@
+import type { StandardSchemaV1 } from '@standard-schema/spec'
 import type { Options } from './defs'
-import { safeParse } from './utils'
+import { safeParse } from './lib/safe-parse'
 
 type Require<T, Keys extends keyof T> = Pick<Required<T>, Keys> & Omit<T, Keys>
 
@@ -42,10 +43,17 @@ export type ParserBuilder<T> = Required<Parser<T>> &
 
     /**
      * Specifying a default value makes the hook state non-nullable when the
-     * query is missing from the URL.
+     * query is missing from the URL: the default value is returned instead
+     * of `null`.
      *
-     * Note: if you wish to specify options as well, you need to call
-     * `withOptions` **before** `withDefault`.
+     * Setting the state to the default value¹ will clear the query string key
+     * from the URL, unless `clearOnDefault` is set to `false`.
+     *
+     * Setting the state to `null` will always clear the query string key
+     * from the URL, and return the default value.
+     *
+     * ¹: Equality is checked with the parser's `eq` function, or referential
+     * equality if not provided.
      *
      * @param defaultValue
      */
@@ -68,6 +76,9 @@ export type ParserBuilder<T> = Required<Parser<T>> &
        * https://url.spec.whatwg.org/#dom-urlsearchparams-get
        *
        * @param value as coming from page props
+       *
+       * @deprecated prefer using loaders instead, as they enforce a strong
+       * bond between the data type and the search param key.
        */
       parseServerSide(value: string | string[] | undefined): NonNullable<T>
     }
@@ -85,6 +96,9 @@ export type ParserBuilder<T> = Required<Parser<T>> &
      * https://url.spec.whatwg.org/#dom-urlsearchparams-get
      *
      * @param value as coming from page props
+     *
+     * @deprecated prefer using loaders instead, as they enforce a strong
+     * bond between the data type and the search param key.
      */
     parseServerSide(value: string | string[] | undefined): T | null
   }
@@ -139,12 +153,12 @@ export function createParser<T>(
 
 // Parsers implementations -----------------------------------------------------
 
-export const parseAsString = createParser({
+export const parseAsString: ParserBuilder<string> = createParser({
   parse: v => v,
   serialize: v => `${v}`
 })
 
-export const parseAsInteger = createParser({
+export const parseAsInteger: ParserBuilder<number> = createParser({
   parse: v => {
     const int = parseInt(v)
     if (Number.isNaN(int)) {
@@ -155,7 +169,18 @@ export const parseAsInteger = createParser({
   serialize: v => Math.round(v).toFixed()
 })
 
-export const parseAsHex = createParser({
+export const parseAsIndex: ParserBuilder<number> = createParser({
+  parse: v => {
+    const int = parseAsInteger.parse(v)
+    if (int === null) {
+      return null
+    }
+    return int - 1
+  },
+  serialize: v => parseAsInteger.serialize(v + 1)
+})
+
+export const parseAsHex: ParserBuilder<number> = createParser({
   parse: v => {
     const int = parseInt(v, 16)
     if (Number.isNaN(int)) {
@@ -169,7 +194,7 @@ export const parseAsHex = createParser({
   }
 })
 
-export const parseAsFloat = createParser({
+export const parseAsFloat: ParserBuilder<number> = createParser({
   parse: v => {
     const float = parseFloat(v)
     if (Number.isNaN(float)) {
@@ -180,16 +205,20 @@ export const parseAsFloat = createParser({
   serialize: v => v.toString()
 })
 
-export const parseAsBoolean = createParser({
+export const parseAsBoolean: ParserBuilder<boolean> = createParser({
   parse: v => v === 'true',
   serialize: v => (v ? 'true' : 'false')
 })
+
+function compareDates(a: Date, b: Date) {
+  return a.valueOf() === b.valueOf()
+}
 
 /**
  * Querystring encoded as the number of milliseconds since epoch,
  * and returned as a Date object.
  */
-export const parseAsTimestamp = createParser({
+export const parseAsTimestamp: ParserBuilder<Date> = createParser({
   parse: v => {
     const ms = parseInt(v)
     if (Number.isNaN(ms)) {
@@ -197,14 +226,15 @@ export const parseAsTimestamp = createParser({
     }
     return new Date(ms)
   },
-  serialize: (v: Date) => v.valueOf().toString()
+  serialize: (v: Date) => v.valueOf().toString(),
+  eq: compareDates
 })
 
 /**
  * Querystring encoded as an ISO-8601 string (UTC),
  * and returned as a Date object.
  */
-export const parseAsIsoDateTime = createParser({
+export const parseAsIsoDateTime: ParserBuilder<Date> = createParser({
   parse: v => {
     const date = new Date(v)
     if (Number.isNaN(date.valueOf())) {
@@ -212,7 +242,8 @@ export const parseAsIsoDateTime = createParser({
     }
     return date
   },
-  serialize: (v: Date) => v.toISOString()
+  serialize: (v: Date) => v.toISOString(),
+  eq: compareDates
 })
 
 /**
@@ -223,7 +254,7 @@ export const parseAsIsoDateTime = createParser({
  * The Date is parsed without the time zone offset,
  * making it at 00:00:00 UTC.
  */
-export const parseAsIsoDate = createParser({
+export const parseAsIsoDate: ParserBuilder<Date> = createParser({
   parse: v => {
     const date = new Date(v.slice(0, 10))
     if (Number.isNaN(date.valueOf())) {
@@ -231,7 +262,8 @@ export const parseAsIsoDate = createParser({
     }
     return date
   },
-  serialize: (v: Date) => v.toISOString().slice(0, 10)
+  serialize: (v: Date) => v.toISOString().slice(0, 10),
+  eq: compareDates
 })
 
 /**
@@ -261,7 +293,9 @@ export const parseAsIsoDate = createParser({
  *
  * @param validValues The values you want to accept
  */
-export function parseAsStringEnum<Enum extends string>(validValues: Enum[]) {
+export function parseAsStringEnum<Enum extends string>(
+  validValues: Enum[]
+): ParserBuilder<Enum> {
   return createParser({
     parse: (query: string) => {
       const asEnum = query as unknown as Enum
@@ -293,9 +327,9 @@ export function parseAsStringEnum<Enum extends string>(validValues: Enum[]) {
  *
  * @param validValues The values you want to accept
  */
-export function parseAsStringLiteral<Literal extends string>(
+export function parseAsStringLiteral<const Literal extends string>(
   validValues: readonly Literal[]
-) {
+): ParserBuilder<Literal> {
   return createParser({
     parse: (query: string) => {
       const asConst = query as unknown as Literal
@@ -327,9 +361,9 @@ export function parseAsStringLiteral<Literal extends string>(
  *
  * @param validValues The values you want to accept
  */
-export function parseAsNumberLiteral<Literal extends number>(
+export function parseAsNumberLiteral<const Literal extends number>(
   validValues: readonly Literal[]
-) {
+): ParserBuilder<Literal> {
   return createParser({
     parse: (query: string) => {
       const asConst = parseFloat(query) as unknown as Literal
@@ -347,14 +381,25 @@ export function parseAsNumberLiteral<Literal extends number>(
  * Note: you may want to use `useQueryStates` for finer control over
  * multiple related query keys.
  *
- * @param runtimeParser Runtime parser (eg: Zod schema) to validate after JSON.parse
+ * @param runtimeParser Runtime parser (eg: Zod schema or Standard Schema) to validate after JSON.parse
  */
-export function parseAsJson<T>(runtimeParser: (value: unknown) => T) {
+export function parseAsJson<T>(
+  validator: ((value: unknown) => T | null) | StandardSchemaV1<T>
+): ParserBuilder<T> {
   return createParser({
     parse: query => {
       try {
         const obj = JSON.parse(query)
-        return runtimeParser(obj)
+        if ('~standard' in validator) {
+          const result = validator['~standard'].validate(obj)
+          if (result instanceof Promise) {
+            throw new Error(
+              '[nuqs] Only synchronous Standard Schemas are supported in parseAsJson.'
+            )
+          }
+          return result.issues ? null : result.value
+        }
+        return validator(obj)
       } catch {
         return null
       }
@@ -377,7 +422,7 @@ export function parseAsJson<T>(runtimeParser: (value: unknown) => T) {
 export function parseAsArrayOf<ItemType>(
   itemParser: Parser<ItemType>,
   separator = ','
-) {
+): ParserBuilder<ItemType[]> {
   const itemEq = itemParser.eq ?? ((a: ItemType, b: ItemType) => a === b)
   const encodedSeparator = encodeURIComponent(separator)
   // todo: Handle default item values and make return type non-nullable
@@ -432,7 +477,7 @@ type inferSingleParserType<Parser> = Parser extends ParserBuilder<
 
 type inferParserRecordType<Map extends Record<string, ParserBuilder<any>>> = {
   [Key in keyof Map]: inferSingleParserType<Map[Key]>
-}
+} & {}
 
 /**
  * Type helper to extract the underlying returned data type of a parser
@@ -464,3 +509,8 @@ export type inferParserType<Input> =
     : Input extends Record<string, ParserBuilder<any>>
       ? inferParserRecordType<Input>
       : never
+
+export type ParserWithOptionalDefault<T> = ParserBuilder<T> & {
+  defaultValue?: T
+}
+export type ParserMap = Record<string, ParserWithOptionalDefault<any>>

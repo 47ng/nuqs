@@ -79,6 +79,27 @@ function runTest(pathname) {
     cy.get('#bool_value').should('be.empty')
   }
 
+  // Index
+  {
+    cy.get('#index_value').should('be.empty')
+    cy.get('#index_increment').click()
+    cy.location('search').should('eq', '?index=2')
+    cy.get('#index_value').should('have.text', '1')
+    cy.get('#index_increment').click()
+    cy.location('search').should('eq', '?index=3')
+    cy.get('#index_value').should('have.text', '2')
+    cy.get('#index_decrement').click()
+    cy.location('search').should('eq', '?index=2')
+    cy.get('#index_value').should('have.text', '1')
+    cy.get('#index_decrement').click()
+    cy.location('search').should('eq', '?index=1')
+    cy.get('#index_value').should('have.text', '0')
+    cy.get('#index_decrement').click()
+    cy.get('#index_clear').click()
+    cy.location('search').should('be.empty')
+    cy.get('#index_value').should('be.empty')
+  }
+
   // todo: Add tests for:
   // Timestamp
   // ISO DateTime

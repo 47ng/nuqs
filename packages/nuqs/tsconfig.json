@@ -19,11 +19,11 @@
     "declaration": true,
     "declarationMap": true,
     "verbatimModuleSyntax": true,
+    "isolatedDeclarations": true,
     "moduleDetection": "force",
 
     "downlevelIteration": true,
     // Interop
-    "allowJs": true,
     "isolatedModules": true,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,

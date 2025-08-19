@@ -1,21 +1,37 @@
-import type { Nullable, Options } from './defs'
-import type { inferParserType, ParserBuilder } from './parsers'
-import { renderQueryString } from './url-encoding'
+import type { Nullable, Options, UrlKeys } from './defs'
+import { renderQueryString } from './lib/url-encoding'
+import type { inferParserType, ParserMap } from './parsers'
 
 type Base = string | URLSearchParams | URL
-type ParserWithOptionalDefault<T> = ParserBuilder<T> & { defaultValue?: T }
 
-export function createSerializer<
-  Parsers extends Record<string, ParserWithOptionalDefault<any>>
->(
+type SerializeFunction<Parsers extends ParserMap> = {
+  /**
+   * Generate a query string for the given values.
+   */
+  (values: Partial<Nullable<inferParserType<Parsers>>>): string
+  /**
+   * Append/amend the query string of the given base with the given values.
+   *
+   * Existing search param values will kept, unless:
+   * - the value is null, in which case the search param will be deleted
+   * - another value is given for an existing key, in which case the
+   *  search param will be updated
+   */
+  (
+    base: Base,
+    values: Partial<Nullable<inferParserType<Parsers>>> | null
+  ): string
+}
+
+export function createSerializer<Parsers extends ParserMap>(
   parsers: Parsers,
   {
     clearOnDefault = true,
     urlKeys = {}
   }: Pick<Options, 'clearOnDefault'> & {
-    urlKeys?: Partial<Record<keyof Parsers, string>>
+    urlKeys?: UrlKeys<Parsers>
   } = {}
-) {
+): SerializeFunction<Parsers> {
   type Values = Partial<Nullable<inferParserType<Parsers>>>
 
   /**
@@ -81,8 +97,8 @@ function isBase(base: any): base is Base {
 
 function splitBase(base: Base) {
   if (typeof base === 'string') {
-    const [path = '', search] = base.split('?')
-    return [path, new URLSearchParams(search)] as const
+    const [path = '', ...search] = base.split('?')
+    return [path, new URLSearchParams(search.join('?'))] as const
   } else if (base instanceof URLSearchParams) {
     return ['', new URLSearchParams(base)] as const // Operate on a copy of URLSearchParams, as derived classes may restrict its allowed methods
   } else {

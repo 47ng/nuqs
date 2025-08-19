@@ -1,8 +1,6 @@
-import { Banner } from 'fumadocs-ui/components/banner'
 import { RootProvider } from 'fumadocs-ui/provider'
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
-import Link from 'next/link'
 import Script from 'next/script'
 import { NuqsAdapter } from 'nuqs/adapters/next'
 import type { ReactNode } from 'react'
@@ -33,23 +31,22 @@ export const metadata = {
 export default function Layout({ children }: { children: ReactNode }) {
   const enableChiffreAnalytics = process.env.VERCEL_ENV === 'production'
   return (
-    <html lang="en" className={cn(inter.className, 'antialiased')}>
+    <html
+      lang="en"
+      className={cn(inter.className, 'antialiased')}
+      // https://github.com/shadcn-ui/ui/issues/5552#issuecomment-2435024526
+      suppressHydrationWarning
+    >
+      <head>
+        <link
+          rel="alternate"
+          type="application/rss+xml"
+          href="/blog/rss.xml"
+          title="nuqs blog RSS feed"
+        />
+      </head>
       <body>
-        <Banner
-          variant="rainbow"
-          className="text-md gap-4 font-semibold"
-          id="nuqs-2-announcement"
-        >
-          <span aria-hidden>🎉</span>
-          <Link
-            href="/blog/nuqs-2"
-            className="decoration-slice decoration-1 transition-all hover:underline hover:underline-offset-8 focus-visible:underline focus-visible:outline-none"
-            prefetch={false}
-          >
-            Announcing nuqs version 2
-          </Link>
-          <span aria-hidden>🎉</span>
-        </Banner>
+        {/* Top-level banners go here */}
         <RootProvider>
           <NuqsAdapter>{children}</NuqsAdapter>
         </RootProvider>

@@ -10,7 +10,9 @@ wrapping it with a `NuqsAdapter` context provider:
 - [Next.js (pages router)](#nextjs-pages-router)
 - [React SPA (eg: with Vite)](#react-spa)
 - [Remix](#remix)
-- [React Router](#react-router)
+- [React Router v6](#react-router-v6)
+- [React Router v7](#react-router-v7)
+- [TanStack Router](#tanstack-router)
 
 ## Next.js
 
@@ -85,6 +87,25 @@ createRoot(document.getElementById('root')!).render(
 )
 ```
 
+Note: because there is no known server in this configuration, the
+[`shallow: false{:ts}`](./options#shallow) option will have no effect.
+
+Since `nuqs@2.4.0`, you can specify a flag to perform a full-page navigation when
+updating query state configured with `shallow: false{:ts}`, to notify the web server
+that the URL state has changed, if it needs it for server-side rendering other
+parts of the application than the static React bundle:
+
+```tsx title="src/main.tsx" /fullPageNavigationOnShallowFalseUpdates/
+createRoot(document.getElementById('root')!).render(
+  <NuqsAdapter fullPageNavigationOnShallowFalseUpdates>
+    <App />
+  </NuqsAdapter>
+)
+```
+
+This may be useful for servers not written in JavaScript, like Django (Python),
+Rails (Ruby), Laravel (PHP), Phoenix (Elixir) etc...
+
 ## Remix
 
 ```tsx title="app/root.tsx"
@@ -102,11 +123,11 @@ export default function App() {
 }
 ```
 
-## React Router
+## React Router v6
 
 ```tsx title="src/main.tsx"
 // [!code word:NuqsAdapter]
-import { NuqsAdapter } from 'nuqs/adapters/react-router'
+import { NuqsAdapter } from 'nuqs/adapters/react-router/v6'
 import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 import App from './App'
 
@@ -125,6 +146,131 @@ export function ReactRouter() {
   )
 }
 ```
+
+<Callout>
+
+ Only `BrowserRouter` is supported. There may be support for `HashRouter`
+ in the future (see issue [#810](https://github.com/47ng/nuqs/issues/810)), but
+ support for `MemoryRouter` is not planned.
+
+</Callout>
+
+## React Router v7
+
+```tsx title="app/root.tsx"
+// [!code word:NuqsAdapter]
+import { NuqsAdapter } from 'nuqs/adapters/react-router/v7'
+import { Outlet } from 'react-router'
+
+// ...
+
+export default function App() {
+  return (
+    <NuqsAdapter>
+      <Outlet />
+    </NuqsAdapter>
+  )
+}
+```
+
+<Callout type="warn" title="Deprecation notice">
+  The generic import `nuqs/adapters/react-router` (pointing to v6)
+  is deprecated and will be removed in nuqs@3.0.0.
+
+  Please pin your imports to the specific version,
+  eg: `nuqs/adapters/react-router/v6` or `nuqs/adapters/react-router/v7`.
+
+  The main difference is where the React Router hooks are imported from:
+  `react-router-dom` for v6, and `react-router` for v7.
+</Callout>
+
+## TanStack Router
+
+```tsx title="src/routes/__root.tsx"
+// [!code word:NuqsAdapter]
+import { NuqsAdapter } from 'nuqs/adapters/tanstack-router'
+import { Outlet, createRootRoute } from '@tanstack/react-router'
+
+export const Route = createRootRoute({
+  component: () => (
+    <>
+      <NuqsAdapter>
+        <Outlet />
+      </NuqsAdapter>
+    </>
+  ),
+})
+```
+
+<Callout>
+
+TanStack Router support is experimental and does not yet cover TanStack Start.
+
+</Callout>
+
+### Type-safe routing via `validateSearch`
+
+TanStack Router comes with built-in type-safe search params support,
+and its APIs should likely be used in your application code for best DX.
+
+Nevertheless, sometimes you may need to import a component that uses nuqs
+(from NPM or a shared library), and benefit from TanStack Router's type-safe routing.
+
+You may do so via the [Standard Schema](./utilities#standard-schema) support:
+
+```tsx
+import { createFileRoute, Link } from '@tanstack/react-router'
+import {
+  createStandardSchemaV1,
+  parseAsIndex,
+  parseAsString,
+  useQueryStates
+} from 'nuqs'
+
+const searchParams = {
+  searchQuery: parseAsString.withDefault(''),
+  pageIndex: parseAsIndex.withDefault(0),
+}
+
+export const Route = createFileRoute('/search')({
+  component: RouteComponent,
+  // [!code highlight:3]
+  validateSearch: createStandardSchemaV1(searchParams, {
+    partialOutput: true
+  })
+})
+
+function RouteComponent() {
+  // Consume nuqs state as usual:
+  const [{ searchQuery, pageIndex }] = useQueryStates(searchParams)
+  // But now TanStack Router knows about it too:
+  return (
+    <Link
+      to="/search"
+      search={{
+        searchQuery: 'foo',
+        // note: we're not specifying pageIndex
+      }}
+    />
+  )
+}
+```
+
+Note that the `partialOutput{:ts}` flag allows specifying only a subset of
+the search params for a given route. It also does not reflect those search
+in the URL automatically, following nuqs' behaviour more closely.
+
+<Callout title="Caveats" type="warn">
+
+Due to differences in how TanStack Router and nuqs handle serialisation and deserialisation
+(global in TanStack Router and per-key in nuqs), only _trivial_ state types are supported for
+type-safe linking. Those include all string-based parsers (string, enum, literals),
+number-based (integer, float, number literal), boolean, and JSON.
+
+The `urlKeys` feature to provide shorthand key names is also not supported for similar
+reasons.
+
+</Callout>
 
 ## Testing
 

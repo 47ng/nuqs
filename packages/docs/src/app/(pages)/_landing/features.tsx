@@ -47,7 +47,7 @@ export function FeaturesSection(props: React.ComponentProps<'section'>) {
       <Feature
         icon={<Shuffle size={32} />}
         title="Universal"
-        description="Supports Next.js (app & pages routers), React SPA, Remix, React Router, and more."
+        description="Supports Next.js (app & pages routers), React SPA, Remix, React Router, TanStack Router, and more."
         isNew
       />
       <Feature

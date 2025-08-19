@@ -2,7 +2,6 @@
 
 import { parseAsInteger, useQueryState } from 'nuqs'
 import { useTransition } from 'react'
-import { HydrationMarker } from '../../../components/hydration-marker'
 
 export function Client() {
   const [isLoading, startTransition] = useTransition()
@@ -15,7 +14,6 @@ export function Client() {
   )
   return (
     <>
-      <HydrationMarker />
       <p id="server-status">{isLoading ? 'loading' : 'idle'}</p>
       <button onClick={() => setCounter(counter + 1)}>{counter}</button>
     </>

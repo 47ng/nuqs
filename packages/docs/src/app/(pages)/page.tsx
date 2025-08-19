@@ -1,8 +1,8 @@
 import type { Metadata } from 'next'
 import { DependentsSection } from './_landing/dependents'
 import { FeaturesSection } from './_landing/features'
-import Footer from './_landing/footer'
 import { HeroSection } from './_landing/hero'
+import { PageFooter } from './_landing/page-footer'
 import { QuotesSection } from './_landing/quotes/quotes-section'
 import { SponsorsSection } from './_landing/sponsors'
 
@@ -25,7 +25,7 @@ export default function HomePage() {
       <SponsorsSection />
       <DependentsSection />
       <QuotesSection />
-      <Footer />
+      <PageFooter />
     </main>
   )
 }

@@ -1,6 +1,5 @@
 import { Button } from '@/src/components/ui/button'
 import { Heart } from 'lucide-react'
-import Image from 'next/image'
 import { ReactNode } from 'react'
 import { z } from 'zod'
 
@@ -11,14 +10,14 @@ export async function SponsorsSection() {
       <h2 className="mb-12 text-center text-3xl font-bold tracking-tighter dark:text-white md:text-4xl xl:text-5xl">
         Sponsors
       </h2>
-      <ul className="container grid grid-cols-2 gap-y-12 md:grid-cols-3 xl:grid-cols-6">
+      <ul className="container grid grid-cols-2 gap-y-12 md:grid-cols-3 lg:grid-cols-6">
         {sponsors.map(sponsor => (
           <li key={sponsor.handle} className="flex flex-col items-center">
             <a href={sponsor.url} className="h-32 w-32 rounded-full">
-              <Image
+              <img
                 src={sponsor.img}
                 alt={sponsor.name ?? sponsor.handle}
-                className="mx-auto size-28 rounded-full"
+                className="mx-auto size-32 rounded-full"
                 width={128}
                 height={128}
               />
@@ -38,9 +37,9 @@ export async function SponsorsSection() {
         ))}
       </ul>
       <div className="mt-16 flex justify-center">
-        <Button className="mx-auto" asChild>
+        <Button className="text-md mx-auto font-semibold" asChild size="lg">
           <a href="https://github.com/sponsors/franky47">
-            <Heart className="mr-2 text-pink-500" size={16} /> Sponsor my work
+            <Heart className="mr-2 stroke-pink-500" size={18} /> Sponsor my work
           </a>
         </Button>
       </div>
@@ -87,19 +86,43 @@ async function fetchSponsors(): Promise<Sponsors> {
       handle: 'vercel',
       name: 'Vercel',
       url: 'https://vercel.com/',
-      img: 'https://avatars.githubusercontent.com/u/14985020?v=4'
+      img: 'https://avatars.githubusercontent.com/u/14985020?s=200&v=4'
+    },
+    {
+      handle: 'unkey.com',
+      name: 'Unkey',
+      url: 'https://unkey.com',
+      img: 'https://avatars.githubusercontent.com/u/138932600?s=200&v=4'
+    },
+    {
+      handle: 'openstatus.dev',
+      name: 'OpenStatus',
+      url: 'https://openstatus.dev',
+      img: 'https://avatars.githubusercontent.com/u/136892265?s=200&v=4'
+    },
+    {
+      handle: 'code-store-platform',
+      name: 'code.store',
+      url: 'https://code.store',
+      img: 'https://avatars.githubusercontent.com/u/57156815?s=200&v=4'
+    },
+    {
+      handle: 'oxom-de',
+      name: 'oxom.de',
+      url: 'https://oxom.de',
+      img: 'https://avatars.githubusercontent.com/u/132659062?s=200&v=4'
     },
     {
       handle: 'ryanmagoon',
       name: 'Ryan Magoon',
       url: 'https://x.com/Ryan_Magoon',
-      img: 'https://avatars.githubusercontent.com/u/5327290?v=4'
+      img: 'https://avatars.githubusercontent.com/u/5327290?s=200&v=4'
     },
     {
       handle: 'pontusab',
       name: 'Pontus Abrahamsson',
       url: 'https://x.com/pontusab',
-      img: 'https://avatars.githubusercontent.com/u/655158?v=4',
+      img: 'https://avatars.githubusercontent.com/u/655158?s=200&v=4',
       title: (
         <>
           Founder of{' '}
@@ -127,7 +150,7 @@ async function fetchSponsors(): Promise<Sponsors> {
       handle: 'rwieruch',
       name: 'Robin Wieruch',
       url: 'https://www.robinwieruch.de/',
-      img: 'https://avatars.githubusercontent.com/u/2479967?v=4',
+      img: 'https://avatars.githubusercontent.com/u/2479967?s=200&v=4',
       title: (
         <>
           Author of{' '}
@@ -138,11 +161,24 @@ async function fetchSponsors(): Promise<Sponsors> {
       )
     },
     {
+      handle: 'aurorascharff',
+      name: 'Aurora Scharff',
+      url: 'https://aurorascharff.no/',
+      img: 'https://avatars.githubusercontent.com/u/66901228?s=200&v=4',
+      title: 'Queen of RSCs 👸'
+    },
+    {
       handle: 'YoannFleuryDev',
       name: 'Yoann Fleury',
       url: 'https://www.yoannfleury.dev/',
       img: 'https://pbs.twimg.com/profile_images/1594632934245498880/CJTKNRCO_400x400.jpg',
       title: 'Front end developer'
+    },
+    {
+      handle: 'lpbonomi',
+      name: 'Luis Pedro Bonomi',
+      url: 'https://github.com/lpbonomi',
+      img: 'https://avatars.githubusercontent.com/u/38361000?s=200&v=4'
     }
   ]
 }

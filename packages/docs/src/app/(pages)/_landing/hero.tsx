@@ -4,6 +4,7 @@ import { cn } from '@/src/lib/utils'
 import { ChevronDown, Github, Library } from 'lucide-react'
 import Link from 'next/link'
 import { LandingDemo } from './demo'
+import { WorksWith } from './works-with'
 
 export function HeroSection() {
   return (
@@ -44,6 +45,7 @@ export function HeroSection() {
             GitHub
           </a>
         </nav>
+        <WorksWith className="mt-10" />
       </aside>
       <aside className="relative my-4 xl:my-auto xl:flex-1 xl:pt-4">
         <LandingDemo />

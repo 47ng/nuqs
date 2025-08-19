@@ -1,12 +1,11 @@
 import { Card } from '@tremor/react'
-import Image from 'next/image'
 import { SearchParams } from 'nuqs/server'
 import { Suspense } from 'react'
 import { NPMDownloads, NPMStats } from './_components/downloads'
 import { StarHistoryGraph } from './_components/stars'
 import { Versions } from './_components/versions'
 import { getVersions, sumVersions } from './lib/versions'
-import { searchParamsCache } from './searchParams'
+import { loadSearchParams } from './searchParams'
 
 export const dynamic = 'force-dynamic'
 
@@ -15,8 +14,8 @@ type StatsPageProps = {
 }
 
 export default async function StatsPage({ searchParams }: StatsPageProps) {
-  const { pkg } = await searchParamsCache.parse(searchParams)
-  const allVersions = await getVersions()
+  const { pkg, beta } = await loadSearchParams(searchParams)
+  const allVersions = await getVersions(beta)
   const pkgVersions = pkg === 'both' ? sumVersions(allVersions) : allVersions
   // @ts-expect-error
   const versionsToShow = Object.entries(pkgVersions.at(-1)?.[pkg] ?? {})
@@ -33,7 +32,7 @@ export default async function StatsPage({ searchParams }: StatsPageProps) {
           <StarHistoryGraph />
         </Suspense>
         <Card className="flex flex-col gap-2 p-2 dark:bg-background">
-          <Image
+          <img
             width={814}
             height={318}
             alt="Project analytics and stats"

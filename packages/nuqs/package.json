@@ -1,13 +1,14 @@
 {
   "name": "nuqs",
   "version": "0.0.0-semantically-released",
-  "description": "Type-safe search params state manager for Next.js - Like React.useState, but stored in the URL query string",
+  "description": "Type-safe search params state manager for React - Like useState, but stored in the URL query string",
   "license": "MIT",
   "author": {
     "name": "François Best",
     "email": "contact@francoisbest.com",
     "url": "https://francoisbest.com"
   },
+  "funding": "https://github.com/sponsors/franky47",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/47ng/nuqs.git",
@@ -15,115 +16,150 @@
   },
   "homepage": "https://nuqs.47ng.com",
   "keywords": [
-    "url-state",
-    "router",
+    "url state",
     "url",
-    "query-string",
-    "react-hook",
-    "useState",
+    "querystring",
+    "query string",
+    "search params",
     "next-usequerystate",
+    "useQueryState",
+    "useQueryStates",
     "nextjs",
     "react",
     "remix",
-    "react-router"
+    "react-router",
+    "tanstack-router"
   ],
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "provenance": true
   },
   "files": [
     "dist/",
     "server.d.ts",
+    "testing.d.ts",
     "adapters/react.d.ts",
     "adapters/next.d.ts",
     "adapters/next/app.d.ts",
     "adapters/next/pages.d.ts",
     "adapters/remix.d.ts",
     "adapters/react-router.d.ts",
+    "adapters/react-router/v6.d.ts",
+    "adapters/react-router/v7.d.ts",
+    "adapters/tanstack-router.d.ts",
     "adapters/custom.d.ts",
-    "adapters/testing.d.ts",
-    "esm-only.cjs"
+    "adapters/testing.d.ts"
   ],
   "type": "module",
   "sideEffects": false,
   "module": "dist/index.js",
   "types": "dist/index.d.ts",
   "exports": {
+    "./package.json": "./package.json",
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
-      "require": "./esm-only.cjs"
+      "default": "./dist/index.js"
     },
     "./server": {
       "types": "./dist/server.d.ts",
       "import": "./dist/server.js",
-      "require": "./esm-only.cjs"
+      "default": "./dist/server.js"
+    },
+    "./testing": {
+      "types": "./dist/testing.d.ts",
+      "import": "./dist/testing.js",
+      "default": "./dist/testing.js"
     },
     "./adapters/react": {
       "types": "./dist/adapters/react.d.ts",
       "import": "./dist/adapters/react.js",
-      "require": "./esm-only.cjs"
+      "default": "./dist/adapters/react.js"
     },
     "./adapters/next": {
       "types": "./dist/adapters/next.d.ts",
       "import": "./dist/adapters/next.js",
-      "require": "./esm-only.cjs"
+      "default": "./dist/adapters/next.js"
     },
     "./adapters/next/app": {
       "types": "./dist/adapters/next/app.d.ts",
       "import": "./dist/adapters/next/app.js",
-      "require": "./esm-only.cjs"
+      "default": "./dist/adapters/next/app.js"
     },
     "./adapters/next/pages": {
       "types": "./dist/adapters/next/pages.d.ts",
       "import": "./dist/adapters/next/pages.js",
-      "require": "./esm-only.cjs"
+      "default": "./dist/adapters/next/pages.js"
     },
     "./adapters/remix": {
       "types": "./dist/adapters/remix.d.ts",
       "import": "./dist/adapters/remix.js",
-      "require": "./esm-only.cjs"
+      "default": "./dist/adapters/remix.js"
     },
     "./adapters/react-router": {
       "types": "./dist/adapters/react-router.d.ts",
       "import": "./dist/adapters/react-router.js",
-      "require": "./esm-only.cjs"
+      "default": "./dist/adapters/react-router.js"
+    },
+    "./adapters/react-router/v6": {
+      "types": "./dist/adapters/react-router/v6.d.ts",
+      "import": "./dist/adapters/react-router/v6.js",
+      "default": "./dist/adapters/react-router/v6.js"
+    },
+    "./adapters/react-router/v7": {
+      "types": "./dist/adapters/react-router/v7.d.ts",
+      "import": "./dist/adapters/react-router/v7.js",
+      "default": "./dist/adapters/react-router/v7.js"
+    },
+    "./adapters/tanstack-router": {
+      "types": "./dist/adapters/tanstack-router.d.ts",
+      "import": "./dist/adapters/tanstack-router.js",
+      "default": "./dist/adapters/tanstack-router.js"
     },
     "./adapters/custom": {
       "types": "./dist/adapters/custom.d.ts",
       "import": "./dist/adapters/custom.js",
-      "require": "./esm-only.cjs"
+      "default": "./dist/adapters/custom.js"
     },
     "./adapters/testing": {
       "types": "./dist/adapters/testing.d.ts",
       "import": "./dist/adapters/testing.js",
-      "require": "./esm-only.cjs"
+      "default": "./dist/adapters/testing.js"
     }
   },
   "scripts": {
-    "dev": "tsup --watch",
+    "dev": "tsdown --watch",
     "prebuild": "rm -rf dist",
-    "build": "tsup",
+    "build": "tsdown",
     "postbuild": "size-limit --json > size.json",
-    "test": "pnpm run '/^test:/'",
-    "test:types": "tsd",
-    "test:unit": "vitest run",
+    "test": "pnpm run --stream '/^test:/'",
+    "test:unit": "vitest run --typecheck",
     "test:size": "size-limit",
     "prepack": "./scripts/prepack.sh"
   },
   "dependencies": {
+    "@standard-schema/spec": "1.0.0",
     "mitt": "^3.0.1"
   },
   "peerDependencies": {
     "@remix-run/react": ">=2",
+    "@tanstack/react-router": "^1",
     "next": ">=14.2.0",
     "react": ">=18.2.0 || ^19.0.0-0",
-    "react-router-dom": ">=6"
+    "react-router": "^6 || ^7",
+    "react-router-dom": "^6 || ^7"
   },
   "peerDependenciesMeta": {
     "@remix-run/react": {
       "optional": true
     },
+    "@tanstack/react-router": {
+      "optional": true
+    },
     "next": {
+      "optional": true
+    },
+    "react-router": {
       "optional": true
     },
     "react-router-dom": {
@@ -131,36 +167,37 @@
     }
   },
   "devDependencies": {
-    "@microsoft/api-extractor": "^7.47.11",
-    "@remix-run/react": "^2.14.0",
-    "@size-limit/preset-small-lib": "^11.1.6",
+    "@remix-run/react": "^2.16.5",
+    "@size-limit/preset-small-lib": "^11.2.0",
     "@testing-library/dom": "^10.4.0",
     "@testing-library/jest-dom": "^6.6.3",
-    "@testing-library/react": "^16.0.1",
-    "@testing-library/user-event": "^14.5.2",
-    "@types/node": "^22.9.0",
-    "@types/react": "^18.3.12",
-    "@types/react-dom": "^18.3.1",
-    "@vitejs/plugin-react": "^4.3.3",
-    "next": "15.0.3",
-    "react": "catalog:react19rc",
-    "react-dom": "catalog:react19rc",
-    "react-router-dom": "^6.28.0",
-    "size-limit": "^11.1.6",
-    "tsafe": "^1.8.4",
-    "tsd": "^0.31.2",
-    "tsup": "^8.3.5",
-    "typescript": "^5.6.3",
-    "vitest": "^2.1.5"
-  },
-  "tsd": {
-    "directory": "src/tests"
+    "@testing-library/react": "^16.3.0",
+    "@testing-library/user-event": "^14.6.1",
+    "@types/node": "^22.14.1",
+    "@types/react": "catalog:react19",
+    "@types/react-dom": "catalog:react19",
+    "@vitejs/plugin-react": "^4.3.4",
+    "@vitest/coverage-v8": "^3.1.1",
+    "arktype": "^2.1.20",
+    "fast-check": "^4.1.1",
+    "jsdom": "^26.1.0",
+    "next": "15.3.5",
+    "react": "catalog:react19",
+    "react-dom": "catalog:react19",
+    "react-router-dom": "6.30.0",
+    "size-limit": "^11.2.0",
+    "tsdown": "^0.12.7",
+    "typescript": "^5.8.3",
+    "valibot": "^1.1.0",
+    "vitest": "^3.1.1",
+    "vitest-package-exports": "^0.1.1",
+    "zod": "^3.24.2"
   },
   "size-limit": [
     {
       "name": "Client",
       "path": "dist/index.js",
-      "limit": "5 kB",
+      "limit": "6 kB",
       "ignore": [
         "react",
         "next"
@@ -169,7 +206,7 @@
     {
       "name": "Server",
       "path": "dist/server.js",
-      "limit": "2 kB",
+      "limit": "3 kB",
       "ignore": [
         "react",
         "next"

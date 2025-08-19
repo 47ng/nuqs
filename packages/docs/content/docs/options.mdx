@@ -15,7 +15,8 @@ These behaviours can be configured, along with a few additional options.
 
 Options can be passed at the hook level via the builder pattern:
 
-```ts /withOptions/
+```ts
+// [!code word:withOptions]
 const [state, setState] = useQueryState(
   'foo',
   parseAsString.withOptions({ history: 'push' })
@@ -24,11 +25,22 @@ const [state, setState] = useQueryState(
 
 Or when calling the state updater function, as a second parameter:
 
-```ts /{ scroll: true }/
+```ts
+// [!code word:scroll]
 setState('foo', { scroll: true })
 ```
 
 Call-level options will override hook level options.
+
+Default values for some options can also be configured globally via the `defaultOptions{:ts}`
+[adapter](/docs/adapters) prop:
+
+```tsx
+// [!code word:defaultOptions]
+<NuqsAdapter defaultOptions={{ shallow: false }}>
+  {children}
+</NuqsAdapter>
+```
 
 
 ## History
@@ -43,8 +55,9 @@ You can also opt-in to **push** a new history entry for each state change,
 per key, which will let you use the Back button to navigate state
 updates:
 
-```ts /history: /history: 'push'/
+```ts
 // Append state changes to history:
+// [!code word:history]
 useQueryState('foo', { history: 'push' })
 ```
 
@@ -64,14 +77,54 @@ no network calls to the server.
 
 This is equivalent to the `shallow` option of the Next.js router set to `true{:ts}`.
 
-To opt-in to query updates notifying the server (to re-render Server Components
-on the app router and re-run `getServerSideProps` in the pages router),
-you can set `shallow` to `false{:ts}`:
+To opt-in to notifying the server on query updates, you can set `shallow` to `false{:ts}`:
 
-```ts /shallow: false/
+```ts
+// [!code word:shallow]
 useQueryState('foo', { shallow: false })
 ```
 
+Note that the shallow option only makes sense if your page can be server-side rendered.
+Therefore, it has no effect in React SPA.
+
+For server-side renderable frameworks, you would pair `shallow: false{:ts}` with:
+
+- In Next.js app router: the `searchParams` page prop to render the RSC tree based on the updated query state.
+- In Next.js pages router: the `getServerSideProps` function
+- In Remix & React Router: a `loader` function
+
+### In React Router based frameworks
+
+While the `shallow: true{:ts}` default behaviour is uncommon for Remix and React Router,
+where loaders are always supposed to run on URL changes, nuqs gives you control
+of this behaviour, by opting in to running loaders only if they do need to access
+the relevant search params.
+
+One caveat is that the stock `useSearchParams{:ts}` hook from those frameworks doesn't
+reflect shallow-updated search params, so we provide you with one that does:
+
+```tsx
+import { useOptimisticSearchParams } from 'nuqs/adapters/remix' // or '…/react-router/v6' or '…/react-router/v7'
+
+function Component() {
+  // Note: this is read-only, but reactive to all URL changes
+  const searchParams = useOptimisticSearchParams()
+  return <div>{searchParams.get('foo')}</div>
+}
+```
+
+This concept of _"shallow routing"_ is done via updates to the browser's
+[History API](https://developer.mozilla.org/en-US/docs/Web/API/History_API/Working_with_the_History_API).
+
+<Callout title="Why not using shouldRevalidate?">
+ [`shouldRevalidate`](https://reactrouter.com/start/framework/route-module#shouldrevalidate)
+ is the idomatic way of opting out of running loaders on navigation, but nuqs uses
+ the opposite approach: opting in to running loaders only when needed.
+
+ In order to avoid specifying `shouldRevalidate` for every route, nuqs chose to
+ patch the history methods to enable shallow routing by default (on its own updates)
+ in React Router based frameworks.
+</Callout>
 
 ## Scroll
 
@@ -81,46 +134,160 @@ which may not be desirable when updating the query string with local state.
 Query state updates won't scroll to the top of the page by default, but you
 can opt-in to this behaviour:
 
-```ts /scroll: true/
+```ts
+// [!code word:scroll]
 useQueryState('foo', { scroll: true })
 ```
 
 
-## Throttling URL updates
+## Rate-limiting URL updates
 
 Because of browsers rate-limiting the History API, updates **to the
 URL** are queued and throttled to a default of 50ms, which seems to satisfy
 most browsers even when sending high-frequency query updates, like binding
 to a text input or a slider.
 
-Safari's rate limits are much higher and require a throttle of 120ms (320ms for older
-versions of Safari).
-
-If you want to opt-in to a larger throttle time -- for example to reduce the amount
-of requests sent to the server when paired with `shallow: false{:ts}` -- you can
-specify it under the `throttleMs` option:
-
-```ts /throttleMs: 1000/
-useQueryState('foo', {
-  // Send updates to the server maximum once every second
-  shallow: false,
-  throttleMs: 1000
-})
-```
+Safari's rate limits are much higher and use a default throttle of 120ms
+(320ms for older versions of Safari).
 
 <Callout title="Note">
 the state returned by the hook is always updated **instantly**, to keep UI responsive.
-Only changes to the URL, and server requests when using `shallow: false`, are throttled.
+Only changes to the URL, and server requests when using `shallow: false{:ts}`, are throttled.
 </Callout>
+
+This [throttle](#throttle) time is configurable, and also allows you to [debounce](#debounce) updates
+instead.
+
+<Callout title="Which one should I use?">
+Throttle will emit the first update immediately, then batch updates at a slower
+pace **regularly**. This is recommended for most low-frequency updates.
+
+Debounce will push back the moment when the URL is updated when you set your state,
+making it **eventually consistent**. This is recommended for high-frequency
+updates where the last value is more interesting than the intermediate ones,
+like a search input or moving a slider.
+
+Debounce only makes sense for server-aware updates (when combined with [`shallow: false{:ts}`](#shallow)),
+to control when requests are made to the server. For example: it lets you avoid sending the first
+character on its own when typing in a search input, by waiting for the user to finish typing.
+
+Read more about [debounce vs throttle](https://kettanaito.com/blog/debounce-vs-throttle).
+</Callout>
+
+### Throttle
+
+If you want to increase the throttle time -- for example to reduce the amount
+of requests sent to the server when paired with `shallow: false{:ts}` -- you can
+specify it under the `limitUrlUpdates{:ts}` option:
+
+```ts
+// [!code word:limitUrlUpdates]
+useQueryState('foo', {
+  // Send updates to the server maximum once every second
+  shallow: false,
+  limitUrlUpdates: {
+    method: 'throttle',
+    timeMs: 1000
+  }
+})
+
+// or using the shorthand:
+import { throttle } from 'nuqs'
+
+useQueryState('foo', {
+  shallow: false,
+  limitUrlUpdates: throttle(1000)
+})
+```
 
 If multiple hooks set different throttle values on the same event loop tick,
 the highest value will be used. Also, values lower than 50ms will be ignored,
 to avoid rate-limiting issues.
 [Read more](https://francoisbest.com/posts/2023/storing-react-state-in-the-url-with-nextjs#batching--throttling).
 
-Specifying a `+Infinity{:ts}` value for `throttleMs` will **disable** updates to the
-URL or the server, but all `useQueryState(s)` hooks will still update their
+Specifying a `+Infinity{:ts}` value for throttle time will **disable** updates to the
+URL or the server, but all `useQueryState(s){:ts}` hooks will still update their
 internal state and stay in sync with each other.
+
+<Callout title="Deprecation notice">
+The `throttleMs{:ts}` option has been deprecated in `nuqs@2.5.0` and will be removed
+in a later major upgrade.
+
+To migrate:
+1. `import { throttle } from 'nuqs' {:ts}`
+2.  Replace `{ throttleMs: 100 }{:ts}` with `{ limitUrlUpdates: throttle(100) }{:ts}` in your options.
+</Callout>
+
+### Debounce
+
+In addition to throttling, you can apply a debouncing mechanism to state updates,
+to delay the moment where the URL gets updated with the latest value.
+
+This can be useful for high frequency state updates where the server only cares about
+the final value, not all the intermediary ones while typing in a search input
+or moving a slider.
+
+We recommend you opt-in to debouncing on specific state updates, rather than
+defining it for the whole search param.
+
+Let's take the example of a search input. You'll want to update it:
+
+1. When the user is typing text, with debouncing
+2. When the user clears the input, by sending an immediate update
+3. When the user presses Enter, by sending an immediate update
+
+You can see the debounce case is the outlier here, and actually conditioned on
+the set value, so we can specify it using the state updater function:
+
+```tsx
+// [!code word:debounce:1]
+import { useQueryState, parseAsString, debounce } from 'nuqs';
+
+function Search() {
+  const [search, setSearch] = useQueryState(
+    'q',
+    parseAsString
+      .withDefault('')
+      .withOptions({ shallow: false })
+  )
+
+  return (
+    <input
+      value={search}
+      onChange={(e) =>
+        setSearch(e.target.value, {
+          // Send immediate update if resetting, otherwise debounce at 500ms
+          // [!code word:debounce:1]
+          limitUrlUpdates: e.target.value === '' ? undefined : debounce(500)
+        })
+      }
+      onKeyPress={(e) => {
+        if (e.key === 'Enter') {
+          // Send immediate update
+          setSearch(e.target.value)
+        }
+      }}
+    />
+  )
+}
+```
+
+### Resetting
+
+You can use the `defaultRateLimit{:ts}` import to reset debouncing or throttling to
+the default:
+
+```ts
+// [!code word:defaultRateLimit]
+import { debounce, defaultRateLimit } from 'nuqs'
+
+const [, setState] = useQueryState('foo', {
+  limitUrlUpdates: debounce(1000)
+})
+
+// This state update isn't debounced
+setState('bar', { limitUrlUpdates: defaultRateLimit })
+```
 
 
 ## Transitions
@@ -132,11 +299,7 @@ the updated URL.
 Pass in the `startTransition{:ts}` function from `useTransition{:ts}` to the options
 to enable this behaviour:
 
-<Callout title="Upcoming changes" type="warn">
-  In `nuqs@2.0.0`, passing `startTransition` will no longer automatically set `shallow: false{:ts}`.
-</Callout>
-
-```tsx /startTransition/1,3#2
+```tsx
 'use client'
 
 import React from 'react'
@@ -150,7 +313,7 @@ function ClientComponent({ data }) {
     'query',
     // 2. Pass the `startTransition` as an option:
     // [!code word:startTransition:1]
-    parseAsString().withOptions({ startTransition, shallow: false })
+    parseAsString.withOptions({ startTransition, shallow: false })
   )
   // 3. `isLoading` will be true while the server is re-rendering
   // and streaming RSC payloads, when the query is updated via `setQuery`.
@@ -164,7 +327,7 @@ function ClientComponent({ data }) {
 ```
 
 <Callout>
-  In `nuqs@1.x.x`, passing `startTransition` as an option automatically sets
+  In `nuqs@1.x.x`, passing `startTransition{:ts}` as an option automatically sets
   `shallow: false{:ts}`.
 
   This is no longer the case in `nuqs@>=2.0.0`: you'll need to set it explicitly.
@@ -185,9 +348,10 @@ because **default values _can_ change**, and the meaning of the URL along with i
 </Callout>
 
 If you want to keep the search parameter in the URL when it's set to the default
-value, you can set `clearOnDefault` to `false{:ts}`:
+value, you can set `clearOnDefault{:ts}` to `false{:ts}`:
 
-```ts /clearOnDefault: true/
+```ts
+// [!code word:clearOnDefault]
 useQueryState('search', {
   defaultValue: '',
   clearOnDefault: false

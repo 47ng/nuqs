@@ -1,0 +1,87 @@
+---
+title: Waku
+description: Integrate nuqs with Waku
+---
+
+[Waku](https://waku.gg/) is supported as a community-contributed adapter.
+
+## Step 1: Add the adapter code
+
+<Callout type="warn">
+  The custom adapters APIs are not yet stable and may change in the future
+  in a minor or patch release (not following SemVer).
+</Callout>
+
+```tsx title="app/nuqs-waku-adapter.tsx"
+"use client";
+
+import {
+  type unstable_AdapterOptions as AdapterOptions,
+  unstable_createAdapterProvider as createAdapterProvider,
+  renderQueryString,
+} from "nuqs/adapters/custom";
+// import { useRouter_UNSTABLE as useRouter } from "waku";
+// if waku v0.22 or later:
+import { useRouter } from "waku";
+
+function useNuqsAdapter() {
+  const { path, query, push, replace } = useRouter();
+  const searchParams = new URLSearchParams(query);
+  const updateUrl = (search: URLSearchParams, options: AdapterOptions) => {
+    const query = renderQueryString(search);
+    const url = path + query + location.hash;
+    if (options.shallow) {
+      options.history === "push"
+        ? history.pushState(null, "", url)
+        : history.replaceState(null, "", url);
+    } else {
+      const updateMethod = options.history === "push" ? push : replace;
+      // bypass waku's typesafe route check by using `as never`
+      updateMethod(url as never);
+    }
+    // Waku router does not scroll unless the pathname changes
+    if (options.scroll) {
+      window.scrollTo(0, 0);
+    }
+  };
+  return {
+    searchParams,
+    updateUrl,
+  };
+}
+
+export const NuqsAdapter = createAdapterProvider(useNuqsAdapter);
+
+```
+
+## Step 2: wrap your root layout
+
+Integrate the adapter into a _layout.tsx or _root.tsx file, by wrapping the `{children}`
+component:
+
+```tsx title="app/_layout.tsx" /NuqsAdapter/
+import { Suspense, type ReactNode } from 'react';
+
+import { NuqsAdapter } from './nuqs-waku-adapter'
+
+type LayoutProps = { children: ReactNode };
+
+export default async function Layout({ children }: LayoutProps) {
+  return (
+      <>
+        <NuqsAdapter>
+          <Suspense>
+            {children}
+          </Suspense>
+        </NuqsAdapter>
+      </>
+  );
+}
+
+export const getConfig = async () => {
+  return {
+    render: 'dynamic',
+    // render: 'static', // works but can cause hydration warnings
+  } as const;
+};
+```

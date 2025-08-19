@@ -1,10 +1,12 @@
 'use client'
 
+import { Checkbox } from '@/src/components/ui/checkbox'
+import { Label } from '@/src/components/ui/label'
 import { LineChart, Tab, TabGroup, TabList } from '@tremor/react'
 import { Boxes } from 'lucide-react'
-import { useQueryState } from 'nuqs'
+import { useQueryStates } from 'nuqs'
 import { formatStatNumber } from '../lib/format'
-import { pkgOptions, pkgParser } from '../searchParams'
+import { pkgOptions, searchParams } from '../searchParams'
 import { Widget } from './widget'
 
 type VersionProps = {
@@ -27,11 +29,9 @@ type VersionProps = {
 // stroke-purple-500 fill-purple-500 bg-purple-500 text-purple-500
 
 export function Versions({ records, versions }: VersionProps) {
-  const [activeTab, setActiveTab] = useQueryState(
-    'pkg',
-    pkgParser.withOptions({
-      shallow: false
-    })
+  const [{ pkg: activeTab, beta }, setSearchParams] = useQueryStates(
+    searchParams,
+    { shallow: false }
   )
   return (
     <Widget
@@ -43,7 +43,7 @@ export function Versions({ records, versions }: VersionProps) {
           <TabGroup
             className="ml-auto w-auto"
             index={pkgOptions.indexOf(activeTab)}
-            onIndexChange={index => setActiveTab(pkgOptions[index])}
+            onIndexChange={index => setSearchParams({ pkg: pkgOptions[index] })}
           >
             <TabList variant="solid">
               <Tab>nuqs</Tab>
@@ -51,6 +51,16 @@ export function Versions({ records, versions }: VersionProps) {
               <Tab>combined</Tab>
             </TabList>
           </TabGroup>
+          <div className="ml-1 flex items-center gap-2 opacity-75">
+            <Checkbox
+              id="beta"
+              checked={beta}
+              onCheckedChange={checked =>
+                setSearchParams({ beta: checked === true })
+              }
+            />
+            <Label htmlFor="beta">Beta</Label>
+          </div>
         </>
       }
     >
@@ -58,7 +68,7 @@ export function Versions({ records, versions }: VersionProps) {
         data={records}
         curveType="monotone"
         tickGap={40}
-        yAxisWidth={30}
+        yAxisWidth={40}
         categories={versions}
         index="date"
         colors={['green-500', 'amber-500', 'red-500', 'blue-500', 'purple-500']}

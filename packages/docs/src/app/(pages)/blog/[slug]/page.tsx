@@ -1,11 +1,21 @@
 import { blog } from '@/src/app/source'
 // import { createMetadata } from '@/utils/metadata'
-import Footer from '@/src/app/(pages)/_landing/footer'
+import { PageFooter } from '@/src/app/(pages)/_landing/page-footer'
 import { Description } from '@/src/components/typography'
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator
+} from '@/src/components/ui/breadcrumb'
+import { SiBluesky, SiGithub } from '@icons-pack/react-simple-icons'
 import defaultMdxComponents from 'fumadocs-ui/mdx'
 import type { Metadata } from 'next'
+import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { Logo as Logo47ng } from './_components/47ng'
+import { Author } from './_components/author'
 
 export default async function Page(props: {
   params: Promise<{ slug: string }>
@@ -14,9 +24,31 @@ export default async function Page(props: {
   const page = blog.getPage([params.slug])
 
   if (!page) notFound()
+  const blueskyShareIntent = encodeURIComponent(
+    `"${page.data.title}" by @francoisbest.com on the @nuqs.47ng.com blog • https://nuqs.47ng.com/blog/${params.slug}`
+  )
 
   return (
     <>
+      <Breadcrumb className="container mt-8 max-w-[900px] md:px-8">
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <BreadcrumbLink asChild>
+              <Link href="/">Home</Link>
+            </BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbLink asChild>
+              <Link href="/blog">Blog</Link>
+            </BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbPage>{page.data.title}</BreadcrumbPage>
+          </BreadcrumbItem>
+        </BreadcrumbList>
+      </Breadcrumb>
       <div className="container max-w-[900px] py-12 md:px-8">
         <h1 className="mb-4 text-4xl font-bold text-foreground sm:text-5xl">
           {page.data.title}
@@ -24,21 +56,11 @@ export default async function Page(props: {
         <Description>{page.data.description}</Description>
       </div>
       <div className="container flex max-w-[900px] flex-col gap-4 px-4 text-sm sm:flex-row sm:items-center sm:justify-between lg:px-8">
-        <a
-          href="https://x.com/fortysevenfx"
-          className="flex items-center gap-3 rounded-lg px-2 py-1 hover:bg-foreground/5"
-          aria-description="Author"
-        >
-          <Logo47ng size={8} />
-          <div>
-            <p className="font-semibold">François Best</p>
-            <p className="text-xs text-fd-muted-foreground">@fortysevenfx</p>
-          </div>
-        </a>
+        <Author />
         {page.data.date && (
           <p className="text-sm font-medium text-fd-muted-foreground">
             {new Date(page.data.date).toLocaleDateString('en-GB', {
-              dateStyle: 'full'
+              dateStyle: 'long'
             })}
           </p>
         )}
@@ -47,12 +69,35 @@ export default async function Page(props: {
         <hr className="my-4" />
       </div>
       <article className="container max-w-[900px] px-0 pb-24 pt-8 lg:px-4">
-        {/* <InlineTOC items={page.data.toc} /> */}
         <div className="prose min-w-0 flex-1 p-4">
           <page.data.body components={defaultMdxComponents} />
         </div>
       </article>
-      <Footer />
+      <nav
+        aria-label="Share this post"
+        className="container flex max-w-[900px] items-center justify-center gap-4 px-0 pb-24 lg:px-4"
+      >
+        <a
+          href={`https://github.com/47ng/nuqs/edit/next/packages/docs/content/blog/${params.slug}.mdx`}
+          className="flex items-center gap-1.5 hover:underline"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <SiGithub role="presentation" className="size-4" />
+          Edit on GitHub
+        </a>
+        <span aria-hidden>•</span>
+        <a
+          href={`https://bsky.app/intent/compose?text=${blueskyShareIntent}`}
+          className="flex items-center gap-1.5 hover:underline"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <SiBluesky role="presentation" className="size-4" />
+          Comment on Bluesky
+        </a>
+      </nav>
+      <PageFooter />
     </>
   )
 }
@@ -65,7 +110,6 @@ export async function generateMetadata(props: {
 
   if (!page) notFound()
 
-  // todo: Add og:images etc
   return {
     title: page.data.title,
     description:

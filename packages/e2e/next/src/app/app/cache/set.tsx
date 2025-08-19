@@ -4,7 +4,7 @@ import { useQueryStates } from 'nuqs'
 import { parsers } from './searchParams'
 
 export function Set() {
-  const [{ bool, num, str, def, nope }, set] = useQueryStates(parsers, {
+  const [{ bool, num, str, def, nope, idx }, set] = useQueryStates(parsers, {
     shallow: false
   })
   return (
@@ -16,6 +16,7 @@ export function Set() {
       <p style={{ display: 'flex', gap: '1rem' }}>
         <span id="set-str">{str}</span>
         <span id="set-num">{num}</span>
+        <span id="set-idx">{String(idx)}</span>
         <span id="set-bool">{String(bool)}</span>
         <span id="set-def">{def}</span>
         <span id="set-nope">{String(nope)}</span>

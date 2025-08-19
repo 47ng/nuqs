@@ -16,11 +16,11 @@ env:
 jobs:
   lint:
     name: Linting
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04-arm
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
-      - uses: pnpm/action-setup@fe02b34f77f8bc703788d5817da081398fad5dd2
-      - uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af
+      - uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
           node-version-file: .node-version
           cache: pnpm
@@ -45,11 +45,11 @@ jobs:
 
   ci-core:
     name: CI (core)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04-arm
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
-      - uses: pnpm/action-setup@fe02b34f77f8bc703788d5817da081398fad5dd2
-      - uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af
+      - uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
           node-version-file: .node-version
           cache: pnpm
@@ -66,8 +66,8 @@ jobs:
     # Watch out! When changing the job name,
     # update the required checks in GitHub
     # branch protection settings for `next`.
-    name: E2E (next@${{ matrix.next-version }}${{ matrix.base-path && ' basePath' || ''}})
-    runs-on: ubuntu-latest
+    name: E2E (next@${{ matrix.next-version }}${{ matrix.base-path && ' ⚾' || ''}}${{ matrix.react-compiler && ' ⚛️' || ''}})
+    runs-on: ubuntu-24.04-arm
     needs: [ci-core]
     strategy:
       fail-fast: false
@@ -75,132 +75,159 @@ jobs:
         # Watch out! When changing the compat grid,
         # update the required checks in GitHub
         # branch protection settings for `next`.
-        base-path: [false, '/base']
+        base-path: [false]
+        react-compiler: [false]
         next-version:
           # Only keep versions where there were relevant changes in the app router core,
           # and the previous one to use as a baseline.
           - '14.2.0'
-          - '14.2.3' # before vercel/next.js#66755
+          # - '14.2.3' # before vercel/next.js#66755
           - '14.2.4' # after vercel/next.js#66755
-          - '14.2.7' # before vercel/next.js#69509
+          # - '14.2.7' # before vercel/next.js#69509
           - '14.2.8' # after vercel/next.js#69509
           - '15.0.0'
+          - '15.1.0'
+          - '15.2.0'
           - latest
+        include:
+          - next-version: '14.2.0'
+            base-path: '/base'
+          - next-version: '15.0.0'
+            base-path: '/base'
+          - next-version: 'latest'
+            base-path: '/base'
+          - next-version: 'latest'
+            react-compiler: true
+          - next-version: 'latest'
+            base-path: '/base'
+            react-compiler: true
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
-      - uses: pnpm/action-setup@fe02b34f77f8bc703788d5817da081398fad5dd2
-      - uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af
+      - uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
           node-version-file: .node-version
           cache: pnpm
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm install --frozen-lockfile ${{ matrix.next-version != 'latest' && '--filter e2e-next...' || '' }}
       - name: Install Next.js version ${{ matrix.next-version }}
         if: ${{ matrix.next-version != 'local' }}
-        run: pnpm add --filter e2e-next --filter nuqs next@${{ matrix.next-version }}
+        run: pnpm add --filter e2e-next next@${{ matrix.next-version }}
       - name: Run integration tests
         run: pnpm run test ${{ github.event_name == 'workflow_dispatch' && '--force' || '' }} --filter e2e-next
         env:
           BASE_PATH: ${{ matrix.base-path && matrix.base-path || '/' }}
+          REACT_COMPILER: ${{ matrix.react-compiler }}
           TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
           TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
           E2E_NO_CACHE_ON_RERUN: ${{ github.run_attempt }}
       - name: Save Cypress artifacts
-        uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: failure()
         with:
           path: packages/e2e/next/cypress/screenshots
-          name: ci-${{ matrix.next-version }}${{ matrix.base-path && '-basePath' || ''}}
+          name: ci-${{ matrix.next-version }}${{ matrix.base-path && '-basePath' || ''}}${{ matrix.react-compiler && '-react-compiler' || ''}}
       - uses: 47ng/actions-slack-notify@main
         name: Notify on Slack
-        if: always()
+        if: failure()
         with:
           status: ${{ job.status }}
-          jobName: next@${{ matrix.next-version }}${{ matrix.base-path && ' basePath' || ''}}
+          jobName: next@${{ matrix.next-version }}${{ matrix.base-path && ' basePath' || ''}}${{ matrix.react-compiler && ' react-compiler' || ''}}
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
   e2e-react:
-    name: E2E (react)
-    runs-on: ubuntu-latest
+    name: E2E (react-fpn-${{ matrix.full-page-nav-on-shallow-false }})
+    runs-on: ubuntu-24.04-arm
     needs: [ci-core]
+    strategy:
+      fail-fast: false
+      matrix:
+        full-page-nav-on-shallow-false: [false, true]
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
-      - uses: pnpm/action-setup@fe02b34f77f8bc703788d5817da081398fad5dd2
-      - uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af
+      - uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
           node-version-file: .node-version
           cache: pnpm
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm install --frozen-lockfile --filter e2e-react...
       - name: Run tests
         run: pnpm run test ${{ github.event_name == 'workflow_dispatch' && '--force' || '' }} --filter e2e-react
         env:
           TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
           TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
           E2E_NO_CACHE_ON_RERUN: ${{ github.run_attempt }}
+          FULL_PAGE_NAV_ON_SHALLOW_FALSE: ${{ matrix.full-page-nav-on-shallow-false }}
       - name: Save Cypress artifacts
-        uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: failure()
         with:
           path: packages/e2e/react/cypress/screenshots
-          name: ci-react
+          name: ci-react-fpn-${{ matrix.full-page-nav-on-shallow-false }}
       - uses: 47ng/actions-slack-notify@main
         name: Notify on Slack
-        if: always()
+        if: failure()
         with:
           status: ${{ job.status }}
-          jobName: react
+          jobName: react-fpn-${{ matrix.full-page-nav-on-shallow-false }}
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
   e2e-react-router:
-    name: E2E (react-router)
-    runs-on: ubuntu-latest
+    name: E2E (react-router ${{ matrix.react-router-version }})
+    runs-on: ubuntu-24.04-arm
     needs: [ci-core]
+    strategy:
+      fail-fast: false
+      matrix:
+        react-router-version:
+          - 'v6'
+          - 'v7'
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
-      - uses: pnpm/action-setup@fe02b34f77f8bc703788d5817da081398fad5dd2
-      - uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af
+      - uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
           node-version-file: .node-version
           cache: pnpm
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm install --frozen-lockfile --filter e2e-react-router-${{ matrix.react-router-version }}...
       - name: Run tests
-        run: pnpm run test ${{ github.event_name == 'workflow_dispatch' && '--force' || '' }} --filter e2e-react-router
+        run: pnpm run test ${{ github.event_name == 'workflow_dispatch' && '--force' || '' }} --filter e2e-react-router-${{ matrix.react-router-version }}
         env:
           TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
           TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
           E2E_NO_CACHE_ON_RERUN: ${{ github.run_attempt }}
       - name: Save Cypress artifacts
-        uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: failure()
         with:
-          path: packages/e2e/react-router/cypress/screenshots
-          name: ci-react-router
+          path: packages/e2e/react-router/${{ matrix.react-router-version }}/cypress/screenshots
+          name: ci-react-router-${{ matrix.react-router-version }}
       - uses: 47ng/actions-slack-notify@main
         name: Notify on Slack
-        if: always()
+        if: failure()
         with:
           status: ${{ job.status }}
-          jobName: react-router
+          jobName: react-router-${{ matrix.react-router-version }}
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
   e2e-remix:
     name: E2E (remix)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04-arm
     needs: [ci-core]
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
-      - uses: pnpm/action-setup@fe02b34f77f8bc703788d5817da081398fad5dd2
-      - uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af
+      - uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
           node-version-file: .node-version
           cache: pnpm
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm install --frozen-lockfile --filter e2e-remix...
       - name: Run tests
         run: pnpm run test ${{ github.event_name == 'workflow_dispatch' && '--force' || '' }} --filter e2e-remix
         env:
@@ -208,23 +235,57 @@ jobs:
           TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
           E2E_NO_CACHE_ON_RERUN: ${{ github.run_attempt }}
       - name: Save Cypress artifacts
-        uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: failure()
         with:
           path: packages/e2e/remix/cypress/screenshots
           name: ci-remix
       - uses: 47ng/actions-slack-notify@main
         name: Notify on Slack
-        if: always()
+        if: failure()
         with:
           status: ${{ job.status }}
           jobName: remix
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
-  cd:
-    name: Deployment
-    runs-on: ubuntu-latest
+  e2e-tanstack-router:
+    name: E2E (tanstack-router)
+    runs-on: ubuntu-22.04-arm
+    needs: [ci-core]
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda
+      - uses: actions/setup-node@cdca7365b2dadb8aad0a33bc7601856ffabcc48e
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile --filter e2e-tanstack-router...
+      - name: Run tests
+        run: pnpm run test ${{ github.event_name == 'workflow_dispatch' && '--force' || '' }} --filter e2e-tanstack-router
+        env:
+          TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+          TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
+          E2E_NO_CACHE_ON_RERUN: ${{ github.run_attempt }}
+      - name: Save Cypress artifacts
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: failure()
+        with:
+          path: packages/e2e/tanstack-router/cypress/screenshots
+          name: ci-tanstack-router
+      - uses: 47ng/actions-slack-notify@main
+        name: Notify on Slack
+        if: failure()
+        with:
+          status: ${{ job.status }}
+          jobName: tanstack-router
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+  ci-notify:
+    name: Notify on Slack
+    runs-on: ubuntu-24.04-arm
     needs:
       - lint
       - ci-core
@@ -232,11 +293,36 @@ jobs:
       - e2e-react
       - e2e-react-router
       - e2e-remix
+      - e2e-tanstack-router
+    steps:
+      - uses: 47ng/actions-slack-notify@main
+        with:
+          status: ${{ job.status }}
+          jobName: Continuous Integration
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+  cd:
+    name: Deployment
+    runs-on: ubuntu-24.04-arm
+    permissions:
+      contents: write # to be able to publish a GitHub release
+      issues: write # to be able to comment on released issues
+      pull-requests: write # to be able to comment on released pull requests
+      id-token: write # to enable use of OIDC for NPM provenance
+    needs:
+      - lint
+      - ci-core
+      - e2e-next
+      - e2e-react
+      - e2e-react-router
+      - e2e-remix
+      - e2e-tanstack-router
     if: ${{ github.ref_name == 'master' || github.ref_name == 'beta' }}
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
-      - uses: pnpm/action-setup@fe02b34f77f8bc703788d5817da081398fad5dd2
-      - uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af
+      - uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
           node-version-file: .node-version
           cache: pnpm
