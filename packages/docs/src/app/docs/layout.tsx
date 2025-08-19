@@ -12,6 +12,7 @@ export default function RootDocsLayout({ children }: { children: ReactNode }) {
       {...shared}
       nav={{ ...shared.nav, mode: 'top' }}
       sidebar={{
+        collapsible: false,
         // banner: <ReactParis2025SideBanner />,
         footer: (
           <Suspense>

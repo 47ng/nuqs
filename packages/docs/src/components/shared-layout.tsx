@@ -5,7 +5,7 @@ export function getSharedLayoutProps(): BaseLayoutProps {
   return {
     githubUrl: 'https://github.com/47ng/nuqs',
     nav: {
-      title: <NuqsWordmark className="ml-2 text-lg" />,
+      title: <NuqsWordmark className="ml-2 text-xl" />,
       transparentMode: 'top'
     },
     links: [

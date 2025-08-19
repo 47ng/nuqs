@@ -37,6 +37,7 @@
 }
 
 /* Avoid a flash of black (in dark mode) in the navbar background when scrolling */
+header#nd-nav.bg-fd-background\/80,
 header#nd-subnav.bg-fd-background\/80 {
   background-color: hsla(var(--background) / 0.8);
 }
