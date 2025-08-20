@@ -134,6 +134,7 @@ export function usePaginationSearchParams() {
               fill="none"
               viewBox="0 0 128 128"
               xmlns="http://www.w3.org/2000/svg"
+              className="size-4"
               role="presentation"
             >
               <rect fill="currentColor" height="128" rx="6" width="128" />
@@ -153,16 +154,16 @@ export function usePaginationSearchParams() {
             value={`?${pageIndexUrlKey}=${page + 1}&${pageSizeUrlKey}=${pageSize}`}
           />
           <CodeBlock
-            allowCopy={false}
             title="Internal state"
             code={internalState}
+            allowCopy={false}
           />
           <Separator className="my-8" />
           <div className="space-y-2">
             <Label htmlFor="pageIndexKey">Page index URL key</Label>
             <input
               id="pageIndexKey"
-              className="flex h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              className="border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring flex h-10 rounded-md border px-3 py-2 text-sm file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
               value={pageIndexUrlKey}
               onChange={e => {
                 setPage(null)
@@ -176,7 +177,7 @@ export function usePaginationSearchParams() {
             <input
               id="pageSizeKey"
               value={pageSizeUrlKey}
-              className="flex h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              className="border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring flex h-10 rounded-md border px-3 py-2 text-sm file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
               onChange={e => {
                 setPageSize(null)
                 setPageSizeUrlKey(e.target.value)

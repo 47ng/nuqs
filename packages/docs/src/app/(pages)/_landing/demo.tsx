@@ -29,7 +29,7 @@ export async function LandingDemo() {
           <LookAtTheURL />
         </div>
       </Suspense>
-      <CodeBlock code={formattedCode} />
+      <CodeBlock code={formattedCode.trim()} />
     </>
   )
 }

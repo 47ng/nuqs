@@ -1,4 +1,3 @@
-import { rehypeCode } from 'fumadocs-core/mdx-plugins'
 import {
   defineCollections,
   defineConfig,
@@ -13,12 +12,13 @@ export default defineConfig({
   lastModifiedTime: 'git',
   mdxOptions: {
     remarkPlugins: [remarkSmartypants],
-    rehypePlugins: [rehypeCode],
     rehypeCodeOptions
   }
 })
 
-export const { docs, meta } = defineDocs()
+export const { docs, meta } = defineDocs({
+  dir: 'content/docs'
+})
 
 export const blog = defineCollections({
   dir: 'content/blog',

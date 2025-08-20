@@ -1,5 +1,5 @@
 import { getSharedLayoutProps } from '@/src/components/shared-layout'
-import { DocsLayout } from 'fumadocs-ui/layouts/docs'
+import { DocsLayout } from 'fumadocs-ui/layouts/notebook'
 import { DocsBody, DocsPage } from 'fumadocs-ui/page'
 import React, { Suspense } from 'react'
 import { getPlaygroundTree } from './(demos)/demos'
@@ -17,13 +17,15 @@ export default function PlaygroundLayout({
 }: {
   children: React.ReactNode
 }) {
+  const shared = getSharedLayoutProps()
+
   return (
     <>
       <DocsLayout
         tree={getPlaygroundTree()}
-        {...getSharedLayoutProps()}
+        {...shared}
+        nav={{ ...shared.nav, mode: 'top' }}
         sidebar={{
-          collapsible: false,
           // banner: <ReactParis2025SideBanner />,
           footer: (
             <Suspense fallback={<DebugControlsSkeleton />}>

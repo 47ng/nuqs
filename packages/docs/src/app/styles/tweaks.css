@@ -1,0 +1,55 @@
+@layer utilities {
+  /* Background & line spacing for code blocks */
+  .bg-fd-secondary:has(pre) {
+    @apply bg-zinc-100/50 leading-normal dark:bg-zinc-900/50;
+  }
+}
+
+@layer components {
+  /* Line up the Callout left coloured border with the outer border */
+  .bg-\(--callout-color\)\/50[role='none'] {
+    margin-left: -5.5px;
+    margin-right: 5.5px;
+  }
+}
+
+@layer utilities {
+  /* Better vertical alignment of code block titles */
+  figure:has(figcaption.truncate):has(pre) {
+    @apply pt-0;
+  }
+}
+
+/* Highlighted words in code blocks */
+.shiki:not(.not-fumadocs-codeblock *) code span.highlighted-word {
+  @apply -mx-1 rounded-sm border-none px-1;
+}
+
+/* Highlighted lines in code blocks (match border color of container) */
+@supports (color: color-mix(in lab, red, red)) {
+  .shiki:not(.not-fumadocs-codeblock *) code .line.highlighted {
+    background-color: var(--color-border);
+  }
+}
+
+/* Fix x-spacing in inline code spans */
+.shiki:not(.not-fumadocs-codeblock *):has(> code .line) {
+  --spacing: 0.5px;
+}
+
+/* Avoid a flash of black (in dark mode) in the navbar background when scrolling */
+header#nd-nav.bg-fd-background\/80,
+header#nd-subnav.bg-fd-background\/80 {
+  background-color: hsla(var(--background) / 0.8);
+}
+
+/* Remove top radius on code blocks in tabs (see testing.mdx for Vitest) */
+div[role='tabpanel'] > figure:has(figcaption.truncate):has(pre) {
+  @apply rounded-t-none;
+}
+
+/* Make the copy code button hover blend better with the container border */
+figure button[aria-label='Copy Text'],
+figure button[aria-label='Copied Text'] {
+  @apply rounded-tl-none rounded-br-none;
+}

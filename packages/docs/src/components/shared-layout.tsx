@@ -1,25 +1,28 @@
 import { NuqsWordmark } from '@/src/components/logo'
-import type { HomeLayoutProps } from 'fumadocs-ui/layouts/home'
+import type { BaseLayoutProps } from 'fumadocs-ui/layouts/shared'
 
-export function getSharedLayoutProps(): HomeLayoutProps {
+export function getSharedLayoutProps(): BaseLayoutProps {
   return {
     githubUrl: 'https://github.com/47ng/nuqs',
     nav: {
-      title: <NuqsWordmark className="ml-2 text-lg" />,
+      title: <NuqsWordmark className="ml-2 text-xl" />,
       transparentMode: 'top'
     },
     links: [
       {
         text: 'Documentation',
-        url: '/docs'
+        url: '/docs',
+        active: 'nested-url'
       },
       {
         text: 'Playground',
-        url: '/playground'
+        url: '/playground',
+        active: 'nested-url'
       },
       {
         text: 'Blog',
-        url: '/blog'
+        url: '/blog',
+        active: 'nested-url'
       }
     ]
   }
