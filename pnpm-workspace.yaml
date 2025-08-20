@@ -5,6 +5,7 @@ enablePrePostScripts: true
 onlyBuiltDependencies:
   - '@sentry/cli'
   - '@swc/core'
+  - '@tailwindcss/oxide'
   - 'cypress'
   - 'esbuild'
   - 'sharp'
