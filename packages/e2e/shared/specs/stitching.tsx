@@ -36,9 +36,9 @@ function StitchingUseQueryState() {
     setC(x => x + 1, { limitUrlUpdates: debounce(200) })
   }
   const testStaggered = () => {
-    setC(x => x + 1, { limitUrlUpdates: debounce(200) })
+    setC(x => x + 1, { limitUrlUpdates: debounce(500) })
     setTimeout(() => {
-      setB(x => x + 1, { limitUrlUpdates: debounce(100) })
+      setB(x => x + 1, { limitUrlUpdates: debounce(250) })
       setTimeout(() => {
         setA(x => x + 1)
       }, 0)

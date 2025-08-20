@@ -1,4 +1,3 @@
-import mitt from 'mitt'
 import {
   createContext,
   createElement,
@@ -10,6 +9,7 @@ import {
   type ReactNode
 } from 'react'
 import { debug } from '../lib/debug'
+import { createEmitter } from '../lib/emitter'
 import { renderQueryString } from '../lib/url-encoding'
 import { createAdapterProvider, type AdapterProps } from './lib/context'
 import type { AdapterInterface, AdapterOptions } from './lib/defs'
@@ -17,10 +17,10 @@ import { applyChange, filterSearchParams } from './lib/key-isolation'
 import {
   historyUpdateMarker,
   patchHistory,
-  type SearchParamsSyncEmitter
+  type SearchParamsSyncEmitterEvents
 } from './lib/patch-history'
 
-const emitter: SearchParamsSyncEmitter = mitt()
+const emitter = createEmitter<SearchParamsSyncEmitterEvents>()
 
 function generateUpdateUrlFn(fullPageNavigationOnShallowFalseUpdates: boolean) {
   return function updateUrl(search: URLSearchParams, options: AdapterOptions) {

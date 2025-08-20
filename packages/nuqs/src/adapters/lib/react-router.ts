@@ -1,4 +1,3 @@
-import mitt from 'mitt'
 import {
   startTransition,
   useCallback,
@@ -7,6 +6,7 @@ import {
   useState
 } from 'react'
 import { debug } from '../../lib/debug'
+import { createEmitter } from '../../lib/emitter'
 import { setQueueResetMutex } from '../../lib/queues/reset'
 import { globalThrottleQueue } from '../../lib/queues/throttle'
 import { renderQueryString } from '../../lib/url-encoding'
@@ -16,7 +16,7 @@ import { applyChange, filterSearchParams } from './key-isolation'
 import {
   patchHistory as applyHistoryPatch,
   historyUpdateMarker,
-  type SearchParamsSyncEmitter
+  type SearchParamsSyncEmitterEvents
 } from './patch-history'
 
 // Abstract away the types for the useNavigate hook from react-router-based frameworks
@@ -49,7 +49,7 @@ export function createReactRouterBasedAdapter({
   NuqsAdapter: AdapterProvider
   useOptimisticSearchParams: () => URLSearchParams
 } {
-  const emitter: SearchParamsSyncEmitter = mitt()
+  const emitter = createEmitter<SearchParamsSyncEmitterEvents>()
   const enableQueueReset = adapter !== 'react-router-v6'
   function useNuqsReactRouterBasedAdapter(
     watchKeys: string[]

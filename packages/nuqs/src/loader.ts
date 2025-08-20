@@ -127,11 +127,7 @@ export function createLoader<Parsers extends ParserMap>(
 function extractSearchParams(input: LoaderInput): URLSearchParams {
   try {
     if (input instanceof Request) {
-      if (input.url) {
-        return new URL(input.url).searchParams
-      } else {
-        return new URLSearchParams()
-      }
+      return input.url ? new URL(input.url).searchParams : new URLSearchParams()
     }
     if (input instanceof URL) {
       return input.searchParams
@@ -140,9 +136,8 @@ function extractSearchParams(input: LoaderInput): URLSearchParams {
       return input
     }
     if (typeof input === 'object') {
-      const entries = Object.entries(input)
       const searchParams = new URLSearchParams()
-      for (const [key, value] of entries) {
+      for (const [key, value] of Object.entries(input)) {
         if (Array.isArray(value)) {
           for (const v of value) {
             searchParams.append(key, v)
@@ -154,13 +149,11 @@ function extractSearchParams(input: LoaderInput): URLSearchParams {
       return searchParams
     }
     if (typeof input === 'string') {
-      if ('canParse' in URL && URL.canParse(input)) {
+      if (URL.hasOwnProperty('canParse') && URL.canParse(input)) {
         return new URL(input).searchParams
       }
       return new URLSearchParams(input)
     }
-  } catch (e) {
-    return new URLSearchParams()
-  }
+  } catch {}
   return new URLSearchParams()
 }

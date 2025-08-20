@@ -1,6 +1,5 @@
-import type { Emitter } from 'mitt'
-import mitt from 'mitt'
 import { debug } from '../debug'
+import { createEmitter, type Emitter } from '../emitter'
 import { timeout } from '../timeout'
 import { withResolvers, type Resolvers } from '../with-resolvers'
 import {
@@ -40,7 +39,7 @@ export class DebouncedPromiseQueue<ValueType, OutputType> {
         try {
           debug('[nuqs dq] Flushing debounce queue', value)
           const callbackPromise = this.callback(value)
-          debug('[nuqs dq] Reset debounced queue %O', this.queuedValue)
+          debug('[nuqs dq] Reset debounce queue %O', this.queuedValue)
           this.queuedValue = undefined
           this.resolvers = withResolvers<OutputType>()
           callbackPromise
@@ -68,7 +67,7 @@ type DebouncedUpdateQueue = DebouncedPromiseQueue<
 export class DebounceController {
   throttleQueue: ThrottledQueue
   queues: Map<string, DebouncedUpdateQueue> = new Map()
-  queuedQuerySync: Emitter<Record<string, undefined>> = mitt()
+  queuedQuerySync: Emitter<Record<string, undefined>> = createEmitter()
 
   constructor(throttleQueue: ThrottledQueue = new ThrottledQueue()) {
     this.throttleQueue = throttleQueue
@@ -77,10 +76,7 @@ export class DebounceController {
   useQueuedQueries(keys: string[]): Record<string, string | null | undefined> {
     return useSyncExternalStores(
       keys,
-      (key, callback) => {
-        this.queuedQuerySync.on(key, callback)
-        return () => this.queuedQuerySync.off(key, callback)
-      },
+      (key, callback) => this.queuedQuerySync.on(key, callback),
       (key: string) => this.getQueuedQuery(key)
     )
   }
@@ -95,8 +91,9 @@ export class DebounceController {
         adapter.getSearchParamsSnapshot ?? getSearchParamsSnapshotFromLocation
       return Promise.resolve(getSnapshot())
     }
-    if (!this.queues.has(update.key)) {
-      debug('[nuqs dqc] Creating debounced queue for `%s`', update.key)
+    const key = update.key
+    if (!this.queues.has(key)) {
+      debug('[nuqs dqc] Creating debounce queue for `%s`', key)
       const queue = new DebouncedPromiseQueue<
         Omit<UpdateQueuePushArgs, 'timeMs'>,
         URLSearchParams
@@ -111,17 +108,11 @@ export class DebounceController {
           this.queuedQuerySync.emit(update.key)
         })
       })
-      this.queues.set(update.key, queue)
+      this.queues.set(key, queue)
     }
-    debug(
-      '[nuqs dqc] Enqueueing debounced update %s=%s %O',
-      update.key,
-      update.query,
-      update.options
-    )
-    const queue = this.queues.get(update.key)!
-    const promise = queue.push(update, timeMs)
-    this.queuedQuerySync.emit(update.key)
+    debug('[nuqs dqc] Enqueueing debounce update %O', update)
+    const promise = this.queues.get(key)!.push(update, timeMs)
+    this.queuedQuerySync.emit(key)
     return promise
   }
 
@@ -133,20 +124,15 @@ export class DebounceController {
       return passThrough => passThrough
     }
     debug(
-      '[nuqs dqc] Aborting debounced queue %s=%s',
+      '[nuqs dqc] Aborting debounce queue %s=%s',
       key,
       queue.queuedValue?.query
     )
     this.queues.delete(key)
     queue.abort() // Don't run to completion
     this.queuedQuerySync.emit(key)
-    return function attachAbortedDebouncedResolvers(
-      promise: Promise<URLSearchParams>
-    ) {
-      promise.then(
-        value => queue.resolvers.resolve(value),
-        error => queue.resolvers.reject(error)
-      )
+    return promise => {
+      promise.then(queue.resolvers.resolve, queue.resolvers.reject)
       // Don't chain: keep reference equality
       return promise
     }
@@ -155,7 +141,7 @@ export class DebounceController {
   abortAll(): void {
     for (const [key, queue] of this.queues.entries()) {
       debug(
-        '[nuqs dqc] Aborting debounced queue %s=%s',
+        '[nuqs dqc] Aborting debounce queue %s=%s',
         key,
         queue.queuedValue?.query
       )

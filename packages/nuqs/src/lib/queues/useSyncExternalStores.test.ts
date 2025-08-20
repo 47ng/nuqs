@@ -1,12 +1,8 @@
 import { act, renderHook } from '@testing-library/react'
-import mitt, { type Emitter } from 'mitt'
 import { useRef } from 'react'
 import { describe, expect, it } from 'vitest'
+import { createEmitter } from '../emitter'
 import { useSyncExternalStores } from './useSyncExternalStores'
-
-function createEmitter(): Emitter<Record<string, undefined>> {
-  return mitt()
-}
 
 describe('useSyncExternalStores', () => {
   it('should handle an empty array of keys', () => {

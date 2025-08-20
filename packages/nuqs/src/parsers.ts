@@ -155,59 +155,47 @@ export function createParser<T>(
 
 export const parseAsString: ParserBuilder<string> = createParser({
   parse: v => v,
-  serialize: v => `${v}`
+  serialize: String
 })
 
 export const parseAsInteger: ParserBuilder<number> = createParser({
   parse: v => {
     const int = parseInt(v)
-    if (Number.isNaN(int)) {
-      return null
-    }
-    return int
+    return int == int ? int : null // NaN check at low bundle size cost
   },
-  serialize: v => Math.round(v).toFixed()
+  serialize: v => '' + Math.round(v)
 })
 
 export const parseAsIndex: ParserBuilder<number> = createParser({
   parse: v => {
-    const int = parseAsInteger.parse(v)
-    if (int === null) {
-      return null
-    }
-    return int - 1
+    const int = parseInt(v)
+    return int == int ? int - 1 : null // NaN check at low bundle size cost
   },
-  serialize: v => parseAsInteger.serialize(v + 1)
+  serialize: v => '' + Math.round(v + 1)
 })
 
 export const parseAsHex: ParserBuilder<number> = createParser({
   parse: v => {
     const int = parseInt(v, 16)
-    if (Number.isNaN(int)) {
-      return null
-    }
-    return int
+    return int == int ? int : null // NaN check at low bundle size cost
   },
   serialize: v => {
     const hex = Math.round(v).toString(16)
-    return hex.padStart(hex.length + (hex.length % 2), '0')
+    return (hex.length & 1 ? '0' : '') + hex
   }
 })
 
 export const parseAsFloat: ParserBuilder<number> = createParser({
   parse: v => {
     const float = parseFloat(v)
-    if (Number.isNaN(float)) {
-      return null
-    }
-    return float
+    return float == float ? float : null // NaN check at low bundle size cost
   },
-  serialize: v => v.toString()
+  serialize: String
 })
 
 export const parseAsBoolean: ParserBuilder<boolean> = createParser({
   parse: v => v === 'true',
-  serialize: v => (v ? 'true' : 'false')
+  serialize: String
 })
 
 function compareDates(a: Date, b: Date) {
@@ -221,12 +209,9 @@ function compareDates(a: Date, b: Date) {
 export const parseAsTimestamp: ParserBuilder<Date> = createParser({
   parse: v => {
     const ms = parseInt(v)
-    if (Number.isNaN(ms)) {
-      return null
-    }
-    return new Date(ms)
+    return ms == ms ? new Date(ms) : null // NaN check at low bundle size cost
   },
-  serialize: (v: Date) => v.valueOf().toString(),
+  serialize: (v: Date) => '' + v.valueOf(),
   eq: compareDates
 })
 
@@ -237,10 +222,8 @@ export const parseAsTimestamp: ParserBuilder<Date> = createParser({
 export const parseAsIsoDateTime: ParserBuilder<Date> = createParser({
   parse: v => {
     const date = new Date(v)
-    if (Number.isNaN(date.valueOf())) {
-      return null
-    }
-    return date
+    // NaN check at low bundle size cost
+    return date.valueOf() == date.valueOf() ? date : null
   },
   serialize: (v: Date) => v.toISOString(),
   eq: compareDates
@@ -257,10 +240,8 @@ export const parseAsIsoDateTime: ParserBuilder<Date> = createParser({
 export const parseAsIsoDate: ParserBuilder<Date> = createParser({
   parse: v => {
     const date = new Date(v.slice(0, 10))
-    if (Number.isNaN(date.valueOf())) {
-      return null
-    }
-    return date
+    // NaN check at low bundle size cost
+    return date.valueOf() == date.valueOf() ? date : null
   },
   serialize: (v: Date) => v.toISOString().slice(0, 10),
   eq: compareDates
@@ -296,16 +277,8 @@ export const parseAsIsoDate: ParserBuilder<Date> = createParser({
 export function parseAsStringEnum<Enum extends string>(
   validValues: Enum[]
 ): ParserBuilder<Enum> {
-  return createParser({
-    parse: (query: string) => {
-      const asEnum = query as unknown as Enum
-      if (validValues.includes(asEnum)) {
-        return asEnum
-      }
-      return null
-    },
-    serialize: (value: Enum) => value.toString()
-  })
+  // Delegate implementation to parseAsStringLiteral to avoid duplication.
+  return parseAsStringLiteral(validValues as readonly Enum[])
 }
 
 /**
@@ -333,12 +306,9 @@ export function parseAsStringLiteral<const Literal extends string>(
   return createParser({
     parse: (query: string) => {
       const asConst = query as unknown as Literal
-      if (validValues.includes(asConst)) {
-        return asConst
-      }
-      return null
+      return validValues.includes(asConst) ? asConst : null
     },
-    serialize: (value: Literal) => value.toString()
+    serialize: String
   })
 }
 
@@ -372,7 +342,7 @@ export function parseAsNumberLiteral<const Literal extends number>(
       }
       return null
     },
-    serialize: (value: Literal) => value.toString()
+    serialize: String
   })
 }
 

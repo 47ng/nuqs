@@ -1,4 +1,4 @@
-import mitt, { type Emitter } from 'mitt'
+import { createEmitter, type Emitter } from './emitter'
 
 export type CrossHookSyncPayload = {
   state: any
@@ -9,4 +9,4 @@ type EventMap = {
   [key: string]: CrossHookSyncPayload
 }
 
-export const emitter: Emitter<EventMap> = mitt()
+export const emitter: Emitter<EventMap> = createEmitter()
