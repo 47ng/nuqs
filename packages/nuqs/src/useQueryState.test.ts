@@ -331,18 +331,45 @@ describe('useQueryState: adapter defaults', () => {
     const onUrlUpdate = vi.fn<OnUrlUpdateFunction>()
     const { result } = renderHook(() => useQueryState('test'), {
       wrapper: withNuqsTestingAdapter({
-        searchParams: '?test=default',
         defaultOptions: {
           shallow: false
         },
         onUrlUpdate
       })
     })
-    expect(result.current[0]).toEqual('default')
-
     await act(() => result.current[1]('update'))
-
     expect(onUrlUpdate).toHaveBeenCalledOnce()
     expect(onUrlUpdate.mock.calls[0]![0].options.shallow).toBe(false)
+  })
+  it('should use adapter default value for `scroll` when provided', async () => {
+    const onUrlUpdate = vi.fn<OnUrlUpdateFunction>()
+    const { result } = renderHook(() => useQueryState('test'), {
+      wrapper: withNuqsTestingAdapter({
+        defaultOptions: {
+          scroll: true
+        },
+        onUrlUpdate
+      })
+    })
+    await act(() => result.current[1]('update'))
+    expect(onUrlUpdate).toHaveBeenCalledOnce()
+    expect(onUrlUpdate.mock.calls[0]![0].options.scroll).toBe(true)
+  })
+  it('should use adapter default value for `clearOnDefault` when provided', async () => {
+    const onUrlUpdate = vi.fn<OnUrlUpdateFunction>()
+    const { result } = renderHook(
+      () => useQueryState('test', { defaultValue: 'pass' }),
+      {
+        wrapper: withNuqsTestingAdapter({
+          defaultOptions: {
+            clearOnDefault: false
+          },
+          onUrlUpdate
+        })
+      }
+    )
+    await act(() => result.current[1]('pass'))
+    expect(onUrlUpdate).toHaveBeenCalledOnce()
+    expect(onUrlUpdate.mock.calls[0]![0].queryString).toBe('?test=pass')
   })
 })

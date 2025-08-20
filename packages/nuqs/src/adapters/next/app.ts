@@ -4,23 +4,24 @@ import {
   type ReactElement,
   type ReactNode
 } from 'react'
-import { createAdapterProvider } from '../lib/context'
+import { createAdapterProvider, type AdapterProps } from '../lib/context'
 import { NavigationSpy, useNuqsNextAppRouterAdapter } from './impl.app'
 
 const Provider = createAdapterProvider(useNuqsNextAppRouterAdapter)
 
 export function NuqsAdapter({
-  children
-}: {
+  children,
+  ...adapterProps
+}: AdapterProps & {
   children: ReactNode
 }): ReactElement {
-  return createElement(Provider, {
-    children: [
-      createElement(Suspense, {
-        key: 'nuqs-adapter-suspense-navspy',
-        children: createElement(NavigationSpy)
-      }),
-      children
-    ]
-  })
+  // @ts-expect-error AdapterProvider expects children in its props type,
+  // but we pass them as the third argument to createElement, not via props.
+  return createElement(Provider, adapterProps, [
+    createElement(Suspense, {
+      key: 'nuqs-adapter-suspense-navspy',
+      children: createElement(NavigationSpy)
+    }),
+    children
+  ])
 }

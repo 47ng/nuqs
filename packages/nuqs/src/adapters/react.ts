@@ -11,7 +11,7 @@ import {
 } from 'react'
 import { debug } from '../lib/debug'
 import { renderQueryString } from '../lib/url-encoding'
-import { createAdapterProvider } from './lib/context'
+import { createAdapterProvider, type AdapterProps } from './lib/context'
 import type { AdapterInterface, AdapterOptions } from './lib/defs'
 import { applyChange, filterSearchParams } from './lib/key-isolation'
 import {
@@ -93,15 +93,18 @@ const NuqsReactAdapter = createAdapterProvider(useNuqsReactAdapter)
 
 export function NuqsAdapter({
   children,
-  fullPageNavigationOnShallowFalseUpdates = false
-}: {
+  fullPageNavigationOnShallowFalseUpdates = false,
+  ...adapterProps
+}: AdapterProps & {
   children: ReactNode
   fullPageNavigationOnShallowFalseUpdates?: boolean
 }): ReactElement {
   return createElement(
     NuqsReactAdapterContext.Provider,
     { value: { fullPageNavigationOnShallowFalseUpdates } },
-    createElement(NuqsReactAdapter, null, children)
+    // @ts-expect-error AdapterProvider expects children in its props type,
+    // but we pass them as the third argument to createElement, not via props.
+    createElement(NuqsReactAdapter, adapterProps, children)
   )
 }
 
