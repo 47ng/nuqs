@@ -149,7 +149,7 @@ function extractSearchParams(input: LoaderInput): URLSearchParams {
       return searchParams
     }
     if (typeof input === 'string') {
-      if ('canParse' in URL && URL.canParse(input)) {
+      if (URL.hasOwnProperty('canParse') && URL.canParse(input)) {
         return new URL(input).searchParams
       }
       return new URLSearchParams(input)

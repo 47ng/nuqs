@@ -6,7 +6,7 @@ export type Resolvers<T> = {
 
 export function withResolvers<T>(): Resolvers<T> {
   const P = Promise<T>
-  if ('withResolvers' in Promise) {
+  if (Promise.hasOwnProperty('withResolvers')) {
     return Promise.withResolvers<T>()
   }
   // todo: Remove this once Promise.withResolvers is Baseline GA (September 2026)
