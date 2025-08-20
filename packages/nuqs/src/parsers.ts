@@ -161,7 +161,7 @@ export const parseAsString: ParserBuilder<string> = createParser({
 export const parseAsInteger: ParserBuilder<number> = createParser({
   parse: v => {
     const int = parseInt(v)
-    return int == int ? int : null // NaN check
+    return int == int ? int : null // NaN check at low bundle size cost
   },
   serialize: v => '' + Math.round(v)
 })
@@ -169,7 +169,7 @@ export const parseAsInteger: ParserBuilder<number> = createParser({
 export const parseAsIndex: ParserBuilder<number> = createParser({
   parse: v => {
     const int = parseInt(v)
-    return int == int ? int - 1 : null // NaN check
+    return int == int ? int - 1 : null // NaN check at low bundle size cost
   },
   serialize: v => '' + Math.round(v + 1)
 })
@@ -177,7 +177,7 @@ export const parseAsIndex: ParserBuilder<number> = createParser({
 export const parseAsHex: ParserBuilder<number> = createParser({
   parse: v => {
     const int = parseInt(v, 16)
-    return int == int ? int : null // NaN check
+    return int == int ? int : null // NaN check at low bundle size cost
   },
   serialize: v => {
     const hex = Math.round(v).toString(16)
@@ -188,7 +188,7 @@ export const parseAsHex: ParserBuilder<number> = createParser({
 export const parseAsFloat: ParserBuilder<number> = createParser({
   parse: v => {
     const float = parseFloat(v)
-    return float == float ? float : null // NaN check
+    return float == float ? float : null // NaN check at low bundle size cost
   },
   serialize: String
 })
@@ -209,7 +209,7 @@ function compareDates(a: Date, b: Date) {
 export const parseAsTimestamp: ParserBuilder<Date> = createParser({
   parse: v => {
     const ms = parseInt(v)
-    return ms == ms ? new Date(ms) : null
+    return ms == ms ? new Date(ms) : null // NaN check at low bundle size cost
   },
   serialize: (v: Date) => '' + v.valueOf(),
   eq: compareDates
@@ -222,6 +222,7 @@ export const parseAsTimestamp: ParserBuilder<Date> = createParser({
 export const parseAsIsoDateTime: ParserBuilder<Date> = createParser({
   parse: v => {
     const date = new Date(v)
+    // NaN check at low bundle size cost
     return date.valueOf() == date.valueOf() ? date : null
   },
   serialize: (v: Date) => v.toISOString(),
@@ -239,6 +240,7 @@ export const parseAsIsoDateTime: ParserBuilder<Date> = createParser({
 export const parseAsIsoDate: ParserBuilder<Date> = createParser({
   parse: v => {
     const date = new Date(v.slice(0, 10))
+    // NaN check at low bundle size cost
     return date.valueOf() == date.valueOf() ? date : null
   },
   serialize: (v: Date) => v.toISOString().slice(0, 10),

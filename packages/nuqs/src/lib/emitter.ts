@@ -28,8 +28,7 @@ export function createEmitter<
       handler: (event: Events[Key]) => any
     ): () => void {
       const handlers = all.get(type) || []
-      // @ts-expect-error
-      handlers.push(handler)
+      handlers.push(handler as (event: Events[keyof Events]) => any)
       all.set(type, handlers)
       return () => this.off(type, handler)
     },
@@ -50,8 +49,7 @@ export function createEmitter<
       event?: Events[Key] extends undefined ? never : Events[Key]
     ): void {
       const handlers = all.get(type)
-      // @ts-expect-error
-      handlers?.forEach(handler => handler(event))
+      handlers?.forEach(handler => handler(event as Events[keyof Events]))
     }
   }
 }

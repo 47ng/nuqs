@@ -221,8 +221,9 @@ export function useQueryState<T = string>(
         old => ({
           [key]:
             typeof stateUpdater === 'function'
-              ? // @ts-expect-error
-                stateUpdater(old[key]!)
+              ? // @ts-expect-error somehow stateUpdater is not narrowed correctly
+                // and useQueryStates' key type is not inferred
+                stateUpdater(old[key])
               : stateUpdater
         }),
         callOptions
