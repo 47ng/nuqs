@@ -102,9 +102,7 @@ export function NuqsAdapter({
   return createElement(
     NuqsReactAdapterContext.Provider,
     { value: { fullPageNavigationOnShallowFalseUpdates } },
-    // @ts-expect-error AdapterProvider expects children in its props type,
-    // but we pass them as the third argument to createElement, not via props.
-    createElement(NuqsReactAdapter, adapterProps, children)
+    createElement(NuqsReactAdapter, { ...adapterProps, children })
   )
 }
 
