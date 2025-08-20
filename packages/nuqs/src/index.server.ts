@@ -18,5 +18,5 @@ export {
   type LoaderOptions
 } from './loader'
 export * from './parsers'
-export { createSerializer } from './serializer'
+export { createSerializer, type CreateSerializerOptions } from './serializer'
 export { createStandardSchemaV1 } from './standard-schema'
