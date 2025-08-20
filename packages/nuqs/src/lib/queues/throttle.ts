@@ -62,10 +62,10 @@ export class ThrottledQueue {
     if (options.startTransition) {
       this.transitions.add(options.startTransition)
     }
-    this.timeMs = Math.max(
-      timeMs,
-      Number.isFinite(this.timeMs) ? this.timeMs : 0
-    )
+    // Keep the maximum finite throttle value (or set if previous was Infinity)
+    if (!Number.isFinite(this.timeMs) || timeMs > this.timeMs) {
+      this.timeMs = timeMs
+    }
   }
 
   getQueuedQuery(key: string): string | null | undefined {
@@ -108,8 +108,7 @@ export class ThrottledQueue {
       const timeSinceLastFlush = now - this.lastFlushedAt
       const timeMs = this.timeMs
       const flushInMs =
-        rateLimitFactor *
-        Math.max(0, Math.min(timeMs, timeMs - timeSinceLastFlush))
+        rateLimitFactor * Math.max(0, timeMs - timeSinceLastFlush)
       debug(
         `[nuqs gtq] Scheduling flush in %f ms. Throttled at %f ms (x%f)`,
         flushInMs,
@@ -145,9 +144,11 @@ export class ThrottledQueue {
     )
     this.updateMap.clear()
     this.transitions.clear()
-    this.options.history = 'replace'
-    this.options.scroll = false
-    this.options.shallow = true
+    this.options = {
+      history: 'replace',
+      scroll: false,
+      shallow: true
+    }
     this.timeMs = defaultRateLimit.timeMs
     return queuedKeys
   }
@@ -184,11 +185,7 @@ export class ThrottledQueue {
     }
     try {
       compose(transitions, () => {
-        updateUrl(search, {
-          history: options.history,
-          scroll: options.scroll,
-          shallow: options.shallow
-        })
+        updateUrl(search, options)
       })
       return [search, null]
     } catch (err) {

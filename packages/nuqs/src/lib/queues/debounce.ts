@@ -91,8 +91,9 @@ export class DebounceController {
         adapter.getSearchParamsSnapshot ?? getSearchParamsSnapshotFromLocation
       return Promise.resolve(getSnapshot())
     }
-    if (!this.queues.has(update.key)) {
-      debug('[nuqs dqc] Creating debounce queue for `%s`', update.key)
+    const key = update.key
+    if (!this.queues.has(key)) {
+      debug('[nuqs dqc] Creating debounce queue for `%s`', key)
       const queue = new DebouncedPromiseQueue<
         Omit<UpdateQueuePushArgs, 'timeMs'>,
         URLSearchParams
@@ -107,17 +108,11 @@ export class DebounceController {
           this.queuedQuerySync.emit(update.key)
         })
       })
-      this.queues.set(update.key, queue)
+      this.queues.set(key, queue)
     }
-    debug(
-      '[nuqs dqc] Enqueueing debounce update %s=%s %O',
-      update.key,
-      update.query,
-      update.options
-    )
-    const queue = this.queues.get(update.key)!
-    const promise = queue.push(update, timeMs)
-    this.queuedQuerySync.emit(update.key)
+    debug('[nuqs dqc] Enqueueing debounce update %O', update)
+    const promise = this.queues.get(key)!.push(update, timeMs)
+    this.queuedQuerySync.emit(key)
     return promise
   }
 
@@ -136,13 +131,8 @@ export class DebounceController {
     this.queues.delete(key)
     queue.abort() // Don't run to completion
     this.queuedQuerySync.emit(key)
-    return function attachAbortedDebouncedResolvers(
-      promise: Promise<URLSearchParams>
-    ) {
-      promise.then(
-        value => queue.resolvers.resolve(value),
-        error => queue.resolvers.reject(error)
-      )
+    return promise => {
+      promise.then(queue.resolvers.resolve, queue.resolvers.reject)
       // Don't chain: keep reference equality
       return promise
     }
