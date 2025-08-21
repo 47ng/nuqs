@@ -32,7 +32,7 @@
     "@types/webpack": "^5.28.5",
     "babel-plugin-react-compiler": "19.1.0-rc.2",
     "cypress": "catalog:e2e",
-    "cypress-terminal-report": "^7.1.0",
+    "cypress-terminal-report": "^7.2.1",
     "e2e-shared": "workspace:*",
     "start-server-and-test": "catalog:e2e",
     "typescript": "^5.9.2"

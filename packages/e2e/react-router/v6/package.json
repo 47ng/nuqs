@@ -20,15 +20,15 @@
     "react-router-dom": "6.30.0"
   },
   "devDependencies": {
-    "@types/node": "^22.14.1",
+    "@types/node": "^22.17.2",
     "@types/react": "catalog:react19",
     "@types/react-dom": "catalog:react19",
-    "@vitejs/plugin-react": "^4.3.4",
+    "@vitejs/plugin-react": "^4.7.0",
     "cross-env": "^7.0.3",
     "cypress": "catalog:e2e",
     "e2e-shared": "workspace:*",
     "start-server-and-test": "catalog:e2e",
     "typescript": "^5.9.2",
-    "vite": "^6.2.7"
+    "vite": "^6.3.5"
   }
 }

@@ -15,7 +15,7 @@
     "nuqs": "workspace:*"
   },
   "dependencies": {
-    "cypress-terminal-report": "^7.1.0"
+    "cypress-terminal-report": "^7.2.1"
   },
   "devDependencies": {
     "@types/node": "^24.3.0",

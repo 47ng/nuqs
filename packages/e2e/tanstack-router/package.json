@@ -13,9 +13,9 @@
     "cypress:run": "cross-env FORCE_COLOR=3 cypress run --headless"
   },
   "dependencies": {
-    "@tanstack/react-router": "^1.121.34",
-    "@tanstack/react-router-devtools": "^1.121.34",
-    "@tanstack/router-plugin": "^1.121.34",
+    "@tanstack/react-router": "^1.131.27",
+    "@tanstack/react-router-devtools": "^1.131.27",
+    "@tanstack/router-plugin": "^1.131.27",
     "nuqs": "workspace:*",
     "react": "catalog:react19",
     "react-dom": "catalog:react19"
@@ -24,12 +24,12 @@
     "@types/node": "^24.3.0",
     "@types/react": "catalog:react19",
     "@types/react-dom": "catalog:react19",
-    "@vitejs/plugin-react": "^4.3.4",
+    "@vitejs/plugin-react": "^4.7.0",
     "cross-env": "^7.0.3",
     "cypress": "catalog:e2e",
     "e2e-shared": "workspace:*",
     "start-server-and-test": "catalog:e2e",
-    "typescript": "^5.8.2",
-    "vite": "^6.2.3"
+    "typescript": "^5.9.2",
+    "vite": "^6.3.5"
   }
 }

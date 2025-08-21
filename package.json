@@ -32,9 +32,6 @@
     "typescript": "^5.9.2"
   },
   "packageManager": "pnpm@10.15.0",
-  "resolutions": {
-    "@headlessui/react": "2.2.0"
-  },
   "prettier": {
     "arrowParens": "avoid",
     "semi": false,
