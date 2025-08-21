@@ -52,12 +52,12 @@ export async function PullRequestLine({ number }: PullRequestLineProps) {
   )
   if (!response.ok) {
     return (
-      <div className="flex items-baseline gap-1">
+      <li className="flex items-baseline gap-1">
         <span className="tabular-nums">#{number}</span>
         <span className="font-semibold text-gray-500">
           Failed to fetch details: {response.status} {response.statusText}
         </span>
-      </div>
+      </li>
     )
   }
   const data = pullRequestSchema.parse(await response.json())
@@ -79,7 +79,7 @@ export async function PullRequestLine({ number }: PullRequestLineProps) {
     )
     .trim()
   return (
-    <div className="not-prose space-x-2">
+    <li className="not-prose space-x-2">
       <a
         href={data.html_url}
         className="group space-x-1.5"
@@ -112,6 +112,6 @@ export async function PullRequestLine({ number }: PullRequestLineProps) {
         <span className="sr-only">by</span>
         {data.user.login}
       </a>
-    </div>
+    </li>
   )
 }
