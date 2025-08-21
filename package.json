@@ -22,12 +22,12 @@
     "lint:sherif": "sherif"
   },
   "devDependencies": {
-    "@commitlint/config-conventional": "^19.8.0",
-    "commitlint": "^19.8.0",
+    "@commitlint/config-conventional": "^19.8.1",
+    "commitlint": "^19.8.1",
     "husky": "^9.1.7",
-    "prettier": "3.5.3",
-    "semantic-release": "^24.2.3",
-    "sherif": "^1.5.0",
+    "prettier": "3.6.2",
+    "semantic-release": "^24.2.7",
+    "sherif": "^1.6.1",
     "turbo": "^2.5.0",
     "typescript": "^5.8.3"
   },
