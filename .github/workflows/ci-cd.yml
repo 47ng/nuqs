@@ -262,12 +262,20 @@ jobs:
           cache: pnpm
       - name: Install dependencies
         run: pnpm install --frozen-lockfile --filter e2e-tanstack-router...
-      - name: Run tests
-        run: pnpm run test ${{ github.event_name == 'workflow_dispatch' && '--force' || '' }} --filter e2e-tanstack-router
-        env:
-          TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
-          TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
-          E2E_NO_CACHE_ON_RERUN: ${{ github.run_attempt }}
+      - name: Build nuqs
+        run: pnpm build --filter nuqs
+      - name: Build TSR
+        run: pnpm run build
+        working-directory: packages/e2e/tanstack-router
+      - name: Run e2e tests
+        run: pnpm run test:e2e
+        working-directory: packages/e2e/tanstack-router
+      # - name: Run tests
+      #   run: pnpm run test ${{ github.event_name == 'workflow_dispatch' && '--force' || '' }} --filter e2e-tanstack-router
+      #   env:
+      #     TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+      #     TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
+      #     E2E_NO_CACHE_ON_RERUN: ${{ github.run_attempt }}
       - name: Save Cypress artifacts
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: failure()
