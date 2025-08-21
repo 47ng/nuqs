@@ -8,7 +8,7 @@ import {
 } from 'lucide-react'
 import { z } from 'zod/v4'
 
-export type PullRequestLineProps = {
+export type PullRequestLineProps = ComponentProps<'li'> & {
   number: number | string
 }
 
@@ -40,7 +40,12 @@ const statusIcons: Record<Status, LucideIcon> = {
   draft: GitPullRequestDraft
 }
 
-export async function PullRequestLine({ number }: PullRequestLineProps) {
+export async function PullRequestLine({
+  number,
+  className,
+  children,
+  ...props
+}: PullRequestLineProps) {
   const response = await fetch(
     `https://api.github.com/repos/47ng/nuqs/pulls/${number}`,
     {
@@ -52,11 +57,15 @@ export async function PullRequestLine({ number }: PullRequestLineProps) {
   )
   if (!response.ok) {
     return (
-      <li className="flex items-baseline gap-1">
-        <span className="tabular-nums">#{number}</span>
+      <li className={cn('not-prose space-x-2', className)} {...props}>
+        <span className="text-sm text-gray-500 tabular-nums sm:text-base sm:font-medium">
+          <span aria-label="number">#</span>
+          {number}
+        </span>
         <span className="font-semibold text-gray-500">
           Failed to fetch details: {response.status} {response.statusText}
         </span>
+        {children}
       </li>
     )
   }
@@ -79,7 +88,7 @@ export async function PullRequestLine({ number }: PullRequestLineProps) {
     )
     .trim()
   return (
-    <li className="not-prose space-x-2">
+    <li className={cn('not-prose space-x-2', className)} {...props}>
       <a
         href={data.html_url}
         className="group space-x-1.5"
@@ -112,6 +121,7 @@ export async function PullRequestLine({ number }: PullRequestLineProps) {
         <span className="sr-only">by</span>
         {data.user.login}
       </a>
+      {children}
     </li>
   )
 }
