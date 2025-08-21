@@ -10,7 +10,7 @@
     "test:types": "tsc",
     "test:e2e": "start-server-and-test start http://localhost:3004 cypress:run",
     "cypress:open": "cypress open",
-    "cypress:run": "cross-env FORCE_COLOR=3 cypress run --headless"
+    "cypress:run": "cross-env FORCE_COLOR=3 cypress run --headless && echo 'Cypress tests completed'"
   },
   "dependencies": {
     "@tanstack/react-router": "^1.131.27",
