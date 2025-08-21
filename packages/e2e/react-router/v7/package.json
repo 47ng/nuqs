@@ -33,7 +33,7 @@
     "e2e-shared": "workspace:*",
     "express": "^4.21.2",
     "start-server-and-test": "catalog:e2e",
-    "typescript": "^5.8.3",
+    "typescript": "^5.9.2",
     "vite": "^6.2.7",
     "vite-tsconfig-paths": "^5.1.4"
   }

@@ -28,7 +28,7 @@
     "cypress": "catalog:e2e",
     "e2e-shared": "workspace:*",
     "start-server-and-test": "catalog:e2e",
-    "typescript": "^5.8.3",
+    "typescript": "^5.9.2",
     "vite": "^6.2.7"
   }
 }
