@@ -25,7 +25,7 @@
   "devDependencies": {
     "@react-router/dev": "^7.6.2",
     "@react-router/express": "^7.6.2",
-    "@types/node": "^22.15.32",
+    "@types/node": "^24.3.0",
     "@types/react": "catalog:react19",
     "@types/react-dom": "catalog:react19",
     "compression": "^1.8.0",
