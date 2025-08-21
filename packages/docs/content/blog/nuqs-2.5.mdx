@@ -21,11 +21,11 @@ It's a big release full of long-awaited features, bug fixes & improvements, incl
 ## Debounce
 
 While nuqs has always had a throttling system in place to adapt to [browers rate-limiting URL updates](/blog/beware-the-url-type-safety-iceberg#time-safety),
-this system wasn't ideal for **high frequency inputs**, like `<input type="search">{:html}` or `<input type="range">{:html}` sliders.
+this system wasn't ideal for **high frequency inputs**, like `<input type="search">{:html}`, or `<input type="range">{:html}` sliders.
 
 For those cases where the _final value_ is what matters, **debouncing** makes more sense than **throttling**.
 
-You can now specify a new option, `limitUrlUpdates{:ts}`, that replaces `throttleMs{:ts}`, and declares either a debouncing or throttling behaviour.
+You can now specify a new option, `limitUrlUpdates{:ts}`, that replaces `throttleMs{:ts}` and declares either a debouncing or throttling behaviour:
 
 ```tsx
 // [!code word:limitUrlUpdates]
@@ -71,7 +71,7 @@ import {
   createStandardSchemaV1,
   parseAsInteger,
   parseAsString,
-} from 'nuqs' // or 'nuqs/server'
+} from 'nuqs'
 
 // 1. Define your search params as usual
 export const searchParams = {
@@ -93,8 +93,8 @@ Read the [complete documentation](/docs/utilities#standard-schema) for the optio
 ## Key isolation
 
 Also known as _fine grained subscriptions_, and pioneered by TanStack Router, key isolation is the idea
-that components listening to a search param key in the URL should only re-render when the value for that
-key changes.
+that components listening to a search param key in the URL should **only re-render when the value for that
+key changes**.
 
 Key isolation is now built-in for the following adapters:
 - React SPA
