@@ -62,6 +62,7 @@
   "devDependencies": {
     "@shikijs/transformers": "^3.11.0",
     "@types/mdx": "^2.0.13",
+    "@types/node": "^24.3.0",
     "@types/react": "catalog:react19",
     "@types/react-dom": "catalog:react19",
     "hast-util-to-jsx-runtime": "^2.3.6",
