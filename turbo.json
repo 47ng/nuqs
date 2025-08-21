@@ -41,7 +41,7 @@
       ]
     },
     "e2e-tanstack-router#build": {
-      "outputs": ["dist/**", "cypress/**"],
+      "outputs": ["dist/**", "cypress/**", "src/routeTree.gen.ts"],
       "dependsOn": ["^build"],
       "env": ["REACT_COMPILER", "E2E_NO_CACHE_ON_RERUN"]
     },

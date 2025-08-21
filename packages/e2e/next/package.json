@@ -20,21 +20,21 @@
     "cypress:run": "cypress run --headless"
   },
   "dependencies": {
-    "next": "15.4.6",
+    "next": "15.5.0",
     "nuqs": "workspace:*",
     "react": "catalog:react19",
     "react-dom": "catalog:react19"
   },
   "devDependencies": {
-    "@types/node": "^22.14.1",
+    "@types/node": "^24.3.0",
     "@types/react": "catalog:react19",
     "@types/react-dom": "catalog:react19",
     "@types/webpack": "^5.28.5",
     "babel-plugin-react-compiler": "19.1.0-rc.2",
     "cypress": "catalog:e2e",
-    "cypress-terminal-report": "^7.1.0",
+    "cypress-terminal-report": "^7.2.1",
     "e2e-shared": "workspace:*",
     "start-server-and-test": "catalog:e2e",
-    "typescript": "^5.8.3"
+    "typescript": "^5.9.2"
   }
 }
