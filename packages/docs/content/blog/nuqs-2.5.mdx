@@ -194,24 +194,14 @@ const getMapLink = createTypedLink('/map', searchParams, { urlKeys })
 
 function MapLinks() {
   return (
-    <>
-      <Link
-        href={
-          getMapLink({ latitude: 48.86, longitude: 2.35 })
-          // → /map?lat=48.86&lng=2.35
-        }
-      >
-        Paris
-      </Link>
-      <Link
-        href={
-          getMapLink({ latitude: 51.51, longitude: -0.13 })
-          // → /map?lat=51.51&lng=-0.13
-        }
-      >
-        London
-      </Link>
-    </>
+    <Link
+      href={
+        getMapLink({ latitude: 48.86, longitude: 2.35 })
+        // → /map?lat=48.86&lng=2.35
+      }
+    >
+      Paris, France
+    </Link>
   )
 }
 ```
@@ -230,8 +220,8 @@ utility in this video:
 />
 
 I'll open an RFC discussion soon to define the API, with the goals in mind that:
-- It supports both Next.js & React Router typed routes <small>_(if we could connect to TSR too that'd be nice 👀)_</small>
-- It handles static, dynamic & catch-all routes, with type-safe pathname params, search params, and hash.
+- It should support both Next.js & React Router typed routes <small>_(if we could connect to TSR too that'd be nice 👀)_</small>
+- It should handle static, dynamic & catch-all routes, with type-safe pathname params, search params, and hash.
 
 ### Dependencies & bundle size
 
