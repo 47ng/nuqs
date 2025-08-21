@@ -15,7 +15,7 @@
   "scripts": {
     "dev": "turbo run dev",
     "build": "turbo run build",
-    "test": "turbo run test",
+    "test": "turbo run test --log-order=stream",
     "prepare": "husky",
     "lint": "pnpm run -w --parallel --stream '/^lint:/'",
     "lint:prettier": "prettier --check ./packages/nuqs/src/**/*.ts",
