@@ -144,6 +144,95 @@ You can now specify different defaults for some [options](/docs/options), at the
 </NuqsAdapter>
 ```
 
+### Preview support for Next.js 15.5 typed routes
+
+Type-safe routing is now available as an option in Next.js 15.5.
+
+While I'm still working on designing an API to support this elegantly,
+a little change to the serializer types can allow you to experiment with
+it in userland, using a copy-pastable utility function:
+
+```ts title="src/typed-links.ts"
+// Copy this in your codebase
+import { Route } from 'next'
+import {
+  createSerializer,
+  type CreateSerializerOptions,
+  type ParserMap
+} from 'nuqs/server'
+
+export function createTypedLink<Parsers extends ParserMap>(
+  route: Route,
+  parsers: Parsers,
+  options: CreateSerializerOptions<Parsers> = {}
+) {
+  const serialize = createSerializer<Parsers, Route, Route>(parsers, options)
+  return serialize.bind(null, route)
+}
+```
+
+Usage:
+
+```tsx
+import { createTypedLink } from '@/src/typed-links'
+import { parseAsFloat, parseAsIsoDate, parseAsString, type UrlKeys } from 'nuqs'
+
+// Reuse your search params definitions objects & urlKeys:
+const searchParams = {
+  latitude: parseAsFloat.withDefault(0),
+  longitude: parseAsFloat.withDefault(0),
+}
+const urlKeys: UrlKeys<typeof searchParams> = {
+  // Define shorthands in the URL
+  latitude: 'lat',
+  longitude: 'lng'
+}
+
+// This is a function bound to /map, with those search params & mapping:
+// [!code word:getMapLink]
+const getMapLink = createTypedLink('/map', searchParams, { urlKeys })
+
+function MapLinks() {
+  return (
+    <>
+      <Link
+        href={
+          getMapLink({ latitude: 48.86, longitude: 2.35 })
+          // → /map?lat=48.86&lng=2.35
+        }
+      >
+        Paris
+      </Link>
+      <Link
+        href={
+          getMapLink({ latitude: 51.51, longitude: -0.13 })
+          // → /map?lat=51.51&lng=-0.13
+        }
+      >
+        London
+      </Link>
+    </>
+  )
+}
+```
+
+This is based on the same technique I used on React Router's type-safe `href`
+utility in this video:
+
+<iframe
+  src="https://www.youtube-nocookie.com/embed/vmONxheVFxQ"
+  title="YouTube video player"
+  frameBorder="0"
+  allow="autoplay; encrypted-media; picture-in-picture; web-share"
+  referrerPolicy="strict-origin-when-cross-origin"
+  allowFullScreen
+  className='aspect-video w-full max-w-2xl mx-auto'
+/>
+
+I'll open an RFC discussion soon to define the API, with the goals in mind that:
+- It supports both Next.js & React Router typed routes <small>_(if we could connect to TSR too that'd be nice 👀)_</small>
+- It handles static, dynamic & catch-all routes, with type-safe pathname params, search params, and hash.
+
 ### Dependencies & bundle size
 
 nuqs is now a **zero runtime dependencies** library! 🙌
