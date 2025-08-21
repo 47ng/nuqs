@@ -4,11 +4,22 @@ import type { inferParserType, ParserMap } from './parsers'
 
 type Base = string | URLSearchParams | URL
 
-type SerializeFunction<Parsers extends ParserMap> = {
+export type CreateSerializerOptions<Parsers extends ParserMap> = Pick<
+  Options,
+  'clearOnDefault'
+> & {
+  urlKeys?: UrlKeys<Parsers>
+}
+
+type SerializeFunction<
+  Parsers extends ParserMap,
+  BaseType extends Base = Base,
+  Return = string
+> = {
   /**
    * Generate a query string for the given values.
    */
-  (values: Partial<Nullable<inferParserType<Parsers>>>): string
+  (values: Partial<Nullable<inferParserType<Parsers>>>): Return
   /**
    * Append/amend the query string of the given base with the given values.
    *
@@ -18,26 +29,25 @@ type SerializeFunction<Parsers extends ParserMap> = {
    *  search param will be updated
    */
   (
-    base: Base,
+    base: BaseType,
     values: Partial<Nullable<inferParserType<Parsers>>> | null
-  ): string
+  ): Return
 }
 
-export function createSerializer<Parsers extends ParserMap>(
+export function createSerializer<
+  Parsers extends ParserMap,
+  BaseType extends Base = Base,
+  Return = string
+>(
   parsers: Parsers,
-  {
-    clearOnDefault = true,
-    urlKeys = {}
-  }: Pick<Options, 'clearOnDefault'> & {
-    urlKeys?: UrlKeys<Parsers>
-  } = {}
-): SerializeFunction<Parsers> {
+  { clearOnDefault = true, urlKeys = {} }: CreateSerializerOptions<Parsers> = {}
+): SerializeFunction<Parsers, BaseType, Return> {
   type Values = Partial<Nullable<inferParserType<Parsers>>>
 
   /**
    * Generate a query string for the given values.
    */
-  function serialize(values: Values): string
+  function serialize(values: Values): Return
   /**
    * Append/amend the query string of the given base with the given values.
    *
@@ -46,12 +56,12 @@ export function createSerializer<Parsers extends ParserMap>(
    * - another value is given for an existing key, in which case the
    *  search param will be updated
    */
-  function serialize(base: Base, values: Values | null): string
+  function serialize(base: BaseType, values: Values | null): Return
   function serialize(
-    arg1BaseOrValues: Base | Values | null,
+    arg1BaseOrValues: BaseType | Values,
     arg2values: Values | null = {}
   ) {
-    const [base, search] = isBase(arg1BaseOrValues)
+    const [base, search] = isBase<BaseType>(arg1BaseOrValues)
       ? splitBase(arg1BaseOrValues)
       : ['', new URLSearchParams()]
     const values = isBase(arg1BaseOrValues) ? arg2values : arg1BaseOrValues
@@ -60,7 +70,7 @@ export function createSerializer<Parsers extends ParserMap>(
         const urlKey = urlKeys[key] ?? key
         search.delete(urlKey)
       }
-      return base + renderQueryString(search)
+      return (base + renderQueryString(search)) as Return
     }
     for (const key in parsers) {
       const parser = parsers[key]
@@ -87,7 +97,7 @@ export function createSerializer<Parsers extends ParserMap>(
   return serialize
 }
 
-function isBase(base: any): base is Base {
+function isBase<BaseType>(base: any): base is BaseType {
   return (
     typeof base === 'string' ||
     base instanceof URLSearchParams ||
@@ -95,7 +105,7 @@ function isBase(base: any): base is Base {
   )
 }
 
-function splitBase(base: Base) {
+function splitBase<BaseType extends Base>(base: BaseType) {
   if (typeof base === 'string') {
     const [path = '', ...search] = base.split('?')
     return [path, new URLSearchParams(search.join('?'))] as const
