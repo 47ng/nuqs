@@ -26,6 +26,8 @@ jobs:
           cache: pnpm
       - name: Install dependencies
         run: pnpm install --ignore-scripts --frozen-lockfile --workspace-root
+      - name: Build package (required for publint)
+        run: pnpm build --filter nuqs
       - name: Check monorepo with Sherif
         run: pnpm run lint:sherif
       - name: Check source code formatting
@@ -42,6 +44,23 @@ jobs:
           else
             echo "No formatting issues found"
           fi
+      - name: Check package.json with publint
+        run: pnpm run lint:publint
+
+  publint:
+    name: Package Linting
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8
+      - uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - name: Install dependencies
+        run: pnpm install --ignore-scripts --frozen-lockfile --workspace-root
+      - name: Run publint on package.json
+        run: pnpm publint packages/nuqs
 
   ci-core:
     name: CI (core)

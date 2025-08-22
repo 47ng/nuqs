@@ -80,5 +80,8 @@
         true
       ]
     }
+  },
+  "dependencies": {
+    "publint": "^0.3.12"
   }
 }
