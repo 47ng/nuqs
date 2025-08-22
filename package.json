@@ -26,6 +26,7 @@
     "commitlint": "^19.8.1",
     "husky": "^9.1.7",
     "prettier": "3.6.2",
+    "publint": "^0.3.12",
     "semantic-release": "^24.2.7",
     "sherif": "^1.6.1",
     "turbo": "^2.5.6",
