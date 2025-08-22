@@ -26,8 +26,6 @@ jobs:
           cache: pnpm
       - name: Install dependencies
         run: pnpm install --ignore-scripts --frozen-lockfile --workspace-root
-      - name: Build package (required for publint)
-        run: pnpm build --filter nuqs
       - name: Check monorepo with Sherif
         run: pnpm run lint:sherif
       - name: Check source code formatting
@@ -44,12 +42,11 @@ jobs:
           else
             echo "No formatting issues found"
           fi
-      - name: Check package.json with publint
-        run: pnpm run lint:publint
 
   publint:
     name: Package Linting
     runs-on: ubuntu-24.04-arm
+    needs: [ci-core]
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8
       - uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda
@@ -58,9 +55,19 @@ jobs:
           node-version-file: .node-version
           cache: pnpm
       - name: Install dependencies
-        run: pnpm install --ignore-scripts --frozen-lockfile --workspace-root
+        run: pnpm install --ignore-scripts --frozen-lockfile --filter nuqs...
+      - name: Build package
+        run: pnpm build --filter nuqs
       - name: Run publint on package.json
         run: pnpm publint packages/nuqs
+      - uses: 47ng/actions-slack-notify@main
+        name: Notify on Slack
+        if: failure()
+        with:
+          status: ${{ job.status }}
+          jobName: publint
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
   ci-core:
     name: CI (core)
@@ -307,6 +314,7 @@ jobs:
     runs-on: ubuntu-24.04-arm
     needs:
       - lint
+      - publint
       - ci-core
       - e2e-next
       - e2e-react
@@ -331,6 +339,7 @@ jobs:
       id-token: write # to enable use of OIDC for NPM provenance
     needs:
       - lint
+      - publint
       - ci-core
       - e2e-next
       - e2e-react
