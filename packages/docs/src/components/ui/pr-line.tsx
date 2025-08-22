@@ -6,6 +6,7 @@ import {
   GitPullRequestDraft,
   type LucideIcon
 } from 'lucide-react'
+import type { ComponentProps } from 'react'
 import { z } from 'zod/v4'
 
 export type PullRequestLineProps = ComponentProps<'li'> & {
