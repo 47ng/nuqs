@@ -14,42 +14,6 @@ env:
   FORCE_COLOR: 3 # Diplay chalk colors
 
 jobs:
-  docs:
-    name: Docs Typecheck & Build
-    runs-on: ubuntu-24.04-arm
-    needs: [ci-core]
-    steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8
-      - uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
-        with:
-          node-version-file: .node-version
-          cache: pnpm
-      - name: Install docs dependencies
-        run: pnpm install --frozen-lockfile --filter docs...
-      - name: Run fumadocs postinstall
-        run: pnpm --filter docs run postinstall
-      - name: Build dependencies (nuqs, res packages)
-        run: pnpm build --filter docs... --filter=!docs
-        env:
-          TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
-          TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
-      - name: Type-check docs
-        run: pnpm --filter docs run typecheck
-      - name: Build docs
-        run: pnpm build --filter docs
-        env:
-          TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
-          TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
-      - uses: 47ng/actions-slack-notify@main
-        name: Notify on Slack
-        if: failure()
-        with:
-          status: ${{ job.status }}
-          jobName: docs
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-
   lint:
     name: Linting
     runs-on: ubuntu-24.04-arm
@@ -123,6 +87,35 @@ jobs:
           TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
           TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
           E2E_NO_CACHE_ON_RERUN: ${{ github.run_attempt }}
+
+  docs:
+    name: Docs Typecheck & Build
+    runs-on: ubuntu-24.04-arm
+    needs: [ci-core]
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8
+      - uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile --filter docs^...
+      - name: Type-check docs
+        run: pnpm --filter docs run typecheck
+      - name: Build docs and its dependencies
+        run: pnpm run build --filter docs^...
+        env:
+          TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+          TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
+      - uses: 47ng/actions-slack-notify@main
+        name: Notify on Slack
+        if: failure()
+        with:
+          status: ${{ job.status }}
+          jobName: docs
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
   e2e-next:
     # Watch out! When changing the job name,
