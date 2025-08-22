@@ -96,6 +96,26 @@ Also known as _fine grained subscriptions_, and pioneered by TanStack Router, ke
 that components listening to a search param key in the URL should **only re-render when the value for that
 key changes**.
 
+Without key isolation, any change of the URL re-renders every component listening to it.
+
+Take a look at those two counter buttons,
+and how clicking one re-renders both, _without key isolation_:
+
+import { Suspense } from 'react'
+import { DemoSkeleton, KeyIsolationStyles, WithKeyIsolationDemo, WithoutKeyIsolationDemo } from './nuqs-2.5-key-isolation.client'
+
+<KeyIsolationStyles/>
+
+<Suspense fallback={<DemoSkeleton/>}>
+  <WithoutKeyIsolationDemo />
+</Suspense>
+
+And this is what happens **with key isolation**:
+
+<Suspense fallback={<DemoSkeleton/>}>
+  <WithKeyIsolationDemo />
+</Suspense>
+
 Key isolation is now built-in for the following adapters:
 - React SPA
 - React Router (v6 & v7)
