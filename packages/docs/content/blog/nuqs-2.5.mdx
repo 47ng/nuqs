@@ -279,6 +279,7 @@ import {PullRequestLine} from '@/src/components/ui/pr-line'
   <PullRequestLine number="1056" />
   <PullRequestLine number="1058" />
   <PullRequestLine number="1070" />
+  <PullRequestLine number="1082" /> {/* so meta */}
 </ul>
 
 ### Other changes
@@ -296,6 +297,7 @@ import {PullRequestLine} from '@/src/components/ui/pr-line'
   <PullRequestLine number="1078" />
   <PullRequestLine number="1080" />
   <PullRequestLine number="1081" />
+  <PullRequestLine number="1086"><small>Congrats on your first OSS contribution! 🙌</small></PullRequestLine>
 </ul>
 
 {/* Raw data in case the PullRequestLine component becomes too expensive */}
@@ -310,6 +312,7 @@ import {PullRequestLine} from '@/src/components/ui/pr-line'
 - [#1062](https://github.com/47ng/nuqs/pull/1062): Export ./package.json in exports field for Module Federation support, by [@AfeefRazick](https://github.com/AfeefRazick)
 - [#1066](https://github.com/47ng/nuqs/pull/1066): defaultOptions for NuqsAdapter, by [@TkDodo](https://github.com/TkDodo)
 - [#1079](https://github.com/47ng/nuqs/pull/1079): Add support for more global default options at the adapter level, by [@franky47](https://github.com/franky47)
+- [#1083](https://github.com/47ng/nuqs/pull/1083): Allow specifying a different base type for the serializer, by [@franky47](https://github.com/franky47)
 
 ### Bug fixes
 
@@ -339,6 +342,7 @@ import {PullRequestLine} from '@/src/components/ui/pr-line'
 - [#1056](https://github.com/47ng/nuqs/pull/1056): Migrate docs to Fumadocs 15, Tailwind CSS v4, by [@fuma-nama](https://github.com/fuma-nama)
 - [#1058](https://github.com/47ng/nuqs/pull/1058): Fix default value for shallow in React Router disclaimer, by [@franky47](https://github.com/franky47)
 - [#1070](https://github.com/47ng/nuqs/pull/1070): Prevent NaN appearing in pagination example, by [@87xie](https://github.com/87xie)
+- [#1082](https://github.com/47ng/nuqs/pull/1082): Add nuqs 2.5 release blog post, by [@franky47](https://github.com/franky47)
 
 ### Other changes
 - [#985](https://github.com/47ng/nuqs/pull/985): Use React Compiler RC, by [@franky47](https://github.com/franky47)
@@ -353,6 +357,7 @@ import {PullRequestLine} from '@/src/components/ui/pr-line'
 - [#1078](https://github.com/47ng/nuqs/pull/1078): Update dependencies, by [@franky47](https://github.com/franky47)
 - [#1080](https://github.com/47ng/nuqs/pull/1080): Pass children as config in createElement to avoid ts-expect-error, by [@franky47](https://github.com/franky47)
 - [#1081](https://github.com/47ng/nuqs/pull/1081): Reduce the bundle size, by [@franky47](https://github.com/franky47)
+- [#1086](https://github.com/47ng/nuqs/pull/1086): Add publint step to CI workflow, by [@Amirmohammad-Bashiri](https://github.com/Amirmohammad-Bashiri)
 */}
 
 <hr />
@@ -390,4 +395,4 @@ Join them on [💖 GitHub Sponsors](https://github.com/sponsors/franky47)!
 
 ### Contributors
 
-Huge thanks to [@87xie](https://github.com/87xie), [@AfeefRazick](https://github.com/AfeefRazick), [@ahmedrowaihi](https://github.com/ahmedrowaihi), [@AmruthPillai](https://github.com/AmruthPillai), [@an-h2](https://github.com/an-h2), [@anhskohbo](https://github.com/anhskohbo), [@awosky](https://github.com/awosky), [@brandanking-decently](https://github.com/brandanking-decently), [@devhasson](https://github.com/devhasson), [@didemkkaslan](https://github.com/didemkkaslan), [@dinogit](https://github.com/dinogit), [@dmytro-palaniichuk](https://github.com/dmytro-palaniichuk), [@Elya29](https://github.com/Elya29), [@ericwang401](https://github.com/ericwang401), [@ethanniser](https://github.com/ethanniser), [@fuma-nama](https://github.com/fuma-nama), [@gensmusic](https://github.com/gensmusic), [@I-3B](https://github.com/I-3B), [@jaberamin9](https://github.com/jaberamin9), [@Joehoel](https://github.com/Joehoel), [@Kavan72](https://github.com/Kavan72), [@krisnaw](https://github.com/krisnaw), [@Manjit2003](https://github.com/Manjit2003), [@neefrehman](https://github.com/neefrehman), [@phelma](https://github.com/phelma), [@remcohaszing](https://github.com/remcohaszing), [@SeanCassiere](https://github.com/SeanCassiere), [@snelsi](https://github.com/snelsi), [@stefan-schubert-sbb](https://github.com/stefan-schubert-sbb), [@thewebartisan7](https://github.com/thewebartisan7), [@TkDodo](https://github.com/TkDodo), [@vanquishkuso](https://github.com/vanquishkuso), and [@Willem-Jaap](https://github.com/Willem-Jaap) for helping!
+Huge thanks to [@87xie](https://github.com/87xie), [@AfeefRazick](https://github.com/AfeefRazick), [@ahmedrowaihi](https://github.com/ahmedrowaihi), [@Amirmohammad-Bashiri](https://github.com/Amirmohammad-Bashiri), [@AmruthPillai](https://github.com/AmruthPillai), [@an-h2](https://github.com/an-h2), [@anhskohbo](https://github.com/anhskohbo), [@awosky](https://github.com/awosky), [@brandanking-decently](https://github.com/brandanking-decently), [@devhasson](https://github.com/devhasson), [@didemkkaslan](https://github.com/didemkkaslan), [@dinogit](https://github.com/dinogit), [@dmytro-palaniichuk](https://github.com/dmytro-palaniichuk), [@Elya29](https://github.com/Elya29), [@ericwang401](https://github.com/ericwang401), [@ethanniser](https://github.com/ethanniser), [@fuma-nama](https://github.com/fuma-nama), [@gensmusic](https://github.com/gensmusic), [@I-3B](https://github.com/I-3B), [@jaberamin9](https://github.com/jaberamin9), [@Joehoel](https://github.com/Joehoel), [@Kavan72](https://github.com/Kavan72), [@krisnaw](https://github.com/krisnaw), [@Manjit2003](https://github.com/Manjit2003), [@neefrehman](https://github.com/neefrehman), [@phelma](https://github.com/phelma), [@remcohaszing](https://github.com/remcohaszing), [@SeanCassiere](https://github.com/SeanCassiere), [@snelsi](https://github.com/snelsi), [@stefan-schubert-sbb](https://github.com/stefan-schubert-sbb), [@thewebartisan7](https://github.com/thewebartisan7), [@TkDodo](https://github.com/TkDodo), [@vanquishkuso](https://github.com/vanquishkuso), and [@Willem-Jaap](https://github.com/Willem-Jaap) for helping!
