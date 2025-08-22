@@ -1,0 +1,418 @@
+---
+title: nuqs 2.5
+description: Debounce, Standard Schema, TanStack Router, Key isolation, Global defaults, and more…
+author: François Best
+date: 2025-08-22
+---
+
+nuqs@2.5.0 is available, try it now:
+
+```npm
+npm install nuqs@latest
+```
+
+It's a big release full of long-awaited features, bug fixes & improvements, including:
+
+- ⏱️ [Debounce](#debounce): only send network requests once users stopped typing in search inputs
+- ☑️ [Standard Schema](#standard-schema): connect validation & type inference to external tools (eg: tRPC)
+- ⚡ [Key isolation](#key-isolation): only re-render components when their part of the URL changes
+- 🏝️ [TanStack Router](#tanstack-router) support with type-safe routing _(🧪 experimental)_
+
+## Debounce
+
+While nuqs has always had a throttling system in place to adapt to [browers rate-limiting URL updates](/blog/beware-the-url-type-safety-iceberg#time-safety),
+this system wasn't ideal for **high frequency inputs**, like `<input type="search">{:html}`, or `<input type="range">{:html}` sliders.
+
+For those cases where the _final value_ is what matters, **debouncing** makes more sense than **throttling**.
+
+You can now specify a new option, `limitUrlUpdates{:ts}`, that replaces `throttleMs{:ts}` and declares either a debouncing or throttling behaviour:
+
+```tsx
+// [!code word:limitUrlUpdates]
+import { debounce, useQueryState } from 'nuqs'
+
+function DebouncedSearchInput() {
+  // Send updates to the server after 250ms of inactivity
+  const [search, setSearch] = useQueryState('search', {
+    defaultValue: '',
+    shallow: false,
+    limitUrlUpdates: debounce(250)
+  })
+
+  // You can still use controlled components:
+  // the local state updates instantly.
+  return (
+    <input
+      type="search"
+      value={search}
+      onChange={e => setSearch(e.target.value)}
+    />
+  )
+}
+```
+
+Read the [complete documentation](/docs/options#rate-limiting-url-updates) for the API, explanations of what it does,
+and a list of tips when working with search inputs _(you might not want to **always** debounce)_.
+
+## Standard Schema
+
+You can now use your **search params definitions objects**
+(the ones you feed to
+[`useQueryStates{:ts}`](/docs/batching#usequerystates),
+[`createLoader{:ts}`](/docs/server-side#loaders) and
+[`createSerializer{:ts}`](/docs/utilities#serializer-helper)) to derive a **Standard Schema validator**,
+that you can use for basic runtime validation and type inference with other tools, like:
+- tRPC, to validate procedure inputs when feeding them your URL state
+- TanStack Router's `validateSearch{:ts}` ([see below](#tanstack-router))
+
+```ts
+// [!code word:validateSearchParams]
+import {
+  createStandardSchemaV1,
+  parseAsInteger,
+  parseAsString,
+} from 'nuqs'
+
+// 1. Define your search params as usual
+export const searchParams = {
+  searchTerm: parseAsString.withDefault(''),
+  maxResults: parseAsInteger.withDefault(10)
+}
+
+// 2. Create a Standard Schema compatible validator
+export const validateSearchParams = createStandardSchemaV1(searchParams)
+
+// 3. Use it with other tools, like tRPC:
+router({
+  search: publicProcedure.input(validateSearchParams).query(...)
+})
+```
+
+Read the [complete documentation](/docs/utilities#standard-schema) for the options you can pass in.
+
+## Key isolation
+
+Also known as _fine grained subscriptions_, and pioneered by TanStack Router, key isolation is the idea
+that components listening to a search param key in the URL should **only re-render when the value for that
+key changes**.
+
+Without key isolation, any change of the URL re-renders every component listening to it.
+
+Take a look at those two counter buttons,
+and how clicking one re-renders both, _without key isolation_:
+
+import { Suspense } from 'react'
+import { DemoSkeleton, KeyIsolationStyles, WithKeyIsolationDemo, WithoutKeyIsolationDemo } from './nuqs-2.5-key-isolation.client'
+
+<KeyIsolationStyles/>
+
+<Suspense fallback={<DemoSkeleton/>}>
+  <WithoutKeyIsolationDemo />
+</Suspense>
+
+And this is what happens **with key isolation**:
+
+<Suspense fallback={<DemoSkeleton/>}>
+  <WithKeyIsolationDemo />
+</Suspense>
+
+Key isolation is now built-in for the following adapters:
+- React SPA
+- React Router (v6 & v7)
+- Remix
+- TanStack Router
+
+<Callout title="No Next.js? 😢">
+ Unfortunately, Next.js uses a single Context to carry a `URLSearchParams{:ts}` object, which changes
+ reference whenever any search params change, and therefore re-renders every `useSearchParams{:ts}`
+ call site.
+
+ I'm working with the Next.js team to find solutions to this issue to improve performance for
+ everyone (not just nuqs users).
+</Callout>
+
+## TanStack Router
+
+We've added experimental support for TanStack Router, so you can load and use nuqs-enabled components
+from NPM, or shared between different frameworks in a monorepo.
+
+TanStack Router already has great APIs for type-safe URL state management, and we **encourage you to
+use those in your application code**. This adapter serves mainly as a compatibility layer.
+
+This also includes _limited_ support for connecting nuqs search params definitions to TSR's type-safe routing,
+via the Standard Schema interface.
+
+Refer to the [complete documentation](/docs/adapters#tanstack-router) for what is supported.
+
+## Other changes
+
+### Global defaults for options
+
+You can now specify different defaults for some [options](/docs/options), at the adapter level:
+
+```tsx
+// [!code word:defaultOptions]
+<NuqsAdapter
+  defaultOptions={{
+    shallow: false,                 // Always send network requests on updates
+    scroll: true,                   // Always scroll to the top of the page on updates
+    clearOnDefault: false,          // Keep default values in the URL
+    limitUrlUpdates: throttle(250), // Increase global throttle
+  }}
+>
+  {children}
+</NuqsAdapter>
+```
+
+### Preview support for Next.js 15.5 typed routes
+
+Type-safe routing is now available as an option in Next.js 15.5.
+
+While I'm still working on designing an API to support this elegantly,
+a little change to the serializer types can allow you to experiment with
+it in userland, using a copy-pastable utility function:
+
+```ts title="src/typed-links.ts"
+// Copy this in your codebase
+import { Route } from 'next'
+import {
+  createSerializer,
+  type CreateSerializerOptions,
+  type ParserMap
+} from 'nuqs/server'
+
+export function createTypedLink<Parsers extends ParserMap>(
+  route: Route,
+  parsers: Parsers,
+  options: CreateSerializerOptions<Parsers> = {}
+) {
+  const serialize = createSerializer<Parsers, Route, Route>(parsers, options)
+  return serialize.bind(null, route)
+}
+```
+
+Usage:
+
+```tsx
+import { createTypedLink } from '@/src/typed-links'
+import { parseAsFloat, parseAsIsoDate, parseAsString, type UrlKeys } from 'nuqs'
+
+// Reuse your search params definitions objects & urlKeys:
+const searchParams = {
+  latitude: parseAsFloat.withDefault(0),
+  longitude: parseAsFloat.withDefault(0),
+}
+const urlKeys: UrlKeys<typeof searchParams> = {
+  // Define shorthands in the URL
+  latitude: 'lat',
+  longitude: 'lng'
+}
+
+// This is a function bound to /map, with those search params & mapping:
+// [!code word:getMapLink]
+const getMapLink = createTypedLink('/map', searchParams, { urlKeys })
+
+function MapLinks() {
+  return (
+    <Link
+      href={
+        getMapLink({ latitude: 48.86, longitude: 2.35 })
+        // → /map?lat=48.86&lng=2.35
+      }
+    >
+      Paris, France
+    </Link>
+  )
+}
+```
+
+This is based on the same technique I used on React Router's type-safe `href`
+utility in this video:
+
+<iframe
+  src="https://www.youtube-nocookie.com/embed/vmONxheVFxQ"
+  title="YouTube video player"
+  frameBorder="0"
+  allow="autoplay; encrypted-media; picture-in-picture; web-share"
+  referrerPolicy="strict-origin-when-cross-origin"
+  allowFullScreen
+  className='aspect-video w-full max-w-2xl mx-auto'
+/>
+
+I'll open an RFC discussion soon to define the API, with the goals in mind that:
+- It should support both Next.js & React Router typed routes <small>_(if we could connect to TSR too that'd be nice 👀)_</small>
+- It should handle static, dynamic & catch-all routes, with type-safe pathname params, search params, and hash.
+
+### Dependencies & bundle size
+
+nuqs is now a **zero runtime dependencies** library! 🙌
+
+While this release packed a lot of new features, we kept it
+under **5.5kB** (minified + gzipped).
+
+## Full changelog
+
+### Features
+
+import {PullRequestLine} from '@/src/components/ui/pr-line'
+
+<ul className="not-prose list-none space-y-1.5">
+  <PullRequestLine number="855"/>
+  <PullRequestLine number="900"/>
+  <PullRequestLine number="953"/>
+  <PullRequestLine number="965"/>
+  <PullRequestLine number="1038"/>
+  <PullRequestLine number="1062"/>
+  <PullRequestLine number="1066"/>
+  <PullRequestLine number="1079"/>
+  <PullRequestLine number="1083"/>
+</ul>
+
+### Bug fixes
+
+<ul className="not-prose list-none space-y-1.5">
+  <PullRequestLine number="996"><wbr/><small className='text-gray-500'>(helps with ESM/CJS interop)</small></PullRequestLine>
+  <PullRequestLine number="1057" />
+  <PullRequestLine number="1063" />
+  <PullRequestLine number="1073" />
+</ul>
+
+### Documentation
+
+<ul className="not-prose list-none space-y-1.5">
+  <PullRequestLine number="787">→ <a href="/docs/community-adapters/inertia" className="text-sm underline font-medium">Read the docs</a></PullRequestLine>
+  <PullRequestLine number="976" />
+  <PullRequestLine number="1000" />
+  <PullRequestLine number="1004" />
+  <PullRequestLine number="1005" />
+  <PullRequestLine number="1017" />
+  <PullRequestLine number="1021" />
+  <PullRequestLine number="1025" />
+  <PullRequestLine number="1027" />
+  <PullRequestLine number="1032" />
+  <PullRequestLine number="1037" />
+  <PullRequestLine number="1041" />
+  <PullRequestLine number="1043" />
+  <PullRequestLine number="1046" />
+  <PullRequestLine number="1051" />
+  <PullRequestLine number="1052" />
+  <PullRequestLine number="1056" />
+  <PullRequestLine number="1058" />
+  <PullRequestLine number="1070" />
+  <PullRequestLine number="1082" /> {/* so meta */}
+</ul>
+
+### Other changes
+
+<ul className="not-prose list-none space-y-1.5">
+  <PullRequestLine number="985" />
+  <PullRequestLine number="990" />
+  <PullRequestLine number="1011" />
+  <PullRequestLine number="1029" />
+  <PullRequestLine number="1033" />
+  <PullRequestLine number="1065" />
+  <PullRequestLine number="1067" />
+  <PullRequestLine number="1074" />
+  <PullRequestLine number="1077" />
+  <PullRequestLine number="1078" />
+  <PullRequestLine number="1080" />
+  <PullRequestLine number="1081" />
+  <PullRequestLine number="1086"><small className='text-gray-500 italic'>Congrats on your first OSS contribution! 🙌</small></PullRequestLine>
+</ul>
+
+{/* Raw data in case the PullRequestLine component becomes too expensive */}
+{/*
+### Features
+
+- [#855](https://github.com/47ng/nuqs/pull/855): Key isolation, by [@franky47](https://github.com/franky47)
+- [#900](https://github.com/47ng/nuqs/pull/900): Debounce, by [@franky47](https://github.com/franky47)
+- [#953](https://github.com/47ng/nuqs/pull/953): Add support for TanStack Router, by [@ahmedrowaihi](https://github.com/ahmedrowaihi)
+- [#965](https://github.com/47ng/nuqs/pull/965): Add Standard Schema interface, by [@franky47](https://github.com/franky47)
+- [#1038](https://github.com/47ng/nuqs/pull/1038): Add const modifier to literal parsers to auto-infer their arguments as literals, by [@neefrehman](https://github.com/neefrehman)
+- [#1062](https://github.com/47ng/nuqs/pull/1062): Export ./package.json in exports field for Module Federation support, by [@AfeefRazick](https://github.com/AfeefRazick)
+- [#1066](https://github.com/47ng/nuqs/pull/1066): defaultOptions for NuqsAdapter, by [@TkDodo](https://github.com/TkDodo)
+- [#1079](https://github.com/47ng/nuqs/pull/1079): Add support for more global default options at the adapter level, by [@franky47](https://github.com/franky47)
+- [#1083](https://github.com/47ng/nuqs/pull/1083): Allow specifying a different base type for the serializer, by [@franky47](https://github.com/franky47)
+
+### Bug fixes
+
+- [#996](https://github.com/47ng/nuqs/pull/996): Replace require by default conditional export field, by [@stefan-schubert-sbb](https://github.com/stefan-schubert-sbb)
+- [#1057](https://github.com/47ng/nuqs/pull/1057): Type inference for defaultValue of object syntax, by [@TkDodo](https://github.com/TkDodo)
+- [#1063](https://github.com/47ng/nuqs/pull/1063): Remove esm-only on TanStack Router export, by [@franky47](https://github.com/franky47)
+- [#1073](https://github.com/47ng/nuqs/pull/1073): Handle JSON in TanStack Router, by [@franky47](https://github.com/franky47)
+
+### Documentation
+
+- [#787](https://github.com/47ng/nuqs/pull/787): Add Inertia community adapter, by [@Joehoel](https://github.com/Joehoel)
+- [#976](https://github.com/47ng/nuqs/pull/976): Add blog section, by [@franky47](https://github.com/franky47)
+- [#1000](https://github.com/47ng/nuqs/pull/1000): Vercel OSS program, by [@franky47](https://github.com/franky47)
+- [#1004](https://github.com/47ng/nuqs/pull/1004): Add code.store & oxom as sponsors 💖, by [@franky47](https://github.com/franky47)
+- [#1005](https://github.com/47ng/nuqs/pull/1005): The URL type-safety iceberg, by [@franky47](https://github.com/franky47)
+- [#1017](https://github.com/47ng/nuqs/pull/1017): Fix non-null assertions, by [@franky47](https://github.com/franky47)
+- [#1021](https://github.com/47ng/nuqs/pull/1021): Add Deploy on Vercel button, by [@franky47](https://github.com/franky47)
+- [#1025](https://github.com/47ng/nuqs/pull/1025): Extend next-app example to include more features, by [@I-3B](https://github.com/I-3B)
+- [#1027](https://github.com/47ng/nuqs/pull/1027): Fix mobile navbar collapse & sticky, by [@franky47](https://github.com/franky47)
+- [#1032](https://github.com/47ng/nuqs/pull/1032): Fix 500 error on Vercel ISR, by [@franky47](https://github.com/franky47)
+- [#1037](https://github.com/47ng/nuqs/pull/1037): Add Aurora Scharff as a sponsor 💖, by [@franky47](https://github.com/franky47)
+- [#1041](https://github.com/47ng/nuqs/pull/1041): Fix transition docs to not call parser as function, by [@phelma](https://github.com/phelma)
+- [#1043](https://github.com/47ng/nuqs/pull/1043): Title is hidden behind headers on mobile, by [@awosky](https://github.com/awosky)
+- [#1046](https://github.com/47ng/nuqs/pull/1046): Update NUQS-404.md, by [@dmytro-palaniichuk](https://github.com/dmytro-palaniichuk)
+- [#1051](https://github.com/47ng/nuqs/pull/1051): Add effect schema parser page, by [@ethanniser](https://github.com/ethanniser)
+- [#1052](https://github.com/47ng/nuqs/pull/1052): Debounce docs edits, by [@franky47](https://github.com/franky47)
+- [#1056](https://github.com/47ng/nuqs/pull/1056): Migrate docs to Fumadocs 15, Tailwind CSS v4, by [@fuma-nama](https://github.com/fuma-nama)
+- [#1058](https://github.com/47ng/nuqs/pull/1058): Fix default value for shallow in React Router disclaimer, by [@franky47](https://github.com/franky47)
+- [#1070](https://github.com/47ng/nuqs/pull/1070): Prevent NaN appearing in pagination example, by [@87xie](https://github.com/87xie)
+- [#1082](https://github.com/47ng/nuqs/pull/1082): Add nuqs 2.5 release blog post, by [@franky47](https://github.com/franky47)
+
+### Other changes
+- [#985](https://github.com/47ng/nuqs/pull/985): Use React Compiler RC, by [@franky47](https://github.com/franky47)
+- [#990](https://github.com/47ng/nuqs/pull/990): Replace tsup with tsdown, by [@franky47](https://github.com/franky47)
+- [#1011](https://github.com/47ng/nuqs/pull/1011): Add RSS feed auto-discovery, by [@franky47](https://github.com/franky47)
+- [#1029](https://github.com/47ng/nuqs/pull/1029): Fix API stability test, by [@franky47](https://github.com/franky47)
+- [#1033](https://github.com/47ng/nuqs/pull/1033): Linting PR titles, by [@franky47](https://github.com/franky47)
+- [#1065](https://github.com/47ng/nuqs/pull/1065): Add TanStack Router to og:images, by [@franky47](https://github.com/franky47)
+- [#1067](https://github.com/47ng/nuqs/pull/1067): Improve stats page, by [@franky47](https://github.com/franky47)
+- [#1074](https://github.com/47ng/nuqs/pull/1074): Configure MDX types, by [@remcohaszing](https://github.com/remcohaszing)
+- [#1077](https://github.com/47ng/nuqs/pull/1077): Track beta versions adoption in the stats page, by [@franky47](https://github.com/franky47)
+- [#1078](https://github.com/47ng/nuqs/pull/1078): Update dependencies, by [@franky47](https://github.com/franky47)
+- [#1080](https://github.com/47ng/nuqs/pull/1080): Pass children as config in createElement to avoid ts-expect-error, by [@franky47](https://github.com/franky47)
+- [#1081](https://github.com/47ng/nuqs/pull/1081): Reduce the bundle size, by [@franky47](https://github.com/franky47)
+- [#1086](https://github.com/47ng/nuqs/pull/1086): Add publint step to CI workflow, by [@Amirmohammad-Bashiri](https://github.com/Amirmohammad-Bashiri)
+*/}
+
+<hr />
+
+## What's next?
+
+Long standing issues and feature requests include:
+
+- Support for **native arrays** by repeating keys in the URL (eg: `?foo=bar&foo=egg` gives you `['bar', 'egg']{:ts}`)
+- **Runtime validation** with Standard Schema (Zod, Valibot, ArkType etc), to validate what TypeScript can't represent (like number ranges & string formats).
+- Support for **typed links** in Next.js 15.5 and React Router's `href` utility.
+
+## Thanks
+
+I want to thank [sponsors](https://github.com/sponsors/franky47),
+[contributors](https://github.com/47ng/nuqs/graphs/contributors)
+and people who raised issues, discussions and reviewed PRs on
+[GitHub](https://github.com/47ng/nuqs), [Bluesky](https://bsky.app/profile/nuqs.47ng.com) and [X/Twitter](https://x.com/nuqs47ng).
+You are the growing community that drives this project forward,
+and I couldn't be happier with the response.
+
+### Sponsors
+
+import { InlineSponsorsList } from '@/src/app/(pages)/_landing/sponsors'
+import { VercelOssBadge } from '@/src/components/vercel-oss-badge'
+
+<a href="https://vercel.com/blog/spring25-oss-program">
+  <VercelOssBadge className='mt-8'/>
+</a>
+
+<InlineSponsorsList className="not-prose my-8" />
+
+Thanks to these amazing people and companies, I'm able to dedicate more time to this project and make it better for everyone.
+Join them on [💖 GitHub Sponsors](https://github.com/sponsors/franky47)!
+
+### Contributors
+
+Huge thanks to [@87xie](https://github.com/87xie), [@AfeefRazick](https://github.com/AfeefRazick), [@ahmedrowaihi](https://github.com/ahmedrowaihi), [@Amirmohammad-Bashiri](https://github.com/Amirmohammad-Bashiri), [@AmruthPillai](https://github.com/AmruthPillai), [@an-h2](https://github.com/an-h2), [@anhskohbo](https://github.com/anhskohbo), [@awosky](https://github.com/awosky), [@brandanking-decently](https://github.com/brandanking-decently), [@devhasson](https://github.com/devhasson), [@didemkkaslan](https://github.com/didemkkaslan), [@dinogit](https://github.com/dinogit), [@dmytro-palaniichuk](https://github.com/dmytro-palaniichuk), [@Elya29](https://github.com/Elya29), [@ericwang401](https://github.com/ericwang401), [@ethanniser](https://github.com/ethanniser), [@fuma-nama](https://github.com/fuma-nama), [@gensmusic](https://github.com/gensmusic), [@I-3B](https://github.com/I-3B), [@jaberamin9](https://github.com/jaberamin9), [@Joehoel](https://github.com/Joehoel), [@Kavan72](https://github.com/Kavan72), [@krisnaw](https://github.com/krisnaw), [@Manjit2003](https://github.com/Manjit2003), [@neefrehman](https://github.com/neefrehman), [@phelma](https://github.com/phelma), [@remcohaszing](https://github.com/remcohaszing), [@SeanCassiere](https://github.com/SeanCassiere), [@snelsi](https://github.com/snelsi), [@stefan-schubert-sbb](https://github.com/stefan-schubert-sbb), [@thewebartisan7](https://github.com/thewebartisan7), [@TkDodo](https://github.com/TkDodo), [@vanquishkuso](https://github.com/vanquishkuso), and [@Willem-Jaap](https://github.com/Willem-Jaap) for helping!

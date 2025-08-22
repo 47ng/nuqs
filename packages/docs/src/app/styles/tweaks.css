@@ -48,8 +48,9 @@ div[role='tabpanel'] > figure:has(figcaption.truncate):has(pre) {
   @apply rounded-t-none;
 }
 
-/* Make the copy code button hover blend better with the container border */
-figure button[aria-label='Copy Text'],
-figure button[aria-label='Copied Text'] {
+/* Make the copy code button hover blend better with the container border
+  (but only if there isn't a title bar, otherwise it looks weird) */
+figure:not(:has(figcaption)) button[aria-label='Copy Text'],
+figure:not(:has(figcaption)) button[aria-label='Copied Text'] {
   @apply rounded-tl-none rounded-br-none;
 }
