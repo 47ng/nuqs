@@ -101,11 +101,6 @@ jobs:
           cache: pnpm
       - name: Install dependencies
         run: pnpm install --frozen-lockfile --filter docs...
-      - name: Build nuqs package
-        run: pnpm build --filter nuqs
-        env:
-          TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
-          TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
       - name: Type-check docs
         run: pnpm run test --filter docs
         env:
