@@ -64,6 +64,9 @@
       "outputs": ["dist/**", "coverage/**"],
       "dependsOn": ["build"]
     },
+    "docs#test": {
+      "dependsOn": ["^build"]
+    },
     "e2e-next#test": {
       "dependsOn": ["build"],
       "env": ["BASE_PATH", "REACT_COMPILER", "E2E_NO_CACHE_ON_RERUN"]

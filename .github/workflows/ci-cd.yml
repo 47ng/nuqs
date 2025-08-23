@@ -88,6 +88,38 @@ jobs:
           TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
           E2E_NO_CACHE_ON_RERUN: ${{ github.run_attempt }}
 
+  docs:
+    name: Docs Typecheck & Build
+    runs-on: ubuntu-24.04-arm
+    needs: [ci-core]
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8
+      - uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile --filter docs...
+      - name: Type-check docs
+        run: pnpm run test --filter docs
+        env:
+          TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+          TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
+      - name: Build docs
+        run: pnpm run build --filter docs
+        env:
+          TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+          TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
+      - uses: 47ng/actions-slack-notify@main
+        name: Notify on Slack
+        if: failure()
+        with:
+          status: ${{ job.status }}
+          jobName: docs
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
   e2e-next:
     # Watch out! When changing the job name,
     # update the required checks in GitHub
@@ -313,6 +345,7 @@ jobs:
     name: Notify on Slack
     runs-on: ubuntu-24.04-arm
     needs:
+      - docs
       - lint
       - publint
       - ci-core
@@ -338,6 +371,7 @@ jobs:
       pull-requests: write # to be able to comment on released pull requests
       id-token: write # to enable use of OIDC for NPM provenance
     needs:
+      - docs
       - lint
       - publint
       - ci-core
