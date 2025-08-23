@@ -39,11 +39,15 @@ export async function NPMDownloads() {
     fetchNpmPackage('next-usequerystate')
   ])
   const both = combineStats(nuqs, nextUseQueryState)
+  const lastDate = both.last30Days.at(-1)?.date
+  // Fortunately the epoch did not land on a Sunday (it was a Thursday).
+  const isLastDateSunday = new Date(lastDate ?? 0).getDay() === 0
   return (
     <Suspense>
       <DownloadsGraph
         data={both.last90Days}
         dataKeys={['nuqs', 'next-usequerystate']}
+        partialLast={!isLastDateSunday}
         title={
           <>
             <Download size={20} /> Last 90 days
@@ -86,6 +90,7 @@ export async function NPMDownloads() {
       <DownloadsGraph
         data={both.last30Days}
         dataKeys={['nuqs', 'next-usequerystate']}
+        partialLast={false}
         title={
           <>
             <Download size={20} /> Last 30 days
