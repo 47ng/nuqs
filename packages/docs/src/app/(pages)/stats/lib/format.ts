@@ -6,18 +6,17 @@ const LOCALE = 'en-GB'
 export function formatDate(
   date?: Date | string | number,
   defaultValue: string = '',
-  options: Intl.DateTimeFormatOptions = {}
+  options: Intl.DateTimeFormatOptions = {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  }
 ) {
   if (!date) {
     return defaultValue
   }
   // https://css-tricks.com/how-to-convert-a-date-string-into-a-human-readable-format/
-  return new Date(date).toLocaleDateString(LOCALE, {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    ...options
-  })
+  return new Date(date).toLocaleDateString(LOCALE, options)
 }
 
 export function formatTime(date: Date | string | number) {
