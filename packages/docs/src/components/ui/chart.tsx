@@ -6,6 +6,7 @@ import * as React from 'react'
 import * as RechartsPrimitive from 'recharts'
 
 import { cn } from '@/src/lib/utils'
+import type { ValueType } from 'recharts/types/component/DefaultTooltipContent'
 
 // Format: { THEME_NAME: CSS_SELECTOR }
 const THEMES = { light: '', dark: '.dark' } as const
@@ -117,6 +118,7 @@ function ChartTooltipContent({
   labelFormatter,
   labelClassName,
   formatter,
+  valueFormatter = v => v.toLocaleString(),
   color,
   nameKey,
   labelKey
@@ -127,6 +129,7 @@ function ChartTooltipContent({
     indicator?: 'line' | 'dot' | 'dashed'
     nameKey?: string
     labelKey?: string
+    valueFormatter?: (value: ValueType) => React.ReactNode
   }) {
   const { config } = useChart()
 
@@ -204,9 +207,9 @@ function ChartTooltipContent({
                     !hideIndicator && (
                       <div
                         className={cn(
-                          'shrink-0 rounded-[2px] border-(--color-border) bg-(--color-bg)',
+                          'shrink-0 rounded-full border-(--color-border) bg-(--color-bg)',
                           {
-                            'h-2.5 w-2.5': indicator === 'dot',
+                            'size-2': indicator === 'dot',
                             'w-1': indicator === 'line',
                             'w-0 border-[1.5px] border-dashed bg-transparent':
                               indicator === 'dashed',
@@ -224,7 +227,7 @@ function ChartTooltipContent({
                   )}
                   <div
                     className={cn(
-                      'flex flex-1 justify-between leading-none',
+                      'flex flex-1 justify-between gap-4 leading-none',
                       nestLabel ? 'items-end' : 'items-center'
                     )}
                   >
@@ -236,7 +239,7 @@ function ChartTooltipContent({
                     </div>
                     {item.value && (
                       <span className="text-foreground font-mono font-medium tabular-nums">
-                        {item.value.toLocaleString()}
+                        {valueFormatter(item.value)}
                       </span>
                     )}
                   </div>
