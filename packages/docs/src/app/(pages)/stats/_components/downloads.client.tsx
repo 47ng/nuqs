@@ -5,14 +5,23 @@ import {
   ChartTooltip,
   ChartTooltipContent
 } from '@/src/components/ui/chart'
-import { CartesianGrid, Line, LineChart, XAxis, YAxis } from 'recharts'
+import {
+  CartesianGrid,
+  Customized,
+  Line,
+  LineChart,
+  XAxis,
+  YAxis
+} from 'recharts'
 import { formatDate, formatStatNumber } from '../lib/format'
 import type { Datum, MultiDatum } from '../lib/npm'
+import { useDynamicDasharray } from './partial-line-chart'
 import { Widget, WidgetProps } from './widget'
 
 type DownloadsGraphProps = WidgetProps & {
   data: (Datum | MultiDatum)[]
   dataKeys: string[]
+  partialLast: boolean
 }
 
 // stroke-red-500 fill-red-500 bg-red-500
@@ -21,8 +30,12 @@ type DownloadsGraphProps = WidgetProps & {
 export function DownloadsGraph({
   data,
   dataKeys,
+  partialLast,
   ...props
 }: DownloadsGraphProps) {
+  const [DasharrayCalculator, lineDashArrays] = useDynamicDasharray({
+    splitIndex: data.length - 2
+  })
   return (
     <Widget {...props}>
       <ChartContainer className="mt-2 h-84 w-full pr-1">
@@ -36,7 +49,9 @@ export function DownloadsGraph({
             fillOpacity={0.75}
             axisLine={false}
             tickLine={false}
-            tickFormatter={value => formatStatNumber(value)}
+            tickFormatter={value =>
+              value === 0 ? '' : formatStatNumber(value)
+            }
             allowDataOverflow
           />
           <CartesianGrid vertical={false} />
@@ -70,6 +85,12 @@ export function DownloadsGraph({
             className="stroke-red-500 dark:stroke-red-400"
             dot={false}
             strokeWidth={2}
+            strokeDasharray={
+              partialLast
+                ? lineDashArrays.find(line => line.name === 'nuqs')
+                    ?.strokeDasharray || '0 0'
+                : '0 0'
+            }
           />
           <Line
             dataKey="next-usequerystate"
@@ -79,7 +100,14 @@ export function DownloadsGraph({
             strokeOpacity={0.5}
             dot={false}
             strokeWidth={2}
+            strokeDasharray={
+              partialLast
+                ? lineDashArrays.find(line => line.name === 'nuqs')
+                    ?.strokeDasharray || '0 0'
+                : '0 0'
+            }
           />
+          <Customized component={DasharrayCalculator} />
         </LineChart>
       </ChartContainer>
     </Widget>

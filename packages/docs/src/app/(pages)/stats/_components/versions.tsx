@@ -54,8 +54,18 @@ export function Versions({ records, versions }: VersionProps) {
         <>
           <Boxes size={24} strokeWidth={1.5} />
           Version adoption
+          <Label className="ml-auto flex items-center gap-2">
+            <Checkbox
+              id="beta"
+              checked={beta}
+              onCheckedChange={checked =>
+                setSearchParams({ beta: checked === true })
+              }
+            />
+            Beta
+          </Label>
           <Tabs
-            className="ml-auto w-auto"
+            className="ml-1 w-auto"
             value={activeTab}
             onValueChange={value =>
               setSearchParams({
@@ -81,16 +91,6 @@ export function Versions({ records, versions }: VersionProps) {
               </TabsTrigger>
             </TabsList>
           </Tabs>
-          <Label className="ml-1 flex items-center gap-2">
-            <Checkbox
-              id="beta"
-              checked={beta}
-              onCheckedChange={checked =>
-                setSearchParams({ beta: checked === true })
-              }
-            />
-            Beta
-          </Label>
         </>
       }
     >
