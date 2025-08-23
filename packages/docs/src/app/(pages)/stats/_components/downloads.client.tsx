@@ -20,7 +20,6 @@ import { Widget, WidgetProps } from './widget'
 
 type DownloadsGraphProps = WidgetProps & {
   data: (Datum | MultiDatum)[]
-  dataKeys: string[]
   partialLast: boolean
 }
 
@@ -29,7 +28,6 @@ type DownloadsGraphProps = WidgetProps & {
 
 export function DownloadsGraph({
   data,
-  dataKeys,
   partialLast,
   ...props
 }: DownloadsGraphProps) {
