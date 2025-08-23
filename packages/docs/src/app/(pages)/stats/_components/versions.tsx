@@ -2,11 +2,12 @@
 
 import { Checkbox } from '@/src/components/ui/checkbox'
 import { Label } from '@/src/components/ui/label'
-import { LineChart, Tab, TabGroup, TabList } from '@tremor/react'
+import { Tabs, TabsList, TabsTrigger } from '@/src/components/ui/tabs'
+import { LineChart } from '@tremor/react'
 import { Boxes } from 'lucide-react'
-import { useQueryStates } from 'nuqs'
+import { inferParserType, useQueryStates } from 'nuqs'
 import { formatStatNumber } from '../lib/format'
-import { pkgOptions, searchParams } from '../searchParams'
+import { pkgParser, searchParams } from '../searchParams'
 import { Widget } from './widget'
 
 type VersionProps = {
@@ -40,18 +41,34 @@ export function Versions({ records, versions }: VersionProps) {
         <>
           <Boxes size={24} strokeWidth={1.5} />
           Version adoption
-          <TabGroup
+          <Tabs
             className="ml-auto w-auto"
-            index={pkgOptions.indexOf(activeTab)}
-            onIndexChange={index => setSearchParams({ pkg: pkgOptions[index] })}
+            value={activeTab}
+            onValueChange={value =>
+              setSearchParams({
+                pkg: value as inferParserType<typeof pkgParser>
+              })
+            }
           >
-            <TabList variant="solid">
-              <Tab>nuqs</Tab>
-              <Tab>next-usequerystate</Tab>
-              <Tab>combined</Tab>
-            </TabList>
-          </TabGroup>
-          <div className="ml-1 flex items-center gap-2 opacity-75">
+            <TabsList>
+              <TabsTrigger
+                value="nuqs"
+                className="data-[state=active]:text-red-700 dark:data-[state=active]:text-red-400"
+              >
+                nuqs
+              </TabsTrigger>
+              <TabsTrigger value="next-usequerystate">
+                next-usequerystate
+              </TabsTrigger>
+              <TabsTrigger
+                value="both"
+                className="data-[state=active]:text-green-700 dark:data-[state=active]:text-green-300"
+              >
+                combined
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
+          <div className="ml-1 flex items-center gap-2">
             <Checkbox
               id="beta"
               checked={beta}

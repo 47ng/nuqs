@@ -124,26 +124,5 @@ export async function NPMDownloads() {
         }
       />
     </Suspense>
-    // <section className={twMerge('relative', className)} {...props}>
-    //   <LineChart
-    //     data=
-
-    //   />
-
-    //   <SvgCurveGraph
-    //     data={last30Days}
-    //     lastDate={nuqs.lastDate}
-    //     height={200}
-    //     summaryValue={last30Days.reduce((sum, x) => sum + x)}
-    //     className="text-red-500"
-    //   />
-    //   <p className="absolute left-2 top-2 flex items-center gap-2 text-2xl font-semibold tabular-nums md:text-6xl">
-    //     <Download
-    //       aria-label="NPM package downloads"
-    //       className="inline-block md:h-12 md:w-12"
-    //     />{' '}
-    //     {formatter.format(totalDownloads)}
-    //   </p>
-    // </section>
   )
 }
