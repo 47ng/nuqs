@@ -57,7 +57,7 @@ export function StarsGraph({ data, stargazersTab }: StarsGraphProps) {
       }
     >
       {activeTab === 'earned' && (
-        <ChartContainer className="mt-2 h-82 w-full" config={{}}>
+        <ChartContainer className="mt-2 h-82 w-full">
           <BarChart
             accessibilityLayer
             data={data.bins.toReversed().map(b => ({ ...b, Stars: b.diff }))}
@@ -84,6 +84,7 @@ export function StarsGraph({ data, stargazersTab }: StarsGraphProps) {
               cursor={{ fillOpacity: 0.5 }}
             />
             <Bar
+              isAnimationActive={false}
               shape={<CustomGradientBar />}
               dataKey="Stars"
               fill="var(--color-amber-500)"

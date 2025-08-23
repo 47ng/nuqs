@@ -1,12 +1,17 @@
 'use client'
 
+import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent
+} from '@/src/components/ui/chart'
 import { Checkbox } from '@/src/components/ui/checkbox'
 import { Label } from '@/src/components/ui/label'
 import { Tabs, TabsList, TabsTrigger } from '@/src/components/ui/tabs'
-import { LineChart } from '@tremor/react'
 import { Boxes } from 'lucide-react'
 import { inferParserType, useQueryStates } from 'nuqs'
-import { formatStatNumber } from '../lib/format'
+import { CartesianGrid, Line, LineChart, XAxis, YAxis } from 'recharts'
+import { formatDate, formatStatNumber } from '../lib/format'
 import { pkgParser, searchParams } from '../searchParams'
 import { Widget } from './widget'
 
@@ -28,6 +33,14 @@ type VersionProps = {
 // stroke-green-500 fill-green-500 bg-green-500 text-green-500
 // stroke-blue-500 fill-blue-500 bg-blue-500 text-blue-500
 // stroke-purple-500 fill-purple-500 bg-purple-500 text-purple-500
+
+const lineColors = [
+  'green-500',
+  'amber-500',
+  'red-500',
+  'blue-500',
+  'purple-500'
+]
 
 export function Versions({ records, versions }: VersionProps) {
   const [{ pkg: activeTab, beta }, setSearchParams] = useQueryStates(
@@ -68,7 +81,7 @@ export function Versions({ records, versions }: VersionProps) {
               </TabsTrigger>
             </TabsList>
           </Tabs>
-          <div className="ml-1 flex items-center gap-2">
+          <Label className="ml-1 flex items-center gap-2">
             <Checkbox
               id="beta"
               checked={beta}
@@ -76,21 +89,63 @@ export function Versions({ records, versions }: VersionProps) {
                 setSearchParams({ beta: checked === true })
               }
             />
-            <Label htmlFor="beta">Beta</Label>
-          </div>
+            Beta
+          </Label>
         </>
       }
     >
-      <LineChart
-        data={records}
-        curveType="monotone"
-        tickGap={40}
-        yAxisWidth={40}
-        categories={versions}
-        index="date"
-        colors={['green-500', 'amber-500', 'red-500', 'blue-500', 'purple-500']}
-        valueFormatter={v => formatStatNumber(v)}
-      />
+      <ul className="flex justify-end gap-4 pt-2 text-sm text-zinc-500">
+        {versions.map((version, index) => (
+          <li key={version} className="flex items-center">
+            <svg
+              role="presentation"
+              className="mr-1 inline h-4 w-4"
+              viewBox="0 0 16 16"
+              fill={`var(--color-${lineColors[index]})`}
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <circle cx="8" cy="8" r="4.5" />
+            </svg>
+            {version}
+          </li>
+        ))}
+      </ul>
+      <ChartContainer className="mt-2 h-74 w-full pr-1">
+        <LineChart accessibilityLayer data={records}>
+          <YAxis
+            width={30}
+            fillOpacity={0.75}
+            axisLine={false}
+            tickLine={false}
+            tickFormatter={value => formatStatNumber(value)}
+            allowDataOverflow
+          />
+          <CartesianGrid vertical={false} />
+          <XAxis
+            dataKey="date"
+            axisLine={false}
+            tickLine={false}
+            minTickGap={40}
+            tickMargin={10}
+            fillOpacity={0.75}
+            tickFormatter={value =>
+              formatDate(value, '', { day: '2-digit', month: 'short' })
+            }
+          />
+          <ChartTooltip content={<ChartTooltipContent />} />
+          {versions.map((version, index) => (
+            <Line
+              isAnimationActive={false}
+              key={version}
+              dataKey={version}
+              type="monotone"
+              stroke={`var(--color-${lineColors[index]})`}
+              dot={false}
+              strokeWidth={2}
+            />
+          ))}
+        </LineChart>
+      </ChartContainer>
     </Widget>
   )
 }
