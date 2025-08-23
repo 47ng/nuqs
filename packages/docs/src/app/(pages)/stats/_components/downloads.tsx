@@ -46,7 +46,6 @@ export async function NPMDownloads() {
     <Suspense>
       <DownloadsGraph
         data={both.last90Days}
-        dataKeys={['nuqs', 'next-usequerystate']}
         partialLast={!isLastDateSunday}
         title={
           <>
@@ -89,7 +88,6 @@ export async function NPMDownloads() {
       />
       <DownloadsGraph
         data={both.last30Days}
-        dataKeys={['nuqs', 'next-usequerystate']}
         partialLast={false}
         title={
           <>
