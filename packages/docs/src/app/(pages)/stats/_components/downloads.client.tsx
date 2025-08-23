@@ -1,7 +1,12 @@
 'use client'
 
-import { LineChart } from '@tremor/react'
-import { formatStatNumber } from '../lib/format'
+import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent
+} from '@/src/components/ui/chart'
+import { CartesianGrid, Line, LineChart, XAxis, YAxis } from 'recharts'
+import { formatDate, formatStatNumber } from '../lib/format'
 import type { Datum, MultiDatum } from '../lib/npm'
 import { Widget, WidgetProps } from './widget'
 
@@ -20,16 +25,55 @@ export function DownloadsGraph({
 }: DownloadsGraphProps) {
   return (
     <Widget {...props}>
-      <LineChart
-        data={data}
-        curveType="monotone"
-        index="date"
-        tickGap={40}
-        yAxisWidth={45}
-        categories={dataKeys}
-        colors={['red-500', 'zinc-500/50']}
-        valueFormatter={v => formatStatNumber(v)}
-      />
+      <ChartContainer className="mt-2 h-84 w-full pr-1">
+        <LineChart
+          accessibilityLayer
+          data={data}
+          margin={{ top: 10, right: 5, bottom: 5, left: 5 }}
+        >
+          <YAxis
+            width={40}
+            fillOpacity={0.75}
+            axisLine={false}
+            tickLine={false}
+            tickFormatter={value => formatStatNumber(value)}
+            allowDataOverflow
+          />
+          <CartesianGrid vertical={false} />
+          <XAxis
+            dataKey="date"
+            axisLine={false}
+            tickLine={false}
+            minTickGap={40}
+            tickMargin={10}
+            fillOpacity={0.75}
+            tickFormatter={value =>
+              value.startsWith("'")
+                ? value
+                : formatDate(value, '', { day: '2-digit', month: 'short' })
+            }
+          />
+          <ChartTooltip content={<ChartTooltipContent />} />
+          <Line
+            dataKey="nuqs"
+            isAnimationActive={false}
+            type="monotone"
+            stroke="var(--color-red-500)"
+            className="stroke-red-500 dark:stroke-red-400"
+            dot={false}
+            strokeWidth={2}
+          />
+          <Line
+            dataKey="next-usequerystate"
+            isAnimationActive={false}
+            type="monotone"
+            stroke="var(--color-zinc-500)"
+            strokeOpacity={0.5}
+            dot={false}
+            strokeWidth={2}
+          />
+        </LineChart>
+      </ChartContainer>
     </Widget>
   )
 }
