@@ -104,7 +104,7 @@ jobs:
       - name: Type-check docs
         run: pnpm --filter docs run typecheck
       - name: Build docs and its dependencies
-  run: pnpm run build --filter docs...
+        run: pnpm run build --filter docs...
         env:
           TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
           TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
