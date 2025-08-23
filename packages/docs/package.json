@@ -18,7 +18,7 @@
     "build": "next build",
     "start": "next start",
     "postinstall": "fumadocs-mdx",
-    "typecheck": "tsc --noEmit --project tsconfig.json"
+    "test": "tsc"
   },
   "dependencies": {
     "@faker-js/faker": "^9.9.0",
