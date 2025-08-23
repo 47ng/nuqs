@@ -41,7 +41,6 @@
     "@sentry/nextjs": "^8.55.0",
     "@tailwindcss/container-queries": "^0.1.1",
     "@tailwindcss/postcss": "^4.1.12",
-    "@tremor/react": "^3.18.7",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "dayjs": "^1.11.13",
