@@ -53,7 +53,15 @@ export function DownloadsGraph({
                 : formatDate(value, '', { day: '2-digit', month: 'short' })
             }
           />
-          <ChartTooltip content={<ChartTooltipContent />} />
+          <ChartTooltip
+            content={
+              <ChartTooltipContent
+                valueFormatter={value => formatStatNumber(value as number)}
+              />
+            }
+            isAnimationActive={false}
+            position={{ y: 20 }}
+          />
           <Line
             dataKey="nuqs"
             isAnimationActive={false}

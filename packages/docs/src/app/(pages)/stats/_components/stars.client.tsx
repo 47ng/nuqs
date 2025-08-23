@@ -82,6 +82,8 @@ export function StarsGraph({ data, stargazersTab }: StarsGraphProps) {
             <ChartTooltip
               content={<ChartTooltipContent />}
               cursor={{ fillOpacity: 0.5 }}
+              isAnimationActive={false}
+              position={{ y: 20 }}
             />
             <Bar
               isAnimationActive={false}
