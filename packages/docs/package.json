@@ -55,6 +55,7 @@
     "pretty-bytes": "^7.0.1",
     "react": "catalog:react19",
     "react-dom": "catalog:react19",
+    "recharts": "2.15.4",
     "remark-smartypants": "^3.0.2",
     "res": "workspace:*",
     "server-only": "^0.0.1",

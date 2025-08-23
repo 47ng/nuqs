@@ -1,10 +1,15 @@
 'use client'
 
+import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent
+} from '@/src/components/ui/chart'
 import { Tabs, TabsList, TabsTrigger } from '@/src/components/ui/tabs'
-import { BarChart } from '@tremor/react'
 import { Star } from 'lucide-react'
 import { parseAsStringLiteral, useQueryState } from 'nuqs'
-import { formatStatNumber } from '../lib/format'
+import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from 'recharts'
+import { formatDate } from '../lib/format'
 import { GitHubStarHistory } from '../lib/github'
 import { Widget } from './widget'
 
@@ -52,20 +57,72 @@ export function StarsGraph({ data, stargazersTab }: StarsGraphProps) {
       }
     >
       {activeTab === 'earned' && (
-        <BarChart
-          data={data.bins
-            .toReversed()
-            .map(b => ({ ...b, 'Stars earned': b.diff }))}
-          index="date"
-          categories={['Stars earned']}
-          colors={['amber-500']}
-          showLegend={false}
-          tickGap={40}
-          yAxisWidth={30}
-          valueFormatter={v => formatStatNumber(v)}
-        />
+        <ChartContainer className="mt-2 h-82 w-full" config={{}}>
+          <BarChart
+            accessibilityLayer
+            data={data.bins.toReversed().map(b => ({ ...b, Stars: b.diff }))}
+          >
+            <YAxis
+              axisLine={false}
+              width={30}
+              tickLine={false}
+              fillOpacity={0.75}
+            />
+            <CartesianGrid vertical={false} />
+            <XAxis
+              dataKey="date"
+              tickLine={false}
+              tickMargin={10}
+              axisLine={false}
+              fillOpacity={0.75}
+              tickFormatter={value =>
+                formatDate(value, '', { day: '2-digit', month: 'short' })
+              }
+            />
+            <ChartTooltip
+              content={<ChartTooltipContent />}
+              cursor={{ fillOpacity: 0.5 }}
+            />
+            <Bar
+              shape={<CustomGradientBar />}
+              dataKey="Stars"
+              fill="var(--color-amber-500)"
+            />
+          </BarChart>
+        </ChartContainer>
       )}
       {activeTab === 'gazers' && stargazersTab}
     </Widget>
+  )
+}
+
+const CustomGradientBar = (
+  props: React.SVGProps<SVGRectElement> & { dataKey?: string }
+) => {
+  const { fill, x, y, width, height, dataKey } = props
+  return (
+    <>
+      <rect
+        x={x}
+        y={y}
+        width={width}
+        height={height}
+        stroke="none"
+        fill={`url(#gradient-bar-pattern-${dataKey})`}
+      />
+      <rect x={x} y={y} width={width} height={2} stroke="none" fill={fill} />
+      <defs>
+        <linearGradient
+          id={`gradient-bar-pattern-${dataKey}`}
+          x1="0"
+          y1="0"
+          x2="0"
+          y2="1"
+        >
+          <stop offset="0%" stopColor={fill} stopOpacity={0.2} />
+          <stop offset="100%" stopColor={fill} stopOpacity={0} />
+        </linearGradient>
+      </defs>
+    </>
   )
 }

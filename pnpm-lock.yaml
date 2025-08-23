@@ -162,6 +162,9 @@ importers:
       react-dom:
         specifier: catalog:react19
         version: 19.1.1(react@19.1.1)
+      recharts:
+        specifier: 2.15.4
+        version: 2.15.4(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
       remark-smartypants:
         specifier: ^3.0.2
         version: 3.0.2

@@ -229,3 +229,12 @@
   --font-size-tremor-metric: 1.875rem;
   --line-height-tremor-metric: 2.25rem;
 }
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
