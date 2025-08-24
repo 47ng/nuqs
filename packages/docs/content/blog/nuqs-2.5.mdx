@@ -25,6 +25,18 @@ this system wasn't ideal for **high frequency inputs**, like `<input type="searc
 
 For those cases where the _final value_ is what matters, **debouncing** makes more sense than **throttling**.
 
+<Callout title="Do I need debounce?">
+  Debounce only makes sense for **server-side data fetching** (RSCs & loaders, when combined with [`shallow: false{:ts}`](#shallow)),
+  to control when requests are made to the server. For example: it lets you avoid sending the first
+  character on its own when typing in a search input, by waiting for the user to finish typing.
+
+  The state returned by the hooks is always updated **immediately**: only the network requests
+  sent to the server are debounced.
+
+  If you are **fetching client-side** (eg: with TanStack Query), you'll want to debounce the
+  returned state instead (using a 3rd party `useDebounce` utility hook).
+</Callout>
+
 You can now specify a new option, `limitUrlUpdates{:ts}`, that replaces `throttleMs{:ts}` and declares either a debouncing or throttling behaviour:
 
 ```tsx

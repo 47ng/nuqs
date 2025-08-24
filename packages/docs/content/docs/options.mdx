@@ -159,7 +159,7 @@ Safari's rate limits are much higher and use a default throttle of 120ms
 
 <Callout title="Note">
 the state returned by the hook is always updated **instantly**, to keep UI responsive.
-Only changes to the URL, and server requests when using `shallow: false{:ts}`, are throttled.
+Only changes to the URL, and server requests when using `shallow: false{:ts}`, are throttled or debounced.
 </Callout>
 
 This [throttle](#throttle) time is configurable, and also allows you to [debounce](#debounce) updates
@@ -173,10 +173,6 @@ Debounce will push back the moment when the URL is updated when you set your sta
 making it **eventually consistent**. This is recommended for high-frequency
 updates where the last value is more interesting than the intermediate ones,
 like a search input or moving a slider.
-
-Debounce only makes sense for server-aware updates (when combined with [`shallow: false{:ts}`](#shallow)),
-to control when requests are made to the server. For example: it lets you avoid sending the first
-character on its own when typing in a search input, by waiting for the user to finish typing.
 
 Read more about [debounce vs throttle](https://kettanaito.com/blog/debounce-vs-throttle).
 </Callout>
@@ -227,8 +223,22 @@ To migrate:
 
 ### Debounce
 
-In addition to throttling, you can apply a debouncing mechanism to state updates,
+<Callout type="warning" title="Do I need debounce?">
+  Debounce only makes sense for **server-side data fetching** (RSCs & loaders, when combined with [`shallow: false{:ts}`](#shallow)),
+  to control when requests are made to the server. For example: it lets you avoid sending the first
+  character on its own when typing in a search input, by waiting for the user to finish typing.
+
+  If you are **fetching client-side** (eg: with TanStack Query), you'll want to debounce the
+  state returned by the hooks instead (using a 3rd party `useDebounce` utility hook).
+</Callout>
+
+In addition to throttling, you can apply a debouncing mechanism to URL updates,
 to delay the moment where the URL gets updated with the latest value.
+
+<Callout>
+  The returned state is always updated **immediately**: only the network requests
+  sent to the server are debounced.
+</Callout>
 
 This can be useful for high frequency state updates where the server only cares about
 the final value, not all the intermediary ones while typing in a search input
