@@ -59,7 +59,7 @@ export function StarsGraph({ data, stargazersTab }: StarsGraphProps) {
       {activeTab === 'earned' && (
         <ChartContainer className="mt-2 h-82 w-full">
           <BarChart
-            accessibilityLayer
+            // accessibilityLayer // note: Causes a bug with Recharts 2.15.4 where a click on the chart moves the cursor to the first data point.
             data={data.bins.toReversed().map(b => ({ ...b, Stars: b.diff }))}
           >
             <YAxis

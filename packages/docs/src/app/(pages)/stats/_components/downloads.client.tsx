@@ -38,7 +38,8 @@ export function DownloadsGraph({
     <Widget {...props}>
       <ChartContainer className="mt-2 h-84 w-full pr-1">
         <LineChart
-          accessibilityLayer
+          // accessibilityLayer // note: Causes a bug with Recharts 2.15.4 where a click on the chart moves the cursor to the first data point.
+          // Bug is fixed in Recharts v3 (but v3 breaks the <Customized> component for the partial line dashes)
           data={data}
           margin={{ top: 10, right: 5, bottom: 5, left: 5 }}
         >
@@ -100,8 +101,9 @@ export function DownloadsGraph({
             strokeWidth={2}
             strokeDasharray={
               partialLast
-                ? lineDashArrays.find(line => line.name === 'nuqs')
-                    ?.strokeDasharray || '0 0'
+                ? lineDashArrays.find(
+                    line => line.name === 'next-usequerystate'
+                  )?.strokeDasharray || '0 0'
                 : '0 0'
             }
           />

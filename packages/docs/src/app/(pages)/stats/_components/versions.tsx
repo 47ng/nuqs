@@ -111,7 +111,10 @@ export function Versions({ records, versions }: VersionProps) {
         ))}
       </ul>
       <ChartContainer className="mt-2 h-74 w-full pr-1">
-        <LineChart accessibilityLayer data={records}>
+        <LineChart
+          // accessibilityLayer // note: Causes a bug with Recharts 2.15.4 where a click on the chart moves the cursor to the first data point.
+          data={records}
+        >
           <YAxis
             width={30}
             fillOpacity={0.75}
