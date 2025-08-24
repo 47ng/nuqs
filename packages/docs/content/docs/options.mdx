@@ -223,7 +223,7 @@ To migrate:
 
 ### Debounce
 
-<Callout type="warning">
+<Callout type="warning" title="Do I need debounce?">
   Debounce only makes sense for server-side data fetching (RSCs & loaders, when combined with [`shallow: false{:ts}`](#shallow)),
   to control when requests are made to the server. For example: it lets you avoid sending the first
   character on its own when typing in a search input, by waiting for the user to finish typing.
