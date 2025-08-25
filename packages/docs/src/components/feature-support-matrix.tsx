@@ -11,20 +11,27 @@ import {
 export type FeatureSupportMatrixProps = {
   introducedInVersion: string
   deprecatedInVersion?: string
-  supportedFrameworks?: 'all' | Frameworks[]
+  hideFrameworks?: boolean
+  support?: Support
+}
+
+type Support = {
+  supported: boolean
+  frameworks: 'all' | Frameworks[]
 }
 
 export function FeatureSupportMatrix({
   introducedInVersion,
   deprecatedInVersion,
-  supportedFrameworks = 'all'
+  hideFrameworks = false,
+  support = { supported: true, frameworks: 'all' }
 }: FeatureSupportMatrixProps) {
-  const availableIn =
-    supportedFrameworks === 'all' ? FRAMEWORKS : supportedFrameworks
-  const notAvailableIn =
-    supportedFrameworks === 'all'
-      ? []
-      : FRAMEWORKS.filter(fw => !supportedFrameworks.includes(fw))
+  const supportedIn = support.supported
+    ? resolveFrameworks(support.frameworks)
+    : FRAMEWORKS.filter(fw => support.frameworks.includes(fw) === false)
+  const notSupportedIn = FRAMEWORKS.filter(
+    fw => supportedIn.includes(fw) === false
+  )
   return (
     <Callout
       type={deprecatedInVersion ? 'warning' : 'success'}
@@ -41,64 +48,17 @@ export function FeatureSupportMatrix({
             '.'
           )}
         </span>
-        <div className="not-prose ml-auto flex items-center gap-1 text-xl">
-          <TooltipPopover delayDuration={100}>
-            <TooltipPopoverTrigger
-              className={cn(
-                '-my-2 flex flex-shrink-0 items-center gap-2 rounded-lg py-2 pr-2.5 pl-2',
-                // Outline variant
-                'bg-green-50/25 outline -outline-offset-1 outline-green-500/25 dark:bg-green-950/30 dark:outline-green-500/10'
-              )}
-            >
-              {dedupeFrameworks(availableIn).map(framework => {
-                const Icon = FRAMEWORK_ICONS[framework]
-                return (
-                  <span
-                    key={framework}
-                    className="pointer-events-none flex-shrink-0 select-none"
-                  >
-                    <Icon />
-                  </span>
-                )
-              })}
-              <CheckCircle
-                size={16}
-                className="flex-shrink-0 stroke-[2.25] text-green-500"
-                role="presentation"
-              />
-            </TooltipPopoverTrigger>
-            <TooltipPopoverContent className="py-2 text-xs">
-              {supportedFrameworks === 'all' ? (
-                'This feature is supported in all frameworks.'
-              ) : supportedFrameworks.length === 1 ? (
-                <>Only supported in {supportedFrameworks[0]}.</>
-              ) : (
-                <>
-                  Supported frameworks:
-                  <ul className="mt-1 ml-3 list-disc">
-                    {supportedFrameworks.map(fw => (
-                      <li key={fw}>{fw}</li>
-                    ))}
-                  </ul>
-                </>
-              )}
-            </TooltipPopoverContent>
-          </TooltipPopover>
-          {notAvailableIn.length > 0 && (
+        {!hideFrameworks && (
+          <div className="not-prose ml-auto flex items-center gap-1 text-xl">
             <TooltipPopover delayDuration={100}>
               <TooltipPopoverTrigger
                 className={cn(
                   '-my-2 flex flex-shrink-0 items-center gap-2 rounded-lg py-2 pr-2.5 pl-2',
-                  // Gray-out effect
-                  'opacity-50 grayscale transition-all hover:opacity-100 hover:grayscale-0 focus:opacity-100 focus:grayscale-0 data-[state=open]:opacity-100 data-[state=open]:grayscale-0',
                   // Outline variant
-                  'bg-amber-50/25 outline -outline-offset-1 outline-amber-500/25 dark:bg-amber-950/30 dark:outline-amber-500/10'
+                  'bg-green-50/25 outline -outline-offset-1 outline-green-500/25 dark:bg-green-950/30 dark:outline-green-500/10'
                 )}
               >
-                <span className="sr-only">
-                  Not supported in {notAvailableIn.join(', ')}.
-                </span>
-                {dedupeFrameworks(notAvailableIn).map(framework => {
+                {dedupeFrameworks(supportedIn).map(framework => {
                   const Icon = FRAMEWORK_ICONS[framework]
                   return (
                     <span
@@ -109,20 +69,22 @@ export function FeatureSupportMatrix({
                     </span>
                   )
                 })}
-                <XCircle
-                  size={18}
-                  className="flex-shrink-0 stroke-2 text-amber-500"
+                <CheckCircle
+                  size={16}
+                  className="flex-shrink-0 stroke-[2.25] text-green-500"
                   role="presentation"
                 />
               </TooltipPopoverTrigger>
               <TooltipPopoverContent className="py-2 text-xs">
-                {notAvailableIn.length === 1 ? (
-                  <>Not supported in {notAvailableIn[0]}.</>
+                {supportedIn.length === FRAMEWORKS.length ? (
+                  'This feature is supported in all frameworks.'
+                ) : supportedIn.length === 1 ? (
+                  <>Only supported in {supportedIn[0]}.</>
                 ) : (
                   <>
-                    Not supported in:
+                    Supported frameworks:
                     <ul className="mt-1 ml-3 list-disc">
-                      {notAvailableIn.map(fw => (
+                      {supportedIn.map(fw => (
                         <li key={fw}>{fw}</li>
                       ))}
                     </ul>
@@ -130,8 +92,52 @@ export function FeatureSupportMatrix({
                 )}
               </TooltipPopoverContent>
             </TooltipPopover>
-          )}
-        </div>
+            {notSupportedIn.length > 0 && (
+              <TooltipPopover delayDuration={100}>
+                <TooltipPopoverTrigger
+                  className={cn(
+                    '-my-2 flex flex-shrink-0 items-center gap-2 rounded-lg py-2 pr-2.5 pl-2',
+                    // Gray-out effect
+                    'opacity-50 grayscale transition-all hover:opacity-100 hover:grayscale-0 focus:opacity-100 focus:grayscale-0 data-[state=open]:opacity-100 data-[state=open]:grayscale-0',
+                    // Outline variant
+                    'bg-amber-50/25 outline -outline-offset-1 outline-amber-500/25 dark:bg-amber-950/30 dark:outline-amber-500/10'
+                  )}
+                >
+                  {dedupeFrameworks(notSupportedIn).map(framework => {
+                    const Icon = FRAMEWORK_ICONS[framework]
+                    return (
+                      <span
+                        key={framework}
+                        className="pointer-events-none flex-shrink-0 select-none"
+                      >
+                        <Icon />
+                      </span>
+                    )
+                  })}
+                  <XCircle
+                    size={18}
+                    className="flex-shrink-0 stroke-2 text-amber-500"
+                    role="presentation"
+                  />
+                </TooltipPopoverTrigger>
+                <TooltipPopoverContent className="py-2 text-xs">
+                  {notSupportedIn.length === 1 ? (
+                    <>Not supported in {notSupportedIn[0]}.</>
+                  ) : (
+                    <>
+                      Not supported in:
+                      <ul className="mt-1 ml-3 list-disc">
+                        {notSupportedIn.map(fw => (
+                          <li key={fw}>{fw}</li>
+                        ))}
+                      </ul>
+                    </>
+                  )}
+                </TooltipPopoverContent>
+              </TooltipPopover>
+            )}
+          </div>
+        )}
       </div>
     </Callout>
   )
@@ -144,6 +150,15 @@ function dedupeFrameworks(frameworks: readonly Frameworks[]) {
     frameworks.includes('Next.js (pages router)')
   ) {
     frameworks = frameworks.filter(fw => fw !== 'Next.js (pages router)')
+  }
+  return frameworks
+}
+
+function resolveFrameworks(
+  frameworks: 'all' | Frameworks[]
+): readonly Frameworks[] {
+  if (frameworks === 'all') {
+    return FRAMEWORKS
   }
   return frameworks
 }

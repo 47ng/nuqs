@@ -5,6 +5,8 @@ description: Utilities for working with query strings
 
 ## Serializer helper
 
+<FeatureSupportMatrix introducedInVersion='1.16.0' hideFrameworks />
+
 To populate `<Link>` components with state values, you can use the `createSerializer`
 helper.
 
@@ -99,6 +101,8 @@ serialize({
 
 ## Parser type inference
 
+<FeatureSupportMatrix introducedInVersion='1.18.0' />
+
 To access the underlying type returned by a parser, you can use the
 `inferParserType` type helper:
 
@@ -133,6 +137,8 @@ inferParserType<typeof parsers>
 ```
 
 ## Standard Schema
+
+<FeatureSupportMatrix introducedInVersion='2.5.0' />
 
 Search param definitions can be turned into a [Standard Schema](https://standardschema.dev)
 for validating external sources and passing on type inference to other tools.
