@@ -203,7 +203,7 @@ function ChartTooltipContent({
               key={item.dataKey}
               className={cn(
                 '[&>svg]:text-muted-foreground flex w-full flex-wrap items-stretch gap-2 [&>svg]:h-2.5 [&>svg]:w-2.5',
-                indicator === 'dot' && 'items-center'
+                indicator === 'dot' && 'items-baseline'
               )}
             >
               {formatter && item?.value !== undefined && item.name ? (
@@ -218,7 +218,7 @@ function ChartTooltipContent({
                         className={cn(
                           'shrink-0 rounded-full border-(--color-border) bg-(--color-bg)',
                           {
-                            'size-2': indicator === 'dot',
+                            'size-2.25': indicator === 'dot',
                             'w-1': indicator === 'line',
                             'w-0 border-[1.5px] border-dashed bg-transparent':
                               indicator === 'dashed',
@@ -269,9 +269,10 @@ function ChartLegendContent({
   hideIcon = false,
   payload,
   verticalAlign = 'bottom',
+  align = 'center',
   nameKey
 }: React.ComponentProps<'div'> &
-  Pick<RechartsPrimitive.LegendProps, 'payload' | 'verticalAlign'> & {
+  Pick<RechartsPrimitive.LegendProps, 'payload' | 'verticalAlign' | 'align'> & {
     hideIcon?: boolean
     nameKey?: string
   }) {
@@ -284,8 +285,11 @@ function ChartLegendContent({
   return (
     <div
       className={cn(
-        'flex items-center justify-center gap-4',
+        'flex items-center gap-4 text-sm',
         verticalAlign === 'top' ? 'pb-3' : 'pt-3',
+        align === 'center' && 'justify-center',
+        align === 'left' && 'justify-start',
+        align === 'right' && 'justify-end',
         className
       )}
     >
@@ -297,14 +301,14 @@ function ChartLegendContent({
           <div
             key={item.value}
             className={cn(
-              '[&>svg]:text-muted-foreground flex items-center gap-1.5 [&>svg]:h-3 [&>svg]:w-3'
+              'text-muted-foreground/75 flex items-baseline gap-1.5'
             )}
           >
             {itemConfig?.icon && !hideIcon ? (
               <itemConfig.icon />
             ) : (
               <div
-                className="h-2 w-2 shrink-0 rounded-[2px]"
+                className="size-2.25 shrink-0 rounded-full"
                 style={{
                   backgroundColor: item.color
                 }}
