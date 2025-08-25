@@ -158,7 +158,16 @@ function ChartTooltipContent({
       return null
     }
 
-    return <div className={cn('font-medium', labelClassName)}>{value}</div>
+    return (
+      <div
+        className={cn(
+          'border-border border-b px-3 py-2 font-medium',
+          labelClassName
+        )}
+      >
+        {value}
+      </div>
+    )
   }, [
     label,
     labelFormatter,
@@ -178,12 +187,12 @@ function ChartTooltipContent({
   return (
     <div
       className={cn(
-        'border-border/50 bg-background grid min-w-[8rem] items-start gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs shadow-xl',
+        'border-border bg-muted/30 grid min-w-[8rem] items-start rounded-lg border text-sm shadow-xl backdrop-blur-md',
         className
       )}
     >
       {!nestLabel ? tooltipLabel : null}
-      <div className="grid gap-1.5">
+      <div className="grid gap-1.5 px-3 py-2.5">
         {payload.map((item, index) => {
           const key = `${nameKey || item.name || item.dataKey || 'value'}`
           const itemConfig = getPayloadConfigFromPayload(config, item, key)
@@ -227,7 +236,7 @@ function ChartTooltipContent({
                   )}
                   <div
                     className={cn(
-                      'flex flex-1 justify-between gap-4 leading-none',
+                      'flex flex-1 justify-between gap-8 leading-none',
                       nestLabel ? 'items-end' : 'items-center'
                     )}
                   >
