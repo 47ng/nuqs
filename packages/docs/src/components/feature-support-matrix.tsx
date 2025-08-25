@@ -1,0 +1,149 @@
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger
+} from '@/src/components/ui/tooltip'
+import { cn } from '@/src/lib/utils'
+import { Callout } from 'fumadocs-ui/components/callout'
+import { CheckCircle, XCircle } from 'lucide-react'
+import { FRAMEWORK_ICONS, FRAMEWORKS, type Frameworks } from './frameworks'
+
+export type FeatureSupportMatrixProps = {
+  introducedInVersion: string
+  deprecatedInVersion?: string
+  supportedFrameworks?: 'all' | Frameworks[]
+}
+
+export function FeatureSupportMatrix({
+  introducedInVersion,
+  deprecatedInVersion,
+  supportedFrameworks = 'all'
+}: FeatureSupportMatrixProps) {
+  const availableIn =
+    supportedFrameworks === 'all' ? FRAMEWORKS : supportedFrameworks
+  const notAvailableIn =
+    supportedFrameworks === 'all'
+      ? []
+      : FRAMEWORKS.filter(fw => !supportedFrameworks.includes(fw))
+  return (
+    <Callout
+      type={deprecatedInVersion ? 'warning' : 'success'}
+      className="pr-1"
+    >
+      <div className="flex flex-wrap gap-4">
+        <span className="text-balance">
+          Introduced in version <strong>{introducedInVersion}</strong>
+          {deprecatedInVersion ? (
+            <>
+              , and deprecated in version <strong>{deprecatedInVersion}</strong>
+            </>
+          ) : (
+            '.'
+          )}
+        </span>
+        <div className="not-prose ml-auto flex items-center gap-1 text-xl">
+          <Tooltip delayDuration={100}>
+            <TooltipTrigger
+              className={cn(
+                '-my-2 flex flex-shrink-0 items-center gap-2 rounded-lg py-2 pr-2.5 pl-2',
+                // Outline variant
+                'outline -outline-offset-1 outline-green-600/50 dark:bg-green-950/30 dark:outline-green-500/10'
+              )}
+            >
+              {dedupeFrameworks(availableIn).map(framework => {
+                const Icon = FRAMEWORK_ICONS[framework]
+                return (
+                  <span
+                    key={framework}
+                    className="pointer-events-none flex-shrink-0 select-none"
+                  >
+                    <Icon />
+                  </span>
+                )
+              })}
+              <CheckCircle
+                size={16}
+                className="flex-shrink-0 stroke-[2.25] text-green-700 dark:text-green-400"
+                role="presentation"
+              />
+            </TooltipTrigger>
+            <TooltipContent className="text-xs">
+              {supportedFrameworks === 'all' ? (
+                'This feature is supported in all frameworks.'
+              ) : supportedFrameworks.length === 1 ? (
+                <>Only supported in {supportedFrameworks[0]}.</>
+              ) : (
+                <>
+                  Supported frameworks:
+                  <ul className="mt-1 ml-3 list-disc">
+                    {supportedFrameworks.map(fw => (
+                      <li key={fw}>{fw}</li>
+                    ))}
+                  </ul>
+                </>
+              )}
+            </TooltipContent>
+          </Tooltip>
+          {notAvailableIn.length > 0 && (
+            <Tooltip delayDuration={100}>
+              <TooltipTrigger
+                className={cn(
+                  '-my-2 flex flex-shrink-0 items-center gap-2 rounded-lg py-2 pr-2.5 pl-2',
+                  // Gray-out effect
+                  'opacity-50 grayscale transition-all hover:opacity-100 hover:grayscale-0 focus:opacity-100 focus:grayscale-0',
+                  // Outline variant
+                  'outline -outline-offset-1 outline-amber-600/50 dark:bg-amber-950/25 dark:outline-amber-500/10'
+                )}
+              >
+                <span className="sr-only">
+                  Not supported in {notAvailableIn.join(', ')}.
+                </span>
+                {dedupeFrameworks(notAvailableIn).map(framework => {
+                  const Icon = FRAMEWORK_ICONS[framework]
+                  return (
+                    <span
+                      key={framework}
+                      className="pointer-events-none flex-shrink-0 select-none"
+                    >
+                      <Icon />
+                    </span>
+                  )
+                })}
+                <XCircle
+                  size={18}
+                  className="flex-shrink-0 stroke-2 text-amber-500"
+                  role="presentation"
+                />
+              </TooltipTrigger>
+              <TooltipContent className="text-xs">
+                {notAvailableIn.length === 1 ? (
+                  <>Not supported in {notAvailableIn[0]}.</>
+                ) : (
+                  <>
+                    Not supported in:
+                    <ul className="mt-1 ml-3 list-disc">
+                      {notAvailableIn.map(fw => (
+                        <li key={fw}>{fw}</li>
+                      ))}
+                    </ul>
+                  </>
+                )}
+              </TooltipContent>
+            </Tooltip>
+          )}
+        </div>
+      </div>
+    </Callout>
+  )
+}
+
+function dedupeFrameworks(frameworks: readonly Frameworks[]) {
+  // If both Next.js app router and pages router are included, only keep Next.js app router
+  if (
+    frameworks.includes('Next.js (app router)') &&
+    frameworks.includes('Next.js (pages router)')
+  ) {
+    frameworks = frameworks.filter(fw => fw !== 'Next.js (pages router)')
+  }
+  return frameworks
+}
