@@ -126,6 +126,7 @@ export function Versions({ records, versions }: VersionProps) {
           <CartesianGrid vertical={false} />
           <XAxis
             dataKey="date"
+            padding={{ left: 20, right: 20 }}
             axisLine={false}
             tickLine={false}
             minTickGap={40}

@@ -55,6 +55,7 @@ export function DownloadsGraph({
           />
           <CartesianGrid vertical={false} />
           <XAxis
+            padding={{ left: 20, right: 20 }}
             dataKey="date"
             axisLine={false}
             tickLine={false}
