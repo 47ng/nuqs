@@ -2,6 +2,8 @@
 
 import {
   ChartContainer,
+  ChartLegend,
+  ChartLegendContent,
   ChartTooltip,
   ChartTooltipContent
 } from '@/src/components/ui/chart'
@@ -94,27 +96,23 @@ export function Versions({ records, versions }: VersionProps) {
         </>
       }
     >
-      <ul className="flex justify-end gap-4 pt-2 text-sm text-zinc-500">
-        {versions.map((version, index) => (
-          <li key={version} className="flex items-center">
-            <svg
-              role="presentation"
-              className="mr-1 inline h-4 w-4"
-              viewBox="0 0 16 16"
-              fill={`var(--color-${lineColors[index]})`}
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <circle cx="8" cy="8" r="4.5" />
-            </svg>
-            {version}
-          </li>
-        ))}
-      </ul>
-      <ChartContainer className="mt-2 h-74 w-full pr-1">
+      <ChartContainer
+        className="mt-1 h-82 w-full pr-1"
+        config={versions.reduce(
+          (config, version) => ({ ...config, [version]: { label: version } }),
+          {}
+        )}
+      >
         <LineChart
           // accessibilityLayer // note: Causes a bug with Recharts 2.15.4 where a click on the chart moves the cursor to the first data point.
           data={records}
+          margin={{ top: 5, right: 0, bottom: 5, left: 5 }}
         >
+          <ChartLegend
+            align="right"
+            verticalAlign="top"
+            content={<ChartLegendContent />}
+          />
           <YAxis
             width={30}
             fillOpacity={0.75}

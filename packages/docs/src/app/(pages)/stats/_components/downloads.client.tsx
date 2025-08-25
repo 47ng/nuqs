@@ -2,6 +2,8 @@
 
 import {
   ChartContainer,
+  ChartLegend,
+  ChartLegendContent,
   ChartTooltip,
   ChartTooltipContent
 } from '@/src/components/ui/chart'
@@ -36,22 +38,35 @@ export function DownloadsGraph({
   })
   return (
     <Widget {...props}>
-      <ChartContainer className="mt-2 h-84 w-full pr-1">
+      <ChartContainer
+        className="h-85.5 w-full pr-1"
+        config={{
+          nuqs: {
+            label: 'nuqs'
+          },
+          'next-usequerystate': {
+            label: 'next-usequerystate'
+          }
+        }}
+      >
         <LineChart
           // accessibilityLayer // note: Causes a bug with Recharts 2.15.4 where a click on the chart moves the cursor to the first data point.
           // Bug is fixed in Recharts v3 (but v3 breaks the <Customized> component for the partial line dashes)
           data={data}
-          margin={{ top: 10, right: 5, bottom: 5, left: 5 }}
+          margin={{ top: 5, right: 0, bottom: 5, left: 5 }}
         >
           <YAxis
             width={40}
             fillOpacity={0.75}
             axisLine={false}
             tickLine={false}
-            tickFormatter={value =>
-              value === 0 ? '' : formatStatNumber(value)
-            }
+            tickFormatter={value => formatStatNumber(value)}
             allowDataOverflow
+          />
+          <ChartLegend
+            align="right"
+            verticalAlign="top"
+            content={<ChartLegendContent />}
           />
           <CartesianGrid vertical={false} />
           <XAxis
