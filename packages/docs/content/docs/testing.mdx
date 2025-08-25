@@ -25,6 +25,8 @@ const { result } = renderHook(() => useTheHookToTest(), {
 })
 ```
 
+<FeatureSupportMatrix introducedInVersion='2.2.0' hideFrameworks />
+
 ## Testing components with Vitest
 
 Here is an example for Vitest and Testing Library to test a button rendering
@@ -219,3 +221,5 @@ it('is bijective', () => {
   expect(() => testSerializeThenParse(parseAsInteger, NaN)).toThrowError()
 })
 ```
+
+<FeatureSupportMatrix introducedInVersion='2.4.0' hideFrameworks />

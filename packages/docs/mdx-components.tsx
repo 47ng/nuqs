@@ -1,3 +1,4 @@
+import { FeatureSupportMatrix } from '@/src/components/feature-support-matrix'
 import { Callout } from 'fumadocs-ui/components/callout'
 import { CodeBlock, Pre } from 'fumadocs-ui/components/codeblock'
 import { Tab, Tabs } from 'fumadocs-ui/components/tabs'
@@ -21,6 +22,7 @@ const components = {
   Suspense,
   Tab,
   Tabs,
+  FeatureSupportMatrix,
   pre: ({ ref: _ref, children, ...props }) => (
     <CodeBlock {...props}>
       <Pre>{children}</Pre>
