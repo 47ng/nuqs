@@ -1,8 +1,8 @@
 'use client'
 
+import { cn } from '@/src/lib/utils'
 import NumberFlow, { NumberFlowGroup } from '@number-flow/react'
 import { ComponentProps, ReactNode, useEffect, useState } from 'react'
-import { cn } from '../lib/utils'
 
 type CountdownProps = ComponentProps<'div'> & {
   targetDate: Date

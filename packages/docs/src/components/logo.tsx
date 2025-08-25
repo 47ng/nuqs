@@ -1,4 +1,4 @@
-import { cn } from 'src/lib/utils'
+import { cn } from '@/src/lib/utils'
 
 export function NuqsWordmark({ className }: React.ComponentProps<'img'>) {
   return (
