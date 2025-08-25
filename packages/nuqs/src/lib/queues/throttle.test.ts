@@ -125,14 +125,24 @@ describe('throttle: Abort & reset logic', () => {
   afterEach(() => {
     vi.restoreAllMocks()
   })
-
+  it('creates the abort controller lazily', async () => {
+    const queue = new ThrottledQueue()
+    const mockAdapter = createMockAdapter()
+    expect(queue.controller).toBeNull()
+    queue.push({ key: 'a', query: 'a', options: {} })
+    expect(queue.controller).toBeNull()
+    const promise = queue.flush(mockAdapter) // AbortController created on flush
+    expect(queue.controller).not.toBeNull()
+    vi.runAllTimers()
+    await expect(promise).resolves.toEqual(new URLSearchParams('?a=a'))
+  })
   it('does not abort pending flushes when resetting', async () => {
     const queue = new ThrottledQueue()
     const mockAdapter = createMockAdapter()
     queue.push({ key: 'a', query: 'a', options: {} })
     expect(queue.resolvers?.promise).toBeUndefined()
     const promise = queue.flush(mockAdapter)
-    const controller = queue.controller
+    const controller = queue.controller!
     controller.signal.throwIfAborted()
     expect(queue.resolvers!.promise).toBe(promise)
     const abortedKeys = queue.reset()

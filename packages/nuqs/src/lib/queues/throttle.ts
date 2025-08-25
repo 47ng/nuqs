@@ -1,6 +1,3 @@
-// 50ms between calls to the history API seems to satisfy Chrome and Firefox.
-// Safari remains annoying with at most 100 calls in 30 seconds.
-
 import type { AdapterInterface, AdapterOptions } from '../../adapters/lib/defs'
 import type { Options } from '../../defs'
 import { compose } from '../compose'
@@ -40,7 +37,7 @@ export class ThrottledQueue {
   timeMs: number = defaultRateLimit.timeMs
   transitions: TransitionSet = new Set()
   resolvers: Resolvers<URLSearchParams> | null = null
-  controller: AbortController = new AbortController()
+  controller: AbortController | null = null
   lastFlushedAt = 0
 
   push(
@@ -77,6 +74,7 @@ export class ThrottledQueue {
     rateLimitFactor = 1,
     ...adapter
   }: UpdateQueueAdapterContext): Promise<URLSearchParams> {
+    this.controller ??= new AbortController()
     if (!Number.isFinite(this.timeMs)) {
       debug('[nuqs gtq] Skipping flush due to throttleMs=Infinity')
       return Promise.resolve(getSearchParamsSnapshot())
@@ -120,7 +118,7 @@ export class ThrottledQueue {
         // no need to do setTimeout(0) here.
         flushNow()
       } else {
-        timeout(flushNow, flushInMs, this.controller.signal)
+        timeout(flushNow, flushInMs, this.controller!.signal)
       }
     }
     timeout(runOnNextTick, 0, this.controller.signal)
@@ -128,7 +126,7 @@ export class ThrottledQueue {
   }
 
   abort(): string[] {
-    this.controller.abort()
+    this.controller?.abort()
     this.controller = new AbortController()
     // todo: Better abort handling
     this.resolvers?.resolve(new URLSearchParams())
