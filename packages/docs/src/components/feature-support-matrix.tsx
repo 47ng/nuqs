@@ -1,12 +1,12 @@
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger
-} from '@/src/components/ui/tooltip'
 import { cn } from '@/src/lib/utils'
 import { Callout } from 'fumadocs-ui/components/callout'
 import { CheckCircle, XCircle } from 'lucide-react'
 import { FRAMEWORK_ICONS, FRAMEWORKS, type Frameworks } from './frameworks'
+import {
+  TooltipPopover,
+  TooltipPopoverContent,
+  TooltipPopoverTrigger
+} from './ui/tooltip-popover'
 
 export type FeatureSupportMatrixProps = {
   introducedInVersion: string
@@ -42,8 +42,8 @@ export function FeatureSupportMatrix({
           )}
         </span>
         <div className="not-prose ml-auto flex items-center gap-1 text-xl">
-          <Tooltip delayDuration={100}>
-            <TooltipTrigger
+          <TooltipPopover delayDuration={100}>
+            <TooltipPopoverTrigger
               className={cn(
                 '-my-2 flex flex-shrink-0 items-center gap-2 rounded-lg py-2 pr-2.5 pl-2',
                 // Outline variant
@@ -66,8 +66,8 @@ export function FeatureSupportMatrix({
                 className="flex-shrink-0 stroke-[2.25] text-green-500"
                 role="presentation"
               />
-            </TooltipTrigger>
-            <TooltipContent className="text-xs">
+            </TooltipPopoverTrigger>
+            <TooltipPopoverContent className="py-2 text-xs">
               {supportedFrameworks === 'all' ? (
                 'This feature is supported in all frameworks.'
               ) : supportedFrameworks.length === 1 ? (
@@ -82,15 +82,15 @@ export function FeatureSupportMatrix({
                   </ul>
                 </>
               )}
-            </TooltipContent>
-          </Tooltip>
+            </TooltipPopoverContent>
+          </TooltipPopover>
           {notAvailableIn.length > 0 && (
-            <Tooltip delayDuration={100}>
-              <TooltipTrigger
+            <TooltipPopover delayDuration={100}>
+              <TooltipPopoverTrigger
                 className={cn(
                   '-my-2 flex flex-shrink-0 items-center gap-2 rounded-lg py-2 pr-2.5 pl-2',
                   // Gray-out effect
-                  'opacity-50 grayscale transition-all hover:opacity-100 hover:grayscale-0 focus:opacity-100 focus:grayscale-0',
+                  'opacity-50 grayscale transition-all hover:opacity-100 hover:grayscale-0 focus:opacity-100 focus:grayscale-0 data-[state=open]:opacity-100 data-[state=open]:grayscale-0',
                   // Outline variant
                   'bg-amber-50/25 outline -outline-offset-1 outline-amber-500/25 dark:bg-amber-950/30 dark:outline-amber-500/10'
                 )}
@@ -114,8 +114,8 @@ export function FeatureSupportMatrix({
                   className="flex-shrink-0 stroke-2 text-amber-500"
                   role="presentation"
                 />
-              </TooltipTrigger>
-              <TooltipContent className="text-xs">
+              </TooltipPopoverTrigger>
+              <TooltipPopoverContent className="py-2 text-xs">
                 {notAvailableIn.length === 1 ? (
                   <>Not supported in {notAvailableIn[0]}.</>
                 ) : (
@@ -128,8 +128,8 @@ export function FeatureSupportMatrix({
                     </ul>
                   </>
                 )}
-              </TooltipContent>
-            </Tooltip>
+              </TooltipPopoverContent>
+            </TooltipPopover>
           )}
         </div>
       </div>
