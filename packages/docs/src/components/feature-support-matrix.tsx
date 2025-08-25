@@ -47,7 +47,7 @@ export function FeatureSupportMatrix({
               className={cn(
                 '-my-2 flex flex-shrink-0 items-center gap-2 rounded-lg py-2 pr-2.5 pl-2',
                 // Outline variant
-                'outline -outline-offset-1 outline-green-600/50 dark:bg-green-950/30 dark:outline-green-500/10'
+                'bg-green-50/25 outline -outline-offset-1 outline-green-500/25 dark:bg-green-950/30 dark:outline-green-500/10'
               )}
             >
               {dedupeFrameworks(availableIn).map(framework => {
@@ -63,7 +63,7 @@ export function FeatureSupportMatrix({
               })}
               <CheckCircle
                 size={16}
-                className="flex-shrink-0 stroke-[2.25] text-green-700 dark:text-green-400"
+                className="flex-shrink-0 stroke-[2.25] text-green-500"
                 role="presentation"
               />
             </TooltipTrigger>
@@ -92,7 +92,7 @@ export function FeatureSupportMatrix({
                   // Gray-out effect
                   'opacity-50 grayscale transition-all hover:opacity-100 hover:grayscale-0 focus:opacity-100 focus:grayscale-0',
                   // Outline variant
-                  'outline -outline-offset-1 outline-amber-600/50 dark:bg-amber-950/25 dark:outline-amber-500/10'
+                  'bg-amber-50/25 outline -outline-offset-1 outline-amber-500/25 dark:bg-amber-950/30 dark:outline-amber-500/10'
                 )}
               >
                 <span className="sr-only">
