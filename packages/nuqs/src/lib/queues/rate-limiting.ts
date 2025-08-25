@@ -1,5 +1,7 @@
 import type { LimitUrlUpdates } from '../../defs'
 
+// 50ms between calls to the history API seems to satisfy Chrome and Firefox.
+// Safari remains annoying with at most 100 calls in 30 seconds.
 // edit: Safari 17 now allows 100 calls per 10 seconds, a bit better.
 function getDefaultThrottle() {
   if (typeof window === 'undefined') return 50
