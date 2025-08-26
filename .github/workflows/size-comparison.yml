@@ -1,0 +1,29 @@
+name: Bundle Size Comparison
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths:
+      - 'packages/nuqs/**/*.ts'
+      - 'packages/nuqs/package.json'
+      - 'packages/nuqs/tsconfig.json'
+    paths-ignore:
+      - 'packages/nuqs/**/*.test.ts'
+      - 'packages/nuqs/**/*.spec.ts'
+
+permissions:
+  pull-requests: write
+
+jobs:
+  size-comparision:
+    name: Compare bundle size
+    runs-on: ubuntu-24.04-arm
+    if: github.event.pull_request.draft == false
+    env:
+      CI_JOB_NUMBER: 1
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8
+      - name: Check bundle size
+        uses: andresz1/size-limit-action@v1.8.0
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          directory: packages/nuqs
