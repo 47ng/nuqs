@@ -1,8 +1,8 @@
 import { Download } from 'lucide-react'
-import { Suspense } from 'react'
 import { formatStatNumber } from '../lib/format'
 import { combineStats, fetchNpmPackage } from '../lib/npm'
 import { DownloadsGraph } from './downloads.client'
+import { WidgetSkeleton } from './widget.skeleton'
 
 export async function NPMStats() {
   const [nuqs, nextUseQueryState] = await Promise.all([
@@ -43,7 +43,7 @@ export async function NPMDownloads() {
   // Fortunately the epoch did not land on a Sunday (it was a Thursday).
   const isLastDateSunday = new Date(lastDate ?? 0).getDay() === 0
   return (
-    <Suspense>
+    <>
       <DownloadsGraph
         data={both.last90Days}
         partialLast={!isLastDateSunday}
@@ -128,6 +128,51 @@ export async function NPMDownloads() {
           </>
         }
       />
-    </Suspense>
+    </>
+  )
+}
+
+export function NPMDownloadsSkeleton() {
+  return (
+    <>
+      <WidgetSkeleton
+        title={
+          <div className="flex w-full items-center gap-2">
+            <Download size={20} /> Last 90 days
+            <div className="bg-muted ml-auto h-6 w-40 animate-pulse rounded-md" />
+          </div>
+        }
+      >
+        <div className="flex w-full justify-end py-2">
+          <div className="bg-muted h-4 w-52 animate-pulse rounded-md" />
+        </div>
+        <div className="flex h-69 w-full animate-pulse flex-col justify-between pt-1 pr-1 pl-10 opacity-50">
+          <hr />
+          <hr />
+          <hr />
+          <hr />
+          <hr />
+        </div>
+      </WidgetSkeleton>
+      <WidgetSkeleton
+        title={
+          <div className="flex w-full items-center gap-2">
+            <Download size={20} /> Last 30 days
+            <div className="bg-muted ml-auto h-6 w-40 animate-pulse rounded-md" />
+          </div>
+        }
+      >
+        <div className="flex w-full justify-end py-2">
+          <div className="bg-muted h-4 w-52 animate-pulse rounded-md" />
+        </div>
+        <div className="flex h-69 w-full animate-pulse flex-col justify-between pt-1 pr-1 pl-10 opacity-50">
+          <hr />
+          <hr />
+          <hr />
+          <hr />
+          <hr />
+        </div>
+      </WidgetSkeleton>
+    </>
   )
 }
