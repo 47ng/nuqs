@@ -98,7 +98,7 @@ export function FeatureSupportMatrix({
                   className={cn(
                     '-my-2 flex flex-shrink-0 items-center gap-2 rounded-lg py-2 pr-2.5 pl-2',
                     // Gray-out effect
-                    'opacity-50 grayscale transition-all hover:opacity-100 hover:grayscale-0 focus:opacity-100 focus:grayscale-0 data-[state=open]:opacity-100 data-[state=open]:grayscale-0',
+                    'opacity-50 grayscale transition-all will-change-transform hover:opacity-100 hover:grayscale-0 focus:opacity-100 focus:grayscale-0 data-[state=open]:opacity-100 data-[state=open]:grayscale-0',
                     // Outline variant
                     'bg-amber-50/25 outline -outline-offset-1 outline-amber-500/25 dark:bg-amber-950/30 dark:outline-amber-500/10'
                   )}
