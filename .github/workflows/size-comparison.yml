@@ -21,20 +21,26 @@ jobs:
       CI_JOB_NUMBER: 1
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8
+        with:
+          fetch-depth: 0
       - uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
           node-version-file: .node-version
           cache: pnpm
-      - name: Check for test file changes only
+      - name: Check for test file changed only
         id: check-files
         run: |
-          # Check if only test files were changed
-          changed_files=$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.sha }} -- 'packages/nuqs/src/**/*.ts')
+          set -e
+          # Fetch full history (if not already)
+          git fetch --unshallow || true
+
+          # Get changed files between base and head
+          changed_files=$(git diff --name-only "${{ github.event.pull_request.base.sha }}" "${{ github.sha }}" -- 'packages/nuqs/src/**/*.ts')
           test_only=true
 
           for file in $changed_files; do
-            if [[ ! "$file" =~ \.(test)\.(ts)$ ]]; then
+            if [[ ! "$file" =~ \.test\.ts$ ]]; then
               test_only=false
               break
             fi
