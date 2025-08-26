@@ -29,12 +29,12 @@ export function StarsGraph({ data, stargazersTab }: StarsGraphProps) {
 
   return (
     <Widget
-      className="pb-0"
+      className="px-0 pb-0"
       title={
         <>
-          <Star size={20} /> {data.count}
+          <Star size={20} className="ml-2" /> {data.count}
           <Tabs
-            className="ml-auto w-auto"
+            className="mr-2 ml-auto w-auto"
             value={activeTab}
             onValueChange={value => setActiveTab(value as StarTab)}
           >
@@ -57,7 +57,7 @@ export function StarsGraph({ data, stargazersTab }: StarsGraphProps) {
       }
     >
       {activeTab === 'earned' && (
-        <ChartContainer className="mt-2 h-82 w-full">
+        <ChartContainer className="mt-2 h-82 w-full px-2">
           <BarChart
             // accessibilityLayer // note: Causes a bug with Recharts 2.15.4 where a click on the chart moves the cursor to the first data point.
             data={data.bins.toReversed().map(b => ({ ...b, Stars: b.diff }))}
