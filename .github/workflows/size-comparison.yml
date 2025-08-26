@@ -3,12 +3,11 @@ on:
   pull_request:
     types: [opened, synchronize, reopened]
     paths:
-      - 'packages/nuqs/**/*.ts'
+      - 'packages/nuqs/src/**/*.ts'
       - 'packages/nuqs/package.json'
+      - 'packages/nuqs/tsdown.config.ts'
       - 'packages/nuqs/tsconfig.json'
-    paths-ignore:
-      - 'packages/nuqs/**/*.test.ts'
-      - 'packages/nuqs/**/*.spec.ts'
+      - 'packages/nuqs/tsconfig.build.json'
 
 permissions:
   pull-requests: write
@@ -22,7 +21,25 @@ jobs:
       CI_JOB_NUMBER: 1
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8
+
+      - name: Check for test file changes only
+        id: check-files
+        run: |
+          # Check if only test files were changed
+          changed_files=$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.sha }} -- 'packages/nuqs/src/**/*.ts')
+          test_only=true
+
+          for file in $changed_files; do
+            if [[ ! "$file" =~ \.(test)\.(ts)$ ]]; then
+              test_only=false
+              break
+            fi
+          done
+
+          echo "test_only=$test_only" >> $GITHUB_OUTPUT
+
       - name: Check bundle size
+        if: steps.check-files.outputs.test_only != 'true'
         uses: andresz1/size-limit-action@v1.8.0
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
