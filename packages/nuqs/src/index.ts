@@ -21,6 +21,3 @@ export { createSerializer, type CreateSerializerOptions } from './serializer'
 export { createStandardSchemaV1 } from './standard-schema'
 export * from './useQueryState'
 export * from './useQueryStates'
-
-export const removeMe =
-  'adding some changes in the nuqs package to test bundle size increase'
