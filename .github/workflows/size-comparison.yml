@@ -4,6 +4,7 @@ on:
     types: [opened, synchronize, reopened]
     paths:
       - 'packages/nuqs/src/**/*.ts'
+      - '!packages/nuqs/src/**/*.test.ts'
       - 'packages/nuqs/package.json'
       - 'packages/nuqs/tsdown.config.ts'
       - 'packages/nuqs/tsconfig.json'
@@ -21,8 +22,6 @@ jobs:
       CI_JOB_NUMBER: 1
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8
-        with:
-          fetch-depth: 0
       - name: Ensure cache paths exist
         run: |
           mkdir -p node_modules
@@ -40,36 +39,9 @@ jobs:
         with:
           node-version-file: .node-version
           cache: pnpm
-      - name: Check for test file changed only
-        id: check-files
-        run: |
-          set -e
-          # Only unshallow if the repo is shallow
-          if git rev-parse --is-shallow-repository | grep -q true; then
-            git fetch --unshallow
-          fi
-
-          # Get all changed files first
-          all_changed_files=$(git diff --name-only "${{ github.event.pull_request.base.sha }}" "${{ github.sha }}")
-
-          changed_files=$(echo "$all_changed_files" | grep '^packages/nuqs/src/.*\.ts$' || true)
-          test_only=true
-
-          if [ -n "$changed_files" ]; then
-            for file in $changed_files; do
-              if [[ ! "$file" =~ \.test\.ts$ ]]; then
-                test_only=false
-                break
-              fi
-            done
-          fi
-
-          echo "test_only=$test_only" >> $GITHUB_OUTPUT
       - name: Install dependencies
-        if: steps.check-files.outputs.test_only != 'true'
         run: pnpm install --ignore-scripts --frozen-lockfile --filter nuqs...
       - name: Check bundle size
-        if: steps.check-files.outputs.test_only != 'true'
         uses: andresz1/size-limit-action@v1.8.0
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
