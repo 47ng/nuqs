@@ -1,0 +1,57 @@
+---
+title: Design System
+description: Who needs Storybook anyway?
+---
+
+## Typography
+
+# h1 Heading
+## h2 Heading
+### h3 Heading
+#### h4 Heading
+##### h5 Heading
+###### h6 Heading
+
+## Callouts
+
+From [Fumadocs](https://fumadocs.dev/docs/ui/markdown#callouts), with slight design tweaks.
+
+### Inline callouts
+
+<Callout type="info">Info</Callout>
+<Callout type="success">Success</Callout>
+<Callout type="warning">Warning</Callout>
+<Callout type="error">Error</Callout>
+
+### With title
+
+<Callout title="Title" type="info">Info</Callout>
+<Callout title="Title" type="success">Success</Callout>
+<Callout title="Title" type="warning">Warning</Callout>
+<Callout title="Title" type="error">Error</Callout>
+
+## Code blocks
+
+```ts title="demo.ts"
+const hello = 'code blocks'
+```
+
+Inline code blocks are supported too: `const foo = 'bar'{:ts}`.
+
+<Callout title="Code blocks in callouts?">
+  ```ts
+export const yep = "we got'em too."
+  ```
+</Callout>
+
+## Feature support matrix
+
+<FeatureSupportMatrix introducedInVersion='2.5.0' />
+<FeatureSupportMatrix introducedInVersion='2.5.0' support={{ supported: true, frameworks: ['React Router (v6)', 'React Router (v7)', 'Remix']}}/>
+<FeatureSupportMatrix introducedInVersion='2.5.0' support={{ supported: true, frameworks: ['Next.js (app router)']}}/>
+<FeatureSupportMatrix introducedInVersion='2.5.0' support={{ supported: false, frameworks: ['Next.js (app router)']}}/>
+<FeatureSupportMatrix introducedInVersion='2.5.0' deprecatedInVersion='2.6.0' />
+<FeatureSupportMatrix introducedInVersion='2.5.0' deprecatedInVersion='2.6.0' support={{ supported: true, frameworks: ['React Router (v6)', 'React Router (v7)', 'Remix']}}/>
+<FeatureSupportMatrix introducedInVersion='2.5.0' deprecatedInVersion='2.6.0' support={{ supported: true, frameworks: ['Next.js (app router)']}}/>
+<FeatureSupportMatrix introducedInVersion='2.5.0' deprecatedInVersion='2.6.0' support={{ supported: false, frameworks: ['Next.js (app router)']}}/>
+

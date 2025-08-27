@@ -5,6 +5,8 @@ description: Type-safe search params on the server
 
 ## Loaders
 
+<FeatureSupportMatrix introducedInVersion='2.3.0' />
+
 To parse search params server-side, you can use a _loader_ function.
 
 You create one using the `createLoader{:ts}` function, by passing it your search params
@@ -123,6 +125,8 @@ The loader function will accept the following input types to parse search params
 
 ### Strict mode
 
+<FeatureSupportMatrix introducedInVersion='2.5.0' />
+
 If a search param contains an invalid value for the associated parser (eg: `?count=banana` for `parseAsInteger{:ts}`),
 the default behaviour is to return the [default value](/docs/basic-usage#default-values) if specified, or `null{:ts}` otherwise.
 
@@ -143,9 +147,7 @@ loadSearchParams('?count=banana', { strict: true })
 
 ## Cache
 
-<Callout>
-  This feature is available for Next.js only.
-</Callout>
+<FeatureSupportMatrix introducedInVersion='1.13.0' support={{ supported: true, frameworks: ['Next.js (app router)']}} />
 
 If you wish to access the searchParams in a deeply nested Server Component
 (ie: not in the Page component), you can use `createSearchParamsCache{:ts}`
