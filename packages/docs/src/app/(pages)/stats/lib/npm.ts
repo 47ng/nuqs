@@ -35,10 +35,14 @@ async function getLastNDays(pkg: string, n: number): Promise<Datum[]> {
   const end = dayjs().subtract(1, 'day').endOf('day').format('YYYY-MM-DD')
   const url = `https://api.npmjs.org/downloads/range/${start}:${end}/${pkg}`
   const { downloads } = await get<RangeResponse>(url)
-  return downloads.map(d => ({
+  const data = downloads.map(d => ({
     date: d.day,
     downloads: d.downloads
   }))
+  if (data.at(-1)?.downloads === 0) {
+    data.pop() // Remove last day if it's zero (stats not available yet)
+  }
+  return data
 }
 
 async function getAllTime(pkg: string): Promise<number> {
