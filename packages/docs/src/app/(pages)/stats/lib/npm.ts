@@ -61,10 +61,13 @@ async function getAllTime(pkg: string): Promise<number> {
 export async function fetchNpmPackage(
   pkg: string
 ): Promise<NpmPackageStatsData> {
+  // Ensure we cover 90 days + a full first week
+  const startOfFirstWeek = dayjs().subtract(90, 'day').startOf('isoWeek')
+  const ninetyOrSoDays = dayjs().diff(startOfFirstWeek, 'day')
   const [allTime, last30Days, last90Days] = await Promise.all([
     getAllTime(pkg),
     getLastNDays(pkg, 30),
-    getLastNDays(pkg, 90)
+    getLastNDays(pkg, ninetyOrSoDays)
   ])
   return {
     allTime,

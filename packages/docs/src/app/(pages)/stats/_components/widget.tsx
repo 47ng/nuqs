@@ -1,26 +1,19 @@
 import { cn } from '@/src/lib/utils'
-import { Card, CardProps } from '@tremor/react'
+import type { ComponentProps, ReactNode } from 'react'
 
-export type WidgetProps = Omit<CardProps, 'title'> & {
-  title: React.ReactNode
+export type WidgetProps = Omit<ComponentProps<'div'>, 'title'> & {
+  title?: ReactNode
 }
 
-export function Widget({
-  title,
-
-  className,
-  children,
-  ...props
-}: WidgetProps) {
+export function Widget({ title, children, className, ...props }: WidgetProps) {
   return (
-    <Card
-      className={cn('px-4 py-0 pb-2 pt-4 dark:bg-background', className)}
-      {...props}
-    >
-      <h3 className="flex flex-wrap items-center gap-2 text-lg font-bold">
-        {title}
-      </h3>
+    <div className={cn('h-96 rounded-xl border p-2', className)} {...props}>
+      {Boolean(title) && (
+        <div className="flex flex-wrap items-center gap-2 pl-1.5 text-lg font-bold text-inherit">
+          {title}
+        </div>
+      )}
       {children}
-    </Card>
+    </div>
   )
 }
