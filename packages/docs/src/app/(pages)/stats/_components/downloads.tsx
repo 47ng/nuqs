@@ -2,6 +2,7 @@ import { Download } from 'lucide-react'
 import { formatStatNumber } from '../lib/format'
 import { combineStats, fetchNpmPackage } from '../lib/npm'
 import { DownloadsGraph } from './downloads.client'
+import { GraphSkeleton } from './graph.skeleton'
 import { WidgetSkeleton } from './widget.skeleton'
 
 export async function NPMStats() {
@@ -146,13 +147,7 @@ export function NPMDownloadsSkeleton() {
         <div className="flex w-full justify-end py-2">
           <div className="bg-muted h-4 w-52 animate-pulse rounded-md" />
         </div>
-        <div className="flex h-69 w-full animate-pulse flex-col justify-between pt-1 pr-1 pl-10 opacity-50">
-          <hr />
-          <hr />
-          <hr />
-          <hr />
-          <hr />
-        </div>
+        <GraphSkeleton className="h-69" />
       </WidgetSkeleton>
       <WidgetSkeleton
         title={

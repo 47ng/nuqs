@@ -1,5 +1,6 @@
 import { Star } from 'lucide-react'
 import { getStarHistory } from '../lib/github'
+import { GraphSkeleton } from './graph.skeleton'
 import { StarsGraph } from './stars.client'
 import StargazersList from './stars.gazers-list'
 import { WidgetSkeleton } from './widget.skeleton'
@@ -21,6 +22,8 @@ export function StarHistoryGraphSkeleton() {
           <div className="bg-muted ml-auto h-9 w-50 animate-pulse rounded-md" />
         </div>
       }
-    />
+    >
+      <GraphSkeleton className="h-74.5 pt-2" />
+    </WidgetSkeleton>
   )
 }
