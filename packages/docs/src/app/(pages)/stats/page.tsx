@@ -26,14 +26,14 @@ export default async function StatsPage({ searchParams }: StatsPageProps) {
         <Suspense fallback={<StarHistoryGraphSkeleton />}>
           <StarHistoryGraph />
         </Suspense>
-        <Widget className="flex flex-col gap-2">
+        <Widget className="flex h-auto flex-col gap-2">
           <img
             width={814}
             height={318}
             alt="Project analytics and stats"
             src="https://repobeats.axiom.co/api/embed/3ee740e4729dce3992bfa8c74645cfebad8ba034.svg"
           />
-          <div className="flex min-h-24 flex-1 items-center gap-6 px-4">
+          <div className="flex flex-1 items-center gap-6 p-4">
             <Suspense
               fallback={
                 <>
