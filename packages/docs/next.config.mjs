@@ -7,6 +7,9 @@ const withFumadocsMDX = createMDX()
 
 /** @type {import('next').NextConfig} */
 const config = {
+  experimental: {
+    ppr: true
+  },
   outputFileTracingIncludes: {
     '/playground/pagination': [
       './src/app/playground/(demos)/pagination/searchParams.ts',
