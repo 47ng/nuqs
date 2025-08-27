@@ -11,7 +11,7 @@ type StargazersListProps = {
 export default function StargazersList({ stars }: StargazersListProps) {
   return (
     <ul className="max-h-84 overflow-y-auto overscroll-contain">
-      {stars.bins.map(bin => (
+      {stars.bins.map((bin, index) => (
         <section key={bin.date} className="relative not-first:pt-4">
           <h3 className="text-muted-foreground bg-background sticky top-0 border-b px-3 py-2 text-xs leading-tight font-semibold uppercase">
             {formatDate(bin.date, '', {
@@ -20,6 +20,19 @@ export default function StargazersList({ stars }: StargazersListProps) {
               month: 'long'
             })}
           </h3>
+          {bin.stargarzers.length === 0 && (
+            <p className="text-muted-foreground flex items-center gap-2 p-3 text-sm">
+              {index === 0 ? (
+                <>
+                  <span className="text-lg">⏳</span> No stargazers yet today
+                </>
+              ) : (
+                <>
+                  <span className="text-lg">😢</span> No stargazers on that day
+                </>
+              )}
+            </p>
+          )}
           {bin.stargarzers.map(stargazer => (
             <Stargazer
               data={stargazer}
