@@ -27,11 +27,12 @@ import {
   parseAsIsoDate,
   parseAsIsoDateTime,
   parseAsJson,
+  parseAsUuid,
   parseAsStringLiteral,
   parseAsTimestamp,
   useQueryState
 } from 'nuqs'
-import React from 'react'
+import React, { useState } from 'react'
 import { z } from 'zod'
 
 export function DemoFallback() {
@@ -102,6 +103,26 @@ export function StringParserDemo() {
         variant="secondary"
         onClick={() => setValue(null)}
         className="ml-auto"
+      >
+        Clear
+      </Button>
+    </DemoContainer>
+  )
+}
+
+export function UuidParserDemo() {
+  const [value, setValue] = useQueryState('uuid', parseAsUuid())
+
+  return (
+    <DemoContainer demoKey="uuid" className="items-start">
+      <pre className="bg-background flex-1 rounded-md border p-2 text-sm text-zinc-500">
+        {value || 'null'}
+      </pre>
+      <Button onClick={() => setValue(crypto.randomUUID())}>Try it</Button>
+      <Button
+        variant="secondary"
+        className="ml-auto"
+        onClick={() => setValue(null)}
       >
         Clear
       </Button>

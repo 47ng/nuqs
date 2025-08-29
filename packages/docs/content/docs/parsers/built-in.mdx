@@ -15,7 +15,8 @@ import {
   DateISOParserDemo,
   DatetimeISOParserDemo,
   DateTimestampParserDemo,
-  JsonParserDemo
+  JsonParserDemo,
+  UuidParserDemo
 } from '@/content/docs/parsers/demos'
 
 Search params are strings by default, but chances are your state is more complex than that.
@@ -57,6 +58,33 @@ export const searchParamsParsers = {
   })
 }
 ```
+
+## UUID
+
+Validates and parses UUID strings. Accepts all valid UUID formats by default, or you can specify a particular version.
+
+```ts
+import { parseAsUuid } from 'nuqs'
+
+// Accept any valid UUID
+const [id, setId] = useQueryState('id', parseAsUuid())
+
+// Only accept UUID v4
+const [sessionId, setSessionId] = useQueryState(
+  'sessionId', 
+  parseAsUuid({ version: 4 })
+)
+```
+
+<Suspense fallback={<DemoFallback />}>
+  <UuidParserDemo />
+</Suspense>
+
+<Callout title="UUID Validation">
+When no version is specified, the parser accepts any valid UUID format (versions 1-8).
+When a specific version is provided, only UUIDs of that version will be accepted.
+Invalid UUIDs will result in a `null` value.
+</Callout>
 
 ## Numbers
 
