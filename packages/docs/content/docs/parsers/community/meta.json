@@ -1,4 +1,4 @@
 {
   "title": "Community",
-  "pages": ["tanstack-table", "effect-schema"]
+  "pages": ["tanstack-table", "effect-schema", "zod-codecs"]
 }

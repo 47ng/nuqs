@@ -1,6 +1,4 @@
-'use client'
-
-import { createParser, useQueryState } from 'nuqs' // or 'nuqs/server'
+import { createParser } from 'nuqs/server'
 import { z } from 'zod'
 
 function createZodCodecParser<
@@ -98,31 +96,4 @@ const userSchema = z.object({
 // Composition always wins.
 const codec = base64urlToBytes.pipe(bytesToUtf8).pipe(jsonCodec(userSchema))
 
-const parser = createZodCodecParser(codec)
-
-export function ZodCodecsDemo() {
-  const [user, setUser] = useQueryState(
-    'user',
-    parser.withDefault({
-      name: 'John Doe',
-      age: 42
-    })
-  )
-  return (
-    <>
-      <input
-        type="text"
-        value={user.name}
-        onChange={e => setUser(old => ({ ...old, name: e.target.value }))}
-      />
-      <input
-        type="number"
-        value={user.age}
-        onChange={e =>
-          setUser(old => ({ ...old, age: Number(e.target.value) }))
-        }
-      />
-      <pre>{JSON.stringify(user, null, 2)}</pre>
-    </>
-  )
-}
+export const userJsonBase64Parser = createZodCodecParser(codec)
