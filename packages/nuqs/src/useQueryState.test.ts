@@ -104,13 +104,16 @@ describe('useQueryState: referential equality', () => {
   })
 
   it('should have referential equality on the state updater function', async () => {
-    const { result } = renderHook(() => useQueryState('test'), {
+    const { result, rerender } = renderHook(() => useQueryState('test'), {
       wrapper: withNuqsTestingAdapter()
     })
     const [, setState1] = result.current
-    await act(() => setState1('pass'))
+    rerender()
     const [, setState2] = result.current
     expect(setState1).toBe(setState2)
+    await act(() => setState1('pass'))
+    const [, setState3] = result.current
+    expect(setState1).toBe(setState3)
   })
 })
 
