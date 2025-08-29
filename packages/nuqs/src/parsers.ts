@@ -283,15 +283,18 @@ export function parseAsUuid(opts?: {
   version?: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8
 }): ParserBuilder<string> {
   return createParser({
-    parse: v => {
-      let uuidRegex =
-        /^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$/
-      if (opts?.version) {
-        uuidRegex = new RegExp(
-          `^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-${opts.version}[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$`
-        )
-      }
-      return uuidRegex.test(v) ? v : null
+    parse(query) {
+      // Create regex only when needed to reduce bundle size
+      const v = opts?.version
+      // Note: using +v to coerce to number (in case of user-controlled inputs,
+      // to avoid a RegExp DoS attack)
+      const versionPattern = v ? `[${+v}]` : '[1-8]'
+      return new RegExp(
+        `^([0-9a-f]{8}-[0-9a-f]{4}-${versionPattern}[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}|0{8}-0{4}-0{4}-0{4}-0{12}|f{8}-f{4}-f{4}-f{4}-f{12})$`,
+        'i'
+      ).test(query)
+        ? query
+        : null
     },
     serialize: String
   })
