@@ -6,6 +6,9 @@ on:
     branches:
       - next
 
+permissions:
+  pull-requests: write
+
 jobs:
   update_milestones:
     name: Update Milestones
