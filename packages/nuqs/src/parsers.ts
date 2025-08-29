@@ -248,6 +248,54 @@ export const parseAsIsoDate: ParserBuilder<Date> = createParser({
 })
 
 /**
+ * Parse and validate UUID strings from the query string.
+ *
+ * By default, accepts any valid UUID format (v1-v8) including the special
+ * nil UUID (all zeros) and max UUID (all Fs). You can optionally specify
+ * a specific UUID version to validate against.
+ *
+ * @param opts - Optional configuration object
+ * @param opts.version - Specific UUID version to validate (1-8)
+ * @returns A parser that validates UUID strings
+ *
+ * @example
+ * ```ts
+ * // Accept any valid UUID
+ * const [id, setId] = useQueryState('id', parseAsUuid())
+ *
+ * // URL: ?id=550e8400-e29b-41d4-a716-446655440000
+ * console.log(id) // "550e8400-e29b-41d4-a716-446655440000"
+ * ```
+ *
+ * @example
+ * ```ts
+ * // Only accept UUID v4
+ * const [sessionId, setSessionId] = useQueryState(
+ *   'sessionId',
+ *   parseAsUuid({ version: 4 }).withDefault('00000000-0000-0000-0000-000000000000')
+ * )
+ *
+ * // URL: ?sessionId=f47ac10b-58cc-4372-a567-0e02b2c3d479
+ * console.log(sessionId) // "f47ac10b-58cc-4372-a567-0e02b2c3d479"
+ * ```
+ */
+export function parseAsUuid(opts?: { version: number }): ParserBuilder<string> {
+  return createParser({
+    parse: v => {
+      let uuidRegex =
+        /^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$/
+      if (opts?.version) {
+        uuidRegex = new RegExp(
+          `^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-${opts.version}[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$`
+        )
+      }
+      return uuidRegex.test(v) ? v : null
+    },
+    serialize: String
+  })
+}
+
+/**
  * String-based enums provide better type-safety for known sets of values.
  * You will need to pass the parseAsStringEnum function a list of your enum values
  * in order to validate the query string. Anything else will return `null`,
