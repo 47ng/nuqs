@@ -3,9 +3,22 @@ title: Zod codecs
 description: Using Zod codecs for (de)serialisation in custom nuqs parser
 ---
 
-import { ZodCodecsDemo } from './zod-codecs-demo'
+import { ZodCodecsDemo } from './zod-codecs.demo'
+import { ZodCodecsDemoSkeleton } from './zod-codecs.skeleton'
 import { Suspense } from 'react'
 
-<Suspense>
+<Suspense fallback={(
+  <ZodCodecsDemoSkeleton className='animate-pulse'>
+    <div className='h-32 bg-muted/25 rounded-md flex items-center justify-center text-sm text-muted-foreground'>
+      Loading demo…
+    </div>
+  </ZodCodecsDemoSkeleton>
+)}>
   <ZodCodecsDemo/>
 </Suspense>
+
+import { ZodCodecsSource } from './zod-codecs.source'
+
+Source code:
+
+<ZodCodecsSource/>
