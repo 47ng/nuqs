@@ -226,6 +226,19 @@ describe('useQueryStates: urlKeys remapping', () => {
     expect(onUrlUpdate).toHaveBeenCalledOnce()
     expect(onUrlUpdate.mock.calls[0]![0].queryString).toEqual('?f=a&bar=b')
   })
+
+  it('should have referential equality on the state updater function', async () => {
+    const { result } = renderHook(
+      () => useQueryStates({ test: parseAsString }),
+      {
+        wrapper: withNuqsTestingAdapter()
+      }
+    )
+    const [, setState1] = result.current
+    await act(() => setState1({ test: 'pass' }))
+    const [, setState2] = result.current
+    expect(setState1).toBe(setState2)
+  })
 })
 
 describe('useQueryStates: clearOnDefault', () => {
