@@ -279,7 +279,9 @@ export const parseAsIsoDate: ParserBuilder<Date> = createParser({
  * console.log(sessionId) // "f47ac10b-58cc-4372-a567-0e02b2c3d479"
  * ```
  */
-export function parseAsUuid(opts?: { version: number }): ParserBuilder<string> {
+export function parseAsUuid(opts?: {
+  version?: number
+}): ParserBuilder<string> {
   return createParser({
     parse: v => {
       let uuidRegex =
