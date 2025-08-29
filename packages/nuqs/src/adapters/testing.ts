@@ -1,7 +1,13 @@
-import { createElement, type ReactElement, type ReactNode } from 'react'
+import {
+  createElement,
+  useCallback,
+  useMemo,
+  type ReactElement,
+  type ReactNode
+} from 'react'
 import { resetQueues } from '../lib/queues/reset'
-import { renderQueryString } from '../lib/url-encoding'
-import { type AdapterProps, context } from './lib/context'
+import { renderQueryString } from './custom'
+import { context, type AdapterProps } from './lib/context'
 import type { AdapterInterface, AdapterOptions } from './lib/defs'
 
 export type UrlUpdateEvent = {
@@ -28,18 +34,27 @@ export function NuqsTestingAdapter({
   if (resetUrlUpdateQueueOnMount) {
     resetQueues()
   }
-  const useAdapter = (): AdapterInterface => ({
-    searchParams: new URLSearchParams(props.searchParams),
-    updateUrl(search, options) {
+  const searchParams = useMemo(
+    () => new URLSearchParams(props.searchParams),
+    [props.searchParams?.toString()]
+  )
+  const updateUrl = useCallback<AdapterInterface['updateUrl']>(
+    (search, options) => {
       props.onUrlUpdate?.({
-        searchParams: search,
+        searchParams: new URLSearchParams(search),
         queryString: renderQueryString(search),
         options
       })
     },
-    getSearchParamsSnapshot() {
-      return new URLSearchParams(props.searchParams)
-    },
+    [props.onUrlUpdate]
+  )
+  const getSearchParamsSnapshot = useCallback(() => {
+    return new URLSearchParams(props.searchParams)
+  }, [props.searchParams?.toString()])
+  const useAdapter = (): AdapterInterface => ({
+    searchParams,
+    updateUrl,
+    getSearchParamsSnapshot,
     rateLimitFactor: props.rateLimitFactor ?? 0
   })
   return createElement(
