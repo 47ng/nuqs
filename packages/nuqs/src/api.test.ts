@@ -27,6 +27,7 @@ const exports = `
     "parseAsStringEnum": "function",
     "parseAsStringLiteral": "function",
     "parseAsTimestamp": "object",
+    "parseAsUuid": "function",
     "throttle": "function",
     "useQueryState": "function",
     "useQueryStates": "function",
@@ -93,6 +94,7 @@ const exports = `
     "parseAsStringEnum": "function",
     "parseAsStringLiteral": "function",
     "parseAsTimestamp": "object",
+    "parseAsUuid": "function",
     "throttle": "function",
   },
   "./testing": {
