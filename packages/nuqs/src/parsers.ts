@@ -280,7 +280,7 @@ export const parseAsIsoDate: ParserBuilder<Date> = createParser({
  * ```
  */
 export function parseAsUuid(opts?: {
-  version?: number
+  version?: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8
 }): ParserBuilder<string> {
   return createParser({
     parse: v => {

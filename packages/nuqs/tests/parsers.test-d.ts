@@ -78,6 +78,10 @@ describe('types/parsers', () => {
     assertType<string>(p.serialize('550e8400-e29b-41d4-a716-446655440000'))
     assertType<string | null>(p.parseServerSide(undefined))
   })
+  test('parseasUuid (with invalid version specified)', () => {
+    // @ts-expect-error
+    parseAsUuid({ version: 123 })
+  })
   test('parseAsStringEnum', () => {
     enum Test {
       A = 'a',
