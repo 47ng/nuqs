@@ -196,7 +196,7 @@
     {
       "name": "Client",
       "path": "dist/index.js",
-      "limit": "5.5 kB",
+      "limit": "6 kB",
       "ignore": [
         "react",
         "next"
