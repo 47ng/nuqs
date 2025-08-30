@@ -3,7 +3,8 @@ import { Suspense } from 'react'
 import {
   NPMDownloads,
   NPMDownloadsSkeleton,
-  NPMStats
+  NPMStats,
+  NPMStatsSkeleton
 } from './_components/downloads'
 import { StarHistoryGraph, StarHistoryGraphSkeleton } from './_components/stars'
 import { Versions } from './_components/versions'
@@ -34,17 +35,7 @@ export default async function StatsPage({ searchParams }: StatsPageProps) {
             src="https://repobeats.axiom.co/api/embed/3ee740e4729dce3992bfa8c74645cfebad8ba034.svg"
           />
           <div className="flex flex-1 items-center gap-6 p-4">
-            <Suspense
-              fallback={
-                <>
-                  <div className="bg-muted h-18 w-32 animate-pulse rounded-md" />
-                  <div className="flex-1 space-y-2">
-                    <div className="bg-muted h-8 animate-pulse rounded-md" />
-                    <div className="bg-muted h-8 animate-pulse rounded-md" />
-                  </div>
-                </>
-              }
-            >
+            <Suspense fallback={<NPMStatsSkeleton />}>
               <NPMStats />
             </Suspense>
           </div>
