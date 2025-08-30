@@ -34,6 +34,10 @@ export async function NPMStats() {
   )
 }
 
+export const NPMStatsSkeleton = () => (
+  <div className="bg-muted h-9 w-64 animate-pulse rounded-md lg:h-12" />
+)
+
 export async function NPMDownloads() {
   const [nuqs, nextUseQueryState] = await Promise.all([
     fetchNpmPackage('nuqs'),
