@@ -119,6 +119,11 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
     internalState,
     initialSearchParams
   )
+  if (limitUrlUpdates?.method === 'debounce' && shallow === true) {
+    console.warn(
+      '[nuqs] `shallow: true` and `limitUrlUpdates: debounce` are not compatible, use `shallow: false` instead so debounce can work properly (https://nuqs.47ng.com/docs/options#debounce)'
+    )
+  }
   // Initialise the refs with the initial values
   if (
     Object.keys(queryRef.current).join('&') !==
