@@ -1,6 +1,7 @@
 import dayjs from 'dayjs'
 import isoWeek from 'dayjs/plugin/isoWeek'
 import 'server-only'
+import { z } from 'zod'
 
 dayjs.extend(isoWeek)
 
@@ -30,19 +31,33 @@ type RangeResponse = {
   }>
 }
 
+const rangeResponseSchema = z.object({
+  downloads: z.array(
+    z.object({
+      downloads: z.number(),
+      day: z.string()
+    })
+  )
+})
+
 async function getLastNDays(pkg: string, n: number): Promise<Datum[]> {
   const start = dayjs().subtract(n, 'day').format('YYYY-MM-DD')
   const end = dayjs().subtract(1, 'day').endOf('day').format('YYYY-MM-DD')
   const url = `https://api.npmjs.org/downloads/range/${start}:${end}/${pkg}`
-  const { downloads } = await get<RangeResponse>(url)
-  const data = downloads.map(d => ({
-    date: d.day,
-    downloads: d.downloads
-  }))
-  if (data.at(-1)?.downloads === 0) {
-    data.pop() // Remove last day if it's zero (stats not available yet)
+  try {
+    const { downloads } = rangeResponseSchema.parse(await get(url))
+    const data = downloads.map(d => ({
+      date: d.day,
+      downloads: d.downloads
+    }))
+    if (data.at(-1)?.downloads === 0) {
+      data.pop() // Remove last day if it's zero (stats not available yet)
+    }
+    return data
+  } catch (e) {
+    console.error(e)
+    return []
   }
-  return data
 }
 
 async function getAllTime(pkg: string): Promise<number> {
@@ -54,10 +69,15 @@ async function getAllTime(pkg: string): Promise<number> {
     const url = `https://api.npmjs.org/downloads/range/${start.format(
       'YYYY-MM-DD'
     )}:${end.format('YYYY-MM-DD')}/${pkg}`
-    const res = await get<RangeResponse>(url)
-    downloads += res.downloads.reduce((sum, d) => sum + d.downloads, 0)
-    start = end
-    end = start.add(18, 'month')
+    try {
+      const res = rangeResponseSchema.parse(await get<RangeResponse>(url))
+      downloads += res.downloads.reduce((sum, d) => sum + d.downloads, 0)
+      start = end
+      end = start.add(18, 'month')
+    } catch (e) {
+      console.error(e)
+      break
+    }
   }
   return downloads
 }
