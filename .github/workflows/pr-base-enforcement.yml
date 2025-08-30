@@ -12,7 +12,7 @@ jobs:
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8
       - name: Post comment to update base branch
-        run: gh pr comment ${{ github.event.pull_request.number }} --body "⚠️ Pull requests targetting the \`master\` branch are not allowed. Please update the base branch to \`next\` before reopeningm."
+        run: gh pr comment ${{ github.event.pull_request.number }} --body "⚠️ Pull requests targetting the \`master\` branch are not allowed. Please update the base branch to \`next\` before reopening."
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Close PR
