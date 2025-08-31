@@ -86,9 +86,11 @@ jobs:
           fi
 
           # Extract issue numbers, keep only those with milestone "Backlog" (number 3)
+          linked_issues=$(echo "$response" | jq -r '
+            .data.repository.pullRequest.closingIssuesReferences.nodes[]
             | select(.milestone != null and .milestone.number == ${{ env.BACKLOG_MILESTONE_ID }})
-            | .number'
-          )
+            | .number
+          ')
 
           # Check if there are any issues to update
           if [[ -z "$linked_issues" ]]; then
