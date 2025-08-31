@@ -6,8 +6,13 @@ on:
     branches:
       - next
 
+env:
+  BACKLOG_MILESTONE_ID: 3 # ID for "Backlog" milestone
+  SHIPPING_NEXT_MILESTONE_ID: 2 # ID for "Shipping Next" milestone
+
 permissions:
   pull-requests: write
+  issues: write
 
 jobs:
   update_milestones:
@@ -20,7 +25,7 @@ jobs:
         id: check_milestone
         run: |
           milestone_id=$(gh api repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }} --jq '.milestone.number')
-          if [[ "$milestone_id" == "3" ]]; then
+          if [[ "$milestone_id" == "${{ env.BACKLOG_MILESTONE_ID }}" ]]; then
             echo "backlog_milestone=true" >> $GITHUB_OUTPUT
           else
             echo "backlog_milestone=false" >> $GITHUB_OUTPUT
@@ -33,6 +38,94 @@ jobs:
         run: |
           gh api -X PATCH \
             repos/${{ github.repository }}/issues/${{ github.event.pull_request.number }} \
-            -f milestone=2
+            -f milestone=${{ env.SHIPPING_NEXT_MILESTONE_ID }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Update linked issues milestone to "shipping next"
+        if: steps.check_milestone.outputs.backlog_milestone == 'true'
+        run: |
+          set -euo pipefail # Exit on any error
+
+          # Validate PR number is numeric
+          if ! [[ "${{ github.event.pull_request.number }}" =~ ^[0-9]+$ ]]; then
+            echo "Invalid PR number: ${{ github.event.pull_request.number }}"
+            exit 1
+          fi
+
+          # Get linked issues using GraphQL API
+          query='query LinkedIssues($owner: String!, $repo: String!, $prNumber: Int!) {
+            repository(owner: $owner, name: $repo) {
+              pullRequest(number: $prNumber) {
+                closingIssuesReferences(first: 20) {
+                  nodes {
+                    number
+                    milestone {
+                      number
+                    }
+                  }
+                }
+              }
+            }
+          }'
+
+          # Extract owner and repo from repository
+          owner=$(echo "${{ github.repository }}" | cut -d'/' -f1)
+          repo=$(echo "${{ github.repository }}" | cut -d'/' -f2)
+
+          # Execute GraphQL query with error handling
+          echo "Fetching linked issues for PR #${{ github.event.pull_request.number }}"
+
+          if ! response=$(gh api graphql \
+            -f query="$query" \
+            -f owner="$owner" \
+            -f repo="$repo" \
+            -F prNumber="${{ github.event.pull_request.number }}" 2>&1); then
+            echo "Failed to fetch linked issues: $response"
+            exit 1
+          fi
+
+          # Extract issue numbers, keep only those with milestone "Backlog" (number 3)
+          linked_issues=$(echo "$response" | jq -r '
+            .data.repository.pullRequest.closingIssuesReferences.nodes[]
+            | select(.milestone != null and .milestone.number == ${{ env.BACKLOG_MILESTONE_ID }})
+            | .number
+          ')
+
+          # Check if there are any issues to update
+          if [[ -z "$linked_issues" ]]; then
+            echo "No linked issues found or all issues already have the correct milestone"
+            exit 0
+          fi
+
+          echo "Found linked issues to update: $(echo "$linked_issues" | tr '\n' ' ')"
+
+          # Update milestone for each linked issue
+          failed_updates=0
+          updated_count=0
+
+          while IFS= read -r issue_number; do
+            [[ -z "$issue_number" ]] && continue
+
+            echo "Updating milestone for issue #$issue_number"
+            if gh api -X PATCH \
+              "repos/${{ github.repository }}/issues/$issue_number" \
+              -f milestone=${{ env.SHIPPING_NEXT_MILESTONE_ID }} \
+              --silent; then
+              echo "✓ Successfully updated milestone for issue #$issue_number"
+              updated_count=$((updated_count + 1))
+            else
+              echo "✗ Failed to update milestone for issue #$issue_number"
+              failed_updates=$((failed_updates + 1))
+            fi
+          done <<< "$linked_issues"
+
+          echo "Summary: Updated $updated_count issue(s), $failed_updates failure(s)"
+
+          # Fail the step if any updates failed
+          if [[ $failed_updates -gt 0 ]]; then
+            echo "Failed to update $failed_updates issue(s)"
+            exit 1
+          fi
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

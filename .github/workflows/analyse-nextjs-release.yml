@@ -11,12 +11,25 @@ on:
 
 env:
   FORCE_COLOR: 3 # Diplay chalk colors
+  VERSION: ${{ inputs.version }}
 
 jobs:
   analyse-release:
     runs-on: ubuntu-24.04-arm
     name: Check for relevant Next.js core changes
     steps:
+      - name: Ensure input follows SemVer
+        # Source: https://semver.org/#is-there-a-suggested-regular-expression-regex-to-check-a-semver-string
+        run: |
+          node -e "
+            const version = process.env.VERSION;
+            const semverRegex = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$/;
+            if (!semverRegex.test(version)) {
+              console.error(\`Error: Version '\${version}' does not follow SemVer format\`);
+              process.exit(1);
+            }
+            console.log(\`Version '\${version}' is valid SemVer\`);
+          "
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8
       - uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
@@ -26,7 +39,7 @@ jobs:
       - name: Install dependencies
         run: pnpm install
       - name: Check for changes in app router
-        run: ./next-release-analyser.mjs --version ${{ inputs.version }}
+        run: ./next-release-analyser.mjs --version "${{ env.VERSION }}"
         working-directory: packages/scripts
         env:
           MAILPACE_API_TOKEN: ${{ secrets.MAILPACE_API_TOKEN }}

@@ -2,37 +2,15 @@ name: PR Preview
 on:
   pull_request:
     types: [opened, synchronize, labeled]
-  pull_request_review:
-    types: [submitted]
+    paths:
+      - 'packages/nuqs/**'
 
 jobs:
-  check-changes:
-    name: Check for relevant changes to deploy
-    if: |
-      github.event.review.state == 'APPROVED' ||
-      contains(github.event.pull_request.author_association, 'MEMBER') ||
-      contains(github.event.pull_request.labels.*.name, 'deploy:preview')
-    runs-on: ubuntu-24.04-arm
-    outputs:
-      enable: ${{ steps.check-for-changes.outputs.enable }}
-    steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8
-        with:
-          fetch-depth: 2
-      - name: Check for relevant changes
-        id: check-for-changes
-        run: |
-          if git diff --quiet HEAD^ HEAD ./packages/nuqs; then
-            echo "No changes to nuqs package, skipping preview deployment."
-            echo "enable=false" >> $GITHUB_OUTPUT
-          else
-            echo "enable=true" >> $GITHUB_OUTPUT
-          fi
-
   deploy-preview:
     name: Deploy to pkg.pr.new
-    needs: check-changes
-    if: needs.check-changes.outputs.enable == 'true'
+    if: |
+      contains(github.event.pull_request.author_association, 'MEMBER') ||
+      contains(github.event.pull_request.labels.*.name, 'deploy:preview')
     runs-on: ubuntu-24.04-arm
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8

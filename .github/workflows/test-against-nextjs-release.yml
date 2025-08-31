@@ -11,6 +11,7 @@ on:
 
 env:
   FORCE_COLOR: 3 # Diplay chalk colors
+  VERSION: ${{ inputs.version }}
 
 jobs:
   test_against_nextjs_release:
@@ -22,6 +23,18 @@ jobs:
         base-path: [false, '/base']
         react-compiler: [true, false]
     steps:
+      - name: Ensure input follows SemVer
+        # Source: https://semver.org/#is-there-a-suggested-regular-expression-regex-to-check-a-semver-string
+        run: |
+          node -e "
+            const version = process.env.VERSION;
+            const semverRegex = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$/;
+            if (!semverRegex.test(version)) {
+              console.error(\`Error: Version '\${version}' does not follow SemVer format\`);
+              process.exit(1);
+            }
+            console.log(\`Version '\${version}' is valid SemVer\`);
+          "
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8
       - uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
@@ -30,8 +43,8 @@ jobs:
           cache: pnpm
       - name: Install dependencies
         run: pnpm install
-      - name: Install Next.js version ${{ inputs.version }}
-        run: pnpm add --filter e2e-next --filter nuqs next@${{ inputs.version }}
+      - name: Install Next.js version ${{ env.VERSION }}
+        run: pnpm add --filter e2e-next --filter nuqs "next@${{ env.VERSION }}"
       - name: Run integration tests
         run: pnpm run test --filter e2e-next
         env:
@@ -45,13 +58,13 @@ jobs:
         if: failure()
         with:
           path: packages/e2e-next/cypress/screenshots
-          name: ci-next-${{ inputs.version }}${{ matrix.base-path && '-basePath' || ''}}${{ matrix.react-compiler && '-react-compiler' || ''}}
+          name: ci-next-${{ env.VERSION }}${{ matrix.base-path && '-basePath' || ''}}${{ matrix.react-compiler && '-react-compiler' || ''}}
       - uses: 47ng/actions-slack-notify@main
         name: Notify on Slack
         if: failure()
         with:
           status: ${{ job.status }}
-          jobName: next@${{ inputs.version }}${{ matrix.base-path && ' ⚾' || ''}}${{ matrix.react-compiler && ' ⚛️' || ''}}
+          jobName: next@${{ env.VERSION }}${{ matrix.base-path && ' ⚾' || ''}}${{ matrix.react-compiler && ' ⚛️' || ''}}
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
@@ -73,6 +86,6 @@ jobs:
       - uses: 47ng/actions-slack-notify@main
         with:
           status: ${{ job.status }}
-          jobName: ${{ inputs.version }}
+          jobName: '${{ env.VERSION }}'
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
