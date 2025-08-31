@@ -6,6 +6,10 @@ on:
     branches:
       - next
 
+env:
+  BACKLOG_MILESTONE_ID: 3 # ID for "Backlog" milestone
+  SHIPPING_NEXT_MILESTONE_ID: 2 # ID for "Shipping Next" milestone
+
 permissions:
   pull-requests: write
   issues: write
@@ -21,7 +25,7 @@ jobs:
         id: check_milestone
         run: |
           milestone_id=$(gh api repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }} --jq '.milestone.number')
-          if [[ "$milestone_id" == "3" ]]; then
+          if [[ "$milestone_id" == "${{ env.BACKLOG_MILESTONE_ID }}" ]]; then
             echo "backlog_milestone=true" >> $GITHUB_OUTPUT
           else
             echo "backlog_milestone=false" >> $GITHUB_OUTPUT
@@ -34,7 +38,7 @@ jobs:
         run: |
           gh api -X PATCH \
             repos/${{ github.repository }}/issues/${{ github.event.pull_request.number }} \
-            -f milestone=2
+            -f milestone=${{ env.SHIPPING_NEXT_MILESTONE_ID }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -82,7 +86,7 @@ jobs:
           fi
 
           # Extract issue numbers, keep only those with milestone "Backlog" (number 3)
-            | select(.milestone != null and .milestone.number == 3)
+            | select(.milestone != null and .milestone.number == ${{ env.BACKLOG_MILESTONE_ID }})
             | .number'
           )
 
@@ -104,7 +108,7 @@ jobs:
             echo "Updating milestone for issue #$issue_number"
             if gh api -X PATCH \
               "repos/${{ github.repository }}/issues/$issue_number" \
-              -f milestone=2 \
+              -f milestone=${{ env.SHIPPING_NEXT_MILESTONE_ID }} \
               --silent; then
               echo "✓ Successfully updated milestone for issue #$issue_number"
               updated_count=$((updated_count + 1))
