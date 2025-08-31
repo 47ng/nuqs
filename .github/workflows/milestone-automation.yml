@@ -81,8 +81,8 @@ jobs:
             exit 1
           fi
 
-          # Extract issue numbers, filtering out those already in milestone 2
-            | select(.milestone == null or .milestone.number != 2)
+          # Extract issue numbers, keep only those with milestone "Backlog" (number 3)
+            | select(.milestone != null and .milestone.number == 3)
             | .number'
           )
 
