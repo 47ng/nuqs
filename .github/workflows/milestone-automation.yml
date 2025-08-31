@@ -41,7 +41,7 @@ jobs:
       - name: Update linked issues milestone to "shipping next"
         if: steps.check_milestone.outputs.backlog_milestone == 'true'
         run: |
-          set -e  # Exit on any error
+          set -euo pipefail # Exit on any error
 
           # Validate PR number is numeric
           if ! [[ "${{ github.event.pull_request.number }}" =~ ^[0-9]+$ ]]; then
