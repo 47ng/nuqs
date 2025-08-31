@@ -33,6 +33,9 @@
     "typescript": "^5.9.2"
   },
   "packageManager": "pnpm@10.15.0",
+  "resolutions": {
+    "@semantic-release/github": "^11.0.5"
+  },
   "prettier": {
     "arrowParens": "avoid",
     "semi": false,
