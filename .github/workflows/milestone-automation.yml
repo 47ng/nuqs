@@ -82,9 +82,7 @@ jobs:
           fi
 
           # Extract issue numbers, filtering out those already in milestone 2
-          linked_issues=$(echo "$response" | jq -r '
-            .data.repository.pullRequest.closingIssuesReferences.nodes[]
-            | select(.milestone.number != 2)
+            | select(.milestone == null or .milestone.number != 2)
             | .number'
           )
 
