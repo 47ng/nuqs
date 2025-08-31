@@ -30,7 +30,7 @@ jobs:
             const config = await loadConfig(pkgJson.commitlint);
             const result = await lint(process.env.TITLE, config.rules, config.parserPreset ? { parserOpts: config.parserPreset.parserOpts } : {});
             process.env.GITHUB_STEP_SUMMARY += \`## Linting Result\n- Valid: \${result.valid}\n\`;
-            if (\!result.valid) {
+            if (result.valid === false) {
               for (const { message } of result.errors) {
                 process.env.GITHUB_STEP_SUMMARY += \`- Error: \${message}\n\`;
                 console.error(message);
