@@ -18,6 +18,23 @@ jobs:
           node-version-file: .node-version
           cache: pnpm
       - name: Install dependencies
-        run: pnpm install --ignore-scripts --frozen-lockfile --workspace-root
+        run: pnpm add -D @commitlint/load @commitlint/lint
       - name: Lint PR title
-        run: echo "${{ github.event.pull_request.title }}" | ./node_modules/.bin/commitlint > $GITHUB_STEP_SUMMARY
+        env:
+          TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          node -e "
+            import loadConfig from '@commitlint/load'
+            import lint from '@commitlint/lint'
+            import pkgJson from './package.json' assert { type: 'json' }
+            const config = await loadConfig(pkgJson.commitlint)
+            const result = await lint(process.env.TITLE, config.rules, config.parserPreset ? { parserOpts: config.parserPreset.parserOpts } : {})
+            process.env.GITHUB_STEP_SUMMARY += `## Linting Result\n- Valid: ${result.valid}\n`
+            if (!result.valid) {
+              for (const { message } of result.errors) {
+                process.env.GITHUB_STEP_SUMMARY += `- Error: ${message}\n`
+                console.error(message)
+              }
+              process.exit(1)
+            }
+          "
