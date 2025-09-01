@@ -377,7 +377,7 @@ const dateParser = createParser({
 
 ## Adapter props
 
-### Defaults options
+### Global defaults override
 
 <FeatureSupportMatrix introducedInVersion='2.5.0' />
 
@@ -398,21 +398,23 @@ Default values for some options can be configured globally via the `defaultOptio
 </NuqsAdapter>
 ```
 
-### Process URL Search Params
+### Processing `URLSearchParams`
 
 <FeatureSupportMatrix introducedInVersion='2.6.0' />
 
-Called after the URLSearchParams have been merged via the `processUrlSearchParams{:ts}`
-[adapter](/docs/adapters) prop.
+You can pass a `processUrlSearchParams{:ts}` callback to the adapter,
+which will be called _after_ the `URLSearchParams{:ts}` have been merged
+when performing a state update, and _before_ they are sent to the adapter
+for updating the URL.
 
-Useful for modifying the search parameters before they are used by the adapter.
+Think of it as a sort of **middleware** for processing search params.
 
 #### Alphabetical Sort
 
-Sorts the query parameters alphabetically.
+Sort the search parameters alphabetically:
 
 ```tsx
-// [!code word:processUrlSearchParamsAlphabeticalSort]
+// [!code word:processUrlSearchParams]
 <NuqsAdapter
   processUrlSearchParams={(search) => {
     const entries = Array.from(search.entries())
@@ -427,22 +429,24 @@ Sorts the query parameters alphabetically.
 import { Suspense } from 'react'
 import { AlphabeticalSortDemo, DemoSkeleton } from './options.client'
 
+_Try toggling **c**, then **b**, then **a**, and note how the URL remains ordered:_
+
 <Suspense fallback={<DemoSkeleton/>}>
   <AlphabeticalSortDemo />
 </Suspense>
 
-
 #### Timestamp
 
-Adds a timestamp to the query parameters.
+Add a timestamp to the search parameters:
 
 ```tsx
-// [!code word:processUrlSearchParamsTimestamp]
+// [!code word:processUrlSearchParams]
 <NuqsAdapter
   processUrlSearchParams={(search) => {
-    const params = new URLSearchParams(search)
-    params.set('ts', Date.now().toString())
-    return params
+    // Note: you can modify search in-place,
+    // or return a copy, as you wish.
+    search.set('ts', Date.now().toString())
+    return search
   }}
 >
   {children}
