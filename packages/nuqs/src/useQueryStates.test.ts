@@ -1,6 +1,8 @@
-import { act, renderHook } from '@testing-library/react'
+import { act, renderHook, screen } from '@testing-library/react'
+import { createElement, useState, type ReactNode } from 'react'
 import { describe, expect, it, vi } from 'vitest'
 import {
+  NuqsTestingAdapter,
   withNuqsTestingAdapter,
   type OnUrlUpdateFunction
 } from './adapters/testing'
@@ -746,5 +748,65 @@ describe('useQueryStates: adapter defaults', () => {
     await act(() => result.current[1]({ test: 'pass' }))
     expect(onUrlUpdate).toHaveBeenCalledOnce()
     expect(onUrlUpdate.mock.calls[0]![0].queryString).toBe('?test=pass')
+  })
+})
+
+describe('useQueryStates: process url search params', () => {
+  it('should use adapter processUrlSearchParams when provided', async () => {
+    const onUrlUpdate = vi.fn<OnUrlUpdateFunction>()
+    const useTestHook = () => useQueryStates({ test: parseAsString })
+    const { result } = renderHook(useTestHook, {
+      wrapper: withNuqsTestingAdapter({
+        processUrlSearchParams: search => {
+          const params = new URLSearchParams(search)
+          params.set('test', 'processed')
+          return params
+        },
+        onUrlUpdate
+      })
+    })
+    await act(() => result.current[1]({ test: 'update' }))
+    expect(onUrlUpdate).toHaveBeenCalledOnce()
+    expect(onUrlUpdate.mock.calls[0]![0].queryString).toBe('?test=processed')
+  })
+  it('should follow changes in the processUrlSearchParams callback', async () => {
+    const onUrlUpdate = vi.fn<OnUrlUpdateFunction>()
+    function DynamicWrapper({ children }: { children: ReactNode }) {
+      const [process, setProcess] = useState(false)
+      // Who needs JSX in tests anyway?
+      return createElement(NuqsTestingAdapter, {
+        onUrlUpdate,
+        processUrlSearchParams: process
+          ? search => {
+              search.set('test', 'processed')
+              return search
+            }
+          : undefined,
+        children: [
+          createElement('button', {
+            key: 'btn',
+            onClick: () => setProcess(p => !p),
+            'data-testid': 'btn',
+            'data-state': process ? 'on' : 'off'
+          }),
+          children
+        ]
+      })
+    }
+    const useTestHook = () => useQueryStates({ test: parseAsString })
+    const { result } = renderHook(useTestHook, {
+      wrapper: DynamicWrapper
+    })
+    const button = screen.getByTestId('btn')
+    expect(button.getAttribute('data-state')).toBe('off')
+    await act(() => result.current[1]({ test: 'pass' }))
+    expect(onUrlUpdate).toHaveBeenCalledOnce()
+    expect(onUrlUpdate.mock.calls[0]![0].queryString).toBe('?test=pass')
+    onUrlUpdate.mockReset()
+    act(() => button.click())
+    expect(button.getAttribute('data-state')).toBe('on')
+    await act(() => result.current[1]({ test: 'fail-if-kept' }))
+    expect(onUrlUpdate).toHaveBeenCalledOnce()
+    expect(onUrlUpdate.mock.calls[0]![0].queryString).toBe('?test=processed')
   })
 })

@@ -16,6 +16,7 @@ export type AdapterProps = {
   defaultOptions?: Partial<
     Pick<Options, 'shallow' | 'clearOnDefault' | 'scroll' | 'limitUrlUpdates'>
   >
+  processUrlSearchParams?: (search: URLSearchParams) => URLSearchParams
 }
 
 export type AdapterContext = AdapterProps & {
@@ -59,10 +60,13 @@ export type AdapterProvider = (
 export function createAdapterProvider(
   useAdapter: UseAdapterHook
 ): AdapterProvider {
-  return ({ children, defaultOptions, ...props }) =>
+  return ({ children, defaultOptions, processUrlSearchParams, ...props }) =>
     createElement(
       context.Provider,
-      { ...props, value: { useAdapter, defaultOptions } },
+      {
+        ...props,
+        value: { useAdapter, defaultOptions, processUrlSearchParams }
+      },
       children
     )
 }
@@ -77,3 +81,7 @@ export function useAdapter(watchKeys: string[]): AdapterInterface {
 
 export const useAdapterDefaultOptions = (): AdapterProps['defaultOptions'] =>
   useContext(context).defaultOptions
+
+export const useAdapterProcessUrlSearchParams =
+  (): AdapterProps['processUrlSearchParams'] =>
+    useContext(context).processUrlSearchParams

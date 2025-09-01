@@ -29,6 +29,7 @@ type TestingAdapterProps = {
 export function NuqsTestingAdapter({
   resetUrlUpdateQueueOnMount = true,
   defaultOptions,
+  processUrlSearchParams,
   ...props
 }: TestingAdapterProps): ReactElement {
   if (resetUrlUpdateQueueOnMount) {
@@ -59,7 +60,7 @@ export function NuqsTestingAdapter({
   })
   return createElement(
     context.Provider,
-    { value: { useAdapter, defaultOptions } },
+    { value: { useAdapter, defaultOptions, processUrlSearchParams } },
     props.children
   )
 }

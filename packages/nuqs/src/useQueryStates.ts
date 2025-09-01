@@ -1,5 +1,9 @@
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react'
-import { useAdapter, useAdapterDefaultOptions } from './adapters/lib/context'
+import {
+  useAdapter,
+  useAdapterDefaultOptions,
+  useAdapterProcessUrlSearchParams
+} from './adapters/lib/context'
 import type { Nullable, Options, UrlKeys } from './defs'
 import { debug } from './lib/debug'
 import { error } from './lib/errors'
@@ -69,6 +73,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
 ): UseQueryStatesReturn<KeyMap> {
   const hookId = useId()
   const defaultOptions = useAdapterDefaultOptions()
+  const processUrlSearchParams = useAdapterProcessUrlSearchParams()
 
   const {
     history = 'replace',
@@ -333,7 +338,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
       // debounced update that will resolve afterwards.
       const globalPromise = debounceAborts.reduce(
         (previous, fn) => fn(previous),
-        globalThrottleQueue.flush(adapter)
+        globalThrottleQueue.flush(adapter, processUrlSearchParams)
       )
       return returnedPromise ?? globalPromise
     },
@@ -350,6 +355,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
       adapter.updateUrl,
       adapter.getSearchParamsSnapshot,
       adapter.rateLimitFactor,
+      processUrlSearchParams,
       defaultValues
     ]
   )
