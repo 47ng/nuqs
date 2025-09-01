@@ -6,10 +6,11 @@ description: Configuring nuqs
 By default, `nuqs` will update search params:
 1. On the client only (not sending requests to the server),
 2. by replacing the current history entry,
-3. and without scrolling to the top of the page.
+3. without scrolling to the top of the page.
+4. with a throttle rate adapted to your browser
 
-These behaviours can be configured, along with a few additional options.
-
+These default behaviours can be [configured](#global-defaults-override),
+along with a few additional options.
 
 ## Passing options
 
@@ -31,7 +32,6 @@ setState('foo', { scroll: true })
 ```
 
 Call-level options will override hook level options.
-
 
 ## History
 
@@ -128,7 +128,6 @@ can opt-in to this behaviour:
 // [!code word:scroll]
 useQueryState('foo', { scroll: true })
 ```
-
 
 ## Rate-limiting URL updates
 
@@ -289,7 +288,6 @@ const [, setState] = useQueryState('foo', {
 setState('bar', { limitUrlUpdates: defaultRateLimit })
 ```
 
-
 ## Transitions
 
 When combined with `shallow: false{:ts}`, you can use React's `useTransition{:ts}` hook
@@ -376,6 +374,10 @@ const dateParser = createParser({
 ```
 
 ## Adapter props
+
+The following options are global and can be passed directly
+on the `NuqsAdapter{:ts}` as props, and apply to its whole
+children tree.
 
 ### Global defaults override
 
