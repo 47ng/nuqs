@@ -69,11 +69,14 @@ export class ThrottledQueue {
     return this.updateMap.get(key)
   }
 
-  flush({
-    getSearchParamsSnapshot = getSearchParamsSnapshotFromLocation,
-    rateLimitFactor = 1,
-    ...adapter
-  }: UpdateQueueAdapterContext): Promise<URLSearchParams> {
+  flush(
+    {
+      getSearchParamsSnapshot = getSearchParamsSnapshotFromLocation,
+      rateLimitFactor = 1,
+      ...adapter
+    }: UpdateQueueAdapterContext,
+    processUrlSearchParams?: (search: URLSearchParams) => URLSearchParams
+  ): Promise<URLSearchParams> {
     this.controller ??= new AbortController()
     if (!Number.isFinite(this.timeMs)) {
       debug('[nuqs gtq] Skipping flush due to throttleMs=Infinity')
@@ -86,11 +89,14 @@ export class ThrottledQueue {
     this.resolvers = withResolvers<URLSearchParams>()
     const flushNow = () => {
       this.lastFlushedAt = performance.now()
-      const [search, error] = this.applyPendingUpdates({
-        ...adapter,
-        autoResetQueueOnUpdate: adapter.autoResetQueueOnUpdate ?? true,
-        getSearchParamsSnapshot
-      })
+      const [search, error] = this.applyPendingUpdates(
+        {
+          ...adapter,
+          autoResetQueueOnUpdate: adapter.autoResetQueueOnUpdate ?? true,
+          getSearchParamsSnapshot
+        },
+        processUrlSearchParams
+      )
       if (error === null) {
         this.resolvers!.resolve(search)
       } else {
@@ -152,10 +158,11 @@ export class ThrottledQueue {
   }
 
   applyPendingUpdates(
-    adapter: Required<Omit<UpdateQueueAdapterContext, 'rateLimitFactor'>>
+    adapter: Required<Omit<UpdateQueueAdapterContext, 'rateLimitFactor'>>,
+    processUrlSearchParams?: (search: URLSearchParams) => URLSearchParams
   ): [URLSearchParams, null | unknown] {
     const { updateUrl, getSearchParamsSnapshot } = adapter
-    const search = getSearchParamsSnapshot()
+    let search = getSearchParamsSnapshot()
     debug(
       `[nuqs gtq] Applying %d pending update(s) on top of %s`,
       this.updateMap.size,
@@ -180,6 +187,9 @@ export class ThrottledQueue {
       } else {
         search.set(key, value)
       }
+    }
+    if (processUrlSearchParams) {
+      search = processUrlSearchParams(search)
     }
     try {
       compose(transitions, () => {

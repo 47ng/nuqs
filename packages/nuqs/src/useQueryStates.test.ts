@@ -748,3 +748,23 @@ describe('useQueryStates: adapter defaults', () => {
     expect(onUrlUpdate.mock.calls[0]![0].queryString).toBe('?test=pass')
   })
 })
+
+describe('useQueryStates: process url search params', () => {
+  it('should use adapter processUrlSearchParams when provided', async () => {
+    const onUrlUpdate = vi.fn<OnUrlUpdateFunction>()
+    const useTestHook = () => useQueryStates({ test: parseAsString })
+    const { result } = renderHook(useTestHook, {
+      wrapper: withNuqsTestingAdapter({
+        processUrlSearchParams: search => {
+          const params = new URLSearchParams(search)
+          params.set('test', 'processed')
+          return params
+        },
+        onUrlUpdate
+      })
+    })
+    await act(() => result.current[1]({ test: 'update' }))
+    expect(onUrlUpdate).toHaveBeenCalledOnce()
+    expect(onUrlUpdate.mock.calls[0]![0].queryString).toBe('?test=processed')
+  })
+})

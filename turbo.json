@@ -1,5 +1,6 @@
 {
   "$schema": "https://turbo.build/schema.v2.json",
+  "concurrency": "11",
   "tasks": {
     "dev": {
       "cache": false,

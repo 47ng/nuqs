@@ -32,26 +32,6 @@ setState('foo', { scroll: true })
 
 Call-level options will override hook level options.
 
-### Global defaults override
-
-<FeatureSupportMatrix introducedInVersion='2.5.0' />
-
-Default values for some options can also be configured globally via the `defaultOptions{:ts}`
-[adapter](/docs/adapters) prop:
-
-```tsx
-// [!code word:defaultOptions]
-<NuqsAdapter
-  defaultOptions={{
-    shallow: false,
-    scroll: true,
-    clearOnDefault: false,
-    limitUrlUpdates: throttle(250),
-  }}
->
-  {children}
-</NuqsAdapter>
-```
 
 ## History
 
@@ -394,3 +374,83 @@ const dateParser = createParser({
   eq: (a: Date, b: Date) => a.getTime() === b.getTime() // [!code highlight]
 })
 ```
+
+## Adapter props
+
+### Defaults options
+
+<FeatureSupportMatrix introducedInVersion='2.5.0' />
+
+Default values for some options can be configured globally via the `defaultOptions{:ts}`
+[adapter](/docs/adapters) prop:
+
+```tsx
+// [!code word:defaultOptions]
+<NuqsAdapter
+  defaultOptions={{
+    shallow: false,
+    scroll: true,
+    clearOnDefault: false,
+    limitUrlUpdates: throttle(250),
+  }}
+>
+  {children}
+</NuqsAdapter>
+```
+
+### Process URL Search Params
+
+<FeatureSupportMatrix introducedInVersion='2.6.0' />
+
+Called after the URLSearchParams have been merged via the `processUrlSearchParams{:ts}`
+[adapter](/docs/adapters) prop.
+
+Useful for modifying the search parameters before they are used by the adapter.
+
+#### Alphabetical Sort
+
+Sorts the query parameters alphabetically.
+
+```tsx
+// [!code word:processUrlSearchParamsAlphabeticalSort]
+<NuqsAdapter
+  processUrlSearchParams={(search) => {
+    const entries = Array.from(search.entries())
+    entries.sort(([a], [b]) => a.localeCompare(b))
+    return new URLSearchParams(entries)
+  }}
+>
+  {children}
+</NuqsAdapter>
+```
+
+import { Suspense } from 'react'
+import { AlphabeticalSortDemo, DemoSkeleton } from './options.client'
+
+<Suspense fallback={<DemoSkeleton/>}>
+  <AlphabeticalSortDemo />
+</Suspense>
+
+
+#### Timestamp
+
+Adds a timestamp to the query parameters.
+
+```tsx
+// [!code word:processUrlSearchParamsTimestamp]
+<NuqsAdapter
+  processUrlSearchParams={(search) => {
+    const params = new URLSearchParams(search)
+    params.set('ts', Date.now().toString())
+    return params
+  }}
+>
+  {children}
+</NuqsAdapter>
+```
+
+import { TimestampDemo } from './options.client'
+
+<Suspense fallback={<DemoSkeleton/>}>
+  <TimestampDemo />
+</Suspense>
