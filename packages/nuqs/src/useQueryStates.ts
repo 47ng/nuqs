@@ -355,6 +355,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
       adapter.updateUrl,
       adapter.getSearchParamsSnapshot,
       adapter.rateLimitFactor,
+      processUrlSearchParams,
       defaultValues
     ]
   )
