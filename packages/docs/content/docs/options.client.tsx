@@ -10,7 +10,7 @@ import { useState } from 'react'
 
 export function DemoSkeleton() {
   return (
-    <figure className="flex animate-pulse flex-wrap justify-around gap-2 rounded-xl border border-dashed p-1">
+    <figure className="flex animate-pulse flex-wrap justify-around gap-2 rounded-xl border border-dashed p-1 pb-2">
       <ComponentSkeleton />
       <ComponentSkeleton />
       <ComponentSkeleton />
@@ -41,7 +41,7 @@ export function AlphabeticalSortDemo() {
           />{' '}
           Enable alphabetical sorting on updates
         </Label>
-        <figure className="not-prose mt-4 mb-8 flex flex-wrap justify-around gap-2 rounded-xl border border-dashed p-1">
+        <figure className="not-prose mt-4 mb-8 flex flex-wrap justify-around gap-2 rounded-xl border border-dashed p-1 pb-2">
           <QuerySpy keepKeys={['a', 'b', 'c']} />
           <ComponentToggle id="a" />
           <ComponentToggle id="b" />
@@ -61,7 +61,7 @@ export function TimestampDemo() {
       }}
     >
       <>
-        <figure className="flex flex-wrap justify-around gap-2 rounded-xl border border-dashed p-1">
+        <figure className="flex flex-wrap justify-around gap-2 rounded-xl border border-dashed p-1 pb-2">
           <QuerySpy keepKeys={['d', 'e', 'f', 'ts']} />
           <ComponentIncrement id="d" />
           <ComponentIncrement id="e" />
