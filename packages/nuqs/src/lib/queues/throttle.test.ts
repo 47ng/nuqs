@@ -354,9 +354,8 @@ describe('throttle: flush', () => {
         options: {}
       })
       const promise = queue.flush(mockAdapter, search => {
-        const entries = Array.from(search.entries())
-        entries.sort(([a], [b]) => a.localeCompare(b))
-        return new URLSearchParams(entries)
+        search.sort()
+        return search
       })
       expect(queue.controller).not.toBeNull()
       vi.runAllTimers()

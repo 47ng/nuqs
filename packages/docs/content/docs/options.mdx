@@ -419,9 +419,8 @@ Sort the search parameters alphabetically:
 // [!code word:processUrlSearchParams]
 <NuqsAdapter
   processUrlSearchParams={(search) => {
-    const entries = Array.from(search.entries())
-    entries.sort(([a], [b]) => a.localeCompare(b))
-    return new URLSearchParams(entries)
+    search.sort()
+    return search
   }}
 >
   {children}

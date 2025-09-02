@@ -18,9 +18,8 @@ export function DemoSkeleton() {
 }
 
 function sortAlphabetically(search: URLSearchParams): URLSearchParams {
-  const entries = Array.from(search.entries())
-  entries.sort(([a], [b]) => a.localeCompare(b))
-  return new URLSearchParams(entries)
+  search.sort()
+  return search
 }
 function passThrough(search: URLSearchParams): URLSearchParams {
   return search
