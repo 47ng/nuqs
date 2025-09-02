@@ -419,6 +419,8 @@ Sort the search parameters alphabetically:
 // [!code word:processUrlSearchParams]
 <NuqsAdapter
   processUrlSearchParams={(search) => {
+    // Note: you can modify search in-place,
+    // or return a copy, as you wish.
     search.sort()
     return search
   }}
@@ -444,8 +446,6 @@ Add a timestamp to the search parameters:
 // [!code word:processUrlSearchParams]
 <NuqsAdapter
   processUrlSearchParams={(search) => {
-    // Note: you can modify search in-place,
-    // or return a copy, as you wish.
     search.set('ts', Date.now().toString())
     return search
   }}
