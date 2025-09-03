@@ -67,7 +67,7 @@ serialize('?remove=me', { foo: 'bar', remove: null }) // ?foo=bar
 
 ### Shorter search params keys
 
-Just like [`useQueryStates{:ts}`](./batching#shorter-search-params-keys), you can
+Just like [`useQueryStates{:ts}`](/docs/batching#shorter-search-params-keys), you can
 specify a `urlKeys{:ts}` object to map the variable names defined by the parsers
 to shorter keys in the URL:
 
@@ -103,7 +103,7 @@ serialize({
 
 <FeatureSupportMatrix introducedInVersion='2.6.0' />
 
-Just like in the [`<NuqsAdapter>{:ts}`](./options#processing-urlsearchparams),
+Just like in the [`<NuqsAdapter>{:ts}`](/docs/options#processing-urlsearchparams),
 you can specify a `processUrlSearchParams{:ts}` function
 to modify the search params before they are serialized.
 
@@ -152,8 +152,8 @@ inferParserType<typeof intNullable> // number | null
 inferParserType<typeof intNonNull> // number
 ```
 
-For an object describing parsers (that you'd pass to [`createSearchParamsCache`](./server-side)
-or to [`useQueryStates`](./batching#usequerystates)), `inferParserType` will
+For an object describing parsers (that you'd pass to [`createSearchParamsCache`](/docs/server-side)
+or to [`useQueryStates`](/docs/batching#usequerystates)), `inferParserType` will
 return the type of the object with the parsers replaced by their inferred types:
 
 ```ts

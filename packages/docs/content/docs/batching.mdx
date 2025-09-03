@@ -83,7 +83,7 @@ const search = await setCoordinates({
 
 ### Options
 
-There are three places you can define [options](./options) in `useQueryStates`:
+There are three places you can define [options](/docs/options) in `useQueryStates`:
 - As the second argument to the hook itself (global options, like `history: 'push'{:ts}` above)
 - On each parser, like `parseAsFloat.withOptions({ shallow: false }){:ts}`
 - At the call level when updating the state:
@@ -150,7 +150,7 @@ setCoordinates({
 
 As your application grows, you may want to reuse these parsers and urlKeys
 definitions across multiple components or nuqs features
-(like [loaders](./server-side#loaders) or a [serializer](./utilities#serializer-helper)).
+(like [loaders](/docs/server-side#loaders) or a [serializer](/docs/utilities#serializer-helper)).
 
 You can use the `UrlKeys{:ts}` type helper for this:
 

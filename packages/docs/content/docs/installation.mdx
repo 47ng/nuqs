@@ -3,6 +3,15 @@ title: Installation
 description: Getting started
 ---
 
+import {
+  NextJS,
+  ReactRouter,
+  ReactRouterV7,
+  ReactSPA,
+  Remix,
+  TanStackRouter,
+} from '@/src/components/frameworks'
+
 Install the `nuqs` package with your favourite package manager:
 
 ```npm
@@ -13,12 +22,13 @@ npm install nuqs
 
 `nuqs@^2` supports the following frameworks and their respective versions:
 
-- [Next.js](./adapters#nextjs): 14.2.0 and above (including Next.js 15)
-- [React SPA](./adapters#react-spa): 18.3 & 19
-- [Remix](./adapters#remix): 2 and above
-- [React Router v6](./adapters#react-router-v6): `react-router-dom@^6`
-- [React Router v7](./adapters#react-router-v7): `react-router@^7`
-- [TanStack Router](./adapters#tanstack-router): `@tanstack/react-router@^1`
+- <NextJS className='inline mr-1.5' role="presentation"/> [Next.js](/docs/adapters#nextjs): 14.2.0 and above (including Next.js 15)
+- <ReactSPA className='inline mr-1.5' role="presentation" /> [React SPA](/docs/adapters#react-spa): 18.3 & 19
+- <Remix className='inline mr-1.5' role="presentation" /> [Remix](/docs/adapters#remix): 2 and above
+- <ReactRouter className='inline mr-1.5' role="presentation" /> [React Router v6](/docs/adapters#react-router-v6): `react-router-dom@^6`
+- <ReactRouterV7 className='inline mr-1.5' role="presentation" /> [React Router v7](/docs/adapters#react-router-v7): `react-router@^7`
+- <TanStackRouter className='inline mr-1.5 not-prose' role="presentation"/> [TanStack Router](/docs/adapters#tanstack-router): `@tanstack/react-router@^1`
+
 
 <Callout>
   For older versions of Next.js, you may use `nuqs@^1` (documentation in the
