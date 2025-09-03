@@ -105,7 +105,7 @@ The order of precedence is: call-level options > parser options > global options
 
 <Callout title="Tip">
 You can clear all keys managed by a `useQueryStates{:ts}` hook by passing
-`null{:ts}` to the state updater function.
+`null{:ts}` to the state updater function:
 
 ```ts
 const clearAll = () => setCoordinates(null)
@@ -117,11 +117,20 @@ This will clear `lat` & `lng`, and leave other search params untouched.
 
 ### Shorter search params keys
 
+<FeatureSupportMatrix
+  introducedInVersion='1.20.0'
+  support={{
+    supported: false,
+    frameworks: ['TanStack Router']
+  }}
+  highlightUnsupported
+/>
+
 One issue with tying the parsers object keys to the search params keys was that
 you had to trade-off between variable names that make sense for your domain
 or business logic, and short, URL-friendly keys.
 
-In `nuqs@1.20.0` and later, you can use a `urlKeys{:ts}` object in the hook options
+You can use a `urlKeys{:ts}` object in the hook options
 to remap the variable names to shorter keys:
 
 ```ts
