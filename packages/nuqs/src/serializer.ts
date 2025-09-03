@@ -9,6 +9,7 @@ export type CreateSerializerOptions<Parsers extends ParserMap> = Pick<
   'clearOnDefault'
 > & {
   urlKeys?: UrlKeys<Parsers>
+  processUrlSearchParams?: (searchParams: URLSearchParams) => URLSearchParams
 }
 
 type SerializeFunction<
@@ -40,7 +41,11 @@ export function createSerializer<
   Return = string
 >(
   parsers: Parsers,
-  { clearOnDefault = true, urlKeys = {} }: CreateSerializerOptions<Parsers> = {}
+  {
+    clearOnDefault = true,
+    urlKeys = {},
+    processUrlSearchParams
+  }: CreateSerializerOptions<Parsers> = {}
 ): SerializeFunction<Parsers, BaseType, Return> {
   type Values = Partial<Nullable<inferParserType<Parsers>>>
 
@@ -61,7 +66,7 @@ export function createSerializer<
     arg1BaseOrValues: BaseType | Values,
     arg2values: Values | null = {}
   ) {
-    const [base, search] = isBase<BaseType>(arg1BaseOrValues)
+    let [base, search] = isBase<BaseType>(arg1BaseOrValues)
       ? splitBase(arg1BaseOrValues)
       : ['', new URLSearchParams()]
     const values = isBase(arg1BaseOrValues) ? arg2values : arg1BaseOrValues
@@ -69,6 +74,9 @@ export function createSerializer<
       for (const key in parsers) {
         const urlKey = urlKeys[key] ?? key
         search.delete(urlKey)
+      }
+      if (processUrlSearchParams) {
+        search = processUrlSearchParams(search)
       }
       return (base + renderQueryString(search)) as Return
     }
@@ -91,6 +99,9 @@ export function createSerializer<
       } else {
         search.set(urlKey, parser.serialize(value))
       }
+    }
+    if (processUrlSearchParams) {
+      search = processUrlSearchParams(search)
     }
     return base + renderQueryString(search)
   }
