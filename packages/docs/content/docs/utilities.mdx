@@ -103,12 +103,12 @@ serialize({
 
 <FeatureSupportMatrix introducedInVersion='2.6.0' />
 
-Just like [`<NuqsAdapter>{:ts}`](./options#processing-urlsearchparams), you can
-specify a `processUrlSearchParams{:ts}` function to modify the search params before they are serialized.
+Just like in the [`<NuqsAdapter>{:ts}`](./options#processing-urlsearchparams),
+you can specify a `processUrlSearchParams{:ts}` function
+to modify the search params before they are serialized.
 
-### Alphabetical Sort
-
-Useful for consistent canonical URLs.
+For example, it can be useful for consistent canonical URLs (for SEO),
+by sorting search param keys alphabetically:
 
 ```ts
 // [!code word:processUrlSearchParams]
@@ -132,6 +132,7 @@ serialize('?foo=bar', {
   z: 1
 })
 // ?a=1&foo=bar&z=1
+// merged, then sorted
 ```
 
 ## Parser type inference
