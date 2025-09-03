@@ -29,7 +29,7 @@ export function Querystring({ value, keepKeys, ...props }: QuerystringProps) {
         </Fragment>
       ))}
       {search.size === 0 && (
-        <span className="italic text-zinc-500">{'<empty query>'}</span>
+        <span className="text-zinc-500 italic">{'<empty query>'}</span>
       )}
     </QuerystringSkeleton>
   )
@@ -45,7 +45,7 @@ export function QuerystringSkeleton({
       aria-label="Querystring spy"
       aria-description="For browsers where the query is hard to see (eg: on mobile)"
       className={cn(
-        'block w-full overflow-x-auto text-wrap rounded-lg border bg-background px-3 py-2 text-xs dark:bg-zinc-900/50 dark:shadow-inner sm:text-sm',
+        'bg-background block w-full overflow-x-auto rounded-lg border px-3 py-2 text-xs text-wrap sm:text-sm dark:bg-zinc-900/50 dark:shadow-inner',
         className
       )}
       {...props}
@@ -61,9 +61,9 @@ function filterQueryKeys(query: string | URLSearchParams, keys?: string[]) {
     return source
   }
   const destination = new URLSearchParams()
-  for (const key of keys) {
-    if (source.has(key)) {
-      destination.set(key, source.get(key)!)
+  for (const [key, value] of source.entries()) {
+    if (keys.includes(key)) {
+      destination.set(key, value)
     }
   }
   return destination

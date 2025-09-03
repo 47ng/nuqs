@@ -6,10 +6,11 @@ description: Configuring nuqs
 By default, `nuqs` will update search params:
 1. On the client only (not sending requests to the server),
 2. by replacing the current history entry,
-3. and without scrolling to the top of the page.
+3. without scrolling to the top of the page.
+4. with a throttle rate adapted to your browser
 
-These behaviours can be configured, along with a few additional options.
-
+These default behaviours can be [configured](#global-defaults-override),
+along with a few additional options.
 
 ## Passing options
 
@@ -31,27 +32,6 @@ setState('foo', { scroll: true })
 ```
 
 Call-level options will override hook level options.
-
-### Global defaults override
-
-<FeatureSupportMatrix introducedInVersion='2.5.0' />
-
-Default values for some options can also be configured globally via the `defaultOptions{:ts}`
-[adapter](/docs/adapters) prop:
-
-```tsx
-// [!code word:defaultOptions]
-<NuqsAdapter
-  defaultOptions={{
-    shallow: false,
-    scroll: true,
-    clearOnDefault: false,
-    limitUrlUpdates: throttle(250),
-  }}
->
-  {children}
-</NuqsAdapter>
-```
 
 ## History
 
@@ -148,7 +128,6 @@ can opt-in to this behaviour:
 // [!code word:scroll]
 useQueryState('foo', { scroll: true })
 ```
-
 
 ## Rate-limiting URL updates
 
@@ -309,7 +288,6 @@ const [, setState] = useQueryState('foo', {
 setState('bar', { limitUrlUpdates: defaultRateLimit })
 ```
 
-
 ## Transitions
 
 When combined with `shallow: false{:ts}`, you can use React's `useTransition{:ts}` hook
@@ -394,3 +372,90 @@ const dateParser = createParser({
   eq: (a: Date, b: Date) => a.getTime() === b.getTime() // [!code highlight]
 })
 ```
+
+## Adapter props
+
+The following options are global and can be passed directly
+on the `NuqsAdapter{:ts}` as props, and apply to its whole
+children tree.
+
+### Global defaults override
+
+<FeatureSupportMatrix introducedInVersion='2.5.0' />
+
+Default values for some options can be configured globally via the `defaultOptions{:ts}`
+[adapter](/docs/adapters) prop:
+
+```tsx
+// [!code word:defaultOptions]
+<NuqsAdapter
+  defaultOptions={{
+    shallow: false,
+    scroll: true,
+    clearOnDefault: false,
+    limitUrlUpdates: throttle(250),
+  }}
+>
+  {children}
+</NuqsAdapter>
+```
+
+### Processing `URLSearchParams`
+
+<FeatureSupportMatrix introducedInVersion='2.6.0' />
+
+You can pass a `processUrlSearchParams{:ts}` callback to the adapter,
+which will be called _after_ the `URLSearchParams{:ts}` have been merged
+when performing a state update, and _before_ they are sent to the adapter
+for updating the URL.
+
+Think of it as a sort of **middleware** for processing search params.
+
+#### Alphabetical Sort
+
+Sort the search parameters alphabetically:
+
+```tsx
+// [!code word:processUrlSearchParams]
+<NuqsAdapter
+  processUrlSearchParams={(search) => {
+    // Note: you can modify search in-place,
+    // or return a copy, as you wish.
+    search.sort()
+    return search
+  }}
+>
+  {children}
+</NuqsAdapter>
+```
+
+import { Suspense } from 'react'
+import { AlphabeticalSortDemo, DemoSkeleton } from './options.client'
+
+_Try toggling **c**, then **b**, then **a**, and note how the URL remains ordered:_
+
+<Suspense fallback={<DemoSkeleton/>}>
+  <AlphabeticalSortDemo />
+</Suspense>
+
+#### Timestamp
+
+Add a timestamp to the search parameters:
+
+```tsx
+// [!code word:processUrlSearchParams]
+<NuqsAdapter
+  processUrlSearchParams={(search) => {
+    search.set('ts', Date.now().toString())
+    return search
+  }}
+>
+  {children}
+</NuqsAdapter>
+```
+
+import { TimestampDemo } from './options.client'
+
+<Suspense fallback={<DemoSkeleton/>}>
+  <TimestampDemo />
+</Suspense>

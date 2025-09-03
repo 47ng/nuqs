@@ -1,7 +1,12 @@
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react'
-import { useAdapter, useAdapterDefaultOptions } from './adapters/lib/context'
+import {
+  useAdapter,
+  useAdapterDefaultOptions,
+  useAdapterProcessUrlSearchParams
+} from './adapters/lib/context'
 import type { Nullable, Options, UrlKeys } from './defs'
 import { debug } from './lib/debug'
+import { error } from './lib/errors'
 import { debounceController } from './lib/queues/debounce'
 import { defaultRateLimit } from './lib/queues/rate-limiting'
 import {
@@ -68,6 +73,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
 ): UseQueryStatesReturn<KeyMap> {
   const hookId = useId()
   const defaultOptions = useAdapterDefaultOptions()
+  const processUrlSearchParams = useAdapterProcessUrlSearchParams()
 
   const {
     history = 'replace',
@@ -119,6 +125,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
     internalState,
     initialSearchParams
   )
+
   // Initialise the refs with the initial values
   if (
     Object.keys(queryRef.current).join('&') !==
@@ -296,6 +303,9 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
           limitUrlUpdates?.method === 'debounce' ||
           parser.limitUrlUpdates?.method === 'debounce'
         ) {
+          if (update.options.shallow === true) {
+            console.warn(error(422))
+          }
           const timeMs =
             callOptions?.limitUrlUpdates?.timeMs ??
             limitUrlUpdates?.timeMs ??
@@ -328,7 +338,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
       // debounced update that will resolve afterwards.
       const globalPromise = debounceAborts.reduce(
         (previous, fn) => fn(previous),
-        globalThrottleQueue.flush(adapter)
+        globalThrottleQueue.flush(adapter, processUrlSearchParams)
       )
       return returnedPromise ?? globalPromise
     },
@@ -345,6 +355,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
       adapter.updateUrl,
       adapter.getSearchParamsSnapshot,
       adapter.rateLimitFactor,
+      processUrlSearchParams,
       defaultValues
     ]
   )

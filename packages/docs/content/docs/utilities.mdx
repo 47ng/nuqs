@@ -99,6 +99,42 @@ serialize({
 // ?lat=45.18&lng=5.72&z=12
 ```
 
+### Processing URLSearchParams
+
+<FeatureSupportMatrix introducedInVersion='2.6.0' />
+
+Just like in the [`<NuqsAdapter>{:ts}`](./options#processing-urlsearchparams),
+you can specify a `processUrlSearchParams{:ts}` function
+to modify the search params before they are serialized.
+
+For example, it can be useful for consistent canonical URLs (for SEO),
+by sorting search param keys alphabetically:
+
+```ts
+// [!code word:processUrlSearchParams]
+const serialize = createSerializer(
+  {
+    a: parseAsInteger,
+    z: parseAsInteger
+  },
+  {
+    processUrlSearchParams: (search) => {
+      // Note: you can modify search in-place,
+      // or return a copy, as you wish.
+      search.sort()
+      return search
+    }
+  }
+)
+
+serialize('?foo=bar', {
+  a: 1,
+  z: 1
+})
+// ?a=1&foo=bar&z=1
+// merged, then sorted
+```
+
 ## Parser type inference
 
 <FeatureSupportMatrix introducedInVersion='1.18.0' />

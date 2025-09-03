@@ -201,4 +201,33 @@ describe('serializer', () => {
     })
     expect(result).toBe('https://example.com/path?issue=is?here&str=foo?bar')
   })
+  describe('supports processUrlSearchParams', () => {
+    it('modifies search params in place', () => {
+      const serialize = createSerializer(parsers, {
+        processUrlSearchParams: searchParams => {
+          searchParams.set('processed', 'true')
+          return searchParams
+        }
+      })
+      const result = serialize({ str: 'foo' })
+      expect(result).toBe('?str=foo&processed=true')
+    })
+    it('sorts the search params alphabetically', () => {
+      const serialize = createSerializer(
+        {
+          // Note the order of keys here:
+          z: parseAsInteger,
+          a: parseAsInteger
+        },
+        {
+          processUrlSearchParams: searchParams => {
+            searchParams.sort()
+            return searchParams
+          }
+        }
+      )
+      const result = serialize('?foo=bar', { a: 1, z: 1 })
+      expect(result).toBe('?a=1&foo=bar&z=1')
+    })
+  })
 })

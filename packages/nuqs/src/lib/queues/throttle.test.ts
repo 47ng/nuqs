@@ -305,4 +305,61 @@ describe('throttle: flush', () => {
       new Error('updateUrl error')
     )
   })
+  it('should process url search params', async () => {
+    const mockAdapter = createMockAdapter()
+    const queue = new ThrottledQueue()
+    queue.push({
+      key: 'a',
+      query: 'a',
+      options: {}
+    })
+    const promise = queue.flush(mockAdapter, function (search) {
+      const params = new URLSearchParams(search)
+      params.set('b', 'b')
+      return params
+    })
+    expect(queue.controller).not.toBeNull()
+    vi.runAllTimers()
+    await expect(promise).resolves.toEqual(new URLSearchParams('?a=a&b=b'))
+  })
+  describe('should process url search params', () => {
+    it('should add new params', async () => {
+      const mockAdapter = createMockAdapter()
+      const queue = new ThrottledQueue()
+      queue.push({
+        key: 'a',
+        query: 'a',
+        options: {}
+      })
+      const promise = queue.flush(mockAdapter, search => {
+        const params = new URLSearchParams(search)
+        params.set('b', 'b')
+        return params
+      })
+      expect(queue.controller).not.toBeNull()
+      vi.runAllTimers()
+      await expect(promise).resolves.toEqual(new URLSearchParams('?a=a&b=b'))
+    })
+    it('should sort params', async () => {
+      const mockAdapter = createMockAdapter()
+      const queue = new ThrottledQueue()
+      queue.push({
+        key: 'b',
+        query: 'b',
+        options: {}
+      })
+      queue.push({
+        key: 'a',
+        query: 'a',
+        options: {}
+      })
+      const promise = queue.flush(mockAdapter, search => {
+        search.sort()
+        return search
+      })
+      expect(queue.controller).not.toBeNull()
+      vi.runAllTimers()
+      await expect(promise).resolves.toEqual(new URLSearchParams('?a=a&b=b'))
+    })
+  })
 })
