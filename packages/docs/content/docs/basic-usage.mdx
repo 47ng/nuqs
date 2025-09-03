@@ -5,12 +5,11 @@ description: Replacing React.useState with useQueryState
 
 import {
   DemoFallback,
-  BasicUsageDemo,
-  GreetingsPrompt
+  BasicUsageDemo
 } from '@/content/docs/parsers/demos'
 
 <Callout title="Prerequisite">
-  Have you setup your app with the appropriate [**adapter**](./adapters)? Then you
+  Have you setup your app with the appropriate [**adapter**](/docs/adapters)? Then you
   are all set!
 </Callout>
 
@@ -106,7 +105,7 @@ const clearCount = () => setCount(null) // Remove query from the URL
 
 <Callout title="Note">
   The default value is internal to React, it will **not** be written to the
-  URL _unless you set it explicitly_ and use the `clearOnDefault: false{:ts}` [option](./options#clear-on-default).
+  URL _unless you set it explicitly_ and use the [`clearOnDefault: false{:ts}` option](/docs/options#clear-on-default).
 </Callout>
 
 <Callout title="Tip">

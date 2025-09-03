@@ -361,7 +361,7 @@ useQueryState('search', {
 </Callout>
 
 This option compares the set state against the default value using `==={:ts}`
-reference equality, so if you are using a [custom parser](./parsers/making-your-own)
+reference equality, so if you are using a [custom parser](/docs/parsers/making-your-own)
 for a state type that wouldn't work with reference equality, you should provide
 the `eq{:ts}` function to your parser (this is done for you in built-in parsers):
 
@@ -376,7 +376,7 @@ const dateParser = createParser({
 ## Adapter props
 
 The following options are global and can be passed directly
-on the `NuqsAdapter{:ts}` as props, and apply to its whole
+on the [`<NuqsAdapter>{:tsx}`](/docs/adapters) as props, and apply to its whole
 children tree.
 
 ### Global defaults override
@@ -384,7 +384,7 @@ children tree.
 <FeatureSupportMatrix introducedInVersion='2.5.0' />
 
 Default values for some options can be configured globally via the `defaultOptions{:ts}`
-[adapter](/docs/adapters) prop:
+adapter prop:
 
 ```tsx
 // [!code word:defaultOptions]

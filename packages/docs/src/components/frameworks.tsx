@@ -1,4 +1,4 @@
-import type { JSX } from 'react'
+import { useId, type ComponentProps, type JSX } from 'react'
 
 export const FRAMEWORKS = [
   'Next.js (app router)',
@@ -12,8 +12,12 @@ export const FRAMEWORKS = [
 ] as const
 
 export type Frameworks = (typeof FRAMEWORKS)[number]
+type IconProps = ComponentProps<'svg'> & ComponentProps<'img'> & {}
 
-export const FRAMEWORK_ICONS: Record<Frameworks, () => JSX.Element> = {
+export const FRAMEWORK_ICONS: Record<
+  Frameworks,
+  (props: IconProps) => JSX.Element
+> = {
   'Next.js (app router)': NextJS,
   'Next.js (pages router)': NextJS,
   'React SPA': ReactSPA,
@@ -24,15 +28,17 @@ export const FRAMEWORK_ICONS: Record<Frameworks, () => JSX.Element> = {
   'Testing adapter': Vitest
 }
 
-export function Vite() {
+export function Vite({ className, ...props }: IconProps) {
   return (
     <svg
-      aria-lable="Vite"
+      aria-label="Vite"
       viewBox="0 0 256 257"
       width="0.9em"
       height="0.9em"
       xmlns="http://www.w3.org/2000/svg"
       preserveAspectRatio="xMidYMid"
+      className={className}
+      {...props}
     >
       <defs>
         <linearGradient
@@ -69,7 +75,7 @@ export function Vite() {
   )
 }
 
-export function ReactSPA() {
+export function ReactSPA({ className, ...props }: IconProps) {
   return (
     <svg
       aria-label="React (Single Page Application)"
@@ -77,6 +83,8 @@ export function ReactSPA() {
       height="1em"
       viewBox="0 0 569 512"
       xmlns="http://www.w3.org/2000/svg"
+      className={className}
+      {...props}
     >
       <g fill="none" fillRule="evenodd">
         <g
@@ -94,7 +102,7 @@ export function ReactSPA() {
   )
 }
 
-export function Vitest() {
+export function Vitest({ className, ...props }: IconProps) {
   return (
     <svg
       aria-label="Vitest"
@@ -103,6 +111,8 @@ export function Vitest() {
       height="1em"
       xmlns="http://www.w3.org/2000/svg"
       preserveAspectRatio="xMidYMid"
+      className={className}
+      {...props}
     >
       <path
         d="m192.115 70.808-61.2 88.488a5.27 5.27 0 0 1-2.673 2.002 5.285 5.285 0 0 1-3.343-.005 5.25 5.25 0 0 1-2.66-2.01 5.214 5.214 0 0 1-.903-3.203l2.45-48.854-39.543-8.386a5.256 5.256 0 0 1-2.292-1.118 5.222 5.222 0 0 1-1.83-4.581 5.226 5.226 0 0 1 .895-2.383L142.218 2.27a5.279 5.279 0 0 1 6.016-1.996 5.243 5.243 0 0 1 2.66 2.01c.643.942.96 2.066.903 3.203l-2.45 48.855 39.542 8.386a5.262 5.262 0 0 1 2.293 1.117 5.21 5.21 0 0 1 1.829 4.582 5.212 5.212 0 0 1-.896 2.382Z"
@@ -121,7 +131,8 @@ export function Vitest() {
   )
 }
 
-export function NextJS() {
+export function NextJS({ className, ...props }: IconProps) {
+  const id = useId()
   return (
     <svg
       aria-label="Next.js (app & pages routers)"
@@ -130,9 +141,11 @@ export function NextJS() {
       viewBox="0 0 180 180"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
+      className={className}
+      {...props}
     >
       <mask
-        id="mask0_408_139"
+        id={'mask0_408_139' + id}
         style={{
           maskType: 'alpha'
         }}
@@ -144,7 +157,7 @@ export function NextJS() {
       >
         <circle cx={90} cy={90} r={90} fill="black" />
       </mask>
-      <g mask="url(#mask0_408_139)">
+      <g mask={`url(#mask0_408_139${id})`}>
         <circle
           cx={90}
           cy={90}
@@ -155,19 +168,19 @@ export function NextJS() {
         />
         <path
           d="M149.508 157.52L69.142 54H54V125.97H66.1136V69.3836L139.999 164.845C143.333 162.614 146.509 160.165 149.508 157.52Z"
-          fill="url(#paint0_linear_408_139)"
+          fill={`url(#paint0_linear_408_139${id})`}
         />
         <rect
           x={115}
           y={54}
           width={12}
           height={72}
-          fill="url(#paint1_linear_408_139)"
+          fill={`url(#paint1_linear_408_139${id})`}
         />
       </g>
       <defs>
         <linearGradient
-          id="paint0_linear_408_139"
+          id={'paint0_linear_408_139' + id}
           x1={109}
           y1={116.5}
           x2={144.5}
@@ -178,7 +191,7 @@ export function NextJS() {
           <stop offset={1} stopColor="white" stopOpacity={0} />
         </linearGradient>
         <linearGradient
-          id="paint1_linear_408_139"
+          id={'paint1_linear_408_139' + id}
           x1={121}
           y1={54}
           x2={120.799}
@@ -193,7 +206,7 @@ export function NextJS() {
   )
 }
 
-export function ReactRouter() {
+export function ReactRouter({ className, ...props }: IconProps) {
   return (
     <svg
       aria-label="React Router"
@@ -202,7 +215,9 @@ export function ReactRouter() {
       viewBox="0 0 94 61"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
-      style={{ transform: 'scale(1.2)' }}
+      className={className}
+      {...props}
+      style={{ transform: 'scale(1.2)', ...props.style }}
     >
       <path
         d="M72.7315 20.9357C70.0548 20.0941 68.6725 20.3778 65.8649 20.071C61.5246 19.5976 59.7954 17.9013 59.0619 13.5356C58.6514 11.0985 59.1361 7.53022 58.0881 5.32106C56.0839 1.10875 51.3943 -0.780439 46.6828 0.297843C42.7049 1.20956 39.3951 5.18518 39.2117 9.266C39.0021 13.9254 41.657 17.901 46.2156 19.273C48.3814 19.9261 50.6825 20.2548 52.9444 20.4214C57.0925 20.7238 57.4113 23.0297 58.5335 24.9277C59.2409 26.1243 59.9264 27.3034 59.9264 30.8714C59.9264 34.4394 59.2365 35.6185 58.5335 36.8151C57.4113 38.7087 56.0271 39.9491 51.879 40.2559C49.6171 40.4225 47.3116 40.7513 45.1502 41.4044C40.5916 42.7807 37.9367 46.7519 38.1463 51.4113C38.3297 55.4921 41.6395 59.4678 45.6174 60.3795C50.3289 61.4621 55.0185 59.5686 57.0227 55.3563C58.075 53.1471 58.6514 50.6443 59.0619 48.2072C59.7998 43.8414 61.5289 42.1451 65.8649 41.6717C68.6725 41.3649 71.5783 41.6717 74.2093 40.177C76.9895 38.1456 79.4734 35.0968 79.4734 30.8714C79.4734 26.6459 76.7967 22.2156 72.7315 20.9357Z"
@@ -224,7 +239,7 @@ export function ReactRouter() {
   )
 }
 
-export function ReactRouterV7() {
+export function ReactRouterV7({ className, ...props }: IconProps) {
   return (
     <svg
       width="1em"
@@ -232,7 +247,9 @@ export function ReactRouterV7() {
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
       viewBox="100 0 72 72"
-      style={{ transform: 'scale(1.35)' }}
+      className={className}
+      {...props}
+      style={{ transform: 'scale(1.35)', ...props.style }}
     >
       <path
         d="M131.275 20.963v-6.645h33.722V22.5c-14.946 12.02-15.149 20.667-15.223 35.744h-11.087c.227-15.835 3.452-24.876 13.139-35.33h-18.585a1.957 1.957 0 0 1-1.963-1.951h-.003Z"
@@ -246,7 +263,7 @@ export function ReactRouterV7() {
   )
 }
 
-export function Remix() {
+export function Remix({ className, ...props }: IconProps) {
   return (
     <svg
       aria-label="Remix"
@@ -254,6 +271,8 @@ export function Remix() {
       width="0.9em"
       height="0.9em"
       xmlns="http://www.w3.org/2000/svg"
+      className={className}
+      {...props}
     >
       <path
         d="M141.675 0C218.047 0 256 36.35 256 94.414c0 43.43-26.707 71.753-62.785 76.474 30.455 6.137 48.259 23.604 51.54 58.065l.474 6.337.415 5.924.358 5.542.249 4.179.267 4.93.138 2.814.198 4.47.159 4.222.079 2.427.107 3.888.092 4.446.033 2.148.06 6.226.02 6.496v3.885h-78.758l.004-1.62.028-3.147.047-3.065.136-7.424.035-2.489.027-3.902-.004-2.496-.023-2.617-.032-2.054-.064-2.876-.094-3.05-.125-3.242-.16-3.455-.096-1.813-.16-2.833-.186-2.976-.287-4.204-.247-3.342a116.56 116.56 0 0 0-.247-3.02l-.202-1.934c-2.6-22.827-11.655-32.157-27.163-35.269l-1.307-.245a60.184 60.184 0 0 0-2.704-.408l-1.397-.164c-.236-.025-.472-.05-.71-.073l-1.442-.127-1.471-.103-1.502-.081-1.514-.058-1.544-.039-1.574-.018L0 198.74V136.9h127.62c2.086 0 4.108-.04 6.066-.12l1.936-.095 1.893-.122 1.85-.15c.305-.028.608-.056.909-.086l1.785-.193a86.3 86.3 0 0 0 3.442-.475l1.657-.28c20.709-3.755 31.063-14.749 31.063-36.2 0-24.075-16.867-38.666-50.602-38.666H0V0h141.675ZM83.276 250.785c10.333 0 14.657 5.738 16.197 11.23l.203.79.167.782.109.617.046.306.078.603.058.59.023.29.031.569.01.278.008.54v29.507H0v-46.102h83.276Z"
@@ -264,14 +283,16 @@ export function Remix() {
   )
 }
 
-export function TanStackRouter() {
+export function TanStackRouter({ className, ...props }: IconProps) {
   return (
     <img
       src="/tanstack-logo.png"
       alt="TanStack Router"
       width="1em"
       height="1em"
-      style={{ width: '1em', height: '1em' }}
+      className={className}
+      {...props}
+      style={{ width: '1em', height: '1em', ...props.style }}
     />
   )
 }

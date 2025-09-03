@@ -23,7 +23,7 @@ Search params are strings by default, but chances are your state is more complex
 You might want to use numbers, booleans, Dates, objects, arrays, or even custom types.
 This is where **parsers** come in.
 
-`nuqs` provides built-in parsers for the most common types, and allows you to [define your own](./making-your-own).
+`nuqs` provides built-in parsers for the most common types, and allows you to [define your own](/docs/parsers/making-your-own).
 
 ## String
 
@@ -47,8 +47,8 @@ see [Literals](#literals) for ensuring type-runtime safety.
 If search params are strings by default, what's the point of this _"parser"_ ?
 
 It becomes useful if you're declaring a search params object, and/or you want
-to use the builder pattern to specify [default values](./basic-usage#default-values)
-and [options](../options):
+to use the builder pattern to specify [default values](/docs/basic-usage#default-values)
+and [options](/docs/options):
 
 ```ts
 export const searchParamsParsers = {

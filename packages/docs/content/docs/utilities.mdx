@@ -7,7 +7,7 @@ description: Utilities for working with query strings
 
 <FeatureSupportMatrix introducedInVersion='1.16.0' hideFrameworks />
 
-To populate `<Link>` components with state values, you can use the `createSerializer`
+To populate `<Link>{:tsx}` components with state values, you can use the `createSerializer{:ts}`
 helper.
 
 Pass it an object describing your search params, and it will give you a function
@@ -49,7 +49,7 @@ serialize({
 
 ### Base parameter
 
-The returned `serialize` function can take a base parameter over which to
+The returned `serialize{:ts}` function can take a base parameter over which to
 append/amend the search params:
 
 ```ts
@@ -67,9 +67,9 @@ serialize('?remove=me', { foo: 'bar', remove: null }) // ?foo=bar
 
 ### Shorter search params keys
 
-Just like [`useQueryStates{:ts}`](./batching#shorter-search-params-keys), you can
-specify a `urlKeys{:ts}` object to map the variable names defined by the parsers
-to shorter keys in the URL:
+Just like with `useQueryStates{:ts}`, you can
+define a [`urlKeys{:ts}`](/docs/batching#shorter-search-params-keys)
+object to map the variable names defined by the parsers to shorter keys in the URL:
 
 ```ts
 const serialize = createSerializer(
@@ -103,7 +103,7 @@ serialize({
 
 <FeatureSupportMatrix introducedInVersion='2.6.0' />
 
-Just like in the [`<NuqsAdapter>{:ts}`](./options#processing-urlsearchparams),
+Just like in the [`<NuqsAdapter>{:tsx}`](/docs/options#processing-urlsearchparams),
 you can specify a `processUrlSearchParams{:ts}` function
 to modify the search params before they are serialized.
 
@@ -140,7 +140,7 @@ serialize('?foo=bar', {
 <FeatureSupportMatrix introducedInVersion='1.18.0' />
 
 To access the underlying type returned by a parser, you can use the
-`inferParserType` type helper:
+`inferParserType{:ts}` type helper:
 
 ```ts
 import { parseAsInteger, type inferParserType } from 'nuqs' // or 'nuqs/server'
@@ -152,8 +152,8 @@ inferParserType<typeof intNullable> // number | null
 inferParserType<typeof intNonNull> // number
 ```
 
-For an object describing parsers (that you'd pass to [`createSearchParamsCache`](./server-side)
-or to [`useQueryStates`](./batching#usequerystates)), `inferParserType` will
+For an object describing parsers (that you'd pass to [`createLoader{:ts}`](/docs/server-side#loaders)
+or to [`useQueryStates{:ts}`](/docs/batching#usequerystates)), `inferParserType{:ts}` will
 return the type of the object with the parsers replaced by their inferred types:
 
 ```ts
