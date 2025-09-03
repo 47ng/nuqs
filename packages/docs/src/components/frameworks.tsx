@@ -31,7 +31,7 @@ export const FRAMEWORK_ICONS: Record<
 export function Vite({ className, ...props }: IconProps) {
   return (
     <svg
-      aria-lable="Vite"
+      aria-label="Vite"
       viewBox="0 0 256 257"
       width="0.9em"
       height="0.9em"
