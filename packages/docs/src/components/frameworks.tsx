@@ -1,4 +1,4 @@
-import { useId, type ComponentProps, type JSX } from 'react'
+import { type ComponentProps, type JSX } from 'react'
 
 export const FRAMEWORKS = [
   'Next.js (app router)',
@@ -132,7 +132,7 @@ export function Vitest({ className, ...props }: IconProps) {
 }
 
 export function NextJS({ className, ...props }: IconProps) {
-  const id = useId()
+  const id = 'constant' // useId()
   return (
     <svg
       aria-label="Next.js (app & pages routers)"
