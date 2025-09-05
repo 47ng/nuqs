@@ -61,7 +61,7 @@
     "tailwind-merge": "^3.3.1",
     "tailwindcss": "^4.1.12",
     "tailwindcss-animate": "^1.0.7",
-    "zod": "^4.0.17"
+    "zod": "^4.1.5"
   },
   "devDependencies": {
     "@shikijs/transformers": "^3.11.0",
