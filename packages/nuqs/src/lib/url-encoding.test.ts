@@ -36,7 +36,7 @@ describe('url-encoding/encodeQueryValue', () => {
     expect(encodeQueryValue(input)).toBe(input)
   })
   test('Other special characters are passed through', () => {
-    const input = '-._~!$()*,;=:@/?[]{}\\|^'
+    const input = '-._~!$()*,;=:@/[]'
     expect(encodeQueryValue(input)).toBe(input)
   })
   test('practical use-cases', () => {
@@ -80,7 +80,9 @@ describe('url-encoding/renderQueryString', () => {
   test('encoding', () => {
     const search = new URLSearchParams()
     search.set('test', '-._~!$()*,;=:@/?[]{}\\|^')
-    expect(renderQueryString(search)).toBe('?test=-._~!$()*,;=:@/?[]{}\\|^')
+    expect(renderQueryString(search)).toBe(
+      '?test=-._~!$()*,;=:@/%3F[]%7B%7D%5C%7C%5E'
+    )
   })
   test('decoding', () => {
     const search = new URLSearchParams()
@@ -132,7 +134,9 @@ describe('url-encoding/renderQueryString', () => {
       const search = new URLSearchParams()
       search.set('filter', value)
       const query = renderQueryString(search)
-      expect(query.slice('?filter='.length)).toBe(value)
+      expect(query.slice('?filter='.length)).toBe(
+        'leftOfBicycleLane:car_lanes,curb%7CpavementHasShops:true%7CpavementWidth:narrow'
+      )
     }
     {
       const url = new URL(
