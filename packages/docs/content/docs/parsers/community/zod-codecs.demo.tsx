@@ -72,11 +72,17 @@ export function ZodCodecsDemo() {
           Randomize
         </Button>
         <Button onClick={handleReset} variant="outline">
-          Reset
+          Clear
         </Button>
       </div>
 
       <div className="space-y-4">
+        <div>
+          <div className="mb-2 flex items-center gap-2">
+            <Label className="text-sm font-medium">Encoded in the URL:</Label>
+          </div>
+          <QuerySpy keepKeys={['user']} />
+        </div>
         <div>
           <Label className="text-sm font-medium">Current Data:</Label>
           <CodeBlock
@@ -86,24 +92,23 @@ export function ZodCodecsDemo() {
             allowCopy={false}
           />
         </div>
-
-        <div>
-          <div className="mb-2 flex items-center gap-2">
-            <Label className="text-sm font-medium">Encoded in URL:</Label>
-          </div>
-          <QuerySpy keepKeys={['user']} />
-        </div>
-
-        <div className="text-muted-foreground space-y-1 text-xs">
-          <p>
-            <strong>How it works:</strong>
+        <div className="not-prose">
+          <strong className="mt-4 mb-2">How it works</strong>
+          <p className="text-muted-foreground mt-2 mb-2 text-sm">
+            On write (updating the URL):
           </p>
-          <ol className="ml-2 list-inside list-decimal space-y-1">
-            <li>User object is JSON stringified</li>
-            <li>JSON string is encoded as UTF-8 bytes</li>
-            <li>Bytes are encoded as base64url string</li>
-            <li>Result is stored in the URL query parameter</li>
-          </ol>
+          <p>
+            <ol className="text-muted-foreground ml-2 list-inside list-decimal space-y-1 text-sm">
+              <li>User object is JSON stringified</li>
+              <li>JSON string is encoded as UTF-8 bytes</li>
+              <li>Bytes are encoded as base64url string</li>
+              <li>Result is stored in the URL query parameter</li>
+            </ol>
+            <p className="text-muted-foreground mt-2 text-sm">
+              On read, the process is reversed to decode the URL string back
+              into the original object.
+            </p>
+          </p>
         </div>
       </div>
     </ZodCodecsDemoSkeleton>

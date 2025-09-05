@@ -3,6 +3,21 @@ title: Zod codecs
 description: Using Zod codecs for (de)serialisation in custom nuqs parser
 ---
 
+Since `zod@^4.1`, you can use [codecs](https://zod.dev/codecs)
+to add bidirectional serialisation / deserialisation to your validation schemas:
+
+```ts
+import { z } from 'zod'
+
+// Similar to parseAsTimestamp in nuqs:
+const dateTimestampCodec = z.codec(z.string().regex(/^\d+$/), z.date(), {
+  decode: (query) => new Date(parseInt(query)),
+  encode: (date) => date.valueOf().toFixed()
+})
+```
+
+## Demo
+
 <iframe
   src="https://www.youtube-nocookie.com/embed/k4lWvklUxUE"
   title="YouTube video player"
@@ -32,3 +47,22 @@ import { ZodCodecsSource } from './zod-codecs.source'
 Source code:
 
 <ZodCodecsSource/>
+
+## Refinements
+
+The cool part is being able to add string constraints to the first type in a codec.
+It has to be rooted as a string data type (because that's what the URL
+will give us), but you can add **refinements**:
+
+```ts
+z.codec(z.uuid(), ...)
+z.codec(z.email(), ...)
+z.codec(z.base64url(), ...)
+```
+
+See the [complete list](https://zod.dev/api?id=string-formats) of string-based
+refinements you can use.
+
+<Callout title="Caveats" type="warning">
+  As stated in the Zod docs, you [cannot use transforms in codecs](https://zod.dev/codecs#transforms).
+</Callout>

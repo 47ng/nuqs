@@ -14,15 +14,15 @@ export function ZodCodecsDemoSkeleton({
   ...props
 }: ComponentProps<'div'>) {
   return (
-    <Card className={cn('border-dashed', className)} {...props}>
-      <CardHeader>
-        <CardTitle>Zod Codecs Demo</CardTitle>
+    <Card className={cn('border-dashed py-4', className)} {...props}>
+      <CardHeader className="px-4">
+        <CardTitle className="text-xl">Zod Codecs Demo</CardTitle>
         <CardDescription>
           This demo shows how Zod codecs can transform complex data structures
           into URL-safe strings using base64url encoding and JSON serialization.
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-6">{children}</CardContent>
+      <CardContent className="space-y-6 px-4">{children}</CardContent>
     </Card>
   )
 }

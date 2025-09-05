@@ -96,4 +96,7 @@ const userSchema = z.object({
 // Composition always wins.
 const codec = base64urlToBytes.pipe(bytesToUtf8).pipe(jsonCodec(userSchema))
 
-export const userJsonBase64Parser = createZodCodecParser(codec)
+export const userJsonBase64Parser = createZodCodecParser(
+  codec,
+  (a, b) => a === b || (a.name === b.name && a.age === b.age)
+)
