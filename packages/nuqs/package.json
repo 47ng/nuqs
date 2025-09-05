@@ -190,7 +190,7 @@
     "valibot": "^1.1.0",
     "vitest": "^3.2.4",
     "vitest-package-exports": "^0.1.1",
-    "zod": "^4.1.4"
+    "zod": "^4.1.5"
   },
   "size-limit": [
     {
