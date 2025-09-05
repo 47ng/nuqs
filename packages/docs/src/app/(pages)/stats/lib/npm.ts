@@ -1,9 +1,11 @@
 import dayjs from 'dayjs'
 import isoWeek from 'dayjs/plugin/isoWeek'
+import minMax from 'dayjs/plugin/minMax'
 import 'server-only'
 import { z } from 'zod'
 
 dayjs.extend(isoWeek)
+dayjs.extend(minMax)
 
 export type Datum = {
   date: string
@@ -60,11 +62,24 @@ async function getLastNDays(pkg: string, n: number): Promise<Datum[]> {
   }
 }
 
+async function getPackageCreationDate(pkg: string): Promise<dayjs.Dayjs> {
+  const npmStatsEpoch = dayjs('2015-01-10')
+  try {
+    const res = await get<{ time: Record<string, string> }>(
+      `https://registry.npmjs.org/${pkg}`
+    )
+    return dayjs.max(npmStatsEpoch, dayjs(res.time.created))
+  } catch (e) {
+    console.error(e)
+    return npmStatsEpoch
+  }
+}
+
 async function getAllTime(pkg: string): Promise<number> {
   let downloads: number = 0
-  const now = dayjs()
-  let start = dayjs('2015-01-10') // NPM stats epoch
+  let start = dayjs(await getPackageCreationDate(pkg))
   let end = start.add(18, 'month')
+  const now = dayjs()
   while (start.isBefore(now)) {
     const url = `https://api.npmjs.org/downloads/range/${start.format(
       'YYYY-MM-DD'
