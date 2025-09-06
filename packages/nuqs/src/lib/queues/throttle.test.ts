@@ -300,7 +300,7 @@ describe('throttle: flush', () => {
     vi.runAllTimers()
     await expect(p).rejects.toEqual(new URLSearchParams('?initial=search&a=a'))
     expect(consoleErrorSpy).toHaveBeenCalledExactlyOnceWith(
-      '[nuqs] URL update rate-limited by the browser. Consider increasing `throttleMs` for key(s) `%s`. %O\n  See https://err.47ng.com/NUQS-429',
+      '[nuqs] URL update rate-limited by the browser. Consider increasing `throttleMs` for key(s) `%s`. %O\n  See https://nuqs.dev/NUQS-429',
       'a',
       new Error('updateUrl error')
     )
