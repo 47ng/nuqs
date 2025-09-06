@@ -10,7 +10,7 @@ export async function GET() {
 }
 
 function generateRssXml() {
-  const baseUrl = 'https://nuqs.47ng.com'
+  const baseUrl = 'https://nuqs.dev'
   const posts = getBlogPosts().filter(post => Boolean(post.data.date))
   const items = posts
     .map(post => {

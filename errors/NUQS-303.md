@@ -2,7 +2,7 @@
 
 ## Probable cause
 
-This error occurs in [debug mode](https://nuqs.47ng.com/docs/debugging) in
+This error occurs in [debug mode](https://nuqs.dev/docs/debugging) in
 certain monorepo setups where references of the adapter context aren't the same
 in different packages, and cause a [`NUQS-404 - nuqs requires an adapter to work with your framework`](./NUQS-404.md) error.
 

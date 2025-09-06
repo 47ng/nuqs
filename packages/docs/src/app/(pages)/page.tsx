@@ -13,7 +13,7 @@ export const metadata: Metadata = {
     absolute: 'nuqs | Type-safe search params state management for React'
   },
   alternates: {
-    canonical: 'https://nuqs.47ng.com'
+    canonical: 'https://nuqs.dev'
   }
 }
 

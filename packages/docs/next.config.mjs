@@ -34,6 +34,13 @@ const config = {
         source: '/docs/parsers',
         destination: '/docs/parsers/built-in',
         permanent: true
+      },
+      // Moved from err.47ng.com/NUQS-123
+      {
+        source: '/NUQS-:code(\\d{3})',
+        destination:
+          'https://github.com/47ng/nuqs/blob/next/errors/NUQS-:code.md',
+        permanent: false
       }
     ]
   },

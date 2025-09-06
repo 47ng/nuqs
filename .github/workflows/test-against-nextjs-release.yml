@@ -75,7 +75,10 @@ jobs:
     if: ${{ always() }}
     steps:
       - name: Invalidate ISR cache for GitHub Actions status on landing page
-        run: curl -s "https://nuqs.47ng.com/api/isr?tag=github-actions-status&token=${{ secrets.ISR_TOKEN }}"
+        # todo: Remove nuqs.47ng.com when the switch has been made
+        run: |
+          curl -s "https://nuqs.47ng.com/api/isr?tag=github-actions-status&token=${{ secrets.ISR_TOKEN }}"
+          curl -s "https://nuqs.dev/api/isr?tag=github-actions-status&token=${{ secrets.ISR_TOKEN }}"
 
   notify:
     name: Notify on Slack

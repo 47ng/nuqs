@@ -14,7 +14,7 @@
     "url": "git+https://github.com/47ng/nuqs.git",
     "directory": "packages/nuqs"
   },
-  "homepage": "https://nuqs.47ng.com",
+  "homepage": "https://nuqs.dev",
   "keywords": [
     "url state",
     "url",

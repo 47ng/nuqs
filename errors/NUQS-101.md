@@ -14,7 +14,7 @@ solution), please refer to the following guides:
 
 ### Jest
 
-See the [testing adapter documentation](https://nuqs.47ng.com/docs/testing#jest-and-esm)
+See the [testing adapter documentation](https://nuqs.dev/docs/testing#jest-and-esm)
 for its configuration with Jest.
 
 ### ESLint

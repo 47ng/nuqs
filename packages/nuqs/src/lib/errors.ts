@@ -11,5 +11,5 @@ export const errors = {
 
 export function error(code: keyof typeof errors) {
   return `[nuqs] ${errors[code]}
-  See https://err.47ng.com/NUQS-${code}`
+  See https://nuqs.dev/NUQS-${code}`
 }

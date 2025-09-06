@@ -2,7 +2,7 @@
 
 This error occurs if your URL length exceeds 2,000 characters.
 
-There are varying browser limitations for max URL lengths, [read more](https://nuqs.47ng.com/docs/limits#max-url-lengths).
+There are varying browser limitations for max URL lengths, [read more](https://nuqs.dev/docs/limits#max-url-lengths).
 
 URLs that are too long might break in some browsers, or not be able to be
 processed by some servers.
