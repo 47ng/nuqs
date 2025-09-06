@@ -5,6 +5,10 @@ on:
     paths:
       - 'packages/nuqs/**'
 
+concurrency:
+  group: pkg-pr-new-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
+
 jobs:
   deploy-preview:
     name: Deploy to pkg.pr.new
