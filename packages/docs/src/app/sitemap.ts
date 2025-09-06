@@ -1,3 +1,4 @@
+import { getBaseUrl } from '@/src/lib/url'
 import type { MetadataRoute } from 'next'
 import { demos } from './playground/(demos)/demos'
 import { blog, source } from './source'
@@ -5,8 +6,7 @@ import { blog, source } from './source'
 export const revalidate = false // disable ISR
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  // todo: Use deployment URL?
-  const baseUrl = 'https://nuqs.dev'
+  const baseUrl = getBaseUrl()
 
   // todo: Automate retrieval of static pages
   // Static pages in app/(pages)
