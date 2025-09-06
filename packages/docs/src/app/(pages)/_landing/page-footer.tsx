@@ -90,7 +90,7 @@ export function PageFooter() {
               </li>
               <li>
                 <a
-                  href="https://bsky.app/profile/nuqs.47ng.com"
+                  href="https://bsky.app/profile/nuqs.dev"
                   className="inline-flex items-center gap-1 hover:underline"
                 >
                   <SiBluesky role="presentation" className="mr-2 size-5" />

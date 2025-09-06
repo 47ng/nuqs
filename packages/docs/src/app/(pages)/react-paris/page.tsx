@@ -29,7 +29,7 @@ const links: LinkTreeItemProps[] = [
     label: (
       <>
         GitHub{' '}
-        <span className="text-sm text-muted-foreground">
+        <span className="text-muted-foreground text-sm">
           (give nuqs a star! ⭐)
         </span>
       </>
@@ -41,7 +41,7 @@ const links: LinkTreeItemProps[] = [
     label: 'Demo app'
   },
   {
-    href: 'https://nuqs.47ng.com/react-paris-25-slides.pdf',
+    href: 'https://nuqs.dev/react-paris-25-slides.pdf',
     icon: <Images className="size-5" />,
     label: 'Slides'
   },
@@ -51,17 +51,16 @@ const links: LinkTreeItemProps[] = [
     label: (
       <>
         Bluesky{' '}
-        <span className="text-sm text-muted-foreground">@francoisbest.com</span>
+        <span className="text-muted-foreground text-sm">@francoisbest.com</span>
       </>
     )
   },
   {
-    href: 'https://bsky.app/profile/nuqs.47ng.com',
+    href: 'https://bsky.app/profile/nuqs.dev',
     icon: <SiBluesky className="size-5" />,
     label: (
       <>
-        Bluesky{' '}
-        <span className="text-sm text-muted-foreground">@nuqs.47ng.com</span>
+        Bluesky <span className="text-muted-foreground text-sm">@nuqs.dev</span>
       </>
     )
   },
@@ -85,7 +84,7 @@ const links: LinkTreeItemProps[] = [
     icon: <Twitter className="size-5" />,
     label: (
       <>
-        Twitter <span className="text-sm text-muted-foreground">@nuqs47ng</span>
+        Twitter <span className="text-muted-foreground text-sm">@nuqs47ng</span>
       </>
     )
   },
@@ -95,7 +94,7 @@ const links: LinkTreeItemProps[] = [
     label: (
       <>
         Twitter{' '}
-        <span className="text-sm text-muted-foreground">
+        <span className="text-muted-foreground text-sm">
           @fortysevenfx (archived)
         </span>
       </>
@@ -111,7 +110,7 @@ export default function Page() {
         <ReactParisLogo className="-mx-4 mb-4 size-24 translate-y-1.5" />
       </div>
       <p className="mb-2 text-center">Thanks for attending my talk! 🫶</p>
-      <p className="mb-8 text-balance text-center">
+      <p className="mb-8 text-center text-balance">
         Here are some useful links to learn more about nuqs, and how to find me
         on social media:
       </p>

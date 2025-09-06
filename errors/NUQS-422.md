@@ -8,4 +8,4 @@ If you are fetching client-side, you’ll want to debounce the state returned by
 
 ## Solution
 
-- Set `shallow: false` to allow debounce to work properly, check the [documentation](https://nuqs.47ng.com/docs/options#debounce) for more information.
+- Set `shallow: false` to allow debounce to work properly, check the [documentation](https://nuqs.dev/docs/options#debounce) for more information.

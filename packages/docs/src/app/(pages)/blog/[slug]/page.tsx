@@ -25,7 +25,7 @@ export default async function Page(props: {
 
   if (!page) notFound()
   const blueskyShareIntent = encodeURIComponent(
-    `"${page.data.title}" by @francoisbest.com on the @nuqs.47ng.com blog • https://nuqs.47ng.com/blog/${params.slug}`
+    `"${page.data.title}" by @francoisbest.com on the @nuqs.dev blog • https://nuqs.dev/blog/${params.slug}`
   )
 
   return (
@@ -50,7 +50,7 @@ export default async function Page(props: {
         </BreadcrumbList>
       </Breadcrumb>
       <div className="container max-w-[900px] py-12 md:px-8">
-        <h1 className="mb-4 text-4xl font-bold text-foreground sm:text-5xl">
+        <h1 className="text-foreground mb-4 text-4xl font-bold sm:text-5xl">
           {page.data.title}
         </h1>
         <Description>{page.data.description}</Description>
@@ -58,7 +58,7 @@ export default async function Page(props: {
       <div className="container flex max-w-[900px] flex-col gap-4 px-4 text-sm sm:flex-row sm:items-center sm:justify-between lg:px-8">
         <Author />
         {page.data.date && (
-          <p className="text-sm font-medium text-fd-muted-foreground">
+          <p className="text-fd-muted-foreground text-sm font-medium">
             {new Date(page.data.date).toLocaleDateString('en-GB', {
               dateStyle: 'long'
             })}
@@ -68,7 +68,7 @@ export default async function Page(props: {
       <div className="container max-w-[900px] px-0 lg:px-8">
         <hr className="my-4" />
       </div>
-      <article className="container max-w-[900px] px-0 pb-24 pt-8 lg:px-4">
+      <article className="container max-w-[900px] px-0 pt-8 pb-24 lg:px-4">
         <div className="prose min-w-0 flex-1 p-4">
           <page.data.body components={defaultMdxComponents} />
         </div>

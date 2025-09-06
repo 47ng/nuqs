@@ -21,7 +21,7 @@ Type-safe search params state manager for React frameworks. Like `useState`, but
 
 ## Documentation
 
-Read the complete documentation at [nuqs.47ng.com](https://nuqs.47ng.com).
+Read the complete documentation at [nuqs.dev](https://nuqs.dev).
 
 ## Installation
 
@@ -624,7 +624,7 @@ const loadSearchParams = createLoader(searchParams)
 const { q, page } = loadSearchParams('?q=hello&page=2')
 ```
 
-It accepts various types of inputs (strings, URL, URLSearchParams, Request, Promises, etc.). [Read more](https://nuqs.47ng.com/docs/server-side#loaders)
+It accepts various types of inputs (strings, URL, URLSearchParams, Request, Promises, etc.). [Read more](https://nuqs.dev/docs/server-side#loaders)
 
 See the [server-side parsing demo](<./packages/docs/src/app/playground/(demos)/pagination>)
 for a live example showing how to reuse parser configurations between
