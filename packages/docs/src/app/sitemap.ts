@@ -1,11 +1,14 @@
 import { getBaseUrl } from '@/src/lib/url'
+import { getGithubLastEdit } from 'fumadocs-core/server'
 import type { MetadataRoute } from 'next'
 import { demos } from './playground/(demos)/demos'
 import { blog, source } from './source'
 
 export const revalidate = false // disable ISR
 
-export default function sitemap(): MetadataRoute.Sitemap {
+type SitemapEntry = MetadataRoute.Sitemap[number]
+
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = getBaseUrl()
 
   // todo: Automate retrieval of static pages
@@ -20,36 +23,65 @@ export default function sitemap(): MetadataRoute.Sitemap {
   ]
 
   // Get all docs pages from fumadocs
-  const docsPages = source.getPages().map(page => ({
-    url: `${baseUrl}${page.url}`,
-    lastModified: new Date(),
-    changeFrequency: 'weekly' as const,
-    priority: 0.8
-  }))
+  const docsPages = source
+    .getPages()
+    .map<Promise<SitemapEntry>>(async page => ({
+      url: `${baseUrl}${page.url}`,
+      lastModified: await getLastModified(`/content/docs/${page.path}`),
+      changeFrequency: 'weekly' as const,
+      priority: 0.8
+    }))
 
   // Get all blog posts from fumadocs
-  const blogPages = blog.getPages().map(page => ({
+  const blogPages = blog.getPages().map<SitemapEntry>(page => ({
     url: `${baseUrl}${page.url}`,
     lastModified: page.data.date ? new Date(page.data.date) : new Date(),
-    changeFrequency: 'monthly' as const,
+    changeFrequency: 'monthly',
     priority: 0.6
   }))
 
   // Get all playground demo pages
-  const playgroundPages = Object.keys(demos).map(demoPath => ({
-    url: `${baseUrl}/playground/${demoPath}`,
-    lastModified: new Date(),
-    changeFrequency: 'monthly' as const,
-    priority: 0.4
-  }))
+  const playgroundPages = Object.keys(demos).map<Promise<SitemapEntry>>(
+    async demoPath => ({
+      url: `${baseUrl}/playground/${demoPath}`,
+      lastModified: await getLastModified(
+        `/src/app/playground/(demos)/${demoPath}/page.tsx`
+      ),
+      changeFrequency: 'monthly',
+      priority: 0.4
+    })
+  )
 
   // Static pages
-  const staticPageEntries = staticPages.map(path => ({
+  const staticPageEntries = staticPages.map<SitemapEntry>(path => ({
     url: `${baseUrl}${path}`,
     lastModified: new Date(),
-    changeFrequency: path === '' ? ('weekly' as const) : ('monthly' as const),
+    changeFrequency: path === '' ? 'weekly' : 'monthly',
     priority: path === '' ? 1.0 : 0.5
   }))
 
-  return [...staticPageEntries, ...docsPages, ...blogPages, ...playgroundPages]
+  return Promise.all([
+    ...staticPageEntries,
+    ...docsPages,
+    ...blogPages,
+    ...playgroundPages
+  ])
+}
+
+// --
+
+async function getLastModified(path: string): Promise<Date> {
+  try {
+    const lastEdit = await getGithubLastEdit({
+      owner: '47ng',
+      repo: 'nuqs',
+      path: `packages/docs${path}`,
+      sha: 'next',
+      token: `Bearer ${process.env.GITHUB_TOKEN}`
+    })
+    return lastEdit ?? new Date()
+  } catch (error) {
+    console.error(`Error fetching last modification date for ${path}:`, error)
+    return new Date()
+  }
 }
