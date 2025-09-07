@@ -8,19 +8,33 @@ export const revalidate = false // disable ISR
 
 type SitemapEntry = MetadataRoute.Sitemap[number]
 
+const staticPages = [
+  '', // home page
+  '/blog',
+  '/react-paris',
+  '/stats',
+  '/users',
+  '/playground'
+] as const
+
+const staticPagesChangeFrequency: Record<
+  (typeof staticPages)[number],
+  SitemapEntry['changeFrequency']
+> = {
+  '': 'weekly',
+  '/stats': 'hourly',
+  '/users': 'weekly',
+  '/blog': 'monthly',
+  '/playground': 'monthly',
+  // Archived
+  '/react-paris': 'never'
+}
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = getBaseUrl()
 
   // todo: Automate retrieval of static pages
   // Static pages in app/(pages)
-  const staticPages = [
-    '', // home page
-    '/blog',
-    '/react-paris',
-    '/stats',
-    '/users',
-    '/playground'
-  ]
 
   // Get all docs pages from fumadocs
   const docsPages = source
@@ -56,7 +70,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticPageEntries = staticPages.map<SitemapEntry>(path => ({
     url: `${baseUrl}${path}`,
     lastModified: new Date(),
-    changeFrequency: path === '' ? 'weekly' : 'monthly',
+    changeFrequency: staticPagesChangeFrequency[path],
     priority: path === '' ? 1.0 : 0.5
   }))
 
