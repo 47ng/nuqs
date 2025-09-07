@@ -1,4 +1,6 @@
 import { type ComponentProps, type JSX } from 'react'
+import { NextJS } from './frameworks.client'
+export { NextJS }
 
 export const FRAMEWORKS = [
   'Next.js (app router)',
@@ -127,73 +129,6 @@ export function Vitest({ className, ...props }: IconProps) {
         fillOpacity={0.5}
         fill="#729B1B"
       />
-    </svg>
-  )
-}
-
-export function NextJS({ className, ...props }: IconProps) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      aria-label="Next.js (app & pages routers)"
-      width="1em"
-      height="1em"
-      className={className}
-      {...props}
-    >
-      <symbol id="icon-nextjs" viewBox="0 0 180 180">
-        <mask
-          id="mask"
-          style={{ maskType: 'alpha' }}
-          maskUnits="userSpaceOnUse"
-          x={0}
-          y={0}
-          width={180}
-          height={180}
-        >
-          <circle cx={90} cy={90} r={90} fill="black" />
-        </mask>
-        <g mask="url(#mask)">
-          <circle
-            cx={90}
-            cy={90}
-            r={87}
-            fill="black"
-            stroke="white"
-            strokeWidth={6}
-          />
-          <path
-            d="M149.508 157.52L69.142 54H54V125.97H66.1136V69.3836L139.999 164.845C143.333 162.614 146.509 160.165 149.508 157.52Z"
-            fill="url(#paint0)"
-          />
-          <rect x={115} y={54} width={12} height={72} fill="url(#paint1)" />
-        </g>
-        <defs>
-          <linearGradient
-            id="paint0"
-            x1={109}
-            y1={116.5}
-            x2={144.5}
-            y2={160.5}
-            gradientUnits="userSpaceOnUse"
-          >
-            <stop stopColor="white" />
-            <stop offset={1} stopColor="white" stopOpacity={0} />
-          </linearGradient>
-          <linearGradient
-            id="paint1"
-            x1={121}
-            y1={54}
-            x2={120.799}
-            y2={106.875}
-            gradientUnits="userSpaceOnUse"
-          >
-            <stop stopColor="white" />
-            <stop offset={1} stopColor="white" stopOpacity={0} />
-          </linearGradient>
-        </defs>
-      </symbol>
-      <use href="#icon-nextjs" />
     </svg>
   )
 }
