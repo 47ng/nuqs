@@ -1,3 +1,7 @@
+// For actual isolation of masks & gradient IDs with useId,
+// this needs to be a client component.
+// See https://github.com/47ng/nuqs/pull/1117
+
 'use client'
 
 import { useId } from 'react'
