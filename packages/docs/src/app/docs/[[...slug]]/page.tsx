@@ -1,5 +1,6 @@
 import { useMDXComponents } from '@/mdx-components'
 import { source } from '@/src/app/source'
+import { getBaseUrl } from '@/src/lib/url'
 import {
   DocsBody,
   DocsDescription,
@@ -61,12 +62,7 @@ async function getSocialImages(
   try {
     const publicImagePath = `${process.cwd()}/public/og/${slug.join('/')}.jpg`
     await stat(publicImagePath) // Does it exist?
-    const baseUrl =
-      process.env.VERCEL_ENV === 'production'
-        ? 'https://' + process.env.VERCEL_PROJECT_PRODUCTION_URL
-        : process.env.VERCEL_URL
-          ? 'https://' + process.env.VERCEL_URL
-          : ''
+    const baseUrl = getBaseUrl()
     return {
       openGraph: {
         type: 'website',
