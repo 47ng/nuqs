@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { DependentsSection } from './_landing/dependents'
+import { ContributorsSection } from './_landing/contributors'
 import { FeaturesSection } from './_landing/features'
 import { HeroSection } from './_landing/hero'
 import { PageFooter } from './_landing/page-footer'
@@ -23,6 +24,7 @@ export default function HomePage() {
       <HeroSection />
       <FeaturesSection />
       <SponsorsSection />
+      <ContributorsSection />
       <DependentsSection />
       <QuotesSection />
       <PageFooter />
