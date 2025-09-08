@@ -35,12 +35,47 @@ async function fetchContributors(): Promise<Contributor[]> {
   const data = await res.json()
   const contributors = z.array(contributorSchema).parse(data)
 
-  // Filter bots (type Bot, or login including [bot], or known bot accounts)
+  // Known bot account IDs - easily editable list
+  const knownBotIds = new Set([
+    'dependabot[bot]',
+    'dependabot-preview[bot]',
+    'renovate[bot]',
+    'renovate-bot',
+    'depfu[bot]',
+    'greenkeeper[bot]',
+    'mergify[bot]',
+    'mergify-bot',
+    'github-actions[bot]',
+    'github-actions-bot',
+    'codecov[bot]',
+    'codecov-io[bot]',
+    'snyk-bot',
+    'snyk[bot]',
+    'semantic-release[bot]',
+    'semantic-release-bot',
+    'release-drafter[bot]',
+    'release-drafter-bot',
+    'stale[bot]',
+    'stale-bot',
+    'app[bot]',
+    'app-bot',
+    'web-flow[bot]',
+    'web-flow-bot'
+  ])
+
+  // Filter bots (type Bot, or known bot accounts, or login ending with [bot])
   const isHuman = (c: Contributor) => {
     const loginLower = c.login.toLowerCase()
+    
+    // Check if it's explicitly a Bot type
     if (c.type === 'Bot') return false
+    
+    // Check against known bot IDs (exact match)
+    if (knownBotIds.has(loginLower)) return false
+    
+    // Check if login ends with [bot] (common pattern for GitHub bots)
     if (loginLower.endsWith('[bot]')) return false
-    if (loginLower.includes('bot')) return false
+    
     return true
   }
 
