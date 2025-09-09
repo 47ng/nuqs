@@ -11,10 +11,6 @@ const contributorSchema = z.object({
 type Contributor = z.infer<typeof contributorSchema>
 
 async function fetchContributors(): Promise<Contributor[]> {
-  const url = new URL('https://api.github.com/repos/47ng/nuqs/contributors')
-  url.searchParams.set('per_page', '27')
-  // anon=false by default; we only want registered users
-
   const headers: Record<string, string> = {
     Accept: 'application/vnd.github+json'
   }
@@ -22,18 +18,40 @@ async function fetchContributors(): Promise<Contributor[]> {
     headers.Authorization = `Bearer ${process.env.GITHUB_TOKEN}`
   }
 
-  const res = await fetch(url.toString(), {
-    headers,
-    next: {
-      revalidate: 86_400,
-      tags: ['contributors']
+  let allContributors: Contributor[] = []
+  let page = 1
+  const perPage = 100 // GitHub API max per page
+
+  while (true) {
+    const url = new URL('https://api.github.com/repos/47ng/nuqs/contributors')
+    url.searchParams.set('per_page', perPage.toString())
+    url.searchParams.set('page', page.toString())
+    // anon=false by default; we only want registered users
+
+    const res = await fetch(url.toString(), {
+      headers,
+      next: {
+        revalidate: 86_400,
+        tags: ['contributors']
+      }
+    })
+    
+    if (!res.ok) {
+      throw new Error(`Failed to fetch contributors: ${res.status} ${res.statusText}`)
     }
-  })
-  if (!res.ok) {
-    throw new Error(`Failed to fetch contributors: ${res.status} ${res.statusText}`)
+    
+    const data = await res.json()
+    const contributors = z.array(contributorSchema).parse(data)
+    
+    // If we get fewer contributors than perPage, we've reached the end
+    if (contributors.length < perPage) {
+      allContributors = allContributors.concat(contributors)
+      break
+    }
+    
+    allContributors = allContributors.concat(contributors)
+    page++
   }
-  const data = await res.json()
-  const contributors = z.array(contributorSchema).parse(data)
 
   // Known bot account IDs - easily editable list
   const knownBotIds = new Set([
@@ -79,7 +97,7 @@ async function fetchContributors(): Promise<Contributor[]> {
     return true
   }
 
-  const humans = contributors.filter(isHuman)
+  const humans = allContributors.filter(isHuman)
   humans.sort((a, b) => b.contributions - a.contributions)
   return humans
 }
@@ -100,7 +118,7 @@ export async function ContributorsSection() {
       <h2 className="mb-12 text-center text-3xl font-bold tracking-tighter md:text-4xl xl:text-5xl dark:text-white">
         Contributors
       </h2>
-      <ul className={cn('grid grid-cols-4 gap-y-8 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 xl:grid-cols-12 justify-items-center')}>
+      <ul className={cn('flex flex-wrap justify-center gap-y-4 gap-x-3 md:gap-x-4')}>
         {contributors.map(c => (
           <li key={c.login} className="flex flex-col items-center">
             <a
