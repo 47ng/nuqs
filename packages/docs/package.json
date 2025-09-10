@@ -51,7 +51,6 @@
     "lucide-react": "^0.540.0",
     "next": "15.5.0",
     "nuqs": "workspace:*",
-    "pretty-bytes": "^7.0.1",
     "react": "catalog:react19",
     "react-dom": "catalog:react19",
     "recharts": "2.15.4",

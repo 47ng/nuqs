@@ -196,20 +196,18 @@
     {
       "name": "Client",
       "path": "dist/index.js",
-      "limit": "6 kB",
-      "ignore": [
-        "react",
-        "next"
-      ]
+      "limit": "6 kB"
+    },
+    {
+      "name": "Client (minimal tree-shaken)",
+      "path": "dist/index.js",
+      "limit": "4.5 kB",
+      "import": "{ useQueryStates, parseAsInteger }"
     },
     {
       "name": "Server",
       "path": "dist/server.js",
-      "limit": "3 kB",
-      "ignore": [
-        "react",
-        "next"
-      ]
+      "limit": "3 kB"
     }
   ]
 }
