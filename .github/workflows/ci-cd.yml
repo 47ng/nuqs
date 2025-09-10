@@ -405,3 +405,8 @@ jobs:
         run: |
           curl -s "https://nuqs.47ng.com/api/isr?tag=npm&token=${{ secrets.ISR_TOKEN }}"
           curl -s "https://nuqs.dev/api/isr?tag=npm&token=${{ secrets.ISR_TOKEN }}"
+      - name: Invalidate ISR cache for contributors in the docs
+        if: ${{ github.ref_name == 'next' && github.event_name == 'push' }}
+        run: |
+          curl -s "https://nuqs.47ng.com/api/isr?tag=contributors&token=${{ secrets.ISR_TOKEN }}"
+          curl -s "https://nuqs.dev/api/isr?tag=contributors&token=${{ secrets.ISR_TOKEN }}"
