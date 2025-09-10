@@ -1,8 +1,16 @@
-import { useLocation, useMatches, useNavigate } from '@tanstack/react-router'
+import {
+  stringifySearchWith,
+  useLocation,
+  useMatches,
+  useNavigate
+} from '@tanstack/react-router'
 import { startTransition, useCallback, useMemo } from 'react'
 import { renderQueryString } from '../lib/url-encoding'
 import { createAdapterProvider, type AdapterProvider } from './lib/context'
 import type { AdapterInterface, UpdateUrlFunction } from './lib/defs'
+
+// Use TanStack Router's default JSON-based search param serialization
+const defaultStringifySearch = stringifySearchWith(JSON.stringify)
 
 function useNuqsTanstackRouterAdapter(watchKeys: string[]): AdapterInterface {
   const search = useLocation({
@@ -20,25 +28,10 @@ function useNuqsTanstackRouterAdapter(watchKeys: string[]): AdapterInterface {
   })
   const searchParams = useMemo(
     () =>
-      // search is a Record<string, string | number | object | Array<string | number>>,
-      // so we need to flatten it into a list of key/value pairs,
-      // replicating keys that have multiple values before passing it
-      // to URLSearchParams, otherwise { foo: ['bar', 'baz'] }
-      // ends up as { foo → 'bar,baz' } instead of { foo → 'bar', foo → 'baz' }
-      new URLSearchParams(
-        Object.entries(search).flatMap(([key, value]) => {
-          if (Array.isArray(value)) {
-            return value.map(v => [key, v])
-          } else if (typeof value === 'object' && value !== null) {
-            // TSR JSON.parses objects in the search params,
-            // but parseAsJson expects a JSON string,
-            // so we need to re-stringify it first.
-            return [[key, JSON.stringify(value)]]
-          } else {
-            return [[key, value]]
-          }
-        })
-      ),
+      // Use TSR’s default stringify to convert search object → URLSearchParams.
+      // This avoids issues where arrays/objects were previously flattened
+      // into invalid values like "[object Object]".
+      new URLSearchParams(defaultStringifySearch(search)),
     [search, watchKeys.join(',')]
   )
 
