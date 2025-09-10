@@ -105,7 +105,7 @@ Calling updates too quickly will throw an error, potentially crashing your app
 in the process.
 
 Not all browsers are equal on this rate limiting: Chrome and Firefox allow about 50ms between calls
-to be safe, but Safari has much higher limits, and requires about 120ms between calls.
+to be safe, but Safari has much stricter limits, and requires about 120ms between calls.
 
 This issue surfaces when binding URL state to a high-frequency input, like a text box
 `<input type="text">{:html}` or a slider `<input type="range">{:html}`.

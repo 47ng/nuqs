@@ -7,7 +7,7 @@ description: There are some limits you should be aware of when using nuqs or URL
 
 Browsers rate-limit the History API, updates to the URL are queued and throttled to a default of 50ms, which seems to satisfy most browsers even when sending high-frequency query updates, like binding to a text input or a slider.
 
-Safari's rate limits are much higher and require a throttle of 120ms (320ms for older versions of Safari).
+Safari's rate limits are much stricter and require a throttle of 120ms (320ms for older versions of Safari).
 
 Nuqs handles this out of the box so you don't run into those rate-limits, however it is possible to set your own custom throttles.
 
