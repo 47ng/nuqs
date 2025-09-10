@@ -1,6 +1,16 @@
 import fs from 'node:fs/promises'
 import path from 'node:path'
-import prettyBytes from 'pretty-bytes'
+
+function prettyBytes(size: number) {
+  const formatter = new Intl.NumberFormat('en-GB', {
+    style: 'unit',
+    unit: 'byte',
+    notation: 'compact',
+    unitDisplay: 'narrow',
+    maximumFractionDigits: 1
+  })
+  return formatter.format(size).replace('K', ' k')
+}
 
 export async function BundleSize() {
   const filePath = path.resolve(process.cwd(), '../../packages/nuqs/size.json')
@@ -10,6 +20,6 @@ export async function BundleSize() {
     return prettyBytes(size)
   } catch (error) {
     console.error(error)
-    return 'less than 5KB'
+    return 'less than 6 kB'
   }
 }
