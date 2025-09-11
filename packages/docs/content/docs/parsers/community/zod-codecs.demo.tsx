@@ -97,7 +97,7 @@ export function ZodCodecsDemo() {
           <p className="text-muted-foreground mt-2 mb-2 text-sm">
             On write (updating the URL):
           </p>
-          <p>
+          <div>
             <ol className="text-muted-foreground ml-2 list-inside list-decimal space-y-1 text-sm">
               <li>User object is JSON stringified</li>
               <li>JSON string is encoded as UTF-8 bytes</li>
@@ -108,7 +108,7 @@ export function ZodCodecsDemo() {
               On read, the process is reversed to decode the URL string back
               into the original object.
             </p>
-          </p>
+          </div>
         </div>
       </div>
     </ZodCodecsDemoSkeleton>

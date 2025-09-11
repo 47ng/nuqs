@@ -6,9 +6,9 @@ import { ContainerQueryHelper } from '@/src/components/responsive-helpers'
 import { Button } from '@/src/components/ui/button'
 import { Label } from '@/src/components/ui/label'
 import { cn } from '@/src/lib/utils'
+import { Either, Equal, Schema } from 'effect'
 import { createParser, useQueryState } from 'nuqs'
 import React from 'react'
-import { Schema, Either, Equal } from 'effect'
 
 function createSchemaParser<T, E extends string>(schema: Schema.Schema<T, E>) {
   const encoder = Schema.encodeUnknownEither(schema)
@@ -109,10 +109,11 @@ export function EffectSchemaDemo() {
           <Label htmlFor="user-name">Name</Label>
           <input
             id="user-name"
-            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+            className="border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring flex h-10 w-full rounded-md border px-3 py-2 text-sm file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
             value={user?.name ?? ''}
-            placeholder="Enter your name..."
             onChange={handleNameChange}
+            placeholder="Enter your name..."
+            autoComplete="off"
           />
         </div>
         <div className="flex-1 space-y-2">
@@ -121,10 +122,11 @@ export function EffectSchemaDemo() {
             id="user-age"
             type="number"
             min="1"
-            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+            className="border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring flex h-10 w-full rounded-md border px-3 py-2 text-sm file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
             value={user?.age ?? ''}
-            placeholder="Enter your age..."
             onChange={handleAgeChange}
+            placeholder="Enter your age..."
+            autoComplete="off"
           />
         </div>
       </div>

@@ -11,6 +11,7 @@ export async function LandingDemo() {
   // Poor man's AST manipulation
   const demoCode = demoFile
     .replace(/className=".+"/g, '') // Strip styling
+    .replace('autoComplete="off"', '') // Strip irrelevant attributes
     .split('\n')
     .filter(line => !line.includes('data-interacted='))
     .join('\n')
@@ -21,7 +22,7 @@ export async function LandingDemo() {
     <>
       <Suspense
         fallback={
-          <div className="mb-4 h-[136px] animate-pulse rounded bg-zinc-50 dark:bg-zinc-900 sm:h-10" />
+          <div className="mb-4 h-[136px] animate-pulse rounded bg-zinc-50 sm:h-10 dark:bg-zinc-900" />
         }
       >
         <div className="mb-4 flex flex-col gap-4 sm:flex-row sm:items-center">
@@ -40,7 +41,7 @@ function LookAtTheURL() {
       <svg
         xmlns="http://www.w3.org/2000/svg"
         viewBox="0 0 315 72"
-        className="pointer-events-none absolute -top-20 left-0 right-0 mx-auto w-64 select-none opacity-0 transition-opacity peer-data-[interacted=true]:opacity-100 sm:left-16 sm:right-auto sm:mx-0 xl:-left-72 xl:-top-6 xl:mx-0"
+        className="pointer-events-none absolute -top-20 right-0 left-0 mx-auto w-64 opacity-0 transition-opacity select-none peer-data-[interacted=true]:opacity-100 sm:right-auto sm:left-16 sm:mx-0 xl:-top-6 xl:-left-72 xl:mx-0"
       >
         <g
           // Arrow
