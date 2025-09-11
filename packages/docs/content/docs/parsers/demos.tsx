@@ -73,8 +73,9 @@ export function BasicUsageDemo() {
       <input
         className="border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring h-10 flex-1 rounded-md border px-3 py-2 text-sm file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
         value={name}
-        placeholder="Enter your name..."
         onChange={e => setName(e.target.value || null)}
+        placeholder="Enter your name..."
+        autoComplete="off"
       />
       <div className="flex flex-1 items-center gap-2">
         <span className="mr-auto ml-2 text-sm text-zinc-500">
@@ -95,8 +96,9 @@ export function StringParserDemo() {
       <input
         className="border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring h-10 flex-1 rounded-md border px-3 py-2 text-sm file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
         value={value}
-        placeholder="Type something here..."
         onChange={e => setValue(e.target.value || null)}
+        placeholder="Type something here..."
+        autoComplete="off"
       />
       <Button
         variant="secondary"
@@ -125,6 +127,7 @@ export function IntegerParserDemo() {
           }
         }}
         placeholder="What's your favourite number?"
+        autoComplete="off"
       />
       <Button
         variant="secondary"
@@ -400,7 +403,14 @@ export function JsonParserDemo() {
           setValue({
             pkg: 'nuqs',
             version: 2,
-            worksWith: ['Next.js', 'React', 'Remix', 'React Router', 'and more']
+            worksWith: [
+              'Next.js',
+              'React',
+              'Remix',
+              'React Router',
+              'TanStack Router',
+              'and more'
+            ]
           })
         }
       >

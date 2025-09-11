@@ -170,6 +170,7 @@ export function usePaginationSearchParams() {
                 setPageIndexUrlKey(e.target.value)
               }}
               placeholder="e.g., page"
+              autoComplete="off"
             />
           </div>
           <div className="space-y-2">
@@ -183,6 +184,7 @@ export function usePaginationSearchParams() {
                 setPageSizeUrlKey(e.target.value)
               }}
               placeholder="e.g., limit"
+              autoComplete="off"
             />
           </div>
         </aside>
