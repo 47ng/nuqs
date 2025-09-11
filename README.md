@@ -411,7 +411,7 @@ URL are queued and throttled to a default of 50ms, which seems to satisfy
 most browsers even when sending high-frequency query updates, like binding
 to a text input or a slider.
 
-Safari's rate limits are much higher and would require a throttle of around 340ms.
+Safari's rate limits are much stricter and would require a throttle of around 340ms.
 If you end up needing a longer time between updates, you can specify it in the
 options:
 
