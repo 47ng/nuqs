@@ -131,7 +131,7 @@
     "dev": "tsdown --watch",
     "prebuild": "rm -rf dist",
     "build": "tsdown",
-    "postbuild": "size-limit --json > size.json",
+    "build:size": "size-limit --json > size.json",
     "test": "pnpm run --stream '/^test:/'",
     "test:unit": "vitest run --typecheck",
     "test:size": "size-limit",
