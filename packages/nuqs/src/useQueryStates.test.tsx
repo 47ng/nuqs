@@ -1,6 +1,11 @@
-import { act, renderHook, screen } from '@testing-library/react'
-import { createElement, useState, type ReactNode } from 'react'
+import { act, render, renderHook, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
+import React, { createElement, useState, type ReactNode } from 'react'
 import { describe, expect, it, vi } from 'vitest'
+import {
+  NullDetector,
+  useFakeLoadingState
+} from '../tests/components/repro-1099'
 import {
   NuqsTestingAdapter,
   withNuqsTestingAdapter,
@@ -808,5 +813,58 @@ describe('useQueryStates: process url search params', () => {
     await act(() => result.current[1]({ test: 'fail-if-kept' }))
     expect(onUrlUpdate).toHaveBeenCalledOnce()
     expect(onUrlUpdate.mock.calls[0]![0].queryString).toBe('?test=processed')
+  })
+})
+
+describe('useQueryStates: edge cases & repros', () => {
+  it('should not go through transient old state when combined with another state update (#1099)', async () => {
+    function TestComponent() {
+      const [{ test }, setSearchParams] = useQueryStates({
+        test: parseAsString
+      })
+      const [isNullDetectorEnabled, setIsNullDetectorEnabled] = useState(false)
+      const isLoading = useFakeLoadingState(test)
+      return (
+        <>
+          <button
+            onClick={() => {
+              setIsNullDetectorEnabled(true)
+              setSearchParams({ test: 'pass' })
+            }}
+          >
+            Start
+          </button>
+          <NullDetector
+            state={test}
+            enabled={isNullDetectorEnabled}
+            data-testid="null-detector"
+          />
+          <p>isLoading: {String(isLoading)}</p>
+        </>
+      )
+    }
+    const user = userEvent.setup()
+    const onUrlUpdate = vi.fn<OnUrlUpdateFunction>()
+    render(<TestComponent />, {
+      wrapper: withNuqsTestingAdapter({
+        onUrlUpdate
+      })
+    })
+    await expect(
+      screen.findByTestId('null-detector')
+    ).resolves.toHaveTextContent('pass')
+    await expect(
+      screen.findByText('isLoading: false')
+    ).resolves.toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Start' }))
+    await expect(
+      screen.findByText('isLoading: true')
+    ).resolves.toBeInTheDocument()
+    await expect(
+      screen.findByText('isLoading: false')
+    ).resolves.toBeInTheDocument()
+    await expect(
+      screen.findByTestId('null-detector')
+    ).resolves.toHaveTextContent('pass')
   })
 })
