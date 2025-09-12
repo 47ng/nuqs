@@ -42,6 +42,13 @@ export function encodeQueryValue(input: string): string {
       .replace(/`/g, '%60')
       .replace(/</g, '%3C')
       .replace(/>/g, '%3E')
+      .replace(/{/g, '%7B')
+      .replace(/}/g, '%7D')
+      .replace(/\|/g, '%7C')
+      .replace(/\\/g, '%5C')
+      .replace(/\^/g, '%5E')
+      .replace(/`/g, '%60')
+      .replace(/\?/g, '%3F')
       // Encode invisible ASCII control characters
       .replace(/[\x00-\x1F]/g, char => encodeURIComponent(char))
   )
