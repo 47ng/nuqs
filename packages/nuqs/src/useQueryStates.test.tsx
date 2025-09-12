@@ -847,7 +847,8 @@ describe('useQueryStates: edge cases & repros', () => {
     const onUrlUpdate = vi.fn<OnUrlUpdateFunction>()
     render(<TestComponent />, {
       wrapper: withNuqsTestingAdapter({
-        onUrlUpdate
+        onUrlUpdate,
+        hasMemory: true // needs memory for the test to pass
       })
     })
     await expect(
