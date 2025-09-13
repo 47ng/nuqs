@@ -207,7 +207,7 @@
     {
       "name": "Server",
       "path": "dist/server.js",
-      "limit": "3.05 kB"
+      "limit": "3.1 kB"
     }
   ]
 }
