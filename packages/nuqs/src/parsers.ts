@@ -499,9 +499,10 @@ export function parseAsNativeArrayOf<ItemType>(
   const itemEq = itemParser.eq ?? ((a: ItemType, b: ItemType) => a === b)
   return createMultiParser({
     parse: query => {
-      return query
+      const parsed = query
         .map((item, index) => safeParse(itemParser.parse, item, `[${index}]`))
         .filter(value => value !== null && value !== undefined) as ItemType[]
+      return parsed.length === 0 ? null : parsed
     },
     serialize: values =>
       values.flatMap(value => {
