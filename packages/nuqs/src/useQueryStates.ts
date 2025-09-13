@@ -15,7 +15,7 @@ import {
 } from './lib/queues/throttle'
 import { emitter, type CrossHookSyncPayload } from './lib/sync'
 import { type Parser } from './parsers'
-import { isEmpty, read } from './lib/search-params'
+import { isEmpty } from './lib/search-params'
 import { safeParse } from './lib/safe-parse'
 
 type KeyMapValue<Type> = Parser<Type> &
@@ -389,7 +389,7 @@ function parseMap<KeyMap extends UseQueryStatesKeysMap>(
     const query =
       queuedQuery === undefined
         ? parser.type === 'multi'
-          ? (searchParams?.getAll(urlKey) ?? null)
+          ? (searchParams?.getAll(urlKey) ?? [])
           : (searchParams?.get(urlKey) ?? null)
         : queuedQuery
     // todo this === comparison likely won't work with arrays
@@ -402,7 +402,7 @@ function parseMap<KeyMap extends UseQueryStatesKeysMap>(
     hasChanged = true
     const value = isEmpty(query)
       ? null
-      : // todo same narrowing problem as in read()
+      : // we have properly narrowed `query` here, but TS doesn't keep track of that
         safeParse(parser.parse, query as string & Array<string>, urlKey)
 
     out[stateKey as keyof KeyMap] = value ?? null
