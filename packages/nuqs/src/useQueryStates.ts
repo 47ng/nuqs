@@ -15,7 +15,8 @@ import {
 } from './lib/queues/throttle'
 import { emitter, type CrossHookSyncPayload } from './lib/sync'
 import { type Parser } from './parsers'
-import { read } from './lib/search-params'
+import { isEmpty, read } from './lib/search-params'
+import { safeParse } from './lib/safe-parse'
 
 type KeyMapValue<Type> = Parser<Type> &
   Options & {
@@ -387,8 +388,11 @@ function parseMap<KeyMap extends UseQueryStatesKeysMap>(
     const queuedQuery = queuedQueries[urlKey]
     const query =
       queuedQuery === undefined
-        ? (searchParams?.get(urlKey) ?? null)
+        ? parser.type === 'multi'
+          ? (searchParams?.getAll(urlKey) ?? null)
+          : (searchParams?.get(urlKey) ?? null)
         : queuedQuery
+    // todo this === comparison likely won't work with arrays
     if (cachedQuery && cachedState && (cachedQuery[urlKey] ?? null) === query) {
       // Cache hit
       out[stateKey as keyof KeyMap] = cachedState[stateKey] ?? null
@@ -396,8 +400,10 @@ function parseMap<KeyMap extends UseQueryStatesKeysMap>(
     }
     // Cache miss
     hasChanged = true
-    const value =
-      query === null ? null : read(parser, urlKey, searchParams, false)
+    const value = isEmpty(query)
+      ? null
+      : // todo same narrowing problem as in read()
+        safeParse(parser.parse, query as string & Array<string>, urlKey)
 
     out[stateKey as keyof KeyMap] = value ?? null
     if (cachedQuery) {

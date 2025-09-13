@@ -1,6 +1,10 @@
 import type { Options } from '../defs'
 import type { Parser } from '../parsers'
 
+export function isEmpty(query: string | Iterable<string> | null): boolean {
+  return query === null || (Array.isArray(query) && query.length === 0)
+}
+
 export function read<T>(
   parser: Parser<T> &
     Options & {
@@ -15,7 +19,7 @@ export function read<T>(
     parser.type === 'multi'
       ? searchParams.getAll(key) // empty key to get all values
       : searchParams.get(key)
-  if (query === null || (Array.isArray(query) && query.length === 0)) {
+  if (isEmpty(query)) {
     return parser.defaultValue ?? null
   }
   try {
