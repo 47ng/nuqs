@@ -12,6 +12,7 @@ import {
   parseAsIsoDate,
   parseAsIsoDateTime,
   parseAsJson,
+  parseAsNativeArrayOf,
   parseAsNumberLiteral,
   parseAsString,
   parseAsStringEnum,
@@ -298,6 +299,23 @@ describe('parsers', () => {
     expect(() =>
       isParserBijective(parser, 'not-an-array', ['a', 'b'])
     ).toThrow()
+  })
+
+  describe('parseAsNativeArrayOf', () => {
+    it('serializes', () => {
+      const parser = parseAsNativeArrayOf(parseAsString)
+      expect(parser.serialize([])).toStrictEqual([])
+      expect(parser.serialize(['a', ',', 'b'])).toStrictEqual(['a', ',', 'b'])
+    })
+    it('parses', () => {
+      const parser = parseAsNativeArrayOf(parseAsInteger)
+      expect(parser.parse([])).toStrictEqual([])
+      expect(parser.parse(['1', '2'])).toStrictEqual([1, 2])
+    })
+    it('defaults to empty array', () => {
+      const parser = parseAsNativeArrayOf(parseAsInteger)
+      expect(parser.parse(['not', 'a', 'number'])).toStrictEqual([])
+    })
   })
 
   it('parseServerSide with default (#384)', () => {

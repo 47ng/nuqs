@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import { createLoader } from './loader'
-import { createParser, parseAsInteger } from './parsers'
+import {
+  createParser,
+  parseAsInteger,
+  parseAsNativeArrayOf,
+  parseAsString
+} from './parsers'
 
 describe('loader', () => {
   describe('sync', () => {
@@ -217,6 +222,31 @@ describe('loader', () => {
       return expect(result).resolves.toEqual({
         urlKey: 1
       })
+    })
+  })
+
+  describe('multi-parser', () => {
+    it('supports multi-parsers', () => {
+      const load = createLoader({
+        a: parseAsNativeArrayOf(parseAsInteger)
+      })
+      const result = load(new Request('http://example.com/?a=1&a=2&a=3'))
+      expect(result).toStrictEqual({ a: [1, 2, 3] })
+    })
+
+    it('removes un-parseable values', () => {
+      const load = createLoader({
+        a: parseAsNativeArrayOf(parseAsInteger)
+      })
+      const result = load(new Request('http://example.com/?a=foo&a=1'))
+      expect(result).toStrictEqual({ a: [1] })
+    })
+    it('defaults if everything is unparseable', () => {
+      const load = createLoader({
+        a: parseAsNativeArrayOf(parseAsInteger).withDefault([42])
+      })
+      const result = load(new Request('http://example.com/?a=foo&a=bar'))
+      expect(result).toStrictEqual({ a: [42] })
     })
   })
 })
