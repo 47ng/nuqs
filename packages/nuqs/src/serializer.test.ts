@@ -5,6 +5,7 @@ import {
   parseAsBoolean,
   parseAsInteger,
   parseAsJson,
+  parseAsNativeArrayOf,
   parseAsString
 } from './parsers'
 import { createSerializer } from './serializer'
@@ -12,7 +13,8 @@ import { createSerializer } from './serializer'
 const parsers = {
   str: parseAsString,
   int: parseAsInteger,
-  bool: parseAsBoolean
+  bool: parseAsBoolean,
+  multi: parseAsNativeArrayOf(parseAsString)
 }
 
 describe('serializer', () => {
@@ -200,6 +202,11 @@ describe('serializer', () => {
       str: 'foo?bar'
     })
     expect(result).toBe('https://example.com/path?issue=is?here&str=foo?bar')
+  })
+  it('supports native array values', () => {
+    const serialize = createSerializer(parsers)
+    const result = serialize({ multi: ['a', 'b', 'c'] })
+    expect(result).toBe('?multi=a&multi=b&multi=c')
   })
   describe('supports processUrlSearchParams', () => {
     it('modifies search params in place', () => {

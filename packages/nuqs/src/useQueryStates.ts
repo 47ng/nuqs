@@ -13,9 +13,10 @@ import {
   globalThrottleQueue,
   type UpdateQueuePushArgs
 } from './lib/queues/throttle'
-import { safeParse } from './lib/safe-parse'
 import { emitter, type CrossHookSyncPayload } from './lib/sync'
-import type { Parser } from './parsers'
+import { type Parser } from './parsers'
+import { isEmpty } from './lib/search-params'
+import { safeParse } from './lib/safe-parse'
 
 type KeyMapValue<Type> = Parser<Type> &
   Options & {
@@ -97,7 +98,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
   )
   const adapter = useAdapter(Object.values(resolvedUrlKeys))
   const initialSearchParams = adapter.searchParams
-  const queryRef = useRef<Record<string, string | null>>({})
+  const queryRef = useRef<Record<string, Iterable<string> | null>>({})
   const defaultValues = useMemo(
     () =>
       Object.fromEntries(
@@ -373,8 +374,8 @@ function parseMap<KeyMap extends UseQueryStatesKeysMap>(
   keyMap: KeyMap,
   urlKeys: Partial<Record<keyof KeyMap, string>>,
   searchParams: URLSearchParams,
-  queuedQueries: Record<string, string | null | undefined>,
-  cachedQuery?: Record<string, string | null>,
+  queuedQueries: Record<string, Iterable<string> | null | undefined>,
+  cachedQuery?: Record<string, Iterable<string> | null>,
   cachedState?: NullableValues<KeyMap>
 ): {
   state: NullableValues<KeyMap>
@@ -383,12 +384,15 @@ function parseMap<KeyMap extends UseQueryStatesKeysMap>(
   let hasChanged = false
   const state = Object.keys(keyMap).reduce((out, stateKey) => {
     const urlKey = urlKeys?.[stateKey] ?? stateKey
-    const { parse } = keyMap[stateKey]!
+    const parser = keyMap[stateKey]!
     const queuedQuery = queuedQueries[urlKey]
     const query =
       queuedQuery === undefined
-        ? (searchParams?.get(urlKey) ?? null)
+        ? parser.type === 'multi'
+          ? (searchParams?.getAll(urlKey) ?? [])
+          : (searchParams?.get(urlKey) ?? null)
         : queuedQuery
+    // todo this === comparison likely won't work with arrays
     if (cachedQuery && cachedState && (cachedQuery[urlKey] ?? null) === query) {
       // Cache hit
       out[stateKey as keyof KeyMap] = cachedState[stateKey] ?? null
@@ -396,7 +400,11 @@ function parseMap<KeyMap extends UseQueryStatesKeysMap>(
     }
     // Cache miss
     hasChanged = true
-    const value = query === null ? null : safeParse(parse, query, stateKey)
+    const value = isEmpty(query)
+      ? null
+      : // we have properly narrowed `query` here, but TS doesn't keep track of that
+        safeParse(parser.parse, query as string & Array<string>, urlKey)
+
     out[stateKey as keyof KeyMap] = value ?? null
     if (cachedQuery) {
       cachedQuery[urlKey] = query

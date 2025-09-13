@@ -11,6 +11,7 @@ import {
   parseAsArrayOf,
   parseAsInteger,
   parseAsJson,
+  parseAsNativeArrayOf,
   parseAsString
 } from './parsers'
 import { useQueryState } from './useQueryState'
@@ -107,6 +108,11 @@ describe('useQueryStates: referential equality', () => {
       {
         initial: 'state'
       }
+    ],
+    multi: [
+      {
+        initial: 'state'
+      }
     ]
   }
 
@@ -116,7 +122,10 @@ describe('useQueryStates: referential equality', () => {
     return useQueryStates({
       str: parseAsString.withDefault(defaultValue),
       obj: parseAsJson<any>(x => x).withDefault(defaults.obj),
-      arr: parseAsArrayOf(parseAsJson<any>(x => x)).withDefault(defaults.arr)
+      arr: parseAsArrayOf(parseAsJson<any>(x => x)).withDefault(defaults.arr),
+      multi: parseAsNativeArrayOf(parseAsJson<any>(x => x)).withDefault(
+        defaults.multi
+      )
     })
   }
 
@@ -129,6 +138,7 @@ describe('useQueryStates: referential equality', () => {
     expect(state.obj).toBe(defaults.obj)
     expect(state.arr).toBe(defaults.arr)
     expect(state.arr[0]).toBe(defaults.arr[0])
+    expect(state.multi[0]).toBe(defaults.multi[0])
   })
 
   it('should keep referential equality when resetting to defaults', async () => {
@@ -137,7 +147,8 @@ describe('useQueryStates: referential equality', () => {
         searchParams: {
           str: 'foo',
           obj: '{"hello":"world"}',
-          arr: '{"obj":true},{"arr":true}'
+          arr: '{"obj":true},{"arr":true}',
+          multi: '{"obj":true},{"arr":true}'
         }
       })
     })
@@ -147,6 +158,8 @@ describe('useQueryStates: referential equality', () => {
     expect(state.obj).toBe(defaults.obj)
     expect(state.arr).toBe(defaults.arr)
     expect(state.arr[0]).toBe(defaults.arr[0])
+    expect(state.multi).toBe(defaults.multi)
+    expect(state.multi[0]).toBe(defaults.multi[0])
   })
 
   it('should keep referential equality when unrelated keys change', async () => {
@@ -178,6 +191,8 @@ describe('useQueryStates: referential equality', () => {
     expect(state.obj).toBe(defaults.obj)
     expect(state.arr).toBe(defaults.arr)
     expect(state.arr[0]).toBe(defaults.arr[0])
+    expect(state.multi).toBe(defaults.multi)
+    expect(state.multi[0]).toBe(defaults.multi[0])
   })
 })
 

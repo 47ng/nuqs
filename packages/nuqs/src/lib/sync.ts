@@ -2,7 +2,7 @@ import { createEmitter, type Emitter } from './emitter'
 
 export type CrossHookSyncPayload = {
   state: any
-  query: string | null
+  query: Iterable<string> | null
 }
 
 type EventMap = {

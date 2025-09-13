@@ -1,4 +1,4 @@
-import type { ParserBuilder } from './parsers'
+import type { ParserBuilder, SingleParserBuilder } from './parsers'
 
 /**
  * Test that a parser is bijective (serialize then parse gives back the same value).
@@ -21,7 +21,7 @@ import type { ParserBuilder } from './parsers'
  * @returns `true` if the test passes, otherwise it will throw.
  */
 export function isParserBijective<T>(
-  parser: ParserBuilder<T>,
+  parser: SingleParserBuilder<T>,
   serialized: string,
   input: T
 ): boolean {
@@ -69,7 +69,7 @@ export function isParserBijective<T>(
  * @returns `true` if the test passes, otherwise it will throw.
  */
 export function testSerializeThenParse<T>(
-  parser: ParserBuilder<T>,
+  parser: SingleParserBuilder<T>,
   input: T
 ): boolean {
   const serialized = parser.serialize(input)
@@ -109,7 +109,7 @@ export function testSerializeThenParse<T>(
  * @returns `true` if the test passes, otherwise it will throw.
  */
 export function testParseThenSerialize<T>(
-  parser: ParserBuilder<T>,
+  parser: SingleParserBuilder<T>,
   input: string
 ): boolean {
   const parsed = parser.parse(input)

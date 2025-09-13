@@ -6,8 +6,9 @@ import { error } from '../errors'
 import { timeout } from '../timeout'
 import { withResolvers, type Resolvers } from '../with-resolvers'
 import { defaultRateLimit } from './rate-limiting'
+import { write } from '../search-params'
 
-type UpdateMap = Map<string, string | null>
+type UpdateMap = Map<string, Iterable<string> | null>
 type TransitionSet = Set<React.TransitionStartFunction>
 export type UpdateQueueAdapterContext = Pick<
   AdapterInterface,
@@ -19,7 +20,7 @@ export type UpdateQueueAdapterContext = Pick<
 
 export type UpdateQueuePushArgs = {
   key: string
-  query: string | null
+  query: Iterable<string> | null
   options: AdapterOptions & Pick<Options, 'startTransition'>
 }
 
@@ -65,7 +66,7 @@ export class ThrottledQueue {
     }
   }
 
-  getQueuedQuery(key: string): string | null | undefined {
+  getQueuedQuery(key: string): Iterable<string> | null | undefined {
     return this.updateMap.get(key)
   }
 
@@ -185,7 +186,7 @@ export class ThrottledQueue {
       if (value === null) {
         search.delete(key)
       } else {
-        search.set(key, value)
+        search = write(value, key, search)
       }
     }
     if (processUrlSearchParams) {

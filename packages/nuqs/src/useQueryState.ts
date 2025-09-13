@@ -3,7 +3,7 @@ import type { Options } from './defs'
 import type { Parser } from './parsers'
 import { useQueryStates } from './useQueryStates'
 
-export interface UseQueryStateOptions<T> extends Parser<T>, Options {}
+export type UseQueryStateOptions<T> = Parser<T> & Options
 
 export type UseQueryStateReturn<Parsed, Default> = [
   Default extends undefined
@@ -197,21 +197,16 @@ export function useQueryState<T = string>(
     defaultValue?: T
   } = {}
 ) {
-  const {
-    parse = x => x as unknown as T,
-    serialize,
-    eq,
-    defaultValue,
-    ...hookOptions
-  } = options
+  const { parse, type, serialize, eq, defaultValue, ...hookOptions } = options
   const [{ [key]: state }, setState] = useQueryStates(
     {
       [key]: {
-        parse,
+        parse: parse ?? ((x: any) => x as unknown as T),
+        type,
         serialize,
         eq,
         defaultValue
-      }
+      } as Parser<T>
     },
     hookOptions
   )

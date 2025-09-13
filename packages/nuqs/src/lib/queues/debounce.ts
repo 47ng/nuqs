@@ -73,7 +73,9 @@ export class DebounceController {
     this.throttleQueue = throttleQueue
   }
 
-  useQueuedQueries(keys: string[]): Record<string, string | null | undefined> {
+  useQueuedQueries(
+    keys: string[]
+  ): Record<string, Iterable<string> | null | undefined> {
     return useSyncExternalStores(
       keys,
       (key, callback) => this.queuedQuerySync.on(key, callback),
@@ -153,7 +155,7 @@ export class DebounceController {
     this.queues.clear()
   }
 
-  getQueuedQuery(key: string): string | null | undefined {
+  getQueuedQuery(key: string): Iterable<string> | null | undefined {
     // The debounced queued values are more likely to be up-to-date
     // than any updates pending in the throttle queue, which comes last
     // in the update chain.
