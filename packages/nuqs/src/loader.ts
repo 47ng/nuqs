@@ -1,5 +1,6 @@
 import type { UrlKeys } from './defs'
-import type { inferParserType, ParserMap } from './parsers'
+import { type inferParserType, type ParserMap } from './parsers'
+import { read } from './lib/search-params'
 
 export type LoaderInput =
   | URL
@@ -96,27 +97,7 @@ export function createLoader<Parsers extends ParserMap>(
     const result = {} as any
     for (const [key, parser] of Object.entries(parsers)) {
       const urlKey = urlKeys[key] ?? key
-      const query = searchParams.get(urlKey)
-      if (query === null) {
-        result[key] = parser.defaultValue ?? null
-        continue
-      }
-      let parsedValue
-      try {
-        parsedValue = parser.parse(query)
-      } catch (error) {
-        if (strict) {
-          throw new Error(
-            `[nuqs] Error while parsing query \`${query}\` for key \`${key}\`: ${error}`
-          )
-        }
-        parsedValue = null
-      }
-      if (strict && query && parsedValue === null) {
-        throw new Error(
-          `[nuqs] Failed to parse query \`${query}\` for key \`${key}\` (got null)`
-        )
-      }
+      const parsedValue = read(parser, urlKey, searchParams, strict)
       result[key] = parsedValue ?? parser.defaultValue ?? null
     }
     return result
