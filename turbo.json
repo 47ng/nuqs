@@ -10,7 +10,11 @@
       "dependsOn": ["^build"]
     },
     "nuqs#build": {
-      "outputs": ["dist/**", "size.json", ".tsup/**", ".tsbuildinfo"]
+      "outputs": ["dist/**", ".tsup/**", ".tsbuildinfo"]
+    },
+    "nuqs#build:size-json": {
+      "outputs": ["size.json"],
+      "dependsOn": ["build"]
     },
     "e2e-next#build": {
       "outputs": [".next/**", "!.next/cache/**", "cypress/**"],
@@ -48,7 +52,7 @@
     },
     "docs#build": {
       "outputs": [".next/**", "!.next/cache/**"],
-      "dependsOn": ["^build"],
+      "dependsOn": ["^build", "nuqs#build:size-json"],
       "env": [
         "VERCEL_ENV",
         "VERCEL_URL",
