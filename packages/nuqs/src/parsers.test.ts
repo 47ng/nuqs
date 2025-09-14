@@ -309,12 +309,12 @@ describe('parsers', () => {
     })
     it('parses', () => {
       const parser = parseAsNativeArrayOf(parseAsInteger)
-      expect(parser.parse([])).toStrictEqual([])
+      expect(parser.parse([])).toStrictEqual(null)
       expect(parser.parse(['1', '2'])).toStrictEqual([1, 2])
     })
-    it('defaults to empty array', () => {
+    it('defaults to null', () => {
       const parser = parseAsNativeArrayOf(parseAsInteger)
-      expect(parser.parse(['not', 'a', 'number'])).toStrictEqual([])
+      expect(parser.parse(['not', 'a', 'number'])).toStrictEqual(null)
     })
   })
 
