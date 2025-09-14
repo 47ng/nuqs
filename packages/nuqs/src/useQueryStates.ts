@@ -17,6 +17,7 @@ import { emitter, type CrossHookSyncPayload } from './lib/sync'
 import { type Parser } from './parsers'
 import { isAbsentFromUrl } from './lib/search-params'
 import { safeParse } from './lib/safe-parse'
+import { compareQuery } from './lib/compare'
 
 type KeyMapValue<Type> = Parser<Type> &
   Options & {
@@ -385,14 +386,18 @@ function parseMap<KeyMap extends UseQueryStatesKeysMap>(
   const state = Object.entries(keyMap).reduce((out, [stateKey, parser]) => {
     const urlKey = urlKeys?.[stateKey] ?? stateKey
     const queuedQuery = queuedQueries[urlKey]
+    const defaultValue = parser.type === 'multi' ? [] : null
     const query =
       queuedQuery === undefined
-        ? parser.type === 'multi'
-          ? (searchParams?.getAll(urlKey) ?? [])
-          : (searchParams?.get(urlKey) ?? null)
+        ? ((parser.type === 'multi'
+            ? searchParams?.getAll(urlKey)
+            : searchParams?.get(urlKey)) ?? defaultValue)
         : queuedQuery
-    // todo this === comparison likely won't work with arrays
-    if (cachedQuery && cachedState && (cachedQuery[urlKey] ?? null) === query) {
+    if (
+      cachedQuery &&
+      cachedState &&
+      compareQuery(cachedQuery[urlKey] ?? defaultValue, query)
+    ) {
       // Cache hit
       out[stateKey as keyof KeyMap] = cachedState[stateKey] ?? null
       return out
