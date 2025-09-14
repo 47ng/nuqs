@@ -504,11 +504,14 @@ export function parseAsNativeArrayOf<ItemType>(
         .filter(value => value !== null && value !== undefined) as ItemType[]
       return parsed.length === 0 ? null : parsed
     },
-    serialize: values =>
-      values.flatMap(value => {
+    serialize: values => {
+      // defensive check because we potentially get a single value passed from a standard schema
+      const safeValues = Array.isArray(values) ? values : [values]
+      return safeValues.flatMap(value => {
         const serialized = itemParser.serialize?.(value) ?? String(value)
         return typeof serialized === 'string' ? [serialized] : [...serialized]
-      }),
+      })
+    },
     eq(a, b) {
       if (a === b) {
         return true // Referentially stable
