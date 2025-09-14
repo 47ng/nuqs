@@ -382,9 +382,8 @@ function parseMap<KeyMap extends UseQueryStatesKeysMap>(
   hasChanged: boolean
 } {
   let hasChanged = false
-  const state = Object.keys(keyMap).reduce((out, stateKey) => {
+  const state = Object.entries(keyMap).reduce((out, [stateKey, parser]) => {
     const urlKey = urlKeys?.[stateKey] ?? stateKey
-    const parser = keyMap[stateKey]!
     const queuedQuery = queuedQueries[urlKey]
     const query =
       queuedQuery === undefined
