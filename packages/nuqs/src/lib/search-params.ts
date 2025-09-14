@@ -1,4 +1,6 @@
-export function isEmpty(query: string | Iterable<string> | null): boolean {
+export function isEmpty(
+  query: string | Iterable<string> | null
+): query is null | [] {
   return query === null || (Array.isArray(query) && query.length === 0)
 }
 

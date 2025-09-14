@@ -108,7 +108,7 @@ export function createLoader<Parsers extends ParserMap>(
       let parsedValue
       try {
         // we have properly narrowed `query` here, but TS doesn't keep track of that
-        parsedValue = parser.parse(query as string & readonly string[])
+        parsedValue = parser.parse(query as string & Array<string>)
       } catch (error) {
         if (strict) {
           throw new Error(
