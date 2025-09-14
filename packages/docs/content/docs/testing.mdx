@@ -156,6 +156,14 @@ withNuqsTestingAdapter({
   - the new rendered query string (for convenience)
   - the options used to update the URL.
 
+- `hasMemory{:ts}`: by default, the testing adapter is **immutable**,
+meaning it will always use the initial search params as a base for URL
+updates. This encourages testing units of behaviour in a single test.
+
+To make it behave like framework adapters (which do store the
+updates in the URL), set `hasMemory: true{:ts}`, so subsequent updates
+build up on the previous state.
+
 <details>
 <summary className='cursor-pointer'>🧪 Internal/advanced options</summary>
 
