@@ -16,6 +16,9 @@ export function write(
     for (const v of serialized) {
       searchParams.append(key, v)
     }
+    if (searchParams.size === 0) {
+      searchParams.set(key, '')
+    }
   }
   return searchParams
 }
