@@ -15,7 +15,7 @@ import {
 } from './lib/queues/throttle'
 import { emitter, type CrossHookSyncPayload } from './lib/sync'
 import { type Parser } from './parsers'
-import { isEmpty } from './lib/search-params'
+import { isAbsentFromUrl } from './lib/search-params'
 import { safeParse } from './lib/safe-parse'
 
 type KeyMapValue<Type> = Parser<Type> &
@@ -399,7 +399,7 @@ function parseMap<KeyMap extends UseQueryStatesKeysMap>(
     }
     // Cache miss
     hasChanged = true
-    const value = isEmpty(query)
+    const value = isAbsentFromUrl(query)
       ? null
       : // we have properly narrowed `query` here, but TS doesn't keep track of that
         safeParse(parser.parse, query as string & Array<string>, urlKey)

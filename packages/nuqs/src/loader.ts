@@ -1,6 +1,6 @@
 import type { UrlKeys } from './defs'
 import { type inferParserType, type ParserMap } from './parsers'
-import { isEmpty } from './lib/search-params'
+import { isAbsentFromUrl } from './lib/search-params'
 
 export type LoaderInput =
   | URL
@@ -101,7 +101,7 @@ export function createLoader<Parsers extends ParserMap>(
         parser.type === 'multi'
           ? searchParams.getAll(urlKey)
           : searchParams.get(urlKey)
-      if (isEmpty(query)) {
+      if (isAbsentFromUrl(query)) {
         result[key] = parser.defaultValue ?? null
         continue
       }

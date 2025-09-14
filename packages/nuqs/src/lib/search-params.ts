@@ -1,4 +1,4 @@
-export function isEmpty(
+export function isAbsentFromUrl(
   query: string | Iterable<string> | null
 ): query is null | [] {
   return query === null || (Array.isArray(query) && query.length === 0)
