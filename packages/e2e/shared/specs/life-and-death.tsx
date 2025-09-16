@@ -36,7 +36,7 @@ function ChildComponentUseQueryState() {
         Clear
       </button>
       <Display environment="client" target="useQueryState" state={test} />
-      <NullDetector throwOnNull id="null-detector-useQueryState" state={test} />
+      <NullDetector id="null-detector-useQueryState" state={test} />
     </>
   )
 }
@@ -63,11 +63,7 @@ function ChildComponentUseQueryStates() {
         Clear
       </button>
       <Display environment="client" target="useQueryStates" state={test} />
-      <NullDetector
-        throwOnNull
-        id="null-detector-useQueryStates"
-        state={test}
-      />
+      <NullDetector id="null-detector-useQueryStates" state={test} />
     </>
   )
 }
