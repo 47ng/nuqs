@@ -162,7 +162,9 @@ updates. This encourages testing units of behaviour in a single test.
 
 To make it behave like framework adapters (which do store the
 updates in the URL), set `hasMemory: true{:ts}`, so subsequent updates
-build up on the previous state.
+build up on the previous state. This memory is per-adapter instance,
+and so is isolated between tests, but shared for components under the same
+adapter.
 
 <details>
 <summary className='cursor-pointer'>🧪 Internal/advanced options</summary>
