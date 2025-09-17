@@ -9,7 +9,7 @@ export function Repro1099UseQueryState() {
   const { shallow, history } = useOptions()
   const [state, setState] = useQueryState('test', { shallow, history })
   const [isNullDetectorEnabled, setIsNullDetectorEnabled] = useState(false)
-  useFakeLoadingState(state)
+  useStateUpdateInEffect(state)
   return (
     <>
       <button
@@ -40,7 +40,7 @@ export function Repro1099UseQueryStates() {
     }
   )
   const [isNullDetectorEnabled, setIsNullDetectorEnabled] = useState(false)
-  useFakeLoadingState(state)
+  useStateUpdateInEffect(state)
   return (
     <>
       <button
@@ -56,15 +56,13 @@ export function Repro1099UseQueryStates() {
   )
 }
 
-function useFakeLoadingState(trigger: unknown) {
-  const [loading, setLoading] = useState(false)
+function useStateUpdateInEffect(trigger: unknown) {
+  const [, setCount] = useState(0)
   useEffect(() => {
     if (!trigger) {
       return
     }
-    setLoading(true)
-    const timeout = setTimeout(() => setLoading(false), 100)
-    return () => clearTimeout(timeout)
+    console.log('[repro-1099] trigger other state update')
+    setCount(x => x + 1)
   }, [trigger])
-  return loading
 }
