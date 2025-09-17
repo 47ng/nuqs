@@ -72,9 +72,11 @@ const router = createBrowserRouter(
       <Route path="render-count/:hook/:shallow/:history/:startTransition/async-loader"  lazy={load(import('./routes/render-count.$hook.$shallow.$history.$startTransition.async-loader'))} />
 
       {/* Reproductions */}
-      <Route path="repro-359" lazy={load(import('./routes/repro-359'))} />
-      <Route path="repro-839" lazy={load(import('./routes/repro-839'))} />
-      <Route path="repro-982" lazy={load(import('./routes/repro-982'))} />
+      <Route path="repro-359"                 lazy={load(import('./routes/repro-359'))} />
+      <Route path="repro-839"                 lazy={load(import('./routes/repro-839'))} />
+      <Route path="repro-982"                 lazy={load(import('./routes/repro-982'))} />
+      <Route path="repro-1099/useQueryState"  lazy={load(import('./routes/repro-1099.useQueryState'))} />
+      <Route path="repro-1099/useQueryStates" lazy={load(import('./routes/repro-1099.useQueryStates'))} />
     </Route>
   ))
 
