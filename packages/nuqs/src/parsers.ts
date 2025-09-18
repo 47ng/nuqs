@@ -248,6 +248,59 @@ export const parseAsIsoDate: ParserBuilder<Date> = createParser({
 })
 
 /**
+ * Parse and validate UUID strings from the query string.
+ *
+ * By default, accepts any valid UUID format (v1-v8) including the special
+ * nil UUID (all zeros) and max UUID (all Fs). You can optionally specify
+ * a specific UUID version to validate against.
+ *
+ * @param opts - Optional configuration object
+ * @param opts.version - Specific UUID version to validate (1-8)
+ * @returns A parser that validates UUID strings
+ *
+ * @example
+ * ```ts
+ * // Accept any valid UUID
+ * const [id, setId] = useQueryState('id', parseAsUuid())
+ *
+ * // URL: ?id=550e8400-e29b-41d4-a716-446655440000
+ * console.log(id) // "550e8400-e29b-41d4-a716-446655440000"
+ * ```
+ *
+ * @example
+ * ```ts
+ * // Only accept UUID v4
+ * const [sessionId, setSessionId] = useQueryState(
+ *   'sessionId',
+ *   parseAsUuid({ version: 4 }).withDefault('00000000-0000-0000-0000-000000000000')
+ * )
+ *
+ * // URL: ?sessionId=f47ac10b-58cc-4372-a567-0e02b2c3d479
+ * console.log(sessionId) // "f47ac10b-58cc-4372-a567-0e02b2c3d479"
+ * ```
+ */
+export function parseAsUuid(opts?: {
+  version?: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8
+}): ParserBuilder<string> {
+  return createParser({
+    parse(query) {
+      // Create regex only when needed to reduce bundle size
+      const v = opts?.version
+      // Note: using +v to coerce to number (in case of user-controlled inputs,
+      // to avoid a RegExp DoS attack)
+      const versionPattern = v ? `[${+v}]` : '[1-8]'
+      return new RegExp(
+        `^([0-9a-f]{8}-[0-9a-f]{4}-${versionPattern}[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}|0{8}-0{4}-0{4}-0{4}-0{12}|f{8}-f{4}-f{4}-f{4}-f{12})$`,
+        'i'
+      ).test(query)
+        ? query
+        : null
+    },
+    serialize: String
+  })
+}
+
+/**
  * String-based enums provide better type-safety for known sets of values.
  * You will need to pass the parseAsStringEnum function a list of your enum values
  * in order to validate the query string. Anything else will return `null`,

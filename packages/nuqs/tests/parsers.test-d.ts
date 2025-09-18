@@ -13,6 +13,7 @@ import {
   parseAsStringEnum,
   parseAsStringLiteral,
   parseAsTimestamp,
+  parseAsUuid,
   type inferParserType
 } from '../dist'
 
@@ -64,6 +65,22 @@ describe('types/parsers', () => {
     assertType<Date | null>(p.parse('2020-01-01T00:00:00Z'))
     assertType<string>(p.serialize(new Date()))
     assertType<Date | null>(p.parseServerSide(undefined))
+  })
+  test('parseAsUuid (no version specified)', () => {
+    const p = parseAsUuid()
+    assertType<string | null>(p.parse('550e8400-e29b-41d4-a716-446655440000'))
+    assertType<string>(p.serialize('550e8400-e29b-41d4-a716-446655440000'))
+    assertType<string | null>(p.parseServerSide(undefined))
+  })
+  test('parseAsUuid (with version specified)', () => {
+    const p = parseAsUuid({ version: 4 })
+    assertType<string | null>(p.parse('550e8400-e29b-41d4-a716-446655440000'))
+    assertType<string>(p.serialize('550e8400-e29b-41d4-a716-446655440000'))
+    assertType<string | null>(p.parseServerSide(undefined))
+  })
+  test('parseAsUuid (with invalid version specified)', () => {
+    // @ts-expect-error
+    parseAsUuid({ version: 123 })
   })
   test('parseAsStringEnum', () => {
     enum Test {

@@ -16,7 +16,8 @@ import {
   parseAsString,
   parseAsStringEnum,
   parseAsStringLiteral,
-  parseAsTimestamp
+  parseAsTimestamp,
+  parseAsUuid
 } from './parsers'
 import {
   isParserBijective,
@@ -134,6 +135,37 @@ describe('parsers', () => {
     expect(testParseThenSerialize(parseAsIsoDate, moment)).toBe(true)
     expect(testSerializeThenParse(parseAsIsoDate, ref)).toBe(true)
     expect(isParserBijective(parseAsIsoDate, moment, ref)).toBe(true)
+  })
+  it('parseAsUuid', () => {
+    expect(parseAsUuid().parse('')).toBeNull()
+    expect(parseAsUuid().parse('foo')).toBeNull()
+    const uuid = (v = 4) => `01234567-890a-${v}${v}${v}${v}-8bcd-ef0123456789`
+    expect(parseAsUuid().parse(uuid())).toBe(uuid())
+    expect(parseAsUuid({ version: 1 }).parse(uuid(1))).toBe(uuid(1))
+    expect(parseAsUuid({ version: 1 }).parse(uuid(2))).toBe(null)
+    expect(parseAsUuid({ version: 2 }).parse(uuid(2))).toBe(uuid(2))
+    expect(parseAsUuid({ version: 2 }).parse(uuid(1))).toBe(null)
+    expect(parseAsUuid({ version: 3 }).parse(uuid(3))).toBe(uuid(3))
+    expect(parseAsUuid({ version: 3 }).parse(uuid(1))).toBe(null)
+    expect(parseAsUuid({ version: 4 }).parse(uuid(4))).toBe(uuid(4))
+    expect(parseAsUuid({ version: 4 }).parse(uuid(1))).toBe(null)
+    expect(parseAsUuid({ version: 5 }).parse(uuid(5))).toBe(uuid(5))
+    expect(parseAsUuid({ version: 5 }).parse(uuid(1))).toBe(null)
+    expect(parseAsUuid({ version: 6 }).parse(uuid(6))).toBe(uuid(6))
+    expect(parseAsUuid({ version: 6 }).parse(uuid(1))).toBe(null)
+    expect(parseAsUuid({ version: 7 }).parse(uuid(7))).toBe(uuid(7))
+    expect(parseAsUuid({ version: 7 }).parse(uuid(1))).toBe(null)
+    expect(parseAsUuid({ version: 8 }).parse(uuid(8))).toBe(uuid(8))
+    expect(parseAsUuid({ version: 8 }).parse(uuid(1))).toBe(null)
+
+    expect(parseAsUuid().parse('00000000-0000-0000-0000-000000000000')).toBe(
+      '00000000-0000-0000-0000-000000000000'
+    )
+    expect(parseAsUuid().parse('ffffffff-ffff-ffff-ffff-ffffffffffff')).toBe(
+      'ffffffff-ffff-ffff-ffff-ffffffffffff'
+    )
+
+    expect(isParserBijective(parseAsUuid(), uuid(), uuid())).toBe(true)
   })
   it('parseAsStringEnum', () => {
     enum Test {
