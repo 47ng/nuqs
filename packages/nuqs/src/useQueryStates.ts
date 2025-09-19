@@ -386,17 +386,17 @@ function parseMap<KeyMap extends UseQueryStatesKeysMap>(
   const state = Object.entries(keyMap).reduce((out, [stateKey, parser]) => {
     const urlKey = urlKeys?.[stateKey] ?? stateKey
     const queuedQuery = queuedQueries[urlKey]
-    const defaultValue = parser.type === 'multi' ? [] : null
+    const fallbackValue = parser.type === 'multi' ? [] : null
     const query =
       queuedQuery === undefined
         ? ((parser.type === 'multi'
             ? searchParams?.getAll(urlKey)
-            : searchParams?.get(urlKey)) ?? defaultValue)
+            : searchParams?.get(urlKey)) ?? fallbackValue)
         : queuedQuery
     if (
       cachedQuery &&
       cachedState &&
-      compareQuery(cachedQuery[urlKey] ?? defaultValue, query)
+      compareQuery(cachedQuery[urlKey] ?? fallbackValue, query)
     ) {
       // Cache hit
       out[stateKey as keyof KeyMap] = cachedState[stateKey] ?? null
