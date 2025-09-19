@@ -521,7 +521,7 @@ export function parseAsNativeArrayOf<ItemType>(
       }
       return a.every((value, index) => itemEq(value, b[index]!))
     }
-  })
+  }).withDefault([])
 }
 
 type inferSingleParserType<Parser> = Parser extends ParserBuilder<

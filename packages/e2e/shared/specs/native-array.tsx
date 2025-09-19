@@ -3,7 +3,7 @@
 import { parseAsInteger, parseAsNativeArrayOf, useQueryState } from 'nuqs'
 import { Display } from '../components/display'
 
-export const parser = parseAsNativeArrayOf(parseAsInteger).withDefault([])
+export const parser = parseAsNativeArrayOf(parseAsInteger)
 
 export function NativeArray() {
   const [state, setState] = useQueryState('test', parser)
