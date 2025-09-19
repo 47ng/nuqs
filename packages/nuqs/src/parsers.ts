@@ -495,7 +495,7 @@ export function parseAsArrayOf<ItemType>(
 
 export function parseAsNativeArrayOf<ItemType>(
   itemParser: SingleParser<ItemType>
-): MultiParserBuilder<ItemType[]> {
+): ReturnType<MultiParserBuilder<ItemType[]>['withDefault']> {
   const itemEq = itemParser.eq ?? ((a: ItemType, b: ItemType) => a === b)
   return createMultiParser({
     parse: query => {
