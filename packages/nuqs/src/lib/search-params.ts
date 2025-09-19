@@ -16,6 +16,9 @@ export function write(
     for (const v of serialized) {
       searchParams.append(key, v)
     }
+    // if we get here with an empty iterable, no values were appended
+    // however, an empty iterable here means we explicitly want to set the key
+    // because for default values, we don't call write at all
     if (!searchParams.has(key)) {
       searchParams.set(key, '')
     }
