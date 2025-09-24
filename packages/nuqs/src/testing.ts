@@ -1,4 +1,4 @@
-import type { ParserBuilder, SingleParserBuilder } from './parsers'
+import type { SingleParserBuilder } from './parsers'
 
 /**
  * Test that a parser is bijective (serialize then parse gives back the same value).

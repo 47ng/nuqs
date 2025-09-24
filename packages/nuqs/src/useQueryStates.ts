@@ -14,12 +14,12 @@ import {
   type UpdateQueuePushArgs
 } from './lib/queues/throttle'
 import { emitter, type CrossHookSyncPayload } from './lib/sync'
-import { type Parser } from './parsers'
+import { type GenericParser } from './parsers'
 import { isAbsentFromUrl } from './lib/search-params'
 import { safeParse } from './lib/safe-parse'
 import { compareQuery } from './lib/compare'
 
-type KeyMapValue<Type> = Parser<Type> &
+type KeyMapValue<Type> = GenericParser<Type> &
   Options & {
     defaultValue?: Type
   }

@@ -1,9 +1,9 @@
 import { useCallback } from 'react'
 import type { Options } from './defs'
-import type { Parser } from './parsers'
+import type { GenericParser } from './parsers'
 import { useQueryStates } from './useQueryStates'
 
-export type UseQueryStateOptions<T> = Parser<T> & Options
+export type UseQueryStateOptions<T> = GenericParser<T> & Options
 
 export type UseQueryStateReturn<Parsed, Default> = [
   Default extends undefined
@@ -90,7 +90,7 @@ export function useQueryState(
     // Note: Ensure this overload isn't picked when specifying a default
     // value and spreading a parser for which the default would be invalid.
     // See https://github.com/47ng/nuqs/pull/1057
-    [K in keyof Parser<unknown>]?: never
+    [K in keyof GenericParser<unknown>]?: never
   }
 ): UseQueryStateReturn<string, typeof options.defaultValue>
 
@@ -206,7 +206,7 @@ export function useQueryState<T = string>(
         serialize,
         eq,
         defaultValue
-      } as Parser<T>
+      } as GenericParser<T>
     },
     hookOptions
   )

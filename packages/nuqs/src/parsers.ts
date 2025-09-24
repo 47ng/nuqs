@@ -38,9 +38,17 @@ export type MultiParser<T> = {
   eq?: (a: T, b: T) => boolean
 }
 
-export type Parser<T> = SingleParser<T> | MultiParser<T>
+export type GenericParser<T> = SingleParser<T> | MultiParser<T>
+export type GenericParserBuilder<T> =
+  | SingleParserBuilder<T>
+  | MultiParserBuilder<T>
 
-export type ParserBuilder<T> = SingleParserBuilder<T> | MultiParserBuilder<T>
+/* type aliases for backwards compatibility */
+/** @deprecated use SingleParser instead */
+export type Parser<T> = SingleParser<T>
+/** @deprecated use SingleParserBuilder instead */
+export type ParserBuilder<T> = SingleParserBuilder<T>
+
 export type SingleParserBuilder<T> = Required<SingleParser<T>> &
   Options & {
     /**
@@ -524,17 +532,19 @@ export function parseAsNativeArrayOf<ItemType>(
   }).withDefault([])
 }
 
-type inferSingleParserType<Parser> = Parser extends ParserBuilder<
+type inferSingleParserType<Parser> = Parser extends GenericParserBuilder<
   infer Value
 > & {
   defaultValue: infer Value
 }
   ? Value
-  : Parser extends ParserBuilder<infer Value>
+  : Parser extends GenericParserBuilder<infer Value>
     ? Value | null
     : never
 
-type inferParserRecordType<Map extends Record<string, ParserBuilder<any>>> = {
+type inferParserRecordType<
+  Map extends Record<string, GenericParserBuilder<any>>
+> = {
   [Key in keyof Map]: inferSingleParserType<Map[Key]>
 } & {}
 
@@ -563,13 +573,13 @@ type inferParserRecordType<Map extends Record<string, ParserBuilder<any>>> = {
  * ```
  */
 export type inferParserType<Input> =
-  Input extends ParserBuilder<any>
+  Input extends GenericParserBuilder<any>
     ? inferSingleParserType<Input>
-    : Input extends Record<string, ParserBuilder<any>>
+    : Input extends Record<string, GenericParserBuilder<any>>
       ? inferParserRecordType<Input>
       : never
 
-export type ParserWithOptionalDefault<T> = ParserBuilder<T> & {
+export type ParserWithOptionalDefault<T> = GenericParserBuilder<T> & {
   defaultValue?: T
 }
 export type ParserMap = Record<string, ParserWithOptionalDefault<any>>
