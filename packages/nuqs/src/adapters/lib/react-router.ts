@@ -64,7 +64,10 @@ export function createReactRouterBasedAdapter({
     const searchParams = useOptimisticSearchParams(watchKeys)
     const updateUrl = useCallback(
       (search: URLSearchParams, options: AdapterOptions) => {
-        startTransition(() => {
+        const maybeTransition = options.shallow
+          ? (callback: () => void) => callback()
+          : startTransition
+        maybeTransition(() => {
           emitter.emit('update', search)
         })
         const url = new URL(location.href)
