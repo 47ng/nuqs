@@ -27,6 +27,7 @@ import {
   parseAsIsoDate,
   parseAsIsoDateTime,
   parseAsJson,
+  parseAsNativeArrayOf,
   parseAsStringLiteral,
   parseAsTimestamp,
   useQueryState
@@ -458,6 +459,34 @@ export function CustomParserDemo() {
         variant="secondary"
         className="ml-auto"
         onClick={() => setValue(null)}
+      >
+        Clear
+      </Button>
+    </DemoContainer>
+  )
+}
+
+export function NativeArrayParserDemo() {
+  const [_, setValue] = useQueryState(
+    'nativeArray',
+    parseAsNativeArrayOf(parseAsInteger)
+  )
+  return (
+    <DemoContainer demoKey="nativeArray">
+      <Button
+        onClick={() => setValue(prev => prev.concat(Math.floor(Math.random() * 500) + 1))}
+      >
+        Add random number
+      </Button>
+      <Button
+        onClick={() => setValue(prev => prev.slice(0, -1))}
+      >
+        Remove last number
+      </Button>
+      <Button
+        variant="secondary"
+        onClick={() => setValue([])}
+        className="ml-auto"
       >
         Clear
       </Button>

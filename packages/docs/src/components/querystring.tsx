@@ -63,7 +63,7 @@ function filterQueryKeys(query: string | URLSearchParams, keys?: string[]) {
   const destination = new URLSearchParams()
   for (const [key, value] of source.entries()) {
     if (keys.includes(key)) {
-      destination.set(key, value)
+      destination.append(key, value)
     }
   }
   return destination
