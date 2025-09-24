@@ -34,7 +34,7 @@ export type SingleParser<T> = {
 export type MultiParser<T> = {
   type: 'multi'
   parse: (value: ReadonlyArray<string>) => T | null
-  serialize?: (value: T) => Iterable<string>
+  serialize?: (value: T) => Array<string>
   eq?: (a: T, b: T) => boolean
 }
 

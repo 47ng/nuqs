@@ -15,7 +15,7 @@ import {
 } from './lib/queues/throttle'
 import { emitter, type CrossHookSyncPayload } from './lib/sync'
 import { type GenericParser } from './parsers'
-import { isAbsentFromUrl } from './lib/search-params'
+import { isAbsentFromUrl, type QueryParam } from './lib/search-params'
 import { safeParse } from './lib/safe-parse'
 import { compareQuery } from './lib/compare'
 
@@ -99,7 +99,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
   )
   const adapter = useAdapter(Object.values(resolvedUrlKeys))
   const initialSearchParams = adapter.searchParams
-  const queryRef = useRef<Record<string, Iterable<string> | null>>({})
+  const queryRef = useRef<Record<string, QueryParam | null>>({})
   const defaultValues = useMemo(
     () =>
       Object.fromEntries(
@@ -375,8 +375,8 @@ function parseMap<KeyMap extends UseQueryStatesKeysMap>(
   keyMap: KeyMap,
   urlKeys: Partial<Record<keyof KeyMap, string>>,
   searchParams: URLSearchParams,
-  queuedQueries: Record<string, Iterable<string> | null | undefined>,
-  cachedQuery?: Record<string, Iterable<string> | null>,
+  queuedQueries: Record<string, QueryParam | null | undefined>,
+  cachedQuery?: Record<string, QueryParam | null>,
   cachedState?: NullableValues<KeyMap>
 ): {
   state: NullableValues<KeyMap>

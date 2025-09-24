@@ -1,8 +1,9 @@
 import { createEmitter, type Emitter } from './emitter'
+import type { QueryParam } from './search-params'
 
 export type CrossHookSyncPayload = {
   state: any
-  query: Iterable<string> | null
+  query: QueryParam | null
 }
 
 type EventMap = {

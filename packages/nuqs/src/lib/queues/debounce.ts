@@ -10,6 +10,7 @@ import {
   type UpdateQueuePushArgs
 } from './throttle'
 import { useSyncExternalStores } from './useSyncExternalStores'
+import type { QueryParam } from '../search-params'
 
 export class DebouncedPromiseQueue<ValueType, OutputType> {
   callback: (value: ValueType) => Promise<OutputType>
@@ -75,7 +76,7 @@ export class DebounceController {
 
   useQueuedQueries(
     keys: string[]
-  ): Record<string, Iterable<string> | null | undefined> {
+  ): Record<string, QueryParam | null | undefined> {
     return useSyncExternalStores(
       keys,
       (key, callback) => this.queuedQuerySync.on(key, callback),
@@ -155,7 +156,7 @@ export class DebounceController {
     this.queues.clear()
   }
 
-  getQueuedQuery(key: string): Iterable<string> | null | undefined {
+  getQueuedQuery(key: string): QueryParam | null | undefined {
     // The debounced queued values are more likely to be up-to-date
     // than any updates pending in the throttle queue, which comes last
     // in the update chain.

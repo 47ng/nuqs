@@ -1,4 +1,6 @@
-export function compareQuery<T extends string | Iterable<string>>(
+import type { QueryParam } from './search-params'
+
+export function compareQuery<T extends QueryParam>(
   a: T | null,
   b: T | null
 ): boolean {
@@ -8,26 +10,14 @@ export function compareQuery<T extends string | Iterable<string>>(
   if (a === null || b === null) {
     return false
   }
-  // we expect either strings or iterables, not a mix of both
+  // we expect either strings or arrays, not a mix of both
   if (typeof a === 'string' || typeof b === 'string') {
     return false
   }
 
-  const iterA = a[Symbol.iterator]()
-  const iterB = b[Symbol.iterator]()
-
-  while (true) {
-    const nextA = iterA.next()
-    const nextB = iterB.next()
-
-    if (nextA.done && nextB.done) {
-      return true // both ended at the same time
-    }
-    if (nextA.done !== nextB.done) {
-      return false // different lengths
-    }
-    if (nextA.value !== nextB.value) {
-      return false // mismatched value
-    }
+  if (a.length !== b.length) {
+    return false
   }
+
+  return a.every((value, index) => value === b[index]!)
 }

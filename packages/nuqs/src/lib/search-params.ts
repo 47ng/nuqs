@@ -1,11 +1,11 @@
-export function isAbsentFromUrl(
-  query: string | Iterable<string> | null
-): query is null | [] {
+export type QueryParam = string | Array<string>
+
+export function isAbsentFromUrl(query: QueryParam | null): query is null | [] {
   return query === null || (Array.isArray(query) && query.length === 0)
 }
 
 export function write(
-  serialized: Iterable<string>,
+  serialized: QueryParam,
   key: string,
   searchParams: URLSearchParams
 ): URLSearchParams {
