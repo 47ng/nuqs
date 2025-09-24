@@ -1,0 +1,46 @@
+import { describe, expect, it } from 'vitest'
+import { compareQuery } from './compare'
+
+describe('compare', () => {
+  describe('strings', () => {
+    it('should return true for equal values', () => {
+      expect(compareQuery('a', 'a')).toBe(true)
+    })
+    it('should return false for different strings', () => {
+      expect(compareQuery('a', 'b')).toBe(false)
+    })
+  })
+  describe('iterables', () => {
+    it('should return true for equal arrays', () => {
+      expect(compareQuery(['a', 'b'], ['a', 'b'])).toBe(true)
+    })
+    it('should return true for same array instance', () => {
+      const arr = ['a', 'b']
+      expect(compareQuery(arr, arr)).toBe(true)
+    })
+    it('should return false for different arrays', () => {
+      expect(compareQuery(['a', 'b'], ['a', 'c'])).toBe(false)
+    })
+    it('should return false for different length arrays', () => {
+      expect(compareQuery(['a', 'b'], ['a', 'b', 'c'])).toBe(false)
+    })
+    it('should return true for equal sets', () => {
+      expect(compareQuery(new Set(['a', 'b']), new Set(['a', 'b']))).toBe(true)
+    })
+    it('relies on insertion order for sets', () => {
+      expect(compareQuery(new Set(['a', 'b']), new Set(['b', 'a']))).toBe(false)
+    })
+    it('should return true for same set instance', () => {
+      const set = new Set(['a', 'b'])
+      expect(compareQuery(set, set)).toBe(true)
+    })
+    it('should return false for different sets', () => {
+      expect(compareQuery(new Set(['a', 'b']), new Set(['a', 'c']))).toBe(false)
+    })
+    it('should return false for different length sets', () => {
+      expect(compareQuery(new Set(['a', 'b']), new Set(['a', 'b', 'c']))).toBe(
+        false
+      )
+    })
+  })
+})

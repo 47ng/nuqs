@@ -10,7 +10,7 @@ export function compareQuery<T extends string | Iterable<string>>(
   }
   // we expect either strings or iterables, not a mix of both
   if (typeof a === 'string' || typeof b === 'string') {
-    return a === b
+    return false
   }
 
   const iterA = a[Symbol.iterator]()
