@@ -338,13 +338,12 @@ you can now use `MultiParsers` like `parseAsNativeArrayOf` to read and write tho
 ```tsx
 import { useQueryState, parseAsNativeArrayOf, parseAsInteger } from 'nuqs'
 
-export function ProjectsFilter() {
-  // ?project=123&project=456 ==> [123, 456]
-  const [projectIds, setProjectIds] = useQueryState(
-    'project',
-    parseAsNativeArrayOf(parseAsInteger)
-  )
-}
+const [projectIds, setProjectIds] = useQueryState(
+  'project',
+  parseAsNativeArrayOf(parseAsInteger)
+)
+
+// ?project=123&project=456 ==> [123, 456]
 ```
 
 <Suspense fallback={<DemoFallback />}>
