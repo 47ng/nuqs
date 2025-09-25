@@ -604,7 +604,7 @@ export function CustomMultiParserDemo() {
       <Button
         variant="secondary"
         onClick={() => setFilters(null)}
-        className="ml-auto"
+        className="ml-auto mt-auto"
       >
         Clear
       </Button>
