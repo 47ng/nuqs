@@ -4,7 +4,8 @@ description: Making your own parsers for custom data types & pretty URLs
 ---
 
 import {
-  CustomParserDemo
+  CustomParserDemo,
+  CustomMultiParserDemo
 } from '@/content/docs/parsers/demos'
 
 You may wish to customise the rendered query string for your data type.
@@ -33,6 +34,70 @@ const parseAsStarRating = createParser({
 
 <Suspense>
   <CustomParserDemo/>
+</Suspense>
+
+## Custom Multi Parsers
+
+`MultiParsers` work similar to `SingleParsers`, except that they operate on Arrays. That means:
+
+1. `parse` takes an `Array<string>`. It receives all matching values of the key it operates on, and returns the parsed value, or `null{:ts}` if invalid.
+2. `serialize` takes the parsed value and returns an `Array<string>`, where each item will be separately added to the URL.
+
+```tsx
+const parseAsFromTo = createParser({
+  parse: value => {
+    const [min = null, max = null] = value.split('~').map(parseAsInteger.parse)
+    if (min === null) return null
+    if (max === null) return { eq: min}
+    return { gte: min, lte: max }
+  },
+  serialize: value => {
+    return value.eq !== undefined ? String(value.eq) : `${value.gte}~${value.lte}`
+  }
+})
+
+const parseAsKeyValue = createParser({
+  parse: value => {
+    const [key, val] = value.split(':')
+    if (!key || !val) return null
+    return { key, value: val}
+  },
+  serialize: value => {
+    return `${value.key}:${value.value}`
+  }
+})
+
+const parseAsFilters = <TItem extends {}>(itemParser: SingleParser<TItem>) => {
+  return createMultiParser({
+    parse: values => {
+      const keyValue = values.map(parseAsKeyValue.parse).filter(v => v !== null)
+
+      const result = Object.fromEntries(
+        keyValue.flatMap(({ key, value }) => {
+          const parsedValue: TItem | null = itemParser.parse(value)
+          return parsedValue === null ? [] : [[key, parsedValue]]
+        })
+      )
+
+      return Object.keys(result).length === 0 ? null : result
+    },
+    serialize: values => {
+      return Object.entries(values).map(([key, value]) => {
+        if (!itemParser.serialize) return null
+        return parseAsKeyValue.serialize({ key, value: itemParser.serialize(value) })
+      }).filter(v => v !== null)
+    }
+  })
+}
+
+const [filters, setFilters] = useQueryState(
+  'filters',
+  parseAsFilters(parseAsFromTo).withDefault({})
+)
+```
+
+<Suspense>
+  <CustomMultiParserDemo/>
 </Suspense>
 
 ## Caveat: lossy serializers

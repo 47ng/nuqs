@@ -19,6 +19,7 @@ import { ChevronDown, ChevronUp, Minus, Star } from 'lucide-react'
 import {
   ParserBuilder,
   createParser,
+  createMultiParser,
   parseAsBoolean,
   parseAsFloat,
   parseAsHex,
@@ -27,9 +28,12 @@ import {
   parseAsIsoDate,
   parseAsIsoDateTime,
   parseAsJson,
+  parseAsArrayOf,
   parseAsNativeArrayOf,
+  parseAsString,
   parseAsStringLiteral,
   parseAsTimestamp,
+  SingleParser,
   useQueryState
 } from 'nuqs'
 import React from 'react'
@@ -493,6 +497,179 @@ export function NativeArrayParserDemo() {
     </DemoContainer>
   )
 }
+
+export function CustomMultiParserDemo() {
+
+  const parseAsFromTo = createParser({
+    parse: value => {
+      const [min = null, max = null] = value.split('~').map(parseAsInteger.parse)
+      if (min === null) return null
+      if (max === null) return { eq: min}
+      return { gte: min, lte: max }
+    },
+    serialize: value => {
+      return value.eq !== undefined ? String(value.eq) : `${value.gte}~${value.lte}`
+    }
+  })
+
+  const parseAsKeyValue = createParser({
+    parse: value => {
+      const [key, val] = value.split(':')
+      if (!key || !val) return null
+      return { key, value: val}
+    },
+    serialize: value => {
+      return `${value.key}:${value.value}`
+    }
+  })
+
+  const parseAsFilters = <TItem extends {}>(itemParser: SingleParser<TItem>) => {
+    return createMultiParser({
+      parse: values => {
+        const keyValue = values.map(parseAsKeyValue.parse).filter(v => v !== null)
+
+        const result = Object.fromEntries(
+          keyValue.flatMap(({ key, value }) => {
+            const parsedValue: TItem | null = itemParser.parse(value)
+            return parsedValue === null ? [] : [[key, parsedValue]]
+          })
+        )
+
+        return Object.keys(result).length === 0 ? null : result
+      },
+      serialize: values => {
+        return Object.entries(values).map(([key, value]) => {
+          if (!itemParser.serialize) return null
+          return parseAsKeyValue.serialize({ key, value: itemParser.serialize(value) })
+        }).filter(v => v !== null)
+      }
+    })
+  }
+
+  const [filters, setFilters] = useQueryState(
+    'filters',
+    parseAsFilters(parseAsFromTo).withDefault({})
+  )
+
+  return (
+    <DemoContainer demoKey="filters">
+      <div>
+        <label
+          className="text-sm leading-none font-medium select-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+        >
+        Rating:
+        </label>
+        <input
+          type="number"
+          className="border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring flex h-10 flex-1 rounded-md border px-3 py-2 text-sm file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+          value={filters.rating?.eq ?? ''}
+          onChange={e => {
+            setFilters(prev => ({...prev, rating: { eq: e.target.valueAsNumber }}))
+          }}
+          autoComplete="off"
+        />
+      </div>
+      <div>
+        <label
+          className="text-sm leading-none font-medium select-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+        >
+          Price From:
+        </label>
+        <input
+          type="number"
+          className="border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring flex h-10 flex-1 rounded-md border px-3 py-2 text-sm file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+          value={filters.price?.gte ?? 0}
+          onChange={e => {
+            setFilters(prev => ({...prev, price: { lte: prev.price?.lte ?? 0, gte: e.target.valueAsNumber }}))
+          }}
+          autoComplete="off"
+        />
+      </div>
+      <div>
+        <label
+          className="text-sm leading-none font-medium select-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+        >
+          Price To:
+        </label>
+        <input
+          type="number"
+          className="border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring flex h-10 flex-1 rounded-md border px-3 py-2 text-sm file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+          value={filters.price?.lte ?? 0}
+          onChange={e => {
+            setFilters(prev => ({...prev, price: { gte: prev.price?.gte ?? 0, lte: e.target.valueAsNumber }}))
+          }}
+          autoComplete="off"
+        />
+      </div>
+      <Button
+        variant="secondary"
+        onClick={() => setFilters(null)}
+        className="ml-auto"
+      >
+        Clear
+      </Button>
+    </DemoContainer>
+  )
+
+  return (
+    <DemoContainer demoKey="filters">
+      {
+        Object.entries(filters).map(([key, value]) => {
+          if (value.eq !== undefined) {
+            return (
+              <div key={key}>
+                <label
+                  className="text-sm leading-none font-medium select-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                >
+                  {key}:{' '}
+                </label>
+                <input
+                  key={key}
+                  type="number"
+                  className="border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring flex h-10 flex-1 rounded-md border px-3 py-2 text-sm file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+                  value={value.eq}
+                  onChange={e => {
+                    setFilters(prev => ({...prev, [key]: { eq: e.target.valueAsNumber }}))
+                  }}
+                  placeholder="What's your favourite number?"
+                  autoComplete="off"
+                />
+              </div>
+            )
+          }
+          return (
+            <div key={key}>
+              <label
+                className="text-sm leading-none font-medium select-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              >
+                {key}:{' '}
+              </label>
+              <input
+                key={key}
+                type="number"
+                className="border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring flex h-10 flex-1 rounded-md border px-3 py-2 text-sm file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+                value={value.eq}
+                onChange={e => {
+                  setFilters(prev => ({...prev, [key]: { eq: e.target.valueAsNumber }}))
+                }}
+                placeholder="What's your favourite number?"
+                autoComplete="off"
+              />
+            </div>
+          )
+        })
+      }
+      <Button
+        variant="secondary"
+        onClick={() => setFilters(null)}
+        className="ml-auto"
+      >
+        Clear
+      </Button>
+    </DemoContainer>
+  )
+}
+
 
 type StarButtonProps = Omit<React.ComponentProps<typeof Button>, 'value'> & {
   index: Rating
