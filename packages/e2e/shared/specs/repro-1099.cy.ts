@@ -15,7 +15,11 @@ export function testRepro1099({
     for (const shallow of shallowOptions) {
       for (const history of historyOptions) {
         it(`should not emit null during updates with { shallow: ${shallow}, history: '${history}' }`, () => {
-          cy.visit(getOptionsUrl(path, { history, shallow }))
+          cy.visit(getOptionsUrl(path, { history, shallow }), {
+            onBeforeLoad(win) {
+              win.localStorage.setItem('debug', 'nuqs')
+            }
+          })
           cy.contains('#hydration-marker', 'hydrated').should('be.hidden')
           cy.get('#null-detector').should('have.text', 'pass')
           cy.get('button').click()
