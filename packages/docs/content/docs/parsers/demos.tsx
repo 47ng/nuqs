@@ -471,7 +471,7 @@ export function CustomParserDemo() {
 }
 
 export function NativeArrayParserDemo() {
-  const [_, setValue] = useQueryState(
+  const [value, setValue] = useQueryState(
     'nativeArray',
     parseAsNativeArrayOf(parseAsInteger)
   )
@@ -494,6 +494,9 @@ export function NativeArrayParserDemo() {
       >
         Clear
       </Button>
+      <div className="w-full text-sm text-zinc-500">
+        Current value: [{value.join(', ') || ''}]
+      </div>
     </DemoContainer>
   )
 }
