@@ -9,16 +9,17 @@ import {
 } from '@/content/docs/parsers/demos'
 
 You may wish to customise the rendered query string for your data type.
-For this, `nuqs` exposes the `createParser` function to make your own parsers.
+For this, `nuqs` exposes the `createParser{:ts}` function to make your own parsers.
 
 You pass it two functions:
-1. `parse`: a function that takes a string and returns the parsed value, or `null{:ts}` if invalid.
-2. `serialize`: a function that takes the parsed value and returns a string.
+1. `parse{:ts}`: a function that takes a string and returns the parsed value, or `null{:ts}` if invalid.
+2. `serialize{:ts}`: a function that takes the parsed value and returns a string.
 
 ```ts
 import { createParser } from 'nuqs'
 
 const parseAsStarRating = createParser({
+  // [!code word:parse]
   parse(queryValue) {
     const inBetween = queryValue.split('★')
     const isValid = inBetween.length > 1 && inBetween.every(s => s === '')
@@ -26,6 +27,7 @@ const parseAsStarRating = createParser({
     const numStars = inBetween.length - 1
     return Math.min(5, numStars)
   },
+  // [!code word:serialize]
   serialize(value) {
     return Array.from({length: value}, () => '★').join('')
   }
@@ -69,17 +71,36 @@ to check if the current value is equal to the default value.
 
 ## Custom Multi Parsers
 
-`MultiParsers` work similar to `SingleParsers`, except that they operate on Arrays. That means:
+The parsers we've seen until now are `SingleParsers{:ts}`: they operate on **the first occurence** of the
+key in the URL, and give you a string value to parse when it's available.
 
-1. `parse` takes an `Array<string>`. It receives all matching values of the key it operates on, and returns the parsed value, or `null{:ts}` if invalid.
-2. `serialize` takes the parsed value and returns an `Array<string>`, where each item will be separately added to the URL.
+`MultiParsers{:ts}` work similar to `SingleParsers{:ts}`, except that they operate on arrays, to support **key repetition**:
+
+import { Querystring } from '@/src/components/querystring'
+
+<Querystring path="/" value="?tag=type-safe&tag=url-state&tag=react" />
+
+This means:
+
+1. `parse{:ts}` takes an `Array<string>{:ts}`. It receives all matching values of the key it operates on, and returns the parsed value, or `null{:ts}` if invalid.
+2. `serialize{:ts}` takes the parsed value and returns an `Array<string>{:ts}`, where each item will be separately added to the URL.
+
+You can then compose & reduce this array to form **complex data types**:
+
+<Suspense>
+  <CustomMultiParserDemo />
+</Suspense>
 
 ```tsx
+/**
+ * 100~200 <=> { gte: 100, lte: 200 }
+ * 150     <=> { eq: 150 }
+ */
 const parseAsFromTo = createParser({
   parse: value => {
     const [min = null, max = null] = value.split('~').map(parseAsInteger.parse)
     if (min === null) return null
-    if (max === null) return { eq: min}
+    if (max === null) return { eq: min }
     return { gte: min, lte: max }
   },
   serialize: value => {
@@ -87,11 +108,14 @@ const parseAsFromTo = createParser({
   }
 })
 
+/**
+ * foo:bar <=> { key: 'foo', value: 'bar' }
+ */
 const parseAsKeyValue = createParser({
   parse: value => {
     const [key, val] = value.split(':')
     if (!key || !val) return null
-    return { key, value: val}
+    return { key, value: val }
   },
   serialize: value => {
     return `${value.key}:${value.value}`
@@ -126,10 +150,6 @@ const [filters, setFilters] = useQueryState(
   parseAsFilters(parseAsFromTo).withDefault({})
 )
 ```
-
-<Suspense>
-  <CustomMultiParserDemo/>
-</Suspense>
 
 ## Caveat: lossy serializers
 
