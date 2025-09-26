@@ -1,11 +1,10 @@
-import type { Parser } from '../parsers'
 import { warn } from './debug'
 
-export function safeParse<T>(
-  parser: Parser<T>['parse'],
-  value: string,
+export function safeParse<I, R>(
+  parser: (arg: I) => R,
+  value: I,
   key?: string
-): T | null {
+): R | null {
   try {
     return parser(value)
   } catch (error) {

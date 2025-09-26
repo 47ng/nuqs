@@ -8,6 +8,7 @@ const exports = `
 {
   ".": {
     "createLoader": "function",
+    "createMultiParser": "function",
     "createParser": "function",
     "createSerializer": "function",
     "createStandardSchemaV1": "function",
@@ -22,6 +23,7 @@ const exports = `
     "parseAsIsoDate": "object",
     "parseAsIsoDateTime": "object",
     "parseAsJson": "function",
+    "parseAsNativeArrayOf": "function",
     "parseAsNumberLiteral": "function",
     "parseAsString": "object",
     "parseAsStringEnum": "function",
@@ -73,6 +75,7 @@ const exports = `
   },
   "./server": {
     "createLoader": "function",
+    "createMultiParser": "function",
     "createParser": "function",
     "createSearchParamsCache": "function",
     "createSerializer": "function",
@@ -88,6 +91,7 @@ const exports = `
     "parseAsIsoDate": "object",
     "parseAsIsoDateTime": "object",
     "parseAsJson": "function",
+    "parseAsNativeArrayOf": "function",
     "parseAsNumberLiteral": "function",
     "parseAsString": "object",
     "parseAsStringEnum": "function",

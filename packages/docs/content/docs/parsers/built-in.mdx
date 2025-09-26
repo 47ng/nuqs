@@ -15,7 +15,8 @@ import {
   DateISOParserDemo,
   DatetimeISOParserDemo,
   DateTimestampParserDemo,
-  JsonParserDemo
+  JsonParserDemo,
+  NativeArrayParserDemo
 } from '@/content/docs/parsers/demos'
 
 Search params are strings by default, but chances are your state is more complex than that.
@@ -320,6 +321,39 @@ parseAsJson(userSchema.validateSync)
 <Callout title="Note">
   Validation functions must either throw an error or
   return `null{:ts}` for invalid data. Only **synchronous** validation is supported.
+</Callout>
+
+## Native Arrays
+
+<FeatureSupportMatrix introducedInVersion='2.7.0' />
+
+If you want to use the native URL format for arrays, repeating the same key multiple times like:
+
+import { Querystring } from '@/src/components/querystring'
+
+<Querystring path="/products" value='?tag=books&tag=tech&tag=design' />
+
+you can now use `MultiParsers{:ts}` like `parseAsNativeArrayOf{:ts}` to read and write those values in a fully type-safe way.
+
+```tsx
+import { useQueryState, parseAsNativeArrayOf, parseAsInteger } from 'nuqs'
+
+const [projectIds, setProjectIds] = useQueryState(
+  'project',
+  parseAsNativeArrayOf(parseAsInteger)
+)
+
+// ?project=123&project=456 → [123, 456]
+```
+
+<Suspense fallback={<DemoFallback />}>
+  <NativeArrayParserDemo />
+</Suspense>
+
+<Callout title="Note: empty array default">
+  `parseAsNativeArrayOf{:ts}` has a built-in default value of empty array (`.withDefault([]){:ts}`) so that you don't have to handle `null{:ts}` cases.
+
+  Calls to `.withDefault(){:ts}` can be chained, so you can use it to set a custom default.
 </Callout>
 
 ## Using parsers server-side

@@ -35,6 +35,13 @@
 /* Fix x-spacing in inline code spans */
 .shiki:not(.not-fumadocs-codeblock *):has(> code .line) {
   --spacing: 0.5px;
+  & code {
+    /*
+      Reduce vertical padding to allow two inline code blocks
+      on adjacent lines to avoid overlapping.
+    */
+    padding-block: 1.5px;
+  }
 }
 
 /* Avoid a flash of black (in dark mode) in the navbar background when scrolling */

@@ -12,6 +12,7 @@ import {
   parseAsIsoDate,
   parseAsIsoDateTime,
   parseAsJson,
+  parseAsNativeArrayOf,
   parseAsNumberLiteral,
   parseAsString,
   parseAsStringEnum,
@@ -298,6 +299,28 @@ describe('parsers', () => {
     expect(() =>
       isParserBijective(parser, 'not-an-array', ['a', 'b'])
     ).toThrow()
+  })
+
+  describe('parseAsNativeArrayOf', () => {
+    it('serializes', () => {
+      const parser = parseAsNativeArrayOf(parseAsString)
+      expect(parser.serialize([])).toStrictEqual([])
+      expect(parser.serialize(['a', ',', 'b'])).toStrictEqual(['a', ',', 'b'])
+    })
+    it('parses', () => {
+      const parser = parseAsNativeArrayOf(parseAsInteger)
+      expect(parser.parse([])).toStrictEqual(null)
+      expect(parser.parse(['1', '2'])).toStrictEqual([1, 2])
+    })
+    it('defaults to null', () => {
+      const parser = parseAsNativeArrayOf(parseAsInteger)
+      expect(parser.parse(['not', 'a', 'number'])).toStrictEqual(null)
+    })
+    it('is bijective', () => {
+      const parser = parseAsNativeArrayOf(parseAsString)
+      expect(isParserBijective(parser, ['a', 'b'], ['a', 'b'])).toBe(true)
+      expect(() => isParserBijective(parser, ['1', '2'], ['a', 'b'])).toThrow()
+    })
   })
 
   it('parseServerSide with default (#384)', () => {
