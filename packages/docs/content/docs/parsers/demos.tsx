@@ -15,11 +15,17 @@ import {
 } from '@/src/components/ui/pagination'
 import { Slider } from '@/src/components/ui/slider'
 import { cn } from '@/src/lib/utils'
-import { ChevronDown, ChevronUp, Minus, Star } from 'lucide-react'
 import {
-  ParserBuilder,
-  createParser,
+  ChevronDown,
+  ChevronUp,
+  Dices,
+  Minus,
+  Star,
+  Trash2
+} from 'lucide-react'
+import {
   createMultiParser,
+  createParser,
   parseAsBoolean,
   parseAsFloat,
   parseAsHex,
@@ -28,11 +34,10 @@ import {
   parseAsIsoDate,
   parseAsIsoDateTime,
   parseAsJson,
-  parseAsArrayOf,
   parseAsNativeArrayOf,
-  parseAsString,
   parseAsStringLiteral,
   parseAsTimestamp,
+  ParserBuilder,
   SingleParser,
   useQueryState
 } from 'nuqs'
@@ -478,13 +483,18 @@ export function NativeArrayParserDemo() {
   return (
     <DemoContainer demoKey="nativeArray">
       <Button
-        onClick={() => setValue(prev => prev.concat(Math.floor(Math.random() * 500) + 1))}
+        onClick={() =>
+          setValue(prev => prev.concat(Math.floor(Math.random() * 500) + 1))
+        }
       >
+        <Dices size={18} className="mr-2 inline-block" role="presentation" />
         Add random number
       </Button>
       <Button
         onClick={() => setValue(prev => prev.slice(0, -1))}
+        disabled={value.length === 0}
       >
+        <Trash2 size={16} className="mr-2 inline-block" role="presentation" />
         Remove last number
       </Button>
       <Button
@@ -494,24 +504,30 @@ export function NativeArrayParserDemo() {
       >
         Clear
       </Button>
-      <div className="w-full text-sm text-zinc-500">
-        Current value: [{value.join(', ') || ''}]
-      </div>
+      <CodeBlock
+        lang="json"
+        code={JSON.stringify(value)}
+        allowCopy={false}
+        className="my-0 w-full"
+      />
     </DemoContainer>
   )
 }
 
 export function CustomMultiParserDemo() {
-
   const parseAsFromTo = createParser({
     parse: value => {
-      const [min = null, max = null] = value.split('~').map(parseAsInteger.parse)
+      const [min = null, max = null] = value
+        .split('~')
+        .map(parseAsInteger.parse)
       if (min === null) return null
-      if (max === null) return { eq: min}
+      if (max === null) return { eq: min }
       return { gte: min, lte: max }
     },
     serialize: value => {
-      return value.eq !== undefined ? String(value.eq) : `${value.gte}~${value.lte}`
+      return value.eq !== undefined
+        ? String(value.eq)
+        : `${value.gte}~${value.lte}`
     }
   })
 
@@ -519,17 +535,21 @@ export function CustomMultiParserDemo() {
     parse: value => {
       const [key, val] = value.split(':')
       if (!key || !val) return null
-      return { key, value: val}
+      return { key, value: val }
     },
     serialize: value => {
       return `${value.key}:${value.value}`
     }
   })
 
-  const parseAsFilters = <TItem extends {}>(itemParser: SingleParser<TItem>) => {
+  const parseAsFilters = <TItem extends {}>(
+    itemParser: SingleParser<TItem>
+  ) => {
     return createMultiParser({
       parse: values => {
-        const keyValue = values.map(parseAsKeyValue.parse).filter(v => v !== null)
+        const keyValue = values
+          .map(parseAsKeyValue.parse)
+          .filter(v => v !== null)
 
         const result = Object.fromEntries(
           keyValue.flatMap(({ key, value }) => {
@@ -541,10 +561,15 @@ export function CustomMultiParserDemo() {
         return Object.keys(result).length === 0 ? null : result
       },
       serialize: values => {
-        return Object.entries(values).map(([key, value]) => {
-          if (!itemParser.serialize) return null
-          return parseAsKeyValue.serialize({ key, value: itemParser.serialize(value) })
-        }).filter(v => v !== null)
+        return Object.entries(values)
+          .map(([key, value]) => {
+            if (!itemParser.serialize) return null
+            return parseAsKeyValue.serialize({
+              key,
+              value: itemParser.serialize(value)
+            })
+          })
+          .filter(v => v !== null)
       }
     })
   }
@@ -557,25 +582,24 @@ export function CustomMultiParserDemo() {
   return (
     <DemoContainer demoKey="filters">
       <div>
-        <label
-          className="text-sm leading-none font-medium select-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-        >
-        Rating:
+        <label className="text-sm leading-none font-medium select-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+          Rating:
         </label>
         <input
           type="number"
           className="border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring flex h-10 flex-1 rounded-md border px-3 py-2 text-sm file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
           value={filters.rating?.eq ?? ''}
           onChange={e => {
-            setFilters(prev => ({...prev, rating: { eq: e.target.valueAsNumber }}))
+            setFilters(prev => ({
+              ...prev,
+              rating: { eq: e.target.valueAsNumber }
+            }))
           }}
           autoComplete="off"
         />
       </div>
       <div>
-        <label
-          className="text-sm leading-none font-medium select-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-        >
+        <label className="text-sm leading-none font-medium select-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
           Price From:
         </label>
         <input
@@ -583,15 +607,19 @@ export function CustomMultiParserDemo() {
           className="border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring flex h-10 flex-1 rounded-md border px-3 py-2 text-sm file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
           value={filters.price?.gte ?? 0}
           onChange={e => {
-            setFilters(prev => ({...prev, price: { lte: prev.price?.lte ?? 0, gte: e.target.value === '' ? 0 : e.target.valueAsNumber }}))
+            setFilters(prev => ({
+              ...prev,
+              price: {
+                lte: prev.price?.lte ?? 0,
+                gte: e.target.value === '' ? 0 : e.target.valueAsNumber
+              }
+            }))
           }}
           autoComplete="off"
         />
       </div>
       <div>
-        <label
-          className="text-sm leading-none font-medium select-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-        >
+        <label className="text-sm leading-none font-medium select-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
           Price To:
         </label>
         <input
@@ -599,7 +627,13 @@ export function CustomMultiParserDemo() {
           className="border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring flex h-10 flex-1 rounded-md border px-3 py-2 text-sm file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
           value={filters.price?.lte ?? 0}
           onChange={e => {
-            setFilters(prev => ({...prev, price: { gte: prev.price?.gte ?? 0, lte: e.target.value === '' ? 0 : e.target.valueAsNumber }}))
+            setFilters(prev => ({
+              ...prev,
+              price: {
+                gte: prev.price?.gte ?? 0,
+                lte: e.target.value === '' ? 0 : e.target.valueAsNumber
+              }
+            }))
           }}
           autoComplete="off"
         />
@@ -607,7 +641,7 @@ export function CustomMultiParserDemo() {
       <Button
         variant="secondary"
         onClick={() => setFilters(null)}
-        className="ml-auto mt-auto"
+        className="mt-auto ml-auto"
       >
         Clear
       </Button>
@@ -616,35 +650,11 @@ export function CustomMultiParserDemo() {
 
   return (
     <DemoContainer demoKey="filters">
-      {
-        Object.entries(filters).map(([key, value]) => {
-          if (value.eq !== undefined) {
-            return (
-              <div key={key}>
-                <label
-                  className="text-sm leading-none font-medium select-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                >
-                  {key}:{' '}
-                </label>
-                <input
-                  key={key}
-                  type="number"
-                  className="border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring flex h-10 flex-1 rounded-md border px-3 py-2 text-sm file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
-                  value={value.eq}
-                  onChange={e => {
-                    setFilters(prev => ({...prev, [key]: { eq: e.target.valueAsNumber }}))
-                  }}
-                  placeholder="What's your favourite number?"
-                  autoComplete="off"
-                />
-              </div>
-            )
-          }
+      {Object.entries(filters).map(([key, value]) => {
+        if (value.eq !== undefined) {
           return (
             <div key={key}>
-              <label
-                className="text-sm leading-none font-medium select-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-              >
+              <label className="text-sm leading-none font-medium select-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                 {key}:{' '}
               </label>
               <input
@@ -653,15 +663,39 @@ export function CustomMultiParserDemo() {
                 className="border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring flex h-10 flex-1 rounded-md border px-3 py-2 text-sm file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
                 value={value.eq}
                 onChange={e => {
-                  setFilters(prev => ({...prev, [key]: { eq: e.target.valueAsNumber }}))
+                  setFilters(prev => ({
+                    ...prev,
+                    [key]: { eq: e.target.valueAsNumber }
+                  }))
                 }}
                 placeholder="What's your favourite number?"
                 autoComplete="off"
               />
             </div>
           )
-        })
-      }
+        }
+        return (
+          <div key={key}>
+            <label className="text-sm leading-none font-medium select-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+              {key}:{' '}
+            </label>
+            <input
+              key={key}
+              type="number"
+              className="border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring flex h-10 flex-1 rounded-md border px-3 py-2 text-sm file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+              value={value.eq}
+              onChange={e => {
+                setFilters(prev => ({
+                  ...prev,
+                  [key]: { eq: e.target.valueAsNumber }
+                }))
+              }}
+              placeholder="What's your favourite number?"
+              autoComplete="off"
+            />
+          </div>
+        )
+      })}
       <Button
         variant="secondary"
         onClick={() => setFilters(null)}
@@ -672,7 +706,6 @@ export function CustomMultiParserDemo() {
     </DemoContainer>
   )
 }
-
 
 type StarButtonProps = Omit<React.ComponentProps<typeof Button>, 'value'> & {
   index: Rating
