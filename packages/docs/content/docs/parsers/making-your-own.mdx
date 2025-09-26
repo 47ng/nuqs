@@ -36,6 +36,37 @@ const parseAsStarRating = createParser({
   <CustomParserDemo/>
 </Suspense>
 
+## Equality function
+
+For state types that can't be compared by the `==={:ts}` operator, you'll need to
+provide an `eq{:ts}` function as well:
+
+```ts
+
+// Eg: TanStack Table sorting state
+// /?sort=foo:asc → { id: 'foo', desc: false }
+const parseAsSort = createParser({
+  parse(query) {
+    const [key = '', direction = ''] = query.split(':')
+    const desc = parseAsStringLiteral(['asc', 'desc']).parse(direction) ?? 'asc'
+    return {
+      id: key,
+      desc: desc === 'desc'
+    }
+  },
+  serialize(value) {
+    return `${value.id}:${value.desc ? 'desc' : 'asc'}`
+  },
+  // [!code highlight:3]
+  eq(a, b) {
+    return a.id === b.id && a.desc === b.desc
+  }
+})
+```
+
+This is used for the [`clearOnDefault{:ts}`](/docs/options#clear-on-default) option,
+to check if the current value is equal to the default value.
+
 ## Custom Multi Parsers
 
 `MultiParsers` work similar to `SingleParsers`, except that they operate on Arrays. That means:
