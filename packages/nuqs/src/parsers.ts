@@ -130,8 +130,16 @@ export type MultiParserBuilder<T> = Required<MultiParser<T>> &
       defaultValue: NonNullable<T>
     ): Omit<MultiParserBuilder<T>, 'parseServerSide'> & {
       readonly defaultValue: NonNullable<T>
+      /**
+       * @deprecated exposed for symmetry with SingleParserBuilder only,
+       * prefer using loaders instead.
+       */
       parseServerSide(value: string | string[] | undefined): NonNullable<T>
     }
+    /**
+     * @deprecated exposed for symmetry with SingleParserBuilder only,
+     * prefer using loaders instead.
+     */
     parseServerSide(value: string | string[] | undefined): T | null
   }
 
