@@ -316,6 +316,11 @@ describe('parsers', () => {
       const parser = parseAsNativeArrayOf(parseAsInteger)
       expect(parser.parse(['not', 'a', 'number'])).toStrictEqual(null)
     })
+    it('is bijective', () => {
+      const parser = parseAsNativeArrayOf(parseAsString)
+      expect(isParserBijective(parser, ['a', 'b'], ['a', 'b'])).toBe(true)
+      expect(() => isParserBijective(parser, ['1', '2'], ['a', 'b'])).toThrow()
+    })
   })
 
   it('parseServerSide with default (#384)', () => {

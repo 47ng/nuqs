@@ -1,4 +1,20 @@
-import type { SingleParserBuilder } from './parsers'
+import { compareQuery } from './lib/compare'
+import type {
+  GenericParserBuilder,
+  MultiParserBuilder,
+  SingleParserBuilder
+} from './parsers'
+
+export function isParserBijective<T>(
+  parser: SingleParserBuilder<T>,
+  serialized: string,
+  input: T
+): boolean
+export function isParserBijective<T>(
+  parser: MultiParserBuilder<T>,
+  serialized: Array<string>,
+  input: T
+): boolean
 
 /**
  * Test that a parser is bijective (serialize then parse gives back the same value).
@@ -21,15 +37,26 @@ import type { SingleParserBuilder } from './parsers'
  * @returns `true` if the test passes, otherwise it will throw.
  */
 export function isParserBijective<T>(
-  parser: SingleParserBuilder<T>,
-  serialized: string,
+  parser: GenericParserBuilder<T>,
+  serialized: string | Array<string>,
   input: T
 ): boolean {
-  // Test either sides of the bijectivitiy
-  testSerializeThenParse(parser, input)
-  testParseThenSerialize(parser, serialized)
+  if (parser.type === 'multi' && Array.isArray(serialized)) {
+    // Test either sides of the bijectivitiy
+    testSerializeThenParse(parser, input)
+    testParseThenSerialize(parser, serialized)
+  } else if (parser.type !== 'multi' && typeof serialized === 'string') {
+    // Test either sides of the bijectivitiy
+    testSerializeThenParse(parser, input)
+    testParseThenSerialize(parser, serialized)
+  } else {
+    // Shouldn't happen with correct overload types, but better be safe and fail the test.
+    throw new Error(
+      `[nuqs] isParserBijective: mismatched parser type and serialized value type`
+    )
+  }
   // Test value equality
-  if (parser.serialize(input) !== serialized) {
+  if (!compareQuery(parser.serialize(input), serialized)) {
     throw new Error(
       `[nuqs] parser.serialize does not match expected serialized value
   Expected: '${serialized}'
@@ -50,6 +77,15 @@ export function isParserBijective<T>(
   return true
 }
 
+export function testSerializeThenParse<T>(
+  parser: SingleParserBuilder<T>,
+  input: T
+): boolean
+export function testSerializeThenParse<T>(
+  parser: MultiParserBuilder<T>,
+  input: T
+): boolean
+
 /**
  * Test that a parser is bijective (serialize then parse gives back the same value).
  *
@@ -69,11 +105,16 @@ export function isParserBijective<T>(
  * @returns `true` if the test passes, otherwise it will throw.
  */
 export function testSerializeThenParse<T>(
-  parser: SingleParserBuilder<T>,
+  parser: GenericParserBuilder<T>,
   input: T
 ): boolean {
   const serialized = parser.serialize(input)
-  const parsed = parser.parse(serialized)
+  const parsed =
+    parser.type == 'multi' && Array.isArray(serialized)
+      ? parser.parse(serialized)
+      : parser.type !== 'multi' && typeof serialized === 'string'
+        ? parser.parse(serialized)
+        : null
   if (parsed === null) {
     throw new Error(
       `[nuqs] testSerializeThenParse: parsed value is null (when parsing ${serialized} serialized from ${input})`
@@ -90,6 +131,15 @@ export function testSerializeThenParse<T>(
   }
   return true
 }
+
+export function testParseThenSerialize<T>(
+  parser: SingleParserBuilder<T>,
+  input: string
+): boolean
+export function testParseThenSerialize<T>(
+  parser: MultiParserBuilder<T>,
+  input: Array<string>
+): boolean
 
 /**
  * Tests that a parser is bijective (parse then serialize gives back the same query string).
@@ -109,17 +159,22 @@ export function testSerializeThenParse<T>(
  * @returns `true` if the test passes, otherwise it will throw.
  */
 export function testParseThenSerialize<T>(
-  parser: SingleParserBuilder<T>,
-  input: string
+  parser: GenericParserBuilder<T>,
+  input: string | Array<string>
 ): boolean {
-  const parsed = parser.parse(input)
+  const parsed =
+    parser.type === 'multi' && Array.isArray(input)
+      ? parser.parse(input)
+      : parser.type !== 'multi' && typeof input === 'string'
+        ? parser.parse(input)
+        : null
   if (parsed === null) {
     throw new Error(
       `[nuqs] testParseThenSerialize: parsed value is null (when parsing ${input})`
     )
   }
   const serialized = parser.serialize(parsed)
-  if (serialized !== input) {
+  if (!compareQuery(serialized, input)) {
     throw new Error(
       `[nuqs] parser is not bijective (in testParseThenSerialize)
   Expected query: '${input}'
