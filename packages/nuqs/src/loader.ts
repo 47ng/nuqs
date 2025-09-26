@@ -1,6 +1,6 @@
 import type { UrlKeys } from './defs'
-import { type inferParserType, type ParserMap } from './parsers'
 import { isAbsentFromUrl } from './lib/search-params'
+import type { inferParserType, ParserMap } from './parsers'
 
 export type LoaderInput =
   | URL
