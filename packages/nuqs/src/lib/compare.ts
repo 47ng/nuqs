@@ -1,6 +1,6 @@
-import type { QueryParam } from './search-params'
+import type { Query } from './search-params'
 
-export function compareQuery<T extends QueryParam>(
+export function compareQuery<T extends Query>(
   a: T | null,
   b: T | null
 ): boolean {

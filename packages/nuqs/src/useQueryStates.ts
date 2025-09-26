@@ -5,6 +5,7 @@ import {
   useAdapterProcessUrlSearchParams
 } from './adapters/lib/context'
 import type { Nullable, Options, UrlKeys } from './defs'
+import { compareQuery } from './lib/compare'
 import { debug } from './lib/debug'
 import { error } from './lib/errors'
 import { debounceController } from './lib/queues/debounce'
@@ -13,11 +14,10 @@ import {
   globalThrottleQueue,
   type UpdateQueuePushArgs
 } from './lib/queues/throttle'
+import { safeParse } from './lib/safe-parse'
+import { isAbsentFromUrl, type Query } from './lib/search-params'
 import { emitter, type CrossHookSyncPayload } from './lib/sync'
 import { type GenericParser } from './parsers'
-import { isAbsentFromUrl, type QueryParam } from './lib/search-params'
-import { safeParse } from './lib/safe-parse'
-import { compareQuery } from './lib/compare'
 
 type KeyMapValue<Type> = GenericParser<Type> &
   Options & {
@@ -99,7 +99,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
   )
   const adapter = useAdapter(Object.values(resolvedUrlKeys))
   const initialSearchParams = adapter.searchParams
-  const queryRef = useRef<Record<string, QueryParam | null>>({})
+  const queryRef = useRef<Record<string, Query | null>>({})
   const defaultValues = useMemo(
     () =>
       Object.fromEntries(
@@ -375,8 +375,8 @@ function parseMap<KeyMap extends UseQueryStatesKeysMap>(
   keyMap: KeyMap,
   urlKeys: Partial<Record<keyof KeyMap, string>>,
   searchParams: URLSearchParams,
-  queuedQueries: Record<string, QueryParam | null | undefined>,
-  cachedQuery?: Record<string, QueryParam | null>,
+  queuedQueries: Record<string, Query | null | undefined>,
+  cachedQuery?: Record<string, Query | null>,
   cachedState?: NullableValues<KeyMap>
 ): {
   state: NullableValues<KeyMap>

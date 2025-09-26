@@ -1,11 +1,11 @@
-export type QueryParam = string | Array<string>
+export type Query = string | Array<string>
 
-export function isAbsentFromUrl(query: QueryParam | null): query is null | [] {
+export function isAbsentFromUrl(query: Query | null): query is null | [] {
   return query === null || (Array.isArray(query) && query.length === 0)
 }
 
 export function write(
-  serialized: QueryParam,
+  serialized: Query,
   key: string,
   searchParams: URLSearchParams
 ): URLSearchParams {
