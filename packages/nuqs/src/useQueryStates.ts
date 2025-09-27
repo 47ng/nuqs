@@ -103,7 +103,10 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
   const defaultValues = useMemo(
     () =>
       Object.fromEntries(
-        Object.keys(keyMap).map(key => [key, keyMap[key]!.defaultValue ?? null])
+        Object.entries(keyMap).map(([key, { defaultValue }]) => [
+          key,
+          defaultValue ?? null
+        ])
       ) as Values<KeyMap>,
     [
       Object.values(keyMap)
@@ -194,13 +197,12 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
       stateRef.current = state
       setInternalState(state)
     }
-    const handlers = Object.keys(keyMap).reduce(
-      (handlers, stateKey) => {
+    const handlers = Object.entries(keyMap).reduce(
+      (handlers, [stateKey, { defaultValue }]) => {
         handlers[stateKey as keyof KeyMap] = ({
           state,
           query
         }: CrossHookSyncPayload) => {
-          const { defaultValue } = keyMap[stateKey]!
           const urlKey = resolvedUrlKeys[stateKey]!
           // Note: cannot mutate in-place, the object ref must change
           // for the subsequent setState to pick it up.
