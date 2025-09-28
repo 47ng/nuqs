@@ -29,7 +29,6 @@ export async function NPMStats() {
           {formatStatNumber(nextUseQueryState.allTime)}
         </dd>
       </dl>
-      {/* todo: Add contributors list? */}
     </>
   )
 }
