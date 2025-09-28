@@ -193,7 +193,6 @@
     "zod": "^4.1.5"
   },
   "esm.sh": {
-    "// note": "Don't bundle React in esm.sh - See https://github.com/47ng/nuqs/issues/1145",
     "bundle": false
   },
   "size-limit": [
