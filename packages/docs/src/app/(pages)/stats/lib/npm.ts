@@ -159,3 +159,27 @@ export function combineStats(
     }))
   }
 }
+
+// Re-export to avoid importing dayjs everywhere
+// ISO weekday: 1 (Monday) - 7 (Sunday)
+export function getIsoWeekday(date: string) {
+  const lastDay = dayjs(date)
+  return lastDay.isoWeekday()
+}
+
+export function getPartialPreviousWeekDownloads(data: Datum[]) {
+  const lastDate = data.at(-1)?.date
+  if (!lastDate) return 0
+  const lastDay = dayjs(lastDate)
+  const startOfLastWeek = lastDay.startOf('isoWeek').subtract(7, 'day')
+  const numDaysInCurrentWeek = lastDay.isoWeekday()
+  const filtered = data.filter(d => {
+    const date = dayjs(d.date)
+    return (
+      date.isSame(startOfLastWeek) ||
+      (date.isAfter(startOfLastWeek) &&
+        date.isBefore(startOfLastWeek.add(numDaysInCurrentWeek, 'day')))
+    )
+  })
+  return filtered.reduce((sum, d) => sum + d.downloads, 0)
+}
