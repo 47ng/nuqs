@@ -25,9 +25,6 @@ type DownloadsGraphProps = WidgetProps & {
   partialLast: boolean
 }
 
-// stroke-red-500 fill-red-500 bg-red-500
-// stroke-zinc-500/50 fill-zinc-500/50 bg-zinc-500/50
-
 export function DownloadsGraph({
   data,
   partialLast,
