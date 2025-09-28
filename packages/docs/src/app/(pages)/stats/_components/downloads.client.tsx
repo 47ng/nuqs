@@ -7,6 +7,7 @@ import {
   ChartTooltip,
   ChartTooltipContent
 } from '@/src/components/ui/chart'
+import type { ReactNode } from 'react'
 import {
   CartesianGrid,
   Customized,
@@ -23,11 +24,13 @@ import { Widget, WidgetProps } from './widget'
 type DownloadsGraphProps = WidgetProps & {
   data: (Datum | MultiDatum)[]
   partialLast: boolean
+  trend: ReactNode
 }
 
 export function DownloadsGraph({
   data,
   partialLast,
+  trend,
   ...props
 }: DownloadsGraphProps) {
   const [DasharrayCalculator, lineDashArrays] = useDynamicDasharray({
@@ -36,7 +39,7 @@ export function DownloadsGraph({
   return (
     <Widget {...props}>
       <ChartContainer
-        className="h-85.5 w-full pr-1"
+        className="relative h-85.5 w-full pr-1"
         config={{
           nuqs: {
             label: 'nuqs'
@@ -45,6 +48,7 @@ export function DownloadsGraph({
             label: 'next-usequerystate'
           }
         }}
+        domChildren={<div className="absolute top-1.25 left-1">{trend}</div>}
       >
         <LineChart
           // accessibilityLayer // note: Causes a bug with Recharts 2.15.4 where a click on the chart moves the cursor to the first data point.
