@@ -71,7 +71,7 @@ export function createAdapterProvider(
     processUrlSearchParams,
     ...props
   }) {
-    const defaultValueStore = useRef({})
+    const defaultValueStore = useRef(useContext(defaultValueContext) ?? {})
     return createElement(
       context.Provider,
       {
