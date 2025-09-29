@@ -266,6 +266,39 @@ describe('useQueryStates: urlKeys remapping', () => {
   })
 })
 
+describe('useQueryStates: defaultValue', () => {
+  it('should read the same default value for multiple usages of the same parser', () => {
+    function TestComponent({
+      id,
+      defaultValue
+    }: {
+      id: string
+      defaultValue: number
+    }) {
+      const [value] = useQueryStates({
+        a: parseAsInteger.withDefault(defaultValue)
+      })
+
+      return (
+        <div>
+          {id} value: {value.a}
+        </div>
+      )
+    }
+    const result = render(
+      <div>
+        <TestComponent id="first" defaultValue={5} />
+        <TestComponent id="second" defaultValue={23} />
+      </div>,
+      {
+        wrapper: withNuqsTestingAdapter()
+      }
+    )
+    expect(result.getByText('first value: 5')).toBeInTheDocument()
+    expect(result.getByText('second value: 5')).toBeInTheDocument()
+  })
+})
+
 describe('useQueryStates: clearOnDefault', () => {
   it('honors clearOnDefault: true by default', async () => {
     const onUrlUpdate = vi.fn<OnUrlUpdateFunction>()
