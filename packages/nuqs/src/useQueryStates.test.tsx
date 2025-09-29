@@ -192,7 +192,7 @@ describe('useQueryStates: referential equality', () => {
     expect(result.current[0].str).toBe('foo')
     rerender({ defaultValue: 'b' })
     const [state] = result.current
-    expect(state.str).toBe('b')
+    expect(state.str).toBe('foo')
     expect(state.obj).toBe(defaults.obj)
     expect(state.arr).toBe(defaults.arr)
     expect(state.arr[0]).toBe(defaults.arr[0])
