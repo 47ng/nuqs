@@ -191,15 +191,15 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
   useEffect(() => {
     function updateInternalState(state: V) {
       debug('[nuq+ %s `%s`] updateInternalState %O', hookId, stateKeys, state)
-      stateRef.current = state
       setInternalState(state)
     }
-    const handlers = Object.entries(keyMap).reduce(
-      (handlers, [stateKey, { defaultValue }]) => {
+    const handlers = Object.keys(keyMap).reduce(
+      (handlers, stateKey) => {
         handlers[stateKey as keyof KeyMap] = ({
           state,
           query
         }: CrossHookSyncPayload) => {
+          const defaultValue = defaultValueStore[stateKey]
           const urlKey = resolvedUrlKeys[stateKey]!
           // Note: cannot mutate in-place, the object ref must change
           // for the subsequent setState to pick it up.
