@@ -2,6 +2,7 @@ import {
   createContext,
   createElement,
   useContext,
+  useRef,
   type Context,
   type ProviderProps,
   type ReactElement,
@@ -29,6 +30,9 @@ export const context: Context<AdapterContext> = createContext<AdapterContext>({
   }
 })
 context.displayName = 'NuqsAdapterContext'
+
+export type DefaultValueStore = Record<string, unknown>
+const defaultValueContext = createContext<DefaultValueStore>({})
 
 declare global {
   interface Window {
@@ -60,6 +64,7 @@ export type AdapterProvider = (
 export function createAdapterProvider(
   useAdapter: UseAdapterHook
 ): AdapterProvider {
+  const defaultValueStore = useRef({})
   return ({ children, defaultOptions, processUrlSearchParams, ...props }) =>
     createElement(
       context.Provider,
@@ -67,8 +72,16 @@ export function createAdapterProvider(
         ...props,
         value: { useAdapter, defaultOptions, processUrlSearchParams }
       },
-      children
+      createElement(
+        defaultValueContext.Provider,
+        { value: defaultValueStore.current },
+        children
+      )
     )
+}
+
+export function useDefaultValueStore(): DefaultValueStore {
+  return useContext(defaultValueContext)
 }
 
 export function useAdapter(watchKeys: string[]): AdapterInterface {

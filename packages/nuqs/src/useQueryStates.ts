@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react'
 import {
+  type DefaultValueStore,
   useAdapter,
   useAdapterDefaultOptions,
-  useAdapterProcessUrlSearchParams
+  useAdapterProcessUrlSearchParams,
+  useDefaultValueStore
 } from './adapters/lib/context'
 import type { Nullable, Options, UrlKeys } from './defs'
 import { compareQuery } from './lib/compare'
@@ -76,6 +78,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
   const hookId = useId()
   const defaultOptions = useAdapterDefaultOptions()
   const processUrlSearchParams = useAdapterProcessUrlSearchParams()
+  const defaultValueStore = useDefaultValueStore()
 
   const {
     history = 'replace',
@@ -100,20 +103,14 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
   const adapter = useAdapter(Object.values(resolvedUrlKeys))
   const initialSearchParams = adapter.searchParams
   const queryRef = useRef<Record<string, Query | null>>({})
-  const defaultValues = useMemo(
-    () =>
-      Object.fromEntries(
-        Object.entries(keyMap).map(([key, { defaultValue }]) => [
-          key,
-          defaultValue ?? null
-        ])
-      ) as Values<KeyMap>,
-    [
-      Object.values(keyMap)
-        .map(({ defaultValue }) => defaultValue)
-        .join(',')
-    ]
-  )
+
+  // lazily initialize defaultValues in store
+  for (const [stateKey, { defaultValue }] of Object.entries(keyMap)) {
+    if (!(stateKey in defaultValueStore)) {
+      defaultValueStore[stateKey] = defaultValue ?? null
+    }
+  }
+
   const queuedQueries = debounceController.useQueuedQueries(
     Object.values(resolvedUrlKeys)
   )
@@ -259,7 +256,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
       const newState: Partial<Nullable<KeyMap>> =
         typeof stateUpdater === 'function'
           ? (stateUpdater(
-              applyDefaultValues(stateRef.current, defaultValues)
+              applyDefaultValues(stateRef.current, defaultValueStore)
             ) ?? nullMap)
           : (stateUpdater ?? nullMap)
       debug('[nuq+ %s `%s`] setState: %O', hookId, stateKeys, newState)
@@ -360,13 +357,17 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
       adapter.getSearchParamsSnapshot,
       adapter.rateLimitFactor,
       processUrlSearchParams,
-      defaultValues
+      defaultValueStore
     ]
   )
 
   const outputState = useMemo(
-    () => applyDefaultValues(internalState, defaultValues),
-    [internalState, defaultValues]
+    () =>
+      applyDefaultValues(
+        internalState,
+        defaultValueStore as Partial<Values<KeyMap>>
+      ),
+    [internalState, defaultValueStore]
   )
   return [outputState, update]
 }
@@ -432,7 +433,7 @@ function parseMap<KeyMap extends UseQueryStatesKeysMap>(
 
 function applyDefaultValues<KeyMap extends UseQueryStatesKeysMap>(
   state: NullableValues<KeyMap>,
-  defaults: Partial<Values<KeyMap>>
+  defaults: DefaultValueStore
 ) {
   return Object.fromEntries(
     Object.keys(state).map(key => [key, state[key] ?? defaults[key] ?? null])
