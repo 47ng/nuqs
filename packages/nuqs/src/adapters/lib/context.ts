@@ -32,7 +32,7 @@ export const context: Context<AdapterContext> = createContext<AdapterContext>({
 context.displayName = 'NuqsAdapterContext'
 
 export type DefaultValueStore = Record<string, unknown>
-const defaultValueContext = createContext<DefaultValueStore>({})
+const defaultValueContext = createContext<DefaultValueStore | null>(null)
 
 declare global {
   interface Window {
@@ -87,7 +87,11 @@ export function createAdapterProvider(
 }
 
 export function useDefaultValueStore(): DefaultValueStore {
-  return useContext(defaultValueContext)
+  const context = useContext(defaultValueContext)
+  if (!context) {
+    throw new Error('[nuqs] No DefaultValueContext found')
+  }
+  return context
 }
 
 export function useAdapter(watchKeys: string[]): AdapterInterface {
