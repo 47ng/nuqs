@@ -9,7 +9,7 @@ import {
 } from 'react'
 import { resetQueues } from '../lib/queues/reset'
 import { renderQueryString } from './custom'
-import { context, type AdapterProps } from './lib/context'
+import { context, type AdapterProps, defaultValueContext } from './lib/context'
 import type { AdapterInterface, AdapterOptions } from './lib/defs'
 
 export type UrlUpdateEvent = {
@@ -131,10 +131,15 @@ export function NuqsTestingAdapter({
     getSearchParamsSnapshot,
     rateLimitFactor
   })
+  const defaultValueStore = useRef({})
   return createElement(
     context.Provider,
     { value: { useAdapter, defaultOptions, processUrlSearchParams } },
-    children
+    createElement(
+      defaultValueContext.Provider,
+      { value: defaultValueStore.current },
+      children
+    )
   )
 }
 

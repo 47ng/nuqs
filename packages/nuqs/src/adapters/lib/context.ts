@@ -32,7 +32,8 @@ export const context: Context<AdapterContext> = createContext<AdapterContext>({
 context.displayName = 'NuqsAdapterContext'
 
 export type DefaultValueStore = Record<string, unknown>
-const defaultValueContext = createContext<DefaultValueStore | null>(null)
+export const defaultValueContext: Context<DefaultValueStore | null> =
+  createContext<DefaultValueStore | null>(null)
 
 declare global {
   interface Window {
