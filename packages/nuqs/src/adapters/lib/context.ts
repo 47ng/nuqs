@@ -64,9 +64,14 @@ export type AdapterProvider = (
 export function createAdapterProvider(
   useAdapter: UseAdapterHook
 ): AdapterProvider {
-  const defaultValueStore = useRef({})
-  return ({ children, defaultOptions, processUrlSearchParams, ...props }) =>
-    createElement(
+  return function NuqsAdapterProvider({
+    children,
+    defaultOptions,
+    processUrlSearchParams,
+    ...props
+  }) {
+    const defaultValueStore = useRef({})
+    return createElement(
       context.Provider,
       {
         ...props,
@@ -78,6 +83,7 @@ export function createAdapterProvider(
         children
       )
     )
+  }
 }
 
 export function useDefaultValueStore(): DefaultValueStore {
