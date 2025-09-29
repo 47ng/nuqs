@@ -1,4 +1,5 @@
 import type { UrlKeys } from './defs'
+import { isAbsentFromUrl } from './lib/search-params'
 import type { inferParserType, ParserMap } from './parsers'
 
 export type LoaderInput =
@@ -96,14 +97,18 @@ export function createLoader<Parsers extends ParserMap>(
     const result = {} as any
     for (const [key, parser] of Object.entries(parsers)) {
       const urlKey = urlKeys[key] ?? key
-      const query = searchParams.get(urlKey)
-      if (query === null) {
+      const query =
+        parser.type === 'multi'
+          ? searchParams.getAll(urlKey)
+          : searchParams.get(urlKey)
+      if (isAbsentFromUrl(query)) {
         result[key] = parser.defaultValue ?? null
         continue
       }
       let parsedValue
       try {
-        parsedValue = parser.parse(query)
+        // we have properly narrowed `query` here, but TS doesn't keep track of that
+        parsedValue = parser.parse(query as string & Array<string>)
       } catch (error) {
         if (strict) {
           throw new Error(

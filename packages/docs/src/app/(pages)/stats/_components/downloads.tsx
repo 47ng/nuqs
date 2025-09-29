@@ -1,6 +1,13 @@
-import { Download } from 'lucide-react'
+import { Badge } from '@/src/components/ui/badge'
+import { cn } from '@/src/lib/utils'
+import { Download, Minus, TrendingDown, TrendingUp } from 'lucide-react'
 import { formatStatNumber } from '../lib/format'
-import { combineStats, fetchNpmPackage } from '../lib/npm'
+import {
+  combineStats,
+  fetchNpmPackage,
+  getIsoWeekday,
+  getPartialPreviousWeekDownloads
+} from '../lib/npm'
 import { DownloadsGraph } from './downloads.client'
 import { GraphSkeleton } from './graph.skeleton'
 import { WidgetSkeleton } from './widget.skeleton'
@@ -29,7 +36,6 @@ export async function NPMStats() {
           {formatStatNumber(nextUseQueryState.allTime)}
         </dd>
       </dl>
-      {/* todo: Add contributors list? */}
     </>
   )
 }
@@ -45,13 +51,23 @@ export async function NPMDownloads() {
   ])
   const both = combineStats(nuqs, nextUseQueryState)
   const lastDate = both.last30Days.at(-1)?.date
+  const lastDateWeekday = getIsoWeekday(lastDate ?? '')
   // Fortunately the epoch did not land on a Sunday (it was a Thursday).
-  const isLastDateSunday = new Date(lastDate ?? 0).getDay() === 0
+  const isLastDateSunday = lastDateWeekday === 7
   return (
     <>
       <DownloadsGraph
         data={both.last90Days}
         partialLast={!isLastDateSunday}
+        trend={
+          <TrendBadge
+            label={`nuqs downloads this week vs ${isLastDateSunday ? 'last week' : `the first ${lastDateWeekday} days of last week`}`}
+            // Compare the N days of the current week (possibly pending)
+            // to the first N days of the previous week.
+            oldValue={getPartialPreviousWeekDownloads(nuqs.last30Days)}
+            newValue={nuqs.last90Days.at(-1)?.downloads ?? 0}
+          />
+        }
         title={
           <>
             <Download size={20} /> Last 90 days
@@ -94,6 +110,13 @@ export async function NPMDownloads() {
       <DownloadsGraph
         data={both.last30Days}
         partialLast={false}
+        trend={
+          <TrendBadge
+            label="nuqs downloads compared to 7 days ago"
+            oldValue={nuqs.last30Days.at(-8)?.downloads ?? 0}
+            newValue={nuqs.last30Days.at(-1)?.downloads ?? 0}
+          />
+        }
         title={
           <>
             <Download size={20} /> Last 30 days
@@ -173,5 +196,40 @@ export function NPMDownloadsSkeleton() {
         </div>
       </WidgetSkeleton>
     </>
+  )
+}
+
+// --
+
+type TrendBadgeProps = {
+  oldValue: number
+  newValue: number
+  label: string
+}
+
+function TrendBadge({ oldValue, newValue, label }: TrendBadgeProps) {
+  const diff = newValue - oldValue
+  const pct = oldValue === 0 ? 100 : (diff / oldValue) * 100
+  const sign = diff === 0 ? '' : diff > 0 ? '+' : '-'
+  return (
+    <Badge
+      variant="outline"
+      className={cn(
+        'flex items-center gap-1.25 rounded-md border-none pl-1.5',
+        diff > 0 && 'bg-green-500/10 text-green-500',
+        diff < 0 && 'bg-red-500/10 text-red-500',
+        diff === 0 && 'bg-zinc-500/10 text-zinc-500'
+      )}
+      title={`${sign}${Math.abs(diff)} ${label}`}
+    >
+      {diff > 0 && <TrendingUp size={12} />}
+      {diff < 0 && <TrendingDown size={12} />}
+      {diff === 0 && <Minus size={12} />}
+      {diff > 0 ? '+' : '-'}
+      {formatStatNumber(Math.abs(diff)) || 'No change'}
+      {oldValue !== 0 && (
+        <span className="font-normal">({pct.toFixed(1)}%)</span>
+      )}
+    </Badge>
   )
 }

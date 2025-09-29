@@ -34,6 +34,7 @@ const router = createBrowserRouter(
       <Route path="linking/useQueryState/other"               lazy={load(import('./routes/linking.useQueryState.other'))} />
       <Route path="linking/useQueryStates"                    lazy={load(import('./routes/linking.useQueryStates'))} />
       <Route path="linking/useQueryStates/other"              lazy={load(import('./routes/linking.useQueryStates.other'))} />
+      <Route path="native-array"                              lazy={load(import('./routes/native-array'))} />
       <Route path="pretty-urls"                               lazy={load(import('./routes/pretty-urls'))} />
       <Route path="referential-stability/useQueryState"       lazy={load(import('./routes/referential-stability.useQueryState'))} />
       <Route path="referential-stability/useQueryStates"      lazy={load(import('./routes/referential-stability.useQueryStates'))} />

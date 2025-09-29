@@ -4,20 +4,22 @@ description: Making your own parsers for custom data types & pretty URLs
 ---
 
 import {
-  CustomParserDemo
+  CustomParserDemo,
+  CustomMultiParserDemo
 } from '@/content/docs/parsers/demos'
 
 You may wish to customise the rendered query string for your data type.
-For this, `nuqs` exposes the `createParser` function to make your own parsers.
+For this, `nuqs` exposes the `createParser{:ts}` function to make your own parsers.
 
 You pass it two functions:
-1. `parse`: a function that takes a string and returns the parsed value, or `null{:ts}` if invalid.
-2. `serialize`: a function that takes the parsed value and returns a string.
+1. `parse{:ts}`: a function that takes a string and returns the parsed value, or `null{:ts}` if invalid.
+2. `serialize{:ts}`: a function that takes the parsed value and returns a string.
 
 ```ts
 import { createParser } from 'nuqs'
 
 const parseAsStarRating = createParser({
+  // [!code word:parse]
   parse(queryValue) {
     const inBetween = queryValue.split('★')
     const isValid = inBetween.length > 1 && inBetween.every(s => s === '')
@@ -25,6 +27,7 @@ const parseAsStarRating = createParser({
     const numStars = inBetween.length - 1
     return Math.min(5, numStars)
   },
+  // [!code word:serialize]
   serialize(value) {
     return Array.from({length: value}, () => '★').join('')
   }
@@ -34,6 +37,119 @@ const parseAsStarRating = createParser({
 <Suspense>
   <CustomParserDemo/>
 </Suspense>
+
+## Equality function
+
+For state types that can't be compared by the `==={:ts}` operator, you'll need to
+provide an `eq{:ts}` function as well:
+
+```ts
+
+// Eg: TanStack Table sorting state
+// /?sort=foo:asc → { id: 'foo', desc: false }
+const parseAsSort = createParser({
+  parse(query) {
+    const [key = '', direction = ''] = query.split(':')
+    const desc = parseAsStringLiteral(['asc', 'desc']).parse(direction) ?? 'asc'
+    return {
+      id: key,
+      desc: desc === 'desc'
+    }
+  },
+  serialize(value) {
+    return `${value.id}:${value.desc ? 'desc' : 'asc'}`
+  },
+  // [!code highlight:3]
+  eq(a, b) {
+    return a.id === b.id && a.desc === b.desc
+  }
+})
+```
+
+This is used for the [`clearOnDefault{:ts}`](/docs/options#clear-on-default) option,
+to check if the current value is equal to the default value.
+
+## Custom Multi Parsers
+
+The parsers we've seen until now are `SingleParsers{:ts}`: they operate on **the first occurence** of the
+key in the URL, and give you a string value to parse when it's available.
+
+`MultiParsers{:ts}` work similar to `SingleParsers{:ts}`, except that they operate on arrays, to support **key repetition**:
+
+import { Querystring } from '@/src/components/querystring'
+
+<Querystring path="/" value="?tag=type-safe&tag=url-state&tag=react" />
+
+This means:
+
+1. `parse{:ts}` takes an `Array<string>{:ts}`. It receives all matching values of the key it operates on, and returns the parsed value, or `null{:ts}` if invalid.
+2. `serialize{:ts}` takes the parsed value and returns an `Array<string>{:ts}`, where each item will be separately added to the URL.
+
+You can then compose & reduce this array to form **complex data types**:
+
+<Suspense>
+  <CustomMultiParserDemo />
+</Suspense>
+
+```tsx
+/**
+ * 100~200 <=> { gte: 100, lte: 200 }
+ * 150     <=> { eq: 150 }
+ */
+const parseAsFromTo = createParser({
+  parse: value => {
+    const [min = null, max = null] = value.split('~').map(parseAsInteger.parse)
+    if (min === null) return null
+    if (max === null) return { eq: min }
+    return { gte: min, lte: max }
+  },
+  serialize: value => {
+    return value.eq !== undefined ? String(value.eq) : `${value.gte}~${value.lte}`
+  }
+})
+
+/**
+ * foo:bar <=> { key: 'foo', value: 'bar' }
+ */
+const parseAsKeyValue = createParser({
+  parse: value => {
+    const [key, val] = value.split(':')
+    if (!key || !val) return null
+    return { key, value: val }
+  },
+  serialize: value => {
+    return `${value.key}:${value.value}`
+  }
+})
+
+const parseAsFilters = <TItem extends {}>(itemParser: SingleParser<TItem>) => {
+  return createMultiParser({
+    parse: values => {
+      const keyValue = values.map(parseAsKeyValue.parse).filter(v => v !== null)
+
+      const result = Object.fromEntries(
+        keyValue.flatMap(({ key, value }) => {
+          const parsedValue: TItem | null = itemParser.parse(value)
+          return parsedValue === null ? [] : [[key, parsedValue]]
+        })
+      )
+
+      return Object.keys(result).length === 0 ? null : result
+    },
+    serialize: values => {
+      return Object.entries(values).map(([key, value]) => {
+        if (!itemParser.serialize) return null
+        return parseAsKeyValue.serialize({ key, value: itemParser.serialize(value) })
+      }).filter(v => v !== null)
+    }
+  })
+}
+
+const [filters, setFilters] = useQueryState(
+  'filters',
+  parseAsFilters(parseAsFromTo).withDefault({})
+)
+```
 
 ## Caveat: lossy serializers
 

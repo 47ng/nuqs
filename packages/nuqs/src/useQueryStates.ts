@@ -5,6 +5,7 @@ import {
   useAdapterProcessUrlSearchParams
 } from './adapters/lib/context'
 import type { Nullable, Options, UrlKeys } from './defs'
+import { compareQuery } from './lib/compare'
 import { debug } from './lib/debug'
 import { error } from './lib/errors'
 import { debounceController } from './lib/queues/debounce'
@@ -14,10 +15,11 @@ import {
   type UpdateQueuePushArgs
 } from './lib/queues/throttle'
 import { safeParse } from './lib/safe-parse'
+import { isAbsentFromUrl, type Query } from './lib/search-params'
 import { emitter, type CrossHookSyncPayload } from './lib/sync'
-import type { Parser } from './parsers'
+import { type GenericParser } from './parsers'
 
-type KeyMapValue<Type> = Parser<Type> &
+type KeyMapValue<Type> = GenericParser<Type> &
   Options & {
     defaultValue?: Type
   }
@@ -97,7 +99,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
   )
   const adapter = useAdapter(Object.values(resolvedUrlKeys))
   const initialSearchParams = adapter.searchParams
-  const queryRef = useRef<Record<string, string | null>>({})
+  const queryRef = useRef<Record<string, Query | null>>({})
   const defaultValues = useMemo(
     () =>
       Object.fromEntries(
@@ -373,30 +375,40 @@ function parseMap<KeyMap extends UseQueryStatesKeysMap>(
   keyMap: KeyMap,
   urlKeys: Partial<Record<keyof KeyMap, string>>,
   searchParams: URLSearchParams,
-  queuedQueries: Record<string, string | null | undefined>,
-  cachedQuery?: Record<string, string | null>,
+  queuedQueries: Record<string, Query | null | undefined>,
+  cachedQuery?: Record<string, Query | null>,
   cachedState?: NullableValues<KeyMap>
 ): {
   state: NullableValues<KeyMap>
   hasChanged: boolean
 } {
   let hasChanged = false
-  const state = Object.keys(keyMap).reduce((out, stateKey) => {
+  const state = Object.entries(keyMap).reduce((out, [stateKey, parser]) => {
     const urlKey = urlKeys?.[stateKey] ?? stateKey
-    const { parse } = keyMap[stateKey]!
     const queuedQuery = queuedQueries[urlKey]
+    const fallbackValue = parser.type === 'multi' ? [] : null
     const query =
       queuedQuery === undefined
-        ? (searchParams?.get(urlKey) ?? null)
+        ? ((parser.type === 'multi'
+            ? searchParams?.getAll(urlKey)
+            : searchParams?.get(urlKey)) ?? fallbackValue)
         : queuedQuery
-    if (cachedQuery && cachedState && (cachedQuery[urlKey] ?? null) === query) {
+    if (
+      cachedQuery &&
+      cachedState &&
+      compareQuery(cachedQuery[urlKey] ?? fallbackValue, query)
+    ) {
       // Cache hit
       out[stateKey as keyof KeyMap] = cachedState[stateKey] ?? null
       return out
     }
     // Cache miss
     hasChanged = true
-    const value = query === null ? null : safeParse(parse, query, stateKey)
+    const value = isAbsentFromUrl(query)
+      ? null
+      : // we have properly narrowed `query` here, but TS doesn't keep track of that
+        safeParse(parser.parse, query as string & Array<string>, urlKey)
+
     out[stateKey as keyof KeyMap] = value ?? null
     if (cachedQuery) {
       cachedQuery[urlKey] = query

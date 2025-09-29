@@ -1,4 +1,5 @@
 import { debug } from '../../lib/debug'
+import { compareQuery } from '../../lib/compare'
 
 export function applyChange(
   newValue: URLSearchParams,
@@ -9,7 +10,9 @@ export function applyChange(
     const hasChanged =
       keys.length === 0
         ? true
-        : keys.some(key => oldValue.get(key) !== newValue.get(key))
+        : keys.some(
+            key => !compareQuery(oldValue.getAll(key), newValue.getAll(key))
+          )
     if (!hasChanged) {
       debug(
         '[nuqs `%s`] no change, returning previous',

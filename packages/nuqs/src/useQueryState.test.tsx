@@ -11,7 +11,13 @@ import {
   type OnUrlUpdateFunction
 } from './adapters/testing'
 import { debounce } from './lib/queues/rate-limiting'
-import { parseAsArrayOf, parseAsJson, parseAsString } from './parsers'
+import {
+  parseAsArrayOf,
+  parseAsInteger,
+  parseAsJson,
+  parseAsNativeArrayOf,
+  parseAsString
+} from './parsers'
 import { useQueryState } from './useQueryState'
 
 describe('useQueryState: referential equality', () => {
@@ -442,5 +448,49 @@ describe('useQueryState: edge cases & repros', () => {
     await expect(
       screen.findByTestId('null-detector')
     ).resolves.toHaveTextContent('pass')
+  })
+})
+
+describe('useQueryState: multi-parsers', () => {
+  it('should clear the url when defaults are set', async () => {
+    const onUrlUpdate = vi.fn<OnUrlUpdateFunction>()
+    const { result } = renderHook(
+      () =>
+        useQueryState(
+          'test',
+          parseAsNativeArrayOf(parseAsInteger).withDefault([42])
+        ),
+      {
+        wrapper: withNuqsTestingAdapter({
+          searchParams: '?test=1&test=2&test=3',
+          onUrlUpdate
+        })
+      }
+    )
+    expect(result.current[0]).toEqual([1, 2, 3])
+    await act(() => result.current[1]([42]))
+    expect(onUrlUpdate).toHaveBeenCalledOnce()
+    expect(onUrlUpdate.mock.calls[0]![0].queryString).toEqual('')
+  })
+
+  it('should add an empty param when set to empty array and there is a different default', async () => {
+    const onUrlUpdate = vi.fn<OnUrlUpdateFunction>()
+    const { result } = renderHook(
+      () =>
+        useQueryState(
+          'test',
+          parseAsNativeArrayOf(parseAsInteger).withDefault([42])
+        ),
+      {
+        wrapper: withNuqsTestingAdapter({
+          searchParams: '?test=1&test=2&test=3',
+          onUrlUpdate
+        })
+      }
+    )
+    expect(result.current[0]).toEqual([1, 2, 3])
+    await act(() => result.current[1]([]))
+    expect(onUrlUpdate).toHaveBeenCalledOnce()
+    expect(onUrlUpdate.mock.calls[0]![0].queryString).toEqual('?test=')
   })
 })

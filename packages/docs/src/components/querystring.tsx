@@ -2,17 +2,24 @@ import { cn } from '@/src/lib/utils'
 import { Fragment, useMemo } from 'react'
 
 export type QuerystringProps = React.ComponentProps<'pre'> & {
+  path?: string
   value: string | URLSearchParams
   keepKeys?: string[]
 }
 
-export function Querystring({ value, keepKeys, ...props }: QuerystringProps) {
+export function Querystring({
+  path,
+  value,
+  keepKeys,
+  ...props
+}: QuerystringProps) {
   const search = useMemo(
     () => filterQueryKeys(value, keepKeys),
     [value, keepKeys]
   )
   return (
     <QuerystringSkeleton {...props}>
+      {path && <span className="text-zinc-500">{path}</span>}
       {Array.from(search.entries()).map(([key, value], i) => (
         <Fragment key={key + i}>
           <span className="text-zinc-500">
@@ -63,7 +70,7 @@ function filterQueryKeys(query: string | URLSearchParams, keys?: string[]) {
   const destination = new URLSearchParams()
   for (const [key, value] of source.entries()) {
     if (keys.includes(key)) {
-      destination.set(key, value)
+      destination.append(key, value)
     }
   }
   return destination
