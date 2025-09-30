@@ -40,11 +40,16 @@ export class ThrottledQueue {
   resolvers: Resolvers<URLSearchParams> | null = null
   controller: AbortController | null = null
   lastFlushedAt = 0
+  resetQueueOnNextPush = false
 
   push(
     { key, query, options }: UpdateQueuePushArgs,
     timeMs: number = defaultRateLimit.timeMs
   ): void {
+    if (this.resetQueueOnNextPush) {
+      this.reset()
+      this.resetQueueOnNextPush = false
+    }
     debug('[nuqs gtq] Enqueueing %s=%s %O', key, query, options)
     // Enqueue update
     this.updateMap.set(key, query)
@@ -100,6 +105,7 @@ export class ThrottledQueue {
       )
       if (error === null) {
         this.resolvers!.resolve(search)
+        this.resetQueueOnNextPush = true
       } else {
         this.resolvers!.reject(search)
       }

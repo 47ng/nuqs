@@ -54,8 +54,10 @@ export default [
     route('/render-count/:hook/:shallow/:history/:startTransition/async-loader', './routes/render-count.$hook.$shallow.$history.$startTransition.async-loader.tsx'),
 
     // Reproductions
-    route('/repro-359', './routes/repro-359.tsx'),
-    route('/repro-839', './routes/repro-839.tsx'),
-    route('/repro-982', './routes/repro-982.tsx'),
+    route('/repro-359',                 './routes/repro-359.tsx'),
+    route('/repro-839',                 './routes/repro-839.tsx'),
+    route('/repro-982',                 './routes/repro-982.tsx'),
+    route('/repro-1099/useQueryState',  './routes/repro-1099.useQueryState.tsx'),
+    route('/repro-1099/useQueryStates', './routes/repro-1099.useQueryStates.tsx'),
   ])
 ] satisfies RouteConfig

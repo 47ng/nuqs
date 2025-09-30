@@ -55,8 +55,10 @@ const routes: Record<string, React.LazyExoticComponent<() => JSX.Element>> = {
   '/render-count/useQueryStates/false/push/true':     lazy(() => import('./routes/render-count')),
 
   // Reproductions
-  '/repro-359': lazy(() => import('./routes/repro-359')),
-  '/repro-982': lazy(() => import('./routes/repro-982')),
+  '/repro-359':                 lazy(() => import('./routes/repro-359')),
+  '/repro-982':                 lazy(() => import('./routes/repro-982')),
+  '/repro-1099/useQueryState':  lazy(() => import('./routes/repro-1099.useQueryState')),
+  '/repro-1099/useQueryStates': lazy(() => import('./routes/repro-1099.useQueryStates')),
 }
 
 export function Router() {

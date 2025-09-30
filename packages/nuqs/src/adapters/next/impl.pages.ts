@@ -3,7 +3,6 @@ import type { NextRouter } from 'next/router'
 import { useCallback, useEffect, useMemo } from 'react'
 import { debug } from '../../lib/debug'
 import { resetQueues } from '../../lib/queues/reset'
-import { globalThrottleQueue } from '../../lib/queues/throttle'
 import { renderQueryString } from '../../lib/url-encoding'
 import type { AdapterInterface, UpdateUrlFunction } from '../lib/defs'
 
@@ -79,11 +78,6 @@ export function useNuqsNextPagesRouterAdapter(): AdapterInterface {
     const method =
       options.history === 'push' ? nextRouter.push : nextRouter.replace
     isNuqsUpdateMutex = true
-    // A single requestAnimationFrame causes flakiness in the render count,
-    // but two nested ones seem to do the trick.
-    requestAnimationFrame(() =>
-      requestAnimationFrame(() => globalThrottleQueue.reset())
-    )
     method
       .call(
         nextRouter,

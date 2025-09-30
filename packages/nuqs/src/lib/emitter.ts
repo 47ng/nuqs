@@ -11,7 +11,6 @@ export type Emitter<Events extends Record<string, unknown>> = {
     type: Key,
     event?: Events[Key] extends undefined ? never : Events[Key]
   ): void
-  all: Map<keyof Events, Array<(event: Events[keyof Events]) => any>>
 }
 
 export function createEmitter<
@@ -22,7 +21,6 @@ export function createEmitter<
     Array<(event: Events[keyof Events]) => any>
   > = new Map()
   return {
-    all,
     on<Key extends keyof Events>(
       type: Key,
       handler: (event: Events[Key]) => any

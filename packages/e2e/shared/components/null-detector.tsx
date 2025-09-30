@@ -4,16 +4,20 @@ type NullDetectorProps = {
   state: ReactNode
   id?: string
   throwOnNull?: boolean
+  enabled?: boolean
 }
 
 export function NullDetector({
   state,
   id = 'null-detector',
-  throwOnNull = false
+  throwOnNull = false,
+  enabled = true
 }: NullDetectorProps) {
-  const [hasBeenNullAtSomePoint, set] = useState(() => state === null)
+  const [hasBeenNullAtSomePoint, set] = useState(() =>
+    enabled ? state === null : false
+  )
   useEffect(() => {
-    if (state !== null) {
+    if (state !== null || !enabled) {
       return
     }
     if (throwOnNull) {
@@ -21,6 +25,6 @@ export function NullDetector({
     }
     console.error(`<NullDetector id="${id}">: NULL DETECTED`)
     set(true)
-  }, [state])
+  }, [enabled, state])
   return <pre id={id}>{hasBeenNullAtSomePoint ? 'fail' : 'pass'}</pre>
 }

@@ -1,14 +1,7 @@
-import {
-  startTransition,
-  useCallback,
-  useEffect,
-  useRef,
-  useState
-} from 'react'
+import { startTransition, useCallback, useEffect, useState } from 'react'
 import { debug } from '../../lib/debug'
 import { createEmitter } from '../../lib/emitter'
 import { setQueueResetMutex } from '../../lib/queues/reset'
-import { globalThrottleQueue } from '../../lib/queues/throttle'
 import { renderQueryString } from '../../lib/url-encoding'
 import { createAdapterProvider, type AdapterProvider } from './context'
 import type { AdapterInterface, AdapterOptions } from './defs'
@@ -50,16 +43,9 @@ export function createReactRouterBasedAdapter({
   useOptimisticSearchParams: () => URLSearchParams
 } {
   const emitter = createEmitter<SearchParamsSyncEmitterEvents>()
-  const enableQueueReset = adapter !== 'react-router-v6'
   function useNuqsReactRouterBasedAdapter(
     watchKeys: string[]
   ): AdapterInterface {
-    const resetRef = useRef(false)
-    if (enableQueueReset && resetRef.current) {
-      resetRef.current = false
-      globalThrottleQueue.reset()
-    }
-
     const navigate = useNavigate()
     const searchParams = useOptimisticSearchParams(watchKeys)
     const updateUrl = useCallback(
@@ -99,7 +85,6 @@ export function createReactRouterBasedAdapter({
         if (options.scroll) {
           window.scrollTo(0, 0)
         }
-        resetRef.current = enableQueueReset
       },
       [navigate]
     )
