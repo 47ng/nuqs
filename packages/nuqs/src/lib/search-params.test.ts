@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
-import { getSearchParams } from './patch-history'
+import { getSearchParams } from './search-params'
 
-describe('patch-history/getSearchParams', () => {
+describe('search-params/getSearchParams', () => {
   it('extracts search params from a URL object', () => {
     const received = getSearchParams(new URL('http://example.com/?foo=bar'))
     const expected = new URLSearchParams('?foo=bar')
