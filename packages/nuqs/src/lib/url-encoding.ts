@@ -48,9 +48,9 @@ export function encodeQueryValue(input: string): string {
 }
 
 // Note: change error documentation (NUQS-414) when changing this value.
-export const URL_MAX_LENGTH = 2000
+const URL_MAX_LENGTH = 2000
 
-export function warnIfURLIsTooLong(queryString: string): void {
+function warnIfURLIsTooLong(queryString: string): void {
   if (process.env.NODE_ENV === 'production') {
     return
   }
