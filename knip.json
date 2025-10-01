@@ -1,6 +1,10 @@
 {
   "$schema": "https://unpkg.com/knip@5/schema.json",
-  "project": ["src/**/*.ts"],
+  "workspaces": {
+    "packages/nuqs": {
+      "project": ["src/**/*.ts"]
+    }
+  },
   "rules": {
     "optionalPeerDependencies": "off"
   }

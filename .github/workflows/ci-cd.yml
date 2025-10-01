@@ -43,8 +43,7 @@ jobs:
             echo "No formatting issues found"
           fi
       - name: Run Knip
-        run: pnpm run knip
-        working-directory: packages/nuqs
+        run: pnpm run lint:knip --workspace packages/nuqs
 
   publint:
     name: Package Linting

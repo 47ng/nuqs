@@ -18,6 +18,7 @@
     "test": "turbo run test --log-order=stream",
     "prepare": "husky",
     "lint": "pnpm run -w --parallel --stream '/^lint:/'",
+    "lint:knip": "knip",
     "lint:prettier": "prettier --check ./packages/nuqs/src/**/*.ts",
     "lint:sherif": "sherif"
   },
@@ -25,6 +26,7 @@
     "@commitlint/config-conventional": "^19.8.1",
     "commitlint": "^19.8.1",
     "husky": "^9.1.7",
+    "knip": "^5.64.1",
     "prettier": "3.6.2",
     "publint": "^0.3.12",
     "semantic-release": "^24.2.7",
