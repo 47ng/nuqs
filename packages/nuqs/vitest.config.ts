@@ -12,6 +12,14 @@ const config: ViteUserConfig = defineConfig({
       deps: {
         inline: ['vitest-package-exports']
       }
+    },
+    coverage: {
+      provider: 'v8',
+      exclude: [
+        './src/adapters/**', // adapters are tested in e2e tests
+        './tests/**.test-d.ts', // type tests don't generate coverage
+        './**/*.d.ts' // neither do type definitions
+      ]
     }
   }
 })
