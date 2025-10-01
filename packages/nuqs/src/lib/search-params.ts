@@ -25,3 +25,17 @@ export function write(
   }
   return searchParams
 }
+
+export function getSearchParams(url: string | URL): URLSearchParams {
+  if (url instanceof URL) {
+    return url.searchParams
+  }
+  if (url.startsWith('?')) {
+    return new URLSearchParams(url)
+  }
+  try {
+    return new URL(url, location.origin).searchParams
+  } catch {
+    return new URLSearchParams(url)
+  }
+}
