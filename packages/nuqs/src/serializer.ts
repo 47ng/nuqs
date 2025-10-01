@@ -1,7 +1,7 @@
 import type { Nullable, Options, UrlKeys } from './defs'
+import { write } from './lib/search-params'
 import { renderQueryString } from './lib/url-encoding'
 import type { inferParserType, ParserMap } from './parsers'
-import { write } from './lib/search-params'
 
 type Base = string | URLSearchParams | URL
 
@@ -99,7 +99,7 @@ export function createSerializer<
         search.delete(urlKey)
       } else {
         const serialized = parser.serialize(value)
-        search = write(serialized, urlKey, search)
+        search = write(search, urlKey, serialized)
       }
     }
     if (processUrlSearchParams) {
