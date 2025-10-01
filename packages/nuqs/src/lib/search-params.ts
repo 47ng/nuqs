@@ -5,9 +5,9 @@ export function isAbsentFromUrl(query: Query | null): query is null | [] {
 }
 
 export function write(
-  serialized: Query,
+  searchParams: URLSearchParams,
   key: string,
-  searchParams: URLSearchParams
+  serialized: Query
 ): URLSearchParams {
   if (typeof serialized === 'string') {
     searchParams.set(key, serialized)

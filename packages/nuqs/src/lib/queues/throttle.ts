@@ -192,7 +192,7 @@ export class ThrottledQueue {
       if (value === null) {
         search.delete(key)
       } else {
-        search = write(value, key, search)
+        search = write(search, key, value)
       }
     }
     if (processUrlSearchParams) {
