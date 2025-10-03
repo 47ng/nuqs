@@ -79,3 +79,61 @@ export function ReactParis2025SideBanner() {
     </div>
   )
 }
+
+export function NextJSConf2025TopBanner() {
+  return (
+    <Banner
+      variant="primary"
+      className="text-md flex flex-wrap items-center justify-center gap-3 font-semibold"
+      id="nextjs-conf-2025"
+    >
+      <span aria-hidden>📺</span>
+      <Link
+        href="https://nextjs.org/conf"
+        className="decoration-slice decoration-1 transition-all hover:underline hover:underline-offset-8 focus-visible:underline focus-visible:outline-none"
+        prefetch={false}
+      >
+        Watch nuqs at Next.js Conf (Oct 22, 1:55pm PT)
+      </Link>
+      <span aria-hidden>·</span>
+      <Suspense>
+        <Countdown
+          targetDate={new Date('2025-10-22T13:55:00-07:00')}
+          expiredMessage={
+            <span>
+              Live now —{' '}
+              <Link
+                href="https://nextjs.org/conf"
+                className="underline"
+                prefetch={false}
+              >
+                join the livestream
+              </Link>
+            </span>
+          }
+        />
+      </Suspense>
+    </Banner>
+  )
+}
+
+export function NextJSConf2025SideBanner() {
+  return (
+    <div className="my-2 flex flex-col items-center gap-1.5 rounded-lg border border-gray-500/40 bg-gray-100/50 px-2 py-4 dark:bg-gray-700/10">
+      <p className="text-muted-foreground">🎤 nuqs at Next.js Conf</p>
+      <a
+        href="https://nextjs.org/conf"
+        className="text-sm hover:underline"
+      >
+        Livestream link
+      </a>
+      <Suspense>
+        <Countdown
+          targetDate={new Date('2025-10-22T13:55:00-07:00')}
+          className="my-2"
+          expiredMessage={<span className="text-sm">Live now!</span>}
+        />
+      </Suspense>
+    </div>
+  )
+}
