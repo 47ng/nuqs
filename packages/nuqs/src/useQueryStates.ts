@@ -198,7 +198,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
           const { defaultValue } = keyMap[stateKey]!
           const urlKey = resolvedUrlKeys[stateKey]!
           const currentValue =
-            internalState[stateKey as keyof KeyMap] ?? defaultValue ?? null
+            stateRef.current[stateKey as keyof KeyMap] ?? defaultValue ?? null
           const nextValue = state ?? defaultValue ?? null
           if (Object.is(currentValue, nextValue)) {
             debug(
