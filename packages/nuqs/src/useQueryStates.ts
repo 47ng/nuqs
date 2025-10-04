@@ -292,7 +292,8 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
         }
 
         if (
-          (clearOnDefault || !writeDefaults) &&
+          clearOnDefault &&
+          !writeDefaults &&
           value !== null &&
           parser.defaultValue !== undefined &&
           (parser.eq ?? ((a, b) => a === b))(value, parser.defaultValue)
