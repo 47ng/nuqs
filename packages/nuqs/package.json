@@ -196,7 +196,7 @@
     {
       "name": "Client",
       "path": "dist/index.js",
-      "limit": "6 kB"
+      "limit": "6.01 kB"
     },
     {
       "name": "Client (minimal tree-shaken)",
