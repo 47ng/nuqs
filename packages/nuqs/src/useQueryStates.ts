@@ -228,12 +228,6 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
               defaultValue,
               stateRef.current
             )
-            debug(
-              '[nuq+ %s `%s`] updateInternalState %O',
-              hookId,
-              stateKeys,
-              stateRef.current
-            )
             return stateRef.current
           })
         }
