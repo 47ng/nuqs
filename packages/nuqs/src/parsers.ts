@@ -22,7 +22,7 @@ export type SingleParser<T> = {
   /**
    * Check if two state values are equal.
    *
-   * This is used when using the `clearOnDefault` value, to compare the default
+   * This is used when using the `writeDefaults` value, to compare the default
    * value with the set value.
    *
    * It makes sense to provide this function when the state value is an object
@@ -66,7 +66,7 @@ export type SingleParserBuilder<T> = Required<SingleParser<T>> &
      * of `null`.
      *
      * Setting the state to the default value¹ will clear the query string key
-     * from the URL, unless `clearOnDefault` is set to `false`.
+     * from the URL, unless `writeDefaults` is set to `true`.
      *
      * Setting the state to `null` will always clear the query string key
      * from the URL, and return the default value.

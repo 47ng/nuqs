@@ -85,8 +85,20 @@ export type Options = {
    *
    * Set it to `false` to keep backwards-compatiblity when the default value
    * changes (prefer explicit URLs whose meaning don't change).
+   *
+   * @deprecated use `writeDefaults` instead
    */
   clearOnDefault?: boolean
+
+  /**
+   * Indicates whether the key-value pair should be written to the URL query string
+   * when setting the state to the default value.
+   *
+   * Defaults to `false` to keep URLs clean.
+   *
+   * Set it to `true` to always write default values to the URL query string.
+   */
+  writeDefaults?: boolean
 }
 
 export type Nullable<T> = {
