@@ -380,12 +380,16 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
     ]
   )
 
+  const anyParserWriteDefaults = Object.values(keyMap).some(
+    v => v.writeDefaults
+  )
+
   // effect to write defaults to the url on mount
   useEffect(() => {
-    if (optionWriteDefaults) {
+    if (optionWriteDefaults || anyParserWriteDefaults) {
       void update(s => s)
     }
-  }, [update, optionWriteDefaults])
+  }, [update, optionWriteDefaults, anyParserWriteDefaults])
 
   const outputState = useMemo(
     () => applyDefaultValues(internalState, defaultValues),
