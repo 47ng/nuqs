@@ -189,11 +189,6 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
 
   // Sync all hooks together & with external URL changes
   useEffect(() => {
-    function updateInternalState(state: V) {
-      debug('[nuq+ %s `%s`] updateInternalState %O', hookId, stateKeys, state)
-      stateRef.current = state
-      setInternalState(state)
-    }
     const handlers = Object.keys(keyMap).reduce(
       (handlers, stateKey) => {
         handlers[stateKey as keyof KeyMap] = ({
@@ -218,7 +213,27 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
             defaultValue,
             stateRef.current
           )
-          updateInternalState(stateRef.current)
+          if (
+            Object.is(
+              internalState[stateKey as keyof KeyMap] ?? defaultValue ?? null,
+              stateRef.current[stateKey as keyof KeyMap]
+            )
+          ) {
+            debug(
+              '[nuq+ %s `%s`] Cross-hook key sync %s: no change, skipping',
+              hookId,
+              stateKeys,
+              urlKey
+            )
+            return
+          }
+          debug(
+            '[nuq+ %s `%s`] updateInternalState %O',
+            hookId,
+            stateKeys,
+            stateRef.current
+          )
+          setInternalState(stateRef.current)
         }
         return handlers
       },
