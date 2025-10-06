@@ -153,10 +153,15 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
       setInternalState(state)
     }
     queryRef.current = Object.fromEntries(
-      Object.values(resolvedUrlKeys).map(urlKey => [
-        urlKey,
-        initialSearchParams?.get(urlKey) ?? null
-      ])
+      Object.entries(resolvedUrlKeys).map(([key, urlKey]) => {
+        const parser = keyMap[key]
+        return [
+          urlKey,
+          parser?.type === 'multi'
+            ? initialSearchParams?.getAll(urlKey)
+            : (initialSearchParams?.get(urlKey) ?? null)
+        ]
+      })
     )
   }
 
@@ -182,7 +187,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
     }
   }, [
     Object.values(resolvedUrlKeys)
-      .map(key => `${key}=${initialSearchParams?.get(key)}`)
+      .map(key => `${key}=${initialSearchParams?.getAll(key)}`)
       .join('&'),
     JSON.stringify(queuedQueries)
   ])
