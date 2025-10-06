@@ -154,10 +154,10 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
     }
     queryRef.current = Object.fromEntries(
       Object.entries(resolvedUrlKeys).map(([key, urlKey]) => {
-        const parser = keyMap[key]!
+        const parser = keyMap[key]
         return [
           urlKey,
-          parser.type === 'multi'
+          parser?.type === 'multi'
             ? initialSearchParams?.getAll(urlKey)
             : (initialSearchParams?.get(urlKey) ?? null)
         ]
