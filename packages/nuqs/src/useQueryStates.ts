@@ -195,10 +195,12 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
           state,
           query
         }: CrossHookSyncPayload) => {
-          setInternalState(currentValue => {
+          setInternalState(currentState => {
             const { defaultValue } = keyMap[stateKey]!
             const urlKey = resolvedUrlKeys[stateKey]!
             const nextValue = state ?? defaultValue ?? null
+            const currentValue = currentState[stateKey] ?? defaultValue ?? null
+
             if (Object.is(currentValue, nextValue)) {
               debug(
                 '[nuq+ %s `%s`] Cross-hook key sync %s: %O (default: %O). no change, skipping, resolved: %O',
@@ -209,8 +211,8 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
                 defaultValue,
                 stateRef.current
               )
-              // bail out by returning the current value
-              return currentValue
+              // bail out by returning the current state
+              return currentState
             }
             // Note: cannot mutate in-place, the object ref must change
             // for the subsequent setState to pick it up.

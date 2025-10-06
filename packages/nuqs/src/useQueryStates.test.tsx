@@ -1,6 +1,11 @@
 import { act, render, renderHook, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import React, { createElement, useState, type ReactNode } from 'react'
+import React, {
+  createElement,
+  useState,
+  type ReactNode,
+  useEffect
+} from 'react'
 import { describe, expect, it, vi } from 'vitest'
 import {
   NullDetector,
@@ -198,6 +203,48 @@ describe('useQueryStates: referential equality', () => {
     expect(state.arr[0]).toBe(defaults.arr[0])
     expect(state.multi).toBe(defaults.multi)
     expect(state.multi[0]).toBe(defaults.multi[0])
+  })
+})
+
+describe('useQueryStates: rendering & bail-out', () => {
+  it('should bail out of rendering the same component when setting to the same value', async () => {
+    let renderCount = 0
+    function TestComponent() {
+      const [{ test }, setSearchParams] = useQueryStates({
+        test: parseAsString
+      })
+      useEffect(() => {
+        renderCount++
+      })
+      return (
+        <>
+          <button
+            onClick={() => {
+              setSearchParams(v => v)
+            }}
+          >
+            Start
+          </button>
+          <div>value: {test}</div>
+        </>
+      )
+    }
+    const user = userEvent.setup()
+    const onUrlUpdate = vi.fn<OnUrlUpdateFunction>()
+    render(<TestComponent />, {
+      wrapper: withNuqsTestingAdapter({
+        onUrlUpdate,
+        searchParams: '?test=init'
+      })
+    })
+    await expect(screen.findByText('value: init')).resolves.toBeInTheDocument()
+    expect(renderCount).toBe(1)
+    expect(onUrlUpdate).toHaveBeenCalledTimes(0)
+
+    await user.click(screen.getByRole('button', { name: 'Start' }))
+
+    expect(renderCount).toBe(1) // same render count as before
+    expect(onUrlUpdate).toHaveBeenCalledTimes(1) // url update is still called
   })
 })
 
