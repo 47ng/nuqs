@@ -182,7 +182,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
     }
   }, [
     Object.values(resolvedUrlKeys)
-      .map(key => `${key}=${initialSearchParams?.get(key)}`)
+      .map(key => `${key}=${initialSearchParams?.getAll(key)}`)
       .join('&'),
     JSON.stringify(queuedQueries)
   ])
