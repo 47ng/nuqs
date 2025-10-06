@@ -29,5 +29,8 @@ export const testNativeArray = createTest('parseAsNativeArray', ({ path }) => {
     cy.go('back')
     cy.location('search').should('eq', '?test=1&test=2')
     cy.get('#client-name').should('have.text', '1 - 2')
+    cy.go('forward')
+    cy.location('search').should('eq', '?test=1&test=2&test=3')
+    cy.get('#client-name').should('have.text', '1 - 2 - 3')
   })
 })
