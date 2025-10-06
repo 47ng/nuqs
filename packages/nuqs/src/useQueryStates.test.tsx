@@ -192,7 +192,7 @@ describe('useQueryStates: referential equality', () => {
     expect(result.current[0].str).toBe('foo')
     rerender({ defaultValue: 'b' })
     const [state] = result.current
-    expect(state.str).toBe('b')
+    expect(state.str).toBe('foo')
     expect(state.obj).toBe(defaults.obj)
     expect(state.arr).toBe(defaults.arr)
     expect(state.arr[0]).toBe(defaults.arr[0])
@@ -263,6 +263,39 @@ describe('useQueryStates: urlKeys remapping', () => {
     await act(() => setState2({ test: 'pass' }))
     const [, setState3] = result.current
     expect(setState1).toBe(setState3)
+  })
+})
+
+describe('useQueryStates: defaultValue', () => {
+  it('should read the same default value for multiple usages of the same parser', () => {
+    function TestComponent({
+      id,
+      defaultValue
+    }: {
+      id: string
+      defaultValue: number
+    }) {
+      const [value] = useQueryStates({
+        a: parseAsInteger.withDefault(defaultValue)
+      })
+
+      return (
+        <div>
+          {id} value: {value.a}
+        </div>
+      )
+    }
+    const result = render(
+      <div>
+        <TestComponent id="first" defaultValue={5} />
+        <TestComponent id="second" defaultValue={23} />
+      </div>,
+      {
+        wrapper: withNuqsTestingAdapter()
+      }
+    )
+    expect(result.getByText('first value: 5')).toBeInTheDocument()
+    expect(result.getByText('second value: 5')).toBeInTheDocument()
   })
 })
 

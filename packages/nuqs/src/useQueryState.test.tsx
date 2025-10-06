@@ -19,6 +19,7 @@ import {
   parseAsString
 } from './parsers'
 import { useQueryState } from './useQueryState'
+import { useQueryStates } from './useQueryStates'
 
 describe('useQueryState: referential equality', () => {
   const defaults = {
@@ -109,7 +110,7 @@ describe('useQueryState: referential equality', () => {
     expect(result.current.str[0]).toBe('foo')
     rerender({ defaultValue: 'b' })
     const { str, obj, arr } = result.current
-    expect(str[0]).toBe('b')
+    expect(str[0]).toBe('foo')
     expect(obj[0]).toBe(defaults.obj)
     expect(arr[0]).toBe(defaults.arr)
     expect(arr[0][0]).toBe(defaults.arr[0])
@@ -126,6 +127,40 @@ describe('useQueryState: referential equality', () => {
     await act(() => setState1('pass'))
     const [, setState3] = result.current
     expect(setState1).toBe(setState3)
+  })
+})
+
+describe('useQueryState: defaultValue', () => {
+  it('should read the same default value for multiple usages of the same parser', () => {
+    function TestComponent({
+      id,
+      defaultValue
+    }: {
+      id: string
+      defaultValue: number
+    }) {
+      const [value] = useQueryState(
+        'a',
+        parseAsInteger.withDefault(defaultValue)
+      )
+
+      return (
+        <div>
+          {id} value: {value}
+        </div>
+      )
+    }
+    const result = render(
+      <div>
+        <TestComponent id="first" defaultValue={5} />
+        <TestComponent id="second" defaultValue={23} />
+      </div>,
+      {
+        wrapper: withNuqsTestingAdapter()
+      }
+    )
+    expect(result.getByText('first value: 5')).toBeInTheDocument()
+    expect(result.getByText('second value: 5')).toBeInTheDocument()
   })
 })
 
