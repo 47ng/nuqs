@@ -3,7 +3,9 @@
 import { parseAsInteger, parseAsNativeArrayOf, useQueryState } from 'nuqs'
 import { Display } from '../components/display'
 
-export const parser = parseAsNativeArrayOf(parseAsInteger)
+export const parser = parseAsNativeArrayOf(parseAsInteger).withOptions({
+  history: 'push'
+})
 
 export function NativeArray() {
   const [state, setState] = useQueryState('test', parser)
