@@ -1,6 +1,6 @@
-import type { GetServerSideProps } from 'next'
+import { GetServerSideProps } from 'next'
 import { Client } from '../../../app/app/push/client'
-import { loadSearchParams } from '../../../app/app/push/searchParams'
+import { parser } from '../../../app/app/push/searchParams'
 
 export default function Page({ server }: { server: number }) {
   return (
@@ -14,8 +14,7 @@ export default function Page({ server }: { server: number }) {
 }
 
 export const getServerSideProps = (async ctx => {
-  console.dir({ _: 'gSSP', query: ctx.query }, { depth: null })
-  const { server } = loadSearchParams(ctx.query)
+  const server = parser.parseServerSide(ctx.query.server)
   return {
     props: {
       server
