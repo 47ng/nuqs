@@ -405,7 +405,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
   // effect to write defaults to the url on mount
   useEffect(() => {
     if (optionWriteDefaults || anyParserWriteDefaults) {
-      void update(s => s)
+      void update(s => s, { history: 'replace' })
     }
   }, [update, optionWriteDefaults, anyParserWriteDefaults])
 
