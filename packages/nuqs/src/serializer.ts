@@ -97,9 +97,9 @@ export function createSerializer<
 
       const writeDefaults =
         parser.writeDefaults ??
-        (parser.clearOnDefault !== undefined
-          ? !parser.clearOnDefault
-          : optionWriteDefaults)
+        (parser.clearOnDefault === undefined
+          ? optionWriteDefaults
+          : !parser.clearOnDefault)
 
       if (value === null || (!writeDefaults && isMatchingDefault)) {
         search.delete(urlKey)
