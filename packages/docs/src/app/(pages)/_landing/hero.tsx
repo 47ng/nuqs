@@ -8,7 +8,7 @@ import { WorksWith } from './works-with'
 
 export function HeroSection() {
   return (
-    <section className="container relative mb-12 grid grid-cols-1 items-center justify-center gap-8 xl:h-[max(650px,min(800px,calc(75vh)))] xl:grid-cols-2 xl:flex-row">
+    <section className="relative container mb-12 grid grid-cols-1 items-center justify-center gap-8 xl:h-[max(650px,min(800px,calc(75vh)))] xl:grid-cols-2 xl:flex-row">
       <aside className="my-16 flex flex-col items-center self-center xl:my-24 xl:-mr-10 xl:ml-10 xl:flex-1 xl:items-start">
         <h1 className="text-6xl md:text-8xl">
           <NuqsWordmark />
@@ -41,7 +41,7 @@ export function HeroSection() {
               'text-md w-full rounded-full sm:w-auto'
             )}
           >
-            <Github className="-ml-1 mr-2 inline-block" size={20} />
+            <Github className="mr-2 -ml-1 inline-block" size={20} />
             GitHub
           </a>
         </nav>
@@ -51,7 +51,7 @@ export function HeroSection() {
         <LandingDemo />
       </aside>
       <div
-        className="absolute -bottom-12 left-0 right-0 hidden h-12 items-center justify-center xl:flex"
+        className="absolute right-0 -bottom-12 left-0 hidden h-12 items-center justify-center xl:flex"
         aria-hidden
       >
         <ChevronDown />
