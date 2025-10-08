@@ -5,7 +5,6 @@ import Script from 'next/script'
 import { NuqsAdapter } from 'nuqs/adapters/next'
 import type { ReactNode } from 'react'
 import { ResponsiveHelper } from '../components/responsive-helpers'
-import { NextJSConf2025TopBanner } from './banners'
 import { cn } from '../lib/utils'
 import './globals.css'
 
@@ -48,7 +47,6 @@ export default function Layout({ children }: { children: ReactNode }) {
       </head>
       <body>
         {/* Top-level banners go here */}
-        <NextJSConf2025TopBanner />
         <RootProvider>
           <NuqsAdapter>{children}</NuqsAdapter>
         </RootProvider>

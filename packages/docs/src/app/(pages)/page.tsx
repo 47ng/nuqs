@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
-import { DependentsSection } from './_landing/dependents'
+import { NextJSConf2025WideBanner } from '../banners'
 import { ContributorsSection } from './_landing/contributors'
+import { DependentsSection } from './_landing/dependents'
 import { FeaturesSection } from './_landing/features'
 import { HeroSection } from './_landing/hero'
 import { PageFooter } from './_landing/page-footer'
@@ -21,6 +22,7 @@ export const metadata: Metadata = {
 export default function HomePage() {
   return (
     <main>
+      <NextJSConf2025WideBanner />
       <HeroSection />
       <FeaturesSection />
       <SponsorsSection />
