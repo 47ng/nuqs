@@ -1,22 +1,15 @@
-import { Logo47ng } from '@/src/components/47ng'
 import { LinkTree, type LinkTreeItemProps } from '@/src/components/link-tree'
-import { ReactParisLogo } from '@/src/components/react-paris'
 import {
   SiBluesky,
-  SiDiscord,
   SiGithub,
   SiTwitch,
   SiX,
   SiYoutube
 } from '@icons-pack/react-simple-icons'
 import { Heart, Images, Library, Linkedin, Mail } from 'lucide-react'
+import { NextJSConf2025Logo } from '../../banners'
 
 const links: LinkTreeItemProps[] = [
-  {
-    href: 'https://discord.com/channels/723276276072317098/1352179917680283743',
-    icon: <SiDiscord className="size-5" />,
-    label: 'Questions & Feedback 🙏'
-  },
   {
     href: '/',
     icon: <Library className="size-5" />,
@@ -29,12 +22,12 @@ const links: LinkTreeItemProps[] = [
     label: 'GitHub'
   },
   {
-    href: 'https://github.com/franky47/react-paris-25-demo',
+    href: 'https://github.com/franky47/nextjs-conf-25-demo',
     icon: <SiGithub className="size-5" />,
     label: 'Demo app'
   },
   {
-    href: 'https://nuqs.dev/react-paris-25-slides.pdf',
+    href: 'https://nuqs.dev/nextjs-conf-25-slides.pdf',
     icon: <Images className="size-5" />,
     label: 'Slides'
   },
@@ -87,13 +80,12 @@ export default function Page() {
   return (
     <section className="container max-w-lg py-12">
       <div className="flex items-center justify-center gap-12">
-        <Logo47ng className="size-16" />
-        <ReactParisLogo className="-mx-4 mb-4 size-24 translate-y-1.5" />
+        <NextJSConf2025Logo className="mb-8 w-48" />
       </div>
       <p className="mb-2 text-center">Thanks for attending my talk! 🫶</p>
       <p className="mb-8 text-center text-balance">
-        Here are some useful links to learn more about nuqs, and how to find me
-        on social media:
+        Here are some useful links to learn more about nuqs and to get in touch
+        with me:
       </p>
       <LinkTree items={links} />
     </section>
