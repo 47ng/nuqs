@@ -47,6 +47,7 @@ describe('push', () => {
 
   it('works in pages router', () => {
     cy.visit('/pages/push')
+    cy.contains('#hydration-marker', 'hydrated').should('be.hidden')
     cy.get('#server-side').should('have.text', '0')
     cy.get('#server').should('have.text', '0')
     cy.get('#client').should('have.text', '0')

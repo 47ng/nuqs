@@ -153,10 +153,15 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
       setInternalState(state)
     }
     queryRef.current = Object.fromEntries(
-      Object.values(resolvedUrlKeys).map(urlKey => [
-        urlKey,
-        initialSearchParams?.get(urlKey) ?? null
-      ])
+      Object.entries(resolvedUrlKeys).map(([key, urlKey]) => {
+        const parser = keyMap[key]
+        return [
+          urlKey,
+          parser?.type === 'multi'
+            ? initialSearchParams?.getAll(urlKey)
+            : (initialSearchParams?.get(urlKey) ?? null)
+        ]
+      })
     )
   }
 
@@ -182,43 +187,56 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
     }
   }, [
     Object.values(resolvedUrlKeys)
-      .map(key => `${key}=${initialSearchParams?.get(key)}`)
+      .map(key => `${key}=${initialSearchParams?.getAll(key)}`)
       .join('&'),
     JSON.stringify(queuedQueries)
   ])
 
   // Sync all hooks together & with external URL changes
   useEffect(() => {
-    function updateInternalState(state: V) {
-      debug('[nuq+ %s `%s`] updateInternalState %O', hookId, stateKeys, state)
-      stateRef.current = state
-      setInternalState(state)
-    }
     const handlers = Object.keys(keyMap).reduce(
       (handlers, stateKey) => {
         handlers[stateKey as keyof KeyMap] = ({
           state,
           query
         }: CrossHookSyncPayload) => {
-          const { defaultValue } = keyMap[stateKey]!
-          const urlKey = resolvedUrlKeys[stateKey]!
-          // Note: cannot mutate in-place, the object ref must change
-          // for the subsequent setState to pick it up.
-          stateRef.current = {
-            ...stateRef.current,
-            [stateKey as keyof KeyMap]: state ?? defaultValue ?? null
-          }
-          queryRef.current[urlKey] = query
-          debug(
-            '[nuq+ %s `%s`] Cross-hook key sync %s: %O (default: %O). Resolved: %O',
-            hookId,
-            stateKeys,
-            urlKey,
-            state,
-            defaultValue,
-            stateRef.current
-          )
-          updateInternalState(stateRef.current)
+          setInternalState(currentState => {
+            const { defaultValue } = keyMap[stateKey]!
+            const urlKey = resolvedUrlKeys[stateKey]!
+            const nextValue = state ?? defaultValue ?? null
+            const currentValue = currentState[stateKey] ?? defaultValue ?? null
+
+            if (Object.is(currentValue, nextValue)) {
+              debug(
+                '[nuq+ %s `%s`] Cross-hook key sync %s: %O (default: %O). no change, skipping, resolved: %O',
+                hookId,
+                stateKeys,
+                urlKey,
+                state,
+                defaultValue,
+                stateRef.current
+              )
+              // bail out by returning the current state
+              return currentState
+            }
+            // Note: cannot mutate in-place, the object ref must change
+            // for the subsequent setState to pick it up.
+            stateRef.current = {
+              ...stateRef.current,
+              [stateKey as keyof KeyMap]: nextValue
+            }
+            queryRef.current[urlKey] = query
+            debug(
+              '[nuq+ %s `%s`] Cross-hook key sync %s: %O (default: %O). updateInternalState, resolved: %O',
+              hookId,
+              stateKeys,
+              urlKey,
+              state,
+              defaultValue,
+              stateRef.current
+            )
+            return stateRef.current
+          })
         }
         return handlers
       },
