@@ -120,7 +120,7 @@ export default function App() {
 
 </details>
 
-<details><summary><img style="width:1em;height:1em;" src="https://reactrouter.com/_brand/React%20Router%20Brand%20Assets/React%20Router%20Logo/Dark.svg" /> React Router v6
+<details><summary><img width="1em" height="1em" style="width:1em;height:1em;" src="https://reactrouter.com/_brand/React%20Router%20Brand%20Assets/React%20Router%20Logo/Dark.svg" /> React Router v6
 </summary>
 
 > Supported React Router versions: `react-router-dom@^6`
@@ -148,7 +148,7 @@ export function ReactRouter() {
 
 </details>
 
-<details><summary><img style="width:1em;height:1em;" src="https://reactrouter.com/_brand/React%20Router%20Brand%20Assets/React%20Router%20Logo/Dark.svg" /> React Router v7
+<details><summary><img width="1em" height="1em" style="width:1em;height:1em;" src="https://reactrouter.com/_brand/React%20Router%20Brand%20Assets/React%20Router%20Logo/Dark.svg" /> React Router v7
 </summary>
 
 > Supported React Router versions: `react-router@^7`
