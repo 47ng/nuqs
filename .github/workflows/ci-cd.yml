@@ -138,26 +138,26 @@ jobs:
         next-version:
           # Only keep versions where there were relevant changes in the app router core,
           # and the previous one to use as a baseline.
-          - '14.2.0'
+          - "14.2.0"
           # - '14.2.3' # before vercel/next.js#66755
-          - '14.2.4' # after vercel/next.js#66755
+          - "14.2.4" # after vercel/next.js#66755
           # - '14.2.7' # before vercel/next.js#69509
-          - '14.2.8' # after vercel/next.js#69509
-          - '15.0.0'
-          - '15.1.0'
-          - '15.2.0'
+          - "14.2.8" # after vercel/next.js#69509
+          - "15.0.0"
+          - "15.1.0"
+          - "15.2.0"
           - latest
         include:
-          - next-version: '14.2.0'
-            base-path: '/base'
-          - next-version: '15.0.0'
-            base-path: '/base'
-          - next-version: 'latest'
-            base-path: '/base'
-          - next-version: 'latest'
+          - next-version: "14.2.0"
+            base-path: "/base"
+          - next-version: "15.0.0"
+            base-path: "/base"
+          - next-version: "latest"
+            base-path: "/base"
+          - next-version: "latest"
             react-compiler: true
-          - next-version: 'latest'
-            base-path: '/base'
+          - next-version: "latest"
+            base-path: "/base"
             react-compiler: true
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8
@@ -241,8 +241,8 @@ jobs:
       fail-fast: false
       matrix:
         react-router-version:
-          - 'v6'
-          - 'v7'
+          - "v6"
+          - "v7"
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8
       - uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda
@@ -401,12 +401,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
       - name: Invalidate ISR cache for NPM in the docs
-        # todo: Remove nuqs.47ng.com when the switch has been made
-        run: |
-          curl -s "https://nuqs.47ng.com/api/isr?tag=npm&token=${{ secrets.ISR_TOKEN }}"
-          curl -s "https://nuqs.dev/api/isr?tag=npm&token=${{ secrets.ISR_TOKEN }}"
+        run: curl -s "https://nuqs.dev/api/isr?tag=npm&token=${{ secrets.ISR_TOKEN }}"
       - name: Invalidate ISR cache for contributors in the docs
         if: ${{ github.ref_name == 'next' && github.event_name == 'push' }}
-        run: |
-          curl -s "https://nuqs.47ng.com/api/isr?tag=contributors&token=${{ secrets.ISR_TOKEN }}"
-          curl -s "https://nuqs.dev/api/isr?tag=contributors&token=${{ secrets.ISR_TOKEN }}"
+        run: curl -s "https://nuqs.dev/api/isr?tag=contributors&token=${{ secrets.ISR_TOKEN }}"
