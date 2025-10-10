@@ -33,7 +33,7 @@ export async function GitHubActionsStatus({
             <div
               aria-label={status.checkSuite.conclusion}
               className={cn(
-                'h-4 w-4 rounded-full border-2 border-background bg-current md:h-5 md:w-5',
+                'border-background h-4 w-4 rounded-full border-2 bg-current md:h-5 md:w-5',
                 color
               )}
             />
@@ -46,8 +46,8 @@ export async function GitHubActionsStatus({
 
 const ghaStatusSchema = z.object({
   id: z.string(),
-  url: z.string().url(),
-  createdAt: z.string().datetime(),
+  url: z.url(),
+  createdAt: z.iso.datetime(),
   checkSuite: z.object({
     status: z.enum(['QUEUED', 'IN_PROGRESS', 'COMPLETED']),
     conclusion: z.enum([
@@ -79,6 +79,7 @@ async function getGitHubActionsStatus() {
       }
     }
   }`.replace(/\s+/g, ' ') // Minify
+  let debugInfo: any = undefined
   try {
     const json = await fetch(`https://api.github.com/graphql?repo=47ng/nuqs`, {
       method: 'POST',
@@ -90,9 +91,10 @@ async function getGitHubActionsStatus() {
         tags: ['github-actions-status']
       }
     }).then(res => res.json())
+    debugInfo = json
     return z.array(ghaStatusSchema).parse(json.data.node.runs.nodes)
   } catch (error) {
-    console.error(error)
+    console.error(error, JSON.stringify(debugInfo))
     return []
   }
 }
