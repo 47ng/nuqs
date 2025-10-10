@@ -49,7 +49,7 @@
     "fumadocs-mdx": "^11.7.5",
     "fumadocs-ui": "^15.6.12",
     "lucide-react": "^0.540.0",
-    "next": "15.5.0",
+    "next": "16.0.0-beta.0",
     "nuqs": "workspace:*",
     "react": "catalog:react19",
     "react-dom": "catalog:react19",
