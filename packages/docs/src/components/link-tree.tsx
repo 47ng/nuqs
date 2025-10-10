@@ -1,4 +1,5 @@
 import { Button } from '@/src/components/ui/button'
+import { cn } from '@/src/lib/utils'
 import Link from 'next/link'
 import { ReactNode } from 'react'
 
@@ -6,16 +7,19 @@ export type LinkTreeItemProps = {
   href: string
   icon: ReactNode
   label: ReactNode
+  detail?: ReactNode
 }
 
-export function LinkTreeItem({ href, icon, label }: LinkTreeItemProps) {
+export function LinkTreeItem({ href, icon, label, detail }: LinkTreeItemProps) {
   const isLocalRoute = href.startsWith('/')
   return (
     <li>
       <Button
         asChild
         variant="outline"
-        className="flex w-full items-center justify-center gap-3 py-6 text-lg transition-all hover:scale-[1.01]"
+        className={cn(
+          'flex w-full items-center justify-start gap-3 py-6 text-base transition-all active:scale-[0.99]'
+        )}
       >
         <Link
           href={href}
@@ -23,7 +27,12 @@ export function LinkTreeItem({ href, icon, label }: LinkTreeItemProps) {
           rel={isLocalRoute ? undefined : 'noopener noreferrer'}
         >
           {icon}
-          <span>{label}</span>
+          <span className="justify-self-center">{label}</span>
+          {detail && (
+            <span className="text-muted-foreground ml-auto text-sm">
+              {detail}
+            </span>
+          )}
         </Link>
       </Button>
     </li>

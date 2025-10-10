@@ -1,7 +1,7 @@
 import { Banner } from 'fumadocs-ui/components/banner'
 import { PlayIcon } from 'lucide-react'
 import Link from 'next/link'
-import { Suspense } from 'react'
+import { type ComponentProps, Suspense } from 'react'
 import { Countdown } from '../components/countdown'
 import { ReactParisLogo } from '../components/react-paris'
 import { cn } from '../lib/utils'
@@ -175,10 +175,12 @@ export function NextJSConf2025SideBanner({
   )
 }
 
-const NextJSConf2025Logo = () => (
+export const NextJSConf2025Logo = ({
+  className = 'align-center mb-[1px] ml-0.25 inline-block h-[1em] w-auto'
+}: ComponentProps<'svg'>) => (
   <svg
     viewBox="0 0 144 28"
-    className="align-center mb-[1px] ml-0.25 inline-block h-[1em] w-auto"
+    className={className}
     fill="none"
     aria-label="Next.js Conf 25"
     xmlns="http://www.w3.org/2000/svg"
