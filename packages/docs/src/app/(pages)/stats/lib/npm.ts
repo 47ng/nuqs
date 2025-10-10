@@ -56,21 +56,33 @@ async function getLastNDays(pkg: string, n: number): Promise<Datum[]> {
       data.pop() // Remove last day if it's zero (stats not available yet)
     }
     return data
-  } catch (e) {
-    console.error(e)
+  } catch (cause) {
+    const error = new Error(`error: getLastNDays(${pkg}, ${n}) - url: ${url}`, {
+      cause
+    })
+    console.error(error)
     return []
   }
 }
 
+const packageResponseSchema = z.object({
+  time: z.object({
+    created: z.string()
+  })
+})
+
 async function getPackageCreationDate(pkg: string): Promise<dayjs.Dayjs> {
   const npmStatsEpoch = dayjs('2015-01-10')
+  const url = `https://registry.npmjs.org/${pkg}`
   try {
-    const res = await get<{ time: Record<string, string> }>(
-      `https://registry.npmjs.org/${pkg}`
+    const { time } = packageResponseSchema.parse(await get(url))
+    return dayjs.max(npmStatsEpoch, dayjs(time.created))
+  } catch (cause) {
+    const error = new Error(
+      `error: getPackageCreationDate(${pkg}) - url: ${url}, falling back to npm stats epoch`,
+      { cause }
     )
-    return dayjs.max(npmStatsEpoch, dayjs(res.time.created))
-  } catch (e) {
-    console.error(e)
+    console.error(error)
     return npmStatsEpoch
   }
 }
@@ -85,12 +97,15 @@ async function getAllTime(pkg: string): Promise<number> {
       'YYYY-MM-DD'
     )}:${end.format('YYYY-MM-DD')}/${pkg}`
     try {
-      const res = rangeResponseSchema.parse(await get<RangeResponse>(url))
+      const res = rangeResponseSchema.parse(await get(url))
       downloads += res.downloads.reduce((sum, d) => sum + d.downloads, 0)
       start = end
       end = start.add(18, 'month')
-    } catch (e) {
-      console.error(e)
+    } catch (cause) {
+      const error = new Error(`error: getAllTime(${pkg}) - url: ${url}`, {
+        cause
+      })
+      console.error(error)
       break
     }
   }
@@ -115,14 +130,14 @@ export async function fetchNpmPackage(
   }
 }
 
-async function get<T = any>(url: string) {
+async function get(url: string): Promise<unknown> {
   const res = await fetch(url, {
     next: {
       revalidate: 86_400,
       tags: ['npm']
     }
   })
-  return (await res.json()) as T
+  return res.json()
 }
 
 function groupByWeek(data: Datum[]): Datum[] {
