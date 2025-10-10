@@ -135,7 +135,8 @@
     "test": "pnpm run --stream '/^test:/'",
     "test:unit": "vitest run --typecheck",
     "test:size": "size-limit",
-    "prepack": "./scripts/prepack.sh"
+    "prepack": "./scripts/prepack.sh",
+    "knip": "knip"
   },
   "dependencies": {
     "@standard-schema/spec": "1.0.0"
@@ -175,11 +176,11 @@
     "@types/node": "^24.3.0",
     "@types/react": "catalog:react19",
     "@types/react-dom": "catalog:react19",
-    "@vitejs/plugin-react": "^5.0.1",
     "@vitest/coverage-v8": "^3.2.4",
     "arktype": "^2.1.20",
     "fast-check": "^4.2.0",
     "jsdom": "^26.1.0",
+    "knip": "^5.64.1",
     "next": "15.5.0",
     "react": "catalog:react19",
     "react-dom": "catalog:react19",
