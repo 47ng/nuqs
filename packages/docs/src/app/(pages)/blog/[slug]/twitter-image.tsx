@@ -1,3 +1,5 @@
 import Image from './opengraph-image'
 export default Image
-export { contentType, dynamic, size } from './opengraph-image'
+export { contentType, size } from './opengraph-image'
+
+export const dynamic = 'force-static'
