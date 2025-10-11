@@ -17,7 +17,8 @@
     "pretest": "cypress install",
     "test": "start-server-and-test start http://localhost:3001${BASE_PATH} cypress:run",
     "cypress:open": "cypress open --e2e --browser electron",
-    "cypress:run": "cypress run --headless"
+    "cypress:run": "cypress run --headless",
+    "postinstall": "node ./scripts/postinstall.ts"
   },
   "dependencies": {
     "next": "16.0.0-beta.0",
@@ -29,11 +30,13 @@
     "@types/node": "^24.3.0",
     "@types/react": "catalog:react19",
     "@types/react-dom": "catalog:react19",
+    "@types/semver": "^7.7.1",
     "@types/webpack": "^5.28.5",
     "babel-plugin-react-compiler": "1.0.0",
     "cypress": "catalog:e2e",
     "cypress-terminal-report": "^7.2.1",
     "e2e-shared": "workspace:*",
+    "semver": "^7.7.3",
     "start-server-and-test": "catalog:e2e",
     "typescript": "^5.9.2"
   }
