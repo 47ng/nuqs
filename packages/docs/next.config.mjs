@@ -21,7 +21,7 @@ const config = {
   },
   reactStrictMode: true,
   turbopack: {
-    debugIds: true // For Sentry
+    debugIds: enableSourceMaps // For Sentry
   },
   productionBrowserSourceMaps: enableSourceMaps,
   redirects: async () => {
@@ -89,7 +89,7 @@ const sentryConfig = {
   },
 
   // Upload a larger set of source maps for prettier stack traces (increases build time)
-  widenClientFileUpload: false,
+  widenClientFileUpload: true,
 
   // Routes browser requests to Sentry through a Next.js rewrite to circumvent ad-blockers. (increases server load)
   // Note: Check that the configured route will not match with your Next.js middleware, otherwise reporting of client-
