@@ -77,23 +77,13 @@ const sentryConfig = {
   // For all available options, see:
   // https://github.com/getsentry/sentry-webpack-plugin#options
 
-  // Suppresses source map uploading logs during build
-  silent: true,
+  silent: false,
   org: process.env.SENTRY_ORG,
   project: process.env.SENTRY_PROJECT,
   authToken: process.env.SENTRY_AUTH_TOKEN,
   sourcemaps: {
-    disable: !enableSourceMaps,
-    deleteSourcemapsAfterUpload: true
-  }
-}
-
-/**
- * @type {import('@sentry/nextjs').SentryBuildOptions}
- */
-const sentryOptions = {
-  // For all available options, see:
-  // https://docs.sentry.io/platforms/javascript/guides/nextjs/manual-setup/
+    disable: !enableSourceMaps
+  },
 
   // Upload a larger set of source maps for prettier stack traces (increases build time)
   widenClientFileUpload: false,
@@ -103,19 +93,16 @@ const sentryOptions = {
   // side errors will fail.
   // tunnelRoute: '/sentry',
 
-  hideSourceMaps: false,
-
   // Automatically tree-shake Sentry logger statements to reduce bundle size
-  disableLogger: true,
+  // disableLogger: true,
 
   // Enables automatic instrumentation of Vercel Cron Monitors.
   // See the following for more information:
   // https://docs.sentry.io/product/crons/
   // https://vercel.com/docs/cron-jobs
-  automaticVercelMonitors: true
+  automaticVercelMonitors: true,
+
+  debug: true
 }
 
-export default withSentryConfig(withFumadocsMDX(config), {
-  ...sentryConfig,
-  ...sentryOptions
-})
+export default withSentryConfig(withFumadocsMDX(config), sentryConfig)
