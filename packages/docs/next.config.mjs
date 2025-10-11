@@ -20,6 +20,9 @@ const config = {
     ]
   },
   reactStrictMode: true,
+  turbopack: {
+    debugIds: true // For Sentry
+  },
   productionBrowserSourceMaps: enableSourceMaps,
   redirects: async () => {
     return [
