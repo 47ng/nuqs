@@ -5,6 +5,10 @@ import { createMDX } from 'fumadocs-mdx/next'
 
 const withFumadocsMDX = createMDX()
 
+const enableSourceMaps = ['production', 'preview'].includes(
+  process.env.VERCEL_ENV ?? ''
+)
+
 /** @type {import('next').NextConfig} */
 const config = {
   outputFileTracingIncludes: {
@@ -16,6 +20,7 @@ const config = {
     ]
   },
   reactStrictMode: true,
+  productionBrowserSourceMaps: enableSourceMaps,
   redirects: async () => {
     return [
       {
@@ -65,6 +70,9 @@ const config = {
   }
 }
 
+/**
+ * @type {import('@sentry/nextjs').SentryBuildOptions}
+ */
 const sentryConfig = {
   // For all available options, see:
   // https://github.com/getsentry/sentry-webpack-plugin#options
@@ -73,9 +81,16 @@ const sentryConfig = {
   silent: true,
   org: process.env.SENTRY_ORG,
   project: process.env.SENTRY_PROJECT,
-  authToken: process.env.SENTRY_AUTH_TOKEN
+  authToken: process.env.SENTRY_AUTH_TOKEN,
+  sourcemaps: {
+    disable: !enableSourceMaps,
+    deleteSourcemapsAfterUpload: true
+  }
 }
 
+/**
+ * @type {import('@sentry/nextjs').SentryBuildOptions}
+ */
 const sentryOptions = {
   // For all available options, see:
   // https://docs.sentry.io/platforms/javascript/guides/nextjs/manual-setup/
