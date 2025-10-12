@@ -8,6 +8,9 @@ import pkgJson from '../package.json' with { type: 'json' }
 
 // For testing against pre-16 versions of Next.js
 async function renameProxyIntoMiddleware() {
+  console.dir({
+    pkgVersion: pkgJson.dependencies.next
+  })
   if (semver.gte(pkgJson.dependencies.next, '16.0.0-beta.0')) {
     return // No need to rename, use proxy.ts
   }
