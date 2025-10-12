@@ -5,9 +5,10 @@ import { createMDX } from 'fumadocs-mdx/next'
 
 const withFumadocsMDX = createMDX()
 
-const enableSourceMaps = ['production', 'preview'].includes(
-  process.env.VERCEL_ENV ?? ''
-)
+const enableSentry =
+  Boolean(process.env.NEXT_PUBLIC_SENTRY_DSN) &&
+  Boolean(process.env.SENTRY_AUTH_TOKEN) &&
+  ['production', 'preview'].includes(process.env.VERCEL_ENV ?? '')
 
 /** @type {import('next').NextConfig} */
 const config = {
@@ -21,9 +22,9 @@ const config = {
   },
   reactStrictMode: true,
   turbopack: {
-    debugIds: enableSourceMaps // For Sentry
+    debugIds: enableSentry
   },
-  productionBrowserSourceMaps: enableSourceMaps,
+  productionBrowserSourceMaps: enableSentry,
   redirects: async () => {
     return [
       {
@@ -84,9 +85,6 @@ const sentryConfig = {
   org: process.env.SENTRY_ORG,
   project: process.env.SENTRY_PROJECT,
   authToken: process.env.SENTRY_AUTH_TOKEN,
-  sourcemaps: {
-    disable: !enableSourceMaps
-  },
 
   // Upload a larger set of source maps for prettier stack traces (increases build time)
   widenClientFileUpload: true,
@@ -108,4 +106,6 @@ const sentryConfig = {
   debug: true
 }
 
-export default withSentryConfig(withFumadocsMDX(config), sentryConfig)
+export default enableSentry
+  ? withSentryConfig(withFumadocsMDX(config), sentryConfig)
+  : withFumadocsMDX(config)
