@@ -17,8 +17,7 @@
     "pretest": "cypress install",
     "test": "start-server-and-test start http://localhost:3001${BASE_PATH} cypress:run",
     "cypress:open": "cypress open --e2e --browser electron",
-    "cypress:run": "cypress run --headless",
-    "postinstall": "node ./scripts/postinstall.ts"
+    "cypress:run": "cypress run --headless"
   },
   "dependencies": {
     "next": "16.0.0-beta.0",
