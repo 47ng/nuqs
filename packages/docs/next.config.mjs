@@ -19,8 +19,22 @@ const config = {
   async rewrites() {
 		return [
 			{
-				source: "/docs/:path*.md(x)?",
-				destination: "/docs/llms.mdx/:path*",
+				source: "/docs/:path*",
+				has: [
+					{
+						type: "header",
+						key: "accept",
+						value: ".*text/(markdown|plain).*",
+					},
+				],
+				missing: [
+					{
+						type: "header", 
+						key: "accept",
+						value: ".*text/html.*",
+					},
+				],
+				destination: "/llms/docs/:path*",
 			},
 		];
 	},
