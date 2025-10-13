@@ -75,6 +75,12 @@ export class ThrottledQueue {
     return this.updateMap.get(key)
   }
 
+  getPendingPromise({
+    getSearchParamsSnapshot = getSearchParamsSnapshotFromLocation
+  }: UpdateQueueAdapterContext): Promise<URLSearchParams> {
+    return this.resolvers?.promise ?? Promise.resolve(getSearchParamsSnapshot())
+  }
+
   flush(
     {
       getSearchParamsSnapshot = getSearchParamsSnapshotFromLocation,
