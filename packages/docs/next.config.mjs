@@ -16,6 +16,14 @@ const config = {
     ]
   },
   reactStrictMode: true,
+  async rewrites() {
+		return [
+			{
+				source: "/docs/:path*.md(x)?",
+				destination: "/docs/llms.mdx/:path*",
+			},
+		];
+	},
   redirects: async () => {
     return [
       {
