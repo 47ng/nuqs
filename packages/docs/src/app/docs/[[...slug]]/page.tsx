@@ -10,6 +10,7 @@ import {
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { stat } from 'node:fs/promises'
+import { LLMCopyButton, ViewOptions } from '@/src/components/page-actions'
 
 type PageProps = {
   params: Promise<{ slug?: string[] }>
@@ -28,7 +29,16 @@ export default async function Page(props: PageProps) {
   return (
     <DocsPage toc={page.data.toc}>
       <DocsTitle>{page.data.title}</DocsTitle>
-      <DocsDescription>{page.data.description}</DocsDescription>
+      <DocsDescription>{page.data.description}
+        <div className="flex flex-row gap-2 items-center border-b pt-2 pb-6">
+          <LLMCopyButton markdownUrl={`${page.url}.mdx`} />
+          <ViewOptions
+            markdownUrl={`${page.url}.mdx`}
+            githubUrl={`https://github.com/47ng/nuqs/blob/dev/packages/docs/content/docs/${page.path}`}
+          />
+        </div>
+      </DocsDescription>
+
       <DocsBody>
         <MDX components={useMDXComponents()} />
       </DocsBody>
