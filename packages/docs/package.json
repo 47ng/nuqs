@@ -47,7 +47,7 @@
     "effect": "^3.17.8",
     "fumadocs-core": "^15.8.5",
     "fumadocs-mdx": "^12.0.3",
-    "fumadocs-ui": "^15.6.12",
+    "fumadocs-ui": "^15.8.5",
     "lucide-react": "^0.540.0",
     "next": "15.5.0",
     "nuqs": "workspace:*",
