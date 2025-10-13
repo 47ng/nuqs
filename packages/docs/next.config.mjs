@@ -36,6 +36,10 @@ const config = {
 				],
 				destination: "/llms/docs/:path*",
 			},
+      {
+        source: "/docs/:path*.md(x)?",
+        destination: "/llms/docs/:path*",
+      }
 		];
 	},
   redirects: async () => {
