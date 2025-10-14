@@ -1,10 +1,11 @@
 import { act, render, renderHook, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { setTimeout as wait } from 'node:timers/promises'
 import React, {
   createElement,
+  useEffect,
   useState,
-  type ReactNode,
-  useEffect
+  type ReactNode
 } from 'react'
 import { describe, expect, it, vi } from 'vitest'
 import {
@@ -16,7 +17,7 @@ import {
   withNuqsTestingAdapter,
   type OnUrlUpdateFunction
 } from './adapters/testing'
-import { debounce } from './lib/queues/rate-limiting'
+import { debounce, throttle } from './lib/queues/rate-limiting'
 import {
   parseAsArrayOf,
   parseAsInteger,
@@ -26,6 +27,8 @@ import {
 } from './parsers'
 import { useQueryState } from './useQueryState'
 import { useQueryStates } from './useQueryStates'
+
+const waitForNextTick = () => wait(0)
 
 describe('useQueryStates', () => {
   it('allows setting a single value', async () => {
@@ -766,6 +769,59 @@ describe('useQueryStates: update sequencing', () => {
     expect(onUrlUpdate).toHaveBeenCalledTimes(2)
     expect(onUrlUpdate.mock.calls[0]![0].queryString).toEqual('?b=pass')
     expect(onUrlUpdate.mock.calls[1]![0].queryString).toEqual('?a=debounced')
+  })
+
+  it('does flush when pushing throttled updates', async () => {
+    const onUrlUpdate = vi.fn<OnUrlUpdateFunction>()
+    const { result } = renderHook(
+      () =>
+        useQueryStates({
+          test: parseAsString
+        }),
+      {
+        wrapper: withNuqsTestingAdapter({
+          onUrlUpdate
+        })
+      }
+    )
+    let p: Promise<URLSearchParams> | undefined = undefined
+    await act(async () => {
+      p = result.current[1](
+        { test: 'pass' },
+        { limitUrlUpdates: throttle(100) }
+      )
+      await waitForNextTick()
+    })
+    expect(onUrlUpdate).toHaveBeenCalledOnce()
+    expect(onUrlUpdate.mock.calls[0]![0].queryString).toEqual('?test=pass')
+    await expect(p).resolves.toEqual(new URLSearchParams('?test=pass'))
+  })
+
+  it('does not flush when pushing debounced updates', async () => {
+    const onUrlUpdate = vi.fn<OnUrlUpdateFunction>()
+    const { result } = renderHook(
+      () =>
+        useQueryStates({
+          test: parseAsString
+        }),
+      {
+        wrapper: withNuqsTestingAdapter({
+          onUrlUpdate
+        })
+      }
+    )
+    let p: Promise<URLSearchParams> | undefined = undefined
+    await act(async () => {
+      p = result.current[1](
+        { test: 'pass' },
+        { limitUrlUpdates: debounce(100) }
+      )
+      await waitForNextTick()
+    })
+    expect(onUrlUpdate).not.toHaveBeenCalled()
+    await expect(p).resolves.toEqual(new URLSearchParams('?test=pass'))
+    expect(onUrlUpdate).toHaveBeenCalledOnce()
+    expect(onUrlUpdate.mock.calls[0]![0].queryString).toEqual('?test=pass')
   })
 })
 
