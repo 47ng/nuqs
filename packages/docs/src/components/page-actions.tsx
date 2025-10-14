@@ -7,7 +7,7 @@ import {
   ExternalLinkIcon,
   MessageCircleIcon,
 } from 'lucide-react';
-import { cn } from '../lib/cn';
+import { cn } from '@/src/lib/utils';
 import { useCopyButton } from 'fumadocs-ui/utils/use-copy-button';
 import { buttonVariants } from './ui/button';
 import {
