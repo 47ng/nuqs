@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/src/lib/utils';
 import { useCopyButton } from 'fumadocs-ui/utils/use-copy-button';
+import { createSerializer, parseAsString } from 'nuqs';
 import { buttonVariants } from './ui/button';
 import {
   Popover,
@@ -18,6 +19,11 @@ import {
 import { cva } from 'class-variance-authority';
 
 const cache = new Map<string, string>();
+
+const chatGptSerializer = createSerializer({
+  hints: parseAsString,
+  q: parseAsString,
+});
 
 export function LLMCopyButton({
   /**
@@ -170,7 +176,7 @@ export function ViewOptions({
       },
       {
         title: 'Open in ChatGPT',
-        href: `https://chatgpt.com/?${new URLSearchParams({
+        href: `https://chatgpt.com${chatGptSerializer({
           hints: 'search',
           q,
         })}`,
