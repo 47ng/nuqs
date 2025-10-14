@@ -25,6 +25,27 @@ const chatGptSerializer = createSerializer({
   q: parseAsString,
 });
 
+export function PageActionsSkeleton() {
+  return (
+    <div className="flex flex-row gap-2 items-center">
+      <div 
+        className={buttonVariants({
+          variant: 'secondary',
+          size: 'sm',
+          className: 'gap-2 animate-pulse w-36'
+        })}
+      />
+      <div 
+        className={buttonVariants({
+          variant: 'secondary', 
+          size: 'sm',
+          className: 'gap-2 animate-pulse w-20'
+        })}
+      />
+    </div>
+  )
+}
+
 export function LLMCopyButton({
   /**
    * A URL to fetch the raw Markdown/MDX content of page

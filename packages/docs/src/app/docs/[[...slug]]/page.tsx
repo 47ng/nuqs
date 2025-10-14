@@ -9,34 +9,12 @@ import {
 } from 'fumadocs-ui/page'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
-import { lazy, Suspense } from 'react'
+import { Suspense } from 'react'
 import { stat } from 'node:fs/promises'
-import { LLMCopyButton, ViewOptions } from '@/src/components/page-actions'
-import { buttonVariants } from '@/src/components/ui/button'
+import { LLMCopyButton, PageActionsSkeleton, ViewOptions } from '@/src/components/page-actions'
 
 type PageProps = {
   params: Promise<{ slug?: string[] }>
-}
-
-function PageActionsSkeleton() {
-  return (
-    <div className="flex flex-row gap-2 items-center">
-      <div 
-        className={buttonVariants({
-          variant: 'secondary',
-          size: 'sm',
-          className: 'gap-2 animate-pulse w-36'
-        })}
-      />
-      <div 
-        className={buttonVariants({
-          variant: 'secondary', 
-          size: 'sm',
-          className: 'gap-2 animate-pulse w-20'
-        })}
-      />
-    </div>
-  )
 }
 
 export default async function Page(props: PageProps) {
