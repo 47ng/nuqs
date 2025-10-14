@@ -357,7 +357,8 @@ describe('useQueryState: update sequencing', () => {
     const onUrlUpdate = vi.fn<OnUrlUpdateFunction>()
     const { result } = renderHook(() => useQueryState('test'), {
       wrapper: withNuqsTestingAdapter({
-        onUrlUpdate
+        onUrlUpdate,
+        autoResetQueueOnUpdate: false
       })
     })
     let p: Promise<URLSearchParams> | undefined = undefined
@@ -374,9 +375,17 @@ describe('useQueryState: update sequencing', () => {
     const onUrlUpdate = vi.fn<OnUrlUpdateFunction>()
     const { result } = renderHook(() => useQueryState('test'), {
       wrapper: withNuqsTestingAdapter({
-        onUrlUpdate
+        onUrlUpdate,
+        autoResetQueueOnUpdate: false
       })
     })
+    // Flush a first time without resetting the queue to keep pending items
+    // in the global throttle queue.
+    await act(() => result.current[1]('init'))
+    expect(onUrlUpdate).toHaveBeenCalledOnce()
+    expect(onUrlUpdate.mock.calls[0]![0].queryString).toEqual('?test=init')
+    onUrlUpdate.mockClear()
+    // Now push a debounced update, which should not flush immediately
     let p: Promise<URLSearchParams> | undefined = undefined
     await act(async () => {
       p = result.current[1]('pass', { limitUrlUpdates: debounce(100) })

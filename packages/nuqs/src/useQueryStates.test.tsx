@@ -774,13 +774,11 @@ describe('useQueryStates: update sequencing', () => {
   it('does flush when pushing throttled updates', async () => {
     const onUrlUpdate = vi.fn<OnUrlUpdateFunction>()
     const { result } = renderHook(
-      () =>
-        useQueryStates({
-          test: parseAsString
-        }),
+      () => useQueryStates({ test: parseAsString }),
       {
         wrapper: withNuqsTestingAdapter({
-          onUrlUpdate
+          onUrlUpdate,
+          autoResetQueueOnUpdate: false
         })
       }
     )
@@ -800,16 +798,21 @@ describe('useQueryStates: update sequencing', () => {
   it('does not flush when pushing debounced updates', async () => {
     const onUrlUpdate = vi.fn<OnUrlUpdateFunction>()
     const { result } = renderHook(
-      () =>
-        useQueryStates({
-          test: parseAsString
-        }),
+      () => useQueryStates({ test: parseAsString }),
       {
         wrapper: withNuqsTestingAdapter({
-          onUrlUpdate
+          onUrlUpdate,
+          autoResetQueueOnUpdate: false
         })
       }
     )
+    // Flush a first time without resetting the queue to keep pending items
+    // in the global throttle queue.
+    await act(() => result.current[1]({ test: 'init' }))
+    expect(onUrlUpdate).toHaveBeenCalledOnce()
+    expect(onUrlUpdate.mock.calls[0]![0].queryString).toEqual('?test=init')
+    onUrlUpdate.mockClear()
+    // Now push a debounced update, which should not flush immediately
     let p: Promise<URLSearchParams> | undefined = undefined
     await act(async () => {
       p = result.current[1](
