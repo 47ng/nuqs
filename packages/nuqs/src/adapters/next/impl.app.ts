@@ -61,7 +61,7 @@ export function NavigationSpy() {
 
 export function useNuqsNextAppRouterAdapter(): AdapterInterface {
   const router = useRouter()
-  const searchParams = useSearchParams()
+  const searchParams = useSearchParams() ?? new URLSearchParams()
   const [optimisticSearchParams, setOptimisticSearchParams] =
     useOptimistic<URLSearchParams>(searchParams)
   const updateUrl: UpdateUrlFunction = useCallback((search, options) => {
