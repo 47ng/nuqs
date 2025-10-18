@@ -7,7 +7,6 @@ import {
 import type { Nullable, Options, UrlKeys } from './defs'
 import { compareQuery } from './lib/compare'
 import { debug } from './lib/debug'
-import { error } from './lib/errors'
 import { debounceController } from './lib/queues/debounce'
 import { defaultRateLimit } from './lib/queues/rate-limiting'
 import {
@@ -323,9 +322,6 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
           limitUrlUpdates?.method === 'debounce' ||
           parser.limitUrlUpdates?.method === 'debounce'
         ) {
-          if (update.options.shallow === true) {
-            console.warn(error(422))
-          }
           const timeMs =
             callOptions?.limitUrlUpdates?.timeMs ??
             limitUrlUpdates?.timeMs ??
