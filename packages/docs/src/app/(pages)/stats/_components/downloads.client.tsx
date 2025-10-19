@@ -8,17 +8,10 @@ import {
   ChartTooltipContent
 } from '@/src/components/ui/chart'
 import type { ReactNode } from 'react'
-import {
-  CartesianGrid,
-  Customized,
-  Line,
-  LineChart,
-  XAxis,
-  YAxis
-} from 'recharts'
+import { CartesianGrid, Line, LineChart, XAxis, YAxis } from 'recharts'
 import { formatDate, formatStatNumber } from '../lib/format'
 import type { Datum, MultiDatum } from '../lib/npm'
-import { useDynamicDasharray } from './partial-line-chart'
+import { PartialLine } from './partial-line'
 import { Widget, WidgetProps } from './widget'
 
 type DownloadsGraphProps = WidgetProps & {
@@ -33,9 +26,6 @@ export function DownloadsGraph({
   trend,
   ...props
 }: DownloadsGraphProps) {
-  const [DasharrayCalculator, lineDashArrays] = useDynamicDasharray({
-    splitIndex: data.length - 2
-  })
   return (
     <Widget {...props}>
       <ChartContainer
@@ -93,20 +83,17 @@ export function DownloadsGraph({
             isAnimationActive={false}
             position={{ y: 20 }}
           />
-          <Line
+          <PartialLine
+            partialLast={partialLast}
+            data={(data as MultiDatum[]).map(d => d.nuqs)}
             dataKey="nuqs"
+            padding={{ left: 20, right: 20 }}
             isAnimationActive={false}
             type="monotone"
             stroke="var(--color-red-500)"
             className="stroke-red-500 dark:stroke-red-400"
             dot={false}
             strokeWidth={2}
-            strokeDasharray={
-              partialLast
-                ? lineDashArrays.find(line => line.name === 'nuqs')
-                    ?.strokeDasharray || '0 0'
-                : '0 0'
-            }
           />
           <Line
             dataKey="next-usequerystate"
@@ -116,15 +103,7 @@ export function DownloadsGraph({
             strokeOpacity={0.5}
             dot={false}
             strokeWidth={2}
-            strokeDasharray={
-              partialLast
-                ? lineDashArrays.find(
-                    line => line.name === 'next-usequerystate'
-                  )?.strokeDasharray || '0 0'
-                : '0 0'
-            }
           />
-          <Customized component={DasharrayCalculator} />
         </LineChart>
       </ChartContainer>
     </Widget>
