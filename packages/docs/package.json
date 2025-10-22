@@ -15,7 +15,9 @@
   },
   "scripts": {
     "dev": "next dev --turbo",
-    "build": "next build",
+    "build": "pnpm run build:registry && pnpm run build:next",
+    "build:next": "next build",
+    "build:registry": "shadcn build --output ./public",
     "start": "next start",
     "postinstall": "fumadocs-mdx",
     "test": "tsc"
@@ -73,6 +75,7 @@
     "postcss": "^8.5.6",
     "prettier-plugin-tailwindcss": "^0.6.14",
     "require-in-the-middle": "^7.5.2",
+    "shadcn": "^3.4.2",
     "shiki": "^3.11.0",
     "typescript": "^5.9.2"
   },
