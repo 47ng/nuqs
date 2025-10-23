@@ -6,7 +6,7 @@ import {
   SiX,
   SiYoutube
 } from '@icons-pack/react-simple-icons'
-import { Heart, Images, Library, Linkedin, Mail } from 'lucide-react'
+import { Heart, Images, Library, Linkedin } from 'lucide-react'
 import { NextJSConf2025Logo } from '../../banners'
 
 const links: LinkTreeItemProps[] = [
@@ -68,11 +68,6 @@ const links: LinkTreeItemProps[] = [
     href: 'https://www.linkedin.com/in/francoisbest/',
     icon: <Linkedin className="size-5 text-[#0077B5]" />,
     label: 'LinkedIn'
-  },
-  {
-    href: 'mailto:nuqs@47ng.com',
-    icon: <Mail className="size-5" />,
-    label: 'Contact me'
   }
 ]
 

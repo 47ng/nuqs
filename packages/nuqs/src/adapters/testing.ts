@@ -20,7 +20,7 @@ export type UrlUpdateEvent = {
 
 export type OnUrlUpdateFunction = (event: UrlUpdateEvent) => void
 
-type TestingAdapterProps = {
+type TestingAdapterProps = Pick<AdapterInterface, 'autoResetQueueOnUpdate'> & {
   /**
    * An initial value for the search params.
    */
@@ -79,6 +79,7 @@ function renderInitialSearchParams(
 
 export function NuqsTestingAdapter({
   resetUrlUpdateQueueOnMount = true,
+  autoResetQueueOnUpdate = true,
   defaultOptions,
   processUrlSearchParams,
   rateLimitFactor = 0,
@@ -129,7 +130,8 @@ export function NuqsTestingAdapter({
     searchParams,
     updateUrl,
     getSearchParamsSnapshot,
-    rateLimitFactor
+    rateLimitFactor,
+    autoResetQueueOnUpdate
   })
   return createElement(
     context.Provider,
