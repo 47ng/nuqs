@@ -2,7 +2,6 @@ import { source } from '@/src/app/source'
 import { getSharedLayoutProps } from '@/src/components/shared-layout'
 import { DocsLayout } from 'fumadocs-ui/layouts/notebook'
 import { Suspense, type ReactNode } from 'react'
-import { NextJSConf2025SideBanner } from '../banners'
 
 export default function RootDocsLayout({ children }: { children: ReactNode }) {
   const shared = getSharedLayoutProps()
@@ -14,7 +13,7 @@ export default function RootDocsLayout({ children }: { children: ReactNode }) {
       nav={{ ...shared.nav, mode: 'top' }}
       sidebar={{
         collapsible: false,
-        banner: <NextJSConf2025SideBanner />,
+        // banner: // note: side banner goes here
         footer: (
           <Suspense>
             <SidebarFooter />
