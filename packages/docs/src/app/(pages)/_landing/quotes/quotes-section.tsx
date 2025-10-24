@@ -168,12 +168,22 @@ export function QuotesSection() {
       <Quote
         author={{
           name: 'Dominik Koch',
-          handle: '@DominikDoesDev',
+          handle: '@dominikdoesdev',
           avatar:
             'https://pbs.twimg.com/profile_images/1933961142457581568/i2Y0u0lV_400x400.jpg'
         }}
         text="i love nuqs"
         url="https://x.com/DominikDoesDev/status/1973696846079135968"
+      />
+      <Quote
+        author={{
+          name: 'Josh tried coding',
+          handle: '@joshtriedcoding',
+          avatar:
+            'https://pbs.twimg.com/profile_images/1899476552464646146/Vooiz1-9_400x400.jpg'
+        }}
+        text="nuqs is one of my favorite pieces of software recently. don't mean to glaze but man, it's a type-safe, way better version of react state"
+        url="https://x.com/joshtriedcoding/status/1981561126254235959"
       />
       <Quote
         author={{
@@ -184,6 +194,73 @@ export function QuotesSection() {
         }}
         text="Just did first custom parser today, pretty simple .. great API design 👌"
         url="https://x.com/pavelsvitek_/status/1976329834981925328"
+      />
+      <Quote
+        author={{
+          name: 'OrcDev',
+          handle: '@theorcdev',
+          avatar:
+            'https://pbs.twimg.com/profile_images/1756766826736893952/6Gvg6jha_400x400.jpg'
+        }}
+        text={
+          <>
+            <p>Keep it up guys! You're doing a great job!</p>
+            <p>
+              I'm using nuqs on real projects in production already, it's
+              amazing how easy it is to control URL params.
+            </p>
+          </>
+        }
+        url="https://x.com/theorcdev/status/1849368178717290945"
+      />
+      <Quote
+        author={{
+          name: 'Brandon McConnell',
+          handle: '@branmcconnell',
+          avatar:
+            'https://pbs.twimg.com/profile_images/1980738441986859008/Cby9Dgd2_400x400.jpg'
+        }}
+        text={
+          <>
+            <p>
+              nuqs is the perfect solution to the epidemically annoying problem
+              of query param state management
+            </p>
+
+            <p>I wish I had this 10 years ago</p>
+          </>
+        }
+        url="https://x.com/branmcconnell/status/1976717520653459678"
+      />
+      <Quote
+        author={{
+          name: 'Iza',
+          handle: '@izadoesdev',
+          avatar:
+            'https://pbs.twimg.com/profile_images/1964947126711889920/rE54SBtj_400x400.jpg'
+        }}
+        text="goated library"
+        url="https://x.com/izadoesdev/status/1977276660090388523"
+      />
+      <Quote
+        author={{
+          name: 'Code With Antonio',
+          handle: '@YTCodeAntonio',
+          avatar:
+            'https://pbs.twimg.com/profile_images/1677359164580929544/jngFF04Y_400x400.jpg'
+        }}
+        text="i am so happy every time i get to use nuqs!"
+        url="https://x.com/YTCodeAntonio/status/1978044756157481313"
+      />
+      <Quote
+        author={{
+          name: 'arth',
+          handle: '@arthy',
+          avatar:
+            'https://pbs.twimg.com/profile_images/1973415460675739648/1Zc7d1Ll_400x400.jpg'
+        }}
+        text="also, nuqs is amazing"
+        url="https://x.com/arthty/status/1980237430256234768"
       />
     </section>
   )
