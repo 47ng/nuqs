@@ -4,7 +4,7 @@ export const config = {
   matcher: ['/app/multitenant', '/pages/multitenant']
 }
 
-export default async function middleware(req: NextRequest) {
+export default async function proxy(req: NextRequest) {
   // https://media1.tenor.com/m/YrcMb6KRczsAAAAC/doctor-who-dr-who.gif
   const tenant = 'david'
   const pathname = req.nextUrl.pathname

@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/nextjs'
 import { RootProvider } from 'fumadocs-ui/provider'
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
@@ -25,7 +26,10 @@ export const metadata = {
       name: 'François Best',
       url: 'https://francoisbest.com'
     }
-  ]
+  ],
+  other: {
+    ...Sentry.getTraceData()
+  }
 } satisfies Metadata
 
 export default function Layout({ children }: { children: ReactNode }) {

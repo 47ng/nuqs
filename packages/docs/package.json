@@ -14,7 +14,7 @@
     "directory": "packages/docs"
   },
   "scripts": {
-    "dev": "next dev --turbo",
+    "dev": "next dev",
     "build": "pnpm run build:registry && pnpm run build:next",
     "build:next": "next build",
     "build:registry": "shadcn build --output ./public",
@@ -40,7 +40,7 @@
     "@radix-ui/react-toggle": "^1.1.10",
     "@radix-ui/react-toggle-group": "^1.1.11",
     "@radix-ui/react-tooltip": "^1.2.8",
-    "@sentry/nextjs": "^8.55.0",
+    "@sentry/nextjs": "^10.20.0",
     "@tailwindcss/container-queries": "^0.1.1",
     "@tailwindcss/postcss": "^4.1.12",
     "class-variance-authority": "^0.7.1",
@@ -51,7 +51,7 @@
     "fumadocs-mdx": "^11.7.5",
     "fumadocs-ui": "^15.6.12",
     "lucide-react": "^0.540.0",
-    "next": "15.5.0",
+    "next": "16.0.0",
     "nuqs": "workspace:*",
     "react": "catalog:react19",
     "react-dom": "catalog:react19",

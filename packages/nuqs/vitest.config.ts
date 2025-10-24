@@ -5,6 +5,10 @@ const config: ViteUserConfig = defineConfig({
     environment: 'jsdom',
     setupFiles: ['vitest.setup.ts'],
     include: ['**/*.test.?(c|m)[jt]s?(x)'],
+    coverage: {
+      include: ['src/**/*.{ts,tsx}'],
+      exclude: ['src/adapters/**'] // Covered by e2e tests
+    },
     env: {
       IS_REACT_ACT_ENVIRONMENT: 'true'
     },
