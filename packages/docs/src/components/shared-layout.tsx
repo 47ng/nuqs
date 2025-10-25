@@ -20,6 +20,11 @@ export function getSharedLayoutProps(): BaseLayoutProps {
         active: 'nested-url'
       },
       {
+        text: 'Registry',
+        url: '/registry',
+        active: 'nested-url'
+      },
+      {
         text: 'Blog',
         url: '/blog',
         active: 'nested-url'
