@@ -1,0 +1,11 @@
+{
+  "name": "registry",
+  "description": "Shadcn CLI registry for community parsers & utilities",
+  "scripts": {
+    "build": "shadcn build"
+  },
+  "dependencies": {
+    "shadcn": "^3.3.1",
+    "nuqs": "workspace:*"
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry.json",
+  "name": "nuqs",
+  "homepage": "https://nuqs.dev",
+  "items": [
+    {
+      "name": "parseAsTuple",
+      "type": "registry:file",
+      "title": "parseAsTuple",
+      "description": "Parse query string as a tuple of values.",
+      "dependencies": ["nuqs"],
+      "files": [
+        {
+          "path": "parsers/parseAsTuple.ts",
+          "type": "registry:file",
+          "target": "~/components/parsers/parseAsTuple.ts"
+        }
+      ]
+    }
+  ]
+}
