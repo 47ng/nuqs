@@ -64,7 +64,7 @@ function Installation({ name, files }: Pick<RegistryItem, 'name' | 'files'>) {
         <Tab value="CLI">
           <CodeBlock
             lang="shell"
-            code={`npx shadcn@latest add @nuqs/${name}`}
+            code={`npx shadcn@latest add https://nuqs.dev/${name}.json`}
           />
         </Tab>
         <Tab value="Manual">
