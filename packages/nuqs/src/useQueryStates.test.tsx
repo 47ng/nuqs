@@ -1,4 +1,10 @@
-import { act, render, renderHook, screen } from '@testing-library/react'
+import {
+  act,
+  render,
+  renderHook,
+  screen,
+  waitFor
+} from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { setTimeout as wait } from 'node:timers/promises'
 import React, {
@@ -409,6 +415,126 @@ describe('useQueryStates: clearOnDefault', () => {
     )
     expect(onUrlUpdate).toHaveBeenCalledOnce()
     expect(onUrlUpdate.mock.calls[0]![0].queryString).toEqual('')
+  })
+})
+
+describe('useQueryStates: writeDefaults', () => {
+  it('honors writeDefaults: false by default', async () => {
+    const onUrlUpdate = vi.fn<OnUrlUpdateFunction>()
+    const useTestHook = () =>
+      useQueryStates({
+        test: parseAsString.withDefault('default')
+      })
+    const { result } = renderHook(useTestHook, {
+      wrapper: withNuqsTestingAdapter({
+        searchParams: '?test=init',
+        onUrlUpdate
+      })
+    })
+    await act(() => result.current[1]({ test: 'default' }))
+    expect(onUrlUpdate).toHaveBeenCalledOnce()
+    expect(onUrlUpdate.mock.calls[0]![0].queryString).toEqual('')
+  })
+
+  it('supports writeDefaults: true (parser level)', async () => {
+    const onUrlUpdate = vi.fn<OnUrlUpdateFunction>()
+    const useTestHook = () =>
+      useQueryStates({
+        a: parseAsString.withDefault('default').withOptions({
+          writeDefaults: true
+        }),
+        b: parseAsString.withDefault('default')
+      })
+    const { result } = renderHook(useTestHook, {
+      wrapper: withNuqsTestingAdapter({
+        searchParams: '?a=init&b=init',
+        onUrlUpdate
+      })
+    })
+    await act(() => result.current[1]({ a: 'default', b: 'default' }))
+    expect(onUrlUpdate).toHaveBeenCalledOnce()
+    expect(onUrlUpdate.mock.calls[0]![0].queryString).toEqual('?a=default')
+  })
+
+  it('supports writeDefaults: true (hook level)', async () => {
+    const onUrlUpdate = vi.fn<OnUrlUpdateFunction>()
+    const useTestHook = () =>
+      useQueryStates(
+        {
+          a: parseAsString.withDefault('default'),
+          b: parseAsString.withDefault('default').withOptions({
+            writeDefaults: false // overrides hook options
+          })
+        },
+        {
+          writeDefaults: true
+        }
+      )
+    const { result } = renderHook(useTestHook, {
+      wrapper: withNuqsTestingAdapter({
+        searchParams: '?a=init&b=init',
+        onUrlUpdate
+      })
+    })
+    await act(() => result.current[1]({ a: 'default', b: 'default' }))
+    expect(onUrlUpdate).toHaveBeenCalledOnce()
+    expect(onUrlUpdate.mock.calls[0]![0].queryString).toEqual('?a=default')
+  })
+
+  it('supports writeDefault: true (call level)', async () => {
+    const onUrlUpdate = vi.fn<OnUrlUpdateFunction>()
+    const useTestHook = () =>
+      useQueryStates(
+        {
+          a: parseAsString.withDefault('default'),
+          b: parseAsString.withDefault('default').withOptions({
+            writeDefaults: false // overrides hook options
+          })
+        },
+        {
+          writeDefaults: true
+        }
+      )
+    const { result } = renderHook(useTestHook, {
+      wrapper: withNuqsTestingAdapter({
+        searchParams: '?a=init&b=init',
+        onUrlUpdate
+      })
+    })
+    await act(() =>
+      result.current[1](
+        { a: 'default', b: 'default' },
+        {
+          writeDefaults: false
+        }
+      )
+    )
+    expect(onUrlUpdate).toHaveBeenCalledOnce()
+    expect(onUrlUpdate.mock.calls[0]![0].queryString).toEqual('')
+  })
+
+  it('writeDefaults: true auto-updates URL', async () => {
+    const onUrlUpdate = vi.fn<OnUrlUpdateFunction>()
+    const useTestHook = () =>
+      useQueryStates(
+        {
+          a: parseAsString.withDefault('default'),
+          b: parseAsString.withDefault('default').withOptions({
+            writeDefaults: false // overrides hook options
+          })
+        },
+        {
+          writeDefaults: true
+        }
+      )
+    renderHook(useTestHook, {
+      wrapper: withNuqsTestingAdapter({
+        onUrlUpdate
+      })
+    })
+    await waitFor(() => expect(onUrlUpdate).toHaveBeenCalledOnce())
+    expect(onUrlUpdate).toHaveBeenCalledOnce()
+    expect(onUrlUpdate.mock.calls[0]![0].queryString).toEqual('?a=default')
   })
 })
 
