@@ -765,6 +765,15 @@ importers:
         specifier: ^4.1.5
         version: 4.1.5
 
+  packages/registry:
+    dependencies:
+      nuqs:
+        specifier: workspace:*
+        version: link:../nuqs
+      shadcn:
+        specifier: ^3.3.1
+        version: 3.3.1(@types/node@24.3.0)(typescript@5.9.2)
+
   packages/res: {}
 
   packages/scripts:
@@ -972,6 +981,12 @@ packages:
   '@bcoe/v8-coverage@1.0.2':
     resolution: {integrity: sha512-6zABk/ECA/QYSCQ1NGiVwwbQerUCZ+TQbp64Q3AgmfNvurHH0j8TtXa1qbShXA6qqkpAj4V5W8pP6mLe1mcMqA==}
     engines: {node: '>=18'}
+
+  '@bundled-es-modules/cookie@2.0.1':
+    resolution: {integrity: sha512-8o+5fRPLNbjbdGRRmJj3h6Hh1AQJf2dk3qQ/5ZFb+PXkRNiSoMGGUKlsgLfrxneb72axVJyIYji64E2+nNfYyw==}
+
+  '@bundled-es-modules/statuses@1.0.1':
+    resolution: {integrity: sha512-yn7BklA5acgcBr+7w064fGV+SGIFySjCKpqjcWgBAIfrAkY+4GQTJJHQMeT3V/sgz23VTEVV8TtOmkvJAhFVfg==}
 
   '@colors/colors@1.5.0':
     resolution: {integrity: sha512-ooWCrlZP11i8GImSjTHYHLkvFDP48nS4+204nGb1RiX/WXYHmJA2III9/e2DWVabCESdW7hBAEzHRqUn9OUVvQ==}
@@ -1869,12 +1884,34 @@ packages:
     cpu: [x64]
     os: [win32]
 
+  '@inquirer/ansi@1.0.0':
+    resolution: {integrity: sha512-JWaTfCxI1eTmJ1BIv86vUfjVatOdxwD0DAVKYevY8SazeUUZtW+tNbsdejVO1GYE0GXJW1N1ahmiC3TFd+7wZA==}
+    engines: {node: '>=18'}
+
   '@inquirer/ansi@1.0.1':
     resolution: {integrity: sha512-yqq0aJW/5XPhi5xOAL1xRCpe1eh8UFVgYFpFsjEqmIR8rKLyP+HINvFXwUaxYICflJrVlxnp7lLN6As735kVpw==}
     engines: {node: '>=18'}
 
+  '@inquirer/confirm@5.1.18':
+    resolution: {integrity: sha512-MilmWOzHa3Ks11tzvuAmFoAd/wRuaP3SwlT1IZhyMke31FKLxPiuDWcGXhU+PKveNOpAc4axzAgrgxuIJJRmLw==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      '@types/node': '>=18'
+    peerDependenciesMeta:
+      '@types/node':
+        optional: true
+
   '@inquirer/confirm@5.1.19':
     resolution: {integrity: sha512-wQNz9cfcxrtEnUyG5PndC8g3gZ7lGDBzmWiXZkX8ot3vfZ+/BLjR8EvyGX4YzQLeVqtAlY/YScZpW7CW8qMoDQ==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      '@types/node': '>=18'
+    peerDependenciesMeta:
+      '@types/node':
+        optional: true
+
+  '@inquirer/core@10.2.2':
+    resolution: {integrity: sha512-yXq/4QUnk4sHMtmbd7irwiepjB8jXU0kkFRL4nr/aDBA2mDz13cMakEWdDwX3eSCTkk03kwcndD1zfRAIlELxA==}
     engines: {node: '>=18'}
     peerDependencies:
       '@types/node': '>=18'
@@ -1891,9 +1928,22 @@ packages:
       '@types/node':
         optional: true
 
+  '@inquirer/figures@1.0.13':
+    resolution: {integrity: sha512-lGPVU3yO9ZNqA7vTYz26jny41lE7yoQansmqdMLBEfqaGsmdg7V3W9mK9Pvb5IL4EVZ9GnSDGMO/cJXud5dMaw==}
+    engines: {node: '>=18'}
+
   '@inquirer/figures@1.0.14':
     resolution: {integrity: sha512-DbFgdt+9/OZYFM+19dbpXOSeAstPy884FPy1KjDu4anWwymZeOYhMY1mdFri172htv6mvc/uvIAAi7b7tvjJBQ==}
     engines: {node: '>=18'}
+
+  '@inquirer/type@3.0.8':
+    resolution: {integrity: sha512-lg9Whz8onIHRthWaN1Q9EGLa/0LFJjyM8mEUbL1eTi6yMGvBf8gvyDLtxSXztQsxMvhxxNpJYrwa1YHdq+w4Jw==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      '@types/node': '>=18'
+    peerDependenciesMeta:
+      '@types/node':
+        optional: true
 
   '@inquirer/type@3.0.9':
     resolution: {integrity: sha512-QPaNt/nmE2bLGQa9b7wwyRJoLZ7pN6rcyXvzU0YCmivmJyq1BVo94G98tStRWkoD1RgDX5C+dPlhhHzNdu/W/w==}
@@ -1965,8 +2015,16 @@ packages:
   '@mjackson/node-fetch-server@0.7.0':
     resolution: {integrity: sha512-un8diyEBKU3BTVj3GzlTPA1kIjCkGdD+AMYQy31Gf9JCkfoZzwgJ79GUtHrF2BN3XPNMLpubbzPcxys+a3uZEw==}
 
+  '@modelcontextprotocol/sdk@1.18.2':
+    resolution: {integrity: sha512-beedclIvFcCnPrYgHsylqiYJVJ/CI47Vyc4tY8no1/Li/O8U4BTlJfy6ZwxkYwx+Mx10nrgwSVrA7VBbhh4slg==}
+    engines: {node: '>=18'}
+
   '@modelcontextprotocol/sdk@1.20.1':
     resolution: {integrity: sha512-j/P+yuxXfgxb+mW7OEoRCM3G47zCTDqUPivJo/VzpjbG8I9csTXtOprCf5FfOfHK4whOJny0aHuBEON+kS7CCA==}
+    engines: {node: '>=18'}
+
+  '@mswjs/interceptors@0.39.7':
+    resolution: {integrity: sha512-sURvQbbKsq5f8INV54YJgJEdk8oxBanqkTiXXd33rKmofFCwZLhLRszPduMZ9TA9b8/1CHc/IJmOlBHJk2Q5AQ==}
     engines: {node: '>=18'}
 
   '@mswjs/interceptors@0.40.0':
@@ -4285,6 +4343,10 @@ packages:
     resolution: {integrity: sha512-UYmTpOBwgPScZpS4A+YbapwWuBwasxvO/2IOHArSsAhL/+ZdmATBXTex3t+l2hXwLVYK382ibr/nKoY9GKe86w==}
     hasBin: true
 
+  baseline-browser-mapping@2.8.9:
+    resolution: {integrity: sha512-hY/u2lxLrbecMEWSB0IpGzGyDyeoMFQhCvZd2jGFSE5I17Fh01sYUBPCJtkWERw7zrac9+cIghxm/ytJa2X8iA==}
+    hasBin: true
+
   basic-auth@2.0.1:
     resolution: {integrity: sha512-NF+epuEdnUYVlGuhaxbbq+dvJttwLnGY+YixlXlME5KpQ5W3CnXA5cVTneY3SPbPDRkcjMbifrwmFYcClgOZeg==}
     engines: {node: '>= 0.8'}
@@ -4334,6 +4396,11 @@ packages:
 
   browserslist@4.25.3:
     resolution: {integrity: sha512-cDGv1kkDI4/0e5yON9yM5G/0A5u8sf5TnmdX5C9qHzI9PPu++sQ9zjm1k9NiOrf3riY4OkK0zSGqfvJyJsgCBQ==}
+    engines: {node: ^6 || ^7 || ^8 || ^9 || ^10 || ^11 || ^12 || >=13.7}
+    hasBin: true
+
+  browserslist@4.26.2:
+    resolution: {integrity: sha512-ECFzp6uFOSB+dcZ5BK/IBaGWssbSYBHvuMeMt3MMFyhI0Z8SqGgEkBLARgpRH3hutIgPVsALcMwbDrJqPxQ65A==}
     engines: {node: ^6 || ^7 || ^8 || ^9 || ^10 || ^11 || ^12 || >=13.7}
     hasBin: true
 
@@ -4389,6 +4456,9 @@ packages:
 
   caniuse-lite@1.0.30001736:
     resolution: {integrity: sha512-ImpN5gLEY8gWeqfLUyEF4b7mYWcYoR2Si1VhnrbM4JizRFmfGaAQ12PhNykq6nvI4XvKLrsp8Xde74D5phJOSw==}
+
+  caniuse-lite@1.0.30001745:
+    resolution: {integrity: sha512-ywt6i8FzvdgrrrGbr1jZVObnVv6adj+0if2/omv9cmR2oiZs30zL4DIyaptKcbOrBdOIc74QTMoJvSE2QHh5UQ==}
 
   caniuse-lite@1.0.30001751:
     resolution: {integrity: sha512-A0QJhug0Ly64Ii3eIqHu5X51ebln3k4yTUkY1j8drqpWHVreg/VLijN48cZ1bYPiqOQuqpkIKnzr/Ul8V+p6Cw==}
@@ -5007,6 +5077,9 @@ packages:
 
   electron-to-chromium@1.5.207:
     resolution: {integrity: sha512-mryFrrL/GXDTmAtIVMVf+eIXM09BBPlO5IQ7lUyKmK8d+A4VpRGG+M3ofoVef6qyF8s60rJei8ymlJxjUA8Faw==}
+
+  electron-to-chromium@1.5.227:
+    resolution: {integrity: sha512-ITxuoPfJu3lsNWUi2lBM2PaBPYgH3uqmxut5vmBxgYvyI4AlJ6P3Cai1O76mOrkJCBzq0IxWg/NtqOrpu/0gKA==}
 
   electron-to-chromium@1.5.237:
     resolution: {integrity: sha512-icUt1NvfhGLar5lSWH3tHNzablaA5js3HVHacQimfP8ViEBOQv+L7DKEuHdbTZ0SKCO1ogTJTIL1Gwk9S6Qvcg==}
@@ -6893,6 +6966,16 @@ packages:
   ms@2.1.3:
     resolution: {integrity: sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA==}
 
+  msw@2.11.3:
+    resolution: {integrity: sha512-878imp8jxIpfzuzxYfX0qqTq1IFQz/1/RBHs/PyirSjzi+xKM/RRfIpIqHSCWjH0GxidrjhgiiXC+DWXNDvT9w==}
+    engines: {node: '>=18'}
+    hasBin: true
+    peerDependencies:
+      typescript: '>= 4.8.x'
+    peerDependenciesMeta:
+      typescript:
+        optional: true
+
   msw@2.11.6:
     resolution: {integrity: sha512-MCYMykvmiYScyUm7I6y0VCxpNq1rgd5v7kG8ks5dKtvmxRUUPjribX6mUoUNBbM5/3PhUyoelEWiKXGOz84c+w==}
     engines: {node: '>=18'}
@@ -6995,6 +7078,9 @@ packages:
 
   node-releases@2.0.19:
     resolution: {integrity: sha512-xxOWJsBKtzAq7DY0J+DTzuz58K8e7sJbdgwkbMWQe8UYB6ekmsQ45q0M/tJDsGaZmbC+l7n57UV8Hl5tHxO9uw==}
+
+  node-releases@2.0.21:
+    resolution: {integrity: sha512-5b0pgg78U3hwXkCM8Z9b2FJdPZlr9Psr9V2gQPESdGHqbntyFJKFW4r5TeWGFzafGY3hzs1JC62VEQMbl1JFkw==}
 
   node-releases@2.0.25:
     resolution: {integrity: sha512-4auku8B/vw5psvTiiN9j1dAOsXvMoGqJuKJcR+dTdqiXEK20mMTk1UEo3HS16LeGQsVG6+qKTPM9u/qQ2LqATA==}
@@ -8199,6 +8285,10 @@ packages:
 
   setprototypeof@1.2.0:
     resolution: {integrity: sha512-E5LDX7Wrp85Kil5bhZv46j8jOeboKq5JMmYM3gVGdGH8xFpPWXUMsNrlODCrkoxMEeNi/XZIwuRvY4XNwYMJpw==}
+
+  shadcn@3.3.1:
+    resolution: {integrity: sha512-sgai5gahy/TiyTiqJEwIFpAuPhmkpt7sGVdRfcmNH53Yc3yI57+zFVmIaqbTST0jP/7tSqZuI0aSllXL2HIw5w==}
+    hasBin: true
 
   shadcn@3.4.2:
     resolution: {integrity: sha512-afa1UIHC9UzWX2NMHHwaZf6GfT5VGkTDen77RtyUBMfJ5i6ZQuzXOFTE1bFHTaWwftb8wQnMiG8kXdEu3Kx9IQ==}
@@ -9511,7 +9601,7 @@ snapshots:
     dependencies:
       '@babel/compat-data': 7.28.0
       '@babel/helper-validator-option': 7.27.1
-      browserslist: 4.25.3
+      browserslist: 4.26.2
       lru-cache: 5.1.1
       semver: 6.3.1
 
@@ -9671,6 +9761,14 @@ snapshots:
       '@babel/helper-validator-identifier': 7.27.1
 
   '@bcoe/v8-coverage@1.0.2': {}
+
+  '@bundled-es-modules/cookie@2.0.1':
+    dependencies:
+      cookie: 0.7.2
+
+  '@bundled-es-modules/statuses@1.0.1':
+    dependencies:
+      statuses: 2.0.1
 
   '@colors/colors@1.5.0':
     optional: true
@@ -10311,12 +10409,34 @@ snapshots:
   '@img/sharp-win32-x64@0.34.3':
     optional: true
 
+  '@inquirer/ansi@1.0.0': {}
+
   '@inquirer/ansi@1.0.1': {}
+
+  '@inquirer/confirm@5.1.18(@types/node@24.3.0)':
+    dependencies:
+      '@inquirer/core': 10.2.2(@types/node@24.3.0)
+      '@inquirer/type': 3.0.8(@types/node@24.3.0)
+    optionalDependencies:
+      '@types/node': 24.3.0
 
   '@inquirer/confirm@5.1.19(@types/node@24.3.0)':
     dependencies:
       '@inquirer/core': 10.3.0(@types/node@24.3.0)
       '@inquirer/type': 3.0.9(@types/node@24.3.0)
+    optionalDependencies:
+      '@types/node': 24.3.0
+
+  '@inquirer/core@10.2.2(@types/node@24.3.0)':
+    dependencies:
+      '@inquirer/ansi': 1.0.0
+      '@inquirer/figures': 1.0.13
+      '@inquirer/type': 3.0.8(@types/node@24.3.0)
+      cli-width: 4.1.0
+      mute-stream: 2.0.0
+      signal-exit: 4.1.0
+      wrap-ansi: 6.2.0
+      yoctocolors-cjs: 2.1.3
     optionalDependencies:
       '@types/node': 24.3.0
 
@@ -10333,7 +10453,13 @@ snapshots:
     optionalDependencies:
       '@types/node': 24.3.0
 
+  '@inquirer/figures@1.0.13': {}
+
   '@inquirer/figures@1.0.14': {}
+
+  '@inquirer/type@3.0.8(@types/node@24.3.0)':
+    optionalDependencies:
+      '@types/node': 24.3.0
 
   '@inquirer/type@3.0.9(@types/node@24.3.0)':
     optionalDependencies:
@@ -10457,6 +10583,23 @@ snapshots:
 
   '@mjackson/node-fetch-server@0.7.0': {}
 
+  '@modelcontextprotocol/sdk@1.18.2':
+    dependencies:
+      ajv: 6.12.6
+      content-type: 1.0.5
+      cors: 2.8.5
+      cross-spawn: 7.0.6
+      eventsource: 3.0.7
+      eventsource-parser: 3.0.6
+      express: 5.1.0
+      express-rate-limit: 7.5.1(express@5.1.0)
+      pkce-challenge: 5.0.0
+      raw-body: 3.0.1
+      zod: 3.25.76
+      zod-to-json-schema: 3.24.6(zod@3.25.76)
+    transitivePeerDependencies:
+      - supports-color
+
   '@modelcontextprotocol/sdk@1.20.1':
     dependencies:
       ajv: 6.12.6
@@ -10473,6 +10616,15 @@ snapshots:
       zod-to-json-schema: 3.24.6(zod@3.25.76)
     transitivePeerDependencies:
       - supports-color
+
+  '@mswjs/interceptors@0.39.7':
+    dependencies:
+      '@open-draft/deferred-promise': 2.2.0
+      '@open-draft/logger': 0.3.0
+      '@open-draft/until': 2.1.0
+      is-node-process: 1.2.0
+      outvariant: 1.4.3
+      strict-event-emitter: 0.5.1
 
   '@mswjs/interceptors@0.40.0':
     dependencies:
@@ -13205,6 +13357,8 @@ snapshots:
 
   baseline-browser-mapping@2.8.18: {}
 
+  baseline-browser-mapping@2.8.9: {}
+
   basic-auth@2.0.1:
     dependencies:
       safe-buffer: 5.1.2
@@ -13281,6 +13435,14 @@ snapshots:
       node-releases: 2.0.19
       update-browserslist-db: 1.1.3(browserslist@4.25.3)
 
+  browserslist@4.26.2:
+    dependencies:
+      baseline-browser-mapping: 2.8.9
+      caniuse-lite: 1.0.30001745
+      electron-to-chromium: 1.5.227
+      node-releases: 2.0.21
+      update-browserslist-db: 1.1.3(browserslist@4.26.2)
+
   browserslist@4.26.3:
     dependencies:
       baseline-browser-mapping: 2.8.18
@@ -13341,6 +13503,8 @@ snapshots:
   callsites@3.1.0: {}
 
   caniuse-lite@1.0.30001736: {}
+
+  caniuse-lite@1.0.30001745: {}
 
   caniuse-lite@1.0.30001751: {}
 
@@ -13924,6 +14088,8 @@ snapshots:
       fast-check: 3.23.2
 
   electron-to-chromium@1.5.207: {}
+
+  electron-to-chromium@1.5.227: {}
 
   electron-to-chromium@1.5.237: {}
 
@@ -16422,6 +16588,32 @@ snapshots:
 
   ms@2.1.3: {}
 
+  msw@2.11.3(@types/node@24.3.0)(typescript@5.9.2):
+    dependencies:
+      '@bundled-es-modules/cookie': 2.0.1
+      '@bundled-es-modules/statuses': 1.0.1
+      '@inquirer/confirm': 5.1.18(@types/node@24.3.0)
+      '@mswjs/interceptors': 0.39.7
+      '@open-draft/deferred-promise': 2.2.0
+      '@types/cookie': 0.6.0
+      '@types/statuses': 2.0.6
+      graphql: 16.11.0
+      headers-polyfill: 4.0.3
+      is-node-process: 1.2.0
+      outvariant: 1.4.3
+      path-to-regexp: 6.3.0
+      picocolors: 1.1.1
+      rettime: 0.7.0
+      strict-event-emitter: 0.5.1
+      tough-cookie: 6.0.0
+      type-fest: 4.41.0
+      until-async: 3.0.2
+      yargs: 17.7.2
+    optionalDependencies:
+      typescript: 5.9.2
+    transitivePeerDependencies:
+      - '@types/node'
+
   msw@2.11.6(@types/node@24.3.0)(typescript@5.9.2):
     dependencies:
       '@inquirer/confirm': 5.1.19(@types/node@24.3.0)
@@ -16575,6 +16767,8 @@ snapshots:
       formdata-polyfill: 4.0.10
 
   node-releases@2.0.19: {}
+
+  node-releases@2.0.21: {}
 
   node-releases@2.0.25: {}
 
@@ -17825,6 +18019,44 @@ snapshots:
 
   setprototypeof@1.2.0: {}
 
+  shadcn@3.3.1(@types/node@24.3.0)(typescript@5.9.2):
+    dependencies:
+      '@antfu/ni': 25.0.0
+      '@babel/core': 7.28.3
+      '@babel/parser': 7.28.3
+      '@babel/plugin-transform-typescript': 7.28.0(@babel/core@7.28.3)
+      '@babel/preset-typescript': 7.27.1(@babel/core@7.28.3)
+      '@dotenvx/dotenvx': 1.51.0
+      '@modelcontextprotocol/sdk': 1.18.2
+      browserslist: 4.26.2
+      commander: 14.0.1
+      cosmiconfig: 9.0.0(typescript@5.9.2)
+      dedent: 1.6.0
+      deepmerge: 4.3.1
+      diff: 8.0.2
+      execa: 9.6.0
+      fast-glob: 3.3.3
+      fs-extra: 11.3.1
+      fuzzysort: 3.1.0
+      https-proxy-agent: 7.0.6
+      kleur: 4.1.5
+      msw: 2.11.3(@types/node@24.3.0)(typescript@5.9.2)
+      node-fetch: 3.3.2
+      ora: 8.2.0
+      postcss: 8.5.6
+      prompts: 2.4.2
+      recast: 0.23.11
+      stringify-object: 5.0.0
+      ts-morph: 26.0.0
+      tsconfig-paths: 4.2.0
+      zod: 3.25.76
+      zod-to-json-schema: 3.24.6(zod@3.25.76)
+    transitivePeerDependencies:
+      - '@types/node'
+      - babel-plugin-macros
+      - supports-color
+      - typescript
+
   shadcn@3.4.2(@types/node@24.3.0)(typescript@5.9.2):
     dependencies:
       '@antfu/ni': 25.0.0
@@ -18694,6 +18926,12 @@ snapshots:
   update-browserslist-db@1.1.3(browserslist@4.25.3):
     dependencies:
       browserslist: 4.25.3
+      escalade: 3.2.0
+      picocolors: 1.1.1
+
+  update-browserslist-db@1.1.3(browserslist@4.26.2):
+    dependencies:
+      browserslist: 4.26.2
       escalade: 3.2.0
       picocolors: 1.1.1
 
