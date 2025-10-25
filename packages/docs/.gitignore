@@ -28,3 +28,6 @@ yarn-error.log*
 next-env.d.ts
 # Sentry Config File
 .sentryclirc
+
+# shadcn registry output
+public/r
