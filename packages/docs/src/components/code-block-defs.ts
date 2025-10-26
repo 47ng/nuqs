@@ -5,6 +5,7 @@ export type { BundledLanguage }
 
 export type CodeBlockProps = Omit<FumaDocsCodeBlockProps, 'children'> & {
   code: string
+  preHighlighted?: boolean
   compact?: boolean
   lang?: BundledLanguage
 }

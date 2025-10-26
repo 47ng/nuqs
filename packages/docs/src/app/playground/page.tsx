@@ -1,5 +1,10 @@
-import { Description, H1 } from '@/src/components/typography'
 import { Card } from 'fumadocs-ui/components/card'
+import {
+  DocsBody,
+  DocsDescription,
+  DocsPage,
+  DocsTitle
+} from 'fumadocs-ui/page'
 import { demos } from './(demos)/demos'
 
 export const metadata = {
@@ -9,20 +14,22 @@ export const metadata = {
 
 export default function PlaygroundIndexPage() {
   return (
-    <main className="py-6 md:py-10">
-      <H1>{metadata.title}</H1>
-      <Description>{metadata.description}</Description>
-      <ul className="not-prose my-8 space-y-2">
-        {Object.entries(demos).map(([path, { title, description }]) => (
-          <li key={path}>
-            <Card
-              title={title}
-              description={description}
-              href={`/playground/${path}`}
-            />
-          </li>
-        ))}
-      </ul>
-    </main>
+    <DocsPage>
+      <DocsTitle>{metadata.title}</DocsTitle>
+      <DocsDescription>{metadata.description}</DocsDescription>
+      <DocsBody>
+        <ul className="not-prose my-8 space-y-2">
+          {Object.entries(demos).map(([path, { title, description }]) => (
+            <li key={path}>
+              <Card
+                title={title}
+                description={description}
+                href={`/playground/${path}`}
+              />
+            </li>
+          ))}
+        </ul>
+      </DocsBody>
+    </DocsPage>
   )
 }

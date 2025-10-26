@@ -1,8 +1,7 @@
 import { getSharedLayoutProps } from '@/src/components/shared-layout'
+import { SidebarFooter } from '@/src/components/sidebar-footer'
 import { DocsLayout } from 'fumadocs-ui/layouts/notebook'
-import { DocsBody, DocsPage } from 'fumadocs-ui/page'
-import type { ReactNode } from 'react'
-import { readRegistry } from './_lib/read'
+import { Suspense, type ReactNode } from 'react'
 
 export default async function RegistryLayout({
   children
@@ -10,25 +9,26 @@ export default async function RegistryLayout({
   children: ReactNode
 }) {
   const shared = getSharedLayoutProps()
-  const registry = await readRegistry()
   return (
     <>
       <DocsLayout
         tree={{
           name: 'Registry',
-          children: registry.items.map(item => ({
-            type: 'page',
-            url: `#${item.name}`,
-            name: item.title,
-            description: item.description
-          }))
+          children: []
         }}
         {...shared}
         nav={{ ...shared.nav, mode: 'top' }}
+        sidebar={{
+          collapsible: false,
+          // banner: // note: side banner goes here
+          footer: (
+            <Suspense>
+              <SidebarFooter />
+            </Suspense>
+          )
+        }}
       >
-        <DocsPage>
-          <DocsBody>{children}</DocsBody>
-        </DocsPage>
+        {children}
       </DocsLayout>
     </>
   )
