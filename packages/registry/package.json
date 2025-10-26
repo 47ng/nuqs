@@ -7,11 +7,11 @@
     "test:unit": "vitest run --typecheck"
   },
   "dependencies": {
-    "shadcn": "^3.4.2",
-    "nuqs": "workspace:*"
+    "nuqs": "workspace:*",
+    "shadcn": "^3.4.2"
   },
   "devDependencies": {
-    "vitest": "^3.2.4",
-    "typescript": "^5.9.2"
+    "typescript": "^5.9.2",
+    "vitest": "^3.2.4"
   }
 }
