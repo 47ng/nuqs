@@ -127,6 +127,11 @@ function ChartTooltipContent({
   labelKey
 }: React.ComponentProps<typeof RechartsPrimitive.Tooltip> &
   React.ComponentProps<'div'> & {
+    payload?: RechartsPrimitive.DefaultTooltipContentProps<
+      ValueType,
+      'no idea what should go here but it makes TypeScript happy'
+    >['payload']
+    label?: string
     hideLabel?: boolean
     hideIndicator?: boolean
     indicator?: 'line' | 'dot' | 'dashed'
@@ -203,7 +208,7 @@ function ChartTooltipContent({
 
           return (
             <div
-              key={item.dataKey}
+              key={String(item.dataKey)}
               className={cn(
                 '[&>svg]:text-muted-foreground flex w-full flex-wrap items-stretch gap-2 [&>svg]:h-2.5 [&>svg]:w-2.5',
                 indicator === 'dot' && 'items-baseline'
@@ -270,18 +275,19 @@ const ChartLegend = RechartsPrimitive.Legend
 function ChartLegendContent({
   className,
   hideIcon = false,
-  payload,
+  payload = [],
   verticalAlign = 'bottom',
   align = 'center',
   nameKey
 }: React.ComponentProps<'div'> &
-  Pick<RechartsPrimitive.LegendProps, 'payload' | 'verticalAlign' | 'align'> & {
+  Pick<RechartsPrimitive.LegendProps, 'verticalAlign' | 'align'> & {
+    payload?: RechartsPrimitive.LegendPayload[]
     hideIcon?: boolean
     nameKey?: string
   }) {
   const { config } = useChart()
 
-  if (!payload?.length) {
+  if (!payload.length) {
     return null
   }
 
