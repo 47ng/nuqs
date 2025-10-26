@@ -17,7 +17,7 @@
     "dev": "next dev --turbo",
     "build": "pnpm run build:registry && pnpm run build:next",
     "build:next": "next build",
-    "build:registry": "shadcn build --output ./public",
+    "build:registry": "shadcn build",
     "start": "next start",
     "postinstall": "fumadocs-mdx",
     "test": "tsc"

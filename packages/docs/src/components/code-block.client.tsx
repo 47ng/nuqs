@@ -16,16 +16,17 @@ export function CodeBlock({
   code,
   lang = 'tsx',
   compact = false,
+  preHighlighted = false,
   ...props
 }: CodeBlockProps) {
   const [html, setHtml] = useState<string | null>(null)
   const { highlight, renderCodeSkeleton } = use(importHighlight)
   useEffect(() => {
     ;(async () => {
-      const x = await highlight(code, lang)
+      const x = preHighlighted ? code : await highlight(code, lang)
       setHtml(x)
     })()
-  }, [code, lang, highlight])
+  }, [code, lang, highlight, preHighlighted])
   return (
     <FumaDocsCodeBlock
       // @ts-expect-error
