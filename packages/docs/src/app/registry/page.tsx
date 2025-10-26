@@ -78,7 +78,7 @@ function Installation({ name, files }: Pick<RegistryItem, 'name' | 'files'>) {
         <Tab value="CLI">
           <CodeBlock
             preHighlighted
-            code={`<pre><div class="px-1">npx shadcn<span class="text-muted-foreground">@latest</span> add <span class="text-muted-foreground">https://</span>nuqs.dev/${name}<span class="text-muted-foreground">.json</span><div/></pre>`}
+            code={`<pre><div class="px-1">npx shadcn<span class="text-muted-foreground">@latest</span> add <span class="text-muted-foreground">https://</span>nuqs.dev/r/${name}<span class="text-muted-foreground">.json</span><div/></pre>`}
           />
         </Tab>
         <Tab value="Manual">
