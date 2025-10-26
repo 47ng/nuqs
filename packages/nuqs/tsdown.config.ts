@@ -32,8 +32,7 @@ const entrypoints = {
     'adapters/react-router/v7': 'src/adapters/react-router/v7.ts',
     'adapters/tanstack-router': 'src/adapters/tanstack-router.ts',
     'adapters/custom': 'src/adapters/custom.ts',
-    'adapters/testing': 'src/adapters/testing.ts',
-    lib: 'src/lib/index.ts'
+    'adapters/testing': 'src/adapters/testing.ts'
   },
   server: {
     server: 'src/index.server.ts',

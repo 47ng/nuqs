@@ -48,8 +48,7 @@
     "adapters/react-router/v7.d.ts",
     "adapters/tanstack-router.d.ts",
     "adapters/custom.d.ts",
-    "adapters/testing.d.ts",
-    "lib/index.d.ts"
+    "adapters/testing.d.ts"
   ],
   "type": "module",
   "sideEffects": false,
@@ -126,11 +125,6 @@
       "types": "./dist/adapters/testing.d.ts",
       "import": "./dist/adapters/testing.js",
       "default": "./dist/adapters/testing.js"
-    },
-    "./lib": {
-      "types": "./dist/lib.d.ts",
-      "import": "./dist/lib.js",
-      "default": "./dist/lib.js"
     }
   },
   "scripts": {
