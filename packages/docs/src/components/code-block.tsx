@@ -9,16 +9,17 @@ export async function CodeBlock({
   code,
   lang = 'tsx',
   compact = false,
+  preHighlighted = false,
   ...props
 }: CodeBlockProps) {
-  const demoCode = await highlight(code, lang)
+  const highlighted = preHighlighted ? code : await highlight(code, lang)
   return (
     <FumaDocsCodeBlock
       // @ts-expect-error
       custom={compact ? 'compact' : undefined}
       {...props}
     >
-      <Pre className="px-2" dangerouslySetInnerHTML={{ __html: demoCode }} />
+      <Pre className="px-2" dangerouslySetInnerHTML={{ __html: highlighted }} />
     </FumaDocsCodeBlock>
   )
 }

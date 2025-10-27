@@ -1,8 +1,6 @@
 import { getSharedLayoutProps } from '@/src/components/shared-layout'
 import { DocsLayout } from 'fumadocs-ui/layouts/notebook'
-import { DocsBody, DocsPage } from 'fumadocs-ui/page'
 import React, { Suspense } from 'react'
-import { NextJSConf2025SideBanner } from '../banners'
 import { getPlaygroundTree } from './(demos)/demos'
 import { DebugControl } from './debug-control'
 
@@ -27,7 +25,8 @@ export default function PlaygroundLayout({
         {...shared}
         nav={{ ...shared.nav, mode: 'top' }}
         sidebar={{
-          banner: <NextJSConf2025SideBanner />,
+          collapsible: false,
+          // banner: // note: side banner goes here
           footer: (
             <Suspense fallback={<DebugControlsSkeleton />}>
               <DebugControl />
@@ -35,9 +34,7 @@ export default function PlaygroundLayout({
           )
         }}
       >
-        <DocsPage>
-          <DocsBody>{children}</DocsBody>
-        </DocsPage>
+        {children}
       </DocsLayout>
     </>
   )

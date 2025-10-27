@@ -1,5 +1,10 @@
 import { NuqsWordmark } from '@/src/components/logo'
-import { SiBluesky, SiGithub, SiYoutube } from '@icons-pack/react-simple-icons'
+import {
+  SiBluesky,
+  SiGithub,
+  SiX,
+  SiYoutube
+} from '@icons-pack/react-simple-icons'
 import Link from 'next/link'
 
 export function PageFooter() {
@@ -81,11 +86,11 @@ export function PageFooter() {
               </li>
               <li>
                 <a
-                  href="https://www.youtube.com/@47ng-dev"
+                  href="https://x.com/nuqs47ng"
                   className="inline-flex items-center gap-1 hover:underline"
                 >
-                  <SiYoutube role="presentation" className="mr-2 size-5" />
-                  <span>YouTube</span>
+                  <SiX role="presentation" className="mr-2 size-5" />
+                  <span>X / Twitter</span>
                 </a>
               </li>
               <li>
@@ -95,6 +100,15 @@ export function PageFooter() {
                 >
                   <SiBluesky role="presentation" className="mr-2 size-5" />
                   <span>Bluesky</span>
+                </a>
+              </li>
+              <li>
+                <a
+                  href="https://www.youtube.com/@47ng-dev"
+                  className="inline-flex items-center gap-1 hover:underline"
+                >
+                  <SiYoutube role="presentation" className="mr-2 size-5" />
+                  <span>YouTube</span>
                 </a>
               </li>
             </ul>
