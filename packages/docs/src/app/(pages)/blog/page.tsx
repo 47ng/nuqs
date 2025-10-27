@@ -1,5 +1,4 @@
 import { blog } from '@/src/app/source'
-import { Description } from '@/src/components/typography'
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -9,6 +8,7 @@ import {
   BreadcrumbSeparator
 } from '@/src/components/ui/breadcrumb'
 import { Card } from 'fumadocs-ui/components/card'
+import { DocsDescription, DocsTitle } from 'fumadocs-ui/page'
 import { RssIcon } from 'lucide-react'
 import Link from 'next/link'
 import { ComponentProps } from 'react'
@@ -36,12 +36,10 @@ export default async function BlogIndexPage() {
       </Breadcrumb>
       <div className="container max-w-[900px] py-12 md:px-8">
         <nav className="mb-4 flex items-center justify-between">
-          <h1 className="text-4xl font-bold text-foreground sm:text-5xl">
-            Blog
-          </h1>
+          <DocsTitle>Blog</DocsTitle>
           <RssFeedLink />
         </nav>
-        <Description>URL state management with nuqs</Description>
+        <DocsDescription>URL state management with nuqs</DocsDescription>
       </div>
       <ul className="container max-w-[900px] space-y-4 pb-24 lg:px-4">
         {posts.map(post => (
@@ -93,7 +91,7 @@ function RssFeedLink() {
   return (
     <a
       href="/blog/rss.xml"
-      className="flex items-center gap-1 text-sm text-muted-foreground hover:underline"
+      className="text-muted-foreground flex items-center gap-1 text-sm hover:underline"
     >
       <RssIcon
         className="size-4 text-orange-600 dark:text-orange-400"
