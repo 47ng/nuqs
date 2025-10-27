@@ -1,5 +1,3 @@
-## Tuples
-
 The `parseAsTuple` parser allows you to parse fixed-length tuples with **any type** for each position.
 
 ```ts

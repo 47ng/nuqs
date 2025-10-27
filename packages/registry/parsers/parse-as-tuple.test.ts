@@ -5,7 +5,7 @@ import {
   testSerializeThenParse
 } from 'nuqs/testing'
 import { describe, expect, it } from 'vitest'
-import { parseAsTuple } from './parseAsTuple'
+import { parseAsTuple } from './parse-as-tuple'
 
 describe('parseAsTuple', () => {
   it('parses and serializes tuples correctly', () => {

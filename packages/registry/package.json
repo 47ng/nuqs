@@ -2,11 +2,11 @@
   "name": "registry",
   "description": "Shadcn CLI registry for community parsers & utilities",
   "scripts": {
-    "build": "shadcn build",
     "test": "pnpm run --stream '/^test:/'",
     "test:unit": "vitest run --typecheck"
   },
   "dependencies": {
+    "next": "15.5.0",
     "nuqs": "workspace:*",
     "shadcn": "^3.4.2"
   },

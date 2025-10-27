@@ -18,7 +18,6 @@
     "declaration": true,
     "declarationMap": true,
     "verbatimModuleSyntax": true,
-    "isolatedDeclarations": true,
     "moduleDetection": "force",
 
     "downlevelIteration": true,

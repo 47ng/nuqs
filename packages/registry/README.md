@@ -9,17 +9,16 @@ A shadcn/ui compatible registry for community parsers and utilities for the [nuq
 pnpm install
 
 # Build the registry
-pnpm build
-
-# Run the registry (using serve or any other static file server)
-serve public -p 3000
+cd ../docs && pnpm build:registry
+# Run the docs server
+cd ../docs && pnpm dev
 
 ```
 
 Usage example in any npm package:
 
 ```bash
-pnpm dlx shadcn@latest add http://localhost:3000/r/parseAsTuple.json
+pnpm dlx shadcn@latest add http://localhost:3000/r/parse-as-tuple.json
 ```
 
 ## Learn More
