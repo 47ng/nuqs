@@ -13,7 +13,7 @@
         {
           "path": "parsers/parseAsTuple.ts",
           "type": "registry:file",
-          "target": "~/components/parsers/parseAsTuple.ts"
+          "target": "~/lib/parsers/parseAsTuple.ts"
         }
       ]
     }

@@ -1,5 +1,5 @@
 import { createParser, type SingleParserBuilder } from 'nuqs'
-import { nuqsSafeParse } from '../nuqs-safe-parse'
+import { safeParse } from 'nuqs/lib'
 
 type ParserTuple<T extends readonly unknown[]> = {
   [K in keyof T]: SingleParserBuilder<T[K]>
@@ -35,7 +35,7 @@ export function parseAsTuple<T extends any[]>(
       // iterating by parsers instead of parts, any additional parts are ignored.
       const result = itemParsers.map(
         (parser, index) =>
-          nuqsSafeParse(
+          safeParse(
             parser.parse,
             parts[index]!.replaceAll(encodedSeparator, separator),
             `[${index}]`
