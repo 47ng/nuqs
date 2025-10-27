@@ -9,7 +9,9 @@ import {
 } from 'fumadocs-ui/page'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
+import { Suspense } from 'react'
 import { stat } from 'node:fs/promises'
+import { LLMCopyButton, PageActionsSkeleton, ViewOptions } from '@/src/components/page-actions'
 
 type PageProps = {
   params: Promise<{ slug?: string[] }>
@@ -28,7 +30,20 @@ export default async function Page(props: PageProps) {
   return (
     <DocsPage toc={page.data.toc}>
       <DocsTitle>{page.data.title}</DocsTitle>
-      <DocsDescription>{page.data.description}</DocsDescription>
+      <DocsDescription className="mb-0">{page.data.description}</DocsDescription>
+      
+      <div className="border-b pb-6">
+        <Suspense fallback={<PageActionsSkeleton />}>
+          <div className="flex flex-row gap-2 items-center">
+            <LLMCopyButton markdownUrl={`${page.url}.mdx`} />
+            <ViewOptions
+              markdownUrl={`${page.url}.mdx`}
+              githubUrl={`https://github.com/47ng/nuqs/blob/dev/packages/docs/content/docs/${page.path}`}
+            />
+          </div>
+        </Suspense>
+      </div>
+
       <DocsBody>
         <MDX components={useMDXComponents()} />
       </DocsBody>

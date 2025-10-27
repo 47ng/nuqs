@@ -16,6 +16,32 @@ const config = {
     ]
   },
   reactStrictMode: true,
+  async rewrites() {
+		return [
+			{
+				source: "/docs/:path*",
+				has: [
+					{
+						type: "header",
+						key: "accept",
+						value: ".*text/(markdown|plain).*",
+					},
+				],
+				missing: [
+					{
+						type: "header", 
+						key: "accept",
+						value: ".*text/html.*",
+					},
+				],
+				destination: "/llms/docs/:path*",
+			},
+      {
+        source: "/docs/:path*.md(x)?",
+        destination: "/llms/docs/:path*",
+      }
+		];
+	},
   redirects: async () => {
     return [
       {
