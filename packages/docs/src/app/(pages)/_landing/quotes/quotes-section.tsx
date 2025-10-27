@@ -195,6 +195,7 @@ export function QuotesSection() {
         text="Just did first custom parser today, pretty simple .. great API design 👌"
         url="https://x.com/pavelsvitek_/status/1976329834981925328"
       />
+
       <Quote
         author={{
           name: 'OrcDev',
@@ -261,6 +262,109 @@ export function QuotesSection() {
         }}
         text="also, nuqs is amazing"
         url="https://x.com/arthty/status/1980237430256234768"
+      />
+      <Quote
+        author={{
+          name: 'Mr T.',
+          handle: '@DorianTho5',
+          avatar:
+            'https://pbs.twimg.com/profile_images/1885589031238393856/476qnKQb_400x400.jpg'
+        }}
+        text={
+          <>
+            <p>one of the most useful pieces of library ever made</p>
+            <p>
+              thx for making our life easier as devs and ux way better for our
+              users
+            </p>
+          </>
+        }
+        url="https://x.com/DorianTho5/status/1981419755723739213"
+      />
+      <Quote
+        author={{
+          name: 'Hayden Bleasel',
+          handle: '@haydenbleasel',
+          avatar:
+            'https://pbs.twimg.com/profile_images/1964093609801895936/B3_Cmkma_400x400.jpg'
+        }}
+        text="deez nuqs"
+        url="https://x.com/haydenbleasel/status/1981572915591258189"
+      />
+      <Quote
+        author={{
+          name: 'Christopher Burns',
+          handle: '@BurnedChris',
+          avatar:
+            'https://pbs.twimg.com/profile_images/1967905434754334720/V6O4cTOV_400x400.jpg'
+        }}
+        text="Really glad to finally met Francois from nuqs! I love using it!"
+        url="https://x.com/BurnedChris/status/1981071113154417018"
+      />
+      <Quote
+        author={{
+          name: 'Chánh Đại',
+          handle: '@iamncdai',
+          avatar:
+            'https://pbs.twimg.com/profile_images/1905665979662958595/Y0_Ifuk5_400x400.jpg'
+        }}
+        text="I integrated nuqs into an internal project, and it helped simplify filter-related query logic and reduce development time."
+        url="https://x.com/iamncdai/status/1981606278444249232"
+      />
+      <Quote
+        author={{
+          name: 'Abhishek Chauhan',
+          handle: '@abhishekashwinc',
+          avatar:
+            'https://pbs.twimg.com/profile_images/1974178538459664384/g9-sR-0D_400x400.jpg'
+        }}
+        text="Big fan of nuqs!"
+        url="https://x.com/abhishekashwinc/status/1981613111472996827"
+      />
+      <Quote
+        author={{
+          name: 'Michael',
+          handle: '@michael_chomsky',
+          avatar:
+            'https://pbs.twimg.com/profile_images/1869555929865469952/bRcBMrb8_400x400.jpg'
+        }}
+        text="meeting the guy behind nuqs was insane. it's one of those tools literally every web dev should know about"
+        url="https://x.com/michael_chomsky/status/1981633873529471064"
+      />
+      <Quote
+        author={{
+          name: 'James Perkins',
+          handle: '@james_r_perkins',
+          avatar:
+            'https://pbs.twimg.com/profile_images/1854308174817579008/Lon8OO2h_400x400.jpg'
+        }}
+        text="nuqs is so goated"
+        url="https://x.com/james_r_perkins/status/1981744427132424690"
+      />
+      <Quote
+        author={{
+          name: 'dmytro',
+          handle: '@pqoqubbw',
+          avatar:
+            'https://pbs.twimg.com/profile_images/1977481778651639808/XUXmfx6H_400x400.jpg'
+        }}
+        text={
+          <>
+            <p>thank you for your hard work 🫶</p>
+            <p>nuqs is awesome</p>
+          </>
+        }
+        url="https://x.com/pqoqubbw/status/1981753810654494892"
+      />
+      <Quote
+        author={{
+          name: 'Suraj Jha',
+          handle: '@surajtwt_',
+          avatar:
+            'https://pbs.twimg.com/profile_images/1981823623443664896/9wLf-igV_400x400.jpg'
+        }}
+        text="Currently Using nuqs to add some pagination and searching feature into my nextjs app and i am loving it"
+        url="https://x.com/surajtwt_/status/1982684604307034362"
       />
     </section>
   )
