@@ -11,9 +11,16 @@ import {
   DocsTitle
 } from 'fumadocs-ui/page'
 import { Link } from 'lucide-react'
+import type { Metadata } from 'next'
 import NextLink from 'next/link'
 import { readRegistry, readRegistryItem, readUsage } from './_lib/read'
 import type { RegistryFile, RegistryItem } from './_lib/schemas'
+
+export const metadata = {
+  title: 'Shadcn Registry',
+  description:
+    'Use the shadcn CLI to install custom parsers, adapters and utilities from the community.'
+} satisfies Metadata
 
 export default async function Page() {
   const registry = await readRegistry()
