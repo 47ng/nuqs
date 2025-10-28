@@ -88,8 +88,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 // --
 
 async function getLastModified(path: string): Promise<Date> {
-  'use cache'
-  cacheLife('static')
   try {
     const lastEdit = await getGithubLastEdit({
       owner: '47ng',

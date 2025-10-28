@@ -25,10 +25,10 @@ const config = {
   reactStrictMode: true,
   cacheLife: {
     static: {
-      // Only changes on new deploys
-      expire: Infinity,
-      revalidate: Infinity,
-      stale: Infinity
+      // Only changes on new deploys, assuming we at least deploy once a year
+      stale: 300, // 5 minutes for the client cache
+      revalidate: 365 * 24 * 60 * 60, // 1 year
+      expire: 366 * 24 * 60 * 60 // 1 year + 1 day (has to be greater than revalidate)
     }
   },
   turbopack: {
