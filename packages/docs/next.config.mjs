@@ -20,7 +20,17 @@ const config = {
       './src/app/playground/(demos)/pagination/pagination-controls.client.tsx'
     ]
   },
+  reactCompiler: true,
+  cacheComponents: true,
   reactStrictMode: true,
+  cacheLife: {
+    static: {
+      // Only changes on new deploys
+      expire: Infinity,
+      revalidate: Infinity,
+      stale: Infinity
+    }
+  },
   turbopack: {
     debugIds: enableSentry
   },

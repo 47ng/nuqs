@@ -1,4 +1,5 @@
 import { cn } from '@/src/lib/utils'
+import { cacheLife, cacheTag } from 'next/cache'
 import React from 'react'
 import { z } from 'zod'
 
@@ -6,6 +7,9 @@ export async function GitHubActionsStatus({
   className,
   ...props
 }: React.ComponentProps<'div'>) {
+  'use cache'
+  cacheLife('hours')
+  cacheTag('github-actions-status')
   const statuses = await getGitHubActionsStatus()
   if (statuses.length === 0) {
     return null
@@ -87,10 +91,7 @@ async function getGitHubActionsStatus() {
       headers: {
         Authorization: `bearer ${process.env.GITHUB_TOKEN}`
       },
-      body: JSON.stringify({ query }),
-      next: {
-        tags: ['github-actions-status']
-      }
+      body: JSON.stringify({ query })
     }).then(res => res.json())
     debugInfo = json
 
