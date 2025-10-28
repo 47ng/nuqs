@@ -1,10 +1,10 @@
 import * as Sentry from '@sentry/nextjs'
-import { RootProvider } from 'fumadocs-ui/provider'
+import { RootProvider } from 'fumadocs-ui/provider/next'
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import Script from 'next/script'
-import { NuqsAdapter } from 'nuqs/adapters/next'
-import type { ReactNode } from 'react'
+import { NuqsAdapter } from 'nuqs/adapters/next/app'
+import { Suspense, type ReactNode } from 'react'
 import { ResponsiveHelper } from '../components/responsive-helpers'
 import { cn } from '../lib/utils'
 import './globals.css'
@@ -52,7 +52,9 @@ export default function Layout({ children }: { children: ReactNode }) {
       <body>
         {/* Top-level banners go here */}
         <RootProvider>
-          <NuqsAdapter>{children}</NuqsAdapter>
+          <Suspense>
+            <NuqsAdapter>{children}</NuqsAdapter>
+          </Suspense>
         </RootProvider>
         {enableChiffreAnalytics && (
           <Script

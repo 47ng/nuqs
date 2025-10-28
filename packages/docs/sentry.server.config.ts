@@ -4,9 +4,14 @@
 
 import * as Sentry from '@sentry/nextjs'
 
+const enabled =
+  Boolean(process.env.NEXT_PUBLIC_SENTRY_DSN) &&
+  Boolean(process.env.SENTRY_AUTH_TOKEN) &&
+  ['production', 'preview'].includes(process.env.VERCEL_ENV ?? '')
+
 Sentry.init({
   dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
-  enabled: ['production', 'preview'].includes(process.env.VERCEL_ENV ?? ''),
+  enabled,
 
   // Define how likely traces are sampled. Adjust this value in production, or use tracesSampler for greater control.
   tracesSampleRate: 1,

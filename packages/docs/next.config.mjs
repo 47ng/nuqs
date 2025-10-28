@@ -34,6 +34,9 @@ const config = {
   turbopack: {
     debugIds: enableSentry
   },
+  experimental: {
+    isolatedDevBuild: true
+  },
   productionBrowserSourceMaps: enableSentry,
   redirects: async () => {
     return [
