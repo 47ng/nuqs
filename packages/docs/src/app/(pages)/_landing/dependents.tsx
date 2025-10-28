@@ -1,4 +1,5 @@
 import { cn } from '@/src/lib/utils'
+import { cacheLife } from 'next/cache'
 import { z } from 'zod'
 
 const dependentSchema = z.object({
@@ -20,6 +21,8 @@ export async function fetchDependents() {
 }
 
 export async function DependentsSection() {
+  'use cache'
+  cacheLife('hours')
   let dependents: Dependent[] = []
   try {
     dependents = await fetchDependents()
