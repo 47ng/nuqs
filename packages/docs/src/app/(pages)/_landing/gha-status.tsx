@@ -49,7 +49,7 @@ const ghaStatusSchema = z.object({
   url: z.url(),
   createdAt: z.iso.datetime(),
   checkSuite: z.object({
-    status: z.enum(['QUEUED', 'IN_PROGRESS', 'COMPLETED']),
+    status: z.literal('COMPLETED'),
     conclusion: z.enum([
       'SUCCESS',
       'FAILURE',
@@ -62,10 +62,11 @@ const ghaStatusSchema = z.object({
 })
 
 async function getGitHubActionsStatus() {
+  // Fetch a few more than needed to filter out non-completed runs
   const query = `query {
     node(id: "W_kwDOD6wJuM4EeKz5") {
       ... on Workflow {
-        runs(first: 5) {
+        runs(first: 8, orderBy: {field: CREATED_AT, direction: DESC}) {
           nodes {
             id
             url
@@ -92,7 +93,20 @@ async function getGitHubActionsStatus() {
       }
     }).then(res => res.json())
     debugInfo = json
-    return z.array(ghaStatusSchema).parse(json.data.node.runs.nodes)
+
+    // Filter for completed runs only
+    return z
+      .array(z.unknown())
+      .parse(json.data.node.runs.nodes)
+      .reduce<z.infer<typeof ghaStatusSchema>[]>((runs, run) => {
+        const result = ghaStatusSchema.safeParse(run)
+        if (result.success) {
+          runs.push(result.data)
+        }
+        return runs
+      }, [])
+      .slice(0, 5) // Take only the last 5 completed runs
+      .reverse() // Order from oldest to newest
   } catch (error) {
     console.error(error, JSON.stringify(debugInfo))
     return []
