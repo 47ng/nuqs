@@ -1,5 +1,5 @@
 import { getBaseUrl } from '@/src/lib/url'
-import { getGithubLastEdit } from 'fumadocs-core/server'
+import { getGithubLastEdit } from 'fumadocs-core/content/github'
 import type { MetadataRoute } from 'next'
 import { demos } from './playground/(demos)/demos'
 import { blog, source } from './source'
