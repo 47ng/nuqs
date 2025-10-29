@@ -4,7 +4,7 @@ import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import Script from 'next/script'
 import { NuqsAdapter } from 'nuqs/adapters/next/app'
-import { Suspense, type ReactNode } from 'react'
+import { type ReactNode } from 'react'
 import { ResponsiveHelper } from '../components/responsive-helpers'
 import { cn } from '../lib/utils'
 import './globals.css'
@@ -52,9 +52,7 @@ export default function Layout({ children }: { children: ReactNode }) {
       <body>
         {/* Top-level banners go here */}
         <RootProvider>
-          <Suspense>
-            <NuqsAdapter>{children}</NuqsAdapter>
-          </Suspense>
+          <NuqsAdapter>{children}</NuqsAdapter>
         </RootProvider>
         {enableChiffreAnalytics && (
           <Script
