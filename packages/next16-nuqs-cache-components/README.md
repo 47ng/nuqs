@@ -11,7 +11,7 @@ Having a build package from NPM doesn't show this behaviour.
 ## Reproduction
 
 1. Clone the nuqs repository
-2. checkout the following `test/monorepo-repro-next16-nuqs-cache-components` branch.
+2. checkout the `test/monorepo-repro-next16-nuqs-cache-components` branch.
 3. Install dependencies with `pnpm install`.
 4. Build the package and its dependencies `pnpm run build --filter next16-nuqs-cache-components...`
 
