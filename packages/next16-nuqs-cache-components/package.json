@@ -1,0 +1,23 @@
+{
+  "name": "next16-nuqs-cache-components",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start"
+  },
+  "dependencies": {
+    "next": "16.0.1",
+    "nuqs": "workspace:*",
+    "react": "catalog:react19",
+    "react-dom": "catalog:react19"
+  },
+  "devDependencies": {
+    "@types/node": "^24.3.0",
+    "@types/react": "catalog:react19",
+    "@types/react-dom": "catalog:react19",
+    "babel-plugin-react-compiler": "1.0.0",
+    "typescript": "^5.9.2"
+  }
+}
