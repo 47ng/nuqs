@@ -1,0 +1,17 @@
+{
+  "name": "registry",
+  "description": "Shadcn CLI registry for community parsers & utilities",
+  "scripts": {
+    "test": "pnpm run --stream '/^test:/'",
+    "test:unit": "vitest run --typecheck"
+  },
+  "dependencies": {
+    "next": "15.5.0",
+    "nuqs": "workspace:*",
+    "shadcn": "^3.4.2"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.2",
+    "vitest": "^3.2.4"
+  }
+}

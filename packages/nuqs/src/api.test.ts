@@ -73,6 +73,9 @@ const exports = `
     "NuqsTestingAdapter": "function",
     "withNuqsTestingAdapter": "function",
   },
+  "./lib": {
+    "safeParse": "function",
+  },
   "./server": {
     "createLoader": "function",
     "createMultiParser": "function",
