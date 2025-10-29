@@ -1,36 +1,52 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+Reproduction for an issue where in a PNPM monorepo, when Turbopack
+encounters an error using a dynamic API with cacheComponents,
+it marks monorepo packages sources as `<unknown>` and dumps its source
+code as part of the HTML element stack trace pointing to the component
+where "use cache" or Suspense should be used.
 
-## Getting Started
+This causes confusion to have unrelated code in the stack trace.
 
-First, run the development server:
+Having a build package from NPM doesn't show this behaviour.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## Reproduction
+
+1. Clone the nuqs repository
+2. checkout the following `test/monorepo-repro-next16-nuqs-cache-components` branch.
+3. Install dependencies with `pnpm install`.
+4. Build the package and its dependencies `pnpm run build --filter next16-nuqs-cache-components...`
+
+Observe the error:
+
 ```
+> next build --debug-prerender
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+ ⚠ Prerendering is running in debug mode. Note: This may affect performance and should not be used for production.
+   ▲ Next.js 16.0.1 (Turbopack, Cache Components)
+   - Experiments (use with caution):
+     ⨯ prerenderEarlyExit (disabled by `--debug-prerender`)
+     ✓ serverSourceMaps (enabled by `--debug-prerender`)
+     ⨯ turbopackMinify (disabled by `--debug-prerender`)
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+   Creating an optimized production build ...
+ ✓ Compiled successfully in 1993.8ms
+ ✓ Finished TypeScript in 1536.9ms
+ ✓ Collecting page data in 599.0ms
+Error: Route "/": Uncached data was accessed outside of <Suspense>. This delays the entire page from rendering, resulting in a slow user experience. Learn more: https://nextjs.org/docs/messages/blocking-route
+    at section (<anonymous>)
+    at <unknown> (turbopack:///[project]/packages/nuqs/src/adapters/lib/context.ts:63:13)
+    at NuqsAdapter (turbopack:///[project]/packages/nuqs/src/adapters/next/app.ts:13:3)
+    at body (<anonymous>)
+    at html (<anonymous>)
+  61 |   useAdapter: UseAdapterHook
+  62 | ): AdapterProvider {
+> 63 |   return ({ children, defaultOptions, processUrlSearchParams, ...props }) =>
+     |             ^
+  64 |     createElement(
+  65 |       context.Provider,
+  66 |       {
+To get a more detailed stack trace and pinpoint the issue, start the app in development mode by running `next dev`, then open "/" in your browser to investigate the error.
+Error occurred prerendering page "/". Read more: https://nextjs.org/docs/messages/prerender-error
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+> Export encountered errors on following paths:
+        /page: /
+```
