@@ -94,7 +94,7 @@ const sentryConfig = {
   // For all available options, see:
   // https://github.com/getsentry/sentry-webpack-plugin#options
 
-  silent: false,
+  silent: true,
   org: process.env.SENTRY_ORG,
   project: process.env.SENTRY_PROJECT,
   authToken: process.env.SENTRY_AUTH_TOKEN,
@@ -126,7 +126,11 @@ const sentryConfig = {
   // https://vercel.com/docs/cron-jobs
   automaticVercelMonitors: true,
 
-  debug: true
+  debug: false
+}
+
+if (enableSentry) {
+  console.info('Sentry is enabled for this build.')
 }
 
 export default enableSentry

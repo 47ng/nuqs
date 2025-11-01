@@ -8,11 +8,6 @@ const enabled =
   Boolean(process.env.NEXT_PUBLIC_SENTRY_DSN) &&
   ['production', 'preview'].includes(process.env.VERCEL_ENV ?? '')
 
-console.dir({
-  dsnAvailable: Boolean(process.env.NEXT_PUBLIC_SENTRY_DSN),
-  vercelEnv: process.env.VERCEL_ENV
-})
-
 Sentry.init({
   dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
   enabled,
