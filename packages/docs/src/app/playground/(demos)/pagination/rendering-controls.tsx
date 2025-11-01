@@ -6,13 +6,11 @@ import { useQueryStates } from 'nuqs'
 import {
   RenderingOptions,
   renderingOptions,
-  searchParams
-} from './searchParams'
+  usePaginationControls
+} from './search-params'
 
 export function RenderingControls() {
-  const [{ renderOn, delay }, setControls] = useQueryStates(searchParams, {
-    shallow: false
-  })
+  const [{ renderOn, delay }, setControls] = usePaginationControls()
   return (
     <nav className="not-prose">
       <ul className="space-y-2">

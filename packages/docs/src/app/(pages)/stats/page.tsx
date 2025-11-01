@@ -13,8 +13,6 @@ import { WidgetSkeleton } from './_components/widget.skeleton'
 import { getVersions, sumVersions } from './lib/versions'
 import { loadSearchParams } from './searchParams'
 
-export const dynamic = 'force-dynamic'
-
 type StatsPageProps = {
   searchParams: Promise<SearchParams>
 }

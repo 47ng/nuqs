@@ -109,6 +109,7 @@ jobs:
       - name: Build docs
         run: pnpm run build --filter docs
         env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
           TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
       - uses: 47ng/actions-slack-notify@main

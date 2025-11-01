@@ -9,9 +9,8 @@ import {
   PaginationPrevious
 } from '@/src/components/ui/pagination'
 import { cn } from '@/src/lib/utils'
-import { useQueryState } from 'nuqs'
 import React from 'react'
-import { searchParams } from './searchParams'
+import { usePage } from './search-params'
 
 type PaginationControlsProps = {
   numPages: number
@@ -23,13 +22,7 @@ export function ClientPaginationControls({
   numPages
 }: PaginationControlsProps) {
   const [isLoading, startTransition] = React.useTransition()
-  const [page, setPage] = useQueryState(
-    'page',
-    searchParams.page.withOptions({
-      startTransition,
-      shallow: false // Send updates to the server
-    })
-  )
+  const [page, setPage] = usePage({ startTransition })
   return (
     <Pagination className="not-prose items-center gap-2">
       <PaginationContent>

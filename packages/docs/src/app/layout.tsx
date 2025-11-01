@@ -1,9 +1,10 @@
-import { RootProvider } from 'fumadocs-ui/provider'
+import * as Sentry from '@sentry/nextjs'
+import { RootProvider } from 'fumadocs-ui/provider/next'
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import Script from 'next/script'
-import { NuqsAdapter } from 'nuqs/adapters/next'
-import type { ReactNode } from 'react'
+import { NuqsAdapter } from 'nuqs/adapters/next/app'
+import { type ReactNode } from 'react'
 import { ResponsiveHelper } from '../components/responsive-helpers'
 import { cn } from '../lib/utils'
 import './globals.css'
@@ -25,7 +26,10 @@ export const metadata = {
       name: 'François Best',
       url: 'https://francoisbest.com'
     }
-  ]
+  ],
+  other: {
+    ...Sentry.getTraceData()
+  }
 } satisfies Metadata
 
 export default function Layout({ children }: { children: ReactNode }) {

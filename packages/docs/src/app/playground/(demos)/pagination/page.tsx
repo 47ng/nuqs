@@ -9,7 +9,7 @@ import { ClientPaginationControls } from './pagination-controls.client'
 import { ServerPaginationControls } from './pagination-controls.server'
 import { ProductView } from './product'
 import { RenderingControls } from './rendering-controls'
-import { searchParamsCache } from './searchParams'
+import { loadPagination, type PaginationSearchParams } from './search-params'
 
 export const metadata = getMetadata('pagination')
 
@@ -17,9 +17,13 @@ type PageProps = {
   searchParams: Promise<SearchParams>
 }
 
+type PaginatedProps = {
+  pagination: Promise<PaginationSearchParams>
+}
+
 export default async function PaginationDemoPage({ searchParams }: PageProps) {
   // Allow nested RSCs to access the search params (in a type-safe way)
-  await searchParamsCache.parse(searchParams)
+  const pagination = loadPagination(searchParams)
   return (
     <>
       <h1>{metadata.title}</h1>
@@ -29,11 +33,13 @@ export default async function PaginationDemoPage({ searchParams }: PageProps) {
         <RenderingControls />
       </Suspense>
       <Separator className="my-8" />
-      <PaginationRenderer />
       <Suspense>
-        <ProductSection />
+        <PaginationRenderer pagination={pagination} />
       </Suspense>
-      <SourceOnGitHub path="pagination/searchParams.ts" />
+      <Suspense>
+        <ProductSection pagination={pagination} />
+      </Suspense>
+      <SourceOnGitHub path="pagination/search-params.ts" />
       <SourceOnGitHub path="pagination/page.tsx" />
       <SourceOnGitHub path="pagination/pagination-controls.server.tsx" />
       <SourceOnGitHub path="pagination/pagination-controls.client.tsx" />
@@ -41,9 +47,8 @@ export default async function PaginationDemoPage({ searchParams }: PageProps) {
   )
 }
 
-function PaginationRenderer() {
-  // Showcasing the use of search params cache in nested RSCs
-  const renderOn = searchParamsCache.get('renderOn')
+async function PaginationRenderer({ pagination }: PaginatedProps) {
+  const { renderOn } = await pagination
   return (
     <>
       <h2>
@@ -53,7 +58,10 @@ function PaginationRenderer() {
         </small>
       </h2>
       {renderOn === 'server' && (
-        <ServerPaginationControls numPages={pageCount} />
+        <ServerPaginationControls
+          numPages={pageCount}
+          pagination={pagination}
+        />
       )}
       <Suspense key="client">
         {renderOn === 'client' && (
@@ -64,8 +72,8 @@ function PaginationRenderer() {
   )
 }
 
-async function ProductSection() {
-  const { page, delay } = searchParamsCache.all()
+async function ProductSection({ pagination }: PaginatedProps) {
+  const { page, delay } = await pagination
   const products = await fetchProducts(page, delay)
   return (
     <section>

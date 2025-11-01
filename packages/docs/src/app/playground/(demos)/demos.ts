@@ -1,4 +1,4 @@
-import type { PageTree } from 'fumadocs-core/server'
+import type * as PageTree from 'fumadocs-core/page-tree'
 
 type DemoMetadata = {
   title: string

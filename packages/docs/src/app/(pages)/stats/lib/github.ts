@@ -1,5 +1,6 @@
 import dayjs from 'dayjs'
 import utc from 'dayjs/plugin/utc'
+import { cacheLife, cacheTag } from 'next/cache'
 import 'server-only'
 import { z } from 'zod'
 
@@ -35,6 +36,9 @@ const repositoryQuerySchema = z.object({
 export async function fetchRepository(
   slug = '47ng/nuqs'
 ): Promise<GitHubRepositoryData> {
+  'use cache'
+  cacheTag('github')
+  cacheLife('hours')
   const [owner, repo] = slug.split('/')
   const query = `query {
   repository(owner: "${owner}", name: "${repo}") {
@@ -56,11 +60,7 @@ export async function fetchRepository(
     headers: {
       Authorization: `bearer ${process.env.GITHUB_TOKEN}`
     },
-    body: JSON.stringify({ query }),
-    next: {
-      tags: ['github'],
-      revalidate: 3600 // 1h
-    }
+    body: JSON.stringify({ query })
   })
   const {
     data: { repository }
@@ -126,6 +126,9 @@ const starHistoryQuerySchema = z.object({
 export async function getStarHistory(
   slug = '47ng/nuqs'
 ): Promise<GitHubStarHistory> {
+  'use cache'
+  cacheTag('github')
+  cacheLife('hours')
   const [owner, repo] = slug.split('/')
 
   // Compute the 12-day window [today .. today-11d] in UTC
@@ -178,11 +181,7 @@ export async function getStarHistory(
       headers: {
         Authorization: `bearer ${process.env.GITHUB_TOKEN}`
       },
-      body: JSON.stringify({ query }),
-      next: {
-        tags: ['github'],
-        revalidate: 3600 // 1h
-      }
+      body: JSON.stringify({ query })
     })
 
     const {
