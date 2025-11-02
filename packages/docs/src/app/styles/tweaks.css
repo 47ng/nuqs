@@ -1,7 +1,9 @@
 @layer utilities {
   /* Background & line spacing for code blocks */
-  .bg-fd-secondary:has(pre) {
-    @apply bg-zinc-100/50 leading-normal dark:bg-zinc-900/50;
+  /* eg: The demo code block on the landing page */
+  figure.bg-fd-card:has(pre),
+  figure.bg-fd-secondary:has(pre) {
+    @apply bg-zinc-50/50 leading-normal dark:bg-zinc-900/50;
   }
 }
 
@@ -13,10 +15,10 @@
   }
 }
 
+/* Center-align copy button in code blocks with single line */
 @layer utilities {
-  /* Better vertical alignment of code block titles */
-  figure:has(figcaption.truncate):has(pre) {
-    @apply pt-0;
+  figure:has(pre code > .line:only-child) > div:has(button) {
+    @apply top-0 bottom-0 flex items-center;
   }
 }
 
@@ -25,16 +27,14 @@
   @apply -mx-1 rounded-sm border-none px-1;
 }
 
-/* Highlighted lines in code blocks (match border color of container) */
+/* Highlighted lines in code blocks */
 @supports (color: color-mix(in lab, red, red)) {
   .shiki:not(.not-fumadocs-codeblock *) code .line.highlighted {
-    background-color: var(--color-border);
+    background-color: var(--color-fd-secondary);
   }
 }
 
-/* Fix x-spacing in inline code spans */
 .shiki:not(.not-fumadocs-codeblock *):has(> code .line) {
-  --spacing: 0.5px;
   & code {
     /*
       Reduce vertical padding to allow two inline code blocks
@@ -50,14 +50,18 @@ header#nd-subnav.bg-fd-background\/80 {
   background-color: hsla(var(--background) / 0.8);
 }
 
-/* Remove top radius on code blocks in tabs (see testing.mdx for Vitest) */
-div[role='tabpanel'] > figure:has(figcaption.truncate):has(pre) {
-  @apply rounded-t-none;
-}
-
-/* Make the copy code button hover blend better with the container border
-  (but only if there isn't a title bar, otherwise it looks weird) */
-figure:not(:has(figcaption)) button[aria-label='Copy Text'],
-figure:not(:has(figcaption)) button[aria-label='Copied Text'] {
-  @apply rounded-tl-none rounded-br-none;
+/* Tabs with code blocks (eg: loaders) */
+@layer utilities {
+  div:has(> [role='tablist']) {
+    @apply bg-fd-card;
+    & [role='tablist'] {
+      @apply border-border border-b;
+    }
+    & > [role='tabpanel'] {
+      @apply rounded-t-none;
+      & figure:has(pre) {
+        @apply rounded-t-none border-t-0;
+      }
+    }
+  }
 }
