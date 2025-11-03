@@ -17,7 +17,12 @@ export default defineConfig({
 })
 
 export const { docs, meta } = defineDocs({
-  dir: 'content/docs'
+  dir: 'content/docs',
+  docs: {
+    postprocess: {
+      includeProcessedMarkdown: true,
+    },
+  }
 })
 
 export const blog = defineCollections({
