@@ -1,3 +1,5 @@
+// @ts-check
+
 const basePath =
   process.env.BASE_PATH === '/' ? undefined : process.env.BASE_PATH
 
@@ -5,9 +7,9 @@ const basePath =
 const config = {
   basePath,
   productionBrowserSourceMaps: true,
+  reactCompiler: process.env.REACT_COMPILER === 'true',
   experimental: {
     clientRouterFilter: false,
-    ...(process.env.REACT_COMPILER === 'true' ? { reactCompiler: true } : {}),
     serverSourceMaps: true
   },
   transpilePackages: ['e2e-shared'],
@@ -26,7 +28,7 @@ const config = {
 
 console.info(`Next.js config:
   basePath:       ${config.basePath}
-  reactCompiler:  ${config.experimental?.reactCompiler ?? false}
+  reactCompiler:  ${config.reactCompiler}
 `)
 
 export default config

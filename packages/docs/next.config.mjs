@@ -5,17 +5,39 @@ import { createMDX } from 'fumadocs-mdx/next'
 
 const withFumadocsMDX = createMDX()
 
+const enableSentry =
+  Boolean(process.env.NEXT_PUBLIC_SENTRY_DSN) &&
+  Boolean(process.env.SENTRY_AUTH_TOKEN) &&
+  ['production', 'preview'].includes(process.env.VERCEL_ENV ?? '')
+
 /** @type {import('next').NextConfig} */
 const config = {
   outputFileTracingIncludes: {
     '/playground/pagination': [
-      './src/app/playground/(demos)/pagination/searchParams.ts',
+      './src/app/playground/(demos)/pagination/search-params.ts',
       './src/app/playground/(demos)/pagination/page.tsx',
       './src/app/playground/(demos)/pagination/pagination-controls.server.tsx',
       './src/app/playground/(demos)/pagination/pagination-controls.client.tsx'
     ]
   },
+  reactCompiler: true,
+  cacheComponents: true,
   reactStrictMode: true,
+  cacheLife: {
+    static: {
+      // Only changes on new deploys, assuming we at least deploy once a year
+      stale: 300, // 5 minutes for the client cache
+      revalidate: 365 * 24 * 60 * 60, // 1 year
+      expire: 366 * 24 * 60 * 60 // 1 year + 1 day (has to be greater than revalidate)
+    }
+  },
+  turbopack: {
+    debugIds: enableSentry
+  },
+  experimental: {
+    isolatedDevBuild: true
+  },
+  productionBrowserSourceMaps: enableSentry,
   redirects: async () => {
     return [
       {
@@ -65,45 +87,52 @@ const config = {
   }
 }
 
+/**
+ * @type {import('@sentry/nextjs').SentryBuildOptions}
+ */
 const sentryConfig = {
   // For all available options, see:
   // https://github.com/getsentry/sentry-webpack-plugin#options
 
-  // Suppresses source map uploading logs during build
   silent: true,
   org: process.env.SENTRY_ORG,
   project: process.env.SENTRY_PROJECT,
-  authToken: process.env.SENTRY_AUTH_TOKEN
-}
-
-const sentryOptions = {
-  // For all available options, see:
-  // https://docs.sentry.io/platforms/javascript/guides/nextjs/manual-setup/
+  authToken: process.env.SENTRY_AUTH_TOKEN,
 
   // Upload a larger set of source maps for prettier stack traces (increases build time)
-  widenClientFileUpload: false,
+  widenClientFileUpload: true,
 
-  // Transpiles SDK to be compatible with IE11 (increases bundle size)
-  transpileClientSDK: false,
+  release: {
+    setCommits: process.env.VERCEL_GIT_COMMIT_SHA
+      ? {
+          // https://github.com/getsentry/sentry-javascript-bundler-plugins/issues/443#issuecomment-1815988709
+          repo: '47ng/nuqs',
+          commit: process.env.VERCEL_GIT_COMMIT_SHA
+        }
+      : { auto: true }
+  },
 
   // Routes browser requests to Sentry through a Next.js rewrite to circumvent ad-blockers. (increases server load)
   // Note: Check that the configured route will not match with your Next.js middleware, otherwise reporting of client-
   // side errors will fail.
   // tunnelRoute: '/sentry',
 
-  hideSourceMaps: false,
-
   // Automatically tree-shake Sentry logger statements to reduce bundle size
-  disableLogger: true,
+  // disableLogger: true,
 
   // Enables automatic instrumentation of Vercel Cron Monitors.
   // See the following for more information:
   // https://docs.sentry.io/product/crons/
   // https://vercel.com/docs/cron-jobs
-  automaticVercelMonitors: true
+  automaticVercelMonitors: true,
+
+  debug: false
 }
 
-export default withSentryConfig(withFumadocsMDX(config), {
-  ...sentryConfig,
-  ...sentryOptions
-})
+if (enableSentry) {
+  console.info('Sentry is enabled for this build.')
+}
+
+export default enableSentry
+  ? withSentryConfig(withFumadocsMDX(config), sentryConfig)
+  : withFumadocsMDX(config)

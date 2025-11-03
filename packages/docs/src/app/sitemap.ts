@@ -1,10 +1,11 @@
 import { getBaseUrl } from '@/src/lib/url'
-import { getGithubLastEdit } from 'fumadocs-core/server'
+import { getGithubLastEdit } from 'fumadocs-core/content/github'
 import type { MetadataRoute } from 'next'
+import { cacheLife } from 'next/cache'
 import { demos } from './playground/(demos)/demos'
 import { blog, source } from './source'
 
-export const revalidate = false // disable ISR
+export const dynamic = 'force-static'
 
 type SitemapEntry = MetadataRoute.Sitemap[number]
 
@@ -31,6 +32,8 @@ const staticPagesChangeFrequency: Record<
 }
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  'use cache'
+  cacheLife('static')
   const baseUrl = getBaseUrl()
 
   // todo: Automate retrieval of static pages

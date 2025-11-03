@@ -19,7 +19,7 @@ export async function CodeBlock({
       custom={compact ? 'compact' : undefined}
       {...props}
     >
-      <Pre className="px-2" dangerouslySetInnerHTML={{ __html: highlighted }} />
+      <Pre dangerouslySetInnerHTML={{ __html: highlighted }} />
     </FumaDocsCodeBlock>
   )
 }

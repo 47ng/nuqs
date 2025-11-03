@@ -1,3 +1,5 @@
+'use cache'
+
 import { blog } from '@/src/app/source'
 import {
   Breadcrumb,
@@ -10,14 +12,14 @@ import {
 import { Card } from 'fumadocs-ui/components/card'
 import { DocsDescription, DocsTitle } from 'fumadocs-ui/page'
 import { RssIcon } from 'lucide-react'
+import { cacheLife } from 'next/cache'
 import Link from 'next/link'
 import { ComponentProps } from 'react'
 import { PageFooter } from '../_landing/page-footer'
 import { getBlogPosts } from './_lib/source'
 
-export const dynamic = 'force-static'
-
 export default async function BlogIndexPage() {
+  cacheLife('static')
   const posts = getBlogPosts()
   return (
     <>
