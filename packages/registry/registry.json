@@ -4,6 +4,20 @@
   "homepage": "https://nuqs.dev",
   "items": [
     {
+      "name": "parse-as-tuple",
+      "type": "registry:item",
+      "title": "Tuples",
+      "description": "Parse query string as a tuple of values.",
+      "dependencies": ["nuqs"],
+      "files": [
+        {
+          "path": "parsers/parse-as-tuple.ts",
+          "type": "registry:file",
+          "target": "~/src/lib/parsers/parse-as-tuple.ts"
+        }
+      ]
+    },
+    {
       "type": "registry:item",
       "name": "next-typed-links",
       "title": "Typed Links for Next.js",
@@ -12,7 +26,7 @@
       "files": [
         {
           "type": "registry:file",
-          "path": "src/lib/typed-links.ts",
+          "path": "lib/typed-links.ts",
           "target": "~/src/lib/typed-links.ts"
         }
       ]
