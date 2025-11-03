@@ -18,7 +18,7 @@
 /* Center-align copy button in code blocks with single line */
 @layer utilities {
   figure:has(pre code > .line:only-child) > div:has(button) {
-    @apply top-0 bottom-0 flex items-center;
+    @apply top-2 bottom-2 flex items-center;
   }
 }
 
