@@ -1,4 +1,5 @@
 import { cn } from '@/src/lib/utils'
+import { cacheLife } from 'next/cache'
 import { z } from 'zod'
 
 const dependentSchema = z.object({
@@ -13,15 +14,15 @@ const dependentSchema = z.object({
 type Dependent = z.infer<typeof dependentSchema>
 
 export async function fetchDependents() {
-  const data = await fetch('https://dependents.47ng.com', {
-    next: {
-      revalidate: 86_400
-    }
-  }).then(res => res.json())
+  const data = await fetch('https://dependents.47ng.com').then(res =>
+    res.json()
+  )
   return z.array(dependentSchema).parse(data)
 }
 
 export async function DependentsSection() {
+  'use cache'
+  cacheLife('hours')
   let dependents: Dependent[] = []
   try {
     dependents = await fetchDependents()
@@ -31,7 +32,7 @@ export async function DependentsSection() {
   }
   return (
     <section className="container space-y-16">
-      <h2 className="text-center text-3xl font-bold tracking-tighter dark:text-white md:text-4xl xl:text-5xl">
+      <h2 className="text-center text-3xl font-bold tracking-tighter md:text-4xl xl:text-5xl dark:text-white">
         Used by
       </h2>
       <p className="flex flex-wrap items-center justify-center gap-x-16 gap-y-8">
@@ -73,7 +74,7 @@ export async function DependentsSection() {
           <svg
             xmlns="http://www.w3.org/2000/svg"
             viewBox="0 0 102 30"
-            className="inline h-8 fill-black dark:fill-white md:h-10"
+            className="inline h-8 fill-black md:h-10 dark:fill-white"
             fill="none"
             aria-label="Midday.ai"
           >
@@ -94,7 +95,7 @@ export async function DependentsSection() {
             xmlns="http://www.w3.org/2000/svg"
             viewBox="0 0 278 278"
             fill="none"
-            className="inline h-8 fill-black dark:fill-white md:h-10"
+            className="inline h-8 fill-black md:h-10 dark:fill-white"
             role="presentation"
           >
             <rect width="278" height="278" rx="20" fill="#2664EB" />
@@ -147,7 +148,7 @@ export async function DependentsSection() {
             />
             <span
               className={cn(
-                'absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-background',
+                'border-background absolute right-0 bottom-0 h-2.5 w-2.5 rounded-full border-2',
                 dep.pkg === 'nuqs' ? 'bg-green-500' : 'bg-zinc-500'
               )}
               aria-label={`Using ${dep.pkg}`}

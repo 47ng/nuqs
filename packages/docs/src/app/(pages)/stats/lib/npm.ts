@@ -1,6 +1,7 @@
 import dayjs from 'dayjs'
 import isoWeek from 'dayjs/plugin/isoWeek'
 import minMax from 'dayjs/plugin/minMax'
+import { cacheLife, cacheTag } from 'next/cache'
 import 'server-only'
 import { z } from 'zod'
 
@@ -115,6 +116,9 @@ async function getAllTime(pkg: string): Promise<number> {
 export async function fetchNpmPackage(
   pkg: string
 ): Promise<NpmPackageStatsData> {
+  'use cache'
+  cacheTag('npm')
+  cacheLife('days')
   // Ensure we cover 90 days + a full first week
   const startOfFirstWeek = dayjs().subtract(90, 'day').startOf('isoWeek')
   const ninetyOrSoDays = dayjs().diff(startOfFirstWeek, 'day')

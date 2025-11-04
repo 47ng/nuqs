@@ -12,6 +12,7 @@ import {
 } from 'fumadocs-ui/page'
 import { Link } from 'lucide-react'
 import type { Metadata } from 'next'
+import { cacheLife } from 'next/cache'
 import NextLink from 'next/link'
 import { readRegistry, readRegistryItem, readUsage } from './_lib/read'
 import type { RegistryFile, RegistryItem } from './_lib/schemas'
@@ -23,6 +24,8 @@ export const metadata = {
 } satisfies Metadata
 
 export default async function Page() {
+  'use cache'
+  cacheLife('static') // Only changes on new deploys
   const registry = await readRegistry()
   return (
     <DocsPage
@@ -85,7 +88,7 @@ function Installation({ name, files }: Pick<RegistryItem, 'name' | 'files'>) {
         <Tab value="CLI">
           <CodeBlock
             preHighlighted
-            code={`<pre><div class="px-1">npx shadcn<span class="text-muted-foreground">@latest</span> add @nuqs/${name}<div/></pre>`}
+            code={`<pre><code><span class="line">npx shadcn<span style="color:var(--color-muted-foreground);">@latest</span> add @nuqs/${name}<span/></code></pre>`}
           />
         </Tab>
         <Tab value="Manual">
