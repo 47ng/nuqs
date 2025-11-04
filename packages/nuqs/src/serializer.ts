@@ -90,6 +90,7 @@ export function createSerializer<
       const urlKey = urlKeys[key] ?? key
       const isMatchingDefault =
         parser.defaultValue !== undefined &&
+        value !== null &&
         (parser.eq ?? ((a, b) => a === b))(value, parser.defaultValue)
 
       if (

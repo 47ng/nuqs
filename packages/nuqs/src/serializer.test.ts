@@ -102,6 +102,13 @@ describe('serializer', () => {
     const result = serialize('?int=0&str=foo', { int: null })
     expect(result).toBe('?str=foo')
   })
+  it('clears value when setting null for an array parser with a default value', () => {
+    const serialize = createSerializer({
+      arr: parseAsArrayOf(parseAsString).withDefault([])
+    })
+    const result = serialize('?arr=a&arr=b&str=foo', { arr: null })
+    expect(result).toBe('?str=foo')
+  })
   it('clears value when setting the default value (`clearOnDefault: true` is the default)', () => {
     const serialize = createSerializer({
       int: parseAsInteger.withDefault(0),
