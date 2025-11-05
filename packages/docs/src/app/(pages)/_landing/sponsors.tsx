@@ -1,10 +1,13 @@
 import { Button } from '@/src/components/ui/button'
 import { cn } from '@/src/lib/utils'
 import { Heart } from 'lucide-react'
+import { cacheLife } from 'next/cache'
 import type { ComponentProps, ReactNode } from 'react'
 import { z } from 'zod'
 
 export async function SponsorsSection() {
+  'use cache'
+  cacheLife('static')
   const sponsors = await fetchSponsors()
   return (
     <section className="mb-24">
@@ -54,6 +57,8 @@ export async function InlineSponsorsList({
   className,
   ...props
 }: ComponentProps<'ul'>) {
+  'use cache'
+  cacheLife('static')
   const sponsors = await fetchSponsors()
   return (
     <ul
