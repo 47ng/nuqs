@@ -1,7 +1,8 @@
-import { cacheTag } from 'next/cache'
+import { cacheLife, cacheTag } from 'next/cache'
 
 export async function SidebarFooter() {
   'use cache'
+  cacheLife('static')
   cacheTag('npm-version')
   const version = await getLatestVersion()
   return (

@@ -8,6 +8,7 @@ import {
   DocsTitle
 } from 'fumadocs-ui/page'
 import type { Metadata } from 'next'
+import { cacheLife } from 'next/cache'
 import { notFound } from 'next/navigation'
 import { stat } from 'node:fs/promises'
 
@@ -16,6 +17,8 @@ type PageProps = {
 }
 
 export default async function Page(props: PageProps) {
+  'use cache'
+  cacheLife('static')
   const { slug } = await props.params
   const page = source.getPage(slug)
 
@@ -59,6 +62,8 @@ export async function generateMetadata(props: PageProps) {
 async function getSocialImages(
   slug: string[]
 ): Promise<Pick<Metadata, 'openGraph' | 'twitter'>> {
+  'use cache'
+  cacheLife('static')
   try {
     const publicImagePath = `${process.cwd()}/public/og/${slug.join('/')}.jpg`
     await stat(publicImagePath) // Does it exist?
