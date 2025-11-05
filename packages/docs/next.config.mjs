@@ -6,6 +6,7 @@ import { createMDX } from 'fumadocs-mdx/next'
 const withFumadocsMDX = createMDX()
 
 const enableSentry =
+  process.env.ENABLE_SENTRY === 'true' &&
   Boolean(process.env.NEXT_PUBLIC_SENTRY_DSN) &&
   Boolean(process.env.SENTRY_AUTH_TOKEN) &&
   ['production', 'preview'].includes(process.env.VERCEL_ENV ?? '')
