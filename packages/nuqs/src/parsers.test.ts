@@ -86,9 +86,12 @@ describe('parsers', () => {
   })
   it('parseAsBoolean', () => {
     expect(parseAsBoolean.parse('')).toBe(false)
-    // In only triggers on 'true', everything else is false
+    // It only triggers on 'true' (case insensitive), everything else is false
     expect(parseAsBoolean.parse('true')).toBe(true)
+    expect(parseAsBoolean.parse('TRUE')).toBe(true)
+    expect(parseAsBoolean.parse('True')).toBe(true)
     expect(parseAsBoolean.parse('false')).toBe(false)
+    expect(parseAsBoolean.parse('FALSE')).toBe(false)
     expect(parseAsBoolean.parse('0')).toBe(false)
     expect(parseAsBoolean.parse('1')).toBe(false)
     expect(parseAsBoolean.parse('yes')).toBe(false)
