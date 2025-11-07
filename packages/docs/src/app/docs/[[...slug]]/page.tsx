@@ -11,6 +11,8 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { stat } from 'node:fs/promises'
 
+export const dynamic = 'force-static'
+
 type PageProps = {
   params: Promise<{ slug?: string[] }>
 }

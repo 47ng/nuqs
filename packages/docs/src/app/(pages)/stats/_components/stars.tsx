@@ -1,4 +1,5 @@
 import { Star } from 'lucide-react'
+import { connection } from 'next/server'
 import { getStarHistory } from '../lib/github'
 import { GraphSkeleton } from './graph.skeleton'
 import { StarsGraph } from './stars.client'
@@ -6,6 +7,7 @@ import StargazersList from './stars.gazers-list'
 import { WidgetSkeleton } from './widget.skeleton'
 
 export async function StarHistoryGraph() {
+  await connection()
   const stars = await getStarHistory()
   return (
     <StarsGraph data={stars} stargazersTab={<StargazersList stars={stars} />} />

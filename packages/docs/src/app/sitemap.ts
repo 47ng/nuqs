@@ -1,10 +1,11 @@
 import { getBaseUrl } from '@/src/lib/url'
-import { getGithubLastEdit } from 'fumadocs-core/server'
+import { getGithubLastEdit } from 'fumadocs-core/content/github'
 import type { MetadataRoute } from 'next'
 import { demos } from './playground/(demos)/demos'
 import { blog, source } from './source'
 
-export const revalidate = false // disable ISR
+export const revalidate = false // Disable ISR
+export const dynamic = 'force-static'
 
 type SitemapEntry = MetadataRoute.Sitemap[number]
 

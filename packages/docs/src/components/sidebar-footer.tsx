@@ -17,7 +17,7 @@ async function getLatestVersion() {
   try {
     const res = await fetch('https://registry.npmjs.org/nuqs', {
       next: {
-        tags: ['npm']
+        tags: ['npm-version']
       }
     }).then(r => r.json())
     return res['dist-tags'].latest

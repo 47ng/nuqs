@@ -17,7 +17,7 @@ import { getBlogPosts } from './_lib/source'
 
 export const dynamic = 'force-static'
 
-export default async function BlogIndexPage() {
+export default function BlogIndexPage() {
   const posts = getBlogPosts()
   return (
     <>

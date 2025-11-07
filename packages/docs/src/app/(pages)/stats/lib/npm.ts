@@ -134,7 +134,7 @@ async function get(url: string): Promise<unknown> {
   const res = await fetch(url, {
     next: {
       revalidate: 86_400,
-      tags: ['npm']
+      tags: ['npm-stats']
     }
   })
   return res.json()

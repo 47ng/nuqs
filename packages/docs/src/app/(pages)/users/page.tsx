@@ -27,7 +27,7 @@ async function UsersList() {
     <ul className="space-y-2">
       {repos.map(repo => (
         <li key={repo.owner + repo.name} className="flex items-center gap-4">
-          <span className="inline-block h-2.5 w-2.5 rounded-full border-2 border-background">
+          <span className="border-background inline-block h-2.5 w-2.5 rounded-full border-2">
             <span
               className={`block h-2 w-2 rounded-full ${
                 repo.pkg === 'nuqs' ? 'bg-green-500' : 'bg-zinc-500'

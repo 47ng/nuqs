@@ -17,6 +17,12 @@ type PageProps = {
   params: Promise<{ slug: string }>
 }
 
+export async function generateStaticParams(): Promise<{ slug: string }[]> {
+  const pages = blog.getPages()
+  const slugs = new Set(pages.flatMap(page => page.slugs))
+  return Array.from(slugs).map(slug => ({ slug }))
+}
+
 // Image generation
 export default async function Image({ params }: PageProps) {
   const { slug } = await params

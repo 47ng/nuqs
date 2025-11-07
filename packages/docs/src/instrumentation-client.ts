@@ -4,9 +4,14 @@
 
 import * as Sentry from '@sentry/nextjs'
 
+const enabled =
+  process.env.ENABLE_SENTRY === 'true' &&
+  Boolean(process.env.NEXT_PUBLIC_SENTRY_DSN) &&
+  ['production', 'preview'].includes(process.env.VERCEL_ENV ?? '')
+
 Sentry.init({
   dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
-  enabled: ['production', 'preview'].includes(process.env.VERCEL_ENV ?? ''),
+  enabled,
 
   // Adjust this value in production, or use tracesSampler for greater control
   tracesSampleRate: 1,
@@ -29,3 +34,5 @@ Sentry.init({
     })
   ]
 })
+
+export const onRouterTransitionStart = Sentry.captureRouterTransitionStart

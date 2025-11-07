@@ -57,6 +57,7 @@
         "VERCEL_ENV",
         "VERCEL_URL",
         "VERCEL_PROJECT_PRODUCTION_URL",
+        "ENABLE_SENTRY",
         "SENTRY_ORG",
         "SENTRY_PROJECT",
         "SENTRY_AUTH_TOKEN",

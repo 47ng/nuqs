@@ -4,15 +4,124 @@ import { Heart } from 'lucide-react'
 import type { ComponentProps, ReactNode } from 'react'
 import { z } from 'zod'
 
-export async function SponsorsSection() {
-  const sponsors = await fetchSponsors()
+const sponsorSchema = z.object({
+  name: z.string().nullish(),
+  handle: z.string(),
+  url: z.string().url(),
+  img: z.string().url(),
+  title: z.custom<ReactNode>().optional()
+})
+type Sponsors = z.infer<typeof sponsorSchema>[]
+
+const SPONSORS: Sponsors = [
+  {
+    handle: 'vercel',
+    name: 'Vercel',
+    url: 'https://vercel.com/',
+    img: 'https://avatars.githubusercontent.com/u/14985020?s=200&v=4'
+  },
+  {
+    handle: 'unkey.com',
+    name: 'Unkey',
+    url: 'https://unkey.com',
+    img: 'https://avatars.githubusercontent.com/u/138932600?s=200&v=4'
+  },
+  {
+    handle: 'openstatus.dev',
+    name: 'OpenStatus',
+    url: 'https://openstatus.dev',
+    img: 'https://avatars.githubusercontent.com/u/136892265?s=200&v=4'
+  },
+  {
+    handle: 'code-store-platform',
+    name: 'code.store',
+    url: 'https://code.store',
+    img: 'https://avatars.githubusercontent.com/u/57156815?s=200&v=4'
+  },
+  {
+    handle: 'oxom-de',
+    name: 'oxom.de',
+    url: 'https://oxom.de',
+    img: 'https://avatars.githubusercontent.com/u/132659062?s=200&v=4'
+  },
+  {
+    handle: 'ryanmagoon',
+    name: 'Ryan Magoon',
+    url: 'https://x.com/Ryan_Magoon',
+    img: 'https://avatars.githubusercontent.com/u/5327290?s=200&v=4'
+  },
+  {
+    handle: 'pontusab',
+    name: 'Pontus Abrahamsson',
+    url: 'https://x.com/pontusab',
+    img: 'https://avatars.githubusercontent.com/u/655158?s=200&v=4',
+    title: (
+      <>
+        Founder of{' '}
+        <a href="https://midday.ai" className="hover:underline">
+          Midday.ai
+        </a>
+      </>
+    )
+  },
+  {
+    handle: 'CarlLindesvard',
+    name: 'Carl Lindesvärd',
+    url: 'https://x.com/CarlLindesvard',
+    img: 'https://pbs.twimg.com/profile_images/1751607056316944384/8E4F88FL_400x400.jpg',
+    title: (
+      <>
+        Founder of{' '}
+        <a href="https://openpanel.dev" className="hover:underline">
+          OpenPanel
+        </a>
+      </>
+    )
+  },
+  {
+    handle: 'rwieruch',
+    name: 'Robin Wieruch',
+    url: 'https://www.robinwieruch.de/',
+    img: 'https://avatars.githubusercontent.com/u/2479967?s=200&v=4',
+    title: (
+      <>
+        Author of{' '}
+        <a href="https://www.road-to-next.com/" className="hover:underline">
+          The Road to Next
+        </a>
+      </>
+    )
+  },
+  {
+    handle: 'aurorascharff',
+    name: 'Aurora Scharff',
+    url: 'https://aurorascharff.no/',
+    img: 'https://avatars.githubusercontent.com/u/66901228?s=200&v=4',
+    title: 'Queen of RSCs 👸'
+  },
+  {
+    handle: 'YoannFleuryDev',
+    name: 'Yoann Fleury',
+    url: 'https://www.yoannfleury.dev/',
+    img: 'https://pbs.twimg.com/profile_images/1594632934245498880/CJTKNRCO_400x400.jpg',
+    title: 'Front end developer'
+  },
+  {
+    handle: 'lpbonomi',
+    name: 'Luis Pedro Bonomi',
+    url: 'https://github.com/lpbonomi',
+    img: 'https://avatars.githubusercontent.com/u/38361000?s=200&v=4'
+  }
+]
+
+export function SponsorsSection() {
   return (
     <section className="mb-24">
       <h2 className="mb-12 text-center text-3xl font-bold tracking-tighter md:text-4xl xl:text-5xl dark:text-white">
         Sponsors
       </h2>
       <ul className="container grid grid-cols-2 gap-y-12 md:grid-cols-3 lg:grid-cols-6">
-        {sponsors.map(sponsor => (
+        {SPONSORS.map(sponsor => (
           <li key={sponsor.handle} className="flex flex-col items-center">
             <a href={sponsor.url} className="h-32 w-32 rounded-full">
               <img
@@ -50,11 +159,10 @@ export async function SponsorsSection() {
 
 // --
 
-export async function InlineSponsorsList({
+export function InlineSponsorsList({
   className,
   ...props
 }: ComponentProps<'ul'>) {
-  const sponsors = await fetchSponsors()
   return (
     <ul
       className={cn(
@@ -64,7 +172,7 @@ export async function InlineSponsorsList({
       )}
       {...props}
     >
-      {sponsors.map(sponsor => (
+      {SPONSORS.map(sponsor => (
         <li key={sponsor.handle} className="flex flex-col items-center">
           <a
             href={sponsor.url}
@@ -94,140 +202,4 @@ export async function InlineSponsorsList({
       ))}
     </ul>
   )
-}
-
-// --
-
-const sponsorSchema = z.object({
-  name: z.string().nullish(),
-  handle: z.string(),
-  url: z.string().url(),
-  img: z.string().url(),
-  title: z.custom<ReactNode>().optional()
-})
-type Sponsors = z.infer<typeof sponsorSchema>[]
-
-async function fetchSponsors(): Promise<Sponsors> {
-  // GraphQL query (might take time to configure two tokens with correct scopes
-  // to do this automatically, but right now CBA).
-  // {
-  //   user(login: "franky47") {
-  //     sponsors(first: 100) {
-  //       nodes {
-  //         ... on User {
-  //           handle: login
-  //           name
-  //           url
-  //           img: avatarUrl
-  //         }
-  //         ... on Organization {
-  //           handle: login
-  //           name
-  //           url
-  //           img: avatarUrl
-  //         }
-  //       }
-  //     }
-  //   }
-  // }
-  return [
-    {
-      handle: 'vercel',
-      name: 'Vercel',
-      url: 'https://vercel.com/',
-      img: 'https://avatars.githubusercontent.com/u/14985020?s=200&v=4'
-    },
-    {
-      handle: 'unkey.com',
-      name: 'Unkey',
-      url: 'https://unkey.com',
-      img: 'https://avatars.githubusercontent.com/u/138932600?s=200&v=4'
-    },
-    {
-      handle: 'openstatus.dev',
-      name: 'OpenStatus',
-      url: 'https://openstatus.dev',
-      img: 'https://avatars.githubusercontent.com/u/136892265?s=200&v=4'
-    },
-    {
-      handle: 'code-store-platform',
-      name: 'code.store',
-      url: 'https://code.store',
-      img: 'https://avatars.githubusercontent.com/u/57156815?s=200&v=4'
-    },
-    {
-      handle: 'oxom-de',
-      name: 'oxom.de',
-      url: 'https://oxom.de',
-      img: 'https://avatars.githubusercontent.com/u/132659062?s=200&v=4'
-    },
-    {
-      handle: 'ryanmagoon',
-      name: 'Ryan Magoon',
-      url: 'https://x.com/Ryan_Magoon',
-      img: 'https://avatars.githubusercontent.com/u/5327290?s=200&v=4'
-    },
-    {
-      handle: 'pontusab',
-      name: 'Pontus Abrahamsson',
-      url: 'https://x.com/pontusab',
-      img: 'https://avatars.githubusercontent.com/u/655158?s=200&v=4',
-      title: (
-        <>
-          Founder of{' '}
-          <a href="https://midday.ai" className="hover:underline">
-            Midday.ai
-          </a>
-        </>
-      )
-    },
-    {
-      handle: 'CarlLindesvard',
-      name: 'Carl Lindesvärd',
-      url: 'https://x.com/CarlLindesvard',
-      img: 'https://pbs.twimg.com/profile_images/1751607056316944384/8E4F88FL_400x400.jpg',
-      title: (
-        <>
-          Founder of{' '}
-          <a href="https://openpanel.dev" className="hover:underline">
-            OpenPanel
-          </a>
-        </>
-      )
-    },
-    {
-      handle: 'rwieruch',
-      name: 'Robin Wieruch',
-      url: 'https://www.robinwieruch.de/',
-      img: 'https://avatars.githubusercontent.com/u/2479967?s=200&v=4',
-      title: (
-        <>
-          Author of{' '}
-          <a href="https://www.road-to-next.com/" className="hover:underline">
-            The Road to Next
-          </a>
-        </>
-      )
-    },
-    {
-      handle: 'aurorascharff',
-      name: 'Aurora Scharff',
-      url: 'https://aurorascharff.no/',
-      img: 'https://avatars.githubusercontent.com/u/66901228?s=200&v=4',
-      title: 'Queen of RSCs 👸'
-    },
-    {
-      handle: 'YoannFleuryDev',
-      name: 'Yoann Fleury',
-      url: 'https://www.yoannfleury.dev/',
-      img: 'https://pbs.twimg.com/profile_images/1594632934245498880/CJTKNRCO_400x400.jpg',
-      title: 'Front end developer'
-    },
-    {
-      handle: 'lpbonomi',
-      name: 'Luis Pedro Bonomi',
-      url: 'https://github.com/lpbonomi',
-      img: 'https://avatars.githubusercontent.com/u/38361000?s=200&v=4'
-    }
-  ]
 }
