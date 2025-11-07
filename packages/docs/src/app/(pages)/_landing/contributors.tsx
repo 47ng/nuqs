@@ -103,7 +103,7 @@ async function fetchContributors(): Promise<Contributor[]> {
 
 export async function ContributorsSection() {
   'use cache'
-  cacheLife('days')
+  cacheLife('static')
   cacheTag('contributors')
   let contributors: Contributor[] = []
   try {
