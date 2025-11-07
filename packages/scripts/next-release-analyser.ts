@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-// @ts-check
 
 import MailPace from '@mailpace/mailpace.js'
 import { createEnv } from '@t3-oss/env-core'
@@ -11,13 +10,10 @@ const canaryRegexp = /^(\d+)\.(\d+)\.(\d+)-canary\.(\d+)$/
 
 const env = createEnv({
   server: {
-    CI: z
-      .string()
-      .optional()
-      .transform(v => v === 'true'),
+    CI: z.stringbool().optional(),
     MAILPACE_API_TOKEN: z.string(),
-    EMAIL_ADDRESS_FROM: z.string().email(),
-    EMAIL_ADDRESS_TO: z.string().email()
+    EMAIL_ADDRESS_FROM: z.email(),
+    EMAIL_ADDRESS_TO: z.email()
   },
   isServer: true,
   runtimeEnv: process.env
@@ -29,6 +25,8 @@ const fileSchema = z.object({
   filename: z.string(),
   patch: z.string().optional()
 })
+
+type File = z.infer<typeof fileSchema>
 
 async function main() {
   const argv = minimist(process.argv.slice(2))
@@ -63,10 +61,7 @@ async function main() {
 
 // --
 
-/**
- * @param {string} version
- */
-function getPreviousVersion(version) {
+function getPreviousVersion(version: string) {
   const match = canaryRegexp.exec(version)
   if (!match || !match[4]) {
     return null
@@ -78,13 +73,7 @@ function getPreviousVersion(version) {
   return `${match[1]}.${match[2]}.${match[3]}-canary.${canary - 1}`
 }
 
-/**
- *
- * @param {string} thisVersion
- * @param {z.infer<typeof fileSchema>[]} files
- * @returns
- */
-async function sendNotificationEmail(thisVersion, files) {
+async function sendNotificationEmail(thisVersion: string, files: File[]) {
   const client = new MailPace.DomainClient(env.MAILPACE_API_TOKEN)
   const release = await fetch(
     `https://api.github.com/repos/vercel/next.js/releases/tags/v${thisVersion}`
@@ -124,10 +113,7 @@ ${patchSection}
   })
 }
 
-/**
- * @param {string} thisVersion
- */
-function sendGAEmail(thisVersion) {
+function sendGAEmail(thisVersion: string) {
   const client = new MailPace.DomainClient(env.MAILPACE_API_TOKEN)
   const subject = `[nuqs] Next.js ${thisVersion} was published to GA`
   const body = `https://github.com/vercel/next.js/releases/tag/v${thisVersion}`

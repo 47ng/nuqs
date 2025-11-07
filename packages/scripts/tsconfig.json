@@ -31,6 +31,6 @@
     "incremental": true,
     "tsBuildInfoFile": ".tsbuildinfo"
   },
-  "include": ["next-release-analyser.mjs"],
+  "include": ["./**/*.ts"],
   "exclude": ["node_modules"]
 }
