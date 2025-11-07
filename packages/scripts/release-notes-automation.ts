@@ -174,6 +174,9 @@ function groupPRsByCategory(prs: PR[]): Record<Category, CategorizedPR[]> {
       author: pr.author?.login ?? null,
       closingIssues
     })
+  }
+
+  for (const category of CATEGORIES) {
     categories[category].sort((a, b) => a.number - b.number)
   }
 
