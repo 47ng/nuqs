@@ -1,5 +1,4 @@
 import { cn } from '@/src/lib/utils'
-import { cacheLife } from 'next/cache'
 import { z } from 'zod'
 
 const dependentSchema = z.object({
@@ -14,9 +13,11 @@ const dependentSchema = z.object({
 type Dependent = z.infer<typeof dependentSchema>
 
 export async function fetchDependents() {
-  const data = await fetch('https://dependents.47ng.com').then(res =>
-    res.json()
-  )
+  const data = await fetch('https://dependents.47ng.com', {
+    next: {
+      revalidate: 86_400 // 24 hours
+    }
+  }).then(res => res.json())
   return z.array(dependentSchema).parse(data)
 }
 
@@ -134,8 +135,6 @@ function SponsoredUsedBy() {
 }
 
 async function DependentsLeaderboard() {
-  'use cache'
-  cacheLife('hours')
   let dependents: Dependent[] = []
   try {
     dependents = await fetchDependents()
