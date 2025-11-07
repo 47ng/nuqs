@@ -411,14 +411,16 @@ jobs:
           echo "Released version: $VERSION"
         working-directory: packages/nuqs
       - name: Invalidate ISR caches in the docs
-        if: ${{ github.ref_name == 'master' && github.event_name == 'push' }}
+        if: ${{ github.event_name == 'push' && github.ref_name == 'master' }}
         run: |
           curl -s "https://nuqs.dev/api/isr?tag=npm-version&token=${{ secrets.ISR_TOKEN }}"
           curl -s "https://nuqs.dev/api/isr?tag=contributors&token=${{ secrets.ISR_TOKEN }}"
       - name: Install dependencies
+        if: ${{ github.event_name == 'push' && steps.package-version.outputs.version != '0.0.0-semantically-released' }}
         run: pnpm install --ignore-scripts --frozen-lockfile --filter scripts
       - name: Generate release notes
         id: release-notes
+        if: ${{ github.event_name == 'push' && steps.package-version.outputs.version != '0.0.0-semantically-released' }}
         run: |
           NOTES=$(./release-notes-automation.ts)
           echo "$NOTES" >> $GITHUB_STEP_SUMMARY
@@ -431,7 +433,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Update GitHub release notes
-        if: ${{ github.event_name == 'push' && steps.package-version.outputs.version != '0.0.0-semantically-released'  }}
+        if: ${{ github.event_name == 'push' && steps.package-version.outputs.version != '0.0.0-semantically-released' }}
         run: |
           echo "${{ steps.release-notes.outputs.notes }}" | \
            gh release edit "v${{ steps.package-version.outputs.version }}" \
