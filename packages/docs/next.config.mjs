@@ -6,6 +6,7 @@ import { createMDX } from 'fumadocs-mdx/next'
 const withFumadocsMDX = createMDX()
 
 const enableSentry =
+  process.env.ENABLE_SENTRY === 'true' &&
   Boolean(process.env.NEXT_PUBLIC_SENTRY_DSN) &&
   Boolean(process.env.SENTRY_AUTH_TOKEN) &&
   ['production', 'preview'].includes(process.env.VERCEL_ENV ?? '')
@@ -21,16 +22,7 @@ const config = {
     ]
   },
   reactCompiler: true,
-  cacheComponents: true,
   reactStrictMode: true,
-  cacheLife: {
-    static: {
-      // Only changes on new deploys, assuming we at least deploy once a year
-      stale: 300, // 5 minutes for the client cache
-      revalidate: 365 * 24 * 60 * 60, // 1 year
-      expire: 366 * 24 * 60 * 60 // 1 year + 1 day (has to be greater than revalidate)
-    }
-  },
   turbopack: {
     debugIds: enableSentry
   },

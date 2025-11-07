@@ -1,80 +1,9 @@
 import dayjs from 'dayjs'
 import utc from 'dayjs/plugin/utc'
-import { cacheLife, cacheTag } from 'next/cache'
 import 'server-only'
 import { z } from 'zod'
 
 dayjs.extend(utc)
-
-export type GitHubRepositoryData = {
-  version?: string
-  stars: number
-  issues: number
-  prs: number
-  updatedAt: Date
-}
-
-const repositoryQuerySchema = z.object({
-  data: z.object({
-    repository: z.object({
-      latestRelease: z
-        .object({
-          tagName: z.string().nullish()
-        })
-        .nullish(),
-      issues: z.object({
-        totalCount: z.number()
-      }),
-      pullRequests: z.object({
-        totalCount: z.number()
-      }),
-      stargazerCount: z.number()
-    })
-  })
-})
-
-export async function fetchRepository(
-  slug = '47ng/nuqs'
-): Promise<GitHubRepositoryData> {
-  'use cache'
-  cacheTag('github')
-  cacheLife('hours')
-  const [owner, repo] = slug.split('/')
-  const query = `query {
-  repository(owner: "${owner}", name: "${repo}") {
-    latestRelease {
-      tagName
-    }
-    issues(states: OPEN) {
-      totalCount
-    }
-    pullRequests(states: OPEN) {
-      totalCount
-    }
-    stargazerCount
-  }
-}`.replace(/\s+/g, ' ') // Minify
-  // The querystring is not necessary but it helps tagging cache entries in Cache Explorer
-  const res = await fetch(`https://api.github.com/graphql?repo=${slug}`, {
-    method: 'POST',
-    headers: {
-      Authorization: `bearer ${process.env.GITHUB_TOKEN}`
-    },
-    body: JSON.stringify({ query })
-  })
-  const {
-    data: { repository }
-  } = repositoryQuerySchema.parse(await res.json())
-  return {
-    issues: repository.issues.totalCount,
-    prs: repository.pullRequests.totalCount,
-    stars: repository.stargazerCount,
-    version: repository.latestRelease?.tagName?.replace(/^v/, '') ?? undefined,
-    updatedAt: new Date()
-  }
-}
-
-// --
 
 export type GitHubStarHistory = {
   count: number
@@ -126,9 +55,6 @@ const starHistoryQuerySchema = z.object({
 export async function getStarHistory(
   slug = '47ng/nuqs'
 ): Promise<GitHubStarHistory> {
-  'use cache'
-  cacheTag('github')
-  cacheLife('hours')
   const [owner, repo] = slug.split('/')
 
   // Compute the 12-day window [today .. today-11d] in UTC

@@ -1,7 +1,6 @@
 import { Description, H1 } from '@/src/components/typography'
 import { Star } from 'lucide-react'
 import { type Metadata } from 'next'
-import { cacheLife } from 'next/cache'
 import { Suspense } from 'react'
 import { fetchDependents } from '../_landing/dependents'
 
@@ -23,8 +22,6 @@ export default function UsersPage() {
 }
 
 async function UsersList() {
-  'use cache'
-  cacheLife('hours')
   const repos = await fetchDependents()
   return (
     <ul className="space-y-2">

@@ -1,5 +1,7 @@
 import { getBlogPosts } from '../_lib/source'
 
+export const dynamic = 'force-static'
+
 export async function GET() {
   const rssXml = generateRssXml()
   return new Response(rssXml, {

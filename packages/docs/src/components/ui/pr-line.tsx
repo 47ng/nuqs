@@ -6,7 +6,6 @@ import {
   GitPullRequestDraft,
   type LucideIcon
 } from 'lucide-react'
-import { cacheLife, cacheTag } from 'next/cache'
 import type { ComponentProps } from 'react'
 import { z } from 'zod/v4'
 
@@ -48,15 +47,14 @@ export async function PullRequestLine({
   children,
   ...props
 }: PullRequestLineProps) {
-  'use cache'
-  cacheTag('github:pr:' + number)
   const response = await fetch(
     `https://api.github.com/repos/47ng/nuqs/pulls/${number}`,
     {
       headers: {
         Accept: 'application/vnd.github.v3+json',
         Authorization: `bearer ${process.env.GITHUB_TOKEN}`
-      }
+      },
+      cache: 'force-cache'
     }
   )
   if (!response.ok) {
@@ -74,7 +72,6 @@ export async function PullRequestLine({
     )
   }
   const data = pullRequestSchema.parse(await response.json())
-  cacheLife(data.merged ? 'static' : 'days')
 
   const status: Status = data.merged
     ? 'merged'
