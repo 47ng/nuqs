@@ -27,9 +27,9 @@ const config = {
   cacheLife: {
     static: {
       // Only changes on new deploys, assuming we at least deploy once a year
-      stale: Infinity, // 5 minutes for the client cache
-      revalidate: Infinity
-      //expire: 366 * 24 * 60 * 60 // 1 year + 1 day (has to be greater than revalidate)
+      stale: 300, // 5 minutes for the client cache
+      revalidate: 365 * 24 * 60 * 60,
+      expire: 366 * 24 * 60 * 60 // 1 year + 1 day (has to be greater than revalidate)
     }
   },
   turbopack: {
