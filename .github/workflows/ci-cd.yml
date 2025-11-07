@@ -429,6 +429,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Update GitHub release notes
+        if: ${{ github.event_name == 'push' && steps.package-version.outputs.version != '0.0.0-semantically-released'  }}
         run: |
           echo "${{ steps.release-notes.outputs.notes }}" | \
            gh release edit "v${{ steps.package-version.outputs.version }}" \
