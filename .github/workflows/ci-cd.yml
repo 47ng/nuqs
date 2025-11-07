@@ -370,7 +370,7 @@ jobs:
       contents: write # to be able to publish a GitHub release
       issues: write # to be able to comment on released issues
       pull-requests: write # to be able to comment on released pull requests
-      id-token: write # to enable use of OIDC for NPM provenance
+      id-token: write # to enable use of OIDC for NPM provenance / trusted publishing
     needs:
       - docs
       - lint
@@ -391,8 +391,14 @@ jobs:
           cache: pnpm
       # Note: we do not use an external Turbo cache for publishing
       # to prevent against possible cache collision attacks.
+      - name: Update npm # Ensure npm 11.5.1 or later is installed for OIDC trusted publishing
+        run: npm install -g npm@latest
+      - name: Verify the integrity of provenance attestations and registry signatures for installed dependencies
+        run: npm audit signatures
       - name: Install dependencies
         run: pnpm install --ignore-scripts --frozen-lockfile --filter nuqs...
+      - name: Verify the integrity of provenance attestations and registry signatures for installed dependencies
+        run: npm audit signatures
       - name: Build package
         run: pnpm build --filter nuqs
       - name: Semantic Release
@@ -400,7 +406,6 @@ jobs:
         working-directory: packages/nuqs
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
       - name: Invalidate ISR cache for NPM in the docs
         run: curl -s "https://nuqs.dev/api/isr?tag=npm-version&token=${{ secrets.ISR_TOKEN }}"
       - name: Invalidate ISR cache for contributors in the docs

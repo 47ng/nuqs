@@ -22,20 +22,17 @@
     "lint:sherif": "sherif"
   },
   "devDependencies": {
-    "@commitlint/config-conventional": "^19.8.1",
-    "commitlint": "^19.8.1",
+    "@commitlint/config-conventional": "^20.0.0",
+    "commitlint": "^20.1.0",
     "husky": "^9.1.7",
     "prettier": "3.6.2",
     "publint": "^0.3.12",
-    "semantic-release": "^24.2.7",
+    "semantic-release": "^25.0.1",
     "sherif": "^1.6.1",
     "turbo": "^2.5.6",
     "typescript": "^5.9.2"
   },
-  "packageManager": "pnpm@10.15.0",
-  "resolutions": {
-    "@semantic-release/github": "^11.0.5"
-  },
+  "packageManager": "pnpm@10.20.0",
   "prettier": {
     "arrowParens": "avoid",
     "semi": false,
