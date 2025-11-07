@@ -1,9 +1,4 @@
-import { cacheLife, cacheTag } from 'next/cache'
-
 export async function SidebarFooter() {
-  'use cache'
-  cacheLife('static')
-  cacheTag('npm-version')
   const version = await getLatestVersion()
   return (
     <footer className="flex w-full items-baseline gap-2 text-zinc-600 dark:text-zinc-400">
@@ -20,9 +15,11 @@ export async function SidebarFooter() {
 
 async function getLatestVersion() {
   try {
-    const res = await fetch('https://registry.npmjs.org/nuqs').then(r =>
-      r.json()
-    )
+    const res = await fetch('https://registry.npmjs.org/nuqs', {
+      next: {
+        tags: ['npm-version']
+      }
+    }).then(r => r.json())
     return res['dist-tags'].latest
   } catch {
     return 'latest'

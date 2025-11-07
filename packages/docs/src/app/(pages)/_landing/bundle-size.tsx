@@ -1,4 +1,3 @@
-import { cacheLife } from 'next/cache'
 import fs from 'node:fs/promises'
 import path from 'node:path'
 
@@ -14,8 +13,6 @@ function prettyBytes(size: number) {
 }
 
 export async function BundleSize() {
-  'use cache'
-  cacheLife('static') // Only changes on new deploys
   const filePath = path.resolve(process.cwd(), '../../packages/nuqs/size.json')
   try {
     const json = await fs.readFile(filePath, 'utf8')

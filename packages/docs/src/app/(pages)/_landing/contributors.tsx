@@ -1,5 +1,4 @@
 import { cn } from '@/src/lib/utils'
-import { cacheLife, cacheTag } from 'next/cache'
 import { z } from 'zod'
 
 const contributorSchema = z.object({
@@ -30,7 +29,10 @@ async function fetchContributors(): Promise<Contributor[]> {
     // anon=false by default; we only want registered users
 
     const res = await fetch(url.toString(), {
-      headers
+      headers,
+      next: {
+        tags: ['contributors']
+      }
     })
 
     if (!res.ok) {
@@ -102,9 +104,6 @@ async function fetchContributors(): Promise<Contributor[]> {
 }
 
 export async function ContributorsSection() {
-  'use cache'
-  cacheLife('static')
-  cacheTag('contributors')
   let contributors: Contributor[] = []
   try {
     contributors = await fetchContributors()

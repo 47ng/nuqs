@@ -1,13 +1,10 @@
 import { CodeBlock } from '@/src/components/code-block'
-import { cacheLife } from 'next/cache'
 import fs from 'node:fs/promises'
 import { format } from 'prettier'
 import { Suspense } from 'react'
 import { Demo } from './demo.client'
 
 export async function LandingDemo() {
-  'use cache'
-  cacheLife('static') // Only changes on new deploys
   const demoFilePath =
     process.cwd() + '/src/app/(pages)/_landing/demo.client.tsx'
   const demoFile = await fs.readFile(demoFilePath, 'utf8')

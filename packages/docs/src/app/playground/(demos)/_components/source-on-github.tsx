@@ -1,7 +1,6 @@
 import { CodeBlock } from '@/src/components/code-block'
 import * as Sentry from '@sentry/nextjs'
 import { FileCode2 } from 'lucide-react'
-import { cacheLife } from 'next/cache'
 import fs from 'node:fs/promises'
 
 type SourceOnGitHubProps = {
@@ -9,8 +8,6 @@ type SourceOnGitHubProps = {
 }
 
 export async function SourceOnGitHub({ path }: SourceOnGitHubProps) {
-  'use cache'
-  cacheLife('static')
   const source = await readSourceCode(path)
   return (
     <footer className="mt-2 space-y-2 border-t py-4">

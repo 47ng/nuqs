@@ -1,15 +1,14 @@
 import { revalidateTag } from 'next/cache'
 import { NextRequest, NextResponse } from 'next/server'
 
-// https://nextjs.org/docs/app/api-reference/functions/cacheLife#reference
-const tagsAndCacheLife = {
-  github: 'days', // Repository & stargazers
-  'github-actions-status': 'static',
-  npm: 'days',
-  'npm-version': 'static',
-  contributors: 'static'
-} as const
-type Tag = keyof typeof tagsAndCacheLife
+const allowedTags = [
+  'github',
+  'github-actions-status',
+  'npm',
+  'npm-version',
+  'contributors'
+] as const
+type Tag = (typeof allowedTags)[number]
 
 export async function GET(req: NextRequest) {
   const token = req.nextUrl.searchParams.get('token')
@@ -18,10 +17,10 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Invalid token' }, { status: 400 })
   }
   const tag = req.nextUrl.searchParams.get('tag')
-  if (!tag || !Object.keys(tagsAndCacheLife).includes(tag)) {
+  if (!tag || !allowedTags.includes(tag as Tag)) {
     return NextResponse.json({ error: 'Invalid tag' }, { status: 400 })
   }
-  revalidateTag(tag, tagsAndCacheLife[tag as Tag] ?? 'static')
+  revalidateTag(tag, 'max')
   return NextResponse.json({
     at: new Date().toISOString(),
     revalidated: tag
