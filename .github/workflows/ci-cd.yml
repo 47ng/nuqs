@@ -402,7 +402,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
       - name: Invalidate ISR cache for NPM in the docs
-        run: curl -s "https://nuqs.dev/api/isr?tag=npm&token=${{ secrets.ISR_TOKEN }}"
+        run: curl -s "https://nuqs.dev/api/isr?tag=npm-version&token=${{ secrets.ISR_TOKEN }}"
       - name: Invalidate ISR cache for contributors in the docs
         if: ${{ github.ref_name == 'next' && github.event_name == 'push' }}
         run: curl -s "https://nuqs.dev/api/isr?tag=contributors&token=${{ secrets.ISR_TOKEN }}"

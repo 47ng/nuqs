@@ -118,7 +118,7 @@ export async function fetchNpmPackage(
 ): Promise<NpmPackageStatsData> {
   'use cache'
   cacheTag('npm')
-  cacheLife('days')
+  cacheLife('hours')
   // Ensure we cover 90 days + a full first week
   const startOfFirstWeek = dayjs().subtract(90, 'day').startOf('isoWeek')
   const ninetyOrSoDays = dayjs().diff(startOfFirstWeek, 'day')
@@ -135,12 +135,7 @@ export async function fetchNpmPackage(
 }
 
 async function get(url: string): Promise<unknown> {
-  const res = await fetch(url, {
-    next: {
-      revalidate: 86_400,
-      tags: ['npm']
-    }
-  })
+  const res = await fetch(url)
   return res.json()
 }
 

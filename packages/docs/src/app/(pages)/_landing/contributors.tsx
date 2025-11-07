@@ -1,4 +1,5 @@
 import { cn } from '@/src/lib/utils'
+import { cacheLife, cacheTag } from 'next/cache'
 import { z } from 'zod'
 
 const contributorSchema = z.object({
@@ -29,26 +30,24 @@ async function fetchContributors(): Promise<Contributor[]> {
     // anon=false by default; we only want registered users
 
     const res = await fetch(url.toString(), {
-      headers,
-      next: {
-        revalidate: 86_400,
-        tags: ['contributors']
-      }
+      headers
     })
-    
+
     if (!res.ok) {
-      throw new Error(`Failed to fetch contributors: ${res.status} ${res.statusText}`)
+      throw new Error(
+        `Failed to fetch contributors: ${res.status} ${res.statusText}`
+      )
     }
-    
+
     const data = await res.json()
     const contributors = z.array(contributorSchema).parse(data)
-    
+
     // If we get fewer contributors than perPage, we've reached the end
     if (contributors.length < perPage) {
       allContributors = allContributors.concat(contributors)
       break
     }
-    
+
     allContributors = allContributors.concat(contributors)
     page++
   }
@@ -84,16 +83,16 @@ async function fetchContributors(): Promise<Contributor[]> {
   // Filter bots (type Bot, or known bot accounts, or login ending with [bot])
   const isHuman = (c: Contributor) => {
     const loginLower = c.login.toLowerCase()
-    
+
     // Check if it's explicitly a Bot type
     if (c.type === 'Bot') return false
-    
+
     // Check against known bot IDs (exact match)
     if (knownBotIds.has(loginLower)) return false
-    
+
     // Check if login ends with [bot] (common pattern for GitHub bots)
     if (loginLower.endsWith('[bot]')) return false
-    
+
     return true
   }
 
@@ -103,6 +102,9 @@ async function fetchContributors(): Promise<Contributor[]> {
 }
 
 export async function ContributorsSection() {
+  'use cache'
+  cacheLife('static')
+  cacheTag('contributors')
   let contributors: Contributor[] = []
   try {
     contributors = await fetchContributors()
@@ -118,7 +120,11 @@ export async function ContributorsSection() {
       <h2 className="mb-12 text-center text-3xl font-bold tracking-tighter md:text-4xl xl:text-5xl dark:text-white">
         Contributors
       </h2>
-      <ul className={cn('flex flex-wrap justify-center gap-y-4 gap-x-3 md:gap-x-4')}>
+      <ul
+        className={cn(
+          'flex flex-wrap justify-center gap-x-3 gap-y-4 md:gap-x-4'
+        )}
+      >
         {contributors.map(c => (
           <li key={c.login} className="flex flex-col items-center">
             <a
@@ -141,5 +147,3 @@ export async function ContributorsSection() {
     </section>
   )
 }
-
-

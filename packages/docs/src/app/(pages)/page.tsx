@@ -7,8 +7,6 @@ import { PageFooter } from './_landing/page-footer'
 import { QuotesSection } from './_landing/quotes/quotes-section'
 import { SponsorsSection } from './_landing/sponsors'
 
-export const maxDuration = 60
-
 export const metadata: Metadata = {
   title: {
     absolute: 'nuqs | Type-safe search params state management for React'

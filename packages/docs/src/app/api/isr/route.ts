@@ -3,10 +3,11 @@ import { NextRequest, NextResponse } from 'next/server'
 
 // https://nextjs.org/docs/app/api-reference/functions/cacheLife#reference
 const tagsAndCacheLife = {
-  github: 'minutes', // Repository & stargazers
-  'github-actions-status': 'hours',
-  npm: 'hours',
-  contributors: 'hours'
+  github: 'days', // Repository & stargazers
+  'github-actions-status': 'static',
+  npm: 'days',
+  'npm-version': 'static',
+  contributors: 'static'
 } as const
 type Tag = keyof typeof tagsAndCacheLife
 
@@ -20,7 +21,7 @@ export async function GET(req: NextRequest) {
   if (!tag || !Object.keys(tagsAndCacheLife).includes(tag)) {
     return NextResponse.json({ error: 'Invalid tag' }, { status: 400 })
   }
-  revalidateTag(tag, tagsAndCacheLife[tag as Tag] ?? 'max')
+  revalidateTag(tag, tagsAndCacheLife[tag as Tag] ?? 'static')
   return NextResponse.json({
     at: new Date().toISOString(),
     revalidated: tag

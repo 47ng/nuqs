@@ -258,7 +258,7 @@ export function QuotesSection() {
           name: 'arth',
           handle: '@arthy',
           avatar:
-            'https://pbs.twimg.com/profile_images/1973415460675739648/1Zc7d1Ll_400x400.jpg'
+            'https://pbs.twimg.com/profile_images/1982151033443741696/ybbeIzzn_400x400.jpg'
         }}
         text="also, nuqs is amazing"
         url="https://x.com/arthty/status/1980237430256234768"
@@ -326,7 +326,7 @@ export function QuotesSection() {
           name: 'Michael',
           handle: '@michael_chomsky',
           avatar:
-            'https://pbs.twimg.com/profile_images/1869555929865469952/bRcBMrb8_400x400.jpg'
+            'https://pbs.twimg.com/profile_images/1985249115622838272/GWOboDum_400x400.jpg'
         }}
         text="meeting the guy behind nuqs was insane. it's one of those tools literally every web dev should know about"
         url="https://x.com/michael_chomsky/status/1981633873529471064"
@@ -361,7 +361,7 @@ export function QuotesSection() {
           name: 'Suraj Jha',
           handle: '@surajtwt_',
           avatar:
-            'https://pbs.twimg.com/profile_images/1981823623443664896/9wLf-igV_400x400.jpg'
+            'https://pbs.twimg.com/profile_images/1984373283136106496/OkLU-izR_400x400.jpg'
         }}
         text="Currently Using nuqs to add some pagination and searching feature into my nextjs app and i am loving it"
         url="https://x.com/surajtwt_/status/1982684604307034362"

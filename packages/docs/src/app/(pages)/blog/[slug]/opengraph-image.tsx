@@ -1,4 +1,5 @@
 import { blog } from '@/src/app/source'
+import { cacheLife } from 'next/cache'
 import { notFound } from 'next/navigation'
 import { ImageResponse } from 'next/og'
 import { readFile } from 'node:fs/promises'
@@ -11,10 +12,15 @@ export const size = {
   height: 675
 }
 export const contentType = 'image/png'
-export const dynamic = 'force-static'
 
 type PageProps = {
   params: Promise<{ slug: string }>
+}
+
+export async function generateStaticParams(): Promise<{ slug: string }[]> {
+  const pages = blog.getPages()
+  const slugs = new Set(pages.flatMap(page => page.slugs))
+  return Array.from(slugs).map(slug => ({ slug }))
 }
 
 // Image generation
@@ -175,6 +181,8 @@ function getFont(weight: string) {
 }
 
 async function loadResources() {
+  'use cache'
+  cacheLife('static')
   const [light, regular, medium, semibold, bold] = await Promise.all([
     getFont('Light'),
     getFont('Regular'),
@@ -255,6 +263,8 @@ function Logo(props: ComponentProps<'svg'>) {
 }
 
 async function getCustomImage(slug: string) {
+  'use cache'
+  cacheLife('static')
   const filePath = join(process.cwd(), 'content/blog/' + slug + '.og.png')
   try {
     const imageBuffer = await readFile(filePath)

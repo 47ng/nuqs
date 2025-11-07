@@ -126,9 +126,6 @@ const starHistoryQuerySchema = z.object({
 export async function getStarHistory(
   slug = '47ng/nuqs'
 ): Promise<GitHubStarHistory> {
-  'use cache'
-  cacheTag('github')
-  cacheLife('hours')
   const [owner, repo] = slug.split('/')
 
   // Compute the 12-day window [today .. today-11d] in UTC
