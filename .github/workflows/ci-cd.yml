@@ -403,8 +403,35 @@ jobs:
         working-directory: packages/nuqs
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Read package version
+        id: package-version
+        run: |
+          VERSION=$(jq -r '.version' package.json)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Released version: $VERSION"
+        working-directory: packages/nuqs
       - name: Invalidate ISR caches in the docs
         if: ${{ github.ref_name == 'master' && github.event_name == 'push' }}
         run: |
           curl -s "https://nuqs.dev/api/isr?tag=npm-version&token=${{ secrets.ISR_TOKEN }}"
           curl -s "https://nuqs.dev/api/isr?tag=contributors&token=${{ secrets.ISR_TOKEN }}"
+      - name: Generate release notes
+        id: release-notes
+        run: |
+          NOTES=$(./release-notes-automation.ts)
+          echo "$NOTES" >> $GITHUB_STEP_SUMMARY
+          {
+            echo 'notes<<EOF'
+            echo "$NOTES"
+            echo 'EOF'
+          } >> $GITHUB_OUTPUT
+        working-directory: packages/scripts
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Update GitHub release notes
+        run: |
+          echo "${{ steps.release-notes.outputs.notes }}" | \
+           gh release edit "v${{ steps.package-version.outputs.version }}" \
+            --notes-file -
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

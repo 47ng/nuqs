@@ -1,0 +1,40 @@
+name: Clear "Shipping Next"
+
+on:
+  workflow_dispatch:
+
+env:
+  SHIPPING_NEXT_MILESTONE_ID: 2 # ID for "Shipping Next" milestone
+
+permissions:
+  pull-requests: write
+  issues: write
+
+jobs:
+  clear_shipping_next:
+    name: Clear "Shipping Next" Milestone
+    runs-on: ubuntu-24.04-arm
+
+    steps:
+      - name: Get issues & PRs in "Shipping Next" milestone
+        id: get_issues
+        run: |
+          issues=$(gh api -X GET \
+            repos/${{ github.repository }}/issues \
+            -f milestone=${{ env.SHIPPING_NEXT_MILESTONE_ID }} \
+            -f state=all \
+            -f labels=released \
+            --jq '.[].number')
+          echo "issues=$issues" >> $GITHUB_OUTPUT
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Clear milestone from issues & PRs
+        run: |
+          for issue_number in ${{ steps.get_issues.outputs.issues }}; do
+            gh api -X PATCH \
+              repos/${{ github.repository }}/issues/$issue_number \
+              -f milestone=null
+          done
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
