@@ -6,8 +6,13 @@ const config: ViteUserConfig = defineConfig({
     setupFiles: ['vitest.setup.ts'],
     include: ['**/*.test.?(c|m)[jt]s?(x)'],
     coverage: {
+      provider: 'v8',
       include: ['src/**/*.{ts,tsx}'],
-      exclude: ['src/adapters/**'] // Covered by e2e tests
+      exclude: [
+        './src/adapters/**', // adapters are tested in e2e tests
+        './tests/**.test-d.ts', // type tests don't generate coverage
+        './**/*.d.ts' // neither do type definitions
+      ]
     },
     env: {
       IS_REACT_ACT_ENVIRONMENT: 'true'
@@ -16,14 +21,6 @@ const config: ViteUserConfig = defineConfig({
       deps: {
         inline: ['vitest-package-exports']
       }
-    },
-    coverage: {
-      provider: 'v8',
-      exclude: [
-        './src/adapters/**', // adapters are tested in e2e tests
-        './tests/**.test-d.ts', // type tests don't generate coverage
-        './**/*.d.ts' // neither do type definitions
-      ]
     }
   }
 })
