@@ -258,7 +258,7 @@ export function QuotesSection() {
           name: 'arth',
           handle: '@arthy',
           avatar:
-            'https://pbs.twimg.com/profile_images/1973415460675739648/1Zc7d1Ll_400x400.jpg'
+            'https://pbs.twimg.com/profile_images/1982151033443741696/ybbeIzzn_400x400.jpg'
         }}
         text="also, nuqs is amazing"
         url="https://x.com/arthty/status/1980237430256234768"
