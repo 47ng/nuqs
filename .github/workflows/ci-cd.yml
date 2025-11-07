@@ -417,7 +417,6 @@ jobs:
           curl -s "https://nuqs.dev/api/isr?tag=contributors&token=${{ secrets.ISR_TOKEN }}"
       - name: Generate release notes
         id: release-notes
-        if: ${{ github.ref_name == 'master' && github.event_name == 'push' }}
         run: |
           NOTES=$(./release-notes-automation.ts)
           echo "$NOTES" >> $GITHUB_STEP_SUMMARY
@@ -429,8 +428,7 @@ jobs:
         working-directory: packages/scripts
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Update GitHub release
-        if: ${{ github.ref_name == 'master' && github.event_name == 'push' && steps.package-version.outputs.version }}
+      - name: Update GitHub release notes
         run: |
           echo "${{ steps.release-notes.outputs.notes }}" | \
            gh release edit "v${{ steps.package-version.outputs.version }}" \
