@@ -1,14 +1,13 @@
 import { revalidateTag } from 'next/cache'
 import { NextRequest, NextResponse } from 'next/server'
 
-const allowedTags = [
+const ACCEPTED_TAGS = [
   'github',
   'github-actions-status',
-  'npm',
+  'npm-stats',
   'npm-version',
   'contributors'
-] as const
-type Tag = (typeof allowedTags)[number]
+]
 
 export async function GET(req: NextRequest) {
   const token = req.nextUrl.searchParams.get('token')
@@ -17,7 +16,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Invalid token' }, { status: 400 })
   }
   const tag = req.nextUrl.searchParams.get('tag')
-  if (!tag || !allowedTags.includes(tag as Tag)) {
+  if (!tag || !ACCEPTED_TAGS.includes(tag)) {
     return NextResponse.json({ error: 'Invalid tag' }, { status: 400 })
   }
   revalidateTag(tag, 'max')
