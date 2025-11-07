@@ -4,6 +4,7 @@ import type { MetadataRoute } from 'next'
 import { demos } from './playground/(demos)/demos'
 import { blog, source } from './source'
 
+export const revalidate = false // Disable ISR
 export const dynamic = 'force-static'
 
 type SitemapEntry = MetadataRoute.Sitemap[number]
