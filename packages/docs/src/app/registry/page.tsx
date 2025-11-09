@@ -1,5 +1,10 @@
 import { useMDXComponents } from '@/mdx-components'
 import { CodeBlock } from '@/src/components/code-block'
+import { readRegistry, readRegistryItem, readUsage } from '@/src/registry/read'
+import type {
+  RegistryBuiltFile,
+  RegistryBuiltItem
+} from '@/src/registry/schemas'
 import { SiTypescript } from '@icons-pack/react-simple-icons'
 import { Markdown } from 'fumadocs-core/content'
 import { rehypeCode } from 'fumadocs-core/mdx-plugins'
@@ -13,8 +18,6 @@ import {
 import { Link } from 'lucide-react'
 import type { Metadata } from 'next'
 import NextLink from 'next/link'
-import { readRegistry, readRegistryItem, readUsage } from './_lib/read'
-import type { RegistryFile, RegistryItem } from './_lib/schemas'
 
 export const dynamic = 'force-static'
 
@@ -50,7 +53,7 @@ export default async function Page() {
 
 // --
 
-export async function RegistryItem({ name }: Pick<RegistryItem, 'name'>) {
+export async function RegistryItem({ name }: Pick<RegistryBuiltItem, 'name'>) {
   const { title, description, files } = await readRegistryItem(name)
   const usage = await readUsage(name)
   return (
@@ -61,7 +64,11 @@ export async function RegistryItem({ name }: Pick<RegistryItem, 'name'>) {
           <Link className="ml-2 hidden size-[0.75em] opacity-75 group-hover:inline-block" />
         </NextLink>
       </h2>
-      {description && <p>{description}</p>}
+      {description && (
+        <Markdown components={useMDXComponents()} rehypePlugins={[rehypeCode]}>
+          {description}
+        </Markdown>
+      )}
       <Installation name={name} files={files} />
       {usage && (
         <>
@@ -80,7 +87,10 @@ export async function RegistryItem({ name }: Pick<RegistryItem, 'name'>) {
 
 // --
 
-function Installation({ name, files }: Pick<RegistryItem, 'name' | 'files'>) {
+function Installation({
+  name,
+  files
+}: Pick<RegistryBuiltItem, 'name' | 'files'>) {
   return (
     <>
       <Tabs items={['CLI', 'Manual']} defaultIndex={0} persist>
@@ -92,7 +102,7 @@ function Installation({ name, files }: Pick<RegistryItem, 'name' | 'files'>) {
         </Tab>
         <Tab value="Manual">
           {files.map(file => (
-            <RegistryFile key={file.target} {...file} />
+            <RegistryBuiltFile key={file.target} {...file} />
           ))}
         </Tab>
       </Tabs>
@@ -100,10 +110,10 @@ function Installation({ name, files }: Pick<RegistryItem, 'name' | 'files'>) {
   )
 }
 
-function RegistryFile({
+function RegistryBuiltFile({
   target,
   content
-}: RegistryFile & { showTitle?: boolean }) {
+}: RegistryBuiltFile & { showTitle?: boolean }) {
   return (
     <CodeBlock
       lang="ts"

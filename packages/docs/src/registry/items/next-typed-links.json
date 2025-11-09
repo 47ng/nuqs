@@ -1,0 +1,14 @@
+{
+  "type": "registry:item",
+  "name": "next-typed-links",
+  "title": "Typed Links for Next.js",
+  "description": "Type-safe linking for Next.js (using typedRoutes + nuqs)",
+  "dependencies": ["next@>=15.5.0", "nuqs"],
+  "files": [
+    {
+      "type": "registry:file",
+      "path": "src/lib/typed-links.ts",
+      "target": "~/src/lib/typed-links.ts"
+    }
+  ]
+}

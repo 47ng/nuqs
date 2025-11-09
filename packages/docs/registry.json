@@ -5,10 +5,47 @@
   "items": [
     {
       "type": "registry:item",
+      "name": "adapter-inertia",
+      "title": "Inertia.js Adapter",
+      "description": "An adapter for using nuqs in Inertia.js apps (eg: with a Laravel backend)",
+      "dependencies": [
+        "inertia@^0.9.0",
+        "nuqs"
+      ],
+      "files": [
+        {
+          "type": "registry:file",
+          "path": "src/registry/remote/adapter-inertia.jCXe2VyB6jdP.txt",
+          "target": "~/resources/js/lib/nuqs-inertia-adapter.ts"
+        }
+      ]
+    },
+    {
+      "type": "registry:item",
+      "name": "adapter-waku",
+      "title": "Waku Adapter",
+      "description": "Using nuqs in [⛩️ Waku](https://waku.gg/) applications. Read the [full guide](https://nuqs.dev/docs/community-adapters/waku) on where to place the `<NuqsAdapter>`.",
+      "dependencies": [
+        "waku@>=0.22.0",
+        "nuqs"
+      ],
+      "files": [
+        {
+          "type": "registry:file",
+          "path": "src/registry/remote/adapter-waku.1-IeDgeBbgPI.txt",
+          "target": "~/app/nuqs-waku-adapter.tsx"
+        }
+      ]
+    },
+    {
+      "type": "registry:item",
       "name": "next-typed-links",
       "title": "Typed Links for Next.js",
       "description": "Type-safe linking for Next.js (using typedRoutes + nuqs)",
-      "dependencies": ["next@>=15.5.0", "nuqs"],
+      "dependencies": [
+        "next@>=15.5.0",
+        "nuqs"
+      ],
       "files": [
         {
           "type": "registry:file",
