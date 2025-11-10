@@ -1,4 +1,10 @@
-import { registryBuiltItemSchema, registrySchema } from '@/src/registry/schemas'
+import {
+  type Registry,
+  registryBuiltItemSchema,
+  registrySchema,
+  type RegistrySourceItem
+} from '@/src/registry/schemas'
+import { marked } from 'marked'
 import { readFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
 
@@ -21,4 +27,39 @@ export async function readUsage(name: string) {
   } catch {
     return null
   }
+}
+
+export async function markdownToTxt(text: string) {
+  const html = await marked(text)
+  return html.replace(/<[^>]+>/g, '')
+}
+
+export const registryItemCategories = [
+  'Adapters',
+  'Parsers',
+  'Utilities'
+] as const
+export type RegistryItemCategory = (typeof registryItemCategories)[number]
+
+export function getRegistryItemCategory(name: string): RegistryItemCategory {
+  if (name.startsWith('adapter-')) {
+    return 'Adapters'
+  } else if (name.startsWith('parseAs')) {
+    return 'Parsers'
+  } else {
+    return 'Utilities'
+  }
+}
+
+export function categorizeRegistryItems(registry: Registry) {
+  const categories: Record<RegistryItemCategory, RegistrySourceItem[]> = {
+    Adapters: [],
+    Parsers: [],
+    Utilities: []
+  }
+  for (const item of registry.items) {
+    const category = getRegistryItemCategory(item.name)
+    categories[category].push(item)
+  }
+  return categories
 }

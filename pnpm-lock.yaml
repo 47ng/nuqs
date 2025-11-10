@@ -202,6 +202,9 @@ importers:
       import-in-the-middle:
         specifier: ^2.0.0
         version: 2.0.0
+      marked:
+        specifier: ^17.0.0
+        version: 17.0.0
       postcss:
         specifier: ^8.5.6
         version: 8.5.6
@@ -580,7 +583,7 @@ importers:
         version: 16.0.1(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
       nuqs:
         specifier: latest
-        version: 2.7.2(@remix-run/react@2.17.0(react-dom@19.1.1(react@19.1.1))(react@19.1.1)(typescript@5.9.2))(@tanstack/react-router@1.131.27(react-dom@19.1.1(react@19.1.1))(react@19.1.1))(next@16.0.1(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.1.1(react@19.1.1))(react@19.1.1))(react-router-dom@7.8.0(react-dom@19.1.1(react@19.1.1))(react@19.1.1))(react-router@7.8.1(react-dom@19.1.1(react@19.1.1))(react@19.1.1))(react@19.1.1)
+        version: 2.7.3(@remix-run/react@2.17.0(react-dom@19.1.1(react@19.1.1))(react@19.1.1)(typescript@5.9.2))(@tanstack/react-router@1.131.27(react-dom@19.1.1(react@19.1.1))(react@19.1.1))(next@16.0.1(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.1.1(react@19.1.1))(react@19.1.1))(react-router-dom@7.8.0(react-dom@19.1.1(react@19.1.1))(react@19.1.1))(react-router@7.8.1(react-dom@19.1.1(react@19.1.1))(react@19.1.1))(react@19.1.1)
       react:
         specifier: ^19.1.1
         version: 19.1.1
@@ -6650,6 +6653,11 @@ packages:
     engines: {node: '>= 18'}
     hasBin: true
 
+  marked@17.0.0:
+    resolution: {integrity: sha512-KkDYEWEEiYJw/KC+DVm1zzlpMQSMIu6YRltkcCvwheCp8HWPXCk9JwOmHJKBlGfzcpzcIt6x3sMnTsRm/51oDg==}
+    engines: {node: '>= 20'}
+    hasBin: true
+
   math-intrinsics@1.1.0:
     resolution: {integrity: sha512-/IXtbwEk5HTPyEwyKX6hGkYXxM9nbj64B+ilVJnC/R6B0pH5G4V3b0pVbL7DBj4tkhBAppbQUlf6F6Xl9LHu1g==}
     engines: {node: '>= 0.4'}
@@ -7332,8 +7340,8 @@ packages:
   number-flow@0.5.8:
     resolution: {integrity: sha512-FPr1DumWyGi5Nucoug14bC6xEz70A1TnhgSHhKyfqjgji2SOTz+iLJxKtv37N5JyJbteGYCm6NQ9p1O4KZ7iiA==}
 
-  nuqs@2.7.2:
-    resolution: {integrity: sha512-wOPJoz5om7jMJQick9zU1S/Q+joL+B2DZTZxfCleHEcUzjUnPoujGod4+nAmUWb+G9TwZnyv+mfNqlyfEi8Zag==}
+  nuqs@2.7.3:
+    resolution: {integrity: sha512-lQzSYLsXUYftc0cerww64yevjMeYOX8thkcqI25XtyyTEJFTk3LE+i2hcY2h0Jwvp1+owCb+KJ0GMaKQwfmq3g==}
     peerDependencies:
       '@remix-run/react': '>=2'
       '@tanstack/react-router': ^1
@@ -15992,6 +16000,8 @@ snapshots:
 
   marked@15.0.12: {}
 
+  marked@17.0.0: {}
+
   math-intrinsics@1.1.0: {}
 
   mdast-util-definitions@5.1.2:
@@ -17090,7 +17100,7 @@ snapshots:
     dependencies:
       esm-env: 1.2.2
 
-  nuqs@2.7.2(@remix-run/react@2.17.0(react-dom@19.1.1(react@19.1.1))(react@19.1.1)(typescript@5.9.2))(@tanstack/react-router@1.131.27(react-dom@19.1.1(react@19.1.1))(react@19.1.1))(next@16.0.1(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.1.1(react@19.1.1))(react@19.1.1))(react-router-dom@7.8.0(react-dom@19.1.1(react@19.1.1))(react@19.1.1))(react-router@7.8.1(react-dom@19.1.1(react@19.1.1))(react@19.1.1))(react@19.1.1):
+  nuqs@2.7.3(@remix-run/react@2.17.0(react-dom@19.1.1(react@19.1.1))(react@19.1.1)(typescript@5.9.2))(@tanstack/react-router@1.131.27(react-dom@19.1.1(react@19.1.1))(react@19.1.1))(next@16.0.1(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.1.1(react@19.1.1))(react@19.1.1))(react-router-dom@7.8.0(react-dom@19.1.1(react@19.1.1))(react@19.1.1))(react-router@7.8.1(react-dom@19.1.1(react@19.1.1))(react@19.1.1))(react@19.1.1):
     dependencies:
       '@standard-schema/spec': 1.0.0
       react: 19.1.1
