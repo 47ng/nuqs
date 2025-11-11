@@ -47,7 +47,7 @@ jobs:
           for issue_number in ${{ steps.get_issues.outputs.issues }}; do
             gh api -X PATCH \
               repos/${{ github.repository }}/issues/$issue_number \
-              -f milestone=null
+              -F milestone=null
           done
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
