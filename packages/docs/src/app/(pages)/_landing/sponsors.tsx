@@ -125,7 +125,7 @@ export function SponsorsSection() {
           href="https://nextjsweekly.com?utm_source=nuqs&utm_medium=sponsor&utm_campaign=nuqs"
           target="_blank"
           rel="noopener noreferrer"
-          className="block p-2"
+          className="mx-auto block p-2"
         >
           <span
             role="presentation"
@@ -233,7 +233,7 @@ export function AsideSponsors() {
           className="size-4 fill-transparent stroke-current"
           aria-label="Sponsor my work on GitHub to add your company here"
         />
-        <h3 className="uppercase group-hover:underline group-active:underline">
+        <h3 className="group-hover:underline group-active:underline">
           Sponsored by
         </h3>
       </a>
