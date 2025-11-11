@@ -1,4 +1,5 @@
 import { useMDXComponents } from '@/mdx-components'
+import { AsideSponsors } from '@/src/app/(pages)/_landing/sponsors'
 import { source } from '@/src/app/source'
 import { getBaseUrl } from '@/src/lib/url'
 import {
@@ -28,7 +29,12 @@ export default async function Page(props: PageProps) {
   const MDX = page.data.body
 
   return (
-    <DocsPage toc={page.data.toc}>
+    <DocsPage
+      toc={page.data.toc}
+      tableOfContent={{
+        footer: <AsideSponsors />
+      }}
+    >
       <DocsTitle>{page.data.title}</DocsTitle>
       <DocsDescription>{page.data.description}</DocsDescription>
       <DocsBody>
