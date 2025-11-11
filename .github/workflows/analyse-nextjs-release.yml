@@ -1,11 +1,11 @@
-name: 'Analyse Next.js release'
-run-name: 'Analyse Next.js ${{ inputs.version }}'
+name: "Analyse Next.js release"
+run-name: "Analyse Next.js ${{ inputs.version }}"
 
 on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Next.js version to test against'
+        description: "Next.js version to test against"
         required: true
         type: string
 
@@ -39,7 +39,7 @@ jobs:
       - name: Install dependencies
         run: pnpm install
       - name: Check for changes in app router
-        run: ./next-release-analyser.mjs --version "${{ env.VERSION }}"
+        run: ./next-release-analyser.ts --version "${{ env.VERSION }}"
         working-directory: packages/scripts
         env:
           MAILPACE_API_TOKEN: ${{ secrets.MAILPACE_API_TOKEN }}
