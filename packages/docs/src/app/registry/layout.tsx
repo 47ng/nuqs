@@ -2,7 +2,21 @@ import { getSharedLayoutProps } from '@/src/components/shared-layout'
 import { SidebarFooter } from '@/src/components/sidebar-footer'
 import { categorizeRegistryItems, readRegistry } from '@/src/registry/read'
 import { DocsLayout } from 'fumadocs-ui/layouts/notebook'
+import type { Metadata } from 'next'
 import { Suspense, type ReactNode } from 'react'
+
+export const metadata = {
+  alternates: {
+    types: {
+      'application/rss+xml': [
+        {
+          url: '/registry/rss.xml',
+          title: '@nuqs shadcn registry RSS feed'
+        }
+      ]
+    }
+  }
+} satisfies Metadata
 
 export default async function RegistryLayout({
   children
