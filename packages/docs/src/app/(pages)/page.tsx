@@ -12,7 +12,19 @@ export const metadata: Metadata = {
     absolute: 'nuqs | Type-safe search params state management for React'
   },
   alternates: {
-    canonical: 'https://nuqs.dev'
+    canonical: 'https://nuqs.dev',
+    types: {
+      'application/rss+xml': [
+        {
+          url: '/blog/rss.xml',
+          title: 'nuqs blog RSS feed'
+        },
+        {
+          url: '/registry/rss.xml',
+          title: '@nuqs shadcn registry RSS feed'
+        }
+      ]
+    }
   }
 }
 
