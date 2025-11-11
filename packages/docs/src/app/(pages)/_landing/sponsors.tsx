@@ -39,10 +39,10 @@ const SPONSORS: Sponsors = [
     img: 'https://avatars.githubusercontent.com/u/57156815?s=200&v=4'
   },
   {
-    handle: 'oxom-de',
-    name: 'oxom.de',
-    url: 'https://oxom.de',
-    img: 'https://avatars.githubusercontent.com/u/132659062?s=200&v=4'
+    handle: 'pqoqubbw',
+    name: 'dmytro',
+    url: 'https://pqoqubbw.dev/',
+    img: 'https://avatars.githubusercontent.com/u/71014515?s=200&v=4'
   },
   {
     handle: 'ryanmagoon',
