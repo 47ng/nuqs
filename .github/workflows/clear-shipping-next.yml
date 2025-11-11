@@ -34,7 +34,7 @@ jobs:
           if [ -n "$issues" ]; then
             echo "## Issues & PRs to clear from 'Shipping Next' milestone" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
-            echo "$response" | jq -r '.[] | "- #\(.number) \(.title)"' >> $GITHUB_STEP_SUMMARY
+            echo "$response" | jq -r '.[] | "- [#\(.number)](https://github.com/${{ github.repository }}/issues/\(.number)) \(.title)"' >> $GITHUB_STEP_SUMMARY
           else
             echo "No issues or PRs found in the 'Shipping Next' milestone with the 'released' label." >> $GITHUB_STEP_SUMMARY
           fi
