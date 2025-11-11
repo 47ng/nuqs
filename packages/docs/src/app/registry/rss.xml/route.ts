@@ -20,11 +20,11 @@ async function generateRssXml() {
       return `<item>
       <title>${item.title}</title>
       <link>${baseUrl}/${item.name}</link>
-      <guid>registry/${item.name}</guid>
+      <guid>${baseUrl}/${item.name}</guid>
       <description>${item.description}</description>
-      <pubDate>${await getLastModified(
-        `/src/registry/items/${item.name}.json`
-      )}</pubDate>
+      <pubDate>${(
+        await getLastModified(`/src/registry/items/${item.name}.json`)
+      ).toUTCString()}</pubDate>
     </item>`
     })
   )
