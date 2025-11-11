@@ -20,6 +20,7 @@
     "build:registry": "./src/registry/assemble.ts && shadcn build",
     "start": "next start",
     "postinstall": "fumadocs-mdx",
+    "pretest": "next typegen",
     "test": "tsc"
   },
   "dependencies": {
