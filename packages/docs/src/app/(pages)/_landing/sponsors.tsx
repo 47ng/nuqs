@@ -120,6 +120,20 @@ export function SponsorsSection() {
       <h2 className="mb-12 text-center text-3xl font-bold tracking-tighter md:text-4xl xl:text-5xl dark:text-white">
         Sponsors
       </h2>
+      <p className="mb-12 flex justify-center">
+        <a
+          href="https://nextjsweekly.com?utm_source=nuqs&utm_medium=sponsor&utm_campaign=nuqs"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="block p-2"
+        >
+          <span
+            role="presentation"
+            className="mx-auto block h-[25.5px] w-[270px] bg-white [mask-image:url('https://nextjsweekly.com/logo.svg')] [mask-size:100%] [mask-position:center] [mask-repeat:no-repeat]"
+          />
+          <span className="sr-only">Next.js Weekly</span>
+        </a>
+      </p>
       <ul className="container grid grid-cols-2 gap-y-12 md:grid-cols-3 lg:grid-cols-6">
         {SPONSORS.map(sponsor => (
           <li key={sponsor.handle} className="flex flex-col items-center">
