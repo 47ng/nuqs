@@ -9,7 +9,7 @@ export default async function RegistryLayout({
 }: {
   children: ReactNode
 }) {
-  const shared = getSharedLayoutProps()
+  const sharedLayoutProps = getSharedLayoutProps()
   const registry = await readRegistry()
   const categories = categorizeRegistryItems(registry)
   return (
@@ -66,8 +66,8 @@ export default async function RegistryLayout({
             }))
           ]
         }}
-        {...shared}
-        nav={{ ...shared.nav, mode: 'top' }}
+        {...sharedLayoutProps}
+        nav={{ ...sharedLayoutProps.nav, mode: 'top' }}
         sidebar={{
           collapsible: false,
           // banner: // note: side banner goes here
