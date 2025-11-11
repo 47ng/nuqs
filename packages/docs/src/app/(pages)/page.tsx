@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { metadata as rootMetadata } from '../layout'
 import { ContributorsSection } from './_landing/contributors'
 import { DependentsSection } from './_landing/dependents'
 import { FeaturesSection } from './_landing/features'
@@ -13,18 +14,7 @@ export const metadata: Metadata = {
   },
   alternates: {
     canonical: 'https://nuqs.dev',
-    types: {
-      'application/rss+xml': [
-        {
-          url: '/blog/rss.xml',
-          title: 'nuqs blog RSS feed'
-        },
-        {
-          url: '/registry/rss.xml',
-          title: '@nuqs shadcn registry RSS feed'
-        }
-      ]
-    }
+    types: rootMetadata.alternates.types
   }
 }
 

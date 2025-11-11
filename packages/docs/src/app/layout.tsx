@@ -33,8 +33,12 @@ export const metadata = {
         {
           url: '/blog/rss.xml',
           title: 'nuqs blog RSS feed'
+        },
+        {
+          url: '/registry/rss.xml',
+          title: '@nuqs shadcn registry RSS feed'
         }
-      ]
+      ] as const
     }
   },
   other: {
