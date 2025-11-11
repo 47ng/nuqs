@@ -1,8 +1,8 @@
 import { useMDXComponents } from '@/mdx-components'
 import { CodeBlock } from '@/src/components/code-block'
+import { H2 } from '@/src/components/typography'
 import {
   getRegistryItemCategory,
-  markdownToTxt,
   readRegistry,
   readRegistryItem,
   readUsage
@@ -22,35 +22,40 @@ import {
   DocsTitle
 } from 'fumadocs-ui/page'
 import type { Metadata } from 'next'
+import { notFound } from 'next/navigation'
 
 export default async function Page({ params }: PageProps<'/registry/[name]'>) {
   const { name } = await params
-  const { title, description, files } = await readRegistryItem(name)
+  const { title, description, files } =
+    await readRegistryItem(name).catch(notFound)
   const usage = await readUsage(name)
   return (
     <DocsPage
-      toc={
-        [
-          // todo: Fill this up
-        ]
-      }
+      toc={[
+        {
+          url: '#installation',
+          title: 'Installation',
+          depth: 0
+        },
+        ...(usage
+          ? [
+              {
+                url: '#usage',
+                title: 'Usage',
+                depth: 0
+              }
+            ]
+          : [])
+      ]}
     >
       <DocsTitle>{title}</DocsTitle>
-      {description && (
-        <DocsDescription>
-          <Markdown
-            components={useMDXComponents()}
-            rehypePlugins={[rehypeCode]}
-          >
-            {description}
-          </Markdown>
-        </DocsDescription>
-      )}
+      {description && <DocsDescription>{description}</DocsDescription>}
       <DocsBody>
+        <H2 id="installation">Installation</H2>
         <Installation name={name} files={files} />
         {usage && (
           <>
-            <h3>Usage</h3>
+            <H2 id="usage">Usage</H2>
             <Markdown
               components={useMDXComponents()}
               rehypePlugins={[rehypeCode]}
@@ -76,9 +81,7 @@ export async function generateMetadata({
   const item = await readRegistryItem(name)
   return {
     title: item.title,
-    description: item.description
-      ? await markdownToTxt(item.description)
-      : undefined,
+    description: item.description,
     category: getRegistryItemCategory(name)
   } satisfies Metadata
 }
@@ -90,21 +93,19 @@ function Installation({
   files
 }: Pick<RegistryBuiltItem, 'name' | 'files'>) {
   return (
-    <>
-      <Tabs items={['CLI', 'Manual']} defaultIndex={0} persist>
-        <Tab value="CLI">
-          <CodeBlock
-            preHighlighted
-            code={`<pre><code><span class="line">npx shadcn<span style="color:var(--color-muted-foreground);">@latest</span> add @nuqs/${name}<span/></code></pre>`}
-          />
-        </Tab>
-        <Tab value="Manual">
-          {files.map(file => (
-            <RegistryBuiltFile key={file.target} {...file} />
-          ))}
-        </Tab>
-      </Tabs>
-    </>
+    <Tabs items={['CLI', 'Manual']} defaultIndex={0} persist>
+      <Tab value="CLI">
+        <CodeBlock
+          preHighlighted
+          code={`<pre><code><span class="line">npx shadcn<span style="color:var(--color-muted-foreground);">@latest</span> add @nuqs/${name}<span/></code></pre>`}
+        />
+      </Tab>
+      <Tab value="Manual">
+        {files.map(file => (
+          <RegistryBuiltFile key={file.target} {...file} />
+        ))}
+      </Tab>
+    </Tabs>
   )
 }
 

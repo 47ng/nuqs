@@ -4,7 +4,6 @@ import {
   registrySchema,
   type RegistrySourceItem
 } from '@/src/registry/schemas'
-import { marked } from 'marked'
 import { readFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
 
@@ -27,11 +26,6 @@ export async function readUsage(name: string) {
   } catch {
     return null
   }
-}
-
-export async function markdownToTxt(text: string) {
-  const html = await marked(text)
-  return html.replace(/<[^>]+>/g, '')
 }
 
 export const registryItemCategories = [

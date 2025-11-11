@@ -2,7 +2,7 @@
   "type": "registry:item",
   "name": "adapter-waku",
   "title": "Waku Adapter",
-  "description": "Using nuqs in [⛩️ Waku](https://waku.gg/) applications. Read the [full guide](https://nuqs.dev/docs/community-adapters/waku) on where to place the `<NuqsAdapter>`.",
+  "description": "Using nuqs in ⛩️ Waku applications.",
   "dependencies": ["waku@>=0.22.0", "nuqs"],
   "files": [
     {
