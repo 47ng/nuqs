@@ -1,4 +1,5 @@
 import { useMDXComponents } from '@/mdx-components'
+import { rehypeCodeOptions } from '@/rehype-code.config'
 import { CodeBlock } from '@/src/components/code-block'
 import { H2 } from '@/src/components/typography'
 import {
@@ -13,7 +14,8 @@ import type {
 } from '@/src/registry/schemas'
 import { SiTypescript } from '@icons-pack/react-simple-icons'
 import { Markdown } from 'fumadocs-core/content'
-import { rehypeCode } from 'fumadocs-core/mdx-plugins'
+import { rehypeCode, remarkHeading } from 'fumadocs-core/mdx-plugins'
+import { Callout } from 'fumadocs-ui/components/callout'
 import { Tab, Tabs } from 'fumadocs-ui/components/tabs'
 import {
   DocsBody,
@@ -23,11 +25,13 @@ import {
 } from 'fumadocs-ui/page'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
+import remarkSmartypants from 'remark-smartypants'
 
 export default async function Page({ params }: PageProps<'/registry/[name]'>) {
   const { name } = await params
   const { title, description, files } =
     await readRegistryItem(name).catch(notFound)
+  const category = getRegistryItemCategory(name)
   const usage = await readUsage(name)
   return (
     <DocsPage
@@ -58,10 +62,20 @@ export default async function Page({ params }: PageProps<'/registry/[name]'>) {
             <H2 id="usage">Usage</H2>
             <Markdown
               components={useMDXComponents()}
-              rehypePlugins={[rehypeCode]}
+              remarkPlugins={[remarkSmartypants, remarkHeading]}
+              rehypePlugins={[[rehypeCode, rehypeCodeOptions]]}
             >
               {usage}
             </Markdown>
+          </>
+        )}
+        {category === 'Adapters' && (
+          <>
+            <br />
+            <Callout type="warn">
+              The custom adapters APIs are not yet stable and may change in the
+              future in a minor or patch release (not following SemVer).
+            </Callout>
           </>
         )}
       </DocsBody>

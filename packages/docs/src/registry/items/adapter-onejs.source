@@ -1,0 +1,28 @@
+import {
+  type unstable_AdapterOptions as AdapterOptions,
+  unstable_createAdapterProvider as createAdapterProvider,
+  renderQueryString
+} from 'nuqs/adapters/custom'
+import { useActiveParams, useRouter } from 'one'
+
+function useNuqsOneAdapter() {
+  const router = useRouter()
+  const searchParams = new URLSearchParams(useActiveParams() as {})
+  const updateUrl = (search: URLSearchParams, options: AdapterOptions) => {
+    if (options.history === 'push') {
+      router.push(renderQueryString(search), {
+        scroll: options.scroll
+      })
+    } else {
+      router.replace(renderQueryString(search), {
+        scroll: options.scroll
+      })
+    }
+  }
+  return {
+    searchParams,
+    updateUrl
+  }
+}
+
+export const NuqsAdapter = createAdapterProvider(useNuqsOneAdapter)
