@@ -5,6 +5,7 @@ import {
   DocsPage,
   DocsTitle
 } from 'fumadocs-ui/page'
+import { RssIcon } from 'lucide-react'
 import type { Metadata } from 'next'
 
 export const metadata = {
@@ -16,7 +17,10 @@ export const metadata = {
 export default function Page() {
   return (
     <DocsPage>
-      <DocsTitle>Shadcn Registry</DocsTitle>
+      <nav className="mb-4 flex items-center justify-between">
+        <DocsTitle>Shadcn Registry</DocsTitle>
+        <RssFeedLink />
+      </nav>
       <DocsDescription>
         Use the{' '}
         <a href="https://ui.shadcn.com/docs/cli" className="underline">
@@ -38,5 +42,20 @@ export default function Page() {
         </p>
       </DocsBody>
     </DocsPage>
+  )
+}
+
+function RssFeedLink() {
+  return (
+    <a
+      href="/registry/rss.xml"
+      className="text-muted-foreground flex items-center gap-1 text-sm hover:underline"
+    >
+      <RssIcon
+        className="size-4 text-orange-600 dark:text-orange-400"
+        role="presentation"
+      />
+      RSS
+    </a>
   )
 }
