@@ -1,0 +1,14 @@
+{
+  "type": "registry:item",
+  "name": "adapter-onejs",
+  "title": "One.js Adapter",
+  "description": "Using nuqs in One.js applications.",
+  "dependencies": ["one", "nuqs"],
+  "files": [
+    {
+      "type": "registry:file",
+      "path": "src/registry/items/adapter-onejs.source",
+      "target": "~/app/nuqs-onejs-adapter.tsx"
+    }
+  ]
+}

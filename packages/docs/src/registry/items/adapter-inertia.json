@@ -1,0 +1,14 @@
+{
+  "type": "registry:item",
+  "name": "adapter-inertia",
+  "title": "Inertia.js Adapter",
+  "description": "Using nuqs in Inertia.js apps (eg: with a Laravel backend)",
+  "dependencies": ["inertia@^0.9.0", "nuqs"],
+  "files": [
+    {
+      "type": "registry:file",
+      "path": "https://raw.githubusercontent.com/47ng/nuqs-inertia-pingcrm/refs/heads/with-nuqs/resources/js/lib/nuqs-inertia-adapter.ts",
+      "target": "~/resources/js/lib/nuqs-inertia-adapter.ts"
+    }
+  ]
+}

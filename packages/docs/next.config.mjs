@@ -49,6 +49,21 @@ const config = {
         destination: '/docs/parsers/built-in',
         permanent: true
       },
+      {
+        source: '/docs/community-adapters/inertia',
+        destination: '/registry/adapter-inertia',
+        permanent: true
+      },
+      {
+        source: '/docs/community-adapters/waku',
+        destination: '/registry/adapter-waku',
+        permanent: true
+      },
+      {
+        source: '/docs/community-adapters/onejs',
+        destination: '/registry/adapter-onejs',
+        permanent: true
+      },
       // Moved from err.47ng.com/NUQS-123
       {
         source: '/NUQS-:code(\\d{3})',
