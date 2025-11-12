@@ -34,11 +34,16 @@ export default function Page() {
           Follow the CLI instructions for each item to add it to your project,
           or copy-paste the code snippets directly.
         </p>
-        <H2 id="mcp-server">MCP Server</H2>
+        {/* <H2 id="mcp-server">MCP Server</H2>
         <p>
           Shadcn registries come with an{' '}
           <a href="https://ui.shadcn.com/docs/mcp">MCP server</a> that you can
           use
+        </p> */}
+        <H2 id="rss-feed">Staying up to date</H2>
+        <p>
+          Subscribe to the registry's <a href="/registry/rss.xml">RSS feed</a>{' '}
+          to stay updated on the latest changes and additions to the registry.
         </p>
       </DocsBody>
     </DocsPage>
