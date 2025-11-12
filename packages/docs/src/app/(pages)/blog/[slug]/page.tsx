@@ -114,7 +114,17 @@ export async function generateMetadata(props: {
     title: page.data.title,
     description:
       page.data.description ??
-      'Type-safe search params state manager for React frameworks'
+      'Type-safe search params state manager for React frameworks',
+    alternates: {
+      types: {
+        'application/rss+xml': [
+          {
+            url: '/blog/rss.xml',
+            title: 'nuqs blog RSS feed'
+          }
+        ]
+      }
+    }
   }
 }
 
