@@ -410,10 +410,9 @@ jobs:
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "Released version: $VERSION"
         working-directory: packages/nuqs
-      - name: Invalidate ISR caches in the docs
+      - name: Invalidate contributors ISR cache in the docs
         if: ${{ github.event_name == 'push' && github.ref_name == 'master' }}
         run: |
-          curl -s "https://nuqs.dev/api/isr?tag=npm-version&token=${{ secrets.ISR_TOKEN }}"
           curl -s "https://nuqs.dev/api/isr?tag=contributors&token=${{ secrets.ISR_TOKEN }}"
       - name: Install dependencies
         if: ${{ github.event_name == 'push' && steps.package-version.outputs.version != '0.0.0-semantically-released' }}

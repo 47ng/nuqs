@@ -29,8 +29,11 @@ import remarkSmartypants from 'remark-smartypants'
 
 export default async function Page({ params }: PageProps<'/registry/[name]'>) {
   const { name } = await params
-  const { title, description, files } =
-    await readRegistryItem(name).catch(notFound)
+  const [item, error] = await readRegistryItem(name)
+  if (error || !item) {
+    notFound()
+  }
+  const { title, description, files } = item
   const category = getRegistryItemCategory(name)
   const usage = await readUsage(name)
   return (
@@ -84,7 +87,10 @@ export default async function Page({ params }: PageProps<'/registry/[name]'>) {
 }
 
 export async function generateStaticParams() {
-  const registry = await readRegistry()
+  const [registry, error] = await readRegistry()
+  if (error || !registry) {
+    notFound()
+  }
   return registry.items.map(item => ({ name: item.name }))
 }
 
@@ -92,7 +98,10 @@ export async function generateMetadata({
   params
 }: PageProps<'/registry/[name]'>) {
   const { name } = await params
-  const item = await readRegistryItem(name)
+  const [item, error] = await readRegistryItem(name)
+  if (error || !item) {
+    notFound()
+  }
   return {
     title: item.title,
     description: item.description,

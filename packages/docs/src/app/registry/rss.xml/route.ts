@@ -1,5 +1,6 @@
 import { getLastModified } from '@/src/lib/get-last-modified'
 import { readRegistry } from '@/src/registry/read'
+import { notFound } from 'next/navigation'
 
 export const dynamic = 'force-static'
 
@@ -14,7 +15,10 @@ export async function GET() {
 
 async function generateRssXml() {
   const baseUrl = 'https://nuqs.dev/registry'
-  const registry = await readRegistry()
+  const [registry, error] = await readRegistry()
+  if (error || !registry) {
+    notFound()
+  }
   const items = await Promise.all(
     registry.items.map(async item => {
       return `<item>
