@@ -3,6 +3,7 @@ import { SidebarFooter } from '@/src/components/sidebar-footer'
 import { categorizeRegistryItems, readRegistry } from '@/src/registry/read'
 import { DocsLayout } from 'fumadocs-ui/layouts/notebook'
 import type { Metadata } from 'next'
+import { notFound } from 'next/navigation'
 import { Suspense, type ReactNode } from 'react'
 
 export const metadata = {
@@ -24,7 +25,10 @@ export default async function RegistryLayout({
   children: ReactNode
 }) {
   const sharedLayoutProps = getSharedLayoutProps()
-  const registry = await readRegistry()
+  const [registry, error] = await readRegistry()
+  if (error || !registry) {
+    notFound()
+  }
   const categories = categorizeRegistryItems(registry)
   return (
     <>

@@ -8,15 +8,26 @@ import { readFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
 
 export async function readRegistry() {
-  const fileName = resolve(process.cwd(), 'public/r/registry.json')
-  const fileContents = await readFile(fileName, 'utf-8')
-  return registrySchema.parse(JSON.parse(fileContents))
+  try {
+    const fileName = resolve(process.cwd(), 'public/r/registry.json')
+    const fileContents = await readFile(fileName, 'utf-8')
+    return [registrySchema.parse(JSON.parse(fileContents)), null] as const
+  } catch (error) {
+    return [null, error] as const
+  }
 }
 
 export async function readRegistryItem(name: string) {
-  const fileName = resolve(process.cwd(), `public/r/${name}.json`)
-  const fileContents = await readFile(fileName, 'utf-8')
-  return registryBuiltItemSchema.parse(JSON.parse(fileContents))
+  try {
+    const fileName = resolve(process.cwd(), `public/r/${name}.json`)
+    const fileContents = await readFile(fileName, 'utf-8')
+    return [
+      registryBuiltItemSchema.parse(JSON.parse(fileContents)),
+      null
+    ] as const
+  } catch (error) {
+    return [null, error] as const
+  }
 }
 
 export async function readUsage(name: string) {
