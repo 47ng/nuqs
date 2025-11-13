@@ -76,8 +76,14 @@ export default async function Page({ params }: PageProps<'/registry/[name]'>) {
           <>
             <br />
             <Callout type="warn">
-              The custom adapters APIs are not yet stable and may change in the
-              future in a minor or patch release (not following SemVer).
+              <p>
+                The custom adapters APIs are not yet stable and may change in
+                the future in a minor or patch release (not following SemVer).
+              </p>
+              <p>
+                Use the registry's <a href="/registry/rss.xml">RSS feed</a> to
+                stay updated on any changes.
+              </p>
             </Callout>
           </>
         )}
