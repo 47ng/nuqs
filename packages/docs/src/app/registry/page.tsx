@@ -69,7 +69,14 @@ export default function Page() {
         </p> */}
         <H2 id="rss-feed">Staying up to date</H2>
         <p>
-          Subscribe to the registry's <a href="/registry/rss.xml">RSS feed</a>{' '}
+          Subscribe to the registry's{' '}
+          <a href="/registry/rss.xml">
+            <RssIcon
+              className="mr-1 inline-block size-4 stroke-[2.5] text-orange-700 dark:text-orange-400"
+              role="presentation"
+            />
+            RSS feed
+          </a>{' '}
           to stay updated on the latest changes and additions to the registry.
         </p>
       </DocsBody>
@@ -81,10 +88,10 @@ function RssFeedLink() {
   return (
     <a
       href="/registry/rss.xml"
-      className="text-muted-foreground flex items-center gap-1 text-sm hover:underline"
+      className="text-muted-foreground flex items-center gap-1 text-sm font-medium hover:underline"
     >
       <RssIcon
-        className="size-4 text-orange-600 dark:text-orange-400"
+        className="size-4 stroke-[2.5] text-orange-700 dark:text-orange-400"
         role="presentation"
       />
       RSS
