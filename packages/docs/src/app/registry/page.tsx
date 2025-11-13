@@ -26,7 +26,7 @@ export default function Page() {
         <a href="https://ui.shadcn.com/docs/cli" className="underline">
           shadcn CLI
         </a>{' '}
-        to install custom parsers, adapters and utilities from the community.
+        to install custom parsers, adapters, and utilities from the community.
       </DocsDescription>
       <DocsBody>
         <H2 id="using-the-registry">Using the registry</H2>
