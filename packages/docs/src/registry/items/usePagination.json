@@ -1,6 +1,6 @@
 {
   "type": "registry:item",
-  "name": "use-pagination",
+  "name": "usePagination",
   "title": "Pagination Hook",
   "description": "Complete pagination state management with URL synchronization. Handles page navigation, page size control, and edge cases.",
   "dependencies": ["nuqs"],

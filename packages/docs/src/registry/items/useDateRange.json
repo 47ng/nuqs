@@ -1,6 +1,6 @@
 {
   "type": "registry:item",
-  "name": "use-date-range",
+  "name": "useDateRange",
   "title": "Date Range Hook",
   "description": "Date range selection with URL synchronization and preset support. Includes common presets like last 7 days, last 30 days, and custom ranges.",
   "dependencies": ["nuqs", "date-fns@^4.1.0"],

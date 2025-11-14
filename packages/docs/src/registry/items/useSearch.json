@@ -1,6 +1,6 @@
 {
   "type": "registry:item",
-  "name": "use-search",
+  "name": "useSearch",
   "title": "Search Hook",
   "description": "Debounced search state management with URL synchronization. Includes minimum length validation and debounce control.",
   "dependencies": ["nuqs"],

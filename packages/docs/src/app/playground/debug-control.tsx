@@ -7,9 +7,6 @@ export function DebugControl() {
     if (typeof localStorage === 'undefined') {
       return false
     }
-    if (typeof localStorage.getItem !== 'function') {
-      return false
-    }
     return localStorage.getItem('debug')?.includes('nuqs') ?? false
   })
   const update = React.useCallback(() => {

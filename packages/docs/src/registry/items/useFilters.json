@@ -1,6 +1,6 @@
 {
   "type": "registry:item",
-  "name": "use-filters",
+  "name": "useFilters",
   "title": "Filters Hook",
   "description": "Type-safe multi-filter state management with URL synchronization. Uses nuqs parsers for strong typing and validation.",
   "dependencies": ["nuqs"],

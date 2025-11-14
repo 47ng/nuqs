@@ -1,6 +1,6 @@
 {
   "type": "registry:item",
-  "name": "use-multi-select",
+  "name": "useMultiSelect",
   "title": "Multi-Select Hook",
   "description": "Array-based multi-selection state management with URL synchronization. Supports toggle, select all, and deselect all operations.",
   "dependencies": ["nuqs"],
