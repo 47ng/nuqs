@@ -7,42 +7,42 @@
   "files": [
     {
       "type": "registry:file",
-      "path": "https://raw.githubusercontent.com/iHiteshAgrawal/nuqs-presets/main/registry/default/types/index.ts",
+      "path": "https://raw.githubusercontent.com/iHiteshAgrawal/nuqs-presets/eee3b41b1073b71576424e58c5f0891a9405c50a/registry/default/types/index.ts",
       "target": "~/hooks/types/index.ts"
     },
     {
       "type": "registry:file",
-      "path": "https://raw.githubusercontent.com/iHiteshAgrawal/nuqs-presets/main/registry/default/types/common.ts",
+      "path": "https://raw.githubusercontent.com/iHiteshAgrawal/nuqs-presets/eee3b41b1073b71576424e58c5f0891a9405c50a/registry/default/types/common.ts",
       "target": "~/hooks/types/common.ts"
     },
     {
       "type": "registry:file",
-      "path": "https://raw.githubusercontent.com/iHiteshAgrawal/nuqs-presets/main/registry/default/utils/date.ts",
+      "path": "https://raw.githubusercontent.com/iHiteshAgrawal/nuqs-presets/eee3b41b1073b71576424e58c5f0891a9405c50a/registry/default/utils/date.ts",
       "target": "~/lib/utils/date.ts"
     },
     {
       "type": "registry:file",
-      "path": "https://raw.githubusercontent.com/iHiteshAgrawal/nuqs-presets/main/registry/default/date-range/index.ts",
+      "path": "https://raw.githubusercontent.com/iHiteshAgrawal/nuqs-presets/eee3b41b1073b71576424e58c5f0891a9405c50a/registry/default/date-range/index.ts",
       "target": "~/hooks/date-range/index.ts"
     },
     {
       "type": "registry:file",
-      "path": "https://raw.githubusercontent.com/iHiteshAgrawal/nuqs-presets/main/registry/default/date-range/types.ts",
+      "path": "https://raw.githubusercontent.com/iHiteshAgrawal/nuqs-presets/eee3b41b1073b71576424e58c5f0891a9405c50a/registry/default/date-range/types.ts",
       "target": "~/hooks/date-range/types.ts"
     },
     {
       "type": "registry:file",
-      "path": "https://raw.githubusercontent.com/iHiteshAgrawal/nuqs-presets/main/registry/default/date-range/useDateRange.ts",
+      "path": "https://raw.githubusercontent.com/iHiteshAgrawal/nuqs-presets/eee3b41b1073b71576424e58c5f0891a9405c50a/registry/default/date-range/useDateRange.ts",
       "target": "~/hooks/date-range/useDateRange.ts"
     },
     {
       "type": "registry:file",
-      "path": "https://raw.githubusercontent.com/iHiteshAgrawal/nuqs-presets/main/registry/default/date-range/utils.ts",
+      "path": "https://raw.githubusercontent.com/iHiteshAgrawal/nuqs-presets/eee3b41b1073b71576424e58c5f0891a9405c50a/registry/default/date-range/utils.ts",
       "target": "~/hooks/date-range/utils.ts"
     },
     {
       "type": "registry:file",
-      "path": "https://raw.githubusercontent.com/iHiteshAgrawal/nuqs-presets/main/registry/default/date-range/presets.ts",
+      "path": "https://raw.githubusercontent.com/iHiteshAgrawal/nuqs-presets/eee3b41b1073b71576424e58c5f0891a9405c50a/registry/default/date-range/presets.ts",
       "target": "~/hooks/date-range/presets.ts"
     }
   ]

@@ -1,30 +1,72 @@
-This utility connects your `typedRoutes` type-safe pathnames
-to a search params descriptor object, and gives you back a function
-you can call to generate a fully type-safe (pathname + search params) href
-for linking & routing:
+```tsx
+'use client'
 
-```ts title="src/app/map/search-params.ts"
-import { createTypedLink } from '@/src/lib/typed-links'
-import { parseAsFloat, type UrlKeys } from 'nuqs/server'
+import { useSorting } from '@/hooks/sorting'
 
-const coordinates = {
-  latitude: parseAsFloat.withDefault(0),
-  longitude: parseAsFloat.withDefault(0)
+export function DataTable() {
+  const {
+    sortBy,        // Current sort column
+    sortOrder,     // 'asc' | 'desc' | null
+    toggleSort,    // Toggle column sort
+    isSortedBy,    // Check if column is sorted
+    clearSort,     // Clear all sorting
+  } = useSorting({
+    columns: ['name', 'date', 'price'] as const,
+    defaultColumn: 'name',
+    defaultOrder: 'asc',
+  })
+
+  return (
+    <table>
+      <thead>
+        <tr>
+          <th onClick={() => toggleSort('name')}>
+            Name {isSortedBy('name') && (sortOrder === 'asc' ? '↑' : '↓')}
+          </th>
+          <th onClick={() => toggleSort('price')}>
+            Price {isSortedBy('price') && (sortOrder === 'asc' ? '↑' : '↓')}
+          </th>
+          <th onClick={() => toggleSort('date')}>
+            Date {isSortedBy('date') && (sortOrder === 'asc' ? '↑' : '↓')}
+          </th>
+        </tr>
+      </thead>
+      {/* Table body with sorted data */}
+    </table>
+  )
 }
-// Optional remapping for shorter keys
-const urlKeys: UrlKeys<typeof coordinates> = {
-  latitude: 'lat',
-  longitude: 'lng'
-}
-
-// [!code word:createTypedLink]
-export const getMapLink = createTypedLink(
-  '/map', // The values here are inferred from your app's routes
-  coordinates,
-  { urlKeys }
-)
-
-// Usage:
-getMapLink({ latitude: 12.34, longitude: 56.78 })
-// "/map?lat=12.34&lng=56.78"
 ```
+
+## API Reference
+
+### Options
+
+```typescript
+interface UseSortingOptions<T extends readonly string[]> {
+  columns: T                        // Available columns
+  defaultColumn?: T[number]         // Initial sort column
+  defaultOrder?: 'asc' | 'desc'    // Initial order
+  shallow?: boolean
+  history?: 'push' | 'replace'
+  scroll?: boolean
+}
+```
+
+### Return Value
+
+```typescript
+interface UseSortingResult<T> {
+  sortBy: T | null                      // Current column
+  sortOrder: 'asc' | 'desc' | null     // Current order
+  toggleSort: (column: T) => void      // Toggle column (null→asc→desc→null)
+  setSorting: (column: T | null, order: 'asc' | 'desc' | null) => void
+  isSortedBy: (column: T) => boolean   // Check if column is active
+  clearSort: () => void                // Clear sorting
+}
+```
+
+## More Information
+
+- **GitHub**: [nuqs-presets](https://github.com/iHiteshAgrawal/nuqs-presets)
+- **npm**: [nuqs-presets](https://www.npmjs.com/package/nuqs-presets)
+- **Examples**: See the [examples directory](https://github.com/iHiteshAgrawal/nuqs-presets/tree/main/examples)

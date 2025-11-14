@@ -7,32 +7,32 @@
   "files": [
     {
       "type": "registry:file",
-      "path": "https://raw.githubusercontent.com/iHiteshAgrawal/nuqs-presets/main/registry/default/types/index.ts",
+      "path": "https://raw.githubusercontent.com/iHiteshAgrawal/nuqs-presets/eee3b41b1073b71576424e58c5f0891a9405c50a/registry/default/types/index.ts",
       "target": "~/hooks/types/index.ts"
     },
     {
       "type": "registry:file",
-      "path": "https://raw.githubusercontent.com/iHiteshAgrawal/nuqs-presets/main/registry/default/types/common.ts",
+      "path": "https://raw.githubusercontent.com/iHiteshAgrawal/nuqs-presets/eee3b41b1073b71576424e58c5f0891a9405c50a/registry/default/types/common.ts",
       "target": "~/hooks/types/common.ts"
     },
     {
       "type": "registry:file",
-      "path": "https://raw.githubusercontent.com/iHiteshAgrawal/nuqs-presets/main/registry/default/filtering/index.ts",
+      "path": "https://raw.githubusercontent.com/iHiteshAgrawal/nuqs-presets/eee3b41b1073b71576424e58c5f0891a9405c50a/registry/default/filtering/index.ts",
       "target": "~/hooks/filtering/index.ts"
     },
     {
       "type": "registry:file",
-      "path": "https://raw.githubusercontent.com/iHiteshAgrawal/nuqs-presets/main/registry/default/filtering/types.ts",
+      "path": "https://raw.githubusercontent.com/iHiteshAgrawal/nuqs-presets/eee3b41b1073b71576424e58c5f0891a9405c50a/registry/default/filtering/types.ts",
       "target": "~/hooks/filtering/types.ts"
     },
     {
       "type": "registry:file",
-      "path": "https://raw.githubusercontent.com/iHiteshAgrawal/nuqs-presets/main/registry/default/filtering/useFilters.ts",
+      "path": "https://raw.githubusercontent.com/iHiteshAgrawal/nuqs-presets/eee3b41b1073b71576424e58c5f0891a9405c50a/registry/default/filtering/useFilters.ts",
       "target": "~/hooks/filtering/useFilters.ts"
     },
     {
       "type": "registry:file",
-      "path": "https://raw.githubusercontent.com/iHiteshAgrawal/nuqs-presets/main/registry/default/filtering/utils.ts",
+      "path": "https://raw.githubusercontent.com/iHiteshAgrawal/nuqs-presets/eee3b41b1073b71576424e58c5f0891a9405c50a/registry/default/filtering/utils.ts",
       "target": "~/hooks/filtering/utils.ts"
     }
   ]
