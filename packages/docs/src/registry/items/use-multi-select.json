@@ -1,0 +1,39 @@
+{
+  "type": "registry:item",
+  "name": "use-multi-select",
+  "title": "Multi-Select Hook",
+  "description": "Array-based multi-selection state management with URL synchronization. Supports toggle, select all, and deselect all operations.",
+  "dependencies": ["nuqs"],
+  "files": [
+    {
+      "type": "registry:file",
+      "path": "https://raw.githubusercontent.com/iHiteshAgrawal/nuqs-presets/main/registry/default/types/index.ts",
+      "target": "~/hooks/types/index.ts"
+    },
+    {
+      "type": "registry:file",
+      "path": "https://raw.githubusercontent.com/iHiteshAgrawal/nuqs-presets/main/registry/default/types/common.ts",
+      "target": "~/hooks/types/common.ts"
+    },
+    {
+      "type": "registry:file",
+      "path": "https://raw.githubusercontent.com/iHiteshAgrawal/nuqs-presets/main/registry/default/multi-select/index.ts",
+      "target": "~/hooks/multi-select/index.ts"
+    },
+    {
+      "type": "registry:file",
+      "path": "https://raw.githubusercontent.com/iHiteshAgrawal/nuqs-presets/main/registry/default/multi-select/types.ts",
+      "target": "~/hooks/multi-select/types.ts"
+    },
+    {
+      "type": "registry:file",
+      "path": "https://raw.githubusercontent.com/iHiteshAgrawal/nuqs-presets/main/registry/default/multi-select/useMultiSelect.ts",
+      "target": "~/hooks/multi-select/useMultiSelect.ts"
+    },
+    {
+      "type": "registry:file",
+      "path": "https://raw.githubusercontent.com/iHiteshAgrawal/nuqs-presets/main/registry/default/multi-select/utils.ts",
+      "target": "~/hooks/multi-select/utils.ts"
+    }
+  ]
+}

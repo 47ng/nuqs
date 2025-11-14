@@ -1,0 +1,39 @@
+{
+  "type": "registry:item",
+  "name": "use-search",
+  "title": "Search Hook",
+  "description": "Debounced search state management with URL synchronization. Includes minimum length validation and debounce control.",
+  "dependencies": ["nuqs"],
+  "files": [
+    {
+      "type": "registry:file",
+      "path": "https://raw.githubusercontent.com/iHiteshAgrawal/nuqs-presets/main/registry/default/types/index.ts",
+      "target": "~/hooks/types/index.ts"
+    },
+    {
+      "type": "registry:file",
+      "path": "https://raw.githubusercontent.com/iHiteshAgrawal/nuqs-presets/main/registry/default/types/common.ts",
+      "target": "~/hooks/types/common.ts"
+    },
+    {
+      "type": "registry:file",
+      "path": "https://raw.githubusercontent.com/iHiteshAgrawal/nuqs-presets/main/registry/default/utils/debounce.ts",
+      "target": "~/lib/utils/debounce.ts"
+    },
+    {
+      "type": "registry:file",
+      "path": "https://raw.githubusercontent.com/iHiteshAgrawal/nuqs-presets/main/registry/default/search/index.ts",
+      "target": "~/hooks/search/index.ts"
+    },
+    {
+      "type": "registry:file",
+      "path": "https://raw.githubusercontent.com/iHiteshAgrawal/nuqs-presets/main/registry/default/search/types.ts",
+      "target": "~/hooks/search/types.ts"
+    },
+    {
+      "type": "registry:file",
+      "path": "https://raw.githubusercontent.com/iHiteshAgrawal/nuqs-presets/main/registry/default/search/useSearch.ts",
+      "target": "~/hooks/search/useSearch.ts"
+    }
+  ]
+}

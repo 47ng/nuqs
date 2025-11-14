@@ -1,0 +1,44 @@
+{
+  "type": "registry:item",
+  "name": "use-pagination",
+  "title": "Pagination Hook",
+  "description": "Complete pagination state management with URL synchronization. Handles page navigation, page size control, and edge cases.",
+  "dependencies": ["nuqs"],
+  "files": [
+    {
+      "type": "registry:file",
+      "path": "https://raw.githubusercontent.com/iHiteshAgrawal/nuqs-presets/main/registry/default/types/index.ts",
+      "target": "~/hooks/types/index.ts"
+    },
+    {
+      "type": "registry:file",
+      "path": "https://raw.githubusercontent.com/iHiteshAgrawal/nuqs-presets/main/registry/default/types/common.ts",
+      "target": "~/hooks/types/common.ts"
+    },
+    {
+      "type": "registry:file",
+      "path": "https://raw.githubusercontent.com/iHiteshAgrawal/nuqs-presets/main/registry/default/utils/validation.ts",
+      "target": "~/lib/utils/validation.ts"
+    },
+    {
+      "type": "registry:file",
+      "path": "https://raw.githubusercontent.com/iHiteshAgrawal/nuqs-presets/main/registry/default/pagination/index.ts",
+      "target": "~/hooks/pagination/index.ts"
+    },
+    {
+      "type": "registry:file",
+      "path": "https://raw.githubusercontent.com/iHiteshAgrawal/nuqs-presets/main/registry/default/pagination/types.ts",
+      "target": "~/hooks/pagination/types.ts"
+    },
+    {
+      "type": "registry:file",
+      "path": "https://raw.githubusercontent.com/iHiteshAgrawal/nuqs-presets/main/registry/default/pagination/utils.ts",
+      "target": "~/hooks/pagination/utils.ts"
+    },
+    {
+      "type": "registry:file",
+      "path": "https://raw.githubusercontent.com/iHiteshAgrawal/nuqs-presets/main/registry/default/pagination/usePagination.ts",
+      "target": "~/hooks/pagination/usePagination.ts"
+    }
+  ]
+}

@@ -1,0 +1,34 @@
+{
+  "type": "registry:item",
+  "name": "use-tabs",
+  "title": "Tabs Hook",
+  "description": "Type-safe tab navigation with URL synchronization. Provides strongly-typed tab values and active state checking.",
+  "dependencies": ["nuqs"],
+  "files": [
+    {
+      "type": "registry:file",
+      "path": "https://raw.githubusercontent.com/iHiteshAgrawal/nuqs-presets/main/registry/default/types/index.ts",
+      "target": "~/hooks/types/index.ts"
+    },
+    {
+      "type": "registry:file",
+      "path": "https://raw.githubusercontent.com/iHiteshAgrawal/nuqs-presets/main/registry/default/types/common.ts",
+      "target": "~/hooks/types/common.ts"
+    },
+    {
+      "type": "registry:file",
+      "path": "https://raw.githubusercontent.com/iHiteshAgrawal/nuqs-presets/main/registry/default/tabs/index.ts",
+      "target": "~/hooks/tabs/index.ts"
+    },
+    {
+      "type": "registry:file",
+      "path": "https://raw.githubusercontent.com/iHiteshAgrawal/nuqs-presets/main/registry/default/tabs/types.ts",
+      "target": "~/hooks/tabs/types.ts"
+    },
+    {
+      "type": "registry:file",
+      "path": "https://raw.githubusercontent.com/iHiteshAgrawal/nuqs-presets/main/registry/default/tabs/useTabs.ts",
+      "target": "~/hooks/tabs/useTabs.ts"
+    }
+  ]
+}

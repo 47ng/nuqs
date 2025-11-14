@@ -1,0 +1,39 @@
+{
+  "type": "registry:item",
+  "name": "use-sorting",
+  "title": "Sorting Hook",
+  "description": "Multi-column sorting state management with URL synchronization. Supports ascending, descending, and null states with smart toggling.",
+  "dependencies": ["nuqs"],
+  "files": [
+    {
+      "type": "registry:file",
+      "path": "https://raw.githubusercontent.com/iHiteshAgrawal/nuqs-presets/main/registry/default/types/index.ts",
+      "target": "~/hooks/types/index.ts"
+    },
+    {
+      "type": "registry:file",
+      "path": "https://raw.githubusercontent.com/iHiteshAgrawal/nuqs-presets/main/registry/default/types/common.ts",
+      "target": "~/hooks/types/common.ts"
+    },
+    {
+      "type": "registry:file",
+      "path": "https://raw.githubusercontent.com/iHiteshAgrawal/nuqs-presets/main/registry/default/sorting/index.ts",
+      "target": "~/hooks/sorting/index.ts"
+    },
+    {
+      "type": "registry:file",
+      "path": "https://raw.githubusercontent.com/iHiteshAgrawal/nuqs-presets/main/registry/default/sorting/types.ts",
+      "target": "~/hooks/sorting/types.ts"
+    },
+    {
+      "type": "registry:file",
+      "path": "https://raw.githubusercontent.com/iHiteshAgrawal/nuqs-presets/main/registry/default/sorting/useSorting.ts",
+      "target": "~/hooks/sorting/useSorting.ts"
+    },
+    {
+      "type": "registry:file",
+      "path": "https://raw.githubusercontent.com/iHiteshAgrawal/nuqs-presets/main/registry/default/sorting/utils.ts",
+      "target": "~/hooks/sorting/utils.ts"
+    }
+  ]
+}
