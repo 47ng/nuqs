@@ -1,0 +1,35 @@
+{
+  "name": "e2e-react-router-v5",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --port 3005",
+    "build": "vite build",
+    "start": "vite preview --port 3005",
+    "test": "pnpm run --stream '/^test:/'",
+    "test:types": "tsc -b",
+    "test:e2e": "start-server-and-test start http://localhost:3005 cypress:run",
+    "cypress:open": "cypress open",
+    "cypress:run": "cross-env FORCE_COLOR=3 cypress run --headless"
+  },
+  "dependencies": {
+    "nuqs": "workspace:*",
+    "react": "catalog:react19",
+    "react-dom": "catalog:react19",
+    "react-router-dom": "^5.3.4"
+  },
+  "devDependencies": {
+    "@types/node": "^24.3.0",
+    "@types/react": "catalog:react19",
+    "@types/react-dom": "catalog:react19",
+    "@types/react-router-dom": "^5.3.3",
+    "@vitejs/plugin-react": "^5.0.1",
+    "cross-env": "^10.0.0",
+    "cypress": "catalog:e2e",
+    "e2e-shared": "workspace:*",
+    "start-server-and-test": "catalog:e2e",
+    "typescript": "^5.9.2",
+    "vite": "^7.1.11"
+  }
+}
