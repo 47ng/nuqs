@@ -5,13 +5,13 @@ import { write } from './lib/search-params'
 
 type Base = string | URLSearchParams | URL
 
-export type CreateSerializerOptions<Parsers extends ParserMap> = Pick<
-  Options,
-  'clearOnDefault'
-> & {
-  urlKeys?: UrlKeys<Parsers>
-  processUrlSearchParams?: (searchParams: URLSearchParams) => URLSearchParams
-}
+export type CreateSerializerOptions<Parsers extends ParserMap> = {
+  /** @deprecated use 'writeDefaults' instead */
+  clearOnDefault?: Options['clearOnDefault']
+} & Pick<Options, 'writeDefaults'> & {
+    urlKeys?: UrlKeys<Parsers>
+    processUrlSearchParams?: (searchParams: URLSearchParams) => URLSearchParams
+  }
 
 type SerializeFunction<
   Parsers extends ParserMap,
@@ -45,10 +45,13 @@ export function createSerializer<
   {
     clearOnDefault = true,
     urlKeys = {},
-    processUrlSearchParams
+    processUrlSearchParams,
+    ...options
   }: CreateSerializerOptions<Parsers> = {}
 ): SerializeFunction<Parsers, BaseType, Return> {
   type Values = Partial<Nullable<inferParserType<Parsers>>>
+
+  const optionWriteDefaults = options.writeDefaults ?? !clearOnDefault
 
   /**
    * Generate a query string for the given values.
@@ -93,10 +96,13 @@ export function createSerializer<
         value !== null &&
         (parser.eq ?? ((a, b) => a === b))(value, parser.defaultValue)
 
-      if (
-        value === null ||
-        ((parser.clearOnDefault ?? clearOnDefault ?? true) && isMatchingDefault)
-      ) {
+      const writeDefaults =
+        parser.writeDefaults ??
+        (parser.clearOnDefault === undefined
+          ? optionWriteDefaults
+          : !parser.clearOnDefault)
+
+      if (value === null || (!writeDefaults && isMatchingDefault)) {
         search.delete(urlKey)
       } else {
         const serialized = parser.serialize(value)
