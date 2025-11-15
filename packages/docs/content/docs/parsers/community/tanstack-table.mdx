@@ -19,20 +19,24 @@ TanStack Table stores pagination under two pieces of state:
 
 You will likely want the URL to follow your UI and be one-based for the page index:
 
-import { TanStackTablePagination } from './tanstack-table.generator'
+import {
+  TanStackTablePagination,
+  TanStackTableSorting,
+  TanStackTableFiltering
+} from './tanstack-table.generator'
 
 <Suspense>
   <TanStackTablePagination />
 </Suspense>
 
-## Filtering
-
-<Callout>
-  This section is empty for now, [contributions](https://github.com/47ng/nuqs) are welcome!
-</Callout>
-
 ## Sorting
 
-<Callout>
-  This section is empty for now, [contributions](https://github.com/47ng/nuqs) are welcome!
-</Callout>
+<Suspense>
+  <TanStackTableSorting />
+</Suspense>
+
+## Filtering
+
+<Suspense>
+  <TanStackTableFiltering />
+</Suspense>
