@@ -1,4 +1,4 @@
-import { useLocation, useMatches, useNavigate } from '@tanstack/react-router'
+import { useLocation, useNavigate } from '@tanstack/react-router'
 import { startTransition, useCallback, useMemo } from 'react'
 import { renderQueryString } from '../lib/url-encoding'
 import { createAdapterProvider, type AdapterProvider } from './lib/context'
@@ -12,12 +12,6 @@ function useNuqsTanstackRouterAdapter(watchKeys: string[]): AdapterInterface {
       )
   })
   const navigate = useNavigate()
-  const from = useMatches({
-    select: matches =>
-      matches.length > 0
-        ? (matches[matches.length - 1]?.fullPath as string)
-        : undefined
-  })
   const searchParams = useMemo(
     () =>
       // search is a Record<string, string | number | object | Array<string | number>>,
@@ -56,20 +50,17 @@ function useNuqsTanstackRouterAdapter(watchKeys: string[]): AdapterInterface {
           // TBC if it causes issues with consuming those search params
           // in other parts of the app.
           //
-          // When we clear the search, passing an empty string causes
-          // a type error and possible basepath issues, so we switch it to '.' instead.
-          // See https://github.com/47ng/nuqs/pull/953#issuecomment-3003583471
-          to: renderQueryString(search) || '.',
-          // `from` will be handled by tanstack router match resolver, code snippet:
-          // https://github.com/TanStack/router/blob/5d940e2d8bdb12e213eede0abe8012855433ec4b/packages/react-router/src/link.tsx#L108-L112
-          ...(from ? { from } : {}),
+          // Note: we need to specify pathname + search here to avoid TSR appending
+          // a trailing slash to the pathname, see https://github.com/47ng/nuqs/issues/1215
+          from: '/',
+          to: location.pathname + renderQueryString(search),
           replace: options.history === 'replace',
           resetScroll: options.scroll,
           hash: prevHash => prevHash ?? ''
         })
       })
     },
-    [navigate, from]
+    [navigate]
   )
 
   return {
