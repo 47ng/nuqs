@@ -1,10 +1,12 @@
+import type { StandardSchemaV1 } from '@standard-schema/spec'
 import { createLoader, type LoaderFunction } from './loader'
-import type { ParserMap } from './parsers'
+import type { inferParserType, ParserMap } from './parsers'
 import { createSerializer } from './serializer'
-import { useQueryStates, type UseQueryStatesReturn } from './useQueryStates'
+import { createStandardSchemaV1 } from './standard-schema'
 
-type UnifiedAPI<Parsers extends ParserMap> = {
-  useQueryStates: () => UseQueryStatesReturn<Parsers>
+type UnifiedAPI<Parsers extends ParserMap> = StandardSchemaV1<
+  inferParserType<Parsers>
+> & {
   load: LoaderFunction<Parsers>
   serialize: ReturnType<typeof createSerializer<Parsers>>
   parsers: Parsers
@@ -21,9 +23,9 @@ type UnifiedAPI<Parsers extends ParserMap> = {
 export function defineSearchParams<Parsers extends ParserMap>(
   parsers: Parsers
 ): UnifiedAPI<Parsers> {
-  const hook = () => useQueryStates(parsers)
   const load = createLoader(parsers)
   const serialize = createSerializer(parsers)
+  const schema = createStandardSchemaV1(parsers)
   function extend<NewParsers extends ParserMap>(
     newParsers: NewParsers | UnifiedAPI<NewParsers>
   ) {
@@ -43,7 +45,7 @@ export function defineSearchParams<Parsers extends ParserMap>(
     return defineSearchParams(pickedParsers)
   }
   return {
-    useQueryStates: hook,
+    ...schema,
     load,
     serialize,
     parsers,

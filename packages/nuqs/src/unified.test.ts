@@ -3,13 +3,6 @@ import { parseAsInteger, parseAsString } from './parsers'
 import { defineSearchParams } from './unified'
 
 describe('Unified API', () => {
-  it('creates an object containing a hook', () => {
-    const out = defineSearchParams({
-      foo: parseAsString,
-      bar: parseAsInteger
-    })
-    expect(out.useQueryStates).toBeInstanceOf(Function)
-  })
   it('creates an object containing a loader', () => {
     const out = defineSearchParams({
       foo: parseAsString,
