@@ -5,48 +5,63 @@ import { defineSearchParams } from './unified'
 describe('Unified API', () => {
   it('creates an object containing a loader', () => {
     const out = defineSearchParams({
-      foo: parseAsString,
-      bar: parseAsInteger
+      a: parseAsString,
+      b: parseAsInteger
     })
-    expect(out.load).toBeInstanceOf(Function)
+    expect(out.load('?a=pass&b=123')).toEqual({ a: 'pass', b: 123 })
   })
   it('creates an object containing a serializer', () => {
     const out = defineSearchParams({
-      foo: parseAsString,
-      bar: parseAsInteger
+      a: parseAsString,
+      b: parseAsInteger
     })
-    expect(out.serialize).toBeInstanceOf(Function)
+    expect(out.serialize({ a: 'pass', b: 123 })).toBe('?a=pass&b=123')
   })
   it('exposes the parsers it was created with', () => {
     const parsers = {
-      foo: parseAsString,
-      bar: parseAsInteger
+      a: parseAsString,
+      b: parseAsInteger
     }
     const out = defineSearchParams(parsers)
     expect(out.parsers).toBe(parsers)
   })
   it('allows extending with additional parsers', () => {
     const base = defineSearchParams({
-      foo: parseAsString
+      a: parseAsString
     })
     const extended = base.extend({
-      bar: parseAsInteger
+      b: parseAsInteger
     })
     expect(extended.parsers).toEqual({
-      foo: parseAsString,
-      bar: parseAsInteger
+      a: parseAsString,
+      b: parseAsInteger
     })
   })
   it('allows picking a subset of parsers', () => {
     const base = defineSearchParams({
-      foo: parseAsString,
-      bar: parseAsInteger
+      a: parseAsString,
+      b: parseAsInteger
     })
     const picked = base.pick({
-      bar: true
+      b: true
     })
     expect(picked.parsers).toEqual({
-      bar: parseAsInteger
+      b: parseAsInteger
+    })
+  })
+  it('conforms to StandardSchemaV1', async () => {
+    const out = defineSearchParams({
+      a: parseAsString,
+      b: parseAsInteger
+    })
+    const result = await out['~standard'].validate({ a: 'test', b: 456 })
+    expect(result.issues).toBeUndefined()
+    if (result.issues) {
+      throw new Error('Making TypeScript happy')
+    }
+    expect(result.value).toEqual({
+      a: 'test',
+      b: 456
     })
   })
 })
