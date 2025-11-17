@@ -4,9 +4,13 @@ import type { inferParserType, ParserMap } from './parsers'
 import { createSerializer } from './serializer'
 import { createStandardSchemaV1 } from './standard-schema'
 
-type UnifiedAPI<Parsers extends ParserMap> = StandardSchemaV1<
+export const $unified: unique symbol = Symbol.for('nuqs/unified')
+
+// todo: Find a better name for this type
+export type UnifiedAPI<Parsers extends ParserMap> = StandardSchemaV1<
   inferParserType<Parsers>
 > & {
+  [$unified]: true
   load: LoaderFunction<Parsers>
   serialize: ReturnType<typeof createSerializer<Parsers>>
   parsers: Parsers
@@ -31,9 +35,7 @@ export function defineSearchParams<Parsers extends ParserMap>(
   ) {
     return defineSearchParams<Parsers & NewParsers>({
       ...parsers,
-      ...('parsers' in newParsers
-        ? (newParsers as unknown as UnifiedAPI<NewParsers>).parsers
-        : (newParsers as NewParsers))
+      ...($unified in newParsers ? newParsers.parsers : newParsers)
     })
   }
   function pick<Keys extends Partial<Record<keyof Parsers, true>>>(keys: Keys) {
@@ -45,6 +47,7 @@ export function defineSearchParams<Parsers extends ParserMap>(
     return defineSearchParams(pickedParsers)
   }
   return {
+    [$unified]: true,
     ...schema,
     load,
     serialize,

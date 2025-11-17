@@ -1,5 +1,5 @@
-import { describe, expect, it } from 'vitest'
-import { parseAsInteger, parseAsString } from './parsers'
+import { describe, expect, expectTypeOf, it } from 'vitest'
+import { parseAsInteger, parseAsString, type inferParserType } from './parsers'
 import { defineSearchParams } from './unified'
 
 describe('Unified API', () => {
@@ -63,5 +63,16 @@ describe('Unified API', () => {
       a: 'test',
       b: 456
     })
+  })
+  it('can infer the parsers type directly via inferParserType', () => {
+    const out = defineSearchParams({
+      a: parseAsString,
+      b: parseAsInteger
+    })
+    type Inferred = inferParserType<typeof out>
+    expectTypeOf<Inferred>().toEqualTypeOf<{
+      a: string | null
+      b: number | null
+    }>()
   })
 })
