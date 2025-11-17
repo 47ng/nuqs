@@ -1,4 +1,5 @@
 import { describe, expect, expectTypeOf, it } from 'vitest'
+import type { Options } from './defs'
 import { parseAsInteger, parseAsString, type inferParserType } from './parsers'
 import { defineSearchParams } from './unified'
 
@@ -75,4 +76,71 @@ describe('Unified API', () => {
       b: number | null
     }>()
   })
+  it('supports options', () => {
+    const options: Options = {
+      shallow: false,
+      history: 'push',
+      scroll: true,
+      limitUrlUpdates: { method: 'throttle', timeMs: 100 },
+      clearOnDefault: false
+    }
+    const out = defineSearchParams(
+      {
+        a: parseAsString,
+        b: parseAsInteger
+      },
+      options
+    )
+    expect(out.options).toBe(options)
+  })
+  it('supports urlKeys as options', () => {
+    const out = defineSearchParams(
+      {
+        search: parseAsString
+      },
+      {
+        urlKeys: {
+          search: 'q'
+        }
+      }
+    )
+    expect(out.load('?q=testing')).toEqual({ search: 'testing' })
+  })
+  it('forwards options to the serializer', () => {
+    const out = defineSearchParams(
+      {
+        count: parseAsInteger.withDefault(0)
+      },
+      {
+        clearOnDefault: false,
+        urlKeys: {
+          count: 'c'
+        }
+      }
+    )
+    const received = out.serialize({ count: 0 })
+    expect(received).toBe('?c=0')
+  })
+  it('forwards options to the Standard Schema validator', async () => {
+    const out = defineSearchParams(
+      {
+        a: parseAsString.withDefault('present'),
+        b: parseAsString.withDefault('absent')
+      },
+      {
+        partialOutput: true
+      }
+    )
+    out.options
+    const result = await out['~standard'].validate({
+      a: 'specified',
+      // b is missing
+      extra: 'remove me'
+    })
+    if (result.issues) {
+      throw new Error('Making TypeScript happy')
+    }
+    expect(result.value).toEqual({ a: 'specified' })
+  })
+  it.todo('forwards options to useQueryStates')
 })
