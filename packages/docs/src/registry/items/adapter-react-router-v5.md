@@ -8,9 +8,7 @@ export function ReactRouter() {
   return (
     <NuqsAdapter>
       <BrowserRouter>
-        <Switch>
-          <Route .../>
-        </Switch>
+        <Switch>{/* Your routes here */}</Switch>
       </BrowserRouter>
     </NuqsAdapter>
   )
