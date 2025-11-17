@@ -143,4 +143,39 @@ describe('Unified API', () => {
     expect(result.value).toEqual({ a: 'specified' })
   })
   it.todo('forwards options to useQueryStates')
+
+  it('extends with a set of parsers', () => {
+    const base = defineSearchParams({
+      a: parseAsString
+    })
+    const extended = base.extend({
+      b: parseAsInteger
+    })
+    expect(extended.load('?a=test&b=123')).toEqual({
+      a: 'test',
+      b: 123
+    })
+  })
+  it('extends with another unified API', () => {
+    const a = defineSearchParams({ a: parseAsString })
+    const b = defineSearchParams({ b: parseAsInteger })
+    const extended = a.extend(b)
+    expect(a.load('?a=test&b=123')).toEqual({ a: 'test' })
+    expect(b.load('?a=test&b=123')).toEqual({ b: 123 })
+    expect(extended.load('?a=test&b=123')).toEqual({
+      a: 'test',
+      b: 123
+    })
+  })
+  it('combines options when extending with a set of parsers', () => {
+    const base = defineSearchParams({ a: parseAsString }, { shallow: false })
+    const extended = base.extend({ b: parseAsInteger }, { shallow: true })
+    expect(extended.options.shallow).toBe(false) // shallow: false takes precedence
+  })
+  it('combines options when extending with a unified API', () => {
+    const a = defineSearchParams({ a: parseAsString }, { shallow: false })
+    const b = defineSearchParams({ b: parseAsInteger }, { shallow: true })
+    const extended = a.extend(b)
+    expect(extended.options.shallow).toBe(false) // shallow: false takes precedence
+  })
 })

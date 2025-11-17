@@ -1,4 +1,4 @@
-import type { Options } from './defs'
+import type { Options, UrlKeys } from './defs'
 import {
   createLoader,
   type CreateLoaderOptions,
@@ -24,7 +24,10 @@ export type UnifiedOptions<
 > &
   CreateSerializerOptions<Parsers> &
   CreateLoaderOptions<Parsers> &
-  CreateStandardSchemaV1Options<Parsers, PartialOutput> & {}
+  Omit<
+    CreateStandardSchemaV1Options<Parsers, PartialOutput>,
+    'load' | 'serialize'
+  > & {}
 
 // todo: Find a better name for this type
 export type UnifiedAPI<
@@ -40,7 +43,8 @@ export type UnifiedAPI<
     NewParsers extends ParserMap,
     NewPartialOutput extends boolean = PartialOutput
   >(
-    newParsers: NewParsers | UnifiedAPI<NewParsers, NewPartialOutput>
+    newParsers: NewParsers | UnifiedAPI<NewParsers, NewPartialOutput>,
+    newOptions?: UnifiedOptions<NewParsers, NewPartialOutput>
   ) => UnifiedAPI<Parsers & NewParsers, NewPartialOutput>
   pick: <Keys extends Partial<Record<keyof Parsers, true>>>(
     keys: Keys
@@ -70,13 +74,36 @@ export function defineSearchParams<
   function extend<
     NewParsers extends ParserMap,
     NewPartialOutput extends boolean = PartialOutput
-  >(newParsers: NewParsers | UnifiedAPI<NewParsers, NewPartialOutput>) {
+  >(
+    newParsers: NewParsers | UnifiedAPI<NewParsers, NewPartialOutput>,
+    newOptions: UnifiedOptions<NewParsers, NewPartialOutput> = {}
+  ) {
     return defineSearchParams<Parsers & NewParsers, NewPartialOutput>(
       {
         ...parsers,
         ...($unified in newParsers ? newParsers.parsers : newParsers)
+      },
+      {
+        // todo: Refactor options merge with the throttle queue
+        clearOnDefault: mergeOptions(
+          options.clearOnDefault,
+          newOptions.clearOnDefault,
+          false
+        ),
+        history: mergeOptions(options.history, newOptions.history, 'push'),
+        shallow: mergeOptions(options.shallow, newOptions.shallow, false),
+        scroll: mergeOptions(options.scroll, newOptions.scroll, true),
+        // todo: limitUrlUpdates merge strategy?
+        partialOutput: mergeOptions(
+          options.partialOutput as unknown as NewPartialOutput,
+          newOptions.partialOutput as NewPartialOutput,
+          true as NewPartialOutput
+        ),
+        urlKeys: {
+          ...(options.urlKeys || {}),
+          ...(newOptions.urlKeys || {})
+        } as UrlKeys<Parsers & NewParsers>
       }
-      // todo: Merge options
     )
   }
   function pick<Keys extends Partial<Record<keyof Parsers, true>>>(keys: Keys) {
@@ -97,4 +124,15 @@ export function defineSearchParams<
     extend,
     pick
   }
+}
+
+function mergeOptions<Type>(
+  a: Type | undefined,
+  b: Type | undefined,
+  wins: Type
+): Type | undefined {
+  if (a === undefined && b === undefined) return undefined
+  if (a === wins) return a
+  if (b === wins) return b
+  return b ?? a
 }
