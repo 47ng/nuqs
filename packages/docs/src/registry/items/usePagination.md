@@ -1,7 +1,7 @@
 ```tsx
 'use client'
 
-import { usePagination } from '@/hooks/pagination'
+import { usePagination } from '@/hooks/nuqs-presets/usePagination'
 
 export function ProductList() {
   const {

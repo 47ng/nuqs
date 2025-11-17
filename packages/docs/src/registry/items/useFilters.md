@@ -1,7 +1,7 @@
 ```tsx
 'use client'
 
-import { useFilters } from '@/hooks/filtering'
+import { useFilters } from '@/hooks/nuqs-presets/useFilters'
 import { parseAsString, parseAsFloat, parseAsBoolean } from 'nuqs'
 
 const filterParsers = {

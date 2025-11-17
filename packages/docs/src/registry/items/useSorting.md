@@ -1,7 +1,7 @@
 ```tsx
 'use client'
 
-import { useSorting } from '@/hooks/sorting'
+import { useSorting } from '@/hooks/nuqs-presets/useSorting'
 
 export function DataTable() {
   const {

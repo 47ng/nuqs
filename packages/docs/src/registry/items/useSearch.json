@@ -7,33 +7,8 @@
   "files": [
     {
       "type": "registry:file",
-      "path": "https://raw.githubusercontent.com/iHiteshAgrawal/nuqs-presets/eee3b41b1073b71576424e58c5f0891a9405c50a/registry/default/types/index.ts",
-      "target": "~/hooks/types/index.ts"
-    },
-    {
-      "type": "registry:file",
-      "path": "https://raw.githubusercontent.com/iHiteshAgrawal/nuqs-presets/eee3b41b1073b71576424e58c5f0891a9405c50a/registry/default/types/common.ts",
-      "target": "~/hooks/types/common.ts"
-    },
-    {
-      "type": "registry:file",
-      "path": "https://raw.githubusercontent.com/iHiteshAgrawal/nuqs-presets/eee3b41b1073b71576424e58c5f0891a9405c50a/registry/default/utils/debounce.ts",
-      "target": "~/lib/utils/debounce.ts"
-    },
-    {
-      "type": "registry:file",
-      "path": "https://raw.githubusercontent.com/iHiteshAgrawal/nuqs-presets/eee3b41b1073b71576424e58c5f0891a9405c50a/registry/default/search/index.ts",
-      "target": "~/hooks/search/index.ts"
-    },
-    {
-      "type": "registry:file",
-      "path": "https://raw.githubusercontent.com/iHiteshAgrawal/nuqs-presets/eee3b41b1073b71576424e58c5f0891a9405c50a/registry/default/search/types.ts",
-      "target": "~/hooks/search/types.ts"
-    },
-    {
-      "type": "registry:file",
-      "path": "https://raw.githubusercontent.com/iHiteshAgrawal/nuqs-presets/eee3b41b1073b71576424e58c5f0891a9405c50a/registry/default/search/useSearch.ts",
-      "target": "~/hooks/search/useSearch.ts"
+      "path": "https://raw.githubusercontent.com/iHiteshAgrawal/nuqs-presets/a230a749daab2327dae9907f845b445a0653dc04/registry/default/useSearch.ts",
+      "target": "~/hooks/nuqs-presets/useSearch.ts"
     }
   ]
 }

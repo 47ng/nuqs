@@ -1,7 +1,7 @@
 ```tsx
 'use client'
 
-import { useMultiSelect } from '@/hooks/multi-select'
+import { useMultiSelect } from '@/hooks/nuqs-presets/useMultiSelect'
 
 const ITEMS = ['item1', 'item2', 'item3', 'item4']
 

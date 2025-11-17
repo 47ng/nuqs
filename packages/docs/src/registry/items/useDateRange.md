@@ -1,7 +1,7 @@
 ```tsx
 'use client'
 
-import { useDateRange } from '@/hooks/date-range'
+import { useDateRange } from '@/hooks/nuqs-presets/useDateRange'
 
 export function DateRangePicker() {
   const {

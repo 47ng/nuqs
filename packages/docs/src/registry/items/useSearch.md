@@ -1,7 +1,7 @@
 ```tsx
 'use client'
 
-import { useSearch } from '@/hooks/search'
+import { useSearch } from '@/hooks/nuqs-presets/useSearch'
 
 export function SearchBar() {
   const {

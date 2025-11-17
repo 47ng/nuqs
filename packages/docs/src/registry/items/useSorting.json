@@ -7,33 +7,8 @@
   "files": [
     {
       "type": "registry:file",
-      "path": "https://raw.githubusercontent.com/iHiteshAgrawal/nuqs-presets/eee3b41b1073b71576424e58c5f0891a9405c50a/registry/default/types/index.ts",
-      "target": "~/hooks/types/index.ts"
-    },
-    {
-      "type": "registry:file",
-      "path": "https://raw.githubusercontent.com/iHiteshAgrawal/nuqs-presets/eee3b41b1073b71576424e58c5f0891a9405c50a/registry/default/types/common.ts",
-      "target": "~/hooks/types/common.ts"
-    },
-    {
-      "type": "registry:file",
-      "path": "https://raw.githubusercontent.com/iHiteshAgrawal/nuqs-presets/eee3b41b1073b71576424e58c5f0891a9405c50a/registry/default/sorting/index.ts",
-      "target": "~/hooks/sorting/index.ts"
-    },
-    {
-      "type": "registry:file",
-      "path": "https://raw.githubusercontent.com/iHiteshAgrawal/nuqs-presets/eee3b41b1073b71576424e58c5f0891a9405c50a/registry/default/sorting/types.ts",
-      "target": "~/hooks/sorting/types.ts"
-    },
-    {
-      "type": "registry:file",
-      "path": "https://raw.githubusercontent.com/iHiteshAgrawal/nuqs-presets/eee3b41b1073b71576424e58c5f0891a9405c50a/registry/default/sorting/useSorting.ts",
-      "target": "~/hooks/sorting/useSorting.ts"
-    },
-    {
-      "type": "registry:file",
-      "path": "https://raw.githubusercontent.com/iHiteshAgrawal/nuqs-presets/eee3b41b1073b71576424e58c5f0891a9405c50a/registry/default/sorting/utils.ts",
-      "target": "~/hooks/sorting/utils.ts"
+      "path": "https://raw.githubusercontent.com/iHiteshAgrawal/nuqs-presets/a230a749daab2327dae9907f845b445a0653dc04/registry/default/useSorting.ts",
+      "target": "~/hooks/nuqs-presets/useSorting.ts"
     }
   ]
 }

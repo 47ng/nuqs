@@ -1,7 +1,7 @@
 ```tsx
 'use client'
 
-import { useTabs } from '@/hooks/tabs'
+import { useTabs } from '@/hooks/nuqs-presets/useTabs'
 
 export function TabsExample() {
   const {
