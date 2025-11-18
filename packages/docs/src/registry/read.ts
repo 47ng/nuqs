@@ -46,10 +46,10 @@ export const registryItemCategories = [
 ] as const
 export type RegistryItemCategory = (typeof registryItemCategories)[number]
 
-export function getRegistryItemCategory(name: string): RegistryItemCategory {
-  if (name.startsWith('adapter-')) {
+export function getRegistryItemCategory(item: RegistrySourceItem): RegistryItemCategory {
+  if (item.categories?.includes('adapter')) {
     return 'Adapters'
-  } else if (name.startsWith('parseAs')) {
+  } else if (item.categories?.includes('parser')) {
     return 'Parsers'
   } else {
     return 'Utilities'
@@ -63,7 +63,7 @@ export function categorizeRegistryItems(registry: Registry) {
     Utilities: []
   }
   for (const item of registry.items) {
-    const category = getRegistryItemCategory(item.name)
+    const category = getRegistryItemCategory(item)
     categories[category].push(item)
   }
   return categories

@@ -34,7 +34,7 @@ export default async function Page({ params }: PageProps<'/registry/[name]'>) {
     notFound()
   }
   const { title, description, files } = item
-  const category = getRegistryItemCategory(name)
+  const category = getRegistryItemCategory(item)
   const usage = await readUsage(name)
   return (
     <DocsPage
@@ -111,7 +111,7 @@ export async function generateMetadata({
   return {
     title: item.title,
     description: item.description,
-    category: getRegistryItemCategory(name)
+    category: getRegistryItemCategory(item)
   } satisfies Metadata
 }
 
