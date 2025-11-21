@@ -296,7 +296,7 @@ export function QuotesSection() {
           name: 'Christopher Burns',
           handle: '@BurnedChris',
           avatar:
-            'https://pbs.twimg.com/profile_images/1967905434754334720/V6O4cTOV_400x400.jpg'
+            'https://pbs.twimg.com/profile_images/1988259821020221440/qRyYd6iE_400x400.jpg'
         }}
         text="Really glad to finally met Francois from nuqs! I love using it!"
         url="https://x.com/BurnedChris/status/1981071113154417018"
