@@ -5,6 +5,7 @@ import { createAdapterProvider, type AdapterProvider } from './lib/context'
 import type { AdapterInterface, UpdateUrlFunction } from './lib/defs'
 
 function useNuqsTanstackRouterAdapter(watchKeys: string[]): AdapterInterface {
+  const pathname = useLocation({ select: state => state.pathname })
   const search = useLocation({
     select: state =>
       Object.fromEntries(
@@ -53,7 +54,7 @@ function useNuqsTanstackRouterAdapter(watchKeys: string[]): AdapterInterface {
           // Note: we need to specify pathname + search here to avoid TSR appending
           // a trailing slash to the pathname, see https://github.com/47ng/nuqs/issues/1215
           from: '/',
-          to: location.pathname + renderQueryString(search),
+          to: pathname + renderQueryString(search),
           replace: options.history === 'replace',
           resetScroll: options.scroll,
           hash: prevHash => prevHash ?? '',
@@ -61,7 +62,7 @@ function useNuqsTanstackRouterAdapter(watchKeys: string[]): AdapterInterface {
         })
       })
     },
-    [navigate]
+    [navigate, pathname]
   )
 
   return {
