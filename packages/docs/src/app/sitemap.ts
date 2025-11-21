@@ -1,5 +1,5 @@
+import { getLastModified } from '@/src/lib/get-last-modified'
 import { getBaseUrl } from '@/src/lib/url'
-import { getGithubLastEdit } from 'fumadocs-core/content/github'
 import type { MetadataRoute } from 'next'
 import { demos } from './playground/(demos)/demos'
 import { blog, source } from './source'
@@ -81,22 +81,4 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...blogPages,
     ...playgroundPages
   ])
-}
-
-// --
-
-async function getLastModified(path: string): Promise<Date> {
-  try {
-    const lastEdit = await getGithubLastEdit({
-      owner: '47ng',
-      repo: 'nuqs',
-      path: `packages/docs${path}`,
-      sha: 'next',
-      token: `Bearer ${process.env.GITHUB_TOKEN}`
-    })
-    return lastEdit ?? new Date()
-  } catch (error) {
-    console.error(`Error fetching last modification date for ${path}:`, error)
-    return new Date()
-  }
 }

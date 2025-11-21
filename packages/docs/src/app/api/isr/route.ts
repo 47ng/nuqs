@@ -5,7 +5,6 @@ const ACCEPTED_TAGS = [
   'github',
   'github-actions-status',
   'npm-stats',
-  'npm-version',
   'contributors'
 ]
 

@@ -1,0 +1,12 @@
+it('does not append a trailing slash', () => {
+  cy.visit('/trailing-slash')
+  cy.location('pathname').should('eq', '/trailing-slash')
+  cy.contains('Set declared').click()
+  cy.location('pathname').should('eq', '/trailing-slash')
+  cy.contains('Clear').click()
+  cy.location('pathname').should('eq', '/trailing-slash')
+  cy.contains('Set undeclared').click()
+  cy.location('pathname').should('eq', '/trailing-slash')
+  cy.contains('Clear').click()
+  cy.location('pathname').should('eq', '/trailing-slash')
+})

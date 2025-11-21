@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { metadata as rootMetadata } from '../layout'
 import { ContributorsSection } from './_landing/contributors'
 import { DependentsSection } from './_landing/dependents'
 import { FeaturesSection } from './_landing/features'
@@ -12,7 +13,8 @@ export const metadata: Metadata = {
     absolute: 'nuqs | Type-safe search params state management for React'
   },
   alternates: {
-    canonical: 'https://nuqs.dev'
+    canonical: 'https://nuqs.dev',
+    types: rootMetadata.alternates.types
   }
 }
 
