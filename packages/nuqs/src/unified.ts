@@ -78,31 +78,24 @@ export function defineSearchParams<
     newParsers: NewParsers | UnifiedAPI<NewParsers, NewPartialOutput>,
     newOptions: UnifiedOptions<NewParsers, NewPartialOutput> = {}
   ) {
+    const mergedOptions = mergeOptions(
+      options,
+      $unified in newParsers
+        ? mergeOptions(newParsers.options, newOptions)
+        : newOptions
+    )
     return defineSearchParams<Parsers & NewParsers, NewPartialOutput>(
       {
         ...parsers,
         ...($unified in newParsers ? newParsers.parsers : newParsers)
       },
       {
-        // todo: Refactor options merge with the throttle queue
-        clearOnDefault: mergeOptions(
-          options.clearOnDefault,
-          newOptions.clearOnDefault,
-          false
-        ),
-        history: mergeOptions(options.history, newOptions.history, 'push'),
-        shallow: mergeOptions(options.shallow, newOptions.shallow, false),
-        scroll: mergeOptions(options.scroll, newOptions.scroll, true),
-        // todo: limitUrlUpdates merge strategy?
-        partialOutput: mergeOptions(
+        ...mergedOptions,
+        partialOutput: mergeOption(
           options.partialOutput as unknown as NewPartialOutput,
           newOptions.partialOutput as NewPartialOutput,
           true as NewPartialOutput
-        ),
-        urlKeys: {
-          ...(options.urlKeys || {}),
-          ...(newOptions.urlKeys || {})
-        } as UrlKeys<Parsers & NewParsers>
+        )
       }
     )
   }
@@ -126,7 +119,30 @@ export function defineSearchParams<
   }
 }
 
-function mergeOptions<Type>(
+// todo: Refactor options merge with the throttle queue
+type MergeableOptions<P extends ParserMap> = Omit<
+  UnifiedOptions<P>,
+  'partialOutput'
+>
+
+export function mergeOptions<A extends ParserMap, B extends ParserMap>(
+  a: MergeableOptions<A>,
+  b: MergeableOptions<B>
+): MergeableOptions<A & B> {
+  return {
+    clearOnDefault: mergeOption(a.clearOnDefault, b.clearOnDefault, false),
+    history: mergeOption(a.history, b.history, 'push'),
+    shallow: mergeOption(a.shallow, b.shallow, false),
+    scroll: mergeOption(a.scroll, b.scroll, true),
+    limitUrlUpdates: mergeLimitUrlUpdates(a.limitUrlUpdates, b.limitUrlUpdates),
+    urlKeys: {
+      ...(a.urlKeys || {}),
+      ...(b.urlKeys || {})
+    } as UrlKeys<A & B>
+  }
+}
+
+function mergeOption<Type>(
   a: Type | undefined,
   b: Type | undefined,
   wins: Type
@@ -135,4 +151,16 @@ function mergeOptions<Type>(
   if (a === wins) return a
   if (b === wins) return b
   return b ?? a
+}
+
+function mergeLimitUrlUpdates(
+  a: Options['limitUrlUpdates'],
+  b: Options['limitUrlUpdates']
+): Options['limitUrlUpdates'] {
+  if (a === undefined) return b
+  if (b === undefined) return a
+  if (a.method === b.method) {
+    return a.timeMs >= b.timeMs ? a : b
+  }
+  return b.method === 'debounce' ? b : a
 }

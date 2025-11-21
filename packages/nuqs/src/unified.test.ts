@@ -1,7 +1,13 @@
-import { describe, expect, expectTypeOf, it } from 'vitest'
+import { act, renderHook } from '@testing-library/react'
+import { describe, expect, expectTypeOf, it, vi } from 'vitest'
+import {
+  withNuqsTestingAdapter,
+  type OnUrlUpdateFunction
+} from './adapters/testing'
 import type { Options } from './defs'
 import { parseAsInteger, parseAsString, type inferParserType } from './parsers'
 import { defineSearchParams } from './unified'
+import { useQueryStates } from './useQueryStates'
 
 describe('Unified API', () => {
   it('creates an object containing a loader', () => {
@@ -173,9 +179,63 @@ describe('Unified API', () => {
     expect(extended.options.shallow).toBe(false) // shallow: false takes precedence
   })
   it('combines options when extending with a unified API', () => {
-    const a = defineSearchParams({ a: parseAsString }, { shallow: false })
-    const b = defineSearchParams({ b: parseAsInteger }, { shallow: true })
-    const extended = a.extend(b)
+    const a = defineSearchParams(
+      { a: parseAsString },
+      { shallow: false, history: 'replace' }
+    )
+    const b = defineSearchParams(
+      { b: parseAsInteger },
+      { shallow: true, history: 'push', urlKeys: { b: 'B' } }
+    )
+    const extended = a.extend(b, {
+      scroll: true,
+      urlKeys: {
+        b: 'bee'
+      }
+    })
     expect(extended.options.shallow).toBe(false) // shallow: false takes precedence
+    expect(extended.options.history).toBe('push') // history: 'push' takes precedence
+    expect(extended.options.scroll).toBe(true) // Passed as extend option
+  })
+
+  it('works with useQueryStates', async () => {
+    const out = defineSearchParams(
+      {
+        a: parseAsString.withOptions({ history: 'push' }),
+        b: parseAsInteger.withOptions({ shallow: false })
+      },
+      {
+        scroll: true,
+        urlKeys: {
+          a: 'overridden',
+          b: '2'
+        }
+      }
+    )
+    const onUrlUpdate = vi.fn<OnUrlUpdateFunction>()
+    const { result } = renderHook(
+      () =>
+        useQueryStates(out, {
+          urlKeys: {
+            a: '1'
+          }
+        }),
+      {
+        wrapper: withNuqsTestingAdapter({
+          searchParams: '?1=hello&2=42',
+          onUrlUpdate
+        })
+      }
+    )
+    expect(result.current[0]).toEqual({ a: 'hello', b: 42 })
+    await act(() => result.current[1]({ a: 'updated', b: 100 }))
+    expect(result.current[0]).toEqual({ a: 'updated', b: 100 })
+    expect(onUrlUpdate).toHaveBeenCalledOnce()
+    expect(onUrlUpdate.mock.calls[0]![0].queryString).toBe('?1=updated&2=100')
+    expect(onUrlUpdate.mock.calls[0]![0].options).toEqual({
+      history: 'push',
+      shallow: false,
+      scroll: true
+    })
   })
 })

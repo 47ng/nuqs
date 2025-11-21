@@ -17,9 +17,10 @@ import {
 import { safeParse } from './lib/safe-parse'
 import { isAbsentFromUrl, type Query } from './lib/search-params'
 import { emitter, type CrossHookSyncPayload } from './lib/sync'
-import { type GenericParser } from './parsers'
+import { type GenericParserBuilder } from './parsers'
+import { $unified, mergeOptions, type UnifiedAPI } from './unified'
 
-type KeyMapValue<Type> = GenericParser<Type> &
+type KeyMapValue<Type> = GenericParserBuilder<Type> &
   Options & {
     defaultValue?: Type
   }
@@ -70,10 +71,11 @@ const defaultUrlKeys = {}
  * @param options - Optional history mode, shallow routing and scroll restoration options.
  */
 export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
-  keyMap: KeyMap,
+  keyMap: KeyMap | UnifiedAPI<KeyMap>,
   options: Partial<UseQueryStatesOptions<KeyMap>> = {}
 ): UseQueryStatesReturn<KeyMap> {
   const hookId = useId()
+  const parsers = $unified in keyMap ? keyMap.parsers : keyMap
   const defaultOptions = useAdapterDefaultOptions()
   const processUrlSearchParams = useAdapterProcessUrlSearchParams()
 
@@ -81,19 +83,19 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
     history = 'replace',
     scroll = defaultOptions?.scroll ?? false,
     shallow = defaultOptions?.shallow ?? true,
-    throttleMs = defaultRateLimit.timeMs,
     limitUrlUpdates = defaultOptions?.limitUrlUpdates,
     clearOnDefault = defaultOptions?.clearOnDefault ?? true,
-    startTransition,
     urlKeys = defaultUrlKeys as UrlKeys<KeyMap>
-  } = options
+  } = mergeOptions($unified in keyMap ? keyMap.options : {}, options)
+  const { throttleMs = defaultRateLimit.timeMs, startTransition } = options
 
   type V = NullableValues<KeyMap>
-  const stateKeys = Object.keys(keyMap).join(',')
+  const stateKeys = Object.keys(parsers).join(',')
+
   const resolvedUrlKeys = useMemo(
     () =>
       Object.fromEntries(
-        Object.keys(keyMap).map(key => [key, urlKeys[key] ?? key])
+        Object.keys(parsers).map(key => [key, urlKeys[key] ?? key])
       ),
     [stateKeys, JSON.stringify(urlKeys)]
   )
@@ -103,10 +105,13 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
   const defaultValues = useMemo(
     () =>
       Object.fromEntries(
-        Object.keys(keyMap).map(key => [key, keyMap[key]!.defaultValue ?? null])
+        Object.keys(parsers).map(key => [
+          key,
+          parsers[key]!.defaultValue ?? null
+        ])
       ) as Values<KeyMap>,
     [
-      Object.values(keyMap)
+      Object.values(parsers)
         .map(({ defaultValue }) => defaultValue)
         .join(',')
     ]
@@ -116,7 +121,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
   )
   const [internalState, setInternalState] = useState<V>(() => {
     const source = initialSearchParams ?? new URLSearchParams()
-    return parseMap(keyMap, urlKeys, source, queuedQueries).state
+    return parseMap(parsers, urlKeys, source, queuedQueries).state
   })
 
   const stateRef = useRef(internalState)
@@ -134,7 +139,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
     Object.values(resolvedUrlKeys).join('&')
   ) {
     const { state, hasChanged } = parseMap(
-      keyMap,
+      parsers,
       urlKeys,
       initialSearchParams,
       queuedQueries,
@@ -154,7 +159,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
     }
     queryRef.current = Object.fromEntries(
       Object.entries(resolvedUrlKeys).map(([key, urlKey]) => {
-        const parser = keyMap[key]
+        const parser = parsers[key]
         return [
           urlKey,
           parser?.type === 'multi'
@@ -167,7 +172,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
 
   useEffect(() => {
     const { state, hasChanged } = parseMap(
-      keyMap,
+      parsers,
       urlKeys,
       initialSearchParams,
       queuedQueries,
@@ -194,14 +199,14 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
 
   // Sync all hooks together & with external URL changes
   useEffect(() => {
-    const handlers = Object.keys(keyMap).reduce(
+    const handlers = Object.keys(parsers).reduce(
       (handlers, stateKey) => {
         handlers[stateKey as keyof KeyMap] = ({
           state,
           query
         }: CrossHookSyncPayload) => {
           setInternalState(currentState => {
-            const { defaultValue } = keyMap[stateKey]!
+            const { defaultValue } = parsers[stateKey]!
             const urlKey = resolvedUrlKeys[stateKey]!
             const nextValue = state ?? defaultValue ?? null
             const currentValue = currentState[stateKey] ?? defaultValue ?? null
@@ -243,7 +248,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
       {} as Record<keyof KeyMap, (payload: CrossHookSyncPayload) => void>
     )
 
-    for (const stateKey of Object.keys(keyMap)) {
+    for (const stateKey of Object.keys(parsers)) {
       const urlKey = resolvedUrlKeys[stateKey]!
       debug(
         '[nuq+ %s `%s`] Subscribing to sync for `%s`',
@@ -254,7 +259,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
       emitter.on(urlKey, handlers[stateKey]!)
     }
     return () => {
-      for (const stateKey of Object.keys(keyMap)) {
+      for (const stateKey of Object.keys(parsers)) {
         const urlKey = resolvedUrlKeys[stateKey]!
         debug(
           '[nuq+ %s `%s`] Unsubscribing to sync for `%s`',
@@ -270,7 +275,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
   const update = useCallback<SetValues<KeyMap>>(
     (stateUpdater, callOptions = {}) => {
       const nullMap = Object.fromEntries(
-        Object.keys(keyMap).map(key => [key, null])
+        Object.keys(parsers).map(key => [key, null])
       ) as Nullable<KeyMap>
       const newState: Partial<Nullable<KeyMap>> =
         typeof stateUpdater === 'function'
@@ -286,7 +291,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
         (p: Promise<URLSearchParams>) => Promise<URLSearchParams>
       > = []
       for (let [stateKey, value] of Object.entries(newState)) {
-        const parser = keyMap[stateKey]
+        const parser = parsers[stateKey]
         const urlKey = resolvedUrlKeys[stateKey]!
         if (!parser || value === undefined) {
           continue
