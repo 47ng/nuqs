@@ -56,7 +56,8 @@ function useNuqsTanstackRouterAdapter(watchKeys: string[]): AdapterInterface {
           to: location.pathname + renderQueryString(search),
           replace: options.history === 'replace',
           resetScroll: options.scroll,
-          hash: prevHash => prevHash ?? ''
+          hash: prevHash => prevHash ?? '',
+          state: state => state
         })
       })
     },
