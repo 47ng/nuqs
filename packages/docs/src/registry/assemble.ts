@@ -77,7 +77,12 @@ async function main() {
     $schema: 'https://ui.shadcn.com/schema/registry.json',
     name: 'nuqs',
     homepage: 'https://nuqs.dev',
-    items: items.sort((a, b) => a.name.localeCompare(b.name))
+    items: items
+      .map(item => ({
+        ...item,
+        docs: `https://nuqs.dev/registry/${item.name}`
+      }))
+      .sort((a, b) => a.name.localeCompare(b.name))
   }
   await writeFile(registryJson, JSON.stringify(registry, null, 2), 'utf-8')
   console.log(

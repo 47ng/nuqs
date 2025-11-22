@@ -43,5 +43,6 @@ const registryBuiltFileSchema = registrySourceFileSchema.extend({
 
 export type RegistryBuiltItem = z.infer<typeof registryBuiltItemSchema>
 export const registryBuiltItemSchema = registryBaseItemSchema.extend({
-  files: z.array(registryBuiltFileSchema)
+  files: z.array(registryBuiltFileSchema),
+  docs: z.string()
 })
