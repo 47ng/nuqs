@@ -11,5 +11,6 @@
       "target": "~/resources/js/lib/nuqs-inertia-adapter.ts"
     }
   ],
-  "categories": ["adapter"]
+  "categories": ["adapter"],
+  "author": "François Best <franky47>"
 }

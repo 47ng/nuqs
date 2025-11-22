@@ -8,7 +8,8 @@ const registryBaseItemSchema = z.object({
   title: z.string(),
   description: z.string().optional(),
   dependencies: z.array(z.string()),
-  categories: z.array(z.string()).optional()
+  categories: z.array(z.string()).optional(),
+  author: z.string().optional()
 })
 
 // Source schemas --
