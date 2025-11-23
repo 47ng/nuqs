@@ -133,8 +133,8 @@ export async function fetchNpmPackage(
 async function get(url: string): Promise<unknown> {
   const res = await fetch(url, {
     next: {
-      revalidate: 86_400,
-      tags: ['npm']
+      revalidate: 6 * 60 * 60, // 6 hours
+      tags: ['npm-stats']
     }
   })
   return res.json()

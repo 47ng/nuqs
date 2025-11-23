@@ -10,12 +10,16 @@
     "resolveJsonModule": true,
     // Language & Environment
     "target": "ESNext",
-    "lib": ["DOM", "DOM.Iterable", "ESNext"],
+    "lib": [
+      "DOM",
+      "DOM.Iterable",
+      "ESNext"
+    ],
     // Emit
     "noEmit": true,
     "declaration": false,
     "downlevelIteration": true,
-    "jsx": "preserve",
+    "jsx": "react-jsx",
     // Interop
     "allowJs": true,
     "isolatedModules": true,
@@ -32,9 +36,19 @@
       }
     ],
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": [
+        "./src/*"
+      ]
     }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
-  "exclude": ["node_modules"]
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts",
+    ".next/dev/types/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
 }

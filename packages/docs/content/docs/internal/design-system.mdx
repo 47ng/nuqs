@@ -3,6 +3,10 @@ title: Design System
 description: Who needs Storybook anyway?
 ---
 
+import { H1, H2, Description } from '@/src/components/typography'
+
+<Description>Who needs Storybook anyway? (using the `<Description>` component)</Description>
+
 ## Typography
 
 # h1 Heading
@@ -11,6 +15,20 @@ description: Who needs Storybook anyway?
 #### h4 Heading
 ##### h5 Heading
 ###### h6 Heading
+
+Comparison with components:
+
+# H1 in Markdown with `code` block
+
+<H1 id="foo">H1 using the `<H1>` component (with ID)</H1>
+
+<H1>H1 using the `<H1>` component (no ID)</H1>
+
+## H2 in Markdown
+
+<H2 id="bar">H2 using the `<H2>` component (with ID)</H2>
+
+<H2>H2 using the `<H2>` component (no ID)</H2>
 
 ## Callouts
 

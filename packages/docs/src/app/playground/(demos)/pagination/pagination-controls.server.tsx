@@ -7,19 +7,21 @@ import {
   PaginationPreviousLink
 } from '@/src/components/ui/pagination'
 import { cn } from '@/src/lib/utils'
-import { searchParamsCache, serialize } from './searchParams'
+import { getPaginatedLink, PaginationSearchParams } from './search-params'
 
 type PaginationControlsProps = {
   numPages: number
+  pagination: Promise<PaginationSearchParams>
 }
 
 // Use <Link> components to navigate between pages
-export function ServerPaginationControls({
-  numPages
+export async function ServerPaginationControls({
+  numPages,
+  pagination
 }: PaginationControlsProps) {
-  const { page, delay, renderOn } = searchParamsCache.all()
+  const { page, delay, renderOn } = await pagination
   function pageURL(page: number) {
-    return serialize('/playground/pagination', {
+    return getPaginatedLink('/playground/pagination', {
       page,
       delay,
       renderOn

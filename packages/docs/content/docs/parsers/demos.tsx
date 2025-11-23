@@ -228,7 +228,7 @@ export function IndexParserDemo() {
         </PaginationContent>
       </Pagination>
       <CodeBlock
-        className="-mx-1 my-0 -mb-1 flex-1 border-none"
+        className="my-0 h-10 flex-1 rounded-sm border-none [&>div]:py-2"
         code={`pageIndex: ${pageIndex} // internal state is zero-indexed`}
         allowCopy={false}
       />

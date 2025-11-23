@@ -10,6 +10,7 @@ import {
 import { Card } from 'fumadocs-ui/components/card'
 import { DocsDescription, DocsTitle } from 'fumadocs-ui/page'
 import { RssIcon } from 'lucide-react'
+import type { Metadata } from 'next'
 import Link from 'next/link'
 import { ComponentProps } from 'react'
 import { PageFooter } from '../_landing/page-footer'
@@ -17,7 +18,22 @@ import { getBlogPosts } from './_lib/source'
 
 export const dynamic = 'force-static'
 
-export default async function BlogIndexPage() {
+export const metadata = {
+  title: 'Blog',
+  description: 'URL state management with nuqs',
+  alternates: {
+    types: {
+      'application/rss+xml': [
+        {
+          url: '/blog/rss.xml',
+          title: 'nuqs blog RSS feed'
+        }
+      ]
+    }
+  }
+} satisfies Metadata
+
+export default function BlogIndexPage() {
   const posts = getBlogPosts()
   return (
     <>

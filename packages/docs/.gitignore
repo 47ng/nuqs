@@ -30,4 +30,5 @@ next-env.d.ts
 .sentryclirc
 
 # shadcn registry output
+registry.json
 public/r

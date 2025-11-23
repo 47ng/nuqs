@@ -44,7 +44,8 @@ performance penalties, which were removed in `nuqs@2.0.0`.
 
 #### App router
 
-```tsx {1} /NuqsAdapter/ title="src/app/layout.tsx"
+```tsx title="src/app/layout.tsx"
+// [!code word:NuqsAdapter]
 import { NuqsAdapter } from 'nuqs/adapters/next/app'
 import { type ReactNode } from 'react'
 
@@ -65,7 +66,8 @@ export default function RootLayout({
 
 #### Pages router
 
-```tsx {2} /NuqsAdapter/ title="src/pages/_app.tsx"
+```tsx title="src/pages/_app.tsx"
+// [!code word:NuqsAdapter]
 import type { AppProps } from 'next/app'
 import { NuqsAdapter } from 'nuqs/adapters/next/pages'
 

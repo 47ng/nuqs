@@ -268,7 +268,7 @@ export const parseAsFloat: SingleParserBuilder<number> = createParser({
 })
 
 export const parseAsBoolean: SingleParserBuilder<boolean> = createParser({
-  parse: v => v === 'true',
+  parse: v => v.toLowerCase() === 'true',
   serialize: String
 })
 

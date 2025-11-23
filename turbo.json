@@ -26,6 +26,11 @@
       "dependsOn": ["^build"],
       "env": ["REACT_COMPILER", "E2E_NO_CACHE_ON_RERUN"]
     },
+    "e2e-react-router-v5#build": {
+      "outputs": ["dist/**", "cypress/**"],
+      "dependsOn": ["^build"],
+      "env": ["REACT_COMPILER", "E2E_NO_CACHE_ON_RERUN"]
+    },
     "e2e-react-router-v6#build": {
       "outputs": ["dist/**", "cypress/**"],
       "dependsOn": ["^build"],
@@ -57,6 +62,7 @@
         "VERCEL_ENV",
         "VERCEL_URL",
         "VERCEL_PROJECT_PRODUCTION_URL",
+        "ENABLE_SENTRY",
         "SENTRY_ORG",
         "SENTRY_PROJECT",
         "SENTRY_AUTH_TOKEN",

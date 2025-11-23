@@ -53,7 +53,8 @@ export async function PullRequestLine({
       headers: {
         Accept: 'application/vnd.github.v3+json',
         Authorization: `bearer ${process.env.GITHUB_TOKEN}`
-      }
+      },
+      cache: 'force-cache'
     }
   )
   if (!response.ok) {

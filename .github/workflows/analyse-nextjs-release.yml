@@ -1,11 +1,11 @@
-name: 'Analyse Next.js release'
-run-name: 'Analyse Next.js ${{ inputs.version }}'
+name: "Analyse Next.js release"
+run-name: "Analyse Next.js ${{ inputs.version }}"
 
 on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Next.js version to test against'
+        description: "Next.js version to test against"
         required: true
         type: string
 
@@ -31,15 +31,15 @@ jobs:
             console.log(\`Version '\${version}' is valid SemVer\`);
           "
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8
-      - uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda
-      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444
+      - uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061
+      - uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903
         with:
           node-version-file: .node-version
           cache: pnpm
       - name: Install dependencies
         run: pnpm install
       - name: Check for changes in app router
-        run: ./next-release-analyser.mjs --version "${{ env.VERSION }}"
+        run: ./next-release-analyser.ts --version "${{ env.VERSION }}"
         working-directory: packages/scripts
         env:
           MAILPACE_API_TOKEN: ${{ secrets.MAILPACE_API_TOKEN }}

@@ -1,9 +1,10 @@
-import { RootProvider } from 'fumadocs-ui/provider'
+import * as Sentry from '@sentry/nextjs'
+import { RootProvider } from 'fumadocs-ui/provider/next'
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import Script from 'next/script'
-import { NuqsAdapter } from 'nuqs/adapters/next'
-import type { ReactNode } from 'react'
+import { NuqsAdapter } from 'nuqs/adapters/next/app'
+import { type ReactNode } from 'react'
 import { ResponsiveHelper } from '../components/responsive-helpers'
 import { cn } from '../lib/utils'
 import './globals.css'
@@ -25,7 +26,24 @@ export const metadata = {
       name: 'François Best',
       url: 'https://francoisbest.com'
     }
-  ]
+  ],
+  alternates: {
+    types: {
+      'application/rss+xml': [
+        {
+          url: '/blog/rss.xml',
+          title: 'nuqs blog RSS feed'
+        },
+        {
+          url: '/registry/rss.xml',
+          title: '@nuqs shadcn registry RSS feed'
+        }
+      ] as const
+    }
+  },
+  other: {
+    ...Sentry.getTraceData()
+  }
 } satisfies Metadata
 
 export default function Layout({ children }: { children: ReactNode }) {
@@ -37,14 +55,6 @@ export default function Layout({ children }: { children: ReactNode }) {
       // https://github.com/shadcn-ui/ui/issues/5552#issuecomment-2435024526
       suppressHydrationWarning
     >
-      <head>
-        <link
-          rel="alternate"
-          type="application/rss+xml"
-          href="/blog/rss.xml"
-          title="nuqs blog RSS feed"
-        />
-      </head>
       <body>
         {/* Top-level banners go here */}
         <RootProvider>
