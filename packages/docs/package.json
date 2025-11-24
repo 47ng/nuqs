@@ -24,6 +24,7 @@
     "test": "tsc"
   },
   "dependencies": {
+    "@codesandbox/sandpack-react": "^2.20.0",
     "@faker-js/faker": "^10.1.0",
     "@headlessui/react": "2.2.9",
     "@headlessui/tailwindcss": "^0.2.2",
