@@ -17,15 +17,49 @@ interface CodeSandboxProps {
 function CodeSync({ onCodeChange }: { onCodeChange: (code: string) => void }) {
   const { sandpack } = useSandpack()
   const lastCode = useRef('')
+  const debounceTimer = useRef<NodeJS.Timeout | null>(null)
 
-  // Sync code changes from Sandpack editor to parent component state
+  // Debounced sync: only update parent state after user stops typing for 500ms
+  // This prevents the files object from being recreated on every keystroke
   useEffect(() => {
     const file = sandpack.files['/Demo.tsx']
-    if (file?.code && file.code !== lastCode.current) {
-      lastCode.current = file.code
-      onCodeChange(file.code)
+    const currentCode = file?.code || ''
+
+    if (currentCode && currentCode !== lastCode.current) {
+      lastCode.current = currentCode
+
+      // Clear previous timer
+      if (debounceTimer.current) {
+        clearTimeout(debounceTimer.current)
+      }
+
+      // Update parent state after 500ms of no changes
+      debounceTimer.current = setTimeout(() => {
+        onCodeChange(currentCode)
+      }, 500)
     }
-  }, [sandpack.files, onCodeChange])
+
+    return () => {
+      if (debounceTimer.current) {
+        clearTimeout(debounceTimer.current)
+      }
+    }
+  }, [sandpack.files['/Demo.tsx']?.code]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  return null
+}
+
+function ResetHandler({ resetTrigger, initialCode }: { resetTrigger: number; initialCode: string }) {
+  const { sandpack } = useSandpack()
+  const lastTrigger = useRef(0)
+
+  useEffect(() => {
+    if (resetTrigger > lastTrigger.current && resetTrigger > 0) {
+      lastTrigger.current = resetTrigger
+      // Use Sandpack's updateFile to change code without remounting
+      sandpack.updateFile('/Demo.tsx', initialCode)
+    }
+  }, [resetTrigger, initialCode, sandpack])
 
   return null
 }
@@ -33,6 +67,7 @@ function CodeSync({ onCodeChange }: { onCodeChange: (code: string) => void }) {
 export function CodeSandbox({ code: initialCode = INITIAL_CODE, syncTrigger, dependencies }: CodeSandboxProps) {
   const [code, setCode] = useState(initialCode)
   const [copied, setCopied] = useState(false)
+  const [resetTrigger, setResetTrigger] = useState(0)
   const containerRef = useRef<HTMLDivElement>(null)
   const getSearch = useCallback(() => new URLSearchParams(window.location.search).toString(), [])
   const getTheme = useCallback(() => document.documentElement.classList.contains('dark') ? 'dark' : 'light', [])
@@ -46,7 +81,10 @@ export function CodeSandbox({ code: initialCode = INITIAL_CODE, syncTrigger, dep
     setTimeout(() => setCopied(false), 2000)
   }, [code])
 
-  const handleReset = useCallback(() => setCode(initialCode), [initialCode])
+  const handleReset = useCallback(() => {
+    setCode(initialCode)
+    setResetTrigger(prev => prev + 1)
+  }, [initialCode])
 
   const postToIframes = useCallback((type: string, data: any) => {
     document.querySelectorAll('iframe').forEach(iframe =>
@@ -54,11 +92,14 @@ export function CodeSandbox({ code: initialCode = INITIAL_CODE, syncTrigger, dep
     )
   }, [])
 
+  // Files object should only be created once with initialCode
+  // After that, Sandpack manages the code internally
+  // We don't include 'code' in dependencies to prevent recreation on every edit
   const files = useMemo(() => ({
     ...dependencies,
     ...SANDPACK_FILES,
-    '/Demo.tsx': { code, active: true },
-  }), [code, dependencies])
+    '/Demo.tsx': { code: initialCode, active: true },
+  }), [initialCode, dependencies])
 
   // Listen for iframe messages and sync URL state bidirectionally between parent and iframe
   useEffect(() => {
@@ -176,10 +217,11 @@ export function CodeSandbox({ code: initialCode = INITIAL_CODE, syncTrigger, dep
             autorun: true,
             autoReload: true,
             recompileMode: 'immediate',
-            recompileDelay: 300,
+            recompileDelay: 700,
           }}
         >
           <CodeSync onCodeChange={setCode} />
+          <ResetHandler resetTrigger={resetTrigger} initialCode={initialCode} />
           <SandpackLayout>
             <SandpackCodeEditor
               style={{ height: '600px', minHeight: '300px' }}
