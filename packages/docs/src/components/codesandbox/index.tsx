@@ -6,7 +6,7 @@ import { Button } from '../ui/button'
 import { SandpackProvider, SandpackLayout, SandpackCodeEditor, SandpackPreview, useSandpack } from '@codesandbox/sandpack-react'
 import { INITIAL_CODE, SANDPACK_FILES } from '@/src/components/codesandbox/files'
 
-export type CodeSandboxDependencies = Record<string, string>
+export type CodeSandboxDependencies = Record<string, { code: string }>
 
 interface CodeSandboxProps {
   code?: string
@@ -55,7 +55,7 @@ export function CodeSandbox({ code: initialCode = INITIAL_CODE, syncTrigger, dep
   }, [])
 
   const files = useMemo(() => ({
-    ...(dependencies || {}),
+    ...dependencies,
     ...SANDPACK_FILES,
     '/Demo.tsx': { code, active: true },
   }), [code, dependencies])

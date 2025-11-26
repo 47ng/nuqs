@@ -122,7 +122,9 @@ export async function loadCodeSandboxFiles() {
   ])
 
   return {
-    ...dependencies,
-    "/globals.css": globalCSS,
+    ...Object.fromEntries(
+      Object.entries(dependencies).map(([path, code]) => [path, { code }])
+    ),
+    "/globals.css": { code: globalCSS },
   }
 }
