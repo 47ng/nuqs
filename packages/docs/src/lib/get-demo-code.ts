@@ -1,6 +1,7 @@
 'use server'
 
-import fs from 'node:fs/promises'
+import { readFile } from 'node:fs/promises'
+import { resolve } from 'node:path'
 
 /**
  * Apply a series of string replacements to the input code
@@ -19,11 +20,12 @@ export async function getDemoCode(
   filePath: string,
   isDemoFile: boolean = true
 ): Promise<string> {
+  // Use resolve with process.cwd() for ISR compatibility
   const fullPath = isDemoFile
-    ? process.cwd() + '/src/app/playground/(demos)/' + filePath
-    : process.cwd() + '/src' + filePath
+    ? resolve(process.cwd(), 'src', 'app', 'playground', '(demos)', filePath)
+    : resolve(process.cwd(), 'src', filePath)
 
-  const code = await fs.readFile(fullPath, 'utf8')
+  const code = await readFile(fullPath, 'utf8')
 
   // Skip transformations for CSS files
   if (filePath.endsWith('.css')) {
@@ -66,10 +68,10 @@ export async function getDemoCode(
 
 export async function loadCodeSandboxDependencies() {
   const [button, input, card, utils] = await Promise.all([
-    getDemoCode('/components/ui/button.tsx', false),
-    getDemoCode('/components/ui/input.tsx', false),
-    getDemoCode('/components/ui/card.tsx', false),
-    getDemoCode('/lib/utils.ts', false),
+    getDemoCode('components/ui/button.tsx', false),
+    getDemoCode('components/ui/input.tsx', false),
+    getDemoCode('components/ui/card.tsx', false),
+    getDemoCode('lib/utils.ts', false),
   ])
 
   return {
@@ -85,8 +87,8 @@ export async function loadCodeSandboxDependencies() {
  * Returns CSS content suitable for injection into CodeSandbox preview
  */
 export async function getCodeSandboxGlobalCSS(): Promise<string> {
-  const cssPath = process.cwd() + '/src/app/globals.css'
-  const cssContent = await fs.readFile(cssPath, 'utf8')
+  const cssPath = resolve(process.cwd(), 'src', 'app', 'globals.css')
+  const cssContent = await readFile(cssPath, 'utf8')
 
   const cssReplacements: Array<[RegExp, string]> = [
     // Remove @import statements
