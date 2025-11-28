@@ -187,7 +187,7 @@
     "size-limit": "^11.2.0",
     "tsdown": "^0.15.9",
     "typescript": "^5.9.2",
-    "valibot": "^1.1.0",
+    "valibot": "^1.2.0",
     "vitest": "^4.0.1",
     "vitest-package-exports": "^0.1.1",
     "zod": "^4.1.5"
