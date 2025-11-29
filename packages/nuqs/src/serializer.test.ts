@@ -145,7 +145,7 @@ describe('serializer', () => {
       json: { foo: 'bar' }
     })
     expect(result).toBe(
-      '?int=0&str=&bool=false&arr=&json={%22foo%22:%22bar%22}'
+      '?int=0&str=&bool=false&arr=&json=%7B%22foo%22:%22bar%22%7D'
     )
   })
   it('supports a global clearOnDefault option', () => {
@@ -167,7 +167,7 @@ describe('serializer', () => {
       json: { foo: 'bar' }
     })
     expect(result).toBe(
-      '?int=0&str=&bool=false&arr=&json={%22foo%22:%22bar%22}'
+      '?int=0&str=&bool=false&arr=&json=%7B%22foo%22:%22bar%22%7D'
     )
   })
   it('gives precedence to parser clearOnDefault over global clearOnDefault', () => {
@@ -200,7 +200,7 @@ describe('serializer', () => {
   it('supports ? in the values', () => {
     const serialize = createSerializer(parsers)
     const result = serialize({ str: 'foo?bar', int: 1, bool: true })
-    expect(result).toBe('?str=foo?bar&int=1&bool=true')
+    expect(result).toBe('?str=foo%3Fbar&int=1&bool=true')
   })
   it('supports & in the base', () => {
     // Repro for https://github.com/47ng/nuqs/issues/812
@@ -208,7 +208,9 @@ describe('serializer', () => {
     const result = serialize('https://example.com/path?issue=is?here', {
       str: 'foo?bar'
     })
-    expect(result).toBe('https://example.com/path?issue=is?here&str=foo?bar')
+    expect(result).toBe(
+      'https://example.com/path?issue=is%3Fhere&str=foo%3Fbar'
+    )
   })
   it('supports native array values', () => {
     const serialize = createSerializer(parsers)
