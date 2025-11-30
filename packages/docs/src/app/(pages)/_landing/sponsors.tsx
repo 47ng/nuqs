@@ -111,6 +111,12 @@ const SPONSORS: Sponsors = [
     name: 'Luis Pedro Bonomi',
     url: 'https://github.com/lpbonomi',
     img: 'https://avatars.githubusercontent.com/u/38361000?s=200&v=4'
+  },
+  {
+    handle: 'dominikkoch',
+    name: 'Dominik Koch',
+    url: 'https://dominikkoch.dev',
+    img: 'https://avatars.githubusercontent.com/u/68947960?v=4'
   }
 ]
 
