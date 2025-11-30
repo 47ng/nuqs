@@ -111,6 +111,12 @@ const SPONSORS: Sponsors = [
     name: 'Luis Pedro Bonomi',
     url: 'https://github.com/lpbonomi',
     img: 'https://avatars.githubusercontent.com/u/38361000?s=200&v=4'
+  },
+  {
+    handle: 'dominikkoch',
+    name: 'Dominik Koch',
+    url: 'https://dominikkoch.dev',
+    img: 'https://avatars.githubusercontent.com/u/68947960?v=4'
   }
 ]
 
@@ -134,14 +140,14 @@ export function SponsorsSection() {
           <span className="sr-only">Next.js Weekly</span>
         </a>
       </p>
-      <ul className="container grid grid-cols-2 gap-y-12 md:grid-cols-3 lg:grid-cols-6">
+      <ul className="container flex flex-wrap justify-center gap-y-12 gap-x-4 md:gap-x-6 lg:gap-x-8">
         {SPONSORS.map(sponsor => (
-          <li key={sponsor.handle} className="flex flex-col items-center">
-            <a href={sponsor.url} className="h-32 w-32 rounded-full">
+          <li key={sponsor.handle} className="flex w-1/2 md:w-1/3 lg:w-1/6 flex-col items-center">
+            <a href={sponsor.url} className="flex items-center justify-center h-32 w-32 rounded-full">
               <img
                 src={sponsor.img}
                 alt={sponsor.name ?? sponsor.handle}
-                className="mx-auto size-32 rounded-full"
+                className="size-32 rounded-full"
                 width={128}
                 height={128}
               />
