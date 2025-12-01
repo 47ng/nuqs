@@ -116,7 +116,15 @@ const SPONSORS: Sponsors = [
     handle: 'dominikkoch',
     name: 'Dominik Koch',
     url: 'https://dominikkoch.dev',
-    img: 'https://avatars.githubusercontent.com/u/68947960?v=4'
+    img: 'https://avatars.githubusercontent.com/u/68947960?v=4',
+    title: (
+      <>
+        Co-Founder of{' '}
+        <a href="https://marblecms.com" className="hover:underline">
+          Marble
+        </a>
+      </>
+    )
   }
 ]
 
