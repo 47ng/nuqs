@@ -39,6 +39,12 @@ const SPONSORS: Sponsors = [
     img: 'https://avatars.githubusercontent.com/u/57156815?s=200&v=4'
   },
   {
+    handle: 'databuddy.cc',
+    name: 'Databuddy',
+    url: 'https://databuddy.cc',
+    img: 'https://avatars.githubusercontent.com/u/190393139?v=4'
+  },
+  {
     handle: 'pqoqubbw',
     name: 'dmytro',
     url: 'https://pqoqubbw.dev/',
