@@ -24,6 +24,7 @@
     "test": "tsc"
   },
   "dependencies": {
+    "@databuddy/sdk": "^2.2.12",
     "@faker-js/faker": "^10.1.0",
     "@headlessui/react": "2.2.9",
     "@headlessui/tailwindcss": "^0.2.2",
