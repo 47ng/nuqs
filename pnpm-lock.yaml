@@ -60,6 +60,9 @@ importers:
 
   packages/docs:
     dependencies:
+      '@databuddy/sdk':
+        specifier: ^2.2.12
+        version: 2.2.12(@babel/core@7.28.3)(@babel/template@7.27.2)(@types/react@19.2.0)(msw@2.11.6(@types/node@24.3.0)(typescript@5.9.2))(react@19.2.0)
       '@faker-js/faker':
         specifier: ^10.1.0
         version: 10.1.0
@@ -227,7 +230,7 @@ importers:
     dependencies:
       next:
         specifier: 16.0.1
-        version: 16.0.1(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
+        version: 16.0.1(@babel/core@7.28.5)(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       nuqs:
         specifier: workspace:*
         version: link:../../nuqs
@@ -784,8 +787,8 @@ importers:
         specifier: ^27.0.1
         version: 27.0.1(postcss@8.5.6)
       next:
-        specifier: 16.0.6
-        version: 16.0.6(@babel/core@7.28.3)(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
+        specifier: 16.0.1
+        version: 16.0.1(@babel/core@7.28.5)(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       react:
         specifier: catalog:react19
         version: 19.2.0
@@ -1195,6 +1198,29 @@ packages:
 
   '@cypress/xvfb@1.2.4':
     resolution: {integrity: sha512-skbBzPggOVYCbnGgV+0dmBdW/s77ZkAOXIC1knS8NagwDjBrNC1LuXtQJeiN6l+m7lzmHtaoUw/ctJKdqkG57Q==}
+
+  '@databuddy/sdk@2.2.12':
+    resolution: {integrity: sha512-Zs0aN7bXzQquQhVZ/B9FzzXGqLveGrAug/8MPKEJpsCyp4e++fU+6rv3LukHUB74Ncr2PHeXpt3yudlRDd3mhw==}
+    peerDependencies:
+      '@ai-sdk/provider': ^2.0.0
+      ai: ^5.0.51
+      msw: ^2.11.5
+      react: '>=18'
+      tokenlens: ^2.0.0-alpha.3
+      vue: '>=3'
+    peerDependenciesMeta:
+      '@ai-sdk/provider':
+        optional: true
+      ai:
+        optional: true
+      msw:
+        optional: true
+      react:
+        optional: true
+      tokenlens:
+        optional: true
+      vue:
+        optional: true
 
   '@dotenvx/dotenvx@1.51.0':
     resolution: {integrity: sha512-CbMGzyOYSyFF7d4uaeYwO9gpSBzLTnMmSmTVpCZjvpJFV69qYbjYPpzNnCz1mb2wIvEhjWjRwQWuBzTO0jITww==}
@@ -6447,6 +6473,24 @@ packages:
   joi@17.13.3:
     resolution: {integrity: sha512-otDA4ldcIx+ZXsKHWmp0YizCweVRZG96J10b0FevjfuncLO1oX59THoAmHkNubYJ+9gWsYsp5k8v4ib6oDv1fA==}
 
+  jotai@2.15.2:
+    resolution: {integrity: sha512-El86CCfXNMEOytp20NPfppqGGmcp6H6kIA+tJHdmASEUURJCYW4fh8nTHEnB8rUXEFAY1pm8PdHPwnrcPGwdEg==}
+    engines: {node: '>=12.20.0'}
+    peerDependencies:
+      '@babel/core': '>=7.0.0'
+      '@babel/template': '>=7.0.0'
+      '@types/react': '>=17.0.0'
+      react: '>=17.0.0'
+    peerDependenciesMeta:
+      '@babel/core':
+        optional: true
+      '@babel/template':
+        optional: true
+      '@types/react':
+        optional: true
+      react:
+        optional: true
+
   js-tokens@4.0.0:
     resolution: {integrity: sha512-RdJUflcE3cUzKiMqQgsCu06FPu9UdIJO0beYbPhHN4k6apgJtifcoCtT9bcxOpYBtpD2kCM6Sbzg4CausW/PKQ==}
 
@@ -10336,6 +10380,17 @@ snapshots:
       lodash.once: 4.1.1
     transitivePeerDependencies:
       - supports-color
+
+  '@databuddy/sdk@2.2.12(@babel/core@7.28.3)(@babel/template@7.27.2)(@types/react@19.2.0)(msw@2.11.6(@types/node@24.3.0)(typescript@5.9.2))(react@19.2.0)':
+    dependencies:
+      jotai: 2.15.2(@babel/core@7.28.3)(@babel/template@7.27.2)(@types/react@19.2.0)(react@19.2.0)
+    optionalDependencies:
+      msw: 2.11.6(@types/node@24.3.0)(typescript@5.9.2)
+      react: 19.2.0
+    transitivePeerDependencies:
+      - '@babel/core'
+      - '@babel/template'
+      - '@types/react'
 
   '@dotenvx/dotenvx@1.51.0':
     dependencies:
@@ -15921,6 +15976,13 @@ snapshots:
       '@sideway/formula': 3.0.1
       '@sideway/pinpoint': 2.0.0
 
+  jotai@2.15.2(@babel/core@7.28.3)(@babel/template@7.27.2)(@types/react@19.2.0)(react@19.2.0):
+    optionalDependencies:
+      '@babel/core': 7.28.3
+      '@babel/template': 7.27.2
+      '@types/react': 19.2.0
+      react: 19.2.0
+
   js-tokens@4.0.0: {}
 
   js-tokens@9.0.1: {}
@@ -17171,7 +17233,32 @@ snapshots:
       - '@babel/core'
       - babel-plugin-macros
 
-  next@16.0.1(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0):
+  next@16.0.1(@babel/core@7.28.5)(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0):
+    dependencies:
+      '@next/env': 16.0.1
+      '@swc/helpers': 0.5.15
+      caniuse-lite: 1.0.30001751
+      postcss: 8.4.31
+      react: 19.2.0
+      react-dom: 19.2.0(react@19.2.0)
+      styled-jsx: 5.1.6(@babel/core@7.28.5)(react@19.2.0)
+    optionalDependencies:
+      '@next/swc-darwin-arm64': 16.0.1
+      '@next/swc-darwin-x64': 16.0.1
+      '@next/swc-linux-arm64-gnu': 16.0.1
+      '@next/swc-linux-arm64-musl': 16.0.1
+      '@next/swc-linux-x64-gnu': 16.0.1
+      '@next/swc-linux-x64-musl': 16.0.1
+      '@next/swc-win32-arm64-msvc': 16.0.1
+      '@next/swc-win32-x64-msvc': 16.0.1
+      '@opentelemetry/api': 1.9.0
+      babel-plugin-react-compiler: 1.0.0
+      sharp: 0.34.4
+    transitivePeerDependencies:
+      - '@babel/core'
+      - babel-plugin-macros
+
+  next@16.0.1(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.1.1(react@19.1.1))(react@19.1.1):
     dependencies:
       '@next/env': 16.0.1
       '@swc/helpers': 0.5.15
@@ -18934,6 +19021,13 @@ snapshots:
       react: 19.2.0
     optionalDependencies:
       '@babel/core': 7.28.3
+
+  styled-jsx@5.1.6(@babel/core@7.28.5)(react@19.2.0):
+    dependencies:
+      client-only: 0.0.1
+      react: 19.2.0
+    optionalDependencies:
+      '@babel/core': 7.28.5
 
   styled-jsx@5.1.6(react@19.1.1):
     dependencies:
