@@ -11,7 +11,7 @@ import { cn } from '../lib/utils'
 
 export function SideBanner() {
   // Note: add banners here to enable them
-  return <ReactAdvancedLondon2025SideBanner />
+  return null
 }
 
 export function NuqsV2AnnouncementTopBanner() {
