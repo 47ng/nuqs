@@ -3,7 +3,7 @@
   "name": "adapter-inertia",
   "title": "Inertia.js Adapter",
   "description": "Using nuqs in Inertia.js apps (eg: with a Laravel backend)",
-  "dependencies": ["inertia@^0.9.0", "nuqs"],
+  "dependencies": ["nuqs"],
   "files": [
     {
       "type": "registry:file",
