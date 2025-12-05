@@ -115,7 +115,6 @@ export function createSearchParamsCache<Parsers extends ParserMap>(
   }
   function all() {
     const { searchParams } = getCache()
-
     if (Object.keys(searchParams).length === 0) {
       throw new Error(error(500))
     }
