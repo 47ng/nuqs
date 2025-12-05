@@ -186,6 +186,66 @@ describe('serializer', () => {
     })
     expect(result).toBe('?str=')
   })
+  it('keeps value when setting the default value when `writeDefaults: true`', () => {
+    const options: Options = { writeDefaults: true }
+    const serialize = createSerializer({
+      int: parseAsInteger.withOptions(options).withDefault(0),
+      str: parseAsString.withOptions(options).withDefault(''),
+      bool: parseAsBoolean.withOptions(options).withDefault(false),
+      arr: parseAsArrayOf(parseAsString).withOptions(options).withDefault([]),
+      json: parseAsJson(x => x)
+        .withOptions(options)
+        .withDefault({ foo: 'bar' })
+    })
+    const result = serialize({
+      int: 0,
+      str: '',
+      bool: false,
+      arr: [],
+      json: { foo: 'bar' }
+    })
+    expect(result).toBe(
+      '?int=0&str=&bool=false&arr=&json={%22foo%22:%22bar%22}'
+    )
+  })
+  it('writeDefaults takes precedence over clearOnDefault when both are provided', () => {
+    const options: Options = { writeDefaults: true, clearOnDefault: true }
+    const serialize = createSerializer({
+      int: parseAsInteger.withOptions(options).withDefault(0),
+      str: parseAsString.withOptions(options).withDefault(''),
+      bool: parseAsBoolean.withOptions(options).withDefault(false),
+      arr: parseAsArrayOf(parseAsString).withOptions(options).withDefault([]),
+      json: parseAsJson(x => x)
+        .withOptions(options)
+        .withDefault({ foo: 'bar' })
+    })
+    const result = serialize({
+      int: 0,
+      str: '',
+      bool: false,
+      arr: [],
+      json: { foo: 'bar' }
+    })
+    expect(result).toBe(
+      '?int=0&str=&bool=false&arr=&json={%22foo%22:%22bar%22}'
+    )
+  })
+  it('gives precedence to parser writeDefaults over global writeDefaults', () => {
+    const serialize = createSerializer(
+      {
+        int: parseAsInteger
+          .withDefault(0)
+          .withOptions({ writeDefaults: false }),
+        str: parseAsString.withDefault('')
+      },
+      { writeDefaults: true }
+    )
+    const result = serialize({
+      int: 0,
+      str: ''
+    })
+    expect(result).toBe('?str=')
+  })
   it('supports urlKeys', () => {
     const serialize = createSerializer(parsers, {
       urlKeys: {

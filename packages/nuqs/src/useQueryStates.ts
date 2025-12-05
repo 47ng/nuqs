@@ -83,10 +83,12 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
     shallow = defaultOptions?.shallow ?? true,
     throttleMs = defaultRateLimit.timeMs,
     limitUrlUpdates = defaultOptions?.limitUrlUpdates,
-    clearOnDefault = defaultOptions?.clearOnDefault ?? true,
     startTransition,
     urlKeys = defaultUrlKeys as UrlKeys<KeyMap>
   } = options
+
+  const optionWriteDefaults =
+    options.writeDefaults ?? defaultOptions?.writeDefaults ?? false
 
   type V = NullableValues<KeyMap>
   const stateKeys = Object.keys(keyMap).join(',')
@@ -291,10 +293,26 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
         if (!parser) {
           continue
         }
+
+        let clearOnDefault =
+          callOptions.clearOnDefault ??
+          parser.clearOnDefault ??
+          options.clearOnDefault ??
+          defaultOptions?.clearOnDefault ??
+          true
+
+        const writeDefaults =
+          callOptions.writeDefaults ??
+          parser.writeDefaults ??
+          optionWriteDefaults
+
+        if (writeDefaults) {
+          clearOnDefault = false
+        }
+
         if (
-          (callOptions.clearOnDefault ??
-            parser.clearOnDefault ??
-            clearOnDefault) &&
+          clearOnDefault &&
+          !writeDefaults &&
           value !== null &&
           parser.defaultValue !== undefined &&
           (parser.eq ?? ((a, b) => a === b))(value, parser.defaultValue)
@@ -384,6 +402,17 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
       defaultValues
     ]
   )
+
+  const anyParserWriteDefaults = Object.values(keyMap).some(
+    v => v.writeDefaults
+  )
+
+  // effect to write defaults to the url on mount
+  useEffect(() => {
+    if (optionWriteDefaults || anyParserWriteDefaults) {
+      void update(s => s, { history: 'replace' })
+    }
+  }, [update, optionWriteDefaults, anyParserWriteDefaults])
 
   const outputState = useMemo(
     () => applyDefaultValues(internalState, defaultValues),
