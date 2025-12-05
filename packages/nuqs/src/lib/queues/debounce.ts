@@ -85,7 +85,8 @@ export class DebounceController {
   push(
     update: Omit<UpdateQueuePushArgs, 'timeMs'>,
     timeMs: number,
-    adapter: UpdateQueueAdapterContext
+    adapter: UpdateQueueAdapterContext,
+    processUrlSearchParams?: (search: URLSearchParams) => URLSearchParams
   ): Promise<URLSearchParams> {
     if (!Number.isFinite(timeMs)) {
       const getSnapshot =
@@ -100,14 +101,16 @@ export class DebounceController {
         URLSearchParams
       >(update => {
         this.throttleQueue.push(update)
-        return this.throttleQueue.flush(adapter).finally(() => {
-          const queuedValue = this.queues.get(update.key)?.queuedValue
-          if (queuedValue === undefined) {
-            debug('[nuqs dqc] Cleaning up empty queue for `%s`', update.key)
-            this.queues.delete(update.key)
-          }
-          this.queuedQuerySync.emit(update.key)
-        })
+        return this.throttleQueue
+          .flush(adapter, processUrlSearchParams)
+          .finally(() => {
+            const queuedValue = this.queues.get(update.key)?.queuedValue
+            if (queuedValue === undefined) {
+              debug('[nuqs dqc] Cleaning up empty queue for `%s`', update.key)
+              this.queues.delete(update.key)
+            }
+            this.queuedQuerySync.emit(update.key)
+          })
       })
       this.queues.set(key, queue)
     }
