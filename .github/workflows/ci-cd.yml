@@ -82,7 +82,7 @@ jobs:
       - name: Install dependencies
         run: pnpm install --ignore-scripts --frozen-lockfile --filter nuqs...
       - name: Install Playwright Chromium
-        run: pnpm exec playwright install chromium --with-deps
+        run: pnpm --filter nuqs bexec playwright install chromium --with-deps
       - name: Run tests
         run: pnpm run test ${{ github.event_name == 'workflow_dispatch' && '--force' || '' }} --filter nuqs
         env:
@@ -140,26 +140,26 @@ jobs:
         next-version:
           # Only keep versions where there were relevant changes in the app router core,
           # and the previous one to use as a baseline.
-          - "14.2.0"
+          - '14.2.0'
           # - '14.2.3' # before vercel/next.js#66755
-          - "14.2.4" # after vercel/next.js#66755
+          - '14.2.4' # after vercel/next.js#66755
           # - "14.2.7" # before vercel/next.js#69509
-          - "14.2.8" # after vercel/next.js#69509
-          - "15.0.0"
-          - "15.1.0"
-          - "15.2.0"
+          - '14.2.8' # after vercel/next.js#69509
+          - '15.0.0'
+          - '15.1.0'
+          - '15.2.0'
           - latest
         include:
-          - next-version: "14.2.0"
-            base-path: "/base"
-          - next-version: "15.0.0"
-            base-path: "/base"
-          - next-version: "latest"
-            base-path: "/base"
-          - next-version: "latest"
+          - next-version: '14.2.0'
+            base-path: '/base'
+          - next-version: '15.0.0'
+            base-path: '/base'
+          - next-version: 'latest'
+            base-path: '/base'
+          - next-version: 'latest'
             react-compiler: true
-          - next-version: "latest"
-            base-path: "/base"
+          - next-version: 'latest'
+            base-path: '/base'
             react-compiler: true
     steps:
       - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3
@@ -243,8 +243,8 @@ jobs:
       fail-fast: false
       matrix:
         react-router-version:
-          - "v6"
-          - "v7"
+          - 'v6'
+          - 'v7'
     steps:
       - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3
       - uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061

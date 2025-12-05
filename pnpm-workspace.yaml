@@ -20,5 +20,6 @@ onlyBuiltDependencies:
   - '@swc/core'
   - '@tailwindcss/oxide'
   - cypress
+  - playwright
   - esbuild
   - sharp
