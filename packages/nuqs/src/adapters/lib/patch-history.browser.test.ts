@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import { getSearchParams } from './patch-history'
 
 describe('patch-history/getSearchParams', () => {
@@ -13,7 +13,6 @@ describe('patch-history/getSearchParams', () => {
     expect(received).toEqual(expected)
   })
   it('extracts search params from a pathname', () => {
-    vi.stubGlobal('location', { origin: 'http://example.com' })
     const received = getSearchParams('/?foo=bar')
     const expected = new URLSearchParams('?foo=bar')
     expect(received).toEqual(expected)
