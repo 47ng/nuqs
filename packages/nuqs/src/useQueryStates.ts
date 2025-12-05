@@ -335,7 +335,8 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
           const debouncedPromise = debounceController.push(
             update,
             timeMs,
-            adapter
+            adapter,
+            processUrlSearchParams
           )
           if (maxDebounceTime < timeMs) {
             // The largest debounce is likely to be the last URL update,
