@@ -57,7 +57,7 @@ jobs:
         uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4
         if: failure()
         with:
-          path: packages/e2e-next/cypress/screenshots
+          path: packages/e2e/next/cypress/screenshots
           name: ci-next-${{ env.VERSION }}${{ matrix.base-path && '-basePath' || ''}}${{ matrix.react-compiler && '-react-compiler' || ''}}
       - uses: 47ng/actions-slack-notify@main
         name: Notify on Slack
