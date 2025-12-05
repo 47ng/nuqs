@@ -1,9 +1,9 @@
-import { render, screen } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
 import React from 'react'
 import { describe, expect, it } from 'vitest'
+import { page, userEvent } from 'vitest/browser'
 import { withNuqsTestingAdapter } from '../adapters/testing'
 import { parseAsInteger, useQueryState, useQueryStates } from '../index'
+import { render } from 'vitest-browser-react'
 
 type TestComponentProps = {
   testId: string
@@ -24,7 +24,7 @@ describe('sync', () => {
     }
 
     const user = userEvent.setup()
-    render(
+    await render(
       <>
         <TestComponent testId="a" />
         <TestComponent testId="b" />
@@ -34,14 +34,14 @@ describe('sync', () => {
       }
     )
     // Act
-    const buttonA = screen.getByTestId('a')
-    const buttonB = screen.getByTestId('b')
+    const buttonA = page.getByTestId('a')
+    const buttonB = page.getByTestId('b')
     await user.click(buttonA)
-    expect(buttonA).toHaveTextContent('count is 1')
-    expect(buttonB).toHaveTextContent('count is 1')
+    await expect.element(buttonA).toHaveTextContent('count is 1')
+    await expect.element(buttonB).toHaveTextContent('count is 1')
     await user.click(buttonB)
-    expect(buttonA).toHaveTextContent('count is 2')
-    expect(buttonB).toHaveTextContent('count is 2')
+    await expect.element(buttonA).toHaveTextContent('count is 2')
+    await expect.element(buttonB).toHaveTextContent('count is 2')
   })
 
   it('should sync useQueryState and useQueryStates', async () => {
@@ -71,7 +71,7 @@ describe('sync', () => {
     }
 
     const user = userEvent.setup()
-    render(
+    await render(
       <>
         <TestComponentA testId="a" />
         <TestComponentB testId="b" />
@@ -81,13 +81,13 @@ describe('sync', () => {
       }
     )
     // Act
-    const buttonA = screen.getByTestId('a')
-    const buttonB = screen.getByTestId('b')
+    const buttonA = page.getByTestId('a')
+    const buttonB = page.getByTestId('b')
     await user.click(buttonA)
-    expect(buttonA).toHaveTextContent('count is 1')
-    expect(buttonB).toHaveTextContent('count is 1')
+    await expect.element(buttonA).toHaveTextContent('count is 1')
+    await expect.element(buttonB).toHaveTextContent('count is 1')
     await user.click(buttonB)
-    expect(buttonA).toHaveTextContent('count is 2')
-    expect(buttonB).toHaveTextContent('count is 2')
+    await expect.element(buttonA).toHaveTextContent('count is 2')
+    await expect.element(buttonB).toHaveTextContent('count is 2')
   })
 })

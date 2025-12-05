@@ -1,31 +1,31 @@
-import { act, renderHook } from '@testing-library/react'
 import { useRef } from 'react'
 import { describe, expect, it } from 'vitest'
+import { renderHook } from 'vitest-browser-react'
 import { createEmitter } from '../emitter'
 import { useSyncExternalStores } from './useSyncExternalStores'
 
 describe('useSyncExternalStores', () => {
-  it('should handle an empty array of keys', () => {
+  it('should handle an empty array of keys', async () => {
     const useTest = () =>
       useSyncExternalStores(
         [],
         (_, callback) => callback,
         _ => 'snapshot'
       )
-    const { result } = renderHook(useTest)
+    const { result } = await renderHook(useTest)
     expect(result.current).toEqual({})
   })
-  it('should handle a single key', () => {
+  it('should handle a single key', async () => {
     const useTest = () =>
       useSyncExternalStores(
         ['a'],
         (_, callback) => callback,
         _ => 'snapshot'
       )
-    const { result } = renderHook(useTest)
+    const { result } = await renderHook(useTest)
     expect(result.current).toEqual({ a: 'snapshot' })
   })
-  it('should be reactive to changes in the store', () => {
+  it('should be reactive to changes in the store', async () => {
     const emitter = createEmitter()
     const store: Record<string, number> = {
       a: 0
@@ -39,7 +39,7 @@ describe('useSyncExternalStores', () => {
         },
         key => store[key]
       )
-    const { result } = renderHook(useTest)
+    const { result, act } = await renderHook(useTest)
     expect(result.current).toEqual({ a: 0 })
     // Update the store
     act(() => {
@@ -48,7 +48,7 @@ describe('useSyncExternalStores', () => {
     })
     expect(result.current).toEqual({ a: 1 })
   })
-  it('should be reactive to changes in the keys', () => {
+  it('should be reactive to changes in the keys', async () => {
     const emitter = createEmitter()
     const store: Record<string, number> = {
       a: 0,
@@ -63,12 +63,12 @@ describe('useSyncExternalStores', () => {
         },
         key => store[key]
       )
-    const { result, rerender } = renderHook(useTest)
+    const { result, rerender } = await renderHook(useTest)
     expect(result.current).toEqual({ a: 0 })
     rerender({ keys: ['b'] })
     expect(result.current).toEqual({ b: 0 })
   })
-  it('should not re-render when a non-listened key changes', () => {
+  it('should not re-render when a non-listened key changes', async () => {
     const emitter = createEmitter()
     const store: Record<string, number> = {
       a: 0,
@@ -89,7 +89,7 @@ describe('useSyncExternalStores', () => {
         result
       }
     }
-    const { result } = renderHook(useTest)
+    const { result, act } = await renderHook(useTest)
     expect(result.current.result).toEqual({ a: 0 })
     expect(result.current.renderCount).toBe(1)
     // Update another key
