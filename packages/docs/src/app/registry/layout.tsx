@@ -5,6 +5,7 @@ import { DocsLayout } from 'fumadocs-ui/layouts/notebook'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { Suspense, type ReactNode } from 'react'
+import { SideBanner } from '../banners'
 
 export const metadata = {
   alternates: {
@@ -88,7 +89,7 @@ export default async function RegistryLayout({
         nav={{ ...sharedLayoutProps.nav, mode: 'top' }}
         sidebar={{
           collapsible: false,
-          // banner: // note: side banner goes here
+          banner: SideBanner,
           footer: (
             <Suspense>
               <SidebarFooter />

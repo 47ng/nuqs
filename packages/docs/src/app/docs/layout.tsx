@@ -3,6 +3,7 @@ import { getSharedLayoutProps } from '@/src/components/shared-layout'
 import { SidebarFooter } from '@/src/components/sidebar-footer'
 import { DocsLayout } from 'fumadocs-ui/layouts/notebook'
 import { Suspense, type ReactNode } from 'react'
+import { SideBanner } from '../banners'
 
 export default function RootDocsLayout({ children }: { children: ReactNode }) {
   const shared = getSharedLayoutProps()
@@ -14,7 +15,7 @@ export default function RootDocsLayout({ children }: { children: ReactNode }) {
       nav={{ ...shared.nav, mode: 'top' }}
       sidebar={{
         collapsible: false,
-        // banner: // note: side banner goes here
+        banner: SideBanner,
         footer: (
           <Suspense>
             <SidebarFooter />

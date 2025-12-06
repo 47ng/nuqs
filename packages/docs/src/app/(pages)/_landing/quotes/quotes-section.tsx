@@ -77,7 +77,7 @@ export function QuotesSection() {
           name: 'ahmet',
           handle: '@bruvimtired',
           avatar:
-            'https://pbs.twimg.com/profile_images/1974628705839267840/aMCXsAyI_400x400.jpg'
+            'https://pbs.twimg.com/profile_images/1991136440135106560/KtTAASs0_400x400.jpg'
         }}
         text="nuqs has to be one of the best libraries out there. lifting state to the url is so easy now and far better for ux."
         url="https://x.com/bruvimtired/status/1944437102562759144"
@@ -129,7 +129,7 @@ export function QuotesSection() {
           name: 'Ido Evergreen',
           handle: '@IdoEvergreen',
           avatar:
-            'https://pbs.twimg.com/profile_images/1973707110388023297/comRbAQQ_400x400.jpg'
+            'https://pbs.twimg.com/profile_images/1991962658023612416/AAao07da_400x400.jpg'
         }}
         text={
           <>
@@ -316,7 +316,7 @@ export function QuotesSection() {
           name: 'Abhishek Chauhan',
           handle: '@abhishekashwinc',
           avatar:
-            'https://pbs.twimg.com/profile_images/1974178538459664384/g9-sR-0D_400x400.jpg'
+            'https://pbs.twimg.com/profile_images/1989354618586058752/Y3NmNf_Q_400x400.jpg'
         }}
         text="Big fan of nuqs!"
         url="https://x.com/abhishekashwinc/status/1981613111472996827"

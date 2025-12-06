@@ -7,7 +7,7 @@ import {
   SiYoutube
 } from '@icons-pack/react-simple-icons'
 import { Heart, Images, Library, Linkedin } from 'lucide-react'
-import { NextJSConf2025Logo } from '../../banners'
+import { NextJSConf2025Logo } from '../../../banners'
 
 const links: LinkTreeItemProps[] = [
   {

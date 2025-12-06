@@ -935,6 +935,28 @@ describe('useQueryStates: process url search params', () => {
     expect(onUrlUpdate).toHaveBeenCalledOnce()
     expect(onUrlUpdate.mock.calls[0]![0].queryString).toBe('?test=processed')
   })
+  it('should call processUrlSearchParams after a debounced update', async () => {
+    const onUrlUpdate = vi.fn<OnUrlUpdateFunction>()
+    const useTestHook = () => useQueryStates({ test: parseAsString })
+    const { result } = renderHook(useTestHook, {
+      wrapper: withNuqsTestingAdapter({
+        processUrlSearchParams: search => {
+          expect(search.get('test')).toBe('fail')
+          search.set('test', 'pass')
+          return search
+        },
+        onUrlUpdate
+      })
+    })
+    await act(async () => {
+      await result.current[1](
+        { test: 'fail' },
+        { limitUrlUpdates: debounce(50) }
+      )
+    })
+    expect(onUrlUpdate).toHaveBeenCalledOnce()
+    expect(onUrlUpdate.mock.calls[0]![0].queryString).toBe('?test=pass')
+  })
 })
 
 describe('useQueryStates: edge cases & repros', () => {
