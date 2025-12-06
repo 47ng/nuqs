@@ -1,0 +1,14 @@
+{
+  "name": "parse-as-tuple",
+  "type": "registry:item",
+  "title": "Tuples",
+  "description": "Parse query string as a tuple of values.",
+  "dependencies": ["nuqs"],
+  "files": [
+    {
+      "path": "node_modules/registry/items/parse-as-tuple.ts",
+      "type": "registry:file",
+      "target": "~/src/lib/parsers/parse-as-tuple.ts"
+    }
+  ]
+}

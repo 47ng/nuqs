@@ -16,12 +16,17 @@ import {
 // Paths
 const __dirname = fileURLToPath(new URL('.', import.meta.url))
 const packageRoot = resolve(__dirname, '../../')
-const itemsDir = resolve(__dirname, './items')
+const docsItemsDir = resolve(__dirname, './items')
+const registryItemsDir = resolve(packageRoot, 'node_modules/registry/items')
 const remoteDir = resolve(__dirname, './remote')
 const registryJson = resolve(packageRoot, 'registry.json')
 
 async function loadItems() {
-  const itemFiles = await Array.fromAsync(glob(`${itemsDir}/*.json`))
+  const [localFiles, registryFiles] = await Promise.all([
+    Array.fromAsync(glob(`${docsItemsDir}/*.json`)),
+    Array.fromAsync(glob(`${registryItemsDir}/*.json`))
+  ])
+  const itemFiles = [...localFiles, ...registryFiles]
   return await Promise.all(
     itemFiles.map(async filePath => {
       const item = await loadItem(filePath)

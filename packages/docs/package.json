@@ -58,6 +58,7 @@
     "react": "catalog:react19",
     "react-dom": "catalog:react19",
     "recharts": "3.3.0",
+    "registry": "workspace:*",
     "remark-smartypants": "^3.0.2",
     "res": "workspace:*",
     "server-only": "^0.0.1",

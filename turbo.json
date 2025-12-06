@@ -75,6 +75,9 @@
       "outputs": ["dist/**", "coverage/**"],
       "dependsOn": ["build"]
     },
+    "registry#test": {
+      "dependsOn": ["^build"]
+    },
     "docs#test": {
       "dependsOn": ["^build"]
     },
