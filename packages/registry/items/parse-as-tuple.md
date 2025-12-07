@@ -2,11 +2,11 @@ The `parseAsTuple` parser allows you to parse fixed-length tuples with **any typ
 
 ```ts
 import { parseAsTuple } from '@/lib/parsers/parse-as-tuple'
-import { parseAsInteger } from 'nuqs'
+import { parseAsString, parseAsStringLiteral } from 'nuqs'
 
-// Coordinates tuple (x, y)
-parseAsTuple([parseAsInteger, parseAsInteger])
+// Sorting tuple (key: string, direction: 'asc' | 'desc')
+parseAsTuple([parseAsString, parseAsStringLiteral(['asc', 'desc'])])
 
 // Optionally, customise the separator
-parseAsTuple([parseAsInteger, parseAsInteger], ';')
+parseAsTuple([parseAsString, parseAsString], ';')
 ```
