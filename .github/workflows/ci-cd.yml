@@ -81,6 +81,9 @@ jobs:
           cache: pnpm
       - name: Install dependencies
         run: pnpm install --ignore-scripts --frozen-lockfile --filter nuqs...
+      - name: Install Playwright Chromium
+        run: ./node_modules/.bin/playwright install chromium
+        working-directory: packages/nuqs
       - name: Run tests
         run: pnpm run test ${{ github.event_name == 'workflow_dispatch' && '--force' || '' }} --filter nuqs
         env:
