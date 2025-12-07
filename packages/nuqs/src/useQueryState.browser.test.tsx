@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { describe, expect, it, vi } from 'vitest'
+import { render, renderHook } from 'vitest-browser-react'
 import { page, userEvent } from 'vitest/browser'
-import { renderHook, render } from 'vitest-browser-react'
 import {
   NullDetector,
   useFakeLoadingState
@@ -283,19 +283,15 @@ describe('useQueryState: update sequencing', () => {
     let p0: Promise<URLSearchParams> | undefined = undefined
     let p1: Promise<URLSearchParams> | undefined = undefined
     let p2: Promise<URLSearchParams> | undefined = undefined
+    // prettier-ignore
     await act(async () => {
-      // prettier-ignore
       // Flush the queue from previous tests
       await new Promise(r => setTimeout(r, 60))
       // First, push an update to a to be emitted "immediately"
       p0 = result.current.a[1]('init')
       // Then two updates before the end of the throttle timeout
-      setTimeout(() => {
-        p1 = result.current.a[1]('a')
-      }, 10)
-      setTimeout(() => {
-        p2 = result.current.b[1]('b')
-      }, 20)
+      setTimeout(() => { p1 = result.current.a[1]('a') }, 10)
+      setTimeout(() => { p2 = result.current.b[1]('b') }, 20)
       return new Promise(resolve => setTimeout(resolve, 30))
     })
 

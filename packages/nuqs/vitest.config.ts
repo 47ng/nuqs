@@ -27,7 +27,6 @@ const config: ViteUserConfig = defineConfig({
     projects: [
       {
         extends: true,
-
         test: {
           setupFiles: ['vitest.setup.ts', 'vitest.browser.setup.ts'],
           name: 'browser',
