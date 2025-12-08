@@ -46,7 +46,8 @@ const config: UserConfig = defineConfig([
     ...commonConfig,
     entry: entrypoints.client,
     outputOptions: {
-      intro: ({ isEntry }) => (isEntry ? "'use client';\n" : '')
+      intro: ({ isEntry, fileName }) =>
+        isEntry && !fileName.endsWith('.d.ts') ? "'use client';\n" : ''
     },
     async onSuccess() {
       // Mark the un-versionned React Router adapter as deprecated
