@@ -129,7 +129,6 @@
   },
   "scripts": {
     "dev": "tsdown --watch",
-    "prebuild": "rm -rf dist",
     "build": "tsdown",
     "build:size-json": "size-limit --json > size.json",
     "test": "pnpm run --stream '/^test:/'",
