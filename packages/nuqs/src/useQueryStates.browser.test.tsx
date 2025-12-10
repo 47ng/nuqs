@@ -5,8 +5,8 @@ import React, {
   type ReactNode
 } from 'react'
 import { describe, expect, it, vi } from 'vitest'
-import { page, userEvent } from 'vitest/browser'
 import { render, renderHook } from 'vitest-browser-react'
+import { page, userEvent } from 'vitest/browser'
 import {
   NullDetector,
   useFakeLoadingState
@@ -112,6 +112,52 @@ describe('useQueryStates', () => {
     expect(result.current[0].b).toBeNull()
     expect(onUrlUpdate).toHaveBeenCalledOnce()
     expect(onUrlUpdate.mock.calls[0]![0].queryString).toEqual('')
+  })
+  it('accepts undefined for keys to leave them unchanged', async () => {
+    const onUrlUpdate = vi.fn<OnUrlUpdateFunction>()
+    const useTestHook = () =>
+      useQueryStates({
+        a: parseAsString,
+        b: parseAsString
+      })
+    const { result, act } = await renderHook(useTestHook, {
+      wrapper: withNuqsTestingAdapter({
+        searchParams: '?a=init&b=init',
+        onUrlUpdate
+      })
+    })
+    expect(result.current[0].a).toEqual('init')
+    expect(result.current[0].b).toEqual('init')
+    await act(() => result.current[1]({ a: undefined, b: 'changed' }))
+    expect(result.current[0].a).toEqual('init')
+    expect(result.current[0].b).toEqual('changed')
+    expect(onUrlUpdate).toHaveBeenCalledOnce()
+    expect(onUrlUpdate.mock.calls[0]![0].queryString).toEqual(
+      '?a=init&b=changed'
+    )
+  })
+  it('accepts undefined for keys to leave them unchanged (updater function version)', async () => {
+    const onUrlUpdate = vi.fn<OnUrlUpdateFunction>()
+    const useTestHook = () =>
+      useQueryStates({
+        a: parseAsString,
+        b: parseAsString
+      })
+    const { result, act } = await renderHook(useTestHook, {
+      wrapper: withNuqsTestingAdapter({
+        searchParams: '?a=init&b=init',
+        onUrlUpdate
+      })
+    })
+    expect(result.current[0].a).toEqual('init')
+    expect(result.current[0].b).toEqual('init')
+    await act(() => result.current[1](() => ({ a: undefined, b: 'changed' })))
+    expect(result.current[0].a).toEqual('init')
+    expect(result.current[0].b).toEqual('changed')
+    expect(onUrlUpdate).toHaveBeenCalledOnce()
+    expect(onUrlUpdate.mock.calls[0]![0].queryString).toEqual(
+      '?a=init&b=changed'
+    )
   })
 })
 

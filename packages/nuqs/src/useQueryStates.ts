@@ -288,7 +288,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
       for (let [stateKey, value] of Object.entries(newState)) {
         const parser = keyMap[stateKey]
         const urlKey = resolvedUrlKeys[stateKey]!
-        if (!parser) {
+        if (!parser || value === undefined) {
           continue
         }
         if (
