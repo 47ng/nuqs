@@ -4,7 +4,7 @@ import {
   type CreateLoaderOptions,
   type LoaderFunction
 } from './loader'
-import type { ParserMap } from './parsers'
+import type { inferParserType, ParserMap } from './parsers'
 import { createSerializer, type CreateSerializerOptions } from './serializer'
 import {
   createStandardSchemaV1,
@@ -54,6 +54,7 @@ export type UnifiedAPI<
     },
     PartialOutput
   >
+  $infer: inferParserType<Parsers>
 }
 
 export function defineSearchParams<
@@ -115,10 +116,12 @@ export function defineSearchParams<
     parsers,
     options,
     extend,
-    pick
+    pick,
+    get $infer(): inferParserType<Parsers> {
+      throw new TypeError('This property is only for type inference purposes.')
+    }
   }
 }
-
 // todo: Refactor options merge with the throttle queue
 type MergeableOptions<P extends ParserMap> = Omit<
   UnifiedOptions<P>,

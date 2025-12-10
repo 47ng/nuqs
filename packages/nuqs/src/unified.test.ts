@@ -238,4 +238,16 @@ describe('Unified API', () => {
       scroll: true
     })
   })
+
+  it('can infer types', () => {
+    const out = defineSearchParams({
+      name: parseAsString.withDefault(''),
+      age: parseAsInteger
+    })
+    type Inferred = typeof out.$infer
+    expectTypeOf<Inferred>().toEqualTypeOf<{
+      name: string
+      age: number | null
+    }>()
+  })
 })
