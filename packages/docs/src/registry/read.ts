@@ -31,12 +31,20 @@ export async function readRegistryItem(name: string) {
 }
 
 export async function readUsage(name: string) {
-  try {
-    const fileName = resolve(process.cwd(), `src/registry/items/${name}.md`)
-    return await readFile(fileName, 'utf-8')
-  } catch {
-    return null
+  const paths = [
+    resolve(process.cwd(), `src/registry/items/${name}.md`),
+    resolve(process.cwd(), `node_modules/registry/items/${name}.md`)
+  ]
+
+  for (const filePath of paths) {
+    try {
+      return await readFile(filePath, 'utf-8')
+    } catch {
+      continue
+    }
   }
+
+  return null
 }
 
 export const registryItemCategories = [
