@@ -82,16 +82,19 @@ async function getGitHubActionsStatus() {
   }`.replace(/\s+/g, ' ') // Minify
   let debugInfo: any = undefined
   try {
-    const json = await fetch(`https://api.github.com/graphql?repo=47ng/nuqs`, {
-      method: 'POST',
-      headers: {
-        Authorization: `bearer ${process.env.GITHUB_TOKEN}`
-      },
-      body: JSON.stringify({ query }),
-      next: {
-        tags: ['github-actions-status']
+    const json = await fetch(
+      `https://api.github.com/graphql?fn=getGitHubActionsStatus`,
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `bearer ${process.env.GITHUB_TOKEN}`
+        },
+        body: JSON.stringify({ query }),
+        next: {
+          tags: ['github-actions-status']
+        }
       }
-    }).then(res => res.json())
+    ).then(res => res.json())
     debugInfo = json
 
     // Filter for completed runs only

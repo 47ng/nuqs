@@ -102,13 +102,25 @@ export async function getStarHistory(
     }
   }
 }`.replace(/\s+/g, ' ') // Minify
-    const res = await fetch(`https://api.github.com/graphql?stars=${slug}`, {
-      method: 'POST',
-      headers: {
-        Authorization: `bearer ${process.env.GITHUB_TOKEN}`
-      },
-      body: JSON.stringify({ query })
-    })
+    const res = await fetch(
+      `https://api.github.com/graphql?fn=getStarHistory`,
+      {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          Authorization: `bearer ${process.env.GITHUB_TOKEN}`
+        },
+        body: JSON.stringify({ query })
+      }
+    )
+    console.dir(process.env.GITHUB_TOKEN)
+    if (!res.ok) {
+      throw new Error(
+        `GitHub API error: ${res.status} ${res.statusText}
+${query}
+${await res.text()}`
+      )
+    }
 
     const {
       data: {
