@@ -8,7 +8,8 @@
     "cypress.config.ts",
     "cypress/support/e2e.ts",
     "cypress/e2e/fixtures",
-    "shared.cy.ts"
+    "shared.cy.ts",
+    "playwright.config.ts"
   ],
   "peerDependencies": {
     "cypress": "catalog:e2e",
@@ -18,6 +19,7 @@
     "cypress-terminal-report": "^7.2.1"
   },
   "devDependencies": {
+    "@playwright/test": "catalog:e2e",
     "@types/node": "^24.3.0",
     "@types/react": "catalog:react19",
     "@types/react-dom": "catalog:react19",

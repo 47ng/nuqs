@@ -14,8 +14,10 @@
     "dev": "next dev --port 3001",
     "build": "next build",
     "start": "NODE_OPTIONS='--enable-source-maps=true' next start --port 3001",
-    "pretest": "cypress install",
-    "test": "start-server-and-test start http://localhost:3001${BASE_PATH} cypress:run",
+    "pretest": "cypress install && playwright install chromium",
+    "test": "pnpm run test:playwright && pnpm run test:cypress",
+    "test:cypress": "start-server-and-test start http://localhost:3001${BASE_PATH} cypress:run",
+    "test:playwright": "playwright test --project=chromium",
     "cypress:open": "cypress open --e2e --browser electron",
     "cypress:run": "cypress run --headless"
   },
@@ -26,6 +28,7 @@
     "react-dom": "catalog:react19"
   },
   "devDependencies": {
+    "@playwright/test": "catalog:e2e",
     "@types/node": "^24.3.0",
     "@types/react": "catalog:react19",
     "@types/react-dom": "catalog:react19",
