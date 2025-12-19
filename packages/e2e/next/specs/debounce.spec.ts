@@ -1,11 +1,14 @@
 import { expect, test as it, test } from '@playwright/test'
+import { navigateTo } from 'e2e-shared/playwright/navigate.ts'
 import { getUrl } from 'e2e-shared/specs/debounce.defs.ts'
 
 test.describe('debounce', () => {
   it('should debounce the input', async ({ page }) => {
     const DEBOUNCE_TIME = 200
-    await page.goto(getUrl('/pages/debounce', { debounceTime: DEBOUNCE_TIME }))
-    await page.locator('#hydration-marker').waitFor({ state: 'hidden' })
+    await navigateTo(
+      page,
+      getUrl('./pages/debounce', { debounceTime: DEBOUNCE_TIME })
+    )
     await page.locator('input[type="text"]').pressSequentially('pass')
     await expect(page.locator('#client-state')).toHaveText(
       '{"search":"pass","pageIndex":0}'
@@ -32,8 +35,10 @@ test.describe('debounce', () => {
     page
   }) => {
     const DEBOUNCE_TIME = 400
-    await page.goto(getUrl('/pages/debounce', { debounceTime: DEBOUNCE_TIME }))
-    await page.locator('#hydration-marker').waitFor({ state: 'hidden' })
+    await navigateTo(
+      page,
+      getUrl('/pages/debounce', { debounceTime: DEBOUNCE_TIME })
+    )
     await page.locator('input[type="text"]').pressSequentially('pass')
     const incrementButton = page.locator('button#increment-page-index')
     await incrementButton.click()
@@ -63,8 +68,8 @@ test.describe('debounce', () => {
   it('should cancel a debounce when the back button is clicked', async ({
     page
   }) => {
-    await page.goto('/pages/debounce/other')
-    await page.goto(getUrl('/pages/debounce', { debounceTime: 200 }))
+    await navigateTo(page, '/pages/debounce/other')
+    await navigateTo(page, getUrl('/pages/debounce', { debounceTime: 200 }))
     await page.locator('#hydration-marker').waitFor({ state: 'hidden' })
     await page.locator('input[type="text"]').pressSequentially('fail')
     await page.goBack()

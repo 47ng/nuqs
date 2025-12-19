@@ -18,9 +18,10 @@ export function configurePlaywright({
     forbidOnly: !!process.env.CI,
     retries: process.env.CI ? 2 : 0,
     workers: process.env.CI ? 3 : undefined,
+    timeout: 5_000,
     reporter: 'html',
     use: {
-      baseURL: `http://localhost:${port}${basePath}`,
+      baseURL: ensureTrailingSlash(`http://localhost:${port}${basePath}`),
       trace: 'on-first-retry'
     },
     projects: [
@@ -38,4 +39,8 @@ export function configurePlaywright({
       }
     }
   })
+}
+
+function ensureTrailingSlash(path: string) {
+  return path.endsWith('/') ? path : path + '/'
 }

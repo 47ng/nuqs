@@ -9,7 +9,8 @@
     "cypress/support/e2e.ts",
     "cypress/e2e/fixtures",
     "shared.cy.ts",
-    "playwright.config.ts"
+    "playwright.config.ts",
+    "playwright/navigate.ts"
   ],
   "peerDependencies": {
     "cypress": "catalog:e2e",
