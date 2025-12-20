@@ -4,13 +4,14 @@ import { source } from '@/src/app/source'
 import { getBaseUrl } from '@/src/lib/url'
 import {
   DocsBody,
-  DocsDescription,
   DocsPage,
   DocsTitle
 } from 'fumadocs-ui/page'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { stat } from 'node:fs/promises'
+import { LLMCopyButton, ViewOptions } from '@/src/components/ai/page-actions';
+import { github } from '@/src/lib/utils'
 
 export const dynamic = 'force-static'
 
@@ -36,7 +37,16 @@ export default async function Page(props: PageProps) {
       }}
     >
       <DocsTitle>{page.data.title}</DocsTitle>
-      <DocsDescription>{page.data.description}</DocsDescription>
+      <p className="text-lg text-fd-muted-foreground mb-2">
+        {page.data.description}
+      </p>
+      <div className="flex flex-row flex-wrap gap-2 items-center border-b pb-6">
+        <LLMCopyButton markdownUrl={`${page.url}.mdx`} />
+        <ViewOptions
+          markdownUrl={`${page.url}.mdx`}
+          githubUrl={`https://github.com/${github.owner}/${github.repo}/blob/${github.branch}/packages/docs/content/docs/${page.path}`}
+        />
+      </div>
       <DocsBody>
         <MDX components={useMDXComponents()} />
       </DocsBody>
