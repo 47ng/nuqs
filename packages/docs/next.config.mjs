@@ -73,6 +73,14 @@ const config = {
       }
     ]
   },
+  async rewrites() {
+    return [
+      {
+        source: '/docs/:path*.mdx',
+        destination: '/llms.mdx/:path*',
+      },
+    ];
+  },
   images: {
     remotePatterns: [
       {
