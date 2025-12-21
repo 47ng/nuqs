@@ -6,9 +6,11 @@
     "dev": "vite --port 3004",
     "build": "vite build",
     "start": "vite preview --port 3004",
-    "test": "pnpm run --stream '/^test:/'",
+    "pretest": "cypress install && playwright install chromium",
+    "test": "pnpm run test:types && pnpm run test:playwright && pnpm run test:cypress",
     "test:types": "tsc",
-    "test:e2e": "start-server-and-test start http://localhost:3004 cypress:run",
+    "test:playwright": "playwright test --project=chromium",
+    "test:cypress": "start-server-and-test start http://localhost:3004 cypress:run",
     "cypress:open": "cypress open",
     "cypress:run": "cross-env FORCE_COLOR=3 cypress run --headless && pnpm run kill-server",
     "kill-server": "lsof -ti:3004 | xargs kill -9 || true"
@@ -22,6 +24,7 @@
     "react-dom": "catalog:react19"
   },
   "devDependencies": {
+    "@playwright/test": "catalog:e2e",
     "@types/node": "^24.3.0",
     "@types/react": "catalog:react19",
     "@types/react-dom": "catalog:react19",

@@ -7,6 +7,7 @@
     "dev": "vite --port 3002",
     "build": "vite build",
     "start": "vite preview --port 3002",
+    "pretest": "cypress install && playwright install chromium",
     "test": "pnpm run test:types && pnpm run test:playwright && pnpm run test:cypress",
     "test:types": "tsc -b",
     "test:cypress": "start-server-and-test start http://localhost:3002 cypress:run",

@@ -5,3 +5,7 @@ dist-ssr
 *.local
 src/routeTree.gen.ts
 .tanstack/
+
+# Playwright
+playwright-report/
+test-results/
