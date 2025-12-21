@@ -9,6 +9,7 @@
     "cypress/support/e2e.ts",
     "cypress/e2e/fixtures",
     "shared.cy.ts",
+    "shared.spec.ts",
     "playwright.config.ts",
     "playwright/navigate.ts",
     "define-test.ts"
