@@ -10,7 +10,8 @@
     "cypress/e2e/fixtures",
     "shared.cy.ts",
     "playwright.config.ts",
-    "playwright/navigate.ts"
+    "playwright/navigate.ts",
+    "define-test.ts"
   ],
   "peerDependencies": {
     "cypress": "catalog:e2e",

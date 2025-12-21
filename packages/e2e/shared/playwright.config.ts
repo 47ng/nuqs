@@ -15,11 +15,13 @@ export function configurePlaywright({
     testDir: './specs',
     outputDir: './node_modules/.playwright/test-results/',
     fullyParallel: true,
-    forbidOnly: !!process.env.CI,
     retries: process.env.CI ? 2 : 0,
     workers: process.env.CI ? 3 : undefined,
     timeout: 5_000,
-    reporter: 'html',
+    reporter: [
+      ['list', { printSteps: true }],
+      process.env.CI ? ['github'] : ['html', { open: 'never' }]
+    ],
     use: {
       baseURL: ensureTrailingSlash(`http://localhost:${port}${basePath}`),
       trace: 'on-first-retry'
