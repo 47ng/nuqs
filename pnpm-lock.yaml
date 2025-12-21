@@ -303,6 +303,9 @@ importers:
         specifier: catalog:react19
         version: 19.2.2(react@19.2.2)
     devDependencies:
+      '@playwright/test':
+        specifier: catalog:e2e
+        version: 1.57.0
       '@types/node':
         specifier: ^24.3.0
         version: 24.3.0
