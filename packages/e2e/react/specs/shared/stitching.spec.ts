@@ -2,6 +2,5 @@ import { testStitching } from 'e2e-shared/specs/stitching.spec.ts'
 
 testStitching({
   path: '/stitching',
-  // React SPA doesn't have full page navigation on shallow: false
-  enableShallowFalse: false
+  enableShallowFalse: process.env.FULL_PAGE_NAV_ON_SHALLOW_FALSE !== 'true'
 })
