@@ -9,8 +9,10 @@ export const metadata = getMetadata('batching')
 export default function BuilderPatternDemoPage() {
   return (
     <>
-      <h1>{metadata.title}</h1>
-      <Description>{metadata.description}</Description>
+      <h1 className="text-foreground my-4 text-3xl font-bold sm:text-4xl">
+        {metadata.title}
+      </h1>
+      <Description className="mb-4">{metadata.description}</Description>
       <Suspense>
         <Client />
       </Suspense>

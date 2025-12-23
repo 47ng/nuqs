@@ -12,7 +12,9 @@ export function ProductView({ product, ...props }: ProductViewProps) {
         <span className="ml-auto">{product.price}</span>
         <span className="text-xs text-zinc-500">SKU-{product.id + 1}</span>
       </div>
-      <p className="mt-1">{product.description}</p>
+      <p className="text-muted-foreground mt-1 text-sm">
+        {product.description}
+      </p>
     </div>
   )
 }

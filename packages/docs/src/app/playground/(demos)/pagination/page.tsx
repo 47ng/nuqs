@@ -26,9 +26,11 @@ export default async function PaginationDemoPage({ searchParams }: PageProps) {
   const pagination = loadPagination(searchParams)
   return (
     <>
-      <h1>{metadata.title}</h1>
-      <Description>{metadata.description}</Description>
-      <h2>Rendering controls</h2>
+      <h1 className="text-foreground my-4 text-3xl font-bold sm:text-4xl">
+        {metadata.title}
+      </h1>
+      <Description className="mb-2">{metadata.description}</Description>
+      <h2 className="mb-2 text-xl">Rendering controls</h2>
       <Suspense>
         <RenderingControls />
       </Suspense>
@@ -77,15 +79,17 @@ async function ProductSection({ pagination }: PaginatedProps) {
   const products = await fetchProducts(page, delay)
   return (
     <section>
-      <h2>
+      <h2 className="my-2">
         Product list{' '}
         <small className="text-sm font-medium text-zinc-500">
           (server-rendered)
         </small>
       </h2>
-      {products.map(product => (
-        <ProductView product={product} key={product.id} />
-      ))}
+      <div className="space-y-2">
+        {products.map(product => (
+          <ProductView product={product} key={product.id} />
+        ))}
+      </div>
     </section>
   )
 }
