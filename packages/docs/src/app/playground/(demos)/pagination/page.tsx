@@ -1,4 +1,4 @@
-import { Description } from '@/src/components/typography'
+import { Description, H1, H2 } from '@/src/components/typography'
 import { Separator } from '@/src/components/ui/separator'
 import type { SearchParams } from 'nuqs/server'
 import { Suspense } from 'react'
@@ -26,15 +26,15 @@ export default async function PaginationDemoPage({ searchParams }: PageProps) {
   const pagination = loadPagination(searchParams)
   return (
     <>
-      <h1 className="text-foreground my-4 text-3xl font-bold sm:text-4xl">
+      <H1 className="text-foreground my-4 text-3xl font-bold sm:text-4xl">
         {metadata.title}
-      </h1>
-      <Description className="mb-2">{metadata.description}</Description>
-      <h2 className="mb-2 text-xl">Rendering controls</h2>
+      </H1>
+      <Description className="mb-4">{metadata.description}</Description>
+      <H2 className="mb-2 text-xl">Rendering controls</H2>
       <Suspense>
         <RenderingControls />
       </Suspense>
-      <Separator className="my-8" />
+      <Separator className="my-4" />
       <Suspense>
         <PaginationRenderer pagination={pagination} />
       </Suspense>
@@ -78,7 +78,7 @@ async function ProductSection({ pagination }: PaginatedProps) {
   const { page, delay } = await pagination
   const products = await fetchProducts(page, delay)
   return (
-    <section>
+    <section className="mb-4">
       <h2 className="my-2">
         Product list{' '}
         <small className="text-sm font-medium text-zinc-500">

@@ -24,9 +24,9 @@ export default function BuilderPatternDemoPage() {
       >
         Random coordinates
       </Button>
-      <ul>
-        <li className="py-2">Latitude: {lat}</li>
-        <li className="py-2">Longitude: {lng}</li>
+      <ul className="mb-4 space-y-2">
+        <li>Latitude: {lat}</li>
+        <li>Longitude: {lng}</li>
       </ul>
     </>
   )

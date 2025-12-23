@@ -28,7 +28,7 @@ export async function ServerPaginationControls({
     })
   }
   return (
-    <Pagination className="not-prose items-center gap-2">
+    <Pagination className="not-prose mt-2 items-center gap-2">
       <PaginationContent>
         <PaginationItem>
           <PaginationPreviousLink
