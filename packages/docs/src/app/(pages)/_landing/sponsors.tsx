@@ -140,12 +140,12 @@ export function SponsorsSection() {
       <h2 className="mb-12 text-center text-3xl font-bold tracking-tighter md:text-4xl xl:text-5xl dark:text-white">
         Sponsors
       </h2>
-      <p className="mb-12 flex justify-center">
+      <div className="mb-12 flex flex-wrap items-center justify-center gap-8">
         <a
           href="https://nextjsweekly.com?utm_source=nuqs&utm_medium=sponsor&utm_campaign=nuqs"
           target="_blank"
           rel="noopener noreferrer"
-          className="mx-auto block p-2"
+          className="block p-2"
         >
           <span
             role="presentation"
@@ -153,7 +153,72 @@ export function SponsorsSection() {
           />
           <span className="sr-only">Next.js Weekly</span>
         </a>
-      </p>
+        <a
+          href="https://shadcnstudio.com/?utm_source=nuqs&utm_medium=sponsor&utm_campaign=nuqs"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-3 p-2"
+        >
+          <svg
+            viewBox="0 0 328 329"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            className="size-8"
+            aria-hidden
+          >
+            <rect
+              y="0.5"
+              width="328"
+              height="328"
+              rx="164"
+              fill="currentColor"
+            />
+            <path
+              d="M165.018 72.3008V132.771C165.018 152.653 148.9 168.771 129.018 168.771H70.2288"
+              strokeWidth="20"
+              className="stroke-background"
+            />
+            <path
+              d="M166.627 265.241L166.627 204.771C166.627 184.889 182.744 168.771 202.627 168.771L261.416 168.771"
+              strokeWidth="20"
+              className="stroke-background"
+            />
+            <line
+              x1="238.136"
+              y1="98.8184"
+              x2="196.76"
+              y2="139.707"
+              strokeWidth="20"
+              className="stroke-background"
+            />
+            <line
+              x1="135.688"
+              y1="200.957"
+              x2="94.3128"
+              y2="241.845"
+              strokeWidth="20"
+              className="stroke-background"
+            />
+            <line
+              x1="133.689"
+              y1="137.524"
+              x2="92.5566"
+              y2="96.3914"
+              strokeWidth="20"
+              className="stroke-background"
+            />
+            <line
+              x1="237.679"
+              y1="241.803"
+              x2="196.547"
+              y2="200.671"
+              strokeWidth="20"
+              className="stroke-background"
+            />
+          </svg>
+          <span className="text-3xl font-semibold">shadcnstudio</span>
+        </a>
+      </div>
       <ul className="container flex flex-wrap justify-center gap-x-4 gap-y-12 md:gap-x-6 lg:gap-x-8">
         {SPONSORS.map(sponsor => (
           <li
