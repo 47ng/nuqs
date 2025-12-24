@@ -1,5 +1,6 @@
 import { QuerySpy } from '@/src/components/query-spy'
 import { QuerystringSkeleton } from '@/src/components/querystring'
+import { DocsPage } from 'fumadocs-ui/page'
 import React, { Suspense } from 'react'
 
 export default function PlaygroundDemoLayout({
@@ -9,12 +10,12 @@ export default function PlaygroundDemoLayout({
 }) {
   return (
     <>
-      <div className="px-4 md:px-2">
+      <DocsPage>
         <Suspense fallback={<QuerystringSkeleton>&nbsp;</QuerystringSkeleton>}>
           <QuerySpy />
         </Suspense>
         {children}
-      </div>
+      </DocsPage>
     </>
   )
 }

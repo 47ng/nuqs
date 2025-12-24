@@ -52,7 +52,7 @@ export function QuerystringSkeleton({
       aria-label="Querystring spy"
       aria-description="For browsers where the query is hard to see (eg: on mobile)"
       className={cn(
-        'bg-background mt-4 block w-full overflow-x-auto rounded-lg border px-3 py-2 text-xs text-wrap sm:text-sm dark:bg-zinc-900/50 dark:shadow-inner',
+        'bg-background block w-full overflow-x-auto rounded-lg border px-3 py-2 text-xs text-wrap sm:text-sm dark:bg-zinc-900/50 dark:shadow-inner',
         className
       )}
       {...props}
