@@ -1,6 +1,3 @@
-import { act, render, renderHook, screen } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
-import { setTimeout as wait } from 'node:timers/promises'
 import React, {
   createElement,
   useEffect,
@@ -8,6 +5,8 @@ import React, {
   type ReactNode
 } from 'react'
 import { describe, expect, it, vi } from 'vitest'
+import { render, renderHook } from 'vitest-browser-react'
+import { page, userEvent } from 'vitest/browser'
 import {
   NullDetector,
   useFakeLoadingState
@@ -28,7 +27,10 @@ import {
 import { useQueryState } from './useQueryState'
 import { useQueryStates } from './useQueryStates'
 
-const waitForNextTick = () => wait(0)
+const waitForNextTick = () =>
+  new Promise<void>(resolve => {
+    setTimeout(resolve, 0)
+  })
 
 describe('useQueryStates', () => {
   it('allows setting a single value', async () => {
@@ -38,7 +40,7 @@ describe('useQueryStates', () => {
         a: parseAsString,
         b: parseAsString
       })
-    const { result } = renderHook(useTestHook, {
+    const { result, act } = await renderHook(useTestHook, {
       wrapper: withNuqsTestingAdapter({
         onUrlUpdate
       })
@@ -59,7 +61,7 @@ describe('useQueryStates', () => {
         a: parseAsString,
         b: parseAsString
       })
-    const { result } = renderHook(useTestHook, {
+    const { result, act } = await renderHook(useTestHook, {
       wrapper: withNuqsTestingAdapter({
         searchParams: '?a=init&b=init',
         onUrlUpdate
@@ -80,7 +82,7 @@ describe('useQueryStates', () => {
         a: parseAsString,
         b: parseAsString
       })
-    const { result } = renderHook(useTestHook, {
+    const { result, act } = await renderHook(useTestHook, {
       wrapper: withNuqsTestingAdapter({
         searchParams: '?a=init&b=init',
         onUrlUpdate
@@ -99,7 +101,7 @@ describe('useQueryStates', () => {
         a: parseAsString,
         b: parseAsString
       })
-    const { result } = renderHook(useTestHook, {
+    const { result, act } = await renderHook(useTestHook, {
       wrapper: withNuqsTestingAdapter({
         searchParams: '?a=init&b=init',
         onUrlUpdate
@@ -110,6 +112,52 @@ describe('useQueryStates', () => {
     expect(result.current[0].b).toBeNull()
     expect(onUrlUpdate).toHaveBeenCalledOnce()
     expect(onUrlUpdate.mock.calls[0]![0].queryString).toEqual('')
+  })
+  it('accepts undefined for keys to leave them unchanged', async () => {
+    const onUrlUpdate = vi.fn<OnUrlUpdateFunction>()
+    const useTestHook = () =>
+      useQueryStates({
+        a: parseAsString,
+        b: parseAsString
+      })
+    const { result, act } = await renderHook(useTestHook, {
+      wrapper: withNuqsTestingAdapter({
+        searchParams: '?a=init&b=init',
+        onUrlUpdate
+      })
+    })
+    expect(result.current[0].a).toEqual('init')
+    expect(result.current[0].b).toEqual('init')
+    await act(() => result.current[1]({ a: undefined, b: 'changed' }))
+    expect(result.current[0].a).toEqual('init')
+    expect(result.current[0].b).toEqual('changed')
+    expect(onUrlUpdate).toHaveBeenCalledOnce()
+    expect(onUrlUpdate.mock.calls[0]![0].queryString).toEqual(
+      '?a=init&b=changed'
+    )
+  })
+  it('accepts undefined for keys to leave them unchanged (updater function version)', async () => {
+    const onUrlUpdate = vi.fn<OnUrlUpdateFunction>()
+    const useTestHook = () =>
+      useQueryStates({
+        a: parseAsString,
+        b: parseAsString
+      })
+    const { result, act } = await renderHook(useTestHook, {
+      wrapper: withNuqsTestingAdapter({
+        searchParams: '?a=init&b=init',
+        onUrlUpdate
+      })
+    })
+    expect(result.current[0].a).toEqual('init')
+    expect(result.current[0].b).toEqual('init')
+    await act(() => result.current[1](() => ({ a: undefined, b: 'changed' })))
+    expect(result.current[0].a).toEqual('init')
+    expect(result.current[0].b).toEqual('changed')
+    expect(onUrlUpdate).toHaveBeenCalledOnce()
+    expect(onUrlUpdate.mock.calls[0]![0].queryString).toEqual(
+      '?a=init&b=changed'
+    )
   })
 })
 
@@ -142,8 +190,8 @@ describe('useQueryStates: referential equality', () => {
     })
   }
 
-  it('should have referential equality on default values', () => {
-    const { result } = renderHook(useTestHookWithDefaults, {
+  it('should have referential equality on default values', async () => {
+    const { result } = await renderHook(useTestHookWithDefaults, {
       wrapper: withNuqsTestingAdapter()
     })
     const [state] = result.current
@@ -155,7 +203,7 @@ describe('useQueryStates: referential equality', () => {
   })
 
   it('should keep referential equality when resetting to defaults', async () => {
-    const { result } = renderHook(useTestHookWithDefaults, {
+    const { result, act } = await renderHook(useTestHookWithDefaults, {
       wrapper: withNuqsTestingAdapter({
         searchParams: {
           str: 'foo',
@@ -176,7 +224,7 @@ describe('useQueryStates: referential equality', () => {
   })
 
   it('should keep referential equality when unrelated keys change', async () => {
-    const { result } = renderHook(useTestHookWithDefaults, {
+    const { result, act } = await renderHook(useTestHookWithDefaults, {
       wrapper: withNuqsTestingAdapter({
         searchParams: {
           str: 'foo',
@@ -193,8 +241,8 @@ describe('useQueryStates: referential equality', () => {
     expect(arr).toBe(initialArr)
   })
 
-  it('should keep referential equality when default changes for another key', () => {
-    const { result, rerender } = renderHook(useTestHookWithDefaults, {
+  it('should keep referential equality when default changes for another key', async () => {
+    const { result, rerender } = await renderHook(useTestHookWithDefaults, {
       wrapper: withNuqsTestingAdapter()
     })
     expect(result.current[0].str).toBe('foo')
@@ -234,17 +282,17 @@ describe('useQueryStates: rendering & bail-out', () => {
     }
     const user = userEvent.setup()
     const onUrlUpdate = vi.fn<OnUrlUpdateFunction>()
-    render(<TestComponent />, {
+    await render(<TestComponent />, {
       wrapper: withNuqsTestingAdapter({
         onUrlUpdate,
         searchParams: '?test=init'
       })
     })
-    await expect(screen.findByText('value: init')).resolves.toBeInTheDocument()
+    await expect.element(page.getByText('value: init')).toBeInTheDocument()
     expect(renderCount).toBe(1)
     expect(onUrlUpdate).toHaveBeenCalledTimes(0)
 
-    await user.click(screen.getByRole('button', { name: 'Start' }))
+    await user.click(page.getByRole('button', { name: 'Start' }))
 
     expect(renderCount).toBe(1) // same render count as before
     expect(onUrlUpdate).toHaveBeenCalledTimes(1) // url update is still called
@@ -259,7 +307,7 @@ describe('useQueryStates: urlKeys remapping', () => {
         foo: parseAsString,
         bar: parseAsString
       })
-    const { result } = renderHook(useTestHook, {
+    const { result, act } = await renderHook(useTestHook, {
       wrapper: withNuqsTestingAdapter({
         searchParams: '?foo=init&bar=init',
         onUrlUpdate
@@ -286,7 +334,7 @@ describe('useQueryStates: urlKeys remapping', () => {
           }
         }
       )
-    const { result } = renderHook(useTestHook, {
+    const { result, act } = await renderHook(useTestHook, {
       wrapper: withNuqsTestingAdapter({
         searchParams: '?f=foo&bar=bar',
         onUrlUpdate
@@ -300,7 +348,7 @@ describe('useQueryStates: urlKeys remapping', () => {
   })
 
   it('should have referential equality on the state updater function', async () => {
-    const { result, rerender } = renderHook(
+    const { result, rerender, act } = await renderHook(
       () => useQueryStates({ test: parseAsString }),
       {
         wrapper: withNuqsTestingAdapter()
@@ -323,7 +371,7 @@ describe('useQueryStates: clearOnDefault', () => {
       useQueryStates({
         test: parseAsString.withDefault('default')
       })
-    const { result } = renderHook(useTestHook, {
+    const { result, act } = await renderHook(useTestHook, {
       wrapper: withNuqsTestingAdapter({
         searchParams: '?test=init',
         onUrlUpdate
@@ -343,7 +391,7 @@ describe('useQueryStates: clearOnDefault', () => {
         }),
         b: parseAsString.withDefault('default')
       })
-    const { result } = renderHook(useTestHook, {
+    const { result, act } = await renderHook(useTestHook, {
       wrapper: withNuqsTestingAdapter({
         searchParams: '?a=init&b=init',
         onUrlUpdate
@@ -368,7 +416,7 @@ describe('useQueryStates: clearOnDefault', () => {
           clearOnDefault: false
         }
       )
-    const { result } = renderHook(useTestHook, {
+    const { result, act } = await renderHook(useTestHook, {
       wrapper: withNuqsTestingAdapter({
         searchParams: '?a=init&b=init',
         onUrlUpdate
@@ -393,7 +441,7 @@ describe('useQueryStates: clearOnDefault', () => {
           clearOnDefault: false
         }
       )
-    const { result } = renderHook(useTestHook, {
+    const { result, act } = await renderHook(useTestHook, {
       wrapper: withNuqsTestingAdapter({
         searchParams: '?a=init&b=init',
         onUrlUpdate
@@ -413,13 +461,13 @@ describe('useQueryStates: clearOnDefault', () => {
 })
 
 describe('useQueryStates: dynamic keys', () => {
-  it('supports dynamic keys', () => {
+  it('supports dynamic keys', async () => {
     const useTestHook = (keys: [string, string] = ['a', 'b']) =>
       useQueryStates({
         [keys[0]]: parseAsInteger,
         [keys[1]]: parseAsInteger
       })
-    const { result, rerender } = renderHook(useTestHook, {
+    const { result, rerender } = await renderHook(useTestHook, {
       wrapper: withNuqsTestingAdapter({
         searchParams: '?a=1&b=2&c=3&d=4'
       })
@@ -435,12 +483,12 @@ describe('useQueryStates: dynamic keys', () => {
     expect(result.current[0].d).toEqual(4)
   })
 
-  it('updating keys also updates the result structure', () => {
+  it('updating keys also updates the result structure', async () => {
     const useTestHook = (keys: string[] = ['a', 'b']) =>
       useQueryStates(
         keys.reduce((acc, key) => ({ ...acc, [key]: parseAsInteger }), {})
       )
-    const { result, rerender } = renderHook(useTestHook, {
+    const { result, rerender } = await renderHook(useTestHook, {
       wrapper: withNuqsTestingAdapter({
         searchParams: ''
       })
@@ -454,7 +502,7 @@ describe('useQueryStates: dynamic keys', () => {
     expect(result.current[0]).toStrictEqual({ a: null, b: null, d: null })
   })
 
-  it('supports dynamic keys with remapping', () => {
+  it('supports dynamic keys with remapping', async () => {
     const useTestHook = (keys: [string, string] = ['a', 'b']) =>
       useQueryStates(
         {
@@ -469,7 +517,7 @@ describe('useQueryStates: dynamic keys', () => {
           }
         }
       )
-    const { result, rerender } = renderHook(useTestHook, {
+    const { result, rerender } = await renderHook(useTestHook, {
       wrapper: withNuqsTestingAdapter({
         searchParams: '?x=1&y=2&z=3'
       })
@@ -495,7 +543,7 @@ describe('useQueryStates: dynamic keys', () => {
 describe('useQueryStates: update sequencing', () => {
   it('should combine updates for a single key made in the same event loop tick', async () => {
     const onUrlUpdate = vi.fn<OnUrlUpdateFunction>()
-    const { result } = renderHook(
+    const { result, act } = await renderHook(
       () => useQueryStates({ test: parseAsString }),
       {
         wrapper: withNuqsTestingAdapter({
@@ -513,7 +561,7 @@ describe('useQueryStates: update sequencing', () => {
 
   it('should combine updates for multiple keys in the same hook made in the same event loop tick', async () => {
     const onUrlUpdate = vi.fn<OnUrlUpdateFunction>()
-    const { result } = renderHook(
+    const { result, act } = await renderHook(
       () => useQueryStates({ a: parseAsString, b: parseAsString }),
       {
         wrapper: withNuqsTestingAdapter({
@@ -531,7 +579,7 @@ describe('useQueryStates: update sequencing', () => {
 
   it('should combine updates for multiple keys in different hook made in the same event loop tick', async () => {
     const onUrlUpdate = vi.fn<OnUrlUpdateFunction>()
-    const { result } = renderHook(
+    const { result, act } = await renderHook(
       () => ({
         a: useQueryStates({ a: parseAsString }),
         b: useQueryStates({ b: parseAsString })
@@ -551,7 +599,7 @@ describe('useQueryStates: update sequencing', () => {
   })
 
   it('should return a stable Promise when pushing multiple updates in the same tick', async () => {
-    const { result } = renderHook(
+    const { result, act } = await renderHook(
       () =>
         useQueryStates({
           a: parseAsString,
@@ -575,7 +623,7 @@ describe('useQueryStates: update sequencing', () => {
   })
 
   it('should return a stable Promise when pushing multiple updates in the same tick (multiple useQueryStates)', async () => {
-    const { result } = renderHook(
+    const { result, act } = await renderHook(
       () => ({
         foo: useQueryStates({ a: parseAsString }),
         bar: useQueryStates({ b: parseAsString })
@@ -598,7 +646,7 @@ describe('useQueryStates: update sequencing', () => {
   })
 
   it('should return a stable Promise when pushing updates before the throttle period times out', async () => {
-    const { result } = renderHook(
+    const { result, act } = await renderHook(
       () => ({
         foo: useQueryStates({ a: parseAsString }),
         bar: useQueryStates({ b: parseAsString })
@@ -633,7 +681,7 @@ describe('useQueryStates: update sequencing', () => {
   })
 
   it('should return the same Promise as useQueryState', async () => {
-    const { result } = renderHook(
+    const { result, act } = await renderHook(
       () => ({
         foo: useQueryStates({ a: parseAsString }),
         bar: useQueryState('b')
@@ -669,7 +717,7 @@ describe('useQueryStates: update sequencing', () => {
 
   it('should return a new Promise when using debounce', async () => {
     const onUrlUpdate = vi.fn<OnUrlUpdateFunction>()
-    const { result } = renderHook(
+    const { result, act } = await renderHook(
       () => ({
         foo: useQueryStates({
           a: parseAsString.withOptions({ limitUrlUpdates: debounce(100) })
@@ -706,7 +754,7 @@ describe('useQueryStates: update sequencing', () => {
 
   it('aborts a debounced update when pushing a throttled one', async () => {
     const onUrlUpdate = vi.fn<OnUrlUpdateFunction>()
-    const { result } = renderHook(
+    const { result, act } = await renderHook(
       () =>
         useQueryStates({
           test: parseAsString
@@ -740,7 +788,7 @@ describe('useQueryStates: update sequencing', () => {
 
   it('does not abort when pushing another key', async () => {
     const onUrlUpdate = vi.fn<OnUrlUpdateFunction>()
-    const { result } = renderHook(
+    const { result, act } = await renderHook(
       () =>
         useQueryStates({
           a: parseAsString.withOptions({ limitUrlUpdates: debounce(100) }),
@@ -773,7 +821,7 @@ describe('useQueryStates: update sequencing', () => {
 
   it('does flush when pushing throttled updates', async () => {
     const onUrlUpdate = vi.fn<OnUrlUpdateFunction>()
-    const { result } = renderHook(
+    const { result, act } = await renderHook(
       () => useQueryStates({ test: parseAsString }),
       {
         wrapper: withNuqsTestingAdapter({
@@ -797,7 +845,7 @@ describe('useQueryStates: update sequencing', () => {
 
   it('does not flush when pushing debounced updates', async () => {
     const onUrlUpdate = vi.fn<OnUrlUpdateFunction>()
-    const { result } = renderHook(
+    const { result, act } = await renderHook(
       () => useQueryStates({ test: parseAsString }),
       {
         wrapper: withNuqsTestingAdapter({
@@ -832,7 +880,7 @@ describe('useQueryStates: adapter defaults', () => {
   it('should use adapter default value for `shallow` when provided', async () => {
     const onUrlUpdate = vi.fn<OnUrlUpdateFunction>()
     const useTestHook = () => useQueryStates({ test: parseAsString })
-    const { result } = renderHook(useTestHook, {
+    const { result, act } = await renderHook(useTestHook, {
       wrapper: withNuqsTestingAdapter({
         defaultOptions: {
           shallow: false
@@ -847,7 +895,7 @@ describe('useQueryStates: adapter defaults', () => {
   it('should use adapter default value for `scroll` when provided', async () => {
     const onUrlUpdate = vi.fn<OnUrlUpdateFunction>()
     const useTestHook = () => useQueryStates({ test: parseAsString })
-    const { result } = renderHook(useTestHook, {
+    const { result, act } = await renderHook(useTestHook, {
       wrapper: withNuqsTestingAdapter({
         defaultOptions: {
           scroll: true
@@ -863,7 +911,7 @@ describe('useQueryStates: adapter defaults', () => {
     const onUrlUpdate = vi.fn<OnUrlUpdateFunction>()
     const useTestHook = () =>
       useQueryStates({ test: parseAsString.withDefault('pass') })
-    const { result } = renderHook(useTestHook, {
+    const { result, act } = await renderHook(useTestHook, {
       wrapper: withNuqsTestingAdapter({
         defaultOptions: {
           clearOnDefault: false
@@ -881,7 +929,7 @@ describe('useQueryStates: process url search params', () => {
   it('should use adapter processUrlSearchParams when provided', async () => {
     const onUrlUpdate = vi.fn<OnUrlUpdateFunction>()
     const useTestHook = () => useQueryStates({ test: parseAsString })
-    const { result } = renderHook(useTestHook, {
+    const { result, act } = await renderHook(useTestHook, {
       wrapper: withNuqsTestingAdapter({
         processUrlSearchParams: search => {
           const params = new URLSearchParams(search)
@@ -920,17 +968,17 @@ describe('useQueryStates: process url search params', () => {
       })
     }
     const useTestHook = () => useQueryStates({ test: parseAsString })
-    const { result } = renderHook(useTestHook, {
+    const { result, act } = await renderHook(useTestHook, {
       wrapper: DynamicWrapper
     })
-    const button = screen.getByTestId('btn')
-    expect(button.getAttribute('data-state')).toBe('off')
+    const button = page.getByTestId('btn')
+    expect(button.element().getAttribute('data-state')).toBe('off')
     await act(() => result.current[1]({ test: 'pass' }))
     expect(onUrlUpdate).toHaveBeenCalledOnce()
     expect(onUrlUpdate.mock.calls[0]![0].queryString).toBe('?test=pass')
     onUrlUpdate.mockReset()
-    act(() => button.click())
-    expect(button.getAttribute('data-state')).toBe('on')
+    await act(() => button.click())
+    expect(button.element().getAttribute('data-state')).toBe('on')
     await act(() => result.current[1]({ test: 'fail-if-kept' }))
     expect(onUrlUpdate).toHaveBeenCalledOnce()
     expect(onUrlUpdate.mock.calls[0]![0].queryString).toBe('?test=processed')
@@ -938,7 +986,7 @@ describe('useQueryStates: process url search params', () => {
   it('should call processUrlSearchParams after a debounced update', async () => {
     const onUrlUpdate = vi.fn<OnUrlUpdateFunction>()
     const useTestHook = () => useQueryStates({ test: parseAsString })
-    const { result } = renderHook(useTestHook, {
+    const { result, act } = await renderHook(useTestHook, {
       wrapper: withNuqsTestingAdapter({
         processUrlSearchParams: search => {
           expect(search.get('test')).toBe('fail')
@@ -994,21 +1042,15 @@ describe('useQueryStates: edge cases & repros', () => {
         hasMemory: true // needs memory for the test to pass
       })
     })
-    await expect(
-      screen.findByTestId('null-detector')
-    ).resolves.toHaveTextContent('pass')
-    await expect(
-      screen.findByText('isLoading: false')
-    ).resolves.toBeInTheDocument()
-    await user.click(screen.getByRole('button', { name: 'Start' }))
-    await expect(
-      screen.findByText('isLoading: true')
-    ).resolves.toBeInTheDocument()
-    await expect(
-      screen.findByText('isLoading: false')
-    ).resolves.toBeInTheDocument()
-    await expect(
-      screen.findByTestId('null-detector')
-    ).resolves.toHaveTextContent('pass')
+    await expect
+      .element(page.getByTestId('null-detector'))
+      .toHaveTextContent('pass')
+    await expect.element(page.getByText('isLoading: false')).toBeInTheDocument()
+    await user.click(page.getByRole('button', { name: 'Start' }))
+    await expect.element(page.getByText('isLoading: true')).toBeInTheDocument()
+    await expect.element(page.getByText('isLoading: false')).toBeInTheDocument()
+    await expect
+      .element(page.getByTestId('null-detector'))
+      .toHaveTextContent('pass')
   })
 })

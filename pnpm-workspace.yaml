@@ -5,11 +5,16 @@ catalogs:
   e2e:
     cypress: ^14.5.4
     start-server-and-test: ^2.0.13
+    playwright: ^1.57.0
+
+  next:
+    next: ^16.0.9
+
   react19:
     '@types/react': ^19.2.7
     '@types/react-dom': ^19.2.3
-    react: ^19.2.1
-    react-dom: ^19.2.1
+    react: ^19.2.2
+    react-dom: ^19.2.2
 
 enablePrePostScripts: true
 
@@ -18,5 +23,6 @@ onlyBuiltDependencies:
   - '@swc/core'
   - '@tailwindcss/oxide'
   - cypress
+  - playwright
   - esbuild
   - sharp

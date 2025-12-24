@@ -13,7 +13,7 @@
     // Language & Environment
     "target": "ESNext",
     "lib": ["DOM", "DOM.Iterable", "ESNext"],
-    "types": ["node", "@testing-library/jest-dom"],
+    "types": ["node"],
     // Emit
     "noEmit": true,
     "declaration": true,
