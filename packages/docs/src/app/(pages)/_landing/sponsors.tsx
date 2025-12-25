@@ -216,7 +216,7 @@ export function SponsorsSection() {
               className="stroke-background"
             />
           </svg>
-          <span className="text-3xl font-semibold">shadcnstudio</span>
+          <span className="mb-px text-3xl font-semibold">shadcn/studio</span>
         </a>
       </div>
       <ul className="container flex flex-wrap justify-center gap-x-4 gap-y-12 md:gap-x-6 lg:gap-x-8">
