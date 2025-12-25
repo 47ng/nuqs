@@ -57,8 +57,9 @@ jobs:
         uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4
         if: failure()
         with:
-          path: packages/e2e/next/playwright-report
+          path: packages/e2e/next/.playwright/*
           name: playwright-next-${{ env.VERSION }}${{ matrix.base-path && '-basePath' || ''}}${{ matrix.react-compiler && '-react-compiler' || ''}}
+          include-hidden-files: true
       - uses: 47ng/actions-slack-notify@main
         name: Notify on Slack
         if: failure()
