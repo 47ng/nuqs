@@ -7,13 +7,10 @@
     "build": "remix vite:build",
     "dev": "remix vite:dev --port 3003",
     "start": "cross-env NODE_ENV=production PORT=3003 remix-serve ./build/server/index.js",
-    "pretest": "cypress install && playwright install chromium",
-    "test": "pnpm run test:types && pnpm run test:playwright && pnpm run test:cypress",
+    "pretest": "playwright install chromium",
+    "test": "pnpm run --stream '/^test:/'",
     "test:types": "tsc",
-    "test:playwright": "playwright test --project=chromium",
-    "test:cypress": "start-server-and-test start http://localhost:3003 cypress:run",
-    "cypress:open": "cypress open",
-    "cypress:run": "cross-env FORCE_COLOR=3 cypress run --headless"
+    "test:playwright": "playwright test --project=chromium"
   },
   "dependencies": {
     "@remix-run/node": "^2.17.0",
@@ -30,9 +27,7 @@
     "@types/react": "catalog:react19",
     "@types/react-dom": "catalog:react19",
     "cross-env": "^10.0.0",
-    "cypress": "catalog:e2e",
     "e2e-shared": "workspace:*",
-    "start-server-and-test": "catalog:e2e",
     "typescript": "^5.9.2",
     "vite": "^7.1.11",
     "vite-tsconfig-paths": "^5.1.4"

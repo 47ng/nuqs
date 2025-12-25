@@ -14,7 +14,7 @@ export const testNativeArray = defineTest('parseAsNativeArray', ({ path }) => {
     await navigateTo(page, path)
     await expect(page.locator('#client-name')).toBeEmpty()
     // Note: adding assertions after each action to ensure proper sequencing
-    // (otherwise Playwright is faster than Cypress and pools all actions into one URL update)
+    // (otherwise Playwright pools all actions into one URL update)
     await page.locator('#add-button').click()
     await expect(page.locator('#client-name')).toHaveText('1')
     await expect(page).toHaveURL(url => url.search === '?test=1')

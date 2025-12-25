@@ -7,13 +7,10 @@
     "dev": "vite --port 3005",
     "build": "vite build",
     "start": "vite preview --port 3005",
-    "pretest": "cypress install && playwright install chromium",
-    "test": "pnpm run test:types && pnpm run test:playwright && pnpm run test:cypress",
+    "pretest": "playwright install chromium",
+    "test": "pnpm run --stream '/^test:/'",
     "test:types": "tsc -b",
-    "test:playwright": "playwright test --project=chromium",
-    "test:cypress": "start-server-and-test start http://localhost:3005 cypress:run",
-    "cypress:open": "cypress open",
-    "cypress:run": "cross-env FORCE_COLOR=3 cypress run --headless"
+    "test:playwright": "playwright test --project=chromium"
   },
   "dependencies": {
     "nuqs": "workspace:*",
@@ -28,10 +25,7 @@
     "@types/react-dom": "catalog:react19",
     "@types/react-router-dom": "^5.3.3",
     "@vitejs/plugin-react": "^5.0.1",
-    "cross-env": "^10.0.0",
-    "cypress": "catalog:e2e",
     "e2e-shared": "workspace:*",
-    "start-server-and-test": "catalog:e2e",
     "typescript": "^5.9.2",
     "vite": "^7.1.11"
   }

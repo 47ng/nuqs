@@ -6,13 +6,10 @@
     "build": "react-router build",
     "dev": "react-router dev --port 3007",
     "start": "cross-env NODE_ENV=production ./server.mjs",
-    "pretest": "cypress install && playwright install chromium",
-    "test": "pnpm run test:types && pnpm run test:playwright && pnpm run test:cypress",
+    "pretest": "playwright install chromium",
+    "test": "pnpm run --stream '/^test:/'",
     "test:types": "react-router typegen && tsc",
-    "test:playwright": "playwright test --project=chromium",
-    "test:cypress": "start-server-and-test start http://localhost:3007 cypress:run",
-    "cypress:open": "cypress open",
-    "cypress:run": "cross-env FORCE_COLOR=3 cypress run --headless"
+    "test:playwright": "playwright test --project=chromium"
   },
   "dependencies": {
     "@react-router/node": "^7.8.1",
@@ -32,10 +29,8 @@
     "@types/react-dom": "catalog:react19",
     "compression": "^1.8.1",
     "cross-env": "^10.0.0",
-    "cypress": "catalog:e2e",
     "e2e-shared": "workspace:*",
     "express": "^4.22.0",
-    "start-server-and-test": "catalog:e2e",
     "typescript": "^5.9.2",
     "vite": "^7.1.11",
     "vite-tsconfig-paths": "^5.1.4"

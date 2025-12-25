@@ -14,12 +14,8 @@
     "dev": "next dev --port 3001",
     "build": "next build",
     "start": "NODE_OPTIONS='--enable-source-maps=true' next start --port 3001",
-    "pretest": "cypress install && playwright install chromium",
-    "test": "pnpm run test:playwright && pnpm run test:cypress",
-    "test:cypress": "start-server-and-test start http://localhost:3001${BASE_PATH} cypress:run",
-    "test:playwright": "playwright test --project=chromium",
-    "cypress:open": "cypress open --e2e --browser electron",
-    "cypress:run": "cypress run --headless"
+    "pretest": "playwright install chromium",
+    "test": "playwright test --project=chromium"
   },
   "dependencies": {
     "next": "catalog:next",
@@ -35,11 +31,8 @@
     "@types/semver": "^7.7.1",
     "@types/webpack": "^5.28.5",
     "babel-plugin-react-compiler": "1.0.0",
-    "cypress": "catalog:e2e",
-    "cypress-terminal-report": "^7.2.1",
     "e2e-shared": "workspace:*",
     "semver": "^7.7.3",
-    "start-server-and-test": "catalog:e2e",
     "typescript": "^5.9.2"
   }
 }
