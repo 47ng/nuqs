@@ -8,7 +8,7 @@ import { markHistoryAsPatched, shouldPatchHistory } from '../lib/patch-history'
 
 // See: https://github.com/47ng/nuqs/issues/603#issuecomment-2317057128
 // and https://github.com/47ng/nuqs/discussions/960#discussioncomment-12699171
-const NUM_HISTORY_CALLS_PER_UPDATE = 2 // todo: Revert back to 3
+const NUM_HISTORY_CALLS_PER_UPDATE = 3
 
 let mutex = 0
 
