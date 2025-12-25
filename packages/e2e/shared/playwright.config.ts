@@ -24,7 +24,8 @@ export function configurePlaywright({
     ],
     use: {
       baseURL: ensureTrailingSlash(`http://localhost:${port}${basePath}`),
-      trace: 'on-first-retry'
+      trace: 'on-first-retry',
+      screenshot: 'only-on-failure'
     },
     projects: [
       {
