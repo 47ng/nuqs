@@ -6,7 +6,7 @@ test.describe('cache', () => {
     await navigateTo(
       page,
       '/app/cache',
-      '?str=foo&num=42&idx=1&bool=true&multi=foo&multi=bar'
+      '?str=goo&num=42&idx=1&bool=true&multi=foo&multi=bar'
     )
     await expect(page.locator('#parse-str')).toHaveText('foo')
     await expect(page.locator('#parse-num')).toHaveText('42')
