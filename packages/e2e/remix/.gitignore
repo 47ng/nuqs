@@ -5,5 +5,5 @@ node_modules
 .env
 
 # Playwright
-playwright-report/
-test-results/
+.playwright/
+

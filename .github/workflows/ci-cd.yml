@@ -186,7 +186,7 @@ jobs:
         uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4
         if: failure()
         with:
-          path: packages/e2e/next/playwright-report
+          path: packages/e2e/next/.playwright
           name: playwright-next-${{ matrix.next-version }}${{ matrix.base-path && '-basePath' || ''}}${{ matrix.react-compiler && '-react-compiler' || ''}}
       - uses: 47ng/actions-slack-notify@main
         name: Notify on Slack
@@ -225,7 +225,7 @@ jobs:
         uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4
         if: failure()
         with:
-          path: packages/e2e/react/playwright-report
+          path: packages/e2e/react/.playwright
           name: playwright-react-fpn-${{ matrix.full-page-nav-on-shallow-false }}
       - uses: 47ng/actions-slack-notify@main
         name: Notify on Slack
@@ -265,7 +265,7 @@ jobs:
         uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4
         if: failure()
         with:
-          path: packages/e2e/react-router/${{ matrix.react-router-version }}/playwright-report
+          path: packages/e2e/react-router/${{ matrix.react-router-version }}/.playwright
           name: playwright-react-router-${{ matrix.react-router-version }}
       - uses: 47ng/actions-slack-notify@main
         name: Notify on Slack
@@ -299,7 +299,7 @@ jobs:
         uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4
         if: failure()
         with:
-          path: packages/e2e/remix/playwright-report
+          path: packages/e2e/remix/.playwright
           name: playwright-remix
       - uses: 47ng/actions-slack-notify@main
         name: Notify on Slack
@@ -333,7 +333,7 @@ jobs:
         uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4
         if: failure()
         with:
-          path: packages/e2e/tanstack-router/playwright-report
+          path: packages/e2e/tanstack-router/.playwright
           name: playwright-tanstack-router
       - uses: 47ng/actions-slack-notify@main
         name: Notify on Slack

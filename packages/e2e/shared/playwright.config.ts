@@ -13,14 +13,14 @@ export function configurePlaywright({
 }: ConfigurePlaywright) {
   return defineConfig({
     testDir: './specs',
-    outputDir: './node_modules/.playwright/test-results/',
+    outputDir: '.playwright/test-results',
     fullyParallel: true,
     retries: process.env.CI ? 2 : 0,
     workers: process.env.CI ? 3 : undefined,
     timeout: 5_000,
     reporter: [
-      ['list', { printSteps: true }],
-      process.env.CI ? ['github'] : ['html', { open: 'never' }]
+      ['list', { printSteps: !process.env.CI }],
+      ['html', { open: 'never', outputFolder: '.playwright/report' }]
     ],
     use: {
       baseURL: ensureTrailingSlash(`http://localhost:${port}${basePath}`),
