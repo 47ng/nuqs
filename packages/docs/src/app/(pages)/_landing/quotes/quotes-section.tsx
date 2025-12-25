@@ -366,6 +366,30 @@ export function QuotesSection() {
         text="Currently Using nuqs to add some pagination and searching feature into my nextjs app and i am loving it"
         url="https://x.com/surajtwt_/status/1982684604307034362"
       />
+      <Quote
+        author={{
+          name: 'Ajay Patel',
+          handle: '@ajaypatel_aj',
+          avatar:
+            'https://pbs.twimg.com/profile_images/1957717329397141507/7ctDgOuc_400x400.jpg'
+        }}
+        text={
+          <>
+            <p>
+              Big thanks to nuqs for making URL state management actually
+              enjoyable! 🙌
+            </p>
+            <ul>
+              <li>useState but synced with the URL? ✅</li>
+              <li>Type-safe? ✅</li>
+              <li>Works everywhere (Next.js, Remix, React Router)? ✅</li>
+              <li>Only 6kb? ✅</li>
+            </ul>
+            <p>Happy to support such a well-crafted library 😇</p>
+          </>
+        }
+        url="https://x.com/ajaypatel_aj/status/2004082719047778362"
+      />
     </section>
   )
 }
