@@ -102,11 +102,13 @@ test.describe('Reproduction for issue #630', () => {
 
 test.describe('repro-758', () => {
   test('honors urlKeys when navigating back after a push', async ({ page }) => {
-    await navigateTo(page, '/app/repro-758')
+    await navigateTo(page, '/app/repro-758', '?q=init')
     await page.locator('button').click()
     await expect(page.locator('#state')).toHaveText('test')
+    await expectSearch(page, { q: 'test' })
     await page.goBack()
-    await expect(page.locator('#state')).toBeEmpty()
+    await expect(page.locator('#state')).toHaveText('init')
+    await expectUrl(page, url => url.search === '?q=init')
   })
 })
 
