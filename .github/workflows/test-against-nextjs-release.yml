@@ -53,12 +53,13 @@ jobs:
           TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
           TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
           E2E_NO_CACHE_ON_RERUN: ${{ github.run_attempt }}
-      - name: Save Cypress artifacts
+      - name: Save Playwright report
         uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4
         if: failure()
         with:
-          path: packages/e2e-next/cypress/screenshots
-          name: ci-next-${{ env.VERSION }}${{ matrix.base-path && '-basePath' || ''}}${{ matrix.react-compiler && '-react-compiler' || ''}}
+          path: packages/e2e/next/.playwright/*
+          name: playwright-next-${{ env.VERSION }}${{ matrix.base-path && '-basePath' || ''}}${{ matrix.react-compiler && '-react-compiler' || ''}}
+          include-hidden-files: true
       - uses: 47ng/actions-slack-notify@main
         name: Notify on Slack
         if: failure()
