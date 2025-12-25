@@ -149,7 +149,7 @@ export function SponsorsSection() {
         >
           <span
             role="presentation"
-            className="mx-auto block h-[25.5px] w-[270px] bg-white [mask-image:url('https://nextjsweekly.com/logo.svg')] [mask-size:100%] [mask-position:center] [mask-repeat:no-repeat]"
+            className="mx-auto block h-[25.5px] w-[270px] bg-foreground [mask-image:url('https://nextjsweekly.com/logo.svg')] [mask-size:100%] [mask-position:center] [mask-repeat:no-repeat]"
           />
           <span className="sr-only">Next.js Weekly</span>
         </a>
