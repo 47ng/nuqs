@@ -8,7 +8,7 @@ catalogs:
     playwright: ^1.57.0
 
   next:
-    next: ^16.0.9
+    next: ^16.1.0
 
   react19:
     '@types/react': ^19.2.7
