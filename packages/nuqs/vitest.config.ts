@@ -39,7 +39,8 @@ const config: ViteUserConfig = defineConfig({
           browser: {
             enabled: true,
             provider: playwright(),
-            instances: [{ browser: 'chromium' }]
+            instances: [{ browser: 'chromium' }],
+            screenshotFailures: false
           }
         }
       },

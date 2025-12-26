@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import { getSearchParams, isAbsentFromUrl, write } from './search-params'
 
 describe('search-params/isAbsentFromUrl', () => {
@@ -55,8 +55,7 @@ describe('search-params/getSearchParams', () => {
     expect(received).toEqual(expected)
   })
   it('extracts search params from a pathname', () => {
-    vi.stubGlobal('location', { origin: 'http://example.com' })
-    const received = getSearchParams('/?foo=bar')
+    const received = getSearchParams('/path/to/?foo=bar')
     const expected = new URLSearchParams('?foo=bar')
     expect(received).toEqual(expected)
   })
