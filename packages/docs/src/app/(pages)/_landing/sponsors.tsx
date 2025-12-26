@@ -113,16 +113,10 @@ const SPONSORS: Sponsors = [
     title: 'Front end developer'
   },
   {
-    handle: 'lpbonomi',
-    name: 'Luis Pedro Bonomi',
-    url: 'https://github.com/lpbonomi',
-    img: 'https://avatars.githubusercontent.com/u/38361000?s=200&v=4'
-  },
-  {
     handle: 'dominikkoch',
     name: 'Dominik Koch',
     url: 'https://dominikkoch.dev',
-    img: 'https://avatars.githubusercontent.com/u/68947960?v=4',
+    img: 'https://avatars.githubusercontent.com/u/68947960?s=200&v=4',
     title: (
       <>
         Co-Founder of{' '}
@@ -131,6 +125,18 @@ const SPONSORS: Sponsors = [
         </a>
       </>
     )
+  },
+  {
+    handle: 'lpbonomi',
+    name: 'Luis Pedro Bonomi',
+    url: 'https://github.com/lpbonomi',
+    img: 'https://avatars.githubusercontent.com/u/38361000?s=200&v=4'
+  },
+  {
+    handle: '@RhysSullivan',
+    name: 'Rhys Sullivan',
+    url: 'https://rhys.dev',
+    img: 'https://avatars.githubusercontent.com/u/39114868?s=200&v=4'
   }
 ]
 
@@ -149,7 +155,7 @@ export function SponsorsSection() {
         >
           <span
             role="presentation"
-            className="mx-auto block h-[25.5px] w-[270px] bg-foreground [mask-image:url('https://nextjsweekly.com/logo.svg')] [mask-size:100%] [mask-position:center] [mask-repeat:no-repeat]"
+            className="bg-foreground mx-auto block h-[25.5px] w-[270px] [mask-image:url('https://nextjsweekly.com/logo.svg')] [mask-size:100%] [mask-position:center] [mask-repeat:no-repeat]"
           />
           <span className="sr-only">Next.js Weekly</span>
         </a>
