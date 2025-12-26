@@ -173,7 +173,6 @@
     "@types/node": "^24.3.0",
     "@types/react": "catalog:react19",
     "@types/react-dom": "catalog:react19",
-    "@vitejs/plugin-react": "^5.0.4",
     "@vitest/browser-playwright": "^4.0.15",
     "@vitest/coverage-v8": "^4.0.15",
     "arktype": "^2.1.20",
