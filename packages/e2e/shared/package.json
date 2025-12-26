@@ -10,8 +10,7 @@
     "playwright/expect-url.ts",
     "playwright/log-spy.ts",
     "playwright/navigate.ts",
-    "playwright/url-spy.ts",
-    "define-test.ts"
+    "playwright/url-spy.ts"
   ],
   "peerDependencies": {
     "nuqs": "workspace:*"
@@ -20,10 +19,8 @@
     "@playwright/test": "catalog:e2e",
     "@types/node": "^24.3.0",
     "@types/react": "catalog:react19",
-    "@types/react-dom": "catalog:react19",
     "nuqs": "workspace:*",
     "react": "catalog:react19",
-    "react-dom": "catalog:react19",
     "typescript": "catalog:typescript"
   }
 }
