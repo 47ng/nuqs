@@ -7,6 +7,7 @@
     "build": "vite build",
     "start": "vite preview --port 3004",
     "pretest": "playwright install chromium",
+    "typegen": "tsr generate",
     "test": "pnpm run --stream '/^test:/'",
     "test:types": "tsc",
     "test:playwright": "playwright test --project=chromium"
@@ -14,6 +15,7 @@
   "dependencies": {
     "@tanstack/react-router": "^1.131.27",
     "@tanstack/react-router-devtools": "^1.131.27",
+    "@tanstack/router-cli": "^1.131.27",
     "@tanstack/router-plugin": "^1.131.27",
     "nuqs": "workspace:*",
     "react": "catalog:react19",
