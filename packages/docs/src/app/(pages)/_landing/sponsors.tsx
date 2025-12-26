@@ -33,6 +33,12 @@ const SPONSORS: Sponsors = [
     img: 'https://avatars.githubusercontent.com/u/136892265?s=200&v=4'
   },
   {
+    handle: 'databuddy.cc',
+    name: 'Databuddy',
+    url: 'https://databuddy.cc?utm_source=nuqs',
+    img: 'https://avatars.githubusercontent.com/u/190393139?v=4'
+  },
+  {
     handle: 'code-store-platform',
     name: 'code.store',
     url: 'https://code.store',
@@ -111,6 +117,20 @@ const SPONSORS: Sponsors = [
     name: 'Luis Pedro Bonomi',
     url: 'https://github.com/lpbonomi',
     img: 'https://avatars.githubusercontent.com/u/38361000?s=200&v=4'
+  },
+  {
+    handle: 'dominikkoch',
+    name: 'Dominik Koch',
+    url: 'https://dominikkoch.dev',
+    img: 'https://avatars.githubusercontent.com/u/68947960?v=4',
+    title: (
+      <>
+        Co-Founder of{' '}
+        <a href="https://marblecms.com" className="hover:underline">
+          Marble
+        </a>
+      </>
+    )
   }
 ]
 
@@ -120,28 +140,99 @@ export function SponsorsSection() {
       <h2 className="mb-12 text-center text-3xl font-bold tracking-tighter md:text-4xl xl:text-5xl dark:text-white">
         Sponsors
       </h2>
-      <p className="mb-12 flex justify-center">
+      <div className="mb-12 flex flex-wrap items-center justify-center gap-8">
         <a
           href="https://nextjsweekly.com?utm_source=nuqs&utm_medium=sponsor&utm_campaign=nuqs"
           target="_blank"
           rel="noopener noreferrer"
-          className="mx-auto block p-2"
+          className="block p-2"
         >
           <span
             role="presentation"
-            className="mx-auto block h-[25.5px] w-[270px] bg-white [mask-image:url('https://nextjsweekly.com/logo.svg')] [mask-size:100%] [mask-position:center] [mask-repeat:no-repeat]"
+            className="mx-auto block h-[25.5px] w-[270px] bg-foreground [mask-image:url('https://nextjsweekly.com/logo.svg')] [mask-size:100%] [mask-position:center] [mask-repeat:no-repeat]"
           />
           <span className="sr-only">Next.js Weekly</span>
         </a>
-      </p>
-      <ul className="container grid grid-cols-2 gap-y-12 md:grid-cols-3 lg:grid-cols-6">
+        <a
+          href="https://shadcnstudio.com/?utm_source=nuqs&utm_medium=sponsor&utm_campaign=nuqs"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-3 p-2"
+        >
+          <svg
+            viewBox="0 0 328 329"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            className="size-8"
+            aria-hidden
+          >
+            <rect
+              y="0.5"
+              width="328"
+              height="328"
+              rx="164"
+              fill="currentColor"
+            />
+            <path
+              d="M165.018 72.3008V132.771C165.018 152.653 148.9 168.771 129.018 168.771H70.2288"
+              strokeWidth="20"
+              className="stroke-background"
+            />
+            <path
+              d="M166.627 265.241L166.627 204.771C166.627 184.889 182.744 168.771 202.627 168.771L261.416 168.771"
+              strokeWidth="20"
+              className="stroke-background"
+            />
+            <line
+              x1="238.136"
+              y1="98.8184"
+              x2="196.76"
+              y2="139.707"
+              strokeWidth="20"
+              className="stroke-background"
+            />
+            <line
+              x1="135.688"
+              y1="200.957"
+              x2="94.3128"
+              y2="241.845"
+              strokeWidth="20"
+              className="stroke-background"
+            />
+            <line
+              x1="133.689"
+              y1="137.524"
+              x2="92.5566"
+              y2="96.3914"
+              strokeWidth="20"
+              className="stroke-background"
+            />
+            <line
+              x1="237.679"
+              y1="241.803"
+              x2="196.547"
+              y2="200.671"
+              strokeWidth="20"
+              className="stroke-background"
+            />
+          </svg>
+          <span className="mb-px text-3xl font-semibold">shadcn/studio</span>
+        </a>
+      </div>
+      <ul className="container flex flex-wrap justify-center gap-x-4 gap-y-12 md:gap-x-6 lg:gap-x-8">
         {SPONSORS.map(sponsor => (
-          <li key={sponsor.handle} className="flex flex-col items-center">
-            <a href={sponsor.url} className="h-32 w-32 rounded-full">
+          <li
+            key={sponsor.handle}
+            className="flex w-1/2 flex-col items-center md:w-1/3 lg:w-1/6"
+          >
+            <a
+              href={sponsor.url}
+              className="flex h-32 w-32 items-center justify-center rounded-full"
+            >
               <img
                 src={sponsor.img}
                 alt={sponsor.name ?? sponsor.handle}
-                className="mx-auto size-32 rounded-full"
+                className="size-32 rounded-full"
                 width={128}
                 height={128}
               />
@@ -237,7 +328,14 @@ export function AsideSponsors() {
           Sponsored by
         </h3>
       </a>
-      <NextJSWeeklyAsideSponsor />
+      <ul className="space-y-2">
+        <li>
+          <NextJSWeeklyAsideSponsor />
+        </li>
+        <li>
+          <ShadcnStudioAsideSponsor />
+        </li>
+      </ul>
     </aside>
   )
 }
@@ -270,6 +368,92 @@ export function NextJSWeeklyAsideSponsor() {
         <p className="text-sm">Stay up to date on Next.js</p>
         <p className="text-muted-foreground text-xs">
           A weekly newsletter to keep up with what's happening in the ecosystem.
+        </p>
+      </section>
+    </a>
+  )
+}
+
+export function ShadcnStudioAsideSponsor() {
+  return (
+    <a
+      href="https://shadcnstudio.com/?utm_source=nuqs&utm_medium=banner&utm_campaign=github"
+      target="_blank"
+      rel="noopener noreferrer"
+      className="group"
+    >
+      <section className="text-muted-foreground space-y-4 rounded-md border border-dashed px-4 py-6 transition-colors group-hover:text-current group-active:text-current">
+        <header className="mx-auto flex items-center justify-center gap-2">
+          <svg
+            viewBox="0 0 328 329"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            className="size-8"
+            aria-hidden
+          >
+            <rect
+              y="0.5"
+              width="328"
+              height="328"
+              rx="164"
+              fill="currentColor"
+            />
+            <path
+              d="M165.018 72.3008V132.771C165.018 152.653 148.9 168.771 129.018 168.771H70.2288"
+              strokeWidth="20"
+              className="stroke-background"
+            />
+            <path
+              d="M166.627 265.241L166.627 204.771C166.627 184.889 182.744 168.771 202.627 168.771L261.416 168.771"
+              strokeWidth="20"
+              className="stroke-background"
+            />
+            <line
+              x1="238.136"
+              y1="98.8184"
+              x2="196.76"
+              y2="139.707"
+              strokeWidth="20"
+              className="stroke-background"
+            />
+            <line
+              x1="135.688"
+              y1="200.957"
+              x2="94.3128"
+              y2="241.845"
+              strokeWidth="20"
+              className="stroke-background"
+            />
+            <line
+              x1="133.689"
+              y1="137.524"
+              x2="92.5566"
+              y2="96.3914"
+              strokeWidth="20"
+              className="stroke-background"
+            />
+            <line
+              x1="237.679"
+              y1="241.803"
+              x2="196.547"
+              y2="200.671"
+              strokeWidth="20"
+              className="stroke-background"
+            />
+          </svg>
+          <div className="flex flex-col">
+            <span className="text-sm leading-tight font-medium">
+              shadcnstudio.com
+            </span>
+            <span className="text-muted-foreground text-xs">
+              shadcn blocks & templates
+            </span>
+          </div>
+        </header>
+        <p className="text-muted-foreground text-center text-xs">
+          Accelerate your project development with ready-to-use, and fully
+          customizable shadcn ui Components, Blocks, UI Kits, Boilerplates,
+          Templates and Themes with AI Tools 🪄.
         </p>
       </section>
     </a>

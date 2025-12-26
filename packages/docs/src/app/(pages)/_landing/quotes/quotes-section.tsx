@@ -77,7 +77,7 @@ export function QuotesSection() {
           name: 'ahmet',
           handle: '@bruvimtired',
           avatar:
-            'https://pbs.twimg.com/profile_images/1974628705839267840/aMCXsAyI_400x400.jpg'
+            'https://pbs.twimg.com/profile_images/1991136440135106560/KtTAASs0_400x400.jpg'
         }}
         text="nuqs has to be one of the best libraries out there. lifting state to the url is so easy now and far better for ux."
         url="https://x.com/bruvimtired/status/1944437102562759144"
@@ -129,7 +129,7 @@ export function QuotesSection() {
           name: 'Ido Evergreen',
           handle: '@IdoEvergreen',
           avatar:
-            'https://pbs.twimg.com/profile_images/1973707110388023297/comRbAQQ_400x400.jpg'
+            'https://pbs.twimg.com/profile_images/1991962658023612416/AAao07da_400x400.jpg'
         }}
         text={
           <>
@@ -238,7 +238,7 @@ export function QuotesSection() {
           name: 'Iza',
           handle: '@izadoesdev',
           avatar:
-            'https://pbs.twimg.com/profile_images/1964947126711889920/rE54SBtj_400x400.jpg'
+            'https://pbs.twimg.com/profile_images/1995822557115637760/HEiF8JFH_400x400.jpg'
         }}
         text="goated library"
         url="https://x.com/izadoesdev/status/1977276660090388523"
@@ -258,7 +258,7 @@ export function QuotesSection() {
           name: 'arth',
           handle: '@arthy',
           avatar:
-            'https://pbs.twimg.com/profile_images/1982151033443741696/ybbeIzzn_400x400.jpg'
+            'https://pbs.twimg.com/profile_images/1997561168064544768/IdismN0M_400x400.jpg'
         }}
         text="also, nuqs is amazing"
         url="https://x.com/arthty/status/1980237430256234768"
@@ -268,7 +268,7 @@ export function QuotesSection() {
           name: 'Mr T.',
           handle: '@DorianTho5',
           avatar:
-            'https://pbs.twimg.com/profile_images/1885589031238393856/476qnKQb_400x400.jpg'
+            'https://pbs.twimg.com/profile_images/2000156881772216324/h9lf-PZ6_400x400.jpg'
         }}
         text={
           <>
@@ -316,7 +316,7 @@ export function QuotesSection() {
           name: 'Abhishek Chauhan',
           handle: '@abhishekashwinc',
           avatar:
-            'https://pbs.twimg.com/profile_images/1974178538459664384/g9-sR-0D_400x400.jpg'
+            'https://pbs.twimg.com/profile_images/1999736604102123520/p4VZVIcH_400x400.jpg'
         }}
         text="Big fan of nuqs!"
         url="https://x.com/abhishekashwinc/status/1981613111472996827"
@@ -326,7 +326,7 @@ export function QuotesSection() {
           name: 'Michael',
           handle: '@michael_chomsky',
           avatar:
-            'https://pbs.twimg.com/profile_images/1985249115622838272/GWOboDum_400x400.jpg'
+            'https://pbs.twimg.com/profile_images/1995587948914638854/iGEDdcOq_400x400.jpg'
         }}
         text="meeting the guy behind nuqs was insane. it's one of those tools literally every web dev should know about"
         url="https://x.com/michael_chomsky/status/1981633873529471064"
@@ -346,7 +346,7 @@ export function QuotesSection() {
           name: 'dmytro',
           handle: '@pqoqubbw',
           avatar:
-            'https://pbs.twimg.com/profile_images/1977481778651639808/XUXmfx6H_400x400.jpg'
+            'https://pbs.twimg.com/profile_images/2002890026905169920/T6FpaVHH_400x400.jpg'
         }}
         text={
           <>
@@ -365,6 +365,52 @@ export function QuotesSection() {
         }}
         text="Currently Using nuqs to add some pagination and searching feature into my nextjs app and i am loving it"
         url="https://x.com/surajtwt_/status/1982684604307034362"
+      />
+      <Quote
+        author={{
+          name: 'shibbi',
+          handle: '@shibbicodes',
+          avatar:
+            'https://pbs.twimg.com/profile_images/1911788743721164800/TBqun0ZP_400x400.jpg'
+        }}
+        text="We started using nuqs and achieved world peace internally."
+        url="https://x.com/shibbicodes/status/2002396495832817803"
+      />
+      <Quote
+        author={{
+          name: 'Ajay Patel',
+          handle: '@ajaypatel_aj',
+          avatar:
+            'https://pbs.twimg.com/profile_images/1957717329397141507/7ctDgOuc_400x400.jpg'
+        }}
+        text={
+          <>
+            <p>
+              Big thanks to nuqs for making URL state management actually
+              enjoyable! 🙌
+            </p>
+            <br />
+            <ul>
+              <li>useState but synced with the URL? ✅</li>
+              <li>Type-safe? ✅</li>
+              <li>Works everywhere (Next.js, Remix, React Router)? ✅</li>
+              <li>Only 6kb? ✅</li>
+            </ul>
+            <br />
+            <p>Happy to support such a well-crafted library 😇</p>
+          </>
+        }
+        url="https://x.com/ajaypatel_aj/status/2004082719047778362"
+      />
+      <Quote
+        author={{
+          name: 'anarki supreme',
+          handle: '@basedanarki',
+          avatar:
+            'https://pbs.twimg.com/profile_images/1994299964730781696/lh8gQd0V_400x400.jpg'
+        }}
+        text="I LOVE NUQS I LOVE PARAMS THAT JUST WORK AHAHA WOOHOOO❤️❤️❤️❤️"
+        url="https://x.com/basedanarki/status/2001970260426318003"
       />
     </section>
   )

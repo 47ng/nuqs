@@ -24,6 +24,7 @@
     "test": "tsc"
   },
   "dependencies": {
+    "@databuddy/sdk": "^2.2.12",
     "@faker-js/faker": "^10.1.0",
     "@headlessui/react": "2.2.9",
     "@headlessui/tailwindcss": "^0.2.2",
@@ -41,7 +42,7 @@
     "@radix-ui/react-toggle": "^1.1.10",
     "@radix-ui/react-toggle-group": "^1.1.11",
     "@radix-ui/react-tooltip": "^1.2.8",
-    "@sentry/nextjs": "^10.20.0",
+    "@sentry/nextjs": "^10.27.0",
     "@tailwindcss/container-queries": "^0.1.1",
     "@tailwindcss/postcss": "^4.1.12",
     "class-variance-authority": "^0.7.1",
@@ -52,7 +53,7 @@
     "fumadocs-mdx": "^13.0.2",
     "fumadocs-ui": "^16.0.4",
     "lucide-react": "^0.548.0",
-    "next": "16.0.1",
+    "next": "catalog:next",
     "nuqs": "workspace:*",
     "react": "catalog:react19",
     "react-dom": "catalog:react19",

@@ -5,23 +5,22 @@
   "private": true,
   "type": "module",
   "files": [
-    "cypress.config.ts",
-    "cypress/support/e2e.ts",
-    "cypress/e2e/fixtures",
-    "shared.cy.ts"
+    "shared.spec.ts",
+    "playwright.config.ts",
+    "playwright/expect-url.ts",
+    "playwright/log-spy.ts",
+    "playwright/navigate.ts",
+    "playwright/url-spy.ts",
+    "define-test.ts"
   ],
   "peerDependencies": {
-    "cypress": "catalog:e2e",
     "nuqs": "workspace:*"
   },
-  "dependencies": {
-    "cypress-terminal-report": "^7.2.1"
-  },
   "devDependencies": {
+    "@playwright/test": "catalog:e2e",
     "@types/node": "^24.3.0",
     "@types/react": "catalog:react19",
     "@types/react-dom": "catalog:react19",
-    "cypress": "catalog:e2e",
     "nuqs": "workspace:*",
     "react": "catalog:react19",
     "react-dom": "catalog:react19",
