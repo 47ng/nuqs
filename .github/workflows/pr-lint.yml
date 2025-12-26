@@ -74,7 +74,7 @@ jobs:
             if (!hasCoreChanges) {
               const summary = \`## ❌ Version Bump Check Failed
 
-            Your PR title uses the commit type **\\\`\${commitType}\\\`** which triggers a version bump, but no changes were found in the core package (\\\`packages/nuqs/\\\`).
+            Your PR title uses the commit type **\\\`\${commitType}\\\`** which triggers a version bump, but no changes were found in the core package (\\\`packages/nuqs\\\`).
 
             ### What to do:
 
@@ -98,12 +98,12 @@ jobs:
             \`;
 
               await appendFile(process.env.GITHUB_STEP_SUMMARY, summary);
-              console.error(\`Error: PR title uses version-bumping type '\${commitType}' but contains no changes in packages/nuqs/\`);
+              console.error(\`Error: PR title uses version-bumping type '\${commitType}' but contains no changes in packages/nuqs\`);
               console.error(\`Changed files: \${changedFiles.join(', ')}\`);
               console.error(\`\nPlease use a non-bumping commit type: \${NON_BUMPING_TYPES.join(', ')}\`);
               process.exit(1);
             }
 
             console.log('✓ Version-bumping commit type is valid: core package has changes.');
-            await appendFile(process.env.GITHUB_STEP_SUMMARY, \`## ✅ Version Bump Check Passed\n\nCommit type \\\`\${commitType}\\\` is valid because the PR includes changes to \\\`packages/nuqs/\\\`.\n\`);
+            await appendFile(process.env.GITHUB_STEP_SUMMARY, \`## ✅ Version Bump Check Passed\n\nCommit type \\\`\${commitType}\\\` is valid because the PR includes changes to \\\`packages/nuqs\\\`.\n\`);
           "
