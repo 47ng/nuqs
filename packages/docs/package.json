@@ -79,7 +79,7 @@
     "require-in-the-middle": "^8.0.1",
     "shadcn": "^3.4.2",
     "shiki": "^3.11.0",
-    "typescript": "^5.9.2"
+    "typescript": "catalog:typescript"
   },
   "postcss": {
     "plugins": {

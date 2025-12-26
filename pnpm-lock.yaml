@@ -12,6 +12,10 @@ catalogs:
     playwright:
       specifier: ^1.57.0
       version: 1.57.0
+  knip:
+    knip:
+      specifier: ^5.64.1
+      version: 5.68.0
   next:
     next:
       specifier: ^16.1.0
@@ -29,6 +33,10 @@ catalogs:
     react-dom:
       specifier: ^19.2.2
       version: 19.2.2
+  typescript:
+    typescript:
+      specifier: ^5.9.2
+      version: 5.9.2
 
 importers:
 
@@ -44,7 +52,7 @@ importers:
         specifier: ^9.1.7
         version: 9.1.7
       knip:
-        specifier: ^5.64.1
+        specifier: catalog:knip
         version: 5.68.0(@types/node@24.3.0)(typescript@5.9.2)
       prettier:
         specifier: 3.6.2
@@ -62,7 +70,7 @@ importers:
         specifier: ^2.5.6
         version: 2.5.6
       typescript:
-        specifier: ^5.9.2
+        specifier: catalog:typescript
         version: 5.9.2
 
   packages/docs:
@@ -228,7 +236,7 @@ importers:
         specifier: ^3.11.0
         version: 3.11.0
       typescript:
-        specifier: ^5.9.2
+        specifier: catalog:typescript
         version: 5.9.2
 
   packages/e2e: {}
@@ -276,7 +284,7 @@ importers:
         specifier: ^7.7.3
         version: 7.7.3
       typescript:
-        specifier: ^5.9.2
+        specifier: catalog:typescript
         version: 5.9.2
 
   packages/e2e/react:
@@ -310,7 +318,7 @@ importers:
         specifier: workspace:*
         version: link:../shared
       typescript:
-        specifier: ^5.9.2
+        specifier: catalog:typescript
         version: 5.9.2
       vite:
         specifier: ^7.1.11
@@ -355,7 +363,7 @@ importers:
         specifier: workspace:*
         version: link:../../shared
       typescript:
-        specifier: ^5.9.2
+        specifier: catalog:typescript
         version: 5.9.2
       vite:
         specifier: ^7.1.11
@@ -395,7 +403,7 @@ importers:
         specifier: workspace:*
         version: link:../../shared
       typescript:
-        specifier: ^5.9.2
+        specifier: catalog:typescript
         version: 5.9.2
       vite:
         specifier: ^7.1.11
@@ -456,7 +464,7 @@ importers:
         specifier: ^4.22.0
         version: 4.22.1
       typescript:
-        specifier: ^5.9.2
+        specifier: catalog:typescript
         version: 5.9.2
       vite:
         specifier: ^7.1.11
@@ -508,7 +516,7 @@ importers:
         specifier: workspace:*
         version: link:../shared
       typescript:
-        specifier: ^5.9.2
+        specifier: catalog:typescript
         version: 5.9.2
       vite:
         specifier: ^7.1.11
@@ -541,7 +549,7 @@ importers:
         specifier: catalog:react19
         version: 19.2.2(react@19.2.2)
       typescript:
-        specifier: ^5.9.2
+        specifier: catalog:typescript
         version: 5.9.2
 
   packages/e2e/tanstack-router:
@@ -587,7 +595,7 @@ importers:
         specifier: workspace:*
         version: link:../shared
       typescript:
-        specifier: ^5.9.2
+        specifier: catalog:typescript
         version: 5.9.2
       vite:
         specifier: ^7.1.11
@@ -626,7 +634,7 @@ importers:
         specifier: ^4.1.12
         version: 4.1.12
       typescript:
-        specifier: ^5.9.2
+        specifier: catalog:typescript
         version: 5.9.2
 
   packages/examples/trpc:
@@ -693,7 +701,7 @@ importers:
         specifier: ^4.22.0
         version: 4.22.1
       typescript:
-        specifier: ^5.9.2
+        specifier: catalog:typescript
         version: 5.9.2
       vite:
         specifier: ^7.1.11
@@ -741,11 +749,8 @@ importers:
       fast-check:
         specifier: ^4.2.0
         version: 4.2.0
-      jsdom:
-        specifier: ^27.0.1
-        version: 27.0.1(postcss@8.5.6)
       knip:
-        specifier: ^5.64.1
+        specifier: catalog:knip
         version: 5.68.0(@types/node@24.3.0)(typescript@5.9.2)
       next:
         specifier: catalog:next
@@ -769,7 +774,7 @@ importers:
         specifier: ^0.15.9
         version: 0.15.9(oxc-resolver@11.13.1)(publint@0.3.12)(typescript@5.9.2)
       typescript:
-        specifier: ^5.9.2
+        specifier: catalog:typescript
         version: 5.9.2
       valibot:
         specifier: ^1.2.0
@@ -811,7 +816,7 @@ importers:
         specifier: ^24.3.0
         version: 24.3.0
       typescript:
-        specifier: ^5.9.2
+        specifier: catalog:typescript
         version: 5.9.2
 
 packages:
@@ -9490,6 +9495,7 @@ snapshots:
       '@csstools/css-parser-algorithms': 3.0.5(@csstools/css-tokenizer@3.0.4)
       '@csstools/css-tokenizer': 3.0.4
       lru-cache: 11.2.2
+    optional: true
 
   '@asamuzakjp/dom-selector@6.7.2':
     dependencies:
@@ -9498,8 +9504,10 @@ snapshots:
       css-tree: 3.1.0
       is-potential-custom-element-name: 1.0.1
       lru-cache: 11.2.2
+    optional: true
 
-  '@asamuzakjp/nwsapi@2.3.9': {}
+  '@asamuzakjp/nwsapi@2.3.9':
+    optional: true
 
   '@babel/code-frame@7.27.1':
     dependencies:
@@ -9899,12 +9907,14 @@ snapshots:
       '@jridgewell/trace-mapping': 0.3.9
     optional: true
 
-  '@csstools/color-helpers@5.1.0': {}
+  '@csstools/color-helpers@5.1.0':
+    optional: true
 
   '@csstools/css-calc@2.1.4(@csstools/css-parser-algorithms@3.0.5(@csstools/css-tokenizer@3.0.4))(@csstools/css-tokenizer@3.0.4)':
     dependencies:
       '@csstools/css-parser-algorithms': 3.0.5(@csstools/css-tokenizer@3.0.4)
       '@csstools/css-tokenizer': 3.0.4
+    optional: true
 
   '@csstools/css-color-parser@3.1.0(@csstools/css-parser-algorithms@3.0.5(@csstools/css-tokenizer@3.0.4))(@csstools/css-tokenizer@3.0.4)':
     dependencies:
@@ -9912,16 +9922,20 @@ snapshots:
       '@csstools/css-calc': 2.1.4(@csstools/css-parser-algorithms@3.0.5(@csstools/css-tokenizer@3.0.4))(@csstools/css-tokenizer@3.0.4)
       '@csstools/css-parser-algorithms': 3.0.5(@csstools/css-tokenizer@3.0.4)
       '@csstools/css-tokenizer': 3.0.4
+    optional: true
 
   '@csstools/css-parser-algorithms@3.0.5(@csstools/css-tokenizer@3.0.4)':
     dependencies:
       '@csstools/css-tokenizer': 3.0.4
+    optional: true
 
   '@csstools/css-syntax-patches-for-csstree@1.0.14(postcss@8.5.6)':
     dependencies:
       postcss: 8.5.6
+    optional: true
 
-  '@csstools/css-tokenizer@3.0.4': {}
+  '@csstools/css-tokenizer@3.0.4':
+    optional: true
 
   '@databuddy/sdk@2.2.12(@babel/core@7.28.3)(@babel/template@7.27.2)(@types/react@19.2.7)(msw@2.11.6(@types/node@24.3.0)(typescript@5.9.2))(react@19.2.2)':
     dependencies:
@@ -13397,6 +13411,7 @@ snapshots:
   bidi-js@1.0.3:
     dependencies:
       require-from-string: 2.0.2
+    optional: true
 
   binary-extensions@2.3.0: {}
 
@@ -13797,6 +13812,7 @@ snapshots:
     dependencies:
       mdn-data: 2.12.2
       source-map-js: 1.2.1
+    optional: true
 
   css-what@6.2.2: {}
 
@@ -13809,6 +13825,7 @@ snapshots:
       css-tree: 3.1.0
     transitivePeerDependencies:
       - postcss
+    optional: true
 
   csstype@3.1.3: {}
 
@@ -13862,6 +13879,7 @@ snapshots:
     dependencies:
       whatwg-mimetype: 4.0.0
       whatwg-url: 15.1.0
+    optional: true
 
   dayjs@1.11.13: {}
 
@@ -13879,7 +13897,8 @@ snapshots:
 
   decimal.js-light@2.5.1: {}
 
-  decimal.js@10.6.0: {}
+  decimal.js@10.6.0:
+    optional: true
 
   decode-named-character-reference@1.2.0:
     dependencies:
@@ -14001,7 +14020,8 @@ snapshots:
       graceful-fs: 4.2.11
       tapable: 2.2.2
 
-  entities@6.0.1: {}
+  entities@6.0.1:
+    optional: true
 
   env-ci@11.1.1:
     dependencies:
@@ -14928,6 +14948,7 @@ snapshots:
   html-encoding-sniffer@4.0.0:
     dependencies:
       whatwg-encoding: 3.1.1
+    optional: true
 
   html-escaper@2.0.2: {}
 
@@ -14985,6 +15006,7 @@ snapshots:
   iconv-lite@0.6.3:
     dependencies:
       safer-buffer: 2.1.2
+    optional: true
 
   iconv-lite@0.7.0:
     dependencies:
@@ -15115,7 +15137,8 @@ snapshots:
 
   is-plain-obj@4.1.0: {}
 
-  is-potential-custom-element-name@1.0.1: {}
+  is-potential-custom-element-name@1.0.1:
+    optional: true
 
   is-promise@4.0.0: {}
 
@@ -15257,6 +15280,7 @@ snapshots:
       - postcss
       - supports-color
       - utf-8-validate
+    optional: true
 
   jsesc@3.0.2: {}
 
@@ -15761,7 +15785,8 @@ snapshots:
     dependencies:
       '@types/mdast': 4.0.4
 
-  mdn-data@2.12.2: {}
+  mdn-data@2.12.2:
+    optional: true
 
   media-query-parser@2.0.2:
     dependencies:
@@ -16794,6 +16819,7 @@ snapshots:
   parse5@8.0.0:
     dependencies:
       entities: 6.0.1
+    optional: true
 
   parseurl@1.3.3: {}
 
@@ -17646,7 +17672,8 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  rrweb-cssom@0.8.0: {}
+  rrweb-cssom@0.8.0:
+    optional: true
 
   run-parallel@1.2.0:
     dependencies:
@@ -17671,6 +17698,7 @@ snapshots:
   saxes@6.0.0:
     dependencies:
       xmlchars: 2.2.0
+    optional: true
 
   scheduler@0.26.0: {}
 
@@ -18207,7 +18235,8 @@ snapshots:
 
   supports-preserve-symlinks-flag@1.0.0: {}
 
-  symbol-tree@3.2.4: {}
+  symbol-tree@3.2.4:
+    optional: true
 
   tabbable@6.2.0: {}
 
@@ -18347,6 +18376,7 @@ snapshots:
   tr46@6.0.0:
     dependencies:
       punycode: 2.3.1
+    optional: true
 
   traverse@0.6.8: {}
 
@@ -18907,6 +18937,7 @@ snapshots:
   w3c-xmlserializer@5.0.0:
     dependencies:
       xml-name-validator: 5.0.0
+    optional: true
 
   walk-up-path@4.0.0: {}
 
@@ -18929,7 +18960,8 @@ snapshots:
 
   webidl-conversions@3.0.1: {}
 
-  webidl-conversions@8.0.0: {}
+  webidl-conversions@8.0.0:
+    optional: true
 
   webpack-sources@3.3.3: {}
 
@@ -18972,13 +19004,16 @@ snapshots:
   whatwg-encoding@3.1.1:
     dependencies:
       iconv-lite: 0.6.3
+    optional: true
 
-  whatwg-mimetype@4.0.0: {}
+  whatwg-mimetype@4.0.0:
+    optional: true
 
   whatwg-url@15.1.0:
     dependencies:
       tr46: 6.0.0
       webidl-conversions: 8.0.0
+    optional: true
 
   whatwg-url@5.0.0:
     dependencies:
@@ -19044,9 +19079,11 @@ snapshots:
 
   ws@8.18.3: {}
 
-  xml-name-validator@5.0.0: {}
+  xml-name-validator@5.0.0:
+    optional: true
 
-  xmlchars@2.2.0: {}
+  xmlchars@2.2.0:
+    optional: true
 
   xtend@4.0.2: {}
 

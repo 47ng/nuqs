@@ -24,6 +24,6 @@
     "nuqs": "workspace:*",
     "react": "catalog:react19",
     "react-dom": "catalog:react19",
-    "typescript": "^5.9.2"
+    "typescript": "catalog:typescript"
   }
 }

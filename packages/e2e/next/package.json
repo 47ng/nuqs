@@ -33,6 +33,6 @@
     "babel-plugin-react-compiler": "1.0.0",
     "e2e-shared": "workspace:*",
     "semver": "^7.7.3",
-    "typescript": "^5.9.2"
+    "typescript": "catalog:typescript"
   }
 }
