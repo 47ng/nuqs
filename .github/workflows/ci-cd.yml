@@ -46,6 +46,9 @@ jobs:
         run: pnpm install --ignore-scripts --frozen-lockfile
       - name: Run Knip (nuqs package)
         run: pnpm run lint:knip --workspace packages/nuqs
+      - name: Run typegen for RRv7
+        run: pnpm run typegen
+        working-directory: packages/e2e/react-router/v7
       - name: Run Knip (e2e packages)
         run: |
           pnpm run lint:knip --workspace packages/e2e/next

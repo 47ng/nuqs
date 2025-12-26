@@ -7,8 +7,9 @@
     "dev": "react-router dev --port 3007",
     "start": "cross-env NODE_ENV=production ./server.mjs",
     "pretest": "playwright install chromium",
+    "typegen": "react-router typegen",
     "test": "pnpm run --stream '/^test:/'",
-    "test:types": "react-router typegen && tsc",
+    "test:types": "pnpm run typegen && tsc",
     "test:playwright": "playwright test --project=chromium"
   },
   "dependencies": {
