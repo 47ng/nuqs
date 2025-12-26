@@ -4,6 +4,10 @@
     "packages/nuqs": {
       "project": ["src/**/*.ts"]
     },
+    "packages/docs": {
+      "entry": ["content/**/*.mdx"],
+      "next": true
+    },
     "packages/e2e/shared": {
       "entry": [
         "shared.spec.ts",

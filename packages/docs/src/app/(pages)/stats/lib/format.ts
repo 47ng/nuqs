@@ -19,27 +19,6 @@ export function formatDate(
   return new Date(date).toLocaleDateString(LOCALE, options)
 }
 
-export function formatTime(date: Date | string | number) {
-  return new Date(date).toLocaleTimeString(LOCALE, {
-    hour12: false,
-    hour: '2-digit',
-    minute: '2-digit'
-  })
-}
-
-const numberFormat = Intl.NumberFormat(LOCALE)
-
-export function formatNumber(value: number) {
-  return numberFormat.format(value)
-}
-
-export function formatSEOKeyValues(dict: Record<string, string>) {
-  return Object.keys(dict).flatMap((key, index) => [
-    { name: `twitter:label${index + 1}`, content: key },
-    { name: `twitter:data${index + 1}`, content: dict[key] }
-  ])
-}
-
 export function formatStatNumber(
   number: number,
   options: Intl.NumberFormatOptions = {}
