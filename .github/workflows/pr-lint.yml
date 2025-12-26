@@ -5,6 +5,7 @@ on:
     types:
       - opened
       - edited
+      - synchronize
 
 jobs:
   lint-pr-title:
@@ -12,13 +13,15 @@ jobs:
     runs-on: ubuntu-24.04-arm
     steps:
       - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3
+        with:
+          fetch-depth: 0
       - uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061
       - uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903
         with:
           node-version-file: .node-version
           cache: pnpm
       - name: Install dependencies
-        run: pnpm add -D @commitlint/load @commitlint/lint
+        run: pnpm add -D @commitlint/load @commitlint/lint @commitlint/parse
       - name: Lint PR title
         env:
           TITLE: ${{ github.event.pull_request.title }}
@@ -37,4 +40,70 @@ jobs:
               }
               process.exit(1);
             }
+          "
+      - name: Get changed files
+        id: changed-files
+        run: echo "files=$(git diff --name-only ${{ github.event.pull_request.base.sha }}...${{ github.event.pull_request.head.sha }} | tr '\n' ' ')" >> "$GITHUB_OUTPUT"
+      - name: Check version-bumping commits target core package
+        env:
+          TITLE: ${{ github.event.pull_request.title }}
+          CHANGED_FILES: ${{ steps.changed-files.outputs.files }}
+        run: |
+          node -e "
+            import parse from '@commitlint/parse';
+            import { appendFile } from 'node:fs/promises';
+
+            // Commit types that trigger version bumps (semantic-release defaults)
+            const VERSION_BUMPING_TYPES = ['feat', 'fix', 'perf', 'revert'];
+            // Non-bumping types for reference in error messages
+            const NON_BUMPING_TYPES = ['build', 'chore', 'ci', 'clean', 'doc', 'ref', 'style', 'test'];
+
+            const parsed = await parse(process.env.TITLE);
+            const commitType = parsed.type;
+
+            if (!VERSION_BUMPING_TYPES.includes(commitType)) {
+              console.log(\`Commit type '\${commitType}' does not trigger a version bump. Skipping core package check.\`);
+              process.exit(0);
+            }
+
+            console.log(\`Commit type '\${commitType}' triggers a version bump. Checking for changes in packages/nuqs...\`);
+
+            const changedFiles = process.env.CHANGED_FILES.trim().split(' ').filter(Boolean);
+            const hasCoreChanges = changedFiles.some(file => file.startsWith('packages/nuqs/'));
+
+            if (!hasCoreChanges) {
+              const summary = \`## ❌ Version Bump Check Failed
+
+            Your PR title uses the commit type **\\\`\${commitType}\\\`** which triggers a version bump, but no changes were found in the core package (\\\`packages/nuqs\\\`).
+
+            ### What to do:
+
+            If this PR does not include changes to the core \\\`nuqs\\\` package, please use a non-bumping commit type instead:
+
+            | Type | Use for |
+            |------|---------|
+            | \\\`doc\\\` | Documentation updates |
+            | \\\`chore\\\` | Maintenance, CI/CD, dependencies |
+            | \\\`test\\\` | Test additions or modifications |
+            | \\\`ci\\\` | CI configuration changes |
+            | \\\`build\\\` | Build system changes |
+            | \\\`style\\\` | Code style/formatting |
+            | \\\`ref\\\` | Refactoring (non-core) |
+
+            ### Version-bumping types (require core package changes):
+            - \\\`feat\\\` → minor version bump
+            - \\\`fix\\\` → patch version bump
+            - \\\`perf\\\` → patch version bump
+            - \\\`revert\\\` → depends on reverted commit
+            \`;
+
+              await appendFile(process.env.GITHUB_STEP_SUMMARY, summary);
+              console.error(\`Error: PR title uses version-bumping type '\${commitType}' but contains no changes in packages/nuqs\`);
+              console.error(\`Changed files: \${changedFiles.join(', ')}\`);
+              console.error(\`\nPlease use a non-bumping commit type: \${NON_BUMPING_TYPES.join(', ')}\`);
+              process.exit(1);
+            }
+
+            console.log('✓ Version-bumping commit type is valid: core package has changes.');
+            await appendFile(process.env.GITHUB_STEP_SUMMARY, \`## ✅ Version Bump Check Passed\n\nCommit type \\\`\${commitType}\\\` is valid because the PR includes changes to \\\`packages/nuqs\\\`.\n\`);
           "
