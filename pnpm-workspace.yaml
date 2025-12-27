@@ -6,6 +6,9 @@ catalogs:
     playwright: ^1.57.0
     '@playwright/test': ^1.57.0
 
+  knip:
+    knip: ^5.64.1
+
   next:
     next: ^16.1.0
 
@@ -14,6 +17,9 @@ catalogs:
     '@types/react-dom': ^19.2.3
     react: ^19.2.2
     react-dom: ^19.2.2
+
+  typescript:
+    typescript: ^5.9.2
 
 enablePrePostScripts: true
 

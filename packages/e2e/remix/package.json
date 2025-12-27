@@ -28,7 +28,7 @@
     "@types/react-dom": "catalog:react19",
     "cross-env": "^10.0.0",
     "e2e-shared": "workspace:*",
-    "typescript": "^5.9.2",
+    "typescript": "catalog:typescript",
     "vite": "^7.1.11",
     "vite-tsconfig-paths": "^5.1.4"
   }

@@ -31,7 +31,7 @@
     "compression": "^1.8.1",
     "cross-env": "^10.0.0",
     "express": "^4.22.0",
-    "typescript": "^5.9.2",
+    "typescript": "catalog:typescript",
     "vite": "^7.1.11",
     "vite-tsconfig-paths": "^5.1.4"
   }
