@@ -19,6 +19,12 @@ export function formatDate(
   return new Date(date).toLocaleDateString(LOCALE, options)
 }
 
+const numberFormat = Intl.NumberFormat(LOCALE)
+
+export function formatNumber(value: number) {
+  return numberFormat.format(value)
+}
+
 export function formatStatNumber(
   number: number,
   options: Intl.NumberFormatOptions = {}
