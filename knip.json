@@ -5,7 +5,13 @@
       "project": ["src/**/*.ts"]
     },
     "packages/docs": {
-      "entry": ["content/**/*.mdx"],
+      "entry": [
+        "content/**/*.mdx",
+        "src/app/**/page.tsx",
+        "src/app/**/layout.tsx",
+        "src/app/**/route.ts"
+      ],
+      "project": ["src/**/*.{ts,tsx}"],
       "next": true
     },
     "packages/e2e/shared": {
