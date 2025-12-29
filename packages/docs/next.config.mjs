@@ -73,6 +73,14 @@ const config = {
       }
     ]
   },
+  async rewrites() {
+    return [
+      {
+        source: '/docs/:path*.md',
+        destination: '/llms/:path*'
+      }
+    ]
+  },
   images: {
     remotePatterns: [
       {

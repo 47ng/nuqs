@@ -37,9 +37,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // todo: Automate retrieval of static pages
   // Static pages in app/(pages)
 
-  // Get all docs pages from fumadocs
+  // Get all docs pages from fumadocs (excluding llm-only pages)
   const docsPages = source
     .getPages()
+    .filter(page => page.data.exposeTo.includes('user'))
     .map<Promise<SitemapEntry>>(async page => ({
       url: `${baseUrl}${page.url}`,
       lastModified: await getLastModified(`/content/docs/${page.path}`),
