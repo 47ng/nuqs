@@ -24,7 +24,7 @@ jobs:
         with:
           node-version-file: .node-version
           cache: pnpm
-      - name: Install dependencies
+      - name: Install root workspace dependencies
         run: pnpm install --ignore-scripts --frozen-lockfile --workspace-root
       - name: Check monorepo with Sherif
         run: pnpm run lint:sherif
@@ -42,6 +42,20 @@ jobs:
           else
             echo "No formatting issues found"
           fi
+      - name: Install all dependencies for Knip
+        run: pnpm install --ignore-scripts --frozen-lockfile
+      - name: Run Knip (nuqs package)
+        run: pnpm run lint:knip --workspace packages/nuqs
+      - name: Run Knip (e2e packages)
+        run: |
+          pnpm run --filter "e2e-*" typegen
+          pnpm run lint:knip --workspace packages/e2e/next
+          pnpm run lint:knip --workspace packages/e2e/react
+          pnpm run lint:knip --workspace packages/e2e/react-router/v5
+          pnpm run lint:knip --workspace packages/e2e/react-router/v6
+          pnpm run lint:knip --workspace packages/e2e/react-router/v7
+          pnpm run lint:knip --workspace packages/e2e/remix
+          pnpm run lint:knip --workspace packages/e2e/tanstack-router
 
   publint:
     name: Package Linting

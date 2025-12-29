@@ -59,7 +59,6 @@
     "react-dom": "catalog:react19",
     "recharts": "3.3.0",
     "remark-smartypants": "^3.0.2",
-    "res": "workspace:*",
     "server-only": "^0.0.1",
     "tailwind-merge": "^3.3.1",
     "tailwindcss": "^4.1.12",
@@ -79,7 +78,7 @@
     "require-in-the-middle": "^8.0.1",
     "shadcn": "^3.4.2",
     "shiki": "^3.11.0",
-    "typescript": "^5.9.2"
+    "typescript": "catalog:typescript"
   },
   "postcss": {
     "plugins": {

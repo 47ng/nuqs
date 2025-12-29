@@ -1,186 +1,172 @@
-import { Banner } from 'fumadocs-ui/components/banner'
-import { PlayIcon } from 'lucide-react'
-import Link from 'next/link'
-import { type ComponentProps, Suspense } from 'react'
-import { Countdown } from '../components/countdown'
-import { ReactParisLogo } from '../components/react-paris'
-import { cn } from '../lib/utils'
-
 // Note: top-level banners go into src/app/layout.tsx
 // Note: sidebar banners go into src/app/docs/layout.tsx & playground/layout.tsx
+
+import type { ComponentProps } from 'react'
 
 export function SideBanner() {
   // Note: add banners here to enable them
   return null
 }
 
-export function NuqsV2AnnouncementTopBanner() {
-  return (
-    <Banner
-      variant="rainbow"
-      className="text-md gap-4 font-semibold"
-      id="nuqs-2-announcement"
-    >
-      <span aria-hidden>🎉</span>
-      <Link
-        href="/blog/nuqs-2"
-        className="decoration-slice decoration-1 transition-all hover:underline hover:underline-offset-8 focus-visible:underline focus-visible:outline-none"
-        prefetch={false}
-      >
-        Announcing nuqs version 2
-      </Link>
-      <span aria-hidden>🎉</span>
-    </Banner>
-  )
-}
+// function NuqsV2AnnouncementTopBanner() {
+//   return (
+//     <Banner
+//       variant="rainbow"
+//       className="text-md gap-4 font-semibold"
+//       id="nuqs-2-announcement"
+//     >
+//       <span aria-hidden>🎉</span>
+//       <Link
+//         href="/blog/nuqs-2"
+//         className="decoration-slice decoration-1 transition-all hover:underline hover:underline-offset-8 focus-visible:underline focus-visible:outline-none"
+//         prefetch={false}
+//       >
+//         Announcing nuqs version 2
+//       </Link>
+//       <span aria-hidden>🎉</span>
+//     </Banner>
+//   )
+// }
 
-export function NuqsV2AnnouncementSidebarBanner() {
-  return (
-    <div className="my-2 flex justify-center gap-2 rounded-lg border border-blue-500/40 bg-blue-100/50 py-2.5 font-semibold dark:bg-blue-700/10">
-      <span aria-hidden>🎉</span>
-      <Link
-        href="/blog/nuqs-2"
-        className="text-blue-900 hover:underline focus-visible:underline focus-visible:outline-none dark:text-blue-100"
-        prefetch={false}
-      >
-        Announcing nuqs v2 !
-      </Link>
-      <span aria-hidden>🎉</span>
-    </div>
-  )
-}
+// function NuqsV2AnnouncementSidebarBanner() {
+//   return (
+//     <div className="my-2 flex justify-center gap-2 rounded-lg border border-blue-500/40 bg-blue-100/50 py-2.5 font-semibold dark:bg-blue-700/10">
+//       <span aria-hidden>🎉</span>
+//       <Link
+//         href="/blog/nuqs-2"
+//         className="text-blue-900 hover:underline focus-visible:underline focus-visible:outline-none dark:text-blue-100"
+//         prefetch={false}
+//       >
+//         Announcing nuqs v2 !
+//       </Link>
+//       <span aria-hidden>🎉</span>
+//     </div>
+//   )
+// }
 
-export function ReactParis2025SideBanner() {
-  return (
-    <div className="my-2 flex flex-col items-center gap-1.5 rounded-lg border border-gray-500/40 bg-gray-100/50 px-2 py-4 dark:bg-gray-700/10">
-      <p className="text-muted-foreground">🗣️ nuqs will be featured at</p>
-      <div className="flex gap-2">
-        <ReactParisLogo className="h-12" />
-        <p className="mr-1">
-          <span className="text-lg font-bold text-[#002654] uppercase dark:text-[#00acff]">
-            React
-          </span>{' '}
-          <span className="text-lg text-[#cd1126] uppercase dark:text-[#fe6497]">
-            Paris
-          </span>{' '}
-          <span className="text-lg">'25</span>
-          <br />
-          <a
-            href="https://react.paris/#tickets"
-            className="text-sm hover:underline"
-          >
-            Get your ticket now!
-          </a>
-        </p>
-      </div>
-      <Suspense>
-        <Countdown
-          targetDate={new Date('2025-03-20T15:00:00+01:00')}
-          className="my-2"
-        />
-      </Suspense>
-      <p className="text-muted-foreground text-center text-xs">
-        Use the code <code>Francois_Paris</code> for a 20% discount on your
-        ticket.
-      </p>
-    </div>
-  )
-}
+// function ReactParis2025SideBanner() {
+//   return (
+//     <div className="my-2 flex flex-col items-center gap-1.5 rounded-lg border border-gray-500/40 bg-gray-100/50 px-2 py-4 dark:bg-gray-700/10">
+//       <p className="text-muted-foreground">🗣️ nuqs will be featured at</p>
+//       <div className="flex gap-2">
+//         <ReactParisLogo className="h-12" />
+//         <p className="mr-1">
+//           <span className="text-lg font-bold text-[#002654] uppercase dark:text-[#00acff]">
+//             React
+//           </span>{' '}
+//           <span className="text-lg text-[#cd1126] uppercase dark:text-[#fe6497]">
+//             Paris
+//           </span>{' '}
+//           <span className="text-lg">'25</span>
+//           <br />
+//           <a
+//             href="https://react.paris/#tickets"
+//             className="text-sm hover:underline"
+//           >
+//             Get your ticket now!
+//           </a>
+//         </p>
+//       </div>
+//       <Suspense>
+//         <Countdown
+//           targetDate={new Date('2025-03-20T15:00:00+01:00')}
+//           className="my-2"
+//         />
+//       </Suspense>
+//       <p className="text-muted-foreground text-center text-xs">
+//         Use the code <code>Francois_Paris</code> for a 20% discount on your
+//         ticket.
+//       </p>
+//     </div>
+//   )
+// }
 
-// --
+// // --
 
-const NEXTJS_CONF_2025_TALK_TIME = new Date('2025-10-22T13:55:00-07:00')
+// const NEXTJS_CONF_2025_TALK_TIME = new Date('2025-10-22T13:55:00-07:00')
 
-export function NextJSConf2025WideBanner({
-  className
-}: {
-  className?: string
-}) {
-  return (
-    <div
-      className={cn(
-        'dark:border-b-border flex min-h-11 flex-col items-center justify-center gap-2 border-b border-transparent bg-zinc-50 p-2 shadow-md sm:flex-row sm:gap-4 dark:bg-zinc-900/50',
-        className
-      )}
-    >
-      <p className="text-sm sm:text-base">
-        Watch nuqs at <NextJSConf2025Logo />
-      </p>
-      <span
-        aria-hidden
-        className="text-muted-foreground hidden text-xs sm:block"
-      >
-        •
-      </span>
-      <a
-        href="https://nextjs.org/conf"
-        className="-ml-1.5 text-sm hover:underline sm:text-base"
-      >
-        <PlayIcon className="mr-1 mb-[2px] inline-block size-4 fill-current stroke-none" />{' '}
-        Livestream
-      </a>
-      <span
-        aria-hidden
-        className="text-muted-foreground hidden text-xs sm:block"
-      >
-        •
-      </span>
-      <Suspense
-        fallback={
-          <div className="h-6 w-[150px] animate-pulse rounded-md bg-zinc-500/20" />
-        }
-      >
-        <Countdown
-          targetDate={NEXTJS_CONF_2025_TALK_TIME}
-          className="min-w-[150px] text-lg"
-          expiredMessage={
-            <span className="flex items-center gap-2 font-mono text-sm font-semibold text-red-700 dark:text-red-400">
-              <div className="size-4 rounded-full bg-red-500" />
-              LIVE
-            </span>
-          }
-        />
-      </Suspense>
-    </div>
-  )
-}
+// function NextJSConf2025WideBanner({ className }: { className?: string }) {
+//   return (
+//     <div
+//       className={cn(
+//         'dark:border-b-border flex min-h-11 flex-col items-center justify-center gap-2 border-b border-transparent bg-zinc-50 p-2 shadow-md sm:flex-row sm:gap-4 dark:bg-zinc-900/50',
+//         className
+//       )}
+//     >
+//       <p className="text-sm sm:text-base">
+//         Watch nuqs at <NextJSConf2025Logo />
+//       </p>
+//       <span
+//         aria-hidden
+//         className="text-muted-foreground hidden text-xs sm:block"
+//       >
+//         •
+//       </span>
+//       <a
+//         href="https://nextjs.org/conf"
+//         className="-ml-1.5 text-sm hover:underline sm:text-base"
+//       >
+//         <PlayIcon className="mr-1 mb-[2px] inline-block size-4 fill-current stroke-none" />{' '}
+//         Livestream
+//       </a>
+//       <span
+//         aria-hidden
+//         className="text-muted-foreground hidden text-xs sm:block"
+//       >
+//         •
+//       </span>
+//       <Suspense
+//         fallback={
+//           <div className="h-6 w-[150px] animate-pulse rounded-md bg-zinc-500/20" />
+//         }
+//       >
+//         <Countdown
+//           targetDate={NEXTJS_CONF_2025_TALK_TIME}
+//           className="min-w-[150px] text-lg"
+//           expiredMessage={
+//             <span className="flex items-center gap-2 font-mono text-sm font-semibold text-red-700 dark:text-red-400">
+//               <div className="size-4 rounded-full bg-red-500" />
+//               LIVE
+//             </span>
+//           }
+//         />
+//       </Suspense>
+//     </div>
+//   )
+// }
 
-export function NextJSConf2025SideBanner({
-  className
-}: {
-  className?: string
-}) {
-  return (
-    <div
-      className={cn(
-        'mt-2 flex flex-col items-center gap-3 rounded-lg border border-gray-500/40 bg-gray-100/50 px-2 py-3 dark:bg-gray-700/10',
-        className
-      )}
-    >
-      <p>
-        Watch nuqs at <NextJSConf2025Logo />
-      </p>
-      <a
-        href="https://nextjs.org/conf"
-        className="-ml-1.5 text-sm hover:underline"
-      >
-        <PlayIcon className="mr-1 mb-[2px] inline-block size-4 fill-current stroke-none" />{' '}
-        Livestream
-      </a>
-      <Suspense>
-        <Countdown
-          targetDate={NEXTJS_CONF_2025_TALK_TIME}
-          expiredMessage={
-            <span className="flex items-center gap-2 font-mono text-sm font-semibold text-red-700 dark:text-red-400">
-              <div className="size-4 rounded-full bg-red-500" />
-              LIVE
-            </span>
-          }
-        />
-      </Suspense>
-    </div>
-  )
-}
+// function NextJSConf2025SideBanner({ className }: { className?: string }) {
+//   return (
+//     <div
+//       className={cn(
+//         'mt-2 flex flex-col items-center gap-3 rounded-lg border border-gray-500/40 bg-gray-100/50 px-2 py-3 dark:bg-gray-700/10',
+//         className
+//       )}
+//     >
+//       <p>
+//         Watch nuqs at <NextJSConf2025Logo />
+//       </p>
+//       <a
+//         href="https://nextjs.org/conf"
+//         className="-ml-1.5 text-sm hover:underline"
+//       >
+//         <PlayIcon className="mr-1 mb-[2px] inline-block size-4 fill-current stroke-none" />{' '}
+//         Livestream
+//       </a>
+//       <Suspense>
+//         <Countdown
+//           targetDate={NEXTJS_CONF_2025_TALK_TIME}
+//           expiredMessage={
+//             <span className="flex items-center gap-2 font-mono text-sm font-semibold text-red-700 dark:text-red-400">
+//               <div className="size-4 rounded-full bg-red-500" />
+//               LIVE
+//             </span>
+//           }
+//         />
+//       </Suspense>
+//     </div>
+//   )
+// }
 
 export const NextJSConf2025Logo = ({
   className = 'align-center mb-[1px] ml-0.25 inline-block h-[1em] w-auto'
@@ -252,106 +238,106 @@ export const NextJSConf2025Logo = ({
   </svg>
 )
 
-// --
+// // --
 
-const REACT_ADVANCED_LONDON_2025_TALK_TIME = new Date(
-  '2025-11-28T14:00:00+00:00'
-)
+// const REACT_ADVANCED_LONDON_2025_TALK_TIME = new Date(
+//   '2025-11-28T14:00:00+00:00'
+// )
 
-export function ReactAdvancedLondon2025WideBanner({
-  className
-}: {
-  className?: string
-}) {
-  return (
-    <div
-      className={cn(
-        'dark:border-b-border flex min-h-11 flex-col items-center justify-center gap-2 border-b border-transparent bg-zinc-50 p-2 shadow-md sm:flex-row sm:gap-4 dark:bg-zinc-900/50',
-        className
-      )}
-    >
-      <p className="text-sm sm:text-base">
-        Watch nuqs at React Advanced London <ReactAdvancedLondonLogo />
-      </p>
-      <span
-        aria-hidden
-        className="text-muted-foreground hidden text-xs sm:block"
-      >
-        •
-      </span>
-      <a
-        href="https://reactadvanced.com"
-        className="-ml-1.5 text-sm hover:underline sm:text-base"
-      >
-        <PlayIcon className="mr-1 mb-[2px] inline-block size-4 fill-current stroke-none" />{' '}
-        Livestream
-      </a>
-      <span
-        aria-hidden
-        className="text-muted-foreground hidden text-xs sm:block"
-      >
-        •
-      </span>
-      <Suspense
-        fallback={
-          <div className="h-6 w-[150px] animate-pulse rounded-md bg-zinc-500/20" />
-        }
-      >
-        <Countdown
-          targetDate={REACT_ADVANCED_LONDON_2025_TALK_TIME}
-          className="min-w-[150px] text-lg"
-          expiredMessage={
-            <span className="flex items-center gap-2 font-mono text-sm font-semibold text-red-700 dark:text-red-400">
-              <div className="size-4 rounded-full bg-red-500" />
-              LIVE
-            </span>
-          }
-        />
-      </Suspense>
-    </div>
-  )
-}
+// function ReactAdvancedLondon2025WideBanner({
+//   className
+// }: {
+//   className?: string
+// }) {
+//   return (
+//     <div
+//       className={cn(
+//         'dark:border-b-border flex min-h-11 flex-col items-center justify-center gap-2 border-b border-transparent bg-zinc-50 p-2 shadow-md sm:flex-row sm:gap-4 dark:bg-zinc-900/50',
+//         className
+//       )}
+//     >
+//       <p className="text-sm sm:text-base">
+//         Watch nuqs at React Advanced London <ReactAdvancedLondonLogo />
+//       </p>
+//       <span
+//         aria-hidden
+//         className="text-muted-foreground hidden text-xs sm:block"
+//       >
+//         •
+//       </span>
+//       <a
+//         href="https://reactadvanced.com"
+//         className="-ml-1.5 text-sm hover:underline sm:text-base"
+//       >
+//         <PlayIcon className="mr-1 mb-[2px] inline-block size-4 fill-current stroke-none" />{' '}
+//         Livestream
+//       </a>
+//       <span
+//         aria-hidden
+//         className="text-muted-foreground hidden text-xs sm:block"
+//       >
+//         •
+//       </span>
+//       <Suspense
+//         fallback={
+//           <div className="h-6 w-[150px] animate-pulse rounded-md bg-zinc-500/20" />
+//         }
+//       >
+//         <Countdown
+//           targetDate={REACT_ADVANCED_LONDON_2025_TALK_TIME}
+//           className="min-w-[150px] text-lg"
+//           expiredMessage={
+//             <span className="flex items-center gap-2 font-mono text-sm font-semibold text-red-700 dark:text-red-400">
+//               <div className="size-4 rounded-full bg-red-500" />
+//               LIVE
+//             </span>
+//           }
+//         />
+//       </Suspense>
+//     </div>
+//   )
+// }
 
-export function ReactAdvancedLondon2025SideBanner({
-  className
-}: {
-  className?: string
-}) {
-  return (
-    <div
-      className={cn(
-        'bg-background z-0 flex flex-col items-center gap-3 border-b px-2 py-3 xl:mt-2 xl:rounded-lg xl:border',
-        'md:rounded-br-lg md:border-r',
-        'relative before:absolute before:inset-0 before:-z-1 before:rounded-lg before:bg-zinc-50 dark:before:bg-zinc-700/10',
-        className
-      )}
-    >
-      <p>
-        <ReactAdvancedLondonLogo className="mx-auto h-16" />
-        <br />
-        Watch nuqs at React Advanced
-      </p>
-      <a
-        href="https://reactadvanced.com"
-        className="-ml-1.5 text-sm hover:underline"
-      >
-        <PlayIcon className="mr-1 mb-[2px] inline-block size-4 fill-current stroke-none" />{' '}
-        Livestream
-      </a>
-      <Suspense>
-        <Countdown
-          targetDate={REACT_ADVANCED_LONDON_2025_TALK_TIME}
-          expiredMessage={
-            <span className="flex items-center gap-2 font-mono text-sm font-semibold text-red-700 dark:text-red-400">
-              <div className="size-4 rounded-full bg-red-500" />
-              LIVE
-            </span>
-          }
-        />
-      </Suspense>
-    </div>
-  )
-}
+// function ReactAdvancedLondon2025SideBanner({
+//   className
+// }: {
+//   className?: string
+// }) {
+//   return (
+//     <div
+//       className={cn(
+//         'bg-background z-0 flex flex-col items-center gap-3 border-b px-2 py-3 xl:mt-2 xl:rounded-lg xl:border',
+//         'md:rounded-br-lg md:border-r',
+//         'relative before:absolute before:inset-0 before:-z-1 before:rounded-lg before:bg-zinc-50 dark:before:bg-zinc-700/10',
+//         className
+//       )}
+//     >
+//       <p>
+//         <ReactAdvancedLondonLogo className="mx-auto h-16" />
+//         <br />
+//         Watch nuqs at React Advanced
+//       </p>
+//       <a
+//         href="https://reactadvanced.com"
+//         className="-ml-1.5 text-sm hover:underline"
+//       >
+//         <PlayIcon className="mr-1 mb-[2px] inline-block size-4 fill-current stroke-none" />{' '}
+//         Livestream
+//       </a>
+//       <Suspense>
+//         <Countdown
+//           targetDate={REACT_ADVANCED_LONDON_2025_TALK_TIME}
+//           expiredMessage={
+//             <span className="flex items-center gap-2 font-mono text-sm font-semibold text-red-700 dark:text-red-400">
+//               <div className="size-4 rounded-full bg-red-500" />
+//               LIVE
+//             </span>
+//           }
+//         />
+//       </Suspense>
+//     </div>
+//   )
+// }
 
 export function ReactAdvancedLondonLogo({
   className = 'align-center mb-[1px] ml-0.25 inline-block h-[1em] w-auto'

@@ -1,0 +1,73 @@
+{
+  "$schema": "https://unpkg.com/knip@5/schema.json",
+  "workspaces": {
+    "packages/nuqs": {
+      "project": ["src/**/*.ts"]
+    },
+    "packages/docs": {
+      "entry": [
+        "content/**/*.mdx",
+        "src/app/**/page.tsx",
+        "src/app/**/layout.tsx",
+        "src/app/**/route.ts"
+      ],
+      "project": ["src/**/*.{ts,tsx}"],
+      "next": true
+    },
+    "packages/e2e/shared": {
+      "entry": [
+        "shared.spec.ts",
+        "playwright/*.ts",
+        "specs/**/*.{ts,tsx}",
+        "components/**/*.tsx",
+        "lib/options.ts"
+      ],
+      "project": ["**/*.{ts,tsx}"]
+    },
+    "packages/e2e/next": {
+      "entry": [
+        "src/app/**/*.{ts,tsx}",
+        "src/pages/**/*.{ts,tsx}",
+        "src/components/**/*.tsx",
+        "specs/**/*.ts"
+      ],
+      "project": ["**/*.{ts,tsx}"],
+      "ignore": [".next/**"]
+    },
+    "packages/e2e/react": {
+      "entry": ["src/main.tsx", "specs/**/*.ts"],
+      "project": ["**/*.{ts,tsx}"]
+    },
+    "packages/e2e/remix": {
+      "entry": ["app/**/*.{ts,tsx}", "specs/**/*.ts"],
+      "project": ["**/*.{ts,tsx}"],
+      "ignore": ["build/**"]
+    },
+    "packages/e2e/tanstack-router": {
+      "entry": [
+        "src/main.tsx",
+        "src/routes/**/*.tsx",
+        "src/routeTree.gen.ts",
+        "specs/**/*.ts"
+      ],
+      "project": ["**/*.{ts,tsx}"],
+      "ignore": ["node_modules/**"]
+    },
+    "packages/e2e/react-router/v5": {
+      "entry": ["src/main.tsx", "specs/**/*.ts"],
+      "project": ["**/*.{ts,tsx}"]
+    },
+    "packages/e2e/react-router/v6": {
+      "entry": ["src/main.tsx", "src/routes/**/*.tsx", "specs/**/*.ts"],
+      "project": ["**/*.{ts,tsx}"]
+    },
+    "packages/e2e/react-router/v7": {
+      "entry": ["app/**/*.{ts,tsx}", "server.mjs", "specs/**/*.ts"],
+      "project": ["**/*.{ts,tsx}"],
+      "ignore": ["build/**", ".react-router/**"]
+    }
+  },
+  "rules": {
+    "optionalPeerDependencies": "off"
+  }
+}

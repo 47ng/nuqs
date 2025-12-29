@@ -7,14 +7,15 @@
     "build": "vite build",
     "start": "vite preview --port 3004",
     "pretest": "playwright install chromium",
+    "typegen": "tsr generate",
     "test": "pnpm run --stream '/^test:/'",
     "test:types": "tsc",
-    "test:playwright": "playwright test --project=chromium",
-    "kill-server": "lsof -ti:3004 | xargs kill -9 || true"
+    "test:playwright": "playwright test --project=chromium"
   },
   "dependencies": {
     "@tanstack/react-router": "^1.131.27",
     "@tanstack/react-router-devtools": "^1.131.27",
+    "@tanstack/router-cli": "^1.131.27",
     "@tanstack/router-plugin": "^1.131.27",
     "nuqs": "workspace:*",
     "react": "catalog:react19",
@@ -26,9 +27,8 @@
     "@types/react": "catalog:react19",
     "@types/react-dom": "catalog:react19",
     "@vitejs/plugin-react": "^5.0.1",
-    "cross-env": "^10.0.0",
     "e2e-shared": "workspace:*",
-    "typescript": "^5.9.2",
+    "typescript": "catalog:typescript",
     "vite": "^7.1.11"
   }
 }
