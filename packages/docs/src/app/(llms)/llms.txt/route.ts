@@ -24,11 +24,11 @@ export async function GET() {
   const lines = [
     'nuqs - Type-safe search params state management for React. Like useState, but stored in the URL query string.',
     '',
-    '# Documentation Index',
+    '# Documentation index',
     '',
     'This index lists all documentation pages available to LLMs.',
     '',
-    '## Available Pages',
+    '## Available pages',
     '',
     ...pages.map(
       page =>
