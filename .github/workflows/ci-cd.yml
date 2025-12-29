@@ -69,6 +69,21 @@ jobs:
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
+  ci-scripts:
+    name: CI (scripts)
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3
+      - uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061
+      - uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - name: Install dependencies
+        run: pnpm install --ignore-scripts --frozen-lockfile --filter scripts
+      - name: Run tests
+        run: pnpm run test --filter scripts
+
   ci-core:
     name: CI (core)
     runs-on: ubuntu-24.04-arm
@@ -356,6 +371,7 @@ jobs:
       - docs
       - lint
       - publint
+      - ci-scripts
       - ci-core
       - e2e-next
       - e2e-react
@@ -382,6 +398,7 @@ jobs:
       - docs
       - lint
       - publint
+      - ci-scripts
       - ci-core
       - e2e-next
       - e2e-react
