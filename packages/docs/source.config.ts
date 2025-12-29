@@ -19,9 +19,12 @@ export default defineConfig({
 export const { docs, meta } = defineDocs({
   dir: 'content/docs',
   docs: {
+    schema: frontmatterSchema.extend({
+      exposeToLlms: z.boolean().default(true)
+    }),
     postprocess: {
-      includeProcessedMarkdown: true,
-    },
+      includeProcessedMarkdown: true
+    }
   }
 })
 
