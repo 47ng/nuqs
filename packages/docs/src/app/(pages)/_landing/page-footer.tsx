@@ -2,6 +2,7 @@ import { NuqsWordmark } from '@/src/components/logo'
 import {
   SiBluesky,
   SiGithub,
+  SiTwitch,
   SiX,
   SiYoutube
 } from '@icons-pack/react-simple-icons'
@@ -48,17 +49,26 @@ export function PageFooter() {
                 </Link>
               </li>
               <li>
+                <Link href="/blog" className="hover:underline" prefetch={false}>
+                  Blog
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/registry"
+                  className="hover:underline"
+                  prefetch={false}
+                >
+                  Shadcn Registry
+                </Link>
+              </li>
+              <li>
                 <Link
                   href="/playground"
                   className="hover:underline"
                   prefetch={false}
                 >
                   Playground
-                </Link>
-              </li>
-              <li>
-                <Link href="/blog" className="hover:underline" prefetch={false}>
-                  Blog
                 </Link>
               </li>
               <li>
@@ -109,6 +119,15 @@ export function PageFooter() {
                 >
                   <SiYoutube role="presentation" className="mr-2 size-5" />
                   <span>YouTube</span>
+                </a>
+              </li>
+              <li>
+                <a
+                  href="https://www.twitch.tv/francoisbest"
+                  className="inline-flex items-center gap-1 hover:underline"
+                >
+                  <SiTwitch role="presentation" className="mr-2 size-5" />
+                  <span>Twitch</span>
                 </a>
               </li>
             </ul>
