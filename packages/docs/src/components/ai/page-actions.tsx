@@ -92,7 +92,6 @@ export function CopyMarkdownUrlButton({ markdownUrl }: MarkdownButtonsProps) {
     ) {
       event.preventDefault()
       const fullUrl = new URL(markdownUrl, location.origin)
-      console.log('Opening URL:', fullUrl.toString())
       window.open(fullUrl, '_blank', 'noreferrer noopener')
       return
     }
