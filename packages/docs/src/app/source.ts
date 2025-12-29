@@ -11,12 +11,12 @@ export const source = loader({
     // Filter out llm-only pages from the sidebar
     transformers: [
       {
+        // @ts-expect-error returning undefined removes the node from the tree
         file(node, filePath) {
           if (!filePath) return node
           const file = this.storage.read(filePath)
           if (file?.format === 'page' && !file.data.exposeTo?.includes('user')) {
-            // Return undefined to remove from tree - cast to Item to satisfy types
-            return undefined as unknown as typeof node
+            return undefined
           }
           return node
         }
