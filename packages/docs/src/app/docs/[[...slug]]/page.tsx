@@ -20,7 +20,7 @@ export default async function Page(props: PageProps<'/docs/[[...slug]]'>) {
   const page = source.getPage(slug)
 
   // Return 404 for missing pages or llm-only pages
-  if (page == null || !page.data.exposeTo.includes('user')) {
+  if (!page || !page.data.exposeTo.includes('user')) {
     notFound()
   }
 
