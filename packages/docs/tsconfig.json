@@ -36,6 +36,6 @@
     "**/*.tsx",
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts"
-, "src/app/(llms)/llms-full.txt"  ],
+  ],
   "exclude": ["node_modules", ".next", "./src/registry/items/*.{ts,tsx}"]
 }

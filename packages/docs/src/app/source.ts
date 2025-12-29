@@ -1,6 +1,6 @@
 import { blog as blogPosts, docs, meta } from '@/.source'
-import { Item } from 'fumadocs-core/page-tree'
-import { InferPageType, loader } from 'fumadocs-core/source'
+import type { Item } from 'fumadocs-core/page-tree'
+import { type InferPageType, loader } from 'fumadocs-core/source'
 import { createMDXSource } from 'fumadocs-mdx/runtime/next'
 
 const mdxSource = createMDXSource(docs, meta)

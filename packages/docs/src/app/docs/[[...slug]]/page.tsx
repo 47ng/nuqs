@@ -8,7 +8,12 @@ import {
 } from '@/src/components/ai/page-actions'
 import { getBaseUrl } from '@/src/lib/url'
 import { github } from '@/src/lib/utils'
-import { DocsBody, DocsPage, DocsTitle } from 'fumadocs-ui/page'
+import {
+  DocsBody,
+  DocsDescription,
+  DocsPage,
+  DocsTitle
+} from 'fumadocs-ui/page'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { stat } from 'node:fs/promises'
@@ -34,14 +39,12 @@ export default async function Page(props: PageProps<'/docs/[[...slug]]'>) {
       }}
     >
       <DocsTitle>{page.data.title}</DocsTitle>
-      <p className="text-fd-muted-foreground mb-2 text-lg">
-        {page.data.description}
-      </p>
-      <div className="flex flex-row flex-wrap items-center gap-2 border-b pb-6">
+      <DocsDescription>{page.data.description}</DocsDescription>
+      <div className="mb-2 flex flex-row flex-wrap items-center gap-2 border-b pb-6">
         <CopyAsMarkdownButton markdownUrl={`${page.url}.md`} />
         <CopyMarkdownUrlButton markdownUrl={`${page.url}.md`} />
         <ViewOptions
-          markdownUrl={`${page.url}.mdx`}
+          markdownUrl={`${page.url}.md`}
           githubUrl={`https://github.com/${github.owner}/${github.repo}/blob/${github.branch}/packages/docs/content/docs/${page.path}`}
         />
       </div>

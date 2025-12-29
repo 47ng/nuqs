@@ -6,7 +6,7 @@ type AudienceProps = {
 
 /**
  * Content that is only shown to humans viewing the HTML docs.
- * Hidden from LLMs (llms-full.txt and .mdx endpoints) via the remark-audience plugin.
+ * Hidden from LLMs (llms-full.txt and .md endpoints) via the remark-audience plugin.
  */
 export function HumanContent({ children }: AudienceProps) {
   return <>{children}</>

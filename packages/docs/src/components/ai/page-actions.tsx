@@ -271,7 +271,7 @@ export function ViewOptions({
           })
         )}
       >
-        Open in…
+        Open…
         <ChevronDown className="text-fd-muted-foreground size-3.5" />
       </PopoverTrigger>
       <PopoverContent className="flex flex-col">
