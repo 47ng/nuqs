@@ -21,7 +21,10 @@ export const { docs, meta } = defineDocs({
   dir: 'content/docs',
   docs: {
     schema: frontmatterSchema.extend({
-      exposeTo: z.array(z.enum(['user', 'llm'])).min(1).default(['user', 'llm'])
+      exposeTo: z
+        .array(z.enum(['user', 'llm']))
+        .min(1)
+        .default(['user', 'llm'])
     }),
     postprocess: {
       includeProcessedMarkdown: true

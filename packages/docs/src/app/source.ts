@@ -1,4 +1,5 @@
 import { blog as blogPosts, docs, meta } from '@/.source'
+import { Item } from 'fumadocs-core/page-tree'
 import { InferPageType, loader } from 'fumadocs-core/source'
 import { createMDXSource } from 'fumadocs-mdx/runtime/next'
 
@@ -11,11 +12,14 @@ export const source = loader({
     // Filter out llm-only pages from the sidebar
     transformers: [
       {
-        // @ts-expect-error returning undefined removes the node from the tree
-        file(node, filePath) {
+        file(node, filePath): Item {
           if (!filePath) return node
           const file = this.storage.read(filePath)
-          if (file?.format === 'page' && !file.data.exposeTo?.includes('user')) {
+          if (
+            file?.format === 'page' &&
+            !file.data.exposeTo?.includes('user')
+          ) {
+            // @ts-expect-error not an Item, but works at runtime
             return undefined
           }
           return node
@@ -36,4 +40,4 @@ export const blog = loader({
   source: createMDXSource(blogPosts, [])
 })
 
-export type Page = InferPageType<typeof source>;
+export type Page = InferPageType<typeof source>

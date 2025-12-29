@@ -1,25 +1,17 @@
 import { useMDXComponents } from '@/mdx-components'
 import { AsideSponsors } from '@/src/app/(pages)/_landing/sponsors'
 import { source } from '@/src/app/source'
+import { LLMCopyButton, ViewOptions } from '@/src/components/ai/page-actions'
 import { getBaseUrl } from '@/src/lib/url'
-import {
-  DocsBody,
-  DocsPage,
-  DocsTitle
-} from 'fumadocs-ui/page'
+import { github } from '@/src/lib/utils'
+import { DocsBody, DocsPage, DocsTitle } from 'fumadocs-ui/page'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { stat } from 'node:fs/promises'
-import { LLMCopyButton, ViewOptions } from '@/src/components/ai/page-actions';
-import { github } from '@/src/lib/utils'
 
 export const dynamic = 'force-static'
 
-type PageProps = {
-  params: Promise<{ slug?: string[] }>
-}
-
-export default async function Page(props: PageProps) {
+export default async function Page(props: PageProps<'/docs/[[...slug]]'>) {
   const { slug } = await props.params
   const page = source.getPage(slug)
 
@@ -38,10 +30,10 @@ export default async function Page(props: PageProps) {
       }}
     >
       <DocsTitle>{page.data.title}</DocsTitle>
-      <p className="text-lg text-fd-muted-foreground mb-2">
+      <p className="text-fd-muted-foreground mb-2 text-lg">
         {page.data.description}
       </p>
-      <div className="flex flex-row flex-wrap gap-2 items-center border-b pb-6">
+      <div className="flex flex-row flex-wrap items-center gap-2 border-b pb-6">
         <LLMCopyButton markdownUrl={`${page.url}.mdx`} />
         <ViewOptions
           markdownUrl={`${page.url}.mdx`}
@@ -64,7 +56,9 @@ export async function generateStaticParams() {
     }))
 }
 
-export async function generateMetadata(props: PageProps) {
+export async function generateMetadata(
+  props: PageProps<'/docs/[[...slug]]'>
+): Promise<Metadata> {
   const { slug } = await props.params
   const page = source.getPage(slug)
   if (!page || !page.data.exposeTo.includes('user')) notFound()
@@ -73,7 +67,7 @@ export async function generateMetadata(props: PageProps) {
     title: page.data.title,
     description: page.data.description,
     ...(await getSocialImages(page.slugs))
-  } satisfies Metadata
+  }
 }
 
 // --
