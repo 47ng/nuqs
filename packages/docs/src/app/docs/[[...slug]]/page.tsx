@@ -23,7 +23,8 @@ export default async function Page(props: PageProps) {
   const { slug } = await props.params
   const page = source.getPage(slug)
 
-  if (page == null) {
+  // Return 404 for missing pages or llm-only pages
+  if (page == null || !page.data.exposeTo.includes('user')) {
     notFound()
   }
 
@@ -55,15 +56,18 @@ export default async function Page(props: PageProps) {
 }
 
 export async function generateStaticParams() {
-  return source.getPages().map(page => ({
-    slug: page.slugs
-  }))
+  return source
+    .getPages()
+    .filter(page => page.data.exposeTo.includes('user'))
+    .map(page => ({
+      slug: page.slugs
+    }))
 }
 
 export async function generateMetadata(props: PageProps) {
   const { slug } = await props.params
   const page = source.getPage(slug)
-  if (!page) notFound()
+  if (!page || !page.data.exposeTo.includes('user')) notFound()
 
   return {
     title: page.data.title,

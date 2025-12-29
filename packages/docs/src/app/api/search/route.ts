@@ -1,4 +1,15 @@
-import { source } from '@/src/app/source'
-import { createFromSource } from 'fumadocs-core/search/server'
+import { source, type Page } from '@/src/app/source'
+import { createSearchAPI } from 'fumadocs-core/search/server'
 
-export const { GET } = createFromSource(source)
+export const { GET } = createSearchAPI('advanced', {
+  indexes: source
+    .getPages()
+    .filter((page): page is Page => page.data.exposeTo.includes('user'))
+    .map(page => ({
+      id: page.url,
+      title: page.data.title,
+      description: page.data.description,
+      url: page.url,
+      structuredData: page.data.structuredData
+    }))
+})
