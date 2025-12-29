@@ -1,7 +1,11 @@
 import { useMDXComponents } from '@/mdx-components'
 import { AsideSponsors } from '@/src/app/(pages)/_landing/sponsors'
 import { source } from '@/src/app/source'
-import { LLMCopyButton, ViewOptions } from '@/src/components/ai/page-actions'
+import {
+  CopyAsMarkdownButton,
+  CopyMarkdownUrlButton,
+  ViewOptions
+} from '@/src/components/ai/page-actions'
 import { getBaseUrl } from '@/src/lib/url'
 import { github } from '@/src/lib/utils'
 import { DocsBody, DocsPage, DocsTitle } from 'fumadocs-ui/page'
@@ -34,7 +38,8 @@ export default async function Page(props: PageProps<'/docs/[[...slug]]'>) {
         {page.data.description}
       </p>
       <div className="flex flex-row flex-wrap items-center gap-2 border-b pb-6">
-        <LLMCopyButton markdownUrl={`${page.url}.mdx`} />
+        <CopyAsMarkdownButton markdownUrl={`${page.url}.md`} />
+        <CopyMarkdownUrlButton markdownUrl={`${page.url}.md`} />
         <ViewOptions
           markdownUrl={`${page.url}.mdx`}
           githubUrl={`https://github.com/${github.owner}/${github.repo}/blob/${github.branch}/packages/docs/content/docs/${page.path}`}
