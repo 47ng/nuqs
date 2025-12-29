@@ -88,7 +88,7 @@ export function CopyMarkdownUrlButton({ markdownUrl }: MarkdownButtonsProps) {
     if (
       event.metaKey ||
       event.ctrlKey ||
-      event.button === 1 /* middle mouse */
+      event.button === 1 // middle mouse
     ) {
       event.preventDefault()
       const fullUrl = new URL(markdownUrl, location.origin)
