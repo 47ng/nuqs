@@ -50,7 +50,7 @@
     "dayjs": "^1.11.13",
     "effect": "^3.17.8",
     "fumadocs-core": "16.0.4",
-    "fumadocs-mdx": "^13.0.2",
+    "fumadocs-mdx": "13.0.2",
     "fumadocs-ui": "16.0.4",
     "lucide-react": "^0.548.0",
     "mdast-util-mdx-jsx": "^3.2.0",
