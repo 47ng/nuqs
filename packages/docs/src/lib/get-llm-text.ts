@@ -9,7 +9,8 @@ export async function getLLMText(page: Page) {
 
   return `# ${page.data.title}
 
-URL: ${page.url}
+URL (HTML): ${page.url}
+URL (LLMs): ${page.url}.md
 Source: https://raw.githubusercontent.com/${github.owner}/${github.repo}/refs/heads/${github.branch}/packages/docs/content/docs/${page.path}
 
 ${page.data.description ?? ''}
