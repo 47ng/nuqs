@@ -1,0 +1,29 @@
+{
+  "name": "e2e-waku",
+  "version": "0.0.0",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "waku dev --port 3008",
+    "build": "waku build",
+    "start": "waku start --port 3008",
+    "pretest": "playwright install chromium",
+    "test": "playwright test --project=chromium"
+  },
+  "dependencies": {
+    "nuqs": "workspace:*",
+    "react": "catalog:react19",
+    "react-dom": "catalog:react19",
+    "react-server-dom-webpack": "catalog:react19",
+    "waku": "1.0.0-alpha.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "catalog:e2e",
+    "@types/react": "catalog:react19",
+    "@types/react-dom": "catalog:react19",
+    "@vitejs/plugin-react": "^5.1.0",
+    "babel-plugin-react-compiler": "^1.0.0",
+    "e2e-shared": "workspace:*",
+    "typescript": "^5.9.3"
+  }
+}

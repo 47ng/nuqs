@@ -55,6 +55,7 @@ catalogs:
     '@types/react-dom': ^19.2.3
     react: ^19.2.7
     react-dom: ^19.2.7
+    react-server-dom-webpack: ^19.2.7
 
   typescript:
     typescript: '^7.0.2'
