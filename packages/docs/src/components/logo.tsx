@@ -6,7 +6,11 @@ interface INuqsWordmarkProps extends React.ComponentProps<'svg'> {
   hasDownloader?: boolean
 }
 
+const LOGO_ADDRESS_URL = "https://nuqs.dev/icon.svg";
+
 export function NuqsWordmark({ className, hasDownloader = false }: INuqsWordmarkProps) {
+  const svgTextPromise = hasDownloader ? fetch(LOGO_ADDRESS_URL).then(res => res.text()) : null;
+
   return (
     <>
       <svg
@@ -51,7 +55,7 @@ export function NuqsWordmark({ className, hasDownloader = false }: INuqsWordmark
         />
       </svg>
       <span className="sr-only">nuqs</span>
-      {hasDownloader && <NuqsLogoDownloader />}
+      {hasDownloader && svgTextPromise && <NuqsLogoDownloader svgTextPromise={svgTextPromise} />}
     </>
   )
 }

@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { FC, use, useCallback, useEffect, useRef, useState } from 'react'
 import { SiGooglephotos, SiSvg } from '@icons-pack/react-simple-icons'
 import {
   handleCopyLogoPng,
@@ -18,10 +18,15 @@ enum CopyFormatEnum {
   LOGO_PNG = 'logo_png'
 }
 
-const NuqsLogoDownloader = () => {
+interface INuqsLogoDownloaderProps {
+  svgTextPromise: Promise<string>;
+}
+
+const NuqsLogoDownloader: FC<INuqsLogoDownloaderProps> = ({ svgTextPromise }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [position, setPosition] = useState({ x: 0, y: 0 })
   const [copiedItem, setCopiedItem] = useState<CopyFormatEnum | null>(null)
+  const svgText = use(svgTextPromise);
 
   const menuRef = useRef<HTMLDivElement>(null)
   const timeoutRef = useRef<NodeJS.Timeout>(null)
@@ -131,7 +136,7 @@ const NuqsLogoDownloader = () => {
               <button
                 className="dark:hover:bg-secondary flex w-full items-center gap-3 rounded-lg px-4 py-2.5 text-left transition-colors duration-150 hover:bg-gray-100"
                 onClick={() =>
-                  handleCopy(handleCopyLogoSvg, CopyFormatEnum.LOGO_SVG)
+                  handleCopy(()=>handleCopyLogoSvg(svgText), CopyFormatEnum.LOGO_SVG)
                 }
               >
                 <SiSvg className="h-4 w-4 text-gray-500 dark:text-gray-400" />
@@ -145,7 +150,7 @@ const NuqsLogoDownloader = () => {
               <button
                 className="dark:hover:bg-secondary flex w-full items-center gap-3 rounded-lg px-4 py-2.5 text-left transition-colors duration-150 hover:bg-gray-100"
                 onClick={() =>
-                  handleCopy(handleCopyLogoPng, CopyFormatEnum.LOGO_PNG)
+                  handleCopy(()=> handleCopyLogoPng(svgText), CopyFormatEnum.LOGO_PNG)
                 }
               >
                 <SiGooglephotos className="h-4 w-4 text-gray-500 dark:text-gray-400" />

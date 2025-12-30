@@ -1,23 +1,16 @@
 const LOGO_ADDRESS_URL = '/icon.svg'
 
-export const handleCopyLogoSvg = async () => {
-  const textPromise = fetch(LOGO_ADDRESS_URL).then(response => response.text())
-
+export const handleCopyLogoSvg = async (svgText: string) => {
   await navigator.clipboard.write([
     new ClipboardItem({
-      'text/plain': textPromise.then(
-        text => new Blob([text], { type: 'text/plain' })
-      )
-    })
-  ])
-}
+      "text/plain": new Blob([svgText], { type: "text/plain" }),
+    }),
+  ]);
+};
 
-export const handleCopyLogoPng = async () => {
+export const handleCopyLogoPng = async (svgText: string) => {
     const pngBlobPromise = new Promise<Blob>(async (resolve, reject) => {
       try {
-        const response = await fetch(LOGO_ADDRESS_URL)
-        const svgText = await response.text()
-
         const blob = new Blob([svgText], { type: 'image/svg+xml' })
         const url = URL.createObjectURL(blob)
 
