@@ -17,32 +17,32 @@
       "dependsOn": ["build"]
     },
     "e2e-next#build": {
-      "outputs": [".next/**", "!.next/cache/**", "cypress/**"],
+      "outputs": [".next/**", "!.next/cache/**"],
       "dependsOn": ["^build"],
       "env": ["BASE_PATH", "REACT_COMPILER", "E2E_NO_CACHE_ON_RERUN"]
     },
     "e2e-remix#build": {
-      "outputs": ["build/**", "cypress/**"],
+      "outputs": ["build/**"],
       "dependsOn": ["^build"],
       "env": ["REACT_COMPILER", "E2E_NO_CACHE_ON_RERUN"]
     },
     "e2e-react-router-v5#build": {
-      "outputs": ["dist/**", "cypress/**"],
+      "outputs": ["dist/**"],
       "dependsOn": ["^build"],
       "env": ["REACT_COMPILER", "E2E_NO_CACHE_ON_RERUN"]
     },
     "e2e-react-router-v6#build": {
-      "outputs": ["dist/**", "cypress/**"],
+      "outputs": ["dist/**"],
       "dependsOn": ["^build"],
       "env": ["REACT_COMPILER", "E2E_NO_CACHE_ON_RERUN"]
     },
     "e2e-react-router-v7#build": {
-      "outputs": [".react-router/**", "build/**", "cypress/**"],
+      "outputs": [".react-router/**", "build/**"],
       "dependsOn": ["^build"],
       "env": ["REACT_COMPILER", "E2E_NO_CACHE_ON_RERUN"]
     },
     "e2e-react#build": {
-      "outputs": ["dist/**", "cypress/**"],
+      "outputs": ["dist/**"],
       "dependsOn": ["^build"],
       "env": [
         "FULL_PAGE_NAV_ON_SHALLOW_FALSE",
@@ -51,7 +51,7 @@
       ]
     },
     "e2e-tanstack-router#build": {
-      "outputs": ["dist/**", "cypress/**", "src/routeTree.gen.ts"],
+      "outputs": ["dist/**", "src/routeTree.gen.ts"],
       "dependsOn": ["^build"],
       "env": ["REACT_COMPILER", "E2E_NO_CACHE_ON_RERUN"]
     },
@@ -79,22 +79,32 @@
       "dependsOn": ["^build"]
     },
     "e2e-next#test": {
+      "outputs": [".playwright/**"],
       "dependsOn": ["build"],
       "env": ["BASE_PATH", "REACT_COMPILER", "E2E_NO_CACHE_ON_RERUN"]
     },
     "e2e-remix#test": {
+      "outputs": [".playwright/**"],
+      "dependsOn": ["build"],
+      "env": ["REACT_COMPILER", "E2E_NO_CACHE_ON_RERUN"]
+    },
+    "e2e-react-router-v5#test": {
+      "outputs": [".playwright/**"],
       "dependsOn": ["build"],
       "env": ["REACT_COMPILER", "E2E_NO_CACHE_ON_RERUN"]
     },
     "e2e-react-router-v6#test": {
+      "outputs": [".playwright/**"],
       "dependsOn": ["build"],
       "env": ["REACT_COMPILER", "E2E_NO_CACHE_ON_RERUN"]
     },
     "e2e-react-router-v7#test": {
+      "outputs": [".playwright/**"],
       "dependsOn": ["build"],
       "env": ["REACT_COMPILER", "E2E_NO_CACHE_ON_RERUN"]
     },
     "e2e-react#test": {
+      "outputs": [".playwright/**"],
       "dependsOn": ["build"],
       "env": [
         "FULL_PAGE_NAV_ON_SHALLOW_FALSE",
@@ -103,6 +113,7 @@
       ]
     },
     "e2e-tanstack-router#test": {
+      "outputs": [".playwright/**"],
       "dependsOn": ["build"],
       "env": ["REACT_COMPILER", "E2E_NO_CACHE_ON_RERUN"]
     }

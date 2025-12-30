@@ -10,7 +10,7 @@ const dependentSchema = z.object({
   version: z.string().nullable(),
   createdAt: z.string().transform(date => new Date(date))
 })
-type Dependent = z.infer<typeof dependentSchema>
+export type Dependent = z.infer<typeof dependentSchema>
 
 export async function fetchDependents() {
   const data = await fetch('https://dependents.47ng.com', {

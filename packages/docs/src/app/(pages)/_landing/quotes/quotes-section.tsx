@@ -316,7 +316,7 @@ export function QuotesSection() {
           name: 'Abhishek Chauhan',
           handle: '@abhishekashwinc',
           avatar:
-            'https://pbs.twimg.com/profile_images/1989354618586058752/Y3NmNf_Q_400x400.jpg'
+            'https://pbs.twimg.com/profile_images/1999736604102123520/p4VZVIcH_400x400.jpg'
         }}
         text="Big fan of nuqs!"
         url="https://x.com/abhishekashwinc/status/1981613111472996827"
@@ -346,7 +346,7 @@ export function QuotesSection() {
           name: 'dmytro',
           handle: '@pqoqubbw',
           avatar:
-            'https://pbs.twimg.com/profile_images/1977481778651639808/XUXmfx6H_400x400.jpg'
+            'https://pbs.twimg.com/profile_images/2002890026905169920/T6FpaVHH_400x400.jpg'
         }}
         text={
           <>
@@ -365,6 +365,52 @@ export function QuotesSection() {
         }}
         text="Currently Using nuqs to add some pagination and searching feature into my nextjs app and i am loving it"
         url="https://x.com/surajtwt_/status/1982684604307034362"
+      />
+      <Quote
+        author={{
+          name: 'shibbi',
+          handle: '@shibbicodes',
+          avatar:
+            'https://pbs.twimg.com/profile_images/1911788743721164800/TBqun0ZP_400x400.jpg'
+        }}
+        text="We started using nuqs and achieved world peace internally."
+        url="https://x.com/shibbicodes/status/2002396495832817803"
+      />
+      <Quote
+        author={{
+          name: 'Ajay Patel',
+          handle: '@ajaypatel_aj',
+          avatar:
+            'https://pbs.twimg.com/profile_images/1957717329397141507/7ctDgOuc_400x400.jpg'
+        }}
+        text={
+          <>
+            <p>
+              Big thanks to nuqs for making URL state management actually
+              enjoyable! 🙌
+            </p>
+            <br />
+            <ul>
+              <li>useState but synced with the URL? ✅</li>
+              <li>Type-safe? ✅</li>
+              <li>Works everywhere (Next.js, Remix, React Router)? ✅</li>
+              <li>Only 6kb? ✅</li>
+            </ul>
+            <br />
+            <p>Happy to support such a well-crafted library 😇</p>
+          </>
+        }
+        url="https://x.com/ajaypatel_aj/status/2004082719047778362"
+      />
+      <Quote
+        author={{
+          name: 'anarki supreme',
+          handle: '@basedanarki',
+          avatar:
+            'https://pbs.twimg.com/profile_images/1994299964730781696/lh8gQd0V_400x400.jpg'
+        }}
+        text="I LOVE NUQS I LOVE PARAMS THAT JUST WORK AHAHA WOOHOOO❤️❤️❤️❤️"
+        url="https://x.com/basedanarki/status/2001970260426318003"
       />
     </section>
   )

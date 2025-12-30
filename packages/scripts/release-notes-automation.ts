@@ -12,7 +12,7 @@ const issueReferenceSchema = z.object({
     .nullable()
 })
 
-const prSchema = z.object({
+export const prSchema = z.object({
   number: z.number(),
   title: z.string(),
   author: z
@@ -43,15 +43,15 @@ const responseSchema = z.object({
   })
 })
 
-type PR = z.infer<typeof prSchema>
+export type PR = z.infer<typeof prSchema>
 
-const CATEGORIES = [
+export const CATEGORIES = [
   'Features',
   'Bug fixes',
   'Documentation',
   'Other changes'
 ] as const
-type Category = (typeof CATEGORIES)[number]
+export type Category = (typeof CATEGORIES)[number]
 
 async function fetchMilestonePRs(): Promise<PR[]> {
   const token = process.env.GITHUB_TOKEN
@@ -116,7 +116,7 @@ async function fetchMilestonePRs(): Promise<PR[]> {
   return parsed.data.repository.milestone.pullRequests.nodes
 }
 
-function splitCategoryTitle(title: string): [Category, string] {
+export function splitCategoryTitle(title: string): [Category, string] {
   // Regex to match conventional commit prefix with optional scope
   // Matches: feat:, feat(scope):, fix:, docs:, doc:, etc.
   const conventionalCommitRegex = /^(\w+)(?:\([^)]+\))?:\s*(.+)$/
@@ -148,7 +148,7 @@ function splitCategoryTitle(title: string): [Category, string] {
   return [category, cleanTitle] as const
 }
 
-type CategorizedPR = {
+export type CategorizedPR = {
   category: Category
   number: number
   title: string
@@ -156,7 +156,9 @@ type CategorizedPR = {
   closingIssues: Array<{ number: number; author: string | null }>
 }
 
-function groupPRsByCategory(prs: PR[]): Record<Category, CategorizedPR[]> {
+export function groupPRsByCategory(
+  prs: PR[]
+): Record<Category, CategorizedPR[]> {
   const categories: Record<Category, CategorizedPR[]> = {
     Features: [],
     'Bug fixes': [],
@@ -186,7 +188,7 @@ function groupPRsByCategory(prs: PR[]): Record<Category, CategorizedPR[]> {
   return categories
 }
 
-function collectContributors(prs: PR[]): string[] {
+export function collectContributors(prs: PR[]): string[] {
   const contributors = new Set<string>()
 
   // Known bot accounts to exclude
@@ -219,10 +221,28 @@ function collectContributors(prs: PR[]): string[] {
   )
 }
 
-function formatClosingIssues(issues: CategorizedPR['closingIssues']): string {
+export function formatClosingIssues(
+  issues: CategorizedPR['closingIssues']
+): string {
   if (issues.length === 0) return ''
   const issueNumbers = issues.map(i => `#${i.number}`).join(', ')
   return ` (closes ${issueNumbers})`
+}
+
+export function formatTitle(title: string): string {
+  // Convert backtick code blocks to <code> tags for better rendering in GitHub release notes
+  return title.replace(/`([^`]+)`/g, '<code>$1</code>')
+}
+
+export function formatThanksSection(contributors: string[]): string | null {
+  if (contributors.length === 0) {
+    return null
+  }
+  // Such travesty will not go unpunished! 🇬🇧
+  // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/ListFormat/ListFormat#oxford_comma
+  const oxfordComma = new Intl.ListFormat('en-US', { type: 'conjunction' })
+  const allContributors = oxfordComma.format(contributors.map(c => `@${c}`))
+  return `Huge thanks to ${allContributors} for helping!`
 }
 
 // Main execution
@@ -246,7 +266,9 @@ async function main() {
       for (const pr of prsInCategory) {
         const author = pr.author ? `, by @${pr.author}` : ''
         const closingIssues = formatClosingIssues(pr.closingIssues)
-        console.log(`- #${pr.number} - ${pr.title}${author}${closingIssues}`)
+        console.log(
+          `- #${pr.number} - ${formatTitle(pr.title)}${author}${closingIssues}`
+        )
       }
 
       console.log() // Empty line between categories
@@ -254,17 +276,22 @@ async function main() {
 
     // Collect and display contributors
     const contributors = collectContributors(prs)
-    // Such travesty will not go unpunished! 🇬🇧
-    // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/ListFormat/ListFormat#oxford_comma
-    const oxfordComma = new Intl.ListFormat('en-US', { type: 'conjunction' })
-    const allContributors = oxfordComma.format(contributors.map(c => `@${c}`))
-
-    console.log('## Thanks\n')
-    console.log(`Huge thanks to ${allContributors} for helping!\n`)
+    const thanksSection = formatThanksSection(contributors)
+    if (thanksSection) {
+      console.log('## Thanks\n')
+      console.log(`${thanksSection}\n`)
+    }
   } catch (error) {
     console.error('Error:', error)
     process.exit(1)
   }
 }
 
-main()
+// Only run main when executed directly (not when imported)
+const isMainModule =
+  import.meta.url === `file://${process.argv[1]}` ||
+  process.argv[1]?.endsWith('release-notes-automation.ts')
+
+if (isMainModule) {
+  main()
+}
