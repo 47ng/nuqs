@@ -133,7 +133,7 @@ const SPONSORS: Sponsors = [
     img: 'https://avatars.githubusercontent.com/u/38361000?s=200&v=4'
   },
   {
-    handle: '@RhysSullivan',
+    handle: 'RhysSullivan',
     name: 'Rhys Sullivan',
     url: 'https://rhys.dev',
     img: 'https://avatars.githubusercontent.com/u/39114868?s=200&v=4'
@@ -277,41 +277,42 @@ export function InlineSponsorsList({
   return (
     <ul
       className={cn(
-        'flex flex-wrap items-center gap-2',
+        'flex flex-wrap items-center justify-center gap-2',
         // 'container grid grid-cols-2 gap-y-12 md:grid-cols-3 lg:grid-cols-6',
         className
       )}
       {...props}
     >
       {SPONSORS.map(sponsor => (
-        <li key={sponsor.handle} className="flex flex-col items-center">
-          <a
-            href={sponsor.url}
-            className="size-12 rounded-full transition-transform hover:scale-125"
-          >
-            <img
-              src={sponsor.img}
-              alt={sponsor.name ?? sponsor.handle}
-              className="mx-auto size-12 rounded-full"
-              title={sponsor.name ?? sponsor.handle}
-              width={48}
-              height={48}
-            />
-          </a>
-          {/* <a
-            href={sponsor.url}
-            className="mt-2 inline-block text-center font-medium hover:underline"
-          >
-            {sponsor.name ?? sponsor.handle}
-          </a> */}
-          {/* {Boolean(sponsor.title) && (
-            <span className="mt-1 inline-block text-sm text-zinc-500">
-              {sponsor.title}
-            </span>
-          )} */}
-        </li>
+        <InlineSponsor key={sponsor.handle} {...sponsor} />
       ))}
+      <InlineSponsor
+        handle="ajaypatelaj"
+        name="Ajay Patel"
+        url="https://shadcnstudio.com/?utm_source=nuqs&utm_medium=sponsor&utm_campaign=nuqs"
+        img="https://avatars.githubusercontent.com/u/749684?s=200&v=4"
+      />
     </ul>
+  )
+}
+
+function InlineSponsor({ url, img, handle, name }: Sponsors[number]) {
+  return (
+    <li className="flex flex-col items-center">
+      <a
+        href={url}
+        className="size-12 rounded-full transition-transform hover:scale-125"
+      >
+        <img
+          src={img}
+          alt={name ?? handle}
+          className="mx-auto size-12 rounded-full"
+          title={name ?? handle}
+          width={48}
+          height={48}
+        />
+      </a>
+    </li>
   )
 }
 
