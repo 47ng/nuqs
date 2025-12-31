@@ -74,9 +74,20 @@ type ReleaseDay = {
   date: string
   hasStable: boolean
   hasBeta: boolean
+  versions: string[]
 }
 
-function processReleases(releases: GitHubRelease[], year: number): Activity[] {
+export type ReleasesByDate = Record<string, string[]>
+
+type ProcessedReleases = {
+  activities: Activity[]
+  releasesByDate: ReleasesByDate
+}
+
+function processReleases(
+  releases: GitHubRelease[],
+  year: number
+): ProcessedReleases {
   const yearPrefix = `${year}-`
 
   // Filter to specified year releases only
@@ -85,24 +96,26 @@ function processReleases(releases: GitHubRelease[], year: number): Activity[] {
   )
 
   // Group releases by date
-  const releasesByDate = new Map<string, ReleaseDay>()
+  const releaseDayMap = new Map<string, ReleaseDay>()
 
   for (const release of yearReleases) {
     const date = release.published_at.split('T')[0]
     const isBeta = isBetaVersion(release.tag_name)
 
-    const existing = releasesByDate.get(date)
+    const existing = releaseDayMap.get(date)
     if (existing) {
       if (isBeta) {
         existing.hasBeta = true
       } else {
         existing.hasStable = true
       }
+      existing.versions.push(release.tag_name)
     } else {
-      releasesByDate.set(date, {
+      releaseDayMap.set(date, {
         date,
         hasStable: !isBeta,
-        hasBeta: isBeta
+        hasBeta: isBeta,
+        versions: [release.tag_name]
       })
     }
   }
@@ -114,7 +127,7 @@ function processReleases(releases: GitHubRelease[], year: number): Activity[] {
 
   for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
     const dateStr = d.toISOString().split('T')[0]
-    const releaseDay = releasesByDate.get(dateStr)
+    const releaseDay = releaseDayMap.get(dateStr)
 
     let level = 0
     if (releaseDay?.hasStable) {
@@ -130,7 +143,13 @@ function processReleases(releases: GitHubRelease[], year: number): Activity[] {
     })
   }
 
-  return activities
+  // Convert map to plain object for serialization
+  const releasesByDate: ReleasesByDate = {}
+  for (const [date, day] of releaseDayMap) {
+    releasesByDate[date] = day.versions
+  }
+
+  return { activities, releasesByDate }
 }
 
 type ReleaseContributionGraphProps = {
@@ -141,7 +160,7 @@ async function ReleaseContributionGraphLoader({
   year
 }: ReleaseContributionGraphProps) {
   const releases = await fetchGitHubReleases()
-  const activities = processReleases(releases, year)
+  const { activities, releasesByDate } = processReleases(releases, year)
 
   const stableCount = activities.filter(a => a.level === 2).length
   const betaCount = activities.filter(a => a.level === 1).length
@@ -149,6 +168,7 @@ async function ReleaseContributionGraphLoader({
   return (
     <ReleaseContributionGraphClient
       activities={activities}
+      releasesByDate={releasesByDate}
       stableCount={stableCount}
       betaCount={betaCount}
       year={year}

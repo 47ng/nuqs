@@ -8,12 +8,20 @@ import {
   ContributionGraphTotalCount,
   type Activity
 } from '@/src/components/kibo-ui/contribution-graph'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger
+} from '@/src/components/ui/tooltip'
 import { cn } from '@/src/lib/utils'
 import { useState } from 'react'
+import type { ReleasesByDate } from './release-contribution-graph'
 
 type ReleaseContributionGraphClientProps = {
   year: number
   activities: Activity[]
+  releasesByDate: ReleasesByDate
   stableCount: number
   betaCount: number
 }
@@ -21,41 +29,64 @@ type ReleaseContributionGraphClientProps = {
 export function ReleaseContributionGraphClient({
   year,
   activities,
+  releasesByDate,
   stableCount,
   betaCount
 }: ReleaseContributionGraphClientProps) {
   const [highlightStable, setHighlightStable] = useState(true)
   const [highlightBeta, setHighlightBeta] = useState(false)
   return (
-    <ContributionGraph
-      data={activities}
-      maxLevel={2}
-      blockSize={10}
-      blockMargin={3}
-      blockRadius={2}
-      fontSize={12}
-      labels={{
-        totalCount: `${stableCount + betaCount} releases in ${year}`
-      }}
-    >
-      <ContributionGraphCalendar>
-        {({ activity, dayIndex, weekIndex }) => (
-          <ContributionGraphBlock
-            activity={activity}
-            dayIndex={dayIndex}
-            weekIndex={weekIndex}
-            className={cn(
-              'data-[level="0"]:fill-muted',
-              highlightBeta
-                ? 'data-[level="1"]:fill-amber-500 dark:data-[level="1"]:fill-amber-400'
-                : 'data-[level="1"]:fill-muted-foreground/60',
-              highlightStable
-                ? 'data-[level="2"]:fill-green-500 dark:data-[level="2"]:fill-green-400'
-                : 'data-[level="2"]:fill-foreground/80'
-            )}
-          />
-        )}
-      </ContributionGraphCalendar>
+    <TooltipProvider>
+      <ContributionGraph
+        data={activities}
+        maxLevel={2}
+        blockSize={10}
+        blockMargin={3}
+        blockRadius={2}
+        fontSize={12}
+        labels={{
+          totalCount: `${stableCount + betaCount} releases in ${year}`
+        }}
+      >
+        <ContributionGraphCalendar>
+          {({ activity, dayIndex, weekIndex }) => {
+            const versions = releasesByDate[activity.date]
+            const block = (
+              <ContributionGraphBlock
+                activity={activity}
+                dayIndex={dayIndex}
+                weekIndex={weekIndex}
+                className={cn(
+                  'data-[level="0"]:fill-muted',
+                  highlightBeta
+                    ? 'data-[level="1"]:fill-amber-500 dark:data-[level="1"]:fill-amber-400'
+                    : 'data-[level="1"]:fill-muted-foreground/60',
+                  highlightStable
+                    ? 'data-[level="2"]:fill-green-500 dark:data-[level="2"]:fill-green-400'
+                    : 'data-[level="2"]:fill-foreground/80'
+                )}
+              />
+            )
+            if (!versions) {
+              return block
+            }
+            return (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <g>{block}</g>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p className="font-semibold">{activity.date}</p>
+                  <ul>
+                    {versions.map(v => (
+                      <li key={v}>{v}</li>
+                    ))}
+                  </ul>
+                </TooltipContent>
+              </Tooltip>
+            )
+          }}
+        </ContributionGraphCalendar>
       <ContributionGraphFooter>
         <ContributionGraphTotalCount />
         <div className="text-muted-foreground ml-auto flex items-center gap-4">
@@ -91,6 +122,7 @@ export function ReleaseContributionGraphClient({
           </button>
         </div>
       </ContributionGraphFooter>
-    </ContributionGraph>
+      </ContributionGraph>
+    </TooltipProvider>
   )
 }
