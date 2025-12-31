@@ -133,10 +133,16 @@ const SPONSORS: Sponsors = [
     img: 'https://avatars.githubusercontent.com/u/38361000?s=200&v=4'
   },
   {
-    handle: '@RhysSullivan',
+    handle: 'RhysSullivan',
     name: 'Rhys Sullivan',
     url: 'https://rhys.dev',
     img: 'https://avatars.githubusercontent.com/u/39114868?s=200&v=4'
+  },
+  {
+    handle: 'ajaypatelaj',
+    name: 'Ajay Patel',
+    url: 'https://shadcnstudio.com/?utm_source=nuqs&utm_medium=sponsor&utm_campaign=nuqs',
+    img: 'https://avatars.githubusercontent.com/u/749684?s=200&v=4'
   }
 ]
 
@@ -277,7 +283,7 @@ export function InlineSponsorsList({
   return (
     <ul
       className={cn(
-        'flex flex-wrap items-center gap-2',
+        'flex flex-wrap items-center justify-center gap-2',
         // 'container grid grid-cols-2 gap-y-12 md:grid-cols-3 lg:grid-cols-6',
         className
       )}
