@@ -161,7 +161,6 @@ async function ReleaseContributionGraphLoader({
 }: ReleaseContributionGraphProps) {
   const releases = await fetchGitHubReleases()
   const { activities, releasesByDate } = processReleases(releases, year)
-
   const stableCount = activities.filter(a => a.level === 2).length
   const betaCount = activities.filter(a => a.level === 1).length
 
@@ -171,7 +170,6 @@ async function ReleaseContributionGraphLoader({
       releasesByDate={releasesByDate}
       stableCount={stableCount}
       betaCount={betaCount}
-      year={year}
     />
   )
 }

@@ -27,7 +27,6 @@ type ReleaseContributionGraphClientProps = {
 }
 
 export function ReleaseContributionGraphClient({
-  year,
   activities,
   releasesByDate,
   stableCount,
@@ -45,7 +44,7 @@ export function ReleaseContributionGraphClient({
         blockRadius={2}
         fontSize={12}
         labels={{
-          totalCount: `${stableCount + betaCount} releases in ${year}`
+          totalCount: `${stableCount + betaCount} releases in {{year}}`
         }}
       >
         <ContributionGraphCalendar>
