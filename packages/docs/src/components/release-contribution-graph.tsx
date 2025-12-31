@@ -3,12 +3,24 @@ import { Suspense } from 'react'
 import { z } from 'zod'
 import { ReleaseContributionGraphClient } from './release-contribution-graph.client'
 
+function ReleaseContributionGraphSkeleton() {
+  return (
+    <div className="flex w-full max-w-[686px] flex-col gap-2">
+      <div className="bg-muted h-[108px] animate-pulse rounded" />
+      <div className="flex h-7 items-center justify-between">
+        <div className="bg-muted h-4.5 w-36 animate-pulse rounded" />
+        <div className="bg-muted h-4.5 w-44 animate-pulse rounded" />
+      </div>
+    </div>
+  )
+}
+
 export function ReleaseContributionGraph({
   year
 }: ReleaseContributionGraphProps) {
   return (
-    <div className="my-12 flex items-center justify-center">
-      <Suspense>
+    <div className="my-12 flex flex-col items-center justify-center">
+      <Suspense fallback={<ReleaseContributionGraphSkeleton />}>
         <ReleaseContributionGraphLoader year={year} />
       </Suspense>
     </div>
@@ -133,7 +145,7 @@ function processReleases(
     if (releaseDay?.hasStable) {
       level = 2 // Green for stable
     } else if (releaseDay?.hasBeta) {
-      level = 1 // Yellow for beta
+      level = 1 // Amber for beta
     }
 
     activities.push({
