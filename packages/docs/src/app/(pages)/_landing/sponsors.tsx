@@ -155,6 +155,12 @@ const SPONSORS: Sponsors = [
     name: 'David Haz',
     url: 'https://github.com/DavidHDev',
     img: 'https://avatars.githubusercontent.com/u/48634587?s=200&v=4'
+  },
+  {
+    handle: 'basedanarki',
+    name: 'anarki',
+    url: 'https://github.com/basedanarki',
+    img: 'https://avatars.githubusercontent.com/u/161698650?s=200&v=4'
   }
 ]
 
