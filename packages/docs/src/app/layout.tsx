@@ -6,6 +6,7 @@ import { Inter } from 'next/font/google'
 import Script from 'next/script'
 import { NuqsAdapter } from 'nuqs/adapters/next/app'
 import { type ReactNode } from 'react'
+import { Favicon } from '../components/favicon'
 import { ResponsiveHelper } from '../components/responsive-helpers'
 import { cn } from '../lib/utils'
 import './globals.css'
@@ -56,6 +57,7 @@ export default function Layout({ children }: { children: ReactNode }) {
       // https://github.com/shadcn-ui/ui/issues/5552#issuecomment-2435024526
       suppressHydrationWarning
     >
+      <Favicon />
       <body>
         {/* Top-level banners go here */}
         <RootProvider>

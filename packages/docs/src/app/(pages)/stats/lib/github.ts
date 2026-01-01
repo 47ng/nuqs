@@ -113,7 +113,6 @@ export async function getStarHistory(
         body: JSON.stringify({ query })
       }
     )
-    console.dir(process.env.GITHUB_TOKEN)
     if (!res.ok) {
       throw new Error(
         `GitHub API error: ${res.status} ${res.statusText}
