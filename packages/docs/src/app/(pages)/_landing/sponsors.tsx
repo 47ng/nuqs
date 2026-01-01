@@ -137,6 +137,12 @@ const SPONSORS: Sponsors = [
     name: 'Rhys Sullivan',
     url: 'https://rhys.dev',
     img: 'https://avatars.githubusercontent.com/u/39114868?s=200&v=4'
+  },
+  {
+    handle: 'brandonmcconnell',
+    name: 'Brandon McConnell',
+    url: 'https://github.com/brandonmcconnell',
+    img: 'https://avatars.githubusercontent.com/u/5913254?s=200&v=4'
   }
 ]
 
