@@ -10,5 +10,7 @@
       "path": "https://raw.githubusercontent.com/47ng/nuqs-inertia-pingcrm/refs/heads/with-nuqs/resources/js/lib/nuqs-inertia-adapter.ts",
       "target": "~/resources/js/lib/nuqs-inertia-adapter.ts"
     }
-  ]
+  ],
+  "categories": ["adapter"],
+  "author": "François Best <franky47>"
 }
