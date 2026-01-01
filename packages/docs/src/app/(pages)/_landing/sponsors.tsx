@@ -149,6 +149,12 @@ const SPONSORS: Sponsors = [
     name: 'Ru Chern Chong',
     url: 'https://github.com/ruchernchong',
     img: 'https://avatars.githubusercontent.com/u/10343662?s=200&v=4'
+  },
+  {
+    handle: 'DavidHDev',
+    name: 'David Haz',
+    url: 'https://github.com/DavidHDev',
+    img: 'https://avatars.githubusercontent.com/u/48634587?s=200&v=4'
   }
 ]
 
