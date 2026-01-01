@@ -143,6 +143,12 @@ const SPONSORS: Sponsors = [
     name: 'Brandon McConnell',
     url: 'https://github.com/brandonmcconnell',
     img: 'https://avatars.githubusercontent.com/u/5913254?s=200&v=4'
+  },
+  {
+    handle: 'ruchernchong',
+    name: 'Ru Chern Chong',
+    url: 'https://github.com/ruchernchong',
+    img: 'https://avatars.githubusercontent.com/u/10343662?s=200&v=4'
   }
 ]
 
