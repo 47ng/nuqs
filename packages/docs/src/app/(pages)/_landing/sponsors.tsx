@@ -120,7 +120,7 @@ const SPONSORS: Sponsors = [
     title: (
       <>
         Co-Founder of{' '}
-        <a href="https://marblecms.com" className="hover:underline">
+        <a href="https://usenotra.com" className="hover:underline">
           Marble
         </a>
       </>
