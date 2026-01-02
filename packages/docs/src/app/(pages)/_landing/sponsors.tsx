@@ -119,9 +119,9 @@ const SPONSORS: Sponsors = [
     img: 'https://avatars.githubusercontent.com/u/68947960?s=200&v=4',
     title: (
       <>
-        Co-Founder of{' '}
-        <a href="https://marblecms.com" className="hover:underline">
-          Marble
+        Founder of{' '}
+        <a href="https://usenotra.com" className="hover:underline">
+          Notra
         </a>
       </>
     )
