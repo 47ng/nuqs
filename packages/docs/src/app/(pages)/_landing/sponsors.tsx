@@ -121,7 +121,7 @@ const SPONSORS: Sponsors = [
       <>
         Founder of{' '}
         <a href="https://usenotra.com" className="hover:underline">
-          Marble
+          Notra
         </a>
       </>
     )
