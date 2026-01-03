@@ -1,9 +1,20 @@
 import { cn } from '@/src/lib/utils'
 
-export function NuqsWordmark({ className }: React.ComponentProps<'img'>) {
+import NuqsLogoDownloader from './logo-downloader'
+
+interface INuqsWordmarkProps extends React.ComponentProps<'svg'> {
+  hasDownloader?: boolean
+}
+
+const LOGO_ADDRESS_URL = "https://nuqs.dev/icon.svg";
+
+export function NuqsWordmark({ className, hasDownloader = false }: INuqsWordmarkProps) {
+  const svgTextPromise = hasDownloader ? fetch(LOGO_ADDRESS_URL).then(res => res.text()) : null;
+
   return (
     <>
       <svg
+        id="nuqs-wordmark"
         viewBox="0 0 1912 351"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
@@ -44,6 +55,7 @@ export function NuqsWordmark({ className }: React.ComponentProps<'img'>) {
         />
       </svg>
       <span className="sr-only">nuqs</span>
+      {hasDownloader && svgTextPromise && <NuqsLogoDownloader svgTextPromise={svgTextPromise} />}
     </>
   )
 }
