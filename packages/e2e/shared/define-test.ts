@@ -11,6 +11,7 @@ export type TestConfig = {
     | 'react-router-v7'
     | 'remix'
     | 'tanstack-router'
+    | 'waku'
   description?: string
 }
 
@@ -21,7 +22,8 @@ const routerDisplay: Record<NonNullable<TestConfig['router']>, string> = {
   'react-router-v6': 'React Router v6',
   'react-router-v7': 'React Router v7',
   remix: 'Remix',
-  'tanstack-router': 'TanStack Router'
+  'tanstack-router': 'TanStack Router',
+  waku: 'Waku'
 }
 
 export function defineTest(

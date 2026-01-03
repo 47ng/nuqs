@@ -365,6 +365,41 @@ jobs:
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
+  e2e-waku:
+    name: E2E (waku)
+    runs-on: ubuntu-22.04-arm
+    needs: [ci-core]
+    steps:
+      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3
+      - uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061
+      - uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile --filter e2e-waku...
+      - name: Run tests
+        run: pnpm run test ${{ github.event_name == 'workflow_dispatch' && '--force' || '' }} --filter e2e-waku
+        env:
+          TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+          TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
+          E2E_NO_CACHE_ON_RERUN: ${{ github.run_attempt }}
+      - name: Save Playwright report
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4
+        if: failure()
+        with:
+          path: packages/e2e/waku/.playwright/*
+          name: playwright-waku
+          include-hidden-files: true
+      - uses: 47ng/actions-slack-notify@main
+        name: Notify on Slack
+        if: failure()
+        with:
+          status: ${{ job.status }}
+          jobName: waku
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
   ci-notify:
     name: Notify on Slack
     runs-on: ubuntu-24.04-arm
@@ -379,6 +414,7 @@ jobs:
       - e2e-react-router
       - e2e-remix
       - e2e-tanstack-router
+      - e2e-waku
     steps:
       - uses: 47ng/actions-slack-notify@main
         with:
@@ -406,6 +442,7 @@ jobs:
       - e2e-react-router
       - e2e-remix
       - e2e-tanstack-router
+      - e2e-waku
     if: ${{ github.ref_name == 'master' || github.ref_name == 'beta' }}
     steps:
       - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8
