@@ -161,6 +161,12 @@ const SPONSORS: Sponsors = [
     name: 'anarki',
     url: 'https://github.com/basedanarki',
     img: 'https://avatars.githubusercontent.com/u/161698650?s=200&v=4'
+  },
+  {
+    handle: 'haydenbleasel',
+    name: 'Hayden Bleasel',
+    url: 'https://www.haydenbleasel.com/',
+    img: 'https://avatars.githubusercontent.com/u/4142719?s=200&v=4'
   }
 ]
 
