@@ -18,9 +18,9 @@ jobs:
     name: Linting
     runs-on: ubuntu-24.04-arm
     steps:
-      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8
       - uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061
-      - uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903
+      - uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f
         with:
           node-version-file: .node-version
           cache: pnpm
@@ -48,9 +48,9 @@ jobs:
     runs-on: ubuntu-24.04-arm
     needs: [ci-core]
     steps:
-      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8
       - uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061
-      - uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903
+      - uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f
         with:
           node-version-file: .node-version
           cache: pnpm
@@ -73,9 +73,9 @@ jobs:
     name: CI (scripts)
     runs-on: ubuntu-24.04-arm
     steps:
-      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8
       - uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061
-      - uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903
+      - uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f
         with:
           node-version-file: .node-version
           cache: pnpm
@@ -88,9 +88,9 @@ jobs:
     name: CI (core)
     runs-on: ubuntu-24.04-arm
     steps:
-      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8
       - uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061
-      - uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903
+      - uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f
         with:
           node-version-file: .node-version
           cache: pnpm
@@ -111,9 +111,9 @@ jobs:
     runs-on: ubuntu-24.04-arm
     needs: [ci-core]
     steps:
-      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8
       - uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061
-      - uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903
+      - uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f
         with:
           node-version-file: .node-version
           cache: pnpm
@@ -129,6 +129,7 @@ jobs:
         env:
           TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
           TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - uses: 47ng/actions-slack-notify@main
         name: Notify on Slack
         if: failure()
@@ -178,9 +179,9 @@ jobs:
             base-path: "/base"
             react-compiler: true
     steps:
-      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8
       - uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061
-      - uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903
+      - uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f
         with:
           node-version-file: .node-version
           cache: pnpm
@@ -198,7 +199,7 @@ jobs:
           TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
           E2E_NO_CACHE_ON_RERUN: ${{ github.run_attempt }}
       - name: Save Playwright report
-        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
         if: failure()
         with:
           path: packages/e2e/next/.playwright/*
@@ -222,9 +223,9 @@ jobs:
       matrix:
         full-page-nav-on-shallow-false: [false, true]
     steps:
-      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8
       - uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061
-      - uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903
+      - uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f
         with:
           node-version-file: .node-version
           cache: pnpm
@@ -238,7 +239,7 @@ jobs:
           E2E_NO_CACHE_ON_RERUN: ${{ github.run_attempt }}
           FULL_PAGE_NAV_ON_SHALLOW_FALSE: ${{ matrix.full-page-nav-on-shallow-false }}
       - name: Save Playwright report
-        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
         if: failure()
         with:
           path: packages/e2e/react/.playwright/*
@@ -264,9 +265,9 @@ jobs:
           - "v6"
           - "v7"
     steps:
-      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8
       - uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061
-      - uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903
+      - uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f
         with:
           node-version-file: .node-version
           cache: pnpm
@@ -279,7 +280,7 @@ jobs:
           TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
           E2E_NO_CACHE_ON_RERUN: ${{ github.run_attempt }}
       - name: Save Playwright report
-        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
         if: failure()
         with:
           path: packages/e2e/react-router/${{ matrix.react-router-version }}/.playwright/*
@@ -299,9 +300,9 @@ jobs:
     runs-on: ubuntu-24.04-arm
     needs: [ci-core]
     steps:
-      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8
       - uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061
-      - uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903
+      - uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f
         with:
           node-version-file: .node-version
           cache: pnpm
@@ -314,7 +315,7 @@ jobs:
           TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
           E2E_NO_CACHE_ON_RERUN: ${{ github.run_attempt }}
       - name: Save Playwright report
-        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
         if: failure()
         with:
           path: packages/e2e/remix/.playwright/*
@@ -334,9 +335,9 @@ jobs:
     runs-on: ubuntu-22.04-arm
     needs: [ci-core]
     steps:
-      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8
       - uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061
-      - uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903
+      - uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f
         with:
           node-version-file: .node-version
           cache: pnpm
@@ -349,7 +350,7 @@ jobs:
           TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
           E2E_NO_CACHE_ON_RERUN: ${{ github.run_attempt }}
       - name: Save Playwright report
-        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
         if: failure()
         with:
           path: packages/e2e/tanstack-router/.playwright/*
@@ -407,9 +408,9 @@ jobs:
       - e2e-tanstack-router
     if: ${{ github.ref_name == 'master' || github.ref_name == 'beta' }}
     steps:
-      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8
       - uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061
-      - uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903
+      - uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f
         with:
           node-version-file: .node-version
           cache: pnpm

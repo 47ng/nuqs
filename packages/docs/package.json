@@ -47,6 +47,7 @@
     "@tailwindcss/postcss": "^4.1.12",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "date-fns": "^4.1.0",
     "dayjs": "^1.11.13",
     "effect": "^3.17.8",
     "fumadocs-core": "16.0.4",
