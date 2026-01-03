@@ -147,6 +147,8 @@ export default function App() {
 
 ## <ReactRouter className='inline mr-1.5 -mt-1' role="presentation"/> React Router v6 [#react-router-v6]
 
+### BrowserRouter [#react-router-v6-browser]
+
 ```tsx title="src/main.tsx"
 // [!code word:NuqsAdapter]
 import { NuqsAdapter } from 'nuqs/adapters/react-router/v6'
@@ -169,11 +171,41 @@ export function ReactRouter() {
 }
 ```
 
+### HashRouter [#react-router-v6-hash]
+
+For applications using `createHashRouter` or `<HashRouter>`:
+
+```tsx title="src/main.tsx"
+// [!code word:NuqsAdapter]
+import { NuqsAdapter } from 'nuqs/adapters/react-router/v6-hash'
+import { createHashRouter, RouterProvider } from 'react-router-dom'
+import App from './App'
+
+const router = createHashRouter([
+  {
+    path: '/',
+    element: <App />
+  }
+])
+
+export function ReactRouter() {
+  return (
+    <NuqsAdapter>
+      <RouterProvider router={router} />
+    </NuqsAdapter>
+  )
+}
+```
+
 <Callout>
 
- Only `BrowserRouter` is supported. There may be support for `HashRouter`
- in the future (see issue [#810](https://github.com/47ng/nuqs/issues/810)), but
- support for `MemoryRouter` is not planned.
+HashRouter stores the pathname and search params in the URL hash fragment
+(e.g., `http://example.com/#/page?foo=bar`). This is useful for hosting
+on static file servers that don't support URL rewriting.
+
+Document fragment identifiers (e.g., `#section`) are not supported when
+using HashRouter since the hash is used for routing. `MemoryRouter`
+is not supported.
 
 </Callout>
 

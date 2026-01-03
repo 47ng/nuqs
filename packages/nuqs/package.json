@@ -45,6 +45,7 @@
     "adapters/remix.d.ts",
     "adapters/react-router.d.ts",
     "adapters/react-router/v6.d.ts",
+    "adapters/react-router/v6-hash.d.ts",
     "adapters/react-router/v7.d.ts",
     "adapters/tanstack-router.d.ts",
     "adapters/custom.d.ts",
@@ -105,6 +106,11 @@
       "types": "./dist/adapters/react-router/v6.d.ts",
       "import": "./dist/adapters/react-router/v6.js",
       "default": "./dist/adapters/react-router/v6.js"
+    },
+    "./adapters/react-router/v6-hash": {
+      "types": "./dist/adapters/react-router/v6-hash.d.ts",
+      "import": "./dist/adapters/react-router/v6-hash.js",
+      "default": "./dist/adapters/react-router/v6-hash.js"
     },
     "./adapters/react-router/v7": {
       "types": "./dist/adapters/react-router/v7.d.ts",
