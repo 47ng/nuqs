@@ -13,13 +13,15 @@ export function testRouting({
   methodOptions = ['replace', 'push'],
   ...options
 }: TestRoutingOptions) {
-  const factory = defineTest('Routing', ({ path }) => {
+  const factory = defineTest('Routing', ({ path, isHashRouter }) => {
     for (const shallow of shallowOptions) {
       for (const method of methodOptions) {
         it(`picks up state from a router call pointing to the same page - router.${method}({ shallow: ${shallow} })`, async ({
           page
         }) => {
-          await navigateTo(page, getRoutingUrl(path, { shallow, method }))
+          await navigateTo(page, getRoutingUrl(path, { shallow, method }), '', {
+            isHashRouter
+          })
           await expect(page.locator('#state')).toBeEmpty()
           await page.locator('button').click()
           await expect(page.locator('#state')).toHaveText('pass')
@@ -34,7 +36,9 @@ export function testRouting({
         }) => {
           await navigateTo(
             page,
-            getRoutingUrl(path + '/other', { shallow, method })
+            getRoutingUrl(path + '/other', { shallow, method }),
+            '',
+            { isHashRouter }
           )
           await expect(page.locator('#state')).toBeEmpty()
           await page.locator('button').click()

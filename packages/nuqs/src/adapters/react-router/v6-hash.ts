@@ -1,10 +1,12 @@
 import { useSearchParams } from 'react-router-dom'
 import type { AdapterProvider } from '../lib/context'
-import { createHashRouterBasedAdapter } from '../lib/hash-router'
+import { createReactRouterBasedAdapter } from '../lib/react-router'
 
-const adapter = createHashRouterBasedAdapter({
+const adapter = createReactRouterBasedAdapter({
   adapter: 'react-router-v6-hash',
-  useSearchParams
+  useSearchParams,
+  mode: 'hash'
+  // Note: useNavigate is not needed for hash mode since hash is never sent to server
 })
 
 /**
