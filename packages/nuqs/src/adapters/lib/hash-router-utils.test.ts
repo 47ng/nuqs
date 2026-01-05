@@ -32,15 +32,21 @@ describe('hash-router-utils', () => {
     })
 
     it('handles multiple query params', () => {
-      expect(getSearchFromHash('#/page?foo=bar&baz=qux')).toBe('?foo=bar&baz=qux')
+      expect(getSearchFromHash('#/page?foo=bar&baz=qux')).toBe(
+        '?foo=bar&baz=qux'
+      )
     })
 
     it('handles nested paths', () => {
-      expect(getSearchFromHash('#/deep/nested/path?key=value')).toBe('?key=value')
+      expect(getSearchFromHash('#/deep/nested/path?key=value')).toBe(
+        '?key=value'
+      )
     })
 
     it('preserves everything after the first ?', () => {
-      expect(getSearchFromHash('#/page?foo=bar?baz=qux')).toBe('?foo=bar?baz=qux')
+      expect(getSearchFromHash('#/page?foo=bar?baz=qux')).toBe(
+        '?foo=bar?baz=qux'
+      )
     })
   })
 

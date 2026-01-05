@@ -148,6 +148,40 @@ export function ReactRouter() {
 
 </details>
 
+<details><summary><span style="width:16px;height:16px;background:#fff;border-radius:2px;"><img width="16px" height="16px" src="https://reactrouter.com/_brand/React%20Router%20Brand%20Assets/React%20Router%20Logo/Light.svg" /></span> React Router v6 (HashRouter)
+</summary>
+
+> Supported React Router versions: `react-router-dom@^6`
+>
+> For applications using `HashRouter` or `createHashRouter`, where the URL path and search params are stored in the hash fragment (e.g., `/#/page?foo=bar`).
+
+```tsx
+import { NuqsAdapter } from 'nuqs/adapters/react-router/v6-hash'
+import { createHashRouter, RouterProvider } from 'react-router-dom'
+import App from './App'
+
+const router = createHashRouter([
+  {
+    path: '/',
+    element: <App />
+  }
+])
+
+export function ReactRouter() {
+  return (
+    <NuqsAdapter>
+      <RouterProvider router={router} />
+    </NuqsAdapter>
+  )
+}
+```
+
+Note: HashRouter has some limitations compared to BrowserRouter:
+- Native HTML forms don't work (they submit to `location.search`, not the hash)
+- `shallow: false` has no effect (hash is never sent to server)
+
+</details>
+
 <details><summary><span style="width:16px;height:16px;background:#fff;border-radius:2px;"><img width="16px" height="16px" src="https://reactrouter.com/_brand/React%20Router%20Brand%20Assets/React%20Router%20Logo/Light.svg" /></span> React Router v7
 </summary>
 
