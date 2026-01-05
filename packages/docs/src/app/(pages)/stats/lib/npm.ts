@@ -145,7 +145,7 @@ function groupByWeek(data: Datum[]): Datum[] {
   for (const d of data) {
     const date = dayjs(d.date)
     const key = [
-      "'" + (date.year() - 2000),
+      "'" + (date.isoWeekYear() - 2000),
       date.isoWeek().toFixed().padStart(2, '0')
     ].join('W')
     weeks.set(key, (weeks.get(key) ?? 0) + d.downloads)
