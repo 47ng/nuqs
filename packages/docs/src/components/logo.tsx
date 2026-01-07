@@ -1,9 +1,22 @@
 import { cn } from '@/src/lib/utils'
 
-export function NuqsWordmark({ className }: React.ComponentProps<'img'>) {
+import NuqsLogoDownloader from './logo-downloader'
+
+interface INuqsWordmarkProps extends React.ComponentProps<'svg'> {
+  hasDownloader?: boolean
+}
+
+const LOGO_ADDRESS_URL_LIGHT = "https://nuqs.dev/icon.dev.svg";
+const LOGO_ADDRESS_URL_DARK = "https://nuqs.dev/icon.svg";
+
+export function NuqsWordmark({ className, hasDownloader = false }: INuqsWordmarkProps) {
+  const svgTextPromiseLight = hasDownloader ? fetch(LOGO_ADDRESS_URL_LIGHT).then(res => res.text()) : null;
+  const svgTextPromiseDark = hasDownloader ? fetch(LOGO_ADDRESS_URL_DARK).then(res => res.text()) : null;
+
   return (
     <>
       <svg
+        id="nuqs-wordmark"
         viewBox="0 0 1912 351"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
@@ -44,6 +57,7 @@ export function NuqsWordmark({ className }: React.ComponentProps<'img'>) {
         />
       </svg>
       <span className="sr-only">nuqs</span>
+      {hasDownloader && svgTextPromiseLight && svgTextPromiseDark && <NuqsLogoDownloader svgTextPromiseLight={svgTextPromiseLight} svgTextPromiseDark={svgTextPromiseDark} />}
     </>
   )
 }
