@@ -56,23 +56,31 @@ export function runSharedTests(
 
   // --
 
-  testForm({
-    path: `${pathPrefix}/form/useQueryState`,
-    hook: 'useQueryState',
-    ...config
-  })
-  testForm({
-    path: `${pathPrefix}/form/useQueryStates`,
-    hook: 'useQueryStates',
-    ...config
-  })
+  // Form tests only apply to standard mode
+  // (native HTML forms submit to location.search, not location.hash)
+  if (!config.isHashRouter) {
+    testForm({
+      path: `${pathPrefix}/form/useQueryState`,
+      hook: 'useQueryState',
+      ...config
+    })
+    testForm({
+      path: `${pathPrefix}/form/useQueryStates`,
+      hook: 'useQueryStates',
+      ...config
+    })
+  }
 
   // --
 
-  testHashPreservation({
-    path: `${pathPrefix}/hash-preservation`,
-    ...config
-  })
+  // Hash preservation test only applies to standard mode
+  // (can't have a hash within a hash in HashRouter)
+  if (!config.isHashRouter) {
+    testHashPreservation({
+      path: `${pathPrefix}/hash-preservation`,
+      ...config
+    })
+  }
 
   // --
 
@@ -116,14 +124,21 @@ export function runSharedTests(
 
   // --
 
+  // HashRouter doesn't support shallow routing (no useNavigate in hash mode)
+  // so only test with shallow: false
+  const routingOptions = config.isHashRouter
+    ? { shallowOptions: [false] as boolean[] }
+    : {}
   testRouting({
     path: `${pathPrefix}/routing/useQueryState`,
     hook: 'useQueryState',
+    ...routingOptions,
     ...config
   })
   testRouting({
     path: `${pathPrefix}/routing/useQueryStates`,
     hook: 'useQueryStates',
+    ...routingOptions,
     ...config
   })
 

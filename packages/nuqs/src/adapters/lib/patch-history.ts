@@ -2,6 +2,10 @@ import { debug } from '../../lib/debug'
 import type { Emitter } from '../../lib/emitter'
 import { error } from '../../lib/errors'
 import { resetQueues, spinQueueResetMutex } from '../../lib/queues/reset'
+import {
+  createStandardStrategy,
+  type RouterModeStrategy
+} from './router-strategies'
 
 export type SearchParamsSyncEmitterEvents = { update: URLSearchParams }
 
@@ -16,6 +20,10 @@ declare global {
   }
 }
 
+/**
+ * Legacy function for backwards compatibility with other adapters.
+ * For React Router adapters, use the strategy-based approach instead.
+ */
 export function getSearchParams(url: string | URL): URLSearchParams {
   if (url instanceof URL) {
     return url.searchParams
@@ -61,57 +69,94 @@ export function markHistoryAsPatched(adapter: string): void {
   history.nuqs.adapters.push(adapter)
 }
 
-export function patchHistory(
+/**
+ * Unified history patching that works with any router mode strategy.
+ * The strategy determines how to extract search params from URLs.
+ */
+export function patchHistoryWithStrategy(
   emitter: Emitter<SearchParamsSyncEmitterEvents>,
-  adapter: string
+  adapter: string,
+  strategy: RouterModeStrategy
 ): void {
   if (!shouldPatchHistory(adapter)) {
     return
   }
-  let lastSearchSeen = typeof location === 'object' ? location.search : ''
+
+  // Track the last search string we've seen
+  let lastSearchSeen =
+    typeof location === 'object' ? strategy.getSearchString() : ''
 
   emitter.on('update', search => {
     const searchString = search.toString()
     lastSearchSeen = searchString.length ? '?' + searchString : ''
   })
 
-  window.addEventListener('popstate', () => {
-    lastSearchSeen = location.search
-    resetQueues()
-  })
+  // Subscribe to all navigation events for this mode
+  for (const event of strategy.navigationEvents) {
+    window.addEventListener(event, () => {
+      lastSearchSeen = strategy.getSearchString()
+      resetQueues()
+    })
+  }
 
+  const modeLabel = strategy.supportsServerNavigation ? '' : ' hash'
   debug(
-    '[nuqs %s] Patching history (%s adapter)',
+    '[nuqs %s] Patching history%s (%s adapter)',
     '0.0.0-inject-version-here',
+    modeLabel,
     adapter
   )
+
   function sync(url: URL | string) {
     spinQueueResetMutex()
+
+    const newSearch = strategy.extractSearchStringFromUrl(url)
+    if (newSearch === null) {
+      // Could not extract search, skip
+      return
+    }
+
     try {
-      const newSearch = new URL(url, location.origin).search
       if (newSearch === lastSearchSeen) {
         return
       }
-    } catch {}
-    try {
-      emitter.emit('update', getSearchParams(url))
+      const searchParams = strategy.extractSearchParamsFromUrl(url)
+      if (searchParams) {
+        emitter.emit('update', searchParams)
+      }
     } catch (e) {
       console.error(e)
     }
   }
+
   const originalPushState = history.pushState
   const originalReplaceState = history.replaceState
+
   history.pushState = function nuqs_pushState(state, marker, url) {
     originalPushState.call(history, state, '', url)
     if (url && marker !== historyUpdateMarker) {
       sync(url)
     }
   }
+
   history.replaceState = function nuqs_replaceState(state, marker, url) {
     originalReplaceState.call(history, state, '', url)
     if (url && marker !== historyUpdateMarker) {
       sync(url)
     }
   }
+
   markHistoryAsPatched(adapter)
+}
+
+/**
+ * Legacy patchHistory function for backwards compatibility.
+ * Uses standard strategy (location.search) behavior.
+ */
+export function patchHistory(
+  emitter: Emitter<SearchParamsSyncEmitterEvents>,
+  adapter: string
+): void {
+  // Delegate to strategy-based implementation with standard (location.search) strategy
+  patchHistoryWithStrategy(emitter, adapter, createStandardStrategy())
 }

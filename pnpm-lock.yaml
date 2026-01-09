@@ -413,6 +413,46 @@ importers:
         specifier: ^7.1.11
         version: 7.1.12(@types/node@24.3.0)(jiti@2.5.1)(lightningcss@1.30.1)(terser@5.43.1)(tsx@4.20.4)(yaml@2.8.1)
 
+  packages/e2e/react-router/v6-hash:
+    dependencies:
+      nuqs:
+        specifier: workspace:*
+        version: link:../../../nuqs
+      react:
+        specifier: catalog:react19
+        version: 19.2.2
+      react-dom:
+        specifier: catalog:react19
+        version: 19.2.2(react@19.2.2)
+      react-router-dom:
+        specifier: 6.30.1
+        version: 6.30.1(react-dom@19.2.2(react@19.2.2))(react@19.2.2)
+    devDependencies:
+      '@playwright/test':
+        specifier: catalog:e2e
+        version: 1.57.0
+      '@types/node':
+        specifier: ^24.3.0
+        version: 24.3.0
+      '@types/react':
+        specifier: catalog:react19
+        version: 19.2.7
+      '@types/react-dom':
+        specifier: catalog:react19
+        version: 19.2.3(@types/react@19.2.7)
+      '@vitejs/plugin-react':
+        specifier: ^5.0.1
+        version: 5.0.4(vite@7.1.12(@types/node@24.3.0)(jiti@2.5.1)(lightningcss@1.30.1)(terser@5.43.1)(tsx@4.20.4)(yaml@2.8.1))
+      e2e-shared:
+        specifier: workspace:*
+        version: link:../../shared
+      typescript:
+        specifier: ^5.9.2
+        version: 5.9.2
+      vite:
+        specifier: ^7.1.11
+        version: 7.1.12(@types/node@24.3.0)(jiti@2.5.1)(lightningcss@1.30.1)(terser@5.43.1)(tsx@4.20.4)(yaml@2.8.1)
+
   packages/e2e/react-router/v7:
     dependencies:
       '@react-router/node':

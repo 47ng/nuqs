@@ -4,11 +4,11 @@ import { navigateTo } from '../playwright/navigate'
 
 export const testConditionalRendering = defineTest(
   'Conditional rendering',
-  ({ path }) => {
+  ({ path, isHashRouter }) => {
     it('should have the correct initial state after mounting', async ({
       page
     }) => {
-      await navigateTo(page, path, '?test=pass')
+      await navigateTo(page, path, '?test=pass', { isHashRouter })
       await page.locator('button#mount').click()
       await expect(page.locator('#state')).toHaveText('pass')
       await expect(page.locator('#null-detector')).toHaveText('pass')
@@ -17,7 +17,7 @@ export const testConditionalRendering = defineTest(
     it('should keep the correct state after unmounting and remounting', async ({
       page
     }) => {
-      await navigateTo(page, path)
+      await navigateTo(page, path, '', { isHashRouter })
       await page.locator('button#mount').click()
       await page.locator('button#set').click()
       await page.locator('button#unmount').click()
@@ -29,7 +29,7 @@ export const testConditionalRendering = defineTest(
     it('should keep the correct state after unmounting and remounting with a different state', async ({
       page
     }) => {
-      await navigateTo(page, path, '?test=init')
+      await navigateTo(page, path, '?test=init', { isHashRouter })
       await page.locator('button#mount').click()
       await page.locator('button#set').click()
       await page.locator('button#unmount').click()

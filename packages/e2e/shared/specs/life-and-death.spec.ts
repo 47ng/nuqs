@@ -10,57 +10,62 @@ import { navigateTo } from '../playwright/navigate'
  * See https://github.com/47ng/nuqs/issues/702
  */
 
-export const testLifeAndDeath = defineTest('Life & Death', ({ path }) => {
-  it('set from URL initial state, clear from useQueryState', async ({
-    page
-  }) => {
-    await navigateTo(page, path, '?test=pass')
-    await assertFilledState(page)
-    await page.locator('#clear-useQueryState').click()
-    await assertEmptyState(page)
-  })
+export const testLifeAndDeath = defineTest(
+  'Life & Death',
+  ({ path, isHashRouter }) => {
+    it('set from URL initial state, clear from useQueryState', async ({
+      page
+    }) => {
+      await navigateTo(page, path, '?test=pass', { isHashRouter })
+      await assertFilledState(page)
+      await page.locator('#clear-useQueryState').click()
+      await assertEmptyState(page)
+    })
 
-  it('set from URL initial state, clear from useQueryStates', async ({
-    page
-  }) => {
-    await navigateTo(page, path, '?test=pass')
-    await assertFilledState(page)
-    await page.locator('#clear-useQueryStates').click()
-    await assertEmptyState(page)
-  })
+    it('set from URL initial state, clear from useQueryStates', async ({
+      page
+    }) => {
+      await navigateTo(page, path, '?test=pass', { isHashRouter })
+      await assertFilledState(page)
+      await page.locator('#clear-useQueryStates').click()
+      await assertEmptyState(page)
+    })
 
-  it('set from useQueryState, clear from useQueryState', async ({ page }) => {
-    await navigateTo(page, path)
-    await page.locator('#set-useQueryState').click()
-    await assertFilledState(page)
-    await page.locator('#clear-useQueryState').click()
-    await assertEmptyState(page)
-  })
+    it('set from useQueryState, clear from useQueryState', async ({ page }) => {
+      await navigateTo(page, path, '', { isHashRouter })
+      await page.locator('#set-useQueryState').click()
+      await assertFilledState(page)
+      await page.locator('#clear-useQueryState').click()
+      await assertEmptyState(page)
+    })
 
-  it('set from useQueryState, clear from useQueryStates', async ({ page }) => {
-    await navigateTo(page, path)
-    await page.locator('#set-useQueryState').click()
-    await assertFilledState(page)
-    await page.locator('#clear-useQueryStates').click()
-    await assertEmptyState(page)
-  })
+    it('set from useQueryState, clear from useQueryStates', async ({ page }) => {
+      await navigateTo(page, path, '', { isHashRouter })
+      await page.locator('#set-useQueryState').click()
+      await assertFilledState(page)
+      await page.locator('#clear-useQueryStates').click()
+      await assertEmptyState(page)
+    })
 
-  it('set from useQueryStates, clear from useQueryState', async ({ page }) => {
-    await navigateTo(page, path)
-    await page.locator('#set-useQueryStates').click()
-    await assertFilledState(page)
-    await page.locator('#clear-useQueryState').click()
-    await assertEmptyState(page)
-  })
+    it('set from useQueryStates, clear from useQueryState', async ({ page }) => {
+      await navigateTo(page, path, '', { isHashRouter })
+      await page.locator('#set-useQueryStates').click()
+      await assertFilledState(page)
+      await page.locator('#clear-useQueryState').click()
+      await assertEmptyState(page)
+    })
 
-  it('set from useQueryStates, clear from useQueryStates', async ({ page }) => {
-    await navigateTo(page, path)
-    await page.locator('#set-useQueryStates').click()
-    await assertFilledState(page)
-    await page.locator('#clear-useQueryStates').click()
-    await assertEmptyState(page)
-  })
-})
+    it('set from useQueryStates, clear from useQueryStates', async ({
+      page
+    }) => {
+      await navigateTo(page, path, '', { isHashRouter })
+      await page.locator('#set-useQueryStates').click()
+      await assertFilledState(page)
+      await page.locator('#clear-useQueryStates').click()
+      await assertEmptyState(page)
+    })
+  }
+)
 
 async function assertFilledState(page: Page) {
   await expect(page.locator('#client-useQueryState')).toHaveText('pass')

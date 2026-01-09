@@ -2,11 +2,11 @@ import { expect, test as it } from '@playwright/test'
 import { defineTest } from '../define-test'
 import { navigateTo } from '../playwright/navigate'
 
-export const testForm = defineTest('Form', ({ path }) => {
+export const testForm = defineTest('Form', ({ path, isHashRouter }) => {
   it('supports native HTML forms to update search params', async ({
     page
   }) => {
-    await navigateTo(page, path)
+    await navigateTo(page, path, '', { isHashRouter })
     await page.locator('input').fill('pass')
     await page.locator('input').press('Enter')
     await expect(page.locator('#state')).toHaveText('pass')
@@ -15,7 +15,7 @@ export const testForm = defineTest('Form', ({ path }) => {
   })
 
   it('supports loading initial form state from the URL', async ({ page }) => {
-    await navigateTo(page, path, '?test=init')
+    await navigateTo(page, path, '?test=init', { isHashRouter })
     await expect(page.locator('input')).toHaveValue('init')
     await expect(page.locator('#state')).toHaveText('init')
     await page.locator('input').fill('pass')

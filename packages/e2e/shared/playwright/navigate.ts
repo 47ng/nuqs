@@ -1,9 +1,28 @@
 import type { Page } from '@playwright/test'
 
-export async function navigateTo(page: Page, pathname: string, search = '') {
-  // Needs relative URLs for basePath support
-  const relativePathname = pathname.startsWith('.') ? pathname : `.${pathname}`
-  const relativeUrl = `${relativePathname}${search}`
+export type NavigateOptions = {
+  isHashRouter?: boolean
+}
+
+export async function navigateTo(
+  page: Page,
+  pathname: string,
+  search = '',
+  options: NavigateOptions = {}
+) {
+  const { isHashRouter = false } = options
+
+  let relativeUrl: string
+  if (isHashRouter) {
+    // For HashRouter, construct URL as ./#/pathname?search
+    const hashPath = pathname.startsWith('/') ? pathname : `/${pathname}`
+    relativeUrl = `./#${hashPath}${search}`
+  } else {
+    // Needs relative URLs for basePath support
+    const relativePathname = pathname.startsWith('.') ? pathname : `.${pathname}`
+    relativeUrl = `${relativePathname}${search}`
+  }
+
   const response = await page.goto(relativeUrl)
   if (!response?.ok()) {
     throw new Error(

@@ -8,10 +8,16 @@ export type TestConfig = {
     | 'next-pages'
     | 'react-spa'
     | 'react-router-v6'
+    | 'react-router-v6-hash'
     | 'react-router-v7'
     | 'remix'
     | 'tanstack-router'
   description?: string
+  /**
+   * When true, search params are stored in the URL hash fragment
+   * (e.g., /#/page?foo=bar instead of /page?foo=bar)
+   */
+  isHashRouter?: boolean
 }
 
 const routerDisplay: Record<NonNullable<TestConfig['router']>, string> = {
@@ -19,6 +25,7 @@ const routerDisplay: Record<NonNullable<TestConfig['router']>, string> = {
   'next-pages': 'pages router',
   'react-spa': 'React SPA',
   'react-router-v6': 'React Router v6',
+  'react-router-v6-hash': 'React Router v6 Hash',
   'react-router-v7': 'React Router v7',
   remix: 'Remix',
   'tanstack-router': 'TanStack Router'

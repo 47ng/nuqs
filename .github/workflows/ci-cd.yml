@@ -263,6 +263,7 @@ jobs:
       matrix:
         react-router-version:
           - "v6"
+          - "v6-hash"
           - "v7"
     steps:
       - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8
