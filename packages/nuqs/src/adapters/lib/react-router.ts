@@ -120,12 +120,16 @@ export function createReactRouterBasedAdapter({
     })
     useEffect(() => {
       function onPopState() {
-        setSearchParams(
-          applyChange(new URLSearchParams(location.search), watchKeys, false)
-        )
+        startTransition(() => {
+          setSearchParams(
+            applyChange(new URLSearchParams(location.search), watchKeys, false)
+          )
+        })
       }
       function onEmitterUpdate(search: URLSearchParams) {
-        setSearchParams(applyChange(search, watchKeys, true))
+        startTransition(() => {
+          setSearchParams(applyChange(search, watchKeys, true))
+        })
       }
       emitter.on('update', onEmitterUpdate)
       window.addEventListener('popstate', onPopState)
