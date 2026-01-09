@@ -480,17 +480,17 @@ importers:
   packages/e2e/remix:
     dependencies:
       '@remix-run/node':
-        specifier: ^2.17.0
-        version: 2.17.0(typescript@5.9.2)
+        specifier: ^2.17.3
+        version: 2.17.3(typescript@5.9.2)
       '@remix-run/react':
         specifier: ^2.17.3
         version: 2.17.3(react-dom@19.2.2(react@19.2.2))(react@19.2.2)(typescript@5.9.2)
       '@remix-run/serve':
-        specifier: ^2.17.0
-        version: 2.17.0(typescript@5.9.2)
+        specifier: ^2.17.3
+        version: 2.17.3(typescript@5.9.2)
       isbot:
-        specifier: ^5.1.30
-        version: 5.1.30
+        specifier: ^5.1.32
+        version: 5.1.32
       nuqs:
         specifier: workspace:*
         version: link:../../nuqs
@@ -505,8 +505,8 @@ importers:
         specifier: catalog:e2e
         version: 1.57.0
       '@remix-run/dev':
-        specifier: ^2.17.0
-        version: 2.17.0(@remix-run/react@2.17.3(react-dom@19.2.2(react@19.2.2))(react@19.2.2)(typescript@5.9.2))(@remix-run/serve@2.17.0(typescript@5.9.2))(@types/node@24.3.0)(jiti@2.5.1)(lightningcss@1.30.1)(terser@5.43.1)(ts-node@10.9.2(@types/node@24.3.0)(typescript@5.9.2))(tsx@4.20.4)(typescript@5.9.2)(vite@7.1.12(@types/node@24.3.0)(jiti@2.5.1)(lightningcss@1.30.1)(terser@5.43.1)(tsx@4.20.4)(yaml@2.8.1))(yaml@2.8.1)
+        specifier: ^2.17.3
+        version: 2.17.3(@remix-run/react@2.17.3(react-dom@19.2.2(react@19.2.2))(react@19.2.2)(typescript@5.9.2))(@remix-run/serve@2.17.3(typescript@5.9.2))(@types/node@24.3.0)(jiti@2.5.1)(lightningcss@1.30.1)(terser@5.43.1)(ts-node@10.9.2(@types/node@24.3.0)(typescript@5.9.2))(tsx@4.20.4)(typescript@5.9.2)(vite@7.1.12(@types/node@24.3.0)(jiti@2.5.1)(lightningcss@1.30.1)(terser@5.43.1)(tsx@4.20.4)(yaml@2.8.1))(yaml@2.8.1)
       '@types/react':
         specifier: catalog:react19
         version: 19.2.7
@@ -2947,8 +2947,8 @@ packages:
       react-redux:
         optional: true
 
-  '@remix-run/dev@2.17.0':
-    resolution: {integrity: sha512-L2W8PYH3jUvCKlJeUkFMGyOMzUsM0goZg4n0NU69O85TNlB1jgiqSbSMb69xhviphGpwzAoH+D/p3/cUnw4DbQ==}
+  '@remix-run/dev@2.17.3':
+    resolution: {integrity: sha512-iMu7PXBwcg4NxoDTltM/qoaQ4Q9V1VkF5xeOTAXHaPC4ibm5nbn5Eo5PxzRUcs0+KmQ6pqcRn0JWM++MEz1Lng==}
     engines: {node: '>=18.0.0'}
     hasBin: true
     peerDependencies:
@@ -2967,8 +2967,8 @@ packages:
       wrangler:
         optional: true
 
-  '@remix-run/express@2.17.0':
-    resolution: {integrity: sha512-VUNpdrX3WSLPOkRBbsTQao5Vu/xdKcB8AY+44pAyC7iW5iIKHDb6EYlDvpbMLcMNh9ErYGhpPtshaBiBTMvjiw==}
+  '@remix-run/express@2.17.3':
+    resolution: {integrity: sha512-rg5dd0ADbr6Q7VCV2BoKh7omSCtoDts6o17jTEFzncqTt18t5M9kzlH00QqEzcZ6i20UoH3EqJK4Lkj8wKGEuw==}
     engines: {node: '>=18.0.0'}
     peerDependencies:
       express: ^4.20.0
@@ -2980,8 +2980,8 @@ packages:
   '@remix-run/node-fetch-server@0.9.0':
     resolution: {integrity: sha512-SoLMv7dbH+njWzXnOY6fI08dFMI5+/dQ+vY3n8RnnbdG7MdJEgiP28Xj/xWlnRnED/aB6SFw56Zop+LbmaaKqA==}
 
-  '@remix-run/node@2.17.0':
-    resolution: {integrity: sha512-ISy3N4peKB+Fo8ddh+mU6ki3HzQqLXwJxUrAtqxYxrBDM4Pwc7EvISrcQ4QasB6ORBknJeEZSBu69WDRhGzrjA==}
+  '@remix-run/node@2.17.3':
+    resolution: {integrity: sha512-8ZxzI7PPoulP2D+Xlyl8RrJUnFw7NlaeVSR8ZSrvUh9AKOR/r75FuOB4/IIOCEKJgQ/tEDj7yaM4ecVUZ+kJww==}
     engines: {node: '>=18.0.0'}
     peerDependencies:
       typescript: ^5.1.0
@@ -3004,19 +3004,10 @@ packages:
     resolution: {integrity: sha512-O3rHJzAQKamUz1fvE0Qaw0xSFqsA/yafi2iqeE0pvdFtCO1viYx8QL6f3Ln/aCCTLxs68SLf0KPM9eSeM8yBnA==}
     engines: {node: '>=14.0.0'}
 
-  '@remix-run/serve@2.17.0':
-    resolution: {integrity: sha512-eq0A7A89uqg+rQiGVHoUwb1NUawmPpjAY3RWn4KG4uCp4QwhqJausML63fIxnfdp7zu2OplXhfSXCNiTekQ0rw==}
+  '@remix-run/serve@2.17.3':
+    resolution: {integrity: sha512-mgymD5IBWa/avwx9pi+FOA72uiK7kwXkGf1+l7k0i7s9uCVieWwJAZJIMI+TvbEn7PhV/Vrn07KBPtSVsdaflw==}
     engines: {node: '>=18.0.0'}
     hasBin: true
-
-  '@remix-run/server-runtime@2.17.0':
-    resolution: {integrity: sha512-X0zfGLgvukhuTIL0tdWKnlvHy4xUe7Z17iQ0KMQoITK0SkTZPSud/6cJCsKhPqC8kfdYT1GNFLJKRhHz7Aapmw==}
-    engines: {node: '>=18.0.0'}
-    peerDependencies:
-      typescript: ^5.1.0
-    peerDependenciesMeta:
-      typescript:
-        optional: true
 
   '@remix-run/server-runtime@2.17.3':
     resolution: {integrity: sha512-8uuV0COprImDpyDB8Rx0VLDKxsttBsMjtdv9BFViz8WfJz79jr8YRfp27hXUs9P4/NU6+wQQYcJawkBj/5uuSg==}
@@ -7373,10 +7364,6 @@ packages:
     peerDependencies:
       postcss: ^8.0.0
 
-  postcss-selector-parser@7.1.0:
-    resolution: {integrity: sha512-8sLjZwK0R+JlxlYcTuVnyT2v+htpdrjDOKuMcOVdYjt52Lh8hWRYpxBPoKx/Zg+bcjc3wx6fmQevMmUztS/ccA==}
-    engines: {node: '>=4'}
-
   postcss-selector-parser@7.1.1:
     resolution: {integrity: sha512-orRsuYpJVw8LdAwqqLykBj9ecS5/cRHlI5+nvTo8LcCKmzDmqVORXtOIYEEQuL9D4BxtA1lm5isAqzQZCoQ6Eg==}
     engines: {node: '>=4'}
@@ -9547,9 +9534,9 @@ snapshots:
     dependencies:
       '@babel/types': 7.28.5
 
-  '@babel/plugin-syntax-decorators@7.27.1(@babel/core@7.28.3)':
+  '@babel/plugin-syntax-decorators@7.27.1(@babel/core@7.28.5)':
     dependencies:
-      '@babel/core': 7.28.3
+      '@babel/core': 7.28.5
       '@babel/helper-plugin-utils': 7.27.1
 
   '@babel/plugin-syntax-jsx@7.27.1(@babel/core@7.28.3)':
@@ -11582,22 +11569,22 @@ snapshots:
       react: 19.2.2
       react-redux: 9.2.0(@types/react@19.2.7)(react@19.2.2)(redux@5.0.1)
 
-  '@remix-run/dev@2.17.0(@remix-run/react@2.17.3(react-dom@19.2.2(react@19.2.2))(react@19.2.2)(typescript@5.9.2))(@remix-run/serve@2.17.0(typescript@5.9.2))(@types/node@24.3.0)(jiti@2.5.1)(lightningcss@1.30.1)(terser@5.43.1)(ts-node@10.9.2(@types/node@24.3.0)(typescript@5.9.2))(tsx@4.20.4)(typescript@5.9.2)(vite@7.1.12(@types/node@24.3.0)(jiti@2.5.1)(lightningcss@1.30.1)(terser@5.43.1)(tsx@4.20.4)(yaml@2.8.1))(yaml@2.8.1)':
+  '@remix-run/dev@2.17.3(@remix-run/react@2.17.3(react-dom@19.2.2(react@19.2.2))(react@19.2.2)(typescript@5.9.2))(@remix-run/serve@2.17.3(typescript@5.9.2))(@types/node@24.3.0)(jiti@2.5.1)(lightningcss@1.30.1)(terser@5.43.1)(ts-node@10.9.2(@types/node@24.3.0)(typescript@5.9.2))(tsx@4.20.4)(typescript@5.9.2)(vite@7.1.12(@types/node@24.3.0)(jiti@2.5.1)(lightningcss@1.30.1)(terser@5.43.1)(tsx@4.20.4)(yaml@2.8.1))(yaml@2.8.1)':
     dependencies:
-      '@babel/core': 7.28.3
-      '@babel/generator': 7.28.3
-      '@babel/parser': 7.28.3
-      '@babel/plugin-syntax-decorators': 7.27.1(@babel/core@7.28.3)
-      '@babel/plugin-syntax-jsx': 7.27.1(@babel/core@7.28.3)
-      '@babel/preset-typescript': 7.27.1(@babel/core@7.28.3)
-      '@babel/traverse': 7.28.3
-      '@babel/types': 7.28.2
+      '@babel/core': 7.28.5
+      '@babel/generator': 7.28.5
+      '@babel/parser': 7.28.5
+      '@babel/plugin-syntax-decorators': 7.27.1(@babel/core@7.28.5)
+      '@babel/plugin-syntax-jsx': 7.27.1(@babel/core@7.28.5)
+      '@babel/preset-typescript': 7.27.1(@babel/core@7.28.5)
+      '@babel/traverse': 7.28.5
+      '@babel/types': 7.28.5
       '@mdx-js/mdx': 2.3.0
       '@npmcli/package-json': 4.0.1
-      '@remix-run/node': 2.17.0(typescript@5.9.2)
+      '@remix-run/node': 2.17.3(typescript@5.9.2)
       '@remix-run/react': 2.17.3(react-dom@19.2.2(react@19.2.2))(react@19.2.2)(typescript@5.9.2)
       '@remix-run/router': 1.23.0
-      '@remix-run/server-runtime': 2.17.0(typescript@5.9.2)
+      '@remix-run/server-runtime': 2.17.3(typescript@5.9.2)
       '@types/mdx': 2.0.13
       '@vanilla-extract/integration': 6.5.0(@types/node@24.3.0)(lightningcss@1.30.1)(terser@5.43.1)
       arg: 5.0.2
@@ -11635,14 +11622,14 @@ snapshots:
       remark-frontmatter: 4.0.1
       remark-mdx-frontmatter: 1.1.1
       semver: 7.7.3
-      set-cookie-parser: 2.7.1
+      set-cookie-parser: 2.7.2
       tar-fs: 2.1.3
       tsconfig-paths: 4.2.0
-      valibot: 0.41.0(typescript@5.9.2)
+      valibot: 1.2.0(typescript@5.9.2)
       vite-node: 3.2.4(@types/node@24.3.0)(jiti@2.5.1)(lightningcss@1.30.1)(terser@5.43.1)(tsx@4.20.4)(yaml@2.8.1)
       ws: 7.5.10
     optionalDependencies:
-      '@remix-run/serve': 2.17.0(typescript@5.9.2)
+      '@remix-run/serve': 2.17.3(typescript@5.9.2)
       typescript: 5.9.2
       vite: 7.1.12(@types/node@24.3.0)(jiti@2.5.1)(lightningcss@1.30.1)(terser@5.43.1)(tsx@4.20.4)(yaml@2.8.1)
     transitivePeerDependencies:
@@ -11664,18 +11651,18 @@ snapshots:
       - utf-8-validate
       - yaml
 
-  '@remix-run/express@2.17.0(express@4.22.1)(typescript@5.9.2)':
+  '@remix-run/express@2.17.3(express@4.22.1)(typescript@5.9.2)':
     dependencies:
-      '@remix-run/node': 2.17.0(typescript@5.9.2)
+      '@remix-run/node': 2.17.3(typescript@5.9.2)
       express: 4.22.1
     optionalDependencies:
       typescript: 5.9.2
 
   '@remix-run/node-fetch-server@0.9.0': {}
 
-  '@remix-run/node@2.17.0(typescript@5.9.2)':
+  '@remix-run/node@2.17.3(typescript@5.9.2)':
     dependencies:
-      '@remix-run/server-runtime': 2.17.0(typescript@5.9.2)
+      '@remix-run/server-runtime': 2.17.3(typescript@5.9.2)
       '@remix-run/web-fetch': 4.4.2
       '@web3-storage/multipart-parser': 1.0.0
       cookie-signature: 1.2.2
@@ -11712,10 +11699,10 @@ snapshots:
 
   '@remix-run/router@1.23.0': {}
 
-  '@remix-run/serve@2.17.0(typescript@5.9.2)':
+  '@remix-run/serve@2.17.3(typescript@5.9.2)':
     dependencies:
-      '@remix-run/express': 2.17.0(express@4.22.1)(typescript@5.9.2)
-      '@remix-run/node': 2.17.0(typescript@5.9.2)
+      '@remix-run/express': 2.17.3(express@4.22.1)(typescript@5.9.2)
+      '@remix-run/node': 2.17.3(typescript@5.9.2)
       chokidar: 3.6.0
       compression: 1.8.1
       express: 4.22.1
@@ -11725,18 +11712,6 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
       - typescript
-
-  '@remix-run/server-runtime@2.17.0(typescript@5.9.2)':
-    dependencies:
-      '@remix-run/router': 1.23.0
-      '@types/cookie': 0.6.0
-      '@web3-storage/multipart-parser': 1.0.0
-      cookie: 0.7.2
-      set-cookie-parser: 2.7.2
-      source-map: 0.7.6
-      turbo-stream: 2.4.1
-    optionalDependencies:
-      typescript: 5.9.2
 
   '@remix-run/server-runtime@2.17.3(typescript@5.9.2)':
     dependencies:
@@ -12857,8 +12832,8 @@ snapshots:
 
   '@vanilla-extract/integration@6.5.0(@types/node@24.3.0)(lightningcss@1.30.1)(terser@5.43.1)':
     dependencies:
-      '@babel/core': 7.28.3
-      '@babel/plugin-syntax-typescript': 7.27.1(@babel/core@7.28.3)
+      '@babel/core': 7.28.5
+      '@babel/plugin-syntax-typescript': 7.27.1(@babel/core@7.28.5)
       '@vanilla-extract/babel-plugin-debug-ids': 1.2.2
       '@vanilla-extract/css': 1.17.4
       esbuild: 0.17.6
@@ -13376,7 +13351,7 @@ snapshots:
     dependencies:
       '@npmcli/fs': 3.1.1
       fs-minipass: 3.0.3
-      glob: 10.4.5
+      glob: 10.5.0
       lru-cache: 7.18.3
       minipass: 7.1.2
       minipass-collect: 1.0.2
@@ -16764,13 +16739,13 @@ snapshots:
     dependencies:
       icss-utils: 5.1.0(postcss@8.5.6)
       postcss: 8.5.6
-      postcss-selector-parser: 7.1.0
+      postcss-selector-parser: 7.1.1
       postcss-value-parser: 4.2.0
 
   postcss-modules-scope@3.2.1(postcss@8.5.6):
     dependencies:
       postcss: 8.5.6
-      postcss-selector-parser: 7.1.0
+      postcss-selector-parser: 7.1.1
 
   postcss-modules-values@4.0.0(postcss@8.5.6):
     dependencies:
@@ -16788,11 +16763,6 @@ snapshots:
       postcss-modules-scope: 3.2.1(postcss@8.5.6)
       postcss-modules-values: 4.0.0(postcss@8.5.6)
       string-hash: 1.1.3
-
-  postcss-selector-parser@7.1.0:
-    dependencies:
-      cssesc: 3.0.0
-      util-deprecate: 1.0.2
 
   postcss-selector-parser@7.1.1:
     dependencies:
@@ -17249,7 +17219,7 @@ snapshots:
     dependencies:
       estree-util-is-identifier-name: 1.1.0
       estree-util-value-to-estree: 1.3.0
-      js-yaml: 4.1.0
+      js-yaml: 4.1.1
       toml: 3.0.0
 
   remark-mdx@2.3.0:

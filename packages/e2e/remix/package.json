@@ -13,17 +13,17 @@
     "test:playwright": "playwright test --project=chromium"
   },
   "dependencies": {
-    "@remix-run/node": "^2.17.0",
+    "@remix-run/node": "^2.17.3",
     "@remix-run/react": "^2.17.3",
-    "@remix-run/serve": "^2.17.0",
-    "isbot": "^5.1.30",
+    "@remix-run/serve": "^2.17.3",
+    "isbot": "^5.1.32",
     "nuqs": "workspace:*",
     "react": "catalog:react19",
     "react-dom": "catalog:react19"
   },
   "devDependencies": {
     "@playwright/test": "catalog:e2e",
-    "@remix-run/dev": "^2.17.0",
+    "@remix-run/dev": "^2.17.3",
     "@types/react": "catalog:react19",
     "@types/react-dom": "catalog:react19",
     "cross-env": "^10.0.0",
