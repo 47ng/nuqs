@@ -14,7 +14,7 @@
   },
   "dependencies": {
     "@remix-run/node": "^2.17.0",
-    "@remix-run/react": "^2.17.0",
+    "@remix-run/react": "^2.17.3",
     "@remix-run/serve": "^2.17.0",
     "isbot": "^5.1.30",
     "nuqs": "workspace:*",
