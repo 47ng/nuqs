@@ -12,7 +12,7 @@
     "test:playwright": "playwright test --project=chromium"
   },
   "dependencies": {
-    "@react-router/node": "^7.8.1",
+    "@react-router/node": "^7.9.4",
     "@react-router/serve": "^7.8.1",
     "isbot": "^5.1.30",
     "nuqs": "workspace:*",
