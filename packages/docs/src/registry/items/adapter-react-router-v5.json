@@ -10,5 +10,6 @@
       "path": "src/registry/items/adapter-react-router-v5.source",
       "target": "~/nuqs-adapter.ts"
     }
-  ]
+  ],
+  "categories": ["adapter"]
 }
