@@ -12,9 +12,9 @@
     "test:playwright": "playwright test --project=chromium"
   },
   "dependencies": {
-    "@react-router/node": "^7.9.4",
-    "@react-router/serve": "^7.8.1",
-    "isbot": "^5.1.30",
+    "@react-router/node": "^7.12.0",
+    "@react-router/serve": "^7.12.0",
+    "isbot": "^5.1.32",
     "nuqs": "workspace:*",
     "react": "catalog:react19",
     "react-dom": "catalog:react19",
@@ -22,8 +22,8 @@
   },
   "devDependencies": {
     "@playwright/test": "catalog:e2e",
-    "@react-router/dev": "^7.8.1",
-    "@react-router/express": "^7.8.1",
+    "@react-router/dev": "^7.12.0",
+    "@react-router/express": "^7.12.0",
     "@types/node": "^24.3.0",
     "@types/react": "catalog:react19",
     "@types/react-dom": "catalog:react19",
