@@ -51,7 +51,8 @@ export function DownloadsGraph({
             fillOpacity={0.75}
             axisLine={false}
             tickLine={false}
-            tickFormatter={value => formatStatNumber(value)}
+            tickCount={5}
+            tickFormatter={value => formatStatNumber(value).toUpperCase()}
             allowDataOverflow
           />
           <ChartLegend
@@ -77,13 +78,16 @@ export function DownloadsGraph({
           <ChartTooltip
             content={
               <ChartTooltipContent
-                valueFormatter={value => formatStatNumber(value as number)}
+                valueFormatter={value =>
+                  formatStatNumber(value as number).toUpperCase()
+                }
               />
             }
             isAnimationActive={false}
             position={{ y: 20 }}
           />
           <PartialLine
+            // showDebug
             partialLast={partialLast}
             data={(data as MultiDatum[]).map(d => d.nuqs)}
             dataKey="nuqs"
