@@ -58,6 +58,10 @@ const exports = `
     "NuqsAdapter": "function",
     "useOptimisticSearchParams": "function",
   },
+  "./adapters/react-router/v6-hash": {
+    "NuqsAdapter": "function",
+    "useOptimisticSearchParams": "function",
+  },
   "./adapters/react-router/v7": {
     "NuqsAdapter": "function",
     "useOptimisticSearchParams": "function",

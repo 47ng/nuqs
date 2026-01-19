@@ -29,6 +29,7 @@ const entrypoints = {
     'adapters/remix': 'src/adapters/remix.ts',
     'adapters/react-router': 'src/adapters/react-router.ts',
     'adapters/react-router/v6': 'src/adapters/react-router/v6.ts',
+    'adapters/react-router/v6-hash': 'src/adapters/react-router/v6-hash.ts',
     'adapters/react-router/v7': 'src/adapters/react-router/v7.ts',
     'adapters/tanstack-router': 'src/adapters/tanstack-router.ts',
     'adapters/custom': 'src/adapters/custom.ts',
