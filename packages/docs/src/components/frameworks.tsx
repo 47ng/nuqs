@@ -108,28 +108,197 @@ export function ReactSPA({ className, ...props }: IconProps) {
 export function Vitest({ className, ...props }: IconProps) {
   return (
     <svg
-      aria-label="Vitest"
-      viewBox="0 0 256 234"
-      width="1em"
-      height="1em"
+      height=".8em"
+      viewBox="0 0 77 47"
+      fill="none"
       xmlns="http://www.w3.org/2000/svg"
-      preserveAspectRatio="xMidYMid"
-      className={className}
       {...props}
     >
       <path
-        d="m192.115 70.808-61.2 88.488a5.27 5.27 0 0 1-2.673 2.002 5.285 5.285 0 0 1-3.343-.005 5.25 5.25 0 0 1-2.66-2.01 5.214 5.214 0 0 1-.903-3.203l2.45-48.854-39.543-8.386a5.256 5.256 0 0 1-2.292-1.118 5.222 5.222 0 0 1-1.83-4.581 5.226 5.226 0 0 1 .895-2.383L142.218 2.27a5.279 5.279 0 0 1 6.016-1.996 5.243 5.243 0 0 1 2.66 2.01c.643.942.96 2.066.903 3.203l-2.45 48.855 39.542 8.386a5.262 5.262 0 0 1 2.293 1.117 5.21 5.21 0 0 1 1.829 4.582 5.212 5.212 0 0 1-.896 2.382Z"
-        fill="#FCC72B"
+        d="M36.7645 42.9736C36.4327 43.5638 35.6616 43.7318 35.1122 43.3333L15.9638 29.4066C15.6709 29.1934 15.4985 28.853 15.4985 28.4911V11.7058C15.4985 10.7817 16.5476 10.2475 17.2951 10.7903L29.0073 19.3079C30.1016 20.1049 31.6462 19.7667 32.3097 18.5884L42.0099 1.34428C42.2102 0.988847 42.5872 0.766968 42.9965 0.766968H58.5711C59.4371 0.766968 59.9821 1.69972 59.5577 2.45368L36.7645 42.9714V42.9736Z"
+        fill="#22FF84"
+      />
+      <mask
+        id="mask0_2002_17380"
+        style={{ maskType: 'alpha' }}
+        maskUnits="userSpaceOnUse"
+        x="15"
+        y="0"
+        width="45"
+        height="44"
+      >
+        <path
+          d="M36.7645 42.9734C36.4327 43.5637 35.6616 43.7317 35.1122 43.3332L15.9638 29.4065C15.6709 29.1932 15.4985 28.8529 15.4985 28.491V11.7057C15.4985 10.7816 16.5476 10.2473 17.2951 10.7902L29.0073 19.3078C30.1016 20.1048 31.6462 19.7666 32.3097 18.5883L42.0099 1.34416C42.2102 0.988725 42.5872 0.766846 42.9965 0.766846H58.5711C59.4371 0.766846 59.9821 1.6996 59.5577 2.45356L36.7645 42.9713V42.9734Z"
+          fill="black"
+        />
+      </mask>
+      <g mask="url(#mask0_2002_17380)">
+        <g filter="url(#filter0_f_2002_17380)">
+          <ellipse
+            cx="14.0313"
+            cy="3.39062"
+            rx="14.0313"
+            ry="3.39062"
+            transform="matrix(-0.650066 0.759878 0.759879 0.650065 48.0078 -2.85199)"
+            fill="#00CCC6"
+          />
+        </g>
+        <g filter="url(#filter1_f_2002_17380)">
+          <ellipse
+            cx="14.0313"
+            cy="6.0868"
+            rx="14.0313"
+            ry="6.0868"
+            transform="matrix(-0.588245 -0.808682 -0.808682 0.588246 31.6079 38.2737)"
+            fill="#00CCC6"
+          />
+        </g>
+        <g filter="url(#filter2_f_2002_17380)">
+          <ellipse
+            cx="21.9417"
+            cy="12.9621"
+            rx="6.37416"
+            ry="5.55082"
+            transform="rotate(23.1293 21.9417 12.9621)"
+            fill="#77FF00"
+          />
+        </g>
+        <g filter="url(#filter3_f_2002_17380)">
+          <ellipse
+            cx="56.2731"
+            cy="16.7177"
+            rx="5.61461"
+            ry="24.5343"
+            transform="rotate(23.1293 56.2731 16.7177)"
+            fill="#77FF00"
+          />
+        </g>
+        <g filter="url(#filter4_f_2002_17380)">
+          <ellipse
+            cx="4.98534"
+            cy="10.0691"
+            rx="4.98534"
+            ry="10.0691"
+            transform="matrix(0.707107 -0.707107 -0.707107 -0.707107 54.9468 11.7083)"
+            fill="#97FFE2"
+          />
+        </g>
+      </g>
+      <path
+        d="M6.91893 0.00012207C-2.27936 13.1664 -2.33322 33.575 6.91893 46.7886H13.1337C3.8837 33.575 3.93756 13.1664 13.1337 0.00012207H6.91893Z"
+        className="fill-black dark:fill-white"
       />
       <path
-        d="M128.025 233.537a12.356 12.356 0 0 1-8.763-3.63l-57.828-57.823a12.389 12.389 0 0 1 .023-17.5 12.394 12.394 0 0 1 17.5-.024l49.068 49.061L234.917 96.733a12.39 12.39 0 0 1 17.523 17.524l-115.655 115.65a12.343 12.343 0 0 1-8.76 3.63Z"
-        fill="#729B1B"
+        d="M69.3403 0.000183105H63.1255C72.3238 13.1665 72.3776 33.575 63.1255 46.7887H69.3403C78.5902 33.575 78.5364 13.1665 69.3403 0.000183105Z"
+        className="fill-black dark:fill-white"
       />
-      <path
-        d="M127.975 233.537a12.356 12.356 0 0 0 8.763-3.63l57.828-57.823a12.385 12.385 0 0 0 3.605-8.754 12.395 12.395 0 0 0-12.375-12.376 12.4 12.4 0 0 0-8.755 3.606l-49.066 49.061L21.082 96.733a12.392 12.392 0 0 0-17.524 17.524l115.656 115.65a12.347 12.347 0 0 0 8.76 3.63Z"
-        fillOpacity={0.5}
-        fill="#729B1B"
-      />
+      <defs>
+        <filter
+          id="filter0_f_2002_17380"
+          x="22.7913"
+          y="-10.0666"
+          width="37.3432"
+          height="40.1616"
+          filterUnits="userSpaceOnUse"
+          colorInterpolationFilters="sRGB"
+        >
+          <feFlood floodOpacity="0" result="BackgroundImageFix" />
+          <feBlend
+            mode="normal"
+            in="SourceGraphic"
+            in2="BackgroundImageFix"
+            result="shape"
+          />
+          <feGaussianBlur
+            stdDeviation="4.59556"
+            result="effect1_foregroundBlur_2002_17380"
+          />
+        </filter>
+        <filter
+          id="filter1_f_2002_17380"
+          x="-0.370801"
+          y="9.41466"
+          width="37.6054"
+          height="42.1854"
+          filterUnits="userSpaceOnUse"
+          colorInterpolationFilters="sRGB"
+        >
+          <feFlood floodOpacity="0" result="BackgroundImageFix" />
+          <feBlend
+            mode="normal"
+            in="SourceGraphic"
+            in2="BackgroundImageFix"
+            result="shape"
+          />
+          <feGaussianBlur
+            stdDeviation="4.59556"
+            result="effect1_foregroundBlur_2002_17380"
+          />
+        </filter>
+        <filter
+          id="filter2_f_2002_17380"
+          x="6.49443"
+          y="-1.91591"
+          width="30.8944"
+          height="29.7561"
+          filterUnits="userSpaceOnUse"
+          colorInterpolationFilters="sRGB"
+        >
+          <feFlood floodOpacity="0" result="BackgroundImageFix" />
+          <feBlend
+            mode="normal"
+            in="SourceGraphic"
+            in2="BackgroundImageFix"
+            result="shape"
+          />
+          <feGaussianBlur
+            stdDeviation="4.59556"
+            result="effect1_foregroundBlur_2002_17380"
+          />
+        </filter>
+        <filter
+          id="filter3_f_2002_17380"
+          x="36.1468"
+          y="-15.1448"
+          width="40.2528"
+          height="63.7251"
+          filterUnits="userSpaceOnUse"
+          colorInterpolationFilters="sRGB"
+        >
+          <feFlood floodOpacity="0" result="BackgroundImageFix" />
+          <feBlend
+            mode="normal"
+            in="SourceGraphic"
+            in2="BackgroundImageFix"
+            result="shape"
+          />
+          <feGaussianBlur
+            stdDeviation="4.59556"
+            result="effect1_foregroundBlur_2002_17380"
+          />
+        </filter>
+        <filter
+          id="filter4_f_2002_17380"
+          x="34.2142"
+          y="-16.0745"
+          width="34.2758"
+          height="34.2754"
+          filterUnits="userSpaceOnUse"
+          colorInterpolationFilters="sRGB"
+        >
+          <feFlood floodOpacity="0" result="BackgroundImageFix" />
+          <feBlend
+            mode="normal"
+            in="SourceGraphic"
+            in2="BackgroundImageFix"
+            result="shape"
+          />
+          <feGaussianBlur
+            stdDeviation="4.59556"
+            result="effect1_foregroundBlur_2002_17380"
+          />
+        </filter>
+      </defs>
     </svg>
   )
 }
@@ -217,7 +386,7 @@ export function TanStackRouter({ className, ...props }: IconProps) {
       viewBox="0 0 663 660"
       xmlns="http://www.w3.org/2000/svg"
       aria-label="TanStack Router"
-      className={cn('fill-black dark:fill-white size-[1em]', className)}
+      className={cn('size-[1em] fill-black dark:fill-white', className)}
       {...props}
     >
       <path
