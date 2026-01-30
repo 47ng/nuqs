@@ -21,7 +21,11 @@ function useNuqsTanstackRouterAdapter(watchKeys: string[]): AdapterInterface {
     select: state => state.resolvedLocation?.pathname ?? state.location.pathname
   })
   const { navigate } = useRouter()
+  // Track which pathname this hook instance was mounted under to
+  // keep its last stable search during cross-page transitions.
   const ownedPathnameRef = useRef(pathname)
+  // Cache the last stable search for the owned pathname so we don't
+  // leak destination params while the source is still mounted.
   const cachedSearchRef = useRef<SearchRecord>(search)
 
   // Keep per-hook search stable during cross-page transitions
