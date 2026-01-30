@@ -78,8 +78,8 @@ const router = createBrowserRouter(
       <Route path="repro-982"                 lazy={load(import('./routes/repro-982'))} />
       <Route path="repro-1099/useQueryState"  lazy={load(import('./routes/repro-1099.useQueryState'))} />
       <Route path="repro-1099/useQueryStates" lazy={load(import('./routes/repro-1099.useQueryStates'))} />
-      <Route path="repro-1293/pageA"         lazy={load(import('./routes/repro-1293.pageA'))} />
-      <Route path="repro-1293/pageB"         lazy={load(import('./routes/repro-1293.pageB'))} />
+      <Route path="repro-1293/a"              lazy={load(import('./routes/repro-1293.a'))} />
+      <Route path="repro-1293/b"              lazy={load(import('./routes/repro-1293.b'))} />
     </Route>
   ))
 
