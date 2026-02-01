@@ -100,7 +100,7 @@ export function useNuqsNextAppRouterAdapter(): AdapterInterface {
     searchParams: optimisticSearchParams,
     updateUrl,
     rateLimitFactor: NUM_HISTORY_CALLS_PER_UPDATE,
-    autoResetQueueOnUpdate: false
+    autoResetQueueOnUpdate: true
   }
 }
 
