@@ -1,7 +1,11 @@
 import { useRouter, useSearchParams } from 'next/navigation.js'
 import { startTransition, useCallback, useEffect, useOptimistic } from 'react'
 import { debug } from '../../lib/debug'
-import { resetQueues } from '../../lib/queues/reset'
+import {
+  resetQueues,
+  setQueueResetMutex,
+  spinQueueResetMutex
+} from '../../lib/queues/reset'
 import { renderQueryString } from '../../lib/url-encoding'
 import type { AdapterInterface, UpdateUrlFunction } from '../lib/defs'
 import { markHistoryAsPatched, shouldPatchHistory } from '../lib/patch-history'
@@ -10,25 +14,21 @@ import { markHistoryAsPatched, shouldPatchHistory } from '../lib/patch-history'
 // and https://github.com/47ng/nuqs/discussions/960#discussioncomment-12699171
 const NUM_HISTORY_CALLS_PER_UPDATE = 3
 
-let mutex = 0
-
 function onPopState() {
-  mutex = 0
+  setQueueResetMutex(0)
   resetQueues()
 }
 
 function onHistoryStateUpdate() {
-  mutex--
-  if (mutex <= 0) {
-    mutex = 0 // Don't let values become too negatively large and wrap around
-    // Doing this after the end of the current render work because of the error:
-    // "useInsertionEffect cannot schedule updates"
-    // (resetting the queue causes the useSyncExternalStore of queued queries
-    // to be marked for rendering)
-    // The useInsertionEffect in question is the one in the Next.js app router core
-    //  dealing with history API calls.
+  // Doing this after the end of the current render work because of the error:
+  // "useInsertionEffect cannot schedule updates"
+  // (resetting the queue causes the useSyncExternalStore of queued queries
+  // to be marked for rendering)
+  // The useInsertionEffect in question is the one in the Next.js app router core
+  //  dealing with history API calls.
+  spinQueueResetMutex(() => {
     queueMicrotask(resetQueues)
-  }
+  })
 }
 
 function patchHistory() {
@@ -75,7 +75,7 @@ export function useNuqsNextAppRouterAdapter(): AdapterInterface {
       // this allows keeping a reactive URL if the network is slow.
       const updateMethod =
         options.history === 'push' ? history.pushState : history.replaceState
-      mutex = NUM_HISTORY_CALLS_PER_UPDATE
+      setQueueResetMutex(NUM_HISTORY_CALLS_PER_UPDATE)
       updateMethod.call(
         history,
         // In next@14.1.0, useSearchParams becomes reactive to shallow updates,
