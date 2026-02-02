@@ -41,6 +41,8 @@ export default [
     route('/key-isolation/useQueryState',               './routes/key-isolation.useQueryState.tsx'),
     route('/key-isolation/useQueryStates',              './routes/key-isolation.useQueryStates.tsx'),
     route('/loader',                                    './routes/loader.tsx'),
+    route('/popstate-queue-reset',                      './routes/popstate-queue-reset.tsx'),
+    route('/popstate-queue-reset/other',                './routes/popstate-queue-reset.other.tsx'),
     route('/push/useQueryState',                        './routes/push.useQueryState.tsx'),
     route('/push/useQueryStates',                       './routes/push.useQueryStates.tsx'),
     route('/rate-limits',                               './routes/rate-limits.tsx'),
