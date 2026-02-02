@@ -37,8 +37,8 @@ export type Values<T extends UseQueryStatesKeysMap> = {
   [K in keyof T]: T[K]['defaultValue'] extends NonNullable<
     ReturnType<T[K]['parse']>
   >
-    ? NonNullable<ReturnType<T[K]['parse']>>
-    : ReturnType<T[K]['parse']> | null
+  ? NonNullable<ReturnType<T[K]['parse']>>
+  : ReturnType<T[K]['parse']> | null
 }
 type NullableValues<T extends UseQueryStatesKeysMap> = Nullable<Values<T>>
 
@@ -98,7 +98,6 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
     [stateKeys, JSON.stringify(urlKeys)]
   )
   const adapter = useAdapter(Object.values(resolvedUrlKeys))
-  const initialSearchParams = adapter.searchParams
   const queryRef = useRef<Record<string, Query | null>>({})
   const defaultValues = useMemo(
     () =>
@@ -114,37 +113,43 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
   const queuedQueries = debounceController.useQueuedQueries(
     Object.values(resolvedUrlKeys)
   )
-  const [internalState, setInternalState] = useState<V>(() => {
-    const source = initialSearchParams ?? new URLSearchParams()
-    return parseMap(keyMap, urlKeys, source, queuedQueries).state
-  })
+
+  // Pure, safe initial state (do NOT read runtime data during render)
+  const [internalState, setInternalState] = useState<V>(() =>
+    parseMap(keyMap, urlKeys, new URLSearchParams(), queuedQueries).state
+  )
 
   const stateRef = useRef(internalState)
   debug(
-    '[nuq+ %s `%s`] render - state: %O, iSP: %s',
+    '[nuq+ %s `%s`] render - state: %O',
     hookId,
     stateKeys,
-    internalState,
-    initialSearchParams
+    internalState
   )
 
-  // Initialise the refs with the initial values
-  if (
-    Object.keys(queryRef.current).join('&') !==
-    Object.values(resolvedUrlKeys).join('&')
-  ) {
+  useEffect(() => {
+    const getSnapshot = adapter.getSearchParamsSnapshot
+    if (typeof getSnapshot !== 'function') {
+      // Adapter doesn't support snapshot API in this environment (e.g. server), bail out.
+      return
+    }
+
+    const searchParams = getSnapshot()
+    if (!searchParams) return
+
     const { state, hasChanged } = parseMap(
       keyMap,
       urlKeys,
-      initialSearchParams,
+      searchParams,
       queuedQueries,
       queryRef.current,
       stateRef.current
     )
+
     if (hasChanged) {
       debug('[nuq+ %s `%s`] State changed: %O', hookId, stateKeys, {
         state,
-        initialSearchParams,
+        searchParams: searchParams,
         queuedQueries,
         queryRef: queryRef.current,
         stateRef: stateRef.current
@@ -152,47 +157,24 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
       stateRef.current = state
       setInternalState(state)
     }
+
     queryRef.current = Object.fromEntries(
       Object.entries(resolvedUrlKeys).map(([key, urlKey]) => {
         const parser = keyMap[key]
         return [
           urlKey,
           parser?.type === 'multi'
-            ? initialSearchParams?.getAll(urlKey)
-            : (initialSearchParams?.get(urlKey) ?? null)
+            ? searchParams.getAll(urlKey)
+            : (searchParams.get(urlKey) ?? null)
         ]
       })
     )
-  }
-
-  useEffect(() => {
-    const { state, hasChanged } = parseMap(
-      keyMap,
-      urlKeys,
-      initialSearchParams,
-      queuedQueries,
-      queryRef.current,
-      stateRef.current
-    )
-    if (hasChanged) {
-      debug('[nuq+ %s `%s`] State changed: %O', hookId, stateKeys, {
-        state,
-        initialSearchParams,
-        queuedQueries,
-        queryRef: queryRef.current,
-        stateRef: stateRef.current
-      })
-      stateRef.current = state
-      setInternalState(state)
-    }
   }, [
-    Object.values(resolvedUrlKeys)
-      .map(key => `${key}=${initialSearchParams?.getAll(key)}`)
-      .join('&'),
-    JSON.stringify(queuedQueries)
+    adapter.getSearchParamsSnapshot,
+    JSON.stringify(queuedQueries),
+    stateKeys
   ])
 
-  // Sync all hooks together & with external URL changes
   useEffect(() => {
     const handlers = Object.keys(keyMap).reduce(
       (handlers, stateKey) => {
@@ -275,8 +257,8 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
       const newState: Partial<Nullable<KeyMap>> =
         typeof stateUpdater === 'function'
           ? (stateUpdater(
-              applyDefaultValues(stateRef.current, defaultValues)
-            ) ?? nullMap)
+            applyDefaultValues(stateRef.current, defaultValues)
+          ) ?? nullMap)
           : (stateUpdater ?? nullMap)
       debug('[nuq+ %s `%s`] setState: %O', hookId, stateKeys, newState)
       let returnedPromise: Promise<URLSearchParams> | undefined = undefined
@@ -413,8 +395,8 @@ function parseMap<KeyMap extends UseQueryStatesKeysMap>(
     const query =
       queuedQuery === undefined
         ? ((parser.type === 'multi'
-            ? searchParams?.getAll(urlKey)
-            : searchParams?.get(urlKey)) ?? fallbackValue)
+          ? searchParams?.getAll(urlKey)
+          : searchParams?.get(urlKey)) ?? fallbackValue)
         : queuedQuery
     if (
       cachedQuery &&
@@ -430,7 +412,7 @@ function parseMap<KeyMap extends UseQueryStatesKeysMap>(
     const value = isAbsentFromUrl(query)
       ? null
       : // we have properly narrowed `query` here, but TS doesn't keep track of that
-        safeParse(parser.parse, query as string & Array<string>, urlKey)
+      safeParse(parser.parse, query as string & Array<string>, urlKey)
 
     out[stateKey as keyof KeyMap] = value ?? null
     if (cachedQuery) {
