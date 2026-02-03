@@ -83,7 +83,7 @@
     "require-in-the-middle": "^8.0.1",
     "shadcn": "^3.4.2",
     "shiki": "^3.11.0",
-    "typescript": "^5.9.2",
+    "typescript": "^5.9.3",
     "unified": "^11.0.5"
   },
   "postcss": {

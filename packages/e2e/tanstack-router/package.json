@@ -28,7 +28,7 @@
     "@vitejs/plugin-react": "^5.0.1",
     "cross-env": "^10.0.0",
     "e2e-shared": "workspace:*",
-    "typescript": "^5.9.2",
+    "typescript": "^5.9.3",
     "vite": "^7.1.11"
   }
 }
