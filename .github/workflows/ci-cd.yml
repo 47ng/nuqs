@@ -143,7 +143,7 @@ jobs:
     # Watch out! When changing the job name,
     # update the required checks in GitHub
     # branch protection settings for `next`.
-    name: E2E (next@${{ matrix.next-version }}${{ matrix.base-path && ' ⚾' || ''}}${{ matrix.react-compiler && ' ⚛️' || ''}})
+    name: E2E (next@${{ matrix.next-version }}${{ matrix.base-path && ' ⚾' || ''}}${{ matrix.react-compiler && ' ⚛️' || ''}}${{ matrix.cache-components && ' 💾' || ''}})
     runs-on: ubuntu-24.04-arm
     needs: [ci-core]
     strategy:
@@ -212,14 +212,14 @@ jobs:
         if: failure()
         with:
           path: packages/e2e/next/.playwright/*
-          name: playwright-next-${{ matrix.next-version }}${{ matrix.base-path && '-basePath' || ''}}${{ matrix.react-compiler && '-react-compiler' || ''}}
+          name: playwright-next-${{ matrix.next-version }}${{ matrix.base-path && '-basePath' || ''}}${{ matrix.react-compiler && '-react-compiler' || ''}}${{ matrix.cache-components && '-cache-components' || ''}}
           include-hidden-files: true
       - uses: 47ng/actions-slack-notify@main
         name: Notify on Slack
         if: failure()
         with:
           status: ${{ job.status }}
-          jobName: next@${{ matrix.next-version }}${{ matrix.base-path && ' basePath' || ''}}${{ matrix.react-compiler && ' react-compiler' || ''}}
+          jobName: next@${{ matrix.next-version }}${{ matrix.base-path && ' basePath' || ''}}${{ matrix.react-compiler && ' react-compiler' || ''}}${{ matrix.cache-components && '-cache-components' || ''}}
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
