@@ -10,7 +10,7 @@
     "@mailpace/mailpace.js": "^0.1.3",
     "@t3-oss/env-core": "^0.12.0",
     "minimist": "^1.2.8",
-    "zod": "^4.1.5"
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@types/minimist": "^1.2.5",
