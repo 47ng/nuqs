@@ -3,10 +3,18 @@
 const basePath =
   process.env.BASE_PATH === '/' ? undefined : process.env.BASE_PATH
 
+const enableCacheComponents =
+  process.env.CACHE_COMPONENTS === 'true'
+    ? {
+        cacheComponents: true
+      }
+    : {}
+
 /** @type {import('next').NextConfig } */
 const config = {
   basePath,
   productionBrowserSourceMaps: true,
+  ...enableCacheComponents,
   reactCompiler: process.env.REACT_COMPILER === 'true',
   experimental: {
     clientRouterFilter: false,
@@ -27,8 +35,9 @@ const config = {
 }
 
 console.info(`Next.js config:
-  basePath:       ${config.basePath}
-  reactCompiler:  ${config.reactCompiler}
+  basePath:        ${config.basePath}
+  reactCompiler:   ${config.reactCompiler}
+  cacheComponents: ${config.cacheComponents}
 `)
 
 export default config
