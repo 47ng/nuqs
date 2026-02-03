@@ -29,7 +29,7 @@
     "cross-env": "^10.0.0",
     "e2e-shared": "workspace:*",
     "typescript": "^5.9.3",
-    "vite": "^7.1.11",
+    "vite": "^7.3.1",
     "vite-tsconfig-paths": "^5.1.4"
   }
 }
