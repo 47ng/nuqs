@@ -154,6 +154,7 @@ jobs:
         # branch protection settings for `next`.
         base-path: [false]
         react-compiler: [false]
+        cache-components: [false]
         next-version:
           # Only keep versions where there were relevant changes in the app router core,
           # and the previous one to use as a baseline.
@@ -178,6 +179,9 @@ jobs:
           - next-version: "latest"
             base-path: "/base"
             react-compiler: true
+          - next-version: "latest"
+            cache-components: true
+            react-compiler: true
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
       - uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061
@@ -190,11 +194,16 @@ jobs:
       - name: Install Next.js version ${{ matrix.next-version }}
         if: ${{ matrix.next-version != 'local' }}
         run: pnpm add --filter e2e-next next@${{ matrix.next-version }}
+      - name: Run cacheComponents codemod
+        if: ${{ matrix.cache-components }}
+        run: pnpm run cacheComponents:codemod
+        working-directory: packages/e2e/next
       - name: Run integration tests
         run: pnpm run test ${{ github.event_name == 'workflow_dispatch' && '--force' || '' }} --filter e2e-next
         env:
           BASE_PATH: ${{ matrix.base-path && matrix.base-path || '/' }}
           REACT_COMPILER: ${{ matrix.react-compiler }}
+          CACHE_COMPONENTS: ${{ matrix.cache-components }}
           TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
           TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
           E2E_NO_CACHE_ON_RERUN: ${{ github.run_attempt }}
