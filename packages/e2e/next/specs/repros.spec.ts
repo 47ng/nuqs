@@ -45,14 +45,18 @@ test('Reproduction for issue #498', async ({ page }) => {
 
 test('Reproduction for issue #542', async ({ page }) => {
   await navigateTo(page, '/app/repro-542/a', '?q=foo&r=bar')
-  await expect(page.locator('#q')).toHaveText('foo')
-  await expect(page.locator('#r')).toHaveText('bar')
-  await expect(page.locator('#initial')).toHaveText('{"q":"foo","r":"bar"}')
+  await expect(page.locator('#q').first()).toHaveText('foo')
+  await expect(page.locator('#r').first()).toHaveText('bar')
+  await expect(page.locator('#initial').first()).toHaveText(
+    '{"q":"foo","r":"bar"}'
+  )
   await page.locator('a').click()
   await expect(page).toHaveURL(url => url.search === '')
-  await expect(page.locator('#q')).toHaveText('')
-  await expect(page.locator('#r')).toHaveText('')
-  await expect(page.locator('#initial')).toHaveText('{"q":null,"r":null}')
+  await expect(page.locator('#q').first()).toHaveText('')
+  await expect(page.locator('#r').first()).toHaveText('')
+  await expect(page.locator('#initial').first()).toHaveText(
+    '{"q":null,"r":null}'
+  )
 })
 
 test.describe('Reproduction for issue #630', () => {
