@@ -12,27 +12,27 @@
     "test:playwright": "playwright test --project=chromium"
   },
   "dependencies": {
-    "@react-router/node": "^7.12.0",
-    "@react-router/serve": "^7.12.0",
-    "isbot": "^5.1.32",
+    "@react-router/node": "^7.13.0",
+    "@react-router/serve": "^7.13.0",
+    "isbot": "^5.1.34",
     "nuqs": "workspace:*",
     "react": "catalog:react19",
     "react-dom": "catalog:react19",
-    "react-router": "^7.12.0"
+    "react-router": "^7.13.0"
   },
   "devDependencies": {
     "@playwright/test": "catalog:e2e",
-    "@react-router/dev": "^7.12.0",
-    "@react-router/express": "^7.12.0",
-    "@types/node": "^24.3.0",
+    "@react-router/dev": "^7.13.0",
+    "@react-router/express": "^7.13.0",
+    "@types/node": "^24.10.10",
     "@types/react": "catalog:react19",
     "@types/react-dom": "catalog:react19",
     "compression": "^1.8.1",
-    "cross-env": "^10.0.0",
+    "cross-env": "^10.1.0",
     "e2e-shared": "workspace:*",
-    "express": "^4.22.0",
-    "typescript": "^5.9.2",
-    "vite": "^7.1.11",
-    "vite-tsconfig-paths": "^5.1.4"
+    "express": "^4.22.1",
+    "typescript": "^5.9.3",
+    "vite": "^7.3.1",
+    "vite-tsconfig-paths": "^6.0.5"
   }
 }
