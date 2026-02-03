@@ -20,7 +20,7 @@
   },
   "devDependencies": {
     "@playwright/test": "catalog:e2e",
-    "@types/node": "^24.3.0",
+    "@types/node": "^24.10.10",
     "@types/react": "catalog:react19",
     "@types/react-dom": "catalog:react19",
     "@vitejs/plugin-react": "^5.0.1",
