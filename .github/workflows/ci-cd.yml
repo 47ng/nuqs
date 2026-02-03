@@ -110,6 +110,9 @@ jobs:
     name: Docs Typecheck & Build
     runs-on: ubuntu-24.04-arm
     needs: [ci-core]
+    permissions:
+      contents: read
+      actions: read
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
       - uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061
