@@ -5,12 +5,22 @@
     "build": {
       "outputs": [".next/**", "!.next/cache/**"],
       "dependsOn": ["^build"],
-      "env": ["BASE_PATH", "REACT_COMPILER", "E2E_NO_CACHE_ON_RERUN"]
+      "env": [
+        "BASE_PATH",
+        "REACT_COMPILER",
+        "CACHE_COMPONENTS",
+        "E2E_NO_CACHE_ON_RERUN"
+      ]
     },
     "test": {
       "outputs": [".playwright/**"],
       "dependsOn": ["build"],
-      "env": ["BASE_PATH", "REACT_COMPILER", "E2E_NO_CACHE_ON_RERUN"]
+      "env": [
+        "BASE_PATH",
+        "REACT_COMPILER",
+        "CACHE_COMPONENTS",
+        "E2E_NO_CACHE_ON_RERUN"
+      ]
     }
   }
 }
