@@ -129,7 +129,7 @@ function ChartTooltipContent({
   React.ComponentProps<'div'> & {
     payload?: RechartsPrimitive.DefaultTooltipContentProps<
       ValueType,
-      'no idea what should go here but it makes TypeScript happy'
+      string | number
     >['payload']
     label?: string
     hideLabel?: boolean
