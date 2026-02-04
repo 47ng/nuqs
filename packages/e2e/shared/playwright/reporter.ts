@@ -164,9 +164,10 @@ class MyReporter implements Reporter {
           validateStream
         }),
         'All',
-        styleText('green', `${this.totalTests} tests passed.`, {
+        styleText('green', `${this.totalTests} tests passed`, {
           validateStream
-        })
+        }),
+        dim(`in ${formatDuration(result.duration)}`)
       ].join(' ')
       return console.log(log)
     }
@@ -177,9 +178,10 @@ class MyReporter implements Reporter {
         }),
         styleText(
           'red',
-          `${this.failedTests} of ${this.totalTests} tests failed.`,
+          `${this.failedTests} of ${this.totalTests} tests failed`,
           { validateStream }
-        )
+        ),
+        dim(`in ${formatDuration(result.duration)}`)
       ].join(' ')
       return console.log(log)
     }
