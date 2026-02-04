@@ -10,6 +10,7 @@ import type {
 import { styleText } from 'node:util'
 
 const validateStream = false // force color output
+const ellipsis = '…'
 
 const statusSymbols: Record<TestResult['status'], string> = {
   passed: styleText('green', '✓', { validateStream }),
@@ -23,20 +24,48 @@ function dim(text: string) {
   return styleText(['dim'], text, { validateStream })
 }
 
-function logIf(message: string | undefined) {
-  if (!message) return
-  const formatted = message
-    .split('\n')
-    .map(line => dim('  │ ') + line)
-    .join('\n')
-  console.log(formatted)
+function stripAnsi(text: string) {
+  return text.replace(/\u001b\[[0-9;]*m/g, '')
+}
+
+function visibleWidth(text: string) {
+  return stripAnsi(text).length
+}
+
+function fitTitleToScreen(title: string, prefix: string, suffix: string) {
+  const width = process.stdout.columns
+  if (!width) return title
+  const available = width - visibleWidth(prefix) - visibleWidth(suffix)
+  if (available <= 0) return ''
+  if (title.length <= available) return title
+  if (available <= ellipsis.length) {
+    return title.slice(title.length - available)
+  }
+  const keep = available - ellipsis.length
+  return ellipsis + title.slice(title.length - keep)
+}
+
+function formatDuration(durationMs: number) {
+  if (durationMs < 1000) return `${Math.round(durationMs)}ms`
+  if (durationMs < 60_000) {
+    return `${(durationMs / 1000).toFixed(1).replace(/\.0$/, '')}s`
+  }
+  if (durationMs < 3_600_000) {
+    return `${(durationMs / 60_000).toFixed(1).replace(/\.0$/, '')}m`
+  }
+  return `${(durationMs / 3_600_000).toFixed(1).replace(/\.0$/, '')}h`
 }
 
 class MyReporter implements Reporter {
   private resultIndex = new Map<TestResult, string>()
+  private testRows = new Map<TestCase, number>()
+  private lastRow = 0
   private padding = 1
   private totalTests = 0
   private failedTests = 0
+  private outputLocked = false
+  private outputQueue: Array<() => void> = []
+  private nextIndex = 1
 
   onBegin(config: FullConfig, suite: Suite) {
     const jobs = config.metadata.actualWorkers ?? config.workers
@@ -46,18 +75,26 @@ class MyReporter implements Reporter {
     this.totalTests = suite.allTests().length
     this.padding = String(this.totalTests).length
     const log =
-      '\n' +
       dim('Running ') +
       this.totalTests +
       dim(` test${this.totalTests !== 1 ? 's' : ''} using `) +
       jobs +
       dim(` worker${jobs !== 1 ? 's' : ''}${shardDetails}`)
-    console.log(log)
+    this.writeLine('')
+    this.writeLine(log)
   }
 
   onTestBegin(test: TestCase, result: TestResult) {
-    const index = String(this.resultIndex.size + 1).padStart(this.padding)
-    this.resultIndex.set(result, `${index}/${this.totalTests}`)
+    const index = String(this.nextIndex++).padStart(this.padding)
+    this.resultIndex.set(result, index)
+    if (!process.stdout.isTTY) return
+    const titlePath = this.formatTitlePath(test)
+    const prefix = `. ${index} `
+    const suffix = ''
+    const fittedTitle = fitTitleToScreen(titlePath, prefix, suffix)
+    const line = dim(`${prefix}${fittedTitle}${suffix}`)
+    this.testRows.set(test, this.lastRow)
+    this.appendLine(line)
   }
 
   onTestEnd(test: TestCase, result: TestResult) {
@@ -66,29 +103,31 @@ class MyReporter implements Reporter {
     }
     const index = this.resultIndex.get(result) ?? ''
     const outcomeSymbol = statusSymbols[result.status]
-    const indexStr = dim(String(index).padStart(this.padding))
-    const titlePath = test
-      .titlePath()
-      .filter(
-        part =>
-          part && part.includes('.spec.ts') === false && part !== 'chromium'
-      )
-      .join(dim(' › '))
+    const indexStr = dim(index)
+    const titlePath = this.formatTitlePath(test)
+    const prefix = `${outcomeSymbol} ${indexStr} `
+    const durationStr = dim(` (${formatDuration(result.duration)})`)
+    const suffix = `${durationStr}`
+    const fittedTitle = fitTitleToScreen(titlePath, prefix, suffix)
     const title = styleText(
       result.status !== 'passed' ? 'red' : [],
-      titlePath,
+      fittedTitle,
       { validateStream }
     )
-    const log = `${outcomeSymbol} ${title} ${indexStr}`
-    console.log(log)
-    for (const failure of result.errors) {
-      console.log(dim('  ├── Cause:'))
-      logIf(failure.stack)
-      logIf(failure.snippet)
-    }
+    const log = `${prefix}${title}${suffix}`
+    this.updateOrAppendLine(test, log)
     if (result.errors.length > 0) {
-      console.log(dim('  └──'))
+      const blockLines: string[] = []
+      for (const failure of result.errors) {
+        blockLines.push(dim('  ├── Cause:'))
+        this.pushLogLines(blockLines, failure.stack)
+        this.pushLogLines(blockLines, failure.snippet)
+      }
+      blockLines.push(dim('  └──'))
+      this.withOutputLock(() => this.writeBlock(blockLines))
     }
+    this.resultIndex.delete(result)
+    this.testRows.delete(test)
   }
 
   onError(error: TestError) {
@@ -121,6 +160,93 @@ class MyReporter implements Reporter {
       ].join(' ')
       return console.log(log)
     }
+  }
+
+  private formatTitlePath(test: TestCase) {
+    const titlePath = test
+      .titlePath()
+      .filter(part => {
+        if (!part) return false
+        if (part === 'chromium') return false
+        return (
+          part.includes('.spec.') === false && part.includes('.test.') === false
+        )
+      })
+      .join(' › ')
+    return titlePath || test.title
+  }
+
+  private updateOrAppendLine(test: TestCase, line: string) {
+    if (!process.stdout.isTTY) return this.writeLine(line)
+    if (this.outputLocked) {
+      this.outputQueue.push(() => this.updateOrAppendLine(test, line))
+      return
+    }
+    const row = this.testRows.get(test)
+    const height = process.stdout.rows ?? 0
+    if (row !== undefined && (height === 0 || this.lastRow - row < height)) {
+      this.updateLine(row, line)
+      return
+    }
+    this.testRows.set(test, this.lastRow)
+    this.appendLine(line)
+  }
+
+  private appendLine(line: string) {
+    this.writeLine(line)
+  }
+
+  private writeLine(line: string) {
+    if (this.outputLocked) {
+      this.outputQueue.push(() => this.writeLineUnlocked(line))
+      return
+    }
+    this.writeLineUnlocked(line)
+  }
+
+  private writeLineUnlocked(line: string) {
+    process.stdout.write(line)
+    process.stdout.write('\n')
+    this.lastRow++
+  }
+
+  private writeBlock(lines: string[]) {
+    if (lines.length === 0) return
+    process.stdout.write(`${lines.join('\n')}\n`)
+    this.lastRow += lines.length
+  }
+
+  private pushLogLines(lines: string[], message: string | undefined) {
+    if (!message) return
+    for (const line of message.split('\n')) {
+      lines.push(dim('  │ ') + line)
+    }
+  }
+
+  private withOutputLock(action: () => void) {
+    this.outputLocked = true
+    try {
+      action()
+    } finally {
+      this.outputLocked = false
+      const queued = this.outputQueue
+      this.outputQueue = []
+      for (const flush of queued) {
+        flush()
+      }
+    }
+  }
+
+  private updateLine(row: number, line: string) {
+    let output = ''
+    if (row !== this.lastRow) {
+      output += `\u001B[${this.lastRow - row}A`
+    }
+    output += `\u001B[2K\u001B[0G${line}`
+    if (row !== this.lastRow) {
+      output += `\u001B[${this.lastRow - row}E`
+    }
+    process.stdout.write(output)
   }
 }
 
