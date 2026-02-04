@@ -24,6 +24,10 @@ function dim(text: string) {
   return styleText(['dim'], text, { validateStream })
 }
 
+function dimYellow(text: string) {
+  return styleText(['dim', 'yellow'], text, { validateStream })
+}
+
 function stripAnsi(text: string) {
   return text.replace(/\u001b\[[0-9;]*m/g, '')
 }
@@ -57,7 +61,7 @@ function formatDuration(durationMs: number) {
 }
 
 class MyReporter implements Reporter {
-  private resultIndex = new Map<TestResult, string>()
+  private resultIndex = new Map<TestCase, string>()
   private testRows = new Map<TestCase, number>()
   private lastRow = 0
   private padding = 1
@@ -84,31 +88,35 @@ class MyReporter implements Reporter {
     this.writeLine(log)
   }
 
-  onTestBegin(test: TestCase, result: TestResult) {
-    const index = String(this.nextIndex++).padStart(this.padding)
-    this.resultIndex.set(result, index)
+  onTestBegin(test: TestCase, _result: TestResult) {
+    let index = this.resultIndex.get(test)
+    if (!index) {
+      index = String(this.nextIndex++).padStart(this.padding)
+      this.resultIndex.set(test, index)
+    }
     if (!process.stdout.isTTY) return
     const titlePath = this.formatTitlePath(test)
     const prefix = `. ${index} `
     const suffix = ''
     const fittedTitle = fitTitleToScreen(titlePath, prefix, suffix)
     const line = dim(`${prefix}${fittedTitle}${suffix}`)
-    this.testRows.set(test, this.lastRow)
-    this.appendLine(line)
+    this.updateOrAppendLine(test, line)
   }
 
   onTestEnd(test: TestCase, result: TestResult) {
-    if (['failed', 'timedOut', 'interrupted'].includes(result.status)) {
+    const isFailureStatus = ['failed', 'timedOut', 'interrupted'].includes(
+      result.status
+    )
+    const isFinalAttempt = !isFailureStatus || result.retry >= test.retries
+    if (isFailureStatus && isFinalAttempt) {
       this.failedTests++
     }
-    const index = this.resultIndex.get(result) ?? ''
+    const index = this.resultIndex.get(test) ?? ''
     const outcomeSymbol = statusSymbols[result.status]
     const indexStr = dim(index)
     const titlePath = this.formatTitlePath(test)
     const prefix = `${outcomeSymbol} ${indexStr} `
-    const durationStr = formatDuration(result.duration)
-    const stepsStr = ` ${result.steps.length} step${result.steps.length !== 1 ? 's' : ''}`
-    const suffix = dim(`${stepsStr} • ${durationStr}`)
+    const suffix = this.formatResultSuffix(test, result, isFinalAttempt)
     const fittedTitle = fitTitleToScreen(titlePath, prefix, suffix)
     const title = styleText(
       result.status !== 'passed' ? 'red' : [],
@@ -116,10 +124,7 @@ class MyReporter implements Reporter {
       { validateStream }
     )
     const log = `${prefix}${title}${suffix}`
-    const isFailure = ['failed', 'timedOut', 'interrupted'].includes(
-      result.status
-    )
-    if (isFailure) {
+    if (isFailureStatus && isFinalAttempt) {
       const blockLines: string[] = [log]
       if (result.errors.length > 0) {
         for (const failure of result.errors) {
@@ -134,6 +139,7 @@ class MyReporter implements Reporter {
           const row = this.testRows.get(test)
           if (row !== undefined) {
             this.updateLine(row, '')
+            this.testRows.delete(test)
           }
         }
         this.writeBlock(blockLines)
@@ -141,8 +147,10 @@ class MyReporter implements Reporter {
     } else {
       this.updateOrAppendLine(test, log)
     }
-    this.resultIndex.delete(result)
-    this.testRows.delete(test)
+    if (isFinalAttempt) {
+      this.resultIndex.delete(test)
+      this.testRows.delete(test)
+    }
   }
 
   onError(error: TestError) {
@@ -236,6 +244,30 @@ class MyReporter implements Reporter {
     for (const line of message.split('\n')) {
       lines.push(dim('  │ ') + line)
     }
+  }
+
+  private formatResultSuffix(
+    test: TestCase,
+    result: TestResult,
+    isFinalAttempt: boolean
+  ) {
+    const parts: string[] = []
+    const stepsCount = result.steps.length
+    parts.push(dim(`${stepsCount} step${stepsCount === 1 ? '' : 's'}`))
+    const retryLabel = this.formatRetrySuffix(test, result)
+    if (retryLabel) parts.push(retryLabel)
+    if (isFinalAttempt) {
+      // Only show duration on final attempt to reduce retry clutter.
+      parts.push(dim(formatDuration(result.duration)))
+    }
+    return ` ${parts.join(dim(' • '))}`
+  }
+
+  private formatRetrySuffix(test: TestCase, result: TestResult) {
+    const totalAttempts = test.retries + 1
+    if (totalAttempts <= 1) return ''
+    if (result.retry === 0 && result.status === 'passed') return ''
+    return dimYellow(`attempt ${result.retry + 1}/${totalAttempts}`)
   }
 
   private withOutputLock(action: () => void) {
