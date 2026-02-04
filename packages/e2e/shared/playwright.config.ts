@@ -26,7 +26,7 @@ export function configurePlaywright({
     timeout: 5_000,
     reporter: [
       [customReporter],
-      // ['list', { printSteps: !process.env.CI }],
+
       ['html', { open: 'never', outputFolder: '.playwright/report' }]
     ],
     use: {

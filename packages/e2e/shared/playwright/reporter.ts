@@ -9,7 +9,7 @@ import type {
 } from '@playwright/test/reporter'
 import { styleText } from 'node:util'
 
-const validateStream = false // force color output
+const validateStream = false // always emit color codes, even when stdout is not a TTY or reports no color support (for consistent colored output in CI and captured logs)
 const ellipsis = '…'
 
 const statusSymbols: Record<TestResult['status'], string> = {
@@ -185,6 +185,20 @@ class MyReporter implements Reporter {
       ].join(' ')
       return console.log(log)
     }
+
+    // Fallback summary for other statuses like 'timedout' or 'interrupted'
+    const log = [
+      styleText(['bgYellow'], ` ${result.status.toUpperCase()} `, {
+        validateStream
+      }),
+      styleText(
+        'yellow',
+        `${this.failedTests} of ${this.totalTests} tests failed`,
+        { validateStream }
+      ),
+      dim(`in ${formatDuration(result.duration)}`)
+    ].join(' ')
+    return console.log(log)
   }
 
   private formatTitlePath(test: TestCase) {
