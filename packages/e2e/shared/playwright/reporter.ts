@@ -60,7 +60,7 @@ function formatDuration(durationMs: number) {
   return `${(durationMs / 3_600_000).toFixed(1).replace(/\.0$/, '')}h`
 }
 
-class MyReporter implements Reporter {
+export default class CompactListReporter implements Reporter {
   private resultIndex = new Map<TestCase, string>()
   private testRows = new Map<TestCase, number>()
   private lastRow = 0
@@ -318,5 +318,3 @@ class MyReporter implements Reporter {
     process.stdout.write(output)
   }
 }
-
-export default MyReporter
