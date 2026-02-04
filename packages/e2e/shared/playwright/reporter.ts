@@ -152,7 +152,7 @@ class MyReporter implements Reporter {
   onEnd(result: FullResult) {
     if (result.status === 'passed') {
       const log = [
-        styleText(['bgGreenBright'], ' PASS ', {
+        styleText(['bgGreen'], ' PASS ', {
           validateStream
         }),
         'All',
@@ -164,7 +164,7 @@ class MyReporter implements Reporter {
     }
     if (result.status === 'failed') {
       const log = [
-        styleText(['bgRedBright'], ' FAIL ', {
+        styleText(['bgRed'], ' FAIL ', {
           validateStream
         }),
         styleText(
