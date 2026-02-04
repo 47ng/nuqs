@@ -154,7 +154,13 @@ class MyReporter implements Reporter {
   }
 
   onError(error: TestError) {
-    // todo: Implement me
+    console.dir(
+      {
+        '// todo': 'Implement formatting of onError',
+        ...error
+      },
+      { depth: null }
+    )
   }
 
   onEnd(result: FullResult) {
