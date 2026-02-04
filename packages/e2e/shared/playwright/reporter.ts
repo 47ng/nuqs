@@ -10,22 +10,25 @@ import type {
 import { styleText } from 'node:util'
 
 const validateStream = false // always emit color codes, even when stdout is not a TTY or reports no color support (for consistent colored output in CI and captured logs)
+const dimStyle = process.env.CI ? 'gray' : 'dim'
+const dimYellowStyle: Parameters<typeof styleText>[0] =
+  dimStyle === 'dim' ? ['dim', 'yellow'] : ['yellow']
 const ellipsis = '…'
 
 const statusSymbols: Record<TestResult['status'], string> = {
   passed: styleText('green', '✓', { validateStream }),
   failed: styleText('red', '✗', { validateStream }),
-  skipped: styleText(['dim', 'yellow'], '~', { validateStream }),
+  skipped: styleText(dimYellowStyle, '~', { validateStream }),
   timedOut: styleText('red', '!', { validateStream }),
   interrupted: styleText('cyan', '?', { validateStream })
 }
 
 function dim(text: string) {
-  return styleText(['dim'], text, { validateStream })
+  return styleText(dimStyle, text, { validateStream })
 }
 
 function dimYellow(text: string) {
-  return styleText(['dim', 'yellow'], text, { validateStream })
+  return styleText(dimYellowStyle, text, { validateStream })
 }
 
 function stripAnsi(text: string) {
