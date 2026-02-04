@@ -220,7 +220,7 @@ export default class CompactListReporter implements Reporter {
           part.includes('.spec.') === false && part.includes('.test.') === false
         )
       })
-      .join(' › ')
+      .join(dim(' › '))
     return titlePath || test.title
   }
 
