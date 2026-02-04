@@ -115,16 +115,30 @@ class MyReporter implements Reporter {
       { validateStream }
     )
     const log = `${prefix}${title}${suffix}`
-    this.updateOrAppendLine(test, log)
-    if (result.errors.length > 0) {
-      const blockLines: string[] = []
-      for (const failure of result.errors) {
-        blockLines.push(dim('  ├── Cause:'))
-        this.pushLogLines(blockLines, failure.stack)
-        this.pushLogLines(blockLines, failure.snippet)
+    const isFailure = ['failed', 'timedOut', 'interrupted'].includes(
+      result.status
+    )
+    if (isFailure) {
+      const blockLines: string[] = [log]
+      if (result.errors.length > 0) {
+        for (const failure of result.errors) {
+          blockLines.push(dim('  ├── Cause:'))
+          this.pushLogLines(blockLines, failure.stack)
+          this.pushLogLines(blockLines, failure.snippet)
+        }
+        blockLines.push(dim('  └──'))
       }
-      blockLines.push(dim('  └──'))
-      this.withOutputLock(() => this.writeBlock(blockLines))
+      this.withOutputLock(() => {
+        if (process.stdout.isTTY) {
+          const row = this.testRows.get(test)
+          if (row !== undefined) {
+            this.updateLine(row, '')
+          }
+        }
+        this.writeBlock(blockLines)
+      })
+    } else {
+      this.updateOrAppendLine(test, log)
     }
     this.resultIndex.delete(result)
     this.testRows.delete(test)
