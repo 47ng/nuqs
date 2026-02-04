@@ -1,4 +1,5 @@
 import { defineConfig, devices } from '@playwright/test'
+import { resolve } from 'node:path'
 
 type ConfigurePlaywright = {
   startCommand: string
@@ -11,6 +12,11 @@ export function configurePlaywright({
   port,
   basePath = '/'
 }: ConfigurePlaywright) {
+  const customReporter = resolve(
+    import.meta.dirname,
+    'playwright',
+    'reporter.ts'
+  )
   return defineConfig({
     testDir: './specs',
     outputDir: '.playwright/test-results',
@@ -19,7 +25,8 @@ export function configurePlaywright({
     workers: process.env.CI ? 3 : undefined,
     timeout: 5_000,
     reporter: [
-      ['list', { printSteps: !process.env.CI }],
+      [customReporter],
+      // ['list', { printSteps: !process.env.CI }],
       ['html', { open: 'never', outputFolder: '.playwright/report' }]
     ],
     use: {
