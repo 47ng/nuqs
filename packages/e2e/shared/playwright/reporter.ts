@@ -106,8 +106,9 @@ class MyReporter implements Reporter {
     const indexStr = dim(index)
     const titlePath = this.formatTitlePath(test)
     const prefix = `${outcomeSymbol} ${indexStr} `
-    const durationStr = dim(` (${formatDuration(result.duration)})`)
-    const suffix = `${durationStr}`
+    const durationStr = formatDuration(result.duration)
+    const stepsStr = ` ${result.steps.length} step${result.steps.length !== 1 ? 's' : ''}`
+    const suffix = dim(`${stepsStr} • ${durationStr}`)
     const fittedTitle = fitTitleToScreen(titlePath, prefix, suffix)
     const title = styleText(
       result.status !== 'passed' ? 'red' : [],
