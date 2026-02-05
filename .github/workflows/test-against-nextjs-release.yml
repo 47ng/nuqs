@@ -22,16 +22,7 @@ jobs:
       matrix:
         base-path: [false, "/base"]
         react-compiler: [true, false]
-        cache-components: [false]
-        include:
-          - if: ${{ startsWith(inputs.version, '16.') }}
-            cache-components: true
-            react-compiler: true
-            base-path: false
-          - if: ${{ startsWith(inputs.version, '16.') }}
-            cache-components: true
-            react-compiler: true
-            base-path: /base
+        cache-components: ${{ startsWith(inputs.version, '16.') && fromJson('[true, false]') || fromJson('[false]') }}
     steps:
       - name: Ensure input follows SemVer
         # Source: https://semver.org/#is-there-a-suggested-regular-expression-regex-to-check-a-semver-string
