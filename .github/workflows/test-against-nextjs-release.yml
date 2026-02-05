@@ -15,13 +15,14 @@ env:
 
 jobs:
   test_against_nextjs_release:
-    name: CI (next@${{ inputs.version }}${{ matrix.base-path && ' ⚾' || ''}}${{ matrix.react-compiler && ' ⚛️' || ''}})
+    name: CI (next@${{ inputs.version }}${{ (matrix.base-path || matrix.cache-components || matrix.react-compiler) && ' ' || ''}}${{ matrix.base-path && '⚾' || ''}}${{ matrix.react-compiler && '⚛️' || ''}}${{ matrix.cache-components && '💾' || ''}})
     runs-on: ubuntu-24.04-arm
     strategy:
       fail-fast: false
       matrix:
         base-path: [false, "/base"]
         react-compiler: [true, false]
+        cache-components: [true, false]
     steps:
       - name: Ensure input follows SemVer
         # Source: https://semver.org/#is-there-a-suggested-regular-expression-regex-to-check-a-semver-string
@@ -45,11 +46,16 @@ jobs:
         run: pnpm install
       - name: Install Next.js version ${{ env.VERSION }}
         run: pnpm add --filter e2e-next --filter nuqs "next@${{ env.VERSION }}"
+      - name: Run cacheComponents codemod
+        if: ${{ matrix.cache-components }}
+        run: pnpm run cacheComponents:codemod
+        working-directory: packages/e2e/next
       - name: Run integration tests
         run: pnpm run test --filter e2e-next
         env:
           BASE_PATH: ${{ matrix.base-path && matrix.base-path || '/' }}
           REACT_COMPILER: ${{ matrix.react-compiler }}
+          CACHE_COMPONENTS: ${{ matrix.cache-components }}
           TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
           TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
           E2E_NO_CACHE_ON_RERUN: ${{ github.run_attempt }}
@@ -58,14 +64,14 @@ jobs:
         if: failure()
         with:
           path: packages/e2e/next/.playwright/*
-          name: playwright-next-${{ env.VERSION }}${{ matrix.base-path && '-basePath' || ''}}${{ matrix.react-compiler && '-react-compiler' || ''}}
+          name: playwright-next-${{ env.VERSION }}${{ matrix.base-path && '-basePath' || ''}}${{ matrix.react-compiler && '-react-compiler' || ''}}${{ matrix.cache-components && '-cache-components' || ''}}
           include-hidden-files: true
       - uses: 47ng/actions-slack-notify@main
         name: Notify on Slack
         if: failure()
         with:
           status: ${{ job.status }}
-          jobName: next@${{ env.VERSION }}${{ matrix.base-path && ' ⚾' || ''}}${{ matrix.react-compiler && ' ⚛️' || ''}}
+          jobName: next@${{ env.VERSION }}${{ matrix.base-path && ' basePath' || ''}}${{ matrix.react-compiler && ' react-compiler' || ''}}${{ matrix.cache-components && '-cache-components' || ''}}
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
