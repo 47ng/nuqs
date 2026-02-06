@@ -7,7 +7,6 @@ import {
 import type { Nullable, Options, UrlKeys } from './defs'
 import { compareQuery } from './lib/compare'
 import { debug } from './lib/debug'
-import { error } from './lib/errors'
 import { debounceController } from './lib/queues/debounce'
 import { defaultRateLimit } from './lib/queues/rate-limiting'
 import {
@@ -114,10 +113,9 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
   const queuedQueries = debounceController.useQueuedQueries(
     Object.values(resolvedUrlKeys)
   )
-  const [internalState, setInternalState] = useState<V>(() => {
-    const source = initialSearchParams ?? new URLSearchParams()
-    return parseMap(keyMap, urlKeys, source, queuedQueries).state
-  })
+  const [internalState, setInternalState] = useState<V>(
+    () => parseMap(keyMap, urlKeys, initialSearchParams, queuedQueries).state
+  )
 
   const stateRef = useRef(internalState)
   debug(
@@ -158,8 +156,8 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
         return [
           urlKey,
           parser?.type === 'multi'
-            ? initialSearchParams?.getAll(urlKey)
-            : (initialSearchParams?.get(urlKey) ?? null)
+            ? initialSearchParams.getAll(urlKey)
+            : (initialSearchParams.get(urlKey) ?? null)
         ]
       })
     )
@@ -187,7 +185,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
     }
   }, [
     Object.values(resolvedUrlKeys)
-      .map(key => `${key}=${initialSearchParams?.getAll(key)}`)
+      .map(key => `${key}=${initialSearchParams.getAll(key)}`)
       .join('&'),
     JSON.stringify(queuedQueries)
   ])
@@ -324,9 +322,6 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
           limitUrlUpdates?.method === 'debounce' ||
           parser.limitUrlUpdates?.method === 'debounce'
         ) {
-          if (update.options.shallow === true) {
-            console.warn(error(422))
-          }
           const timeMs =
             callOptions?.limitUrlUpdates?.timeMs ??
             limitUrlUpdates?.timeMs ??
@@ -413,8 +408,8 @@ function parseMap<KeyMap extends UseQueryStatesKeysMap>(
     const query =
       queuedQuery === undefined
         ? ((parser.type === 'multi'
-            ? searchParams?.getAll(urlKey)
-            : searchParams?.get(urlKey)) ?? fallbackValue)
+            ? searchParams.getAll(urlKey)
+            : searchParams.get(urlKey)) ?? fallbackValue)
         : queuedQuery
     if (
       cachedQuery &&
