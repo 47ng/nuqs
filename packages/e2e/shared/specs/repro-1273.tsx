@@ -44,5 +44,6 @@ export function Repro1273StartPage({ otherPagePath }: Repro1273StartPageProps) {
 
 export function Repro1273OtherPage() {
   const [{ test }] = useQueryStates(searchParams)
+  console.log(`test: ${test}`)
   return <code>test: {test}</code>
 }
