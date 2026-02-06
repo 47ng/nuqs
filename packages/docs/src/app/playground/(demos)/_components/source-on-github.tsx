@@ -18,7 +18,8 @@ export async function SourceOnGitHub({ path }: SourceOnGitHubProps) {
         </span>
         <a
           href={`https://github.com/47ng/nuqs/tree/next/packages/docs/src/app/playground/(demos)/${path}`}
-          className="ml-auto text-sm"
+          className="ml-auto text-sm transition-opacity duration-300 hover:opacity-60"
+          target="_blank"
         >
           Source on GitHub
         </a>
