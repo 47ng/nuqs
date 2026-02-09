@@ -158,13 +158,6 @@ export function testPopstateQueueReset(config: TestPopstateQueueResetConfig) {
     it('should abort pending debounced updates on client-side back navigation', async ({
       page
     }) => {
-      // Log console messages for debugging
-      page.on('console', msg => {
-        if (msg.text().includes('nuqs')) {
-          console.log('BROWSER:', msg.text())
-        }
-      })
-
       // Start on the test page
       await navigateTo(page, path)
       await expect(page.locator('#client-state')).toBeVisible()
@@ -193,6 +186,8 @@ export function testPopstateQueueReset(config: TestPopstateQueueResetConfig) {
       // Wait for what would have been the debounce completion
       await page.waitForTimeout(600)
 
+      // Make sure we're still on the other page
+      await expect(page.locator('#other-page')).toBeVisible()
       // If resetQueues() was called on popstate, b and c should be aborted
       // and NOT appear in the URL.
       // If resetQueues() was NOT called (mutation), b and c would be applied
