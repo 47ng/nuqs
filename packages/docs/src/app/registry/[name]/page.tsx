@@ -26,6 +26,7 @@ import {
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import remarkSmartypants from 'remark-smartypants'
+import { Author } from './author'
 
 export default async function Page({ params }: PageProps<'/registry/[name]'>) {
   const { name } = await params
@@ -33,8 +34,8 @@ export default async function Page({ params }: PageProps<'/registry/[name]'>) {
   if (error || !item) {
     notFound()
   }
-  const { title, description, files } = item
-  const category = getRegistryItemCategory(name)
+  const { title, description, files, author } = item
+  const category = getRegistryItemCategory(item)
   const usage = await readUsage(name)
   return (
     <DocsPage
@@ -57,6 +58,12 @@ export default async function Page({ params }: PageProps<'/registry/[name]'>) {
     >
       <DocsTitle>{title}</DocsTitle>
       {description && <DocsDescription>{description}</DocsDescription>}
+      {author && (
+        <>
+          <H2 id="providers">Provided by</H2>
+          <Author author={author} />
+        </>
+      )}
       <DocsBody>
         <H2 id="installation">Installation</H2>
         <Installation name={name} files={files} />
@@ -111,7 +118,7 @@ export async function generateMetadata({
   return {
     title: item.title,
     description: item.description,
-    category: getRegistryItemCategory(name)
+    category: getRegistryItemCategory(item)
   } satisfies Metadata
 }
 

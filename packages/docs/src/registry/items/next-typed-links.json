@@ -10,5 +10,6 @@
       "path": "src/lib/typed-links.ts",
       "target": "~/src/lib/typed-links.ts"
     }
-  ]
+  ],
+  "categories": ["utility"]
 }

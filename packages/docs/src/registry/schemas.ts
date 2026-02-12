@@ -7,7 +7,9 @@ const registryBaseItemSchema = z.object({
   name: z.string(),
   title: z.string(),
   description: z.string().optional(),
-  dependencies: z.array(z.string())
+  dependencies: z.array(z.string()),
+  categories: z.array(z.string()).optional(),
+  author: z.string().optional()
 })
 
 // Source schemas --
@@ -42,5 +44,6 @@ const registryBuiltFileSchema = registrySourceFileSchema.extend({
 
 export type RegistryBuiltItem = z.infer<typeof registryBuiltItemSchema>
 export const registryBuiltItemSchema = registryBaseItemSchema.extend({
-  files: z.array(registryBuiltFileSchema)
+  files: z.array(registryBuiltFileSchema),
+  docs: z.string()
 })

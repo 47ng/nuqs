@@ -97,6 +97,10 @@ const config = {
         protocol: 'https',
         hostname: 'i.redd.it',
         pathname: '/snoovatar/avatars/**'
+      },
+      {
+        protocol: 'https',
+        hostname: 'github.com'
       }
     ]
   }

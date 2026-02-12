@@ -10,5 +10,6 @@
       "path": "src/registry/items/adapter-onejs.source",
       "target": "~/app/nuqs-onejs-adapter.tsx"
     }
-  ]
+  ],
+  "categories": ["adapter"]
 }
