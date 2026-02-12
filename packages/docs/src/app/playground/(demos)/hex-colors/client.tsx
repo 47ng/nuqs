@@ -33,7 +33,7 @@ export default function HexColorsDemo() {
   )
   const asHex = '#' + hexColorSchema.serialize(color)
   return (
-    <div className="flex flex-wrap-reverse items-center gap-4">
+    <div className="mb-4 flex flex-wrap-reverse items-center gap-4">
       <div
         className="h-64 w-64 rounded border"
         style={{

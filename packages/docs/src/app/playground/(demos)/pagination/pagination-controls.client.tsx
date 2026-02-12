@@ -24,7 +24,7 @@ export function ClientPaginationControls({
   const [isLoading, startTransition] = React.useTransition()
   const [page, setPage] = usePage({ startTransition })
   return (
-    <Pagination className="not-prose items-center gap-2">
+    <Pagination className="not-prose mt-2 items-center gap-2">
       <PaginationContent>
         <PaginationItem>
           <PaginationPrevious
