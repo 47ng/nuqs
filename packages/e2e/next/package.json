@@ -16,13 +16,17 @@
     "start": "NODE_OPTIONS='--enable-source-maps=true' next start --port 3001",
     "pretest": "playwright install chromium",
     "test": "playwright test --project=chromium",
-    "cacheComponents:codemod": "node scripts/cache-components-codemod.ts"
+    "cacheComponents:codemod": "node scripts/cache-components-codemod.ts",
+    "dev:vinext": "vite dev --port 3001",
+    "build:vinext": "vite build",
+    "start:vinext": "vite preview --port 3001"
   },
   "dependencies": {
     "next": "catalog:next",
     "nuqs": "workspace:*",
     "react": "catalog:react19",
-    "react-dom": "catalog:react19"
+    "react-dom": "catalog:react19",
+    "vinext": "^0.0.13"
   },
   "devDependencies": {
     "@playwright/test": "catalog:e2e",
@@ -31,9 +35,11 @@
     "@types/react-dom": "catalog:react19",
     "@types/semver": "^7.7.1",
     "@types/webpack": "^5.28.5",
+    "@vitejs/plugin-rsc": "^0.5.21",
     "babel-plugin-react-compiler": "1.0.0",
     "e2e-shared": "workspace:*",
     "semver": "^7.7.3",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "vite": "^7.3.1"
   }
 }

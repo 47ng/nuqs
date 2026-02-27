@@ -1,6 +1,5 @@
 'use client'
 
-import { PrefetchKind } from 'next/dist/client/components/router-reducer/router-reducer-types'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { parseAsInteger, useQueryState } from 'nuqs'
@@ -22,7 +21,10 @@ function Client() {
   )
   const [mounted, setMounted] = React.useState(false)
   const manualPrefetch = React.useCallback(() => {
-    router.prefetch('/', { kind: PrefetchKind.FULL })
+    router.prefetch('/', {
+      // @ts-expect-error
+      kind: 'full'
+    })
   }, [router])
 
   return (

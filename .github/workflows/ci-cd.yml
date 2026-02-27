@@ -158,6 +158,7 @@ jobs:
         base-path: [false]
         react-compiler: [false]
         cache-components: [false]
+        vinext: [false]
         next-version:
           # Only keep versions where there were relevant changes in the app router core,
           # and the previous one to use as a baseline.
@@ -185,6 +186,11 @@ jobs:
           - next-version: "latest"
             cache-components: true
             react-compiler: true
+          - vinext: true
+            next-version: latest
+          - vinext: true
+            next-version: latest
+            base-path: "/base"
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
       - uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061
@@ -201,6 +207,10 @@ jobs:
         if: ${{ matrix.cache-components }}
         run: pnpm run cacheComponents:codemod
         working-directory: packages/e2e/next
+      - name: Build vinext
+        if: ${{ matrix.vinext }}
+        run: pnpm run build:vinext
+        working-directory: packages/e2e/next
       - name: Run integration tests
         run: pnpm run test ${{ github.event_name == 'workflow_dispatch' && '--force' || '' }} --filter e2e-next
         env:
@@ -209,6 +219,7 @@ jobs:
           CACHE_COMPONENTS: ${{ matrix.cache-components }}
           TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
           TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
+          VINEXT: ${{ matrix.vinext }}
           E2E_NO_CACHE_ON_RERUN: ${{ github.run_attempt }}
       - name: Save Playwright report
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
