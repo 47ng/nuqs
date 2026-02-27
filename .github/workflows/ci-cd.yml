@@ -210,6 +210,14 @@ jobs:
       - name: Build vinext
         if: ${{ matrix.vinext }}
         run: pnpm run build:vinext
+        env:
+          BASE_PATH: ${{ matrix.base-path && matrix.base-path || '/' }}
+          REACT_COMPILER: ${{ matrix.react-compiler }}
+          CACHE_COMPONENTS: ${{ matrix.cache-components }}
+          TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+          TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
+          VINEXT: ${{ matrix.vinext }}
+          E2E_NO_CACHE_ON_RERUN: ${{ github.run_attempt }}
       - name: Run integration tests
         run: pnpm run test ${{ github.event_name == 'workflow_dispatch' && '--force' || '' }} --filter e2e-next
         env:
