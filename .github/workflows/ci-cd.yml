@@ -209,7 +209,7 @@ jobs:
         working-directory: packages/e2e/next
       - name: Build vinext
         if: ${{ matrix.vinext }}
-        run: turbo run build:vinext
+        run: pnpm run build:vinext
       - name: Run integration tests
         run: pnpm run test ${{ github.event_name == 'workflow_dispatch' && '--force' || '' }} --filter e2e-next
         env:
