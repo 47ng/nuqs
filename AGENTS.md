@@ -82,10 +82,7 @@ In server or Node environments (e.g. when using `nuqs/server`), set the `DEBUG` 
 DEBUG=nuqs pnpm dev
 ```
 
-Log prefixes:
-
-- `[nuqs]` — single-key operations
-- `[nuq+]` — multi-key operations
+Log lines are prefixed with `[nuq+]`
 
 Encourage debug logs in issue reports and include them in reproduction scripts.
 

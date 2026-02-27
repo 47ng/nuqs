@@ -13,16 +13,18 @@ to `nuqs`, and reload the page.
 localStorage.setItem('debug', 'nuqs')
 ```
 
-Log lines will be prefixed with `[nuqs]` for `useQueryState` and `[nuq+]` for
-`useQueryStates`, along with other internal debug logs.
+Log lines for both `useQueryState` and `useQueryStates` will be prefixed with
+`[nuq+]`, along with other internal debug logs.
 
 > Note: unlike the `debug` package, this will not work with wildcards, but
 > you can combine it: `localStorage.setItem('debug', '*,nuqs')`
 
 ## Server (Node.js)
 
-In server or Node environments (e.g. when using `nuqs/server`), enable debug
-logs by setting the `DEBUG` environment variable so it contains `nuqs`:
+Debug logs apply in any Node environment: server-side rendering (SSR), React
+Server Components (RSC), or when using `nuqs/server`. Hooks like
+`useQueryState` and `useQueryStates` can run on the server in these contexts.
+Enable logs by setting the `DEBUG` environment variable so it contains `nuqs`:
 
 ```bash
 DEBUG=nuqs node server.js
