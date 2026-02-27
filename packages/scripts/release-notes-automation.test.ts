@@ -15,6 +15,7 @@ function createPR(
 ): PR {
   return {
     author: null,
+    participants: { nodes: [] },
     closingIssuesReferences: { edges: [] },
     ...overrides
   }
@@ -121,18 +122,13 @@ describe('formatClosingIssues', () => {
   })
 
   it('formats single issue', () => {
-    expect(formatClosingIssues([{ number: 123, author: null }])).toBe(
-      ' (closes #123)'
-    )
+    expect(formatClosingIssues([{ number: 123 }])).toBe(' (closes #123)')
   })
 
   it('formats multiple issues', () => {
-    expect(
-      formatClosingIssues([
-        { number: 123, author: null },
-        { number: 456, author: null }
-      ])
-    ).toBe(' (closes #123, #456)')
+    expect(formatClosingIssues([{ number: 123 }, { number: 456 }])).toBe(
+      ' (closes #123, #456)'
+    )
   })
 })
 
@@ -146,7 +142,7 @@ describe('collectContributors', () => {
       createPR({
         number: 1,
         title: 'test: should ignore @franky47',
-        author: { login: 'franky47' }
+        participants: { nodes: [{ login: 'franky47' }] }
       })
     ]
     expect(collectContributors(prs)).toEqual([])
@@ -157,17 +153,17 @@ describe('collectContributors', () => {
       createPR({
         number: 1,
         title: 'chore: update deps',
-        author: { login: 'dependabot[bot]' }
+        participants: { nodes: [{ login: 'dependabot[bot]' }] }
       }),
       createPR({
         number: 2,
         title: 'chore: ci',
-        author: { login: 'github-actions[bot]' }
+        participants: { nodes: [{ login: 'github-actions[bot]' }] }
       }),
       createPR({
         number: 3,
         title: 'chore: renovate',
-        author: { login: 'renovate[bot]' }
+        participants: { nodes: [{ login: 'renovate[bot]' }] }
       })
     ]
     expect(collectContributors(prs)).toEqual([])
@@ -178,12 +174,12 @@ describe('collectContributors', () => {
       createPR({
         number: 1,
         title: 'feat: test',
-        author: { login: 'contributor1' }
+        participants: { nodes: [{ login: 'contributor1' }] }
       }),
       createPR({
         number: 2,
         title: 'fix: bug',
-        author: { login: 'contributor2' }
+        participants: { nodes: [{ login: 'contributor2' }] }
       })
     ]
     expect(collectContributors(prs)).toEqual(['contributor1', 'contributor2'])
@@ -194,29 +190,88 @@ describe('collectContributors', () => {
       createPR({
         number: 1,
         title: 'feat: test',
-        author: { login: 'contributor1' }
+        participants: { nodes: [{ login: 'contributor1' }] }
       }),
       createPR({
         number: 2,
         title: 'fix: bug',
-        author: { login: 'contributor1' }
+        participants: { nodes: [{ login: 'contributor1' }] }
       })
     ]
     expect(collectContributors(prs)).toEqual(['contributor1'])
   })
 
-  it('includes issue authors as contributors', () => {
+  it('includes issue participants as contributors', () => {
     const prs: PR[] = [
       createPR({
         number: 1,
         title: 'fix: bug',
-        author: { login: 'franky47' },
+        participants: { nodes: [{ login: 'franky47' }] },
         closingIssuesReferences: {
-          edges: [{ node: { number: 100, author: { login: 'issueReporter' } } }]
+          edges: [
+            {
+              node: {
+                number: 100,
+                participants: { nodes: [{ login: 'issueReporter' }] }
+              }
+            }
+          ]
         }
       })
     ]
     expect(collectContributors(prs)).toEqual(['issueReporter'])
+  })
+
+  it('includes PR discussion participants as contributors', () => {
+    const prs: PR[] = [
+      createPR({
+        number: 1,
+        title: 'feat: test',
+        author: { login: 'prAuthor' },
+        participants: {
+          nodes: [
+            { login: 'prAuthor' },
+            { login: 'commenter1' },
+            { login: 'commenter2' }
+          ]
+        }
+      })
+    ]
+    expect(collectContributors(prs)).toEqual([
+      'commenter1',
+      'commenter2',
+      'prAuthor'
+    ])
+  })
+
+  it('deduplicates across PR author, PR participants, and issue participants', () => {
+    const prs: PR[] = [
+      createPR({
+        number: 1,
+        title: 'fix: bug',
+        author: { login: 'contributor1' },
+        participants: {
+          nodes: [{ login: 'contributor1' }, { login: 'contributor2' }]
+        },
+        closingIssuesReferences: {
+          edges: [
+            {
+              node: {
+                number: 100,
+                participants: {
+                  nodes: [{ login: 'contributor2' }, { login: 'contributor3' }]
+                }
+              }
+            }
+          ]
+        }
+      })
+    ]
+    expect(collectContributors(prs)).toEqual([
+      'contributor1',
+      'contributor2',
+      'contributor3'
+    ])
   })
 
   it('sorts contributors alphabetically (case insensitive)', () => {
@@ -224,17 +279,17 @@ describe('collectContributors', () => {
       createPR({
         number: 1,
         title: 'feat: test',
-        author: { login: 'Zara' }
+        participants: { nodes: [{ login: 'Zara' }] }
       }),
       createPR({
         number: 2,
         title: 'fix: bug',
-        author: { login: 'alice' }
+        participants: { nodes: [{ login: 'alice' }] }
       }),
       createPR({
         number: 3,
         title: 'doc: readme',
-        author: { login: 'Bob' }
+        participants: { nodes: [{ login: 'Bob' }] }
       })
     ]
     expect(collectContributors(prs)).toEqual(['alice', 'Bob', 'Zara'])
@@ -324,8 +379,8 @@ describe('groupPRsByCategory', () => {
         title: 'fix: resolve bug',
         closingIssuesReferences: {
           edges: [
-            { node: { number: 100, author: { login: 'reporter' } } },
-            { node: { number: 101, author: null } }
+            { node: { number: 100, participants: { nodes: [] } } },
+            { node: { number: 101, participants: { nodes: [] } } }
           ]
         }
       })
@@ -333,8 +388,8 @@ describe('groupPRsByCategory', () => {
 
     const result = groupPRsByCategory(prs)
     expect(result['Bug fixes'][0]!.closingIssues).toEqual([
-      { number: 100, author: 'reporter' },
-      { number: 101, author: null }
+      { number: 100 },
+      { number: 101 }
     ])
   })
 })
