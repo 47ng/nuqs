@@ -76,6 +76,12 @@ Enable debug logs in the browser console:
 localStorage.setItem('debug', 'nuqs')
 ```
 
+In server or Node environments (e.g. when using `nuqs/server`), set the `DEBUG` environment variable so it contains `nuqs`:
+
+```bash
+DEBUG=nuqs pnpm dev
+```
+
 Log prefixes:
 
 - `[nuqs]` — single-key operations

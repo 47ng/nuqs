@@ -3,6 +3,8 @@ title: Debugging
 description: Enabling debug logs and user timings markers
 ---
 
+## Browser
+
 You can enable debug logs in the browser by setting the `debug` item in localStorage
 to `nuqs`, and reload the page.
 
@@ -11,11 +13,32 @@ to `nuqs`, and reload the page.
 localStorage.setItem('debug', 'nuqs')
 ```
 
+Log lines will be prefixed with `[nuqs]` for `useQueryState` and `[nuq+]` for
+`useQueryStates`, along with other internal debug logs.
+
 > Note: unlike the `debug` package, this will not work with wildcards, but
 > you can combine it: `localStorage.setItem('debug', '*,nuqs')`
 
-Log lines will be prefixed with `[nuqs]` for `useQueryState` and `[nuq+]` for
-`useQueryStates`, along with other internal debug logs.
+## Server (Node.js)
+
+In server or Node environments (e.g. when using `nuqs/server`), enable debug
+logs by setting the `DEBUG` environment variable so it contains `nuqs`:
+
+```bash
+DEBUG=nuqs node server.js
+```
+
+Or when running your development server:
+
+```bash
+DEBUG=nuqs pnpm dev
+```
+
+You can also define `DEBUG=nuqs` in your `.env` file or configure it through
+your hosting environment.
+
+Unlike the browser version, this does not use `localStorage`. Debug mode is
+enabled when `process.env.DEBUG` contains the string `nuqs`.
 
 User timings markers are also recorded, for advanced performance analysis using
 your browser's devtools.
