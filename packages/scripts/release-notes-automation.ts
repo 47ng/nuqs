@@ -3,13 +3,13 @@
 import { z } from 'zod'
 
 // Schema for the GraphQL response
+const participantsSchema = z.object({
+  nodes: z.array(z.object({ login: z.string() }))
+})
+
 const issueReferenceSchema = z.object({
   number: z.number(),
-  author: z
-    .object({
-      login: z.string()
-    })
-    .nullable()
+  participants: participantsSchema
 })
 
 export const prSchema = z.object({
@@ -20,6 +20,7 @@ export const prSchema = z.object({
       login: z.string()
     })
     .nullable(),
+  participants: participantsSchema,
   closingIssuesReferences: z.object({
     edges: z.array(
       z.object({
@@ -71,12 +72,19 @@ async function fetchMilestonePRs(): Promise<PR[]> {
               author {
                 login
               }
+              participants(first: 20) {
+                nodes {
+                  login
+                }
+              }
               closingIssuesReferences(first: 10) {
                 edges {
                   node {
                     number
-                    author {
-                      login
+                    participants(first: 20) {
+                      nodes {
+                        login
+                      }
                     }
                   }
                 }
@@ -153,7 +161,7 @@ export type CategorizedPR = {
   number: number
   title: string
   author: string | null
-  closingIssues: Array<{ number: number; author: string | null }>
+  closingIssues: Array<{ number: number }>
 }
 
 export function groupPRsByCategory(
@@ -169,8 +177,7 @@ export function groupPRsByCategory(
   for (const pr of prs) {
     const [category, cleanTitle] = splitCategoryTitle(pr.title)
     const closingIssues = pr.closingIssuesReferences.edges.map(edge => ({
-      number: edge.node.number,
-      author: edge.node.author?.login ?? null
+      number: edge.node.number
     }))
     categories[category].push({
       category,
@@ -188,33 +195,43 @@ export function groupPRsByCategory(
   return categories
 }
 
+// Known bot accounts to exclude
+const botAccounts = new Set([
+  'copilot',
+  'dependabot',
+  'github-actions',
+  'pkg-pr-new',
+  'renovate',
+  'vercel'
+])
+
+function isBot(login: string) {
+  return login.endsWith('[bot]') || botAccounts.has(login.toLowerCase())
+}
+
 export function collectContributors(prs: PR[]): string[] {
   const contributors = new Set<string>()
 
-  // Known bot accounts to exclude
-  const botAccounts = new Set([
-    'franky47', // I'm not a bot, but exclude myself from the thanks part.
-    'dependabot',
-    'dependabot[bot]',
-    'github-actions',
-    'github-actions[bot]',
-    'renovate',
-    'renovate[bot]'
-  ])
-
   for (const pr of prs) {
-    // Add PR author
-    if (pr.author?.login && !botAccounts.has(pr.author.login)) {
-      contributors.add(pr.author.login)
+    // Add all PR discussion participants (includes the PR author)
+    for (const { login } of pr.participants.nodes) {
+      if (!isBot(login)) {
+        contributors.add(login)
+      }
     }
 
-    // Add authors of closing issues
+    // Add participants of closing issues
     for (const { node } of pr.closingIssuesReferences.edges) {
-      if (node.author?.login && !botAccounts.has(node.author.login)) {
-        contributors.add(node.author.login)
+      for (const { login } of node.participants.nodes) {
+        if (!isBot(login)) {
+          contributors.add(login)
+        }
       }
     }
   }
+
+  // Remove myself from the list
+  contributors.delete('franky47')
 
   return Array.from(contributors).sort((a, b) =>
     a.toLowerCase().localeCompare(b.toLowerCase())
