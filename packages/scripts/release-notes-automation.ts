@@ -195,24 +195,26 @@ export function groupPRsByCategory(
   return categories
 }
 
+// Known bot accounts to exclude
+const botAccounts = new Set([
+  'dependabot',
+  'github-actions',
+  'pkg-pr-new',
+  'renovate',
+  'vercel'
+])
+
+function isBot(login: string) {
+  return login.endsWith('[bot]') || botAccounts.has(login.toLowerCase())
+}
+
 export function collectContributors(prs: PR[]): string[] {
   const contributors = new Set<string>()
-
-  // Known bot accounts to exclude
-  const botAccounts = new Set([
-    'franky47', // I'm not a bot, but exclude myself from the thanks part.
-    'dependabot',
-    'dependabot[bot]',
-    'github-actions',
-    'github-actions[bot]',
-    'renovate',
-    'renovate[bot]'
-  ])
 
   for (const pr of prs) {
     // Add all PR discussion participants (includes the PR author)
     for (const { login } of pr.participants.nodes) {
-      if (!botAccounts.has(login)) {
+      if (!isBot(login)) {
         contributors.add(login)
       }
     }
@@ -220,12 +222,15 @@ export function collectContributors(prs: PR[]): string[] {
     // Add participants of closing issues
     for (const { node } of pr.closingIssuesReferences.edges) {
       for (const { login } of node.participants.nodes) {
-        if (!botAccounts.has(login)) {
+        if (!isBot(login)) {
           contributors.add(login)
         }
       }
     }
   }
+
+  // Remove myself from the list
+  contributors.delete('franky47')
 
   return Array.from(contributors).sort((a, b) =>
     a.toLowerCase().localeCompare(b.toLowerCase())
