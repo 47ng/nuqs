@@ -197,6 +197,7 @@ export function groupPRsByCategory(
 
 // Known bot accounts to exclude
 const botAccounts = new Set([
+  'copilot',
   'dependabot',
   'github-actions',
   'pkg-pr-new',
