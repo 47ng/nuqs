@@ -11,10 +11,12 @@ cp -f ../../README.md ../../LICENSE ./
 # Read the version from package.json
 VERSION=$(jq -r '.version' < package.json)
 
+echo "Injecting version ${VERSION} into built files..."
+
 if [[ "$(uname)" == "Darwin" ]]; then
   # macOS requires an empty string as the backup extension
-  sed -i '' "s/0.0.0-inject-version-here/${VERSION}/g" dist/index.js
+  find dist -name "*.js" -exec sed -i '' "s/0.0.0-inject-version-here/${VERSION}/g" {} +
 else
   # Ubuntu (CI/CD) doesn't
-  sed -i "s/0.0.0-inject-version-here/${VERSION}/g" dist/index.js
+  find dist -name "*.js" -exec sed -i "s/0.0.0-inject-version-here/${VERSION}/g" {} +
 fi

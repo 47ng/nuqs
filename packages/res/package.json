@@ -3,6 +3,8 @@
   "version": "0.0.0-internal",
   "private": true,
   "files": [
+    "./logo.light.svg",
+    "./logo.dark.svg",
     "./wordmark.svg",
     "./wordmark.light.svg",
     "./wordmark.dark.svg"

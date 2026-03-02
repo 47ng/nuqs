@@ -15,13 +15,14 @@ env:
 
 jobs:
   test_against_nextjs_release:
-    name: CI (next@${{ inputs.version }}${{ matrix.base-path && ' ⚾' || ''}}${{ matrix.react-compiler && ' ⚛️' || ''}})
+    name: CI (next@${{ inputs.version }}${{ (matrix.base-path || matrix.cache-components || matrix.react-compiler) && ' ' || ''}}${{ matrix.base-path && '⚾' || ''}}${{ matrix.react-compiler && '⚛️' || ''}}${{ matrix.cache-components && '💾' || ''}})
     runs-on: ubuntu-24.04-arm
     strategy:
       fail-fast: false
       matrix:
         base-path: [false, "/base"]
         react-compiler: [true, false]
+        cache-components: ${{ startsWith(inputs.version, '16.') && fromJson('[true, false]') || fromJson('[false]') }}
     steps:
       - name: Ensure input follows SemVer
         # Source: https://semver.org/#is-there-a-suggested-regular-expression-regex-to-check-a-semver-string
@@ -35,9 +36,9 @@ jobs:
             }
             console.log(\`Version '\${version}' is valid SemVer\`);
           "
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
       - uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061
-      - uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903
+      - uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238
         with:
           node-version-file: .node-version
           cache: pnpm
@@ -45,26 +46,32 @@ jobs:
         run: pnpm install
       - name: Install Next.js version ${{ env.VERSION }}
         run: pnpm add --filter e2e-next --filter nuqs "next@${{ env.VERSION }}"
+      - name: Run cacheComponents codemod
+        if: ${{ matrix.cache-components }}
+        run: pnpm run cacheComponents:codemod
+        working-directory: packages/e2e/next
       - name: Run integration tests
         run: pnpm run test --filter e2e-next
         env:
           BASE_PATH: ${{ matrix.base-path && matrix.base-path || '/' }}
           REACT_COMPILER: ${{ matrix.react-compiler }}
+          CACHE_COMPONENTS: ${{ matrix.cache-components }}
           TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
           TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
           E2E_NO_CACHE_ON_RERUN: ${{ github.run_attempt }}
-      - name: Save Cypress artifacts
-        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4
+      - name: Save Playwright report
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
         if: failure()
         with:
-          path: packages/e2e-next/cypress/screenshots
-          name: ci-next-${{ env.VERSION }}${{ matrix.base-path && '-basePath' || ''}}${{ matrix.react-compiler && '-react-compiler' || ''}}
+          path: packages/e2e/next/.playwright/*
+          name: playwright-next-${{ env.VERSION }}${{ matrix.base-path && '-basePath' || ''}}${{ matrix.react-compiler && '-react-compiler' || ''}}${{ matrix.cache-components && '-cache-components' || ''}}
+          include-hidden-files: true
       - uses: 47ng/actions-slack-notify@main
         name: Notify on Slack
         if: failure()
         with:
           status: ${{ job.status }}
-          jobName: next@${{ env.VERSION }}${{ matrix.base-path && ' ⚾' || ''}}${{ matrix.react-compiler && ' ⚛️' || ''}}
+          jobName: next@${{ env.VERSION }}${{ matrix.base-path && ' basePath' || ''}}${{ matrix.react-compiler && ' react-compiler' || ''}}${{ matrix.cache-components && '-cache-components' || ''}}
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 

@@ -3,16 +3,16 @@
 import { z } from 'zod'
 
 // Schema for the GraphQL response
-const issueReferenceSchema = z.object({
-  number: z.number(),
-  author: z
-    .object({
-      login: z.string()
-    })
-    .nullable()
+const participantsSchema = z.object({
+  nodes: z.array(z.object({ login: z.string() }))
 })
 
-const prSchema = z.object({
+const issueReferenceSchema = z.object({
+  number: z.number(),
+  participants: participantsSchema
+})
+
+export const prSchema = z.object({
   number: z.number(),
   title: z.string(),
   author: z
@@ -20,6 +20,7 @@ const prSchema = z.object({
       login: z.string()
     })
     .nullable(),
+  participants: participantsSchema,
   closingIssuesReferences: z.object({
     edges: z.array(
       z.object({
@@ -43,15 +44,15 @@ const responseSchema = z.object({
   })
 })
 
-type PR = z.infer<typeof prSchema>
+export type PR = z.infer<typeof prSchema>
 
-const CATEGORIES = [
+export const CATEGORIES = [
   'Features',
   'Bug fixes',
   'Documentation',
   'Other changes'
 ] as const
-type Category = (typeof CATEGORIES)[number]
+export type Category = (typeof CATEGORIES)[number]
 
 async function fetchMilestonePRs(): Promise<PR[]> {
   const token = process.env.GITHUB_TOKEN
@@ -71,12 +72,19 @@ async function fetchMilestonePRs(): Promise<PR[]> {
               author {
                 login
               }
+              participants(first: 20) {
+                nodes {
+                  login
+                }
+              }
               closingIssuesReferences(first: 10) {
                 edges {
                   node {
                     number
-                    author {
-                      login
+                    participants(first: 20) {
+                      nodes {
+                        login
+                      }
                     }
                   }
                 }
@@ -88,14 +96,17 @@ async function fetchMilestonePRs(): Promise<PR[]> {
     }
   `.replace(/\s+/g, ' ')
 
-  const response = await fetch('https://api.github.com/graphql', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({ query })
-  })
+  const response = await fetch(
+    'https://api.github.com/graphql?fn=fetchMilestonesPRs',
+    {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ query })
+    }
+  )
 
   if (!response.ok) {
     throw new Error(
@@ -113,7 +124,7 @@ async function fetchMilestonePRs(): Promise<PR[]> {
   return parsed.data.repository.milestone.pullRequests.nodes
 }
 
-function splitCategoryTitle(title: string): [Category, string] {
+export function splitCategoryTitle(title: string): [Category, string] {
   // Regex to match conventional commit prefix with optional scope
   // Matches: feat:, feat(scope):, fix:, docs:, doc:, etc.
   const conventionalCommitRegex = /^(\w+)(?:\([^)]+\))?:\s*(.+)$/
@@ -145,15 +156,17 @@ function splitCategoryTitle(title: string): [Category, string] {
   return [category, cleanTitle] as const
 }
 
-type CategorizedPR = {
+export type CategorizedPR = {
   category: Category
   number: number
   title: string
   author: string | null
-  closingIssues: Array<{ number: number; author: string | null }>
+  closingIssues: Array<{ number: number }>
 }
 
-function groupPRsByCategory(prs: PR[]): Record<Category, CategorizedPR[]> {
+export function groupPRsByCategory(
+  prs: PR[]
+): Record<Category, CategorizedPR[]> {
   const categories: Record<Category, CategorizedPR[]> = {
     Features: [],
     'Bug fixes': [],
@@ -164,8 +177,7 @@ function groupPRsByCategory(prs: PR[]): Record<Category, CategorizedPR[]> {
   for (const pr of prs) {
     const [category, cleanTitle] = splitCategoryTitle(pr.title)
     const closingIssues = pr.closingIssuesReferences.edges.map(edge => ({
-      number: edge.node.number,
-      author: edge.node.author?.login ?? null
+      number: edge.node.number
     }))
     categories[category].push({
       category,
@@ -183,43 +195,71 @@ function groupPRsByCategory(prs: PR[]): Record<Category, CategorizedPR[]> {
   return categories
 }
 
-function collectContributors(prs: PR[]): string[] {
+// Known bot accounts to exclude
+const botAccounts = new Set([
+  'copilot',
+  'dependabot',
+  'github-actions',
+  'pkg-pr-new',
+  'renovate',
+  'vercel'
+])
+
+function isBot(login: string) {
+  return login.endsWith('[bot]') || botAccounts.has(login.toLowerCase())
+}
+
+export function collectContributors(prs: PR[]): string[] {
   const contributors = new Set<string>()
 
-  // Known bot accounts to exclude
-  const botAccounts = new Set([
-    'franky47', // I'm not a bot, but exclude myself from the thanks part.
-    'dependabot',
-    'dependabot[bot]',
-    'github-actions',
-    'github-actions[bot]',
-    'renovate',
-    'renovate[bot]'
-  ])
-
   for (const pr of prs) {
-    // Add PR author
-    if (pr.author?.login && !botAccounts.has(pr.author.login)) {
-      contributors.add(pr.author.login)
+    // Add all PR discussion participants (includes the PR author)
+    for (const { login } of pr.participants.nodes) {
+      if (!isBot(login)) {
+        contributors.add(login)
+      }
     }
 
-    // Add authors of closing issues
+    // Add participants of closing issues
     for (const { node } of pr.closingIssuesReferences.edges) {
-      if (node.author?.login && !botAccounts.has(node.author.login)) {
-        contributors.add(node.author.login)
+      for (const { login } of node.participants.nodes) {
+        if (!isBot(login)) {
+          contributors.add(login)
+        }
       }
     }
   }
+
+  // Remove myself from the list
+  contributors.delete('franky47')
 
   return Array.from(contributors).sort((a, b) =>
     a.toLowerCase().localeCompare(b.toLowerCase())
   )
 }
 
-function formatClosingIssues(issues: CategorizedPR['closingIssues']): string {
+export function formatClosingIssues(
+  issues: CategorizedPR['closingIssues']
+): string {
   if (issues.length === 0) return ''
   const issueNumbers = issues.map(i => `#${i.number}`).join(', ')
   return ` (closes ${issueNumbers})`
+}
+
+export function formatTitle(title: string): string {
+  // Convert backtick code blocks to <code> tags for better rendering in GitHub release notes
+  return title.replace(/`([^`]+)`/g, '<code>$1</code>')
+}
+
+export function formatThanksSection(contributors: string[]): string | null {
+  if (contributors.length === 0) {
+    return null
+  }
+  // Such travesty will not go unpunished! 🇬🇧
+  // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/ListFormat/ListFormat#oxford_comma
+  const oxfordComma = new Intl.ListFormat('en-US', { type: 'conjunction' })
+  const allContributors = oxfordComma.format(contributors.map(c => `@${c}`))
+  return `Huge thanks to ${allContributors} for helping!`
 }
 
 // Main execution
@@ -243,7 +283,9 @@ async function main() {
       for (const pr of prsInCategory) {
         const author = pr.author ? `, by @${pr.author}` : ''
         const closingIssues = formatClosingIssues(pr.closingIssues)
-        console.log(`- #${pr.number} - ${pr.title}${author}${closingIssues}`)
+        console.log(
+          `- #${pr.number} - ${formatTitle(pr.title)}${author}${closingIssues}`
+        )
       }
 
       console.log() // Empty line between categories
@@ -251,17 +293,22 @@ async function main() {
 
     // Collect and display contributors
     const contributors = collectContributors(prs)
-    // Such travesty will not go unpunished! 🇬🇧
-    // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/ListFormat/ListFormat#oxford_comma
-    const oxfordComma = new Intl.ListFormat('en-US', { type: 'conjunction' })
-    const allContributors = oxfordComma.format(contributors.map(c => `@${c}`))
-
-    console.log('## Thanks\n')
-    console.log(`Huge thanks to ${allContributors} for helping!\n`)
+    const thanksSection = formatThanksSection(contributors)
+    if (thanksSection) {
+      console.log('## Thanks\n')
+      console.log(`${thanksSection}\n`)
+    }
   } catch (error) {
     console.error('Error:', error)
     process.exit(1)
   }
 }
 
-main()
+// Only run main when executed directly (not when imported)
+const isMainModule =
+  import.meta.url === `file://${process.argv[1]}` ||
+  process.argv[1]?.endsWith('release-notes-automation.ts')
+
+if (isMainModule) {
+  main()
+}

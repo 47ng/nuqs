@@ -1,6 +1,6 @@
 import { readFile, writeFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
-import { defineConfig, type Options, type UserConfig } from 'tsdown'
+import { defineConfig, type UserConfig } from 'tsdown'
 
 const commonConfig = {
   clean: true,
@@ -15,9 +15,15 @@ const commonConfig = {
     'react-router',
     '@tanstack/react-router'
   ],
+  outExtensions() {
+    return {
+      js: '.js',
+      dts: '.d.ts'
+    }
+  },
   treeshake: true,
   tsconfig: 'tsconfig.build.json'
-} satisfies Options
+} satisfies UserConfig
 
 const entrypoints = {
   client: {
@@ -46,7 +52,8 @@ const config: UserConfig = defineConfig([
     ...commonConfig,
     entry: entrypoints.client,
     outputOptions: {
-      intro: ({ isEntry }) => (isEntry ? "'use client';\n" : '')
+      intro: ({ isEntry, fileName }) =>
+        isEntry && !fileName.endsWith('.d.ts') ? "'use client';\n" : ''
     },
     async onSuccess() {
       // Mark the un-versionned React Router adapter as deprecated

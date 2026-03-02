@@ -14,7 +14,7 @@ This monorepo contains:
 
 - The source code for the `nuqs` NPM package, in [`packages/nuqs`](./packages/nuqs).
 - A Next.js app under [`packages/docs`](./packages/docs) that serves the documentation and as a playground deployed at <https://nuqs.dev>
-- Test benches for [end-to-end tests](./packages/e2e) for each supported framework, driven by Cypress
+- Test benches for [end-to-end tests](./packages/e2e) for each supported framework, driven by Playwright
 - Examples of integration with other tools.
 
 When running `next dev`, this will:

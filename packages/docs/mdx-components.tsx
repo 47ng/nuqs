@@ -1,3 +1,4 @@
+import { HumanContent, LLMContent } from '@/src/components/audience'
 import { FeatureSupportMatrix } from '@/src/components/feature-support-matrix'
 import { Callout } from 'fumadocs-ui/components/callout'
 import { CodeBlock, Pre } from 'fumadocs-ui/components/codeblock'
@@ -19,10 +20,12 @@ declare module 'mdx/types.js' {
 const components = {
   ...defaultMdxComponents,
   Callout,
+  FeatureSupportMatrix,
+  HumanContent,
+  LLMContent,
   Suspense,
   Tab,
   Tabs,
-  FeatureSupportMatrix,
   pre: ({ ref: _ref, children, ...props }) => (
     <CodeBlock {...props}>
       <Pre>{children}</Pre>

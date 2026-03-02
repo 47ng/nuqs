@@ -14,7 +14,8 @@ export {
   createLoader,
   type LoaderFunction,
   type LoaderInput,
-  type LoaderOptions
+  type LoaderOptions,
+  type CreateLoaderOptions
 } from './loader'
 export * from './parsers'
 export { createSerializer, type CreateSerializerOptions } from './serializer'

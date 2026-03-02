@@ -23,16 +23,21 @@ export async function NPMStats() {
       <dl className="flex items-center gap-3 text-3xl font-bold lg:text-4xl">
         <Download className="size-7 lg:size-9" />
         <dt className="sr-only">combined</dt>
-        <dd title="All time, combined">{formatStatNumber(both.allTime)}</dd>
+        <dd title={`All time, combined: ${both.allTime}`}>
+          {formatStatNumber(both.allTime)}
+        </dd>
         <span className="font-light text-zinc-500" aria-hidden>
           |
         </span>
         <dt className="sr-only">nuqs</dt>
-        <dd className="text-red-500" title="All time, nuqs">
+        <dd className="text-red-500" title={`All time, nuqs: ${nuqs.allTime}`}>
           {formatStatNumber(nuqs.allTime)}
         </dd>
         <dt className="sr-only">next-usequerystate</dt>
-        <dd className="text-zinc-500/50" title="All time, next-usequerystate">
+        <dd
+          className="text-zinc-500/50"
+          title={`All time, next-usequerystate: ${nextUseQueryState.allTime}`}
+        >
           {formatStatNumber(nextUseQueryState.allTime)}
         </dd>
       </dl>

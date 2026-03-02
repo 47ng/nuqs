@@ -26,7 +26,7 @@ export function Demo() {
         onChange={e => setHello(e.target.value || null)}
         data-interacted={Boolean(hello)}
       />
-      <p className="sm:overflow-x-auto sm:text-nowrap sm:text-ellipsis">
+      <p className="max-w-full break-words line-clamp-2 sm:truncate">
         Hello, {hello || 'anonymous visitor'}!
       </p>
     </>
