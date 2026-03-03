@@ -54,8 +54,10 @@ export function parseAsColor(options: ColorParserOptions = {}) {
 
   return createParser({
     parse(value: string) {
-      const color = tinycolor(value)
-      
+    // Decode URL-encoded characters (e.g., %23 -> #)
+    const decodedValue = decodeURIComponent(value)
+    const color = tinycolor(decodedValue)
+
       if (!color.isValid()) {
         return null
       }
