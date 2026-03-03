@@ -1,24 +1,24 @@
-export function Author({ author }: { author: string }) {
-  const match = author.match(/(.*) <(.*)>/)
-  const name = match ? match[1] : author
-  const githubUser = match ? match[2] : undefined
+import { authorRegex } from '@/src/registry/schemas'
 
+export function Author({ author }: { author: string }) {
+  const [, name, githubUser] = author.match(authorRegex)!
   return (
     <a
-      href={githubUser ? `https://github.com/${githubUser}` : undefined}
-      className="hover:bg-foreground/5 flex items-center gap-3 rounded-lg px-2 py-1"
-      aria-description="Author"
+      href={`https://github.com/${githubUser}`}
+      className="hover:bg-foreground/5 rounded-lg"
+      aria-label={`Author: @${githubUser} on GitHub`}
     >
-      {githubUser && (
+      <div className="flex items-center gap-3 rounded-lg py-1 pr-3 pl-2">
         <img
           src={`https://github.com/${githubUser}.png`}
           role="presentation"
+          alt=""
           className="size-9 rounded-full"
         />
-      )}
-      <div>
-        <p className="font-semibold">{name}</p>
-        <p className="text-fd-muted-foreground text-xs">{githubUser}</p>
+        <div>
+          <p className="font-semibold">{name}</p>
+          <p className="text-fd-muted-foreground text-xs">@{githubUser}</p>
+        </div>
       </div>
     </a>
   )

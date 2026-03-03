@@ -2,14 +2,21 @@ import { z } from 'zod'
 
 // Shared schemas --
 
+// Format: "François Best <franky47>" (github username is required)
+export const authorRegex = /^(.*?) <([^>]*)>$/
+
+export const itemCategories = ['adapter', 'parser', 'utility'] as const
+export type ItemCategory = (typeof itemCategories)[number]
+
 const registryBaseItemSchema = z.object({
   type: z.literal('registry:item'),
   name: z.string(),
   title: z.string(),
   description: z.string().optional(),
   dependencies: z.array(z.string()),
-  categories: z.array(z.string()).optional(),
-  author: z.string().optional()
+  categories: z.array(z.enum(itemCategories)).optional(),
+  author: z.string().regex(authorRegex).optional(),
+  docs: z.url().optional()
 })
 
 // Source schemas --
@@ -45,5 +52,5 @@ const registryBuiltFileSchema = registrySourceFileSchema.extend({
 export type RegistryBuiltItem = z.infer<typeof registryBuiltItemSchema>
 export const registryBuiltItemSchema = registryBaseItemSchema.extend({
   files: z.array(registryBuiltFileSchema),
-  docs: z.string()
+  docs: z.string().optional()
 })
