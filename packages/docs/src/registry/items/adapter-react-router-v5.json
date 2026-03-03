@@ -3,6 +3,8 @@
   "name": "adapter-react-router-v5",
   "title": "React Router v5 Adapter",
   "description": "Using nuqs in React Router v5 applications.",
+  "author": "François Best <franky47>",
+  "categories": ["adapter"],
   "dependencies": ["react-router-dom@^5", "nuqs"],
   "files": [
     {
@@ -10,6 +12,5 @@
       "path": "src/registry/items/adapter-react-router-v5.source",
       "target": "~/nuqs-adapter.ts"
     }
-  ],
-  "categories": ["adapter"]
+  ]
 }
