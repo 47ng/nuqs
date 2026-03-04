@@ -172,7 +172,40 @@ describe('Unified API', () => {
       scroll: true
     })
   })
-  it('lets useQueryStates options override unified options', async () => {
+  it('lets useQueryStates hook options override unified options', async () => {
+    const out = defineSearchParams(
+      {
+        a: parseAsString.withOptions({ history: 'push' }),
+        b: parseAsInteger.withOptions({ shallow: false })
+      },
+      {
+        scroll: true
+      }
+    )
+    const onUrlUpdate = vi.fn<OnUrlUpdateFunction>()
+    const { act, result } = await renderHook(
+      () =>
+        useQueryStates(out, {
+          history: 'replace',
+          shallow: true,
+          scroll: false
+        }),
+      {
+        wrapper: withNuqsTestingAdapter({
+          onUrlUpdate
+        })
+      }
+    )
+    await act(() => result.current[1]({ a: 'updated', b: 100 }))
+    expect(onUrlUpdate).toHaveBeenCalledOnce()
+    expect(onUrlUpdate.mock.calls[0]![0].options).toEqual({
+      history: 'replace',
+      shallow: true,
+      scroll: false
+    })
+  })
+
+  it('lets useQueryStates state updater function options override unified options', async () => {
     const out = defineSearchParams(
       {
         a: parseAsString.withOptions({ history: 'push' }),
