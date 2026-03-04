@@ -328,6 +328,63 @@ describe('Unified API', () => {
     })
   })
 
+  it('lets hook-level urlKeys override unified urlKeys', async () => {
+    const out = defineSearchParams(
+      {
+        search: parseAsString,
+        page: parseAsInteger
+      },
+      {
+        urlKeys: {
+          search: 'q',
+          page: 'p'
+        }
+      }
+    )
+    const onUrlUpdate = vi.fn<OnUrlUpdateFunction>()
+    const { result, act } = await renderHook(
+      () =>
+        useQueryStates(out, {
+          urlKeys: {
+            search: 's' // override unified 'q' with 's'
+            // page keeps unified 'p'
+          }
+        }),
+      {
+        wrapper: withNuqsTestingAdapter({
+          searchParams: '?s=hello&p=1',
+          onUrlUpdate
+        })
+      }
+    )
+    // Read: hook urlKey 's' overrides unified 'q', unified 'p' kept
+    expect(result.current[0]).toEqual({ search: 'hello', page: 1 })
+    await act(() => result.current[1]({ search: 'world', page: 2 }))
+    // Write: same urlKeys used for serialization
+    expect(onUrlUpdate.mock.calls[0]![0].queryString).toBe('?s=world&p=2')
+  })
+
+  it('ensures urlKeys at hook level are type-safe', () => {
+    const out = defineSearchParams({
+      search: parseAsString,
+      page: parseAsInteger
+    })
+    // Valid: keys must be keyof the parsers
+    const _doNotRun = () => {
+      useQueryStates(out, {
+        urlKeys: {
+          search: 'q'
+        }
+      })
+      useQueryStates(out, {
+        urlKeys: {
+          // @ts-expect-error - 'nonexistent' is not a key of the parsers
+          nonexistent: 'x'
+        }
+      })
+    }
+  })
+
   it('can infer types', () => {
     const out = defineSearchParams({
       name: parseAsString.withDefault(''),
