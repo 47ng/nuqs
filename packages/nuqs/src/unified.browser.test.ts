@@ -1,5 +1,5 @@
-import { act, renderHook } from '@testing-library/react'
 import { describe, expect, expectTypeOf, it, vi } from 'vitest'
+import { renderHook } from 'vitest-browser-react'
 import {
   withNuqsTestingAdapter,
   type OnUrlUpdateFunction
@@ -148,7 +148,63 @@ describe('Unified API', () => {
     }
     expect(result.value).toEqual({ a: 'specified' })
   })
-  it.todo('forwards options to useQueryStates')
+  it('forwards options to useQueryStates', async () => {
+    const out = defineSearchParams(
+      {
+        a: parseAsString.withOptions({ history: 'push' }),
+        b: parseAsInteger.withOptions({ shallow: false })
+      },
+      {
+        scroll: true
+      }
+    )
+    const onUrlUpdate = vi.fn<OnUrlUpdateFunction>()
+    const { act, result } = await renderHook(() => useQueryStates(out), {
+      wrapper: withNuqsTestingAdapter({
+        onUrlUpdate
+      })
+    })
+    await act(() => result.current[1]({ a: 'updated', b: 100 }))
+    expect(onUrlUpdate).toHaveBeenCalledOnce()
+    expect(onUrlUpdate.mock.calls[0]![0].options).toEqual({
+      history: 'push',
+      shallow: false,
+      scroll: true
+    })
+  })
+  it('lets useQueryStates options override unified options', async () => {
+    const out = defineSearchParams(
+      {
+        a: parseAsString.withOptions({ history: 'push' }),
+        b: parseAsInteger.withOptions({ shallow: false })
+      },
+      {
+        scroll: true
+      }
+    )
+    const onUrlUpdate = vi.fn<OnUrlUpdateFunction>()
+    const { act, result } = await renderHook(() => useQueryStates(out), {
+      wrapper: withNuqsTestingAdapter({
+        onUrlUpdate
+      })
+    })
+    await act(() =>
+      result.current[1](
+        { a: 'updated', b: 100 },
+        {
+          history: 'replace',
+          shallow: true,
+          scroll: false
+        }
+      )
+    )
+    expect(onUrlUpdate).toHaveBeenCalledOnce()
+    expect(onUrlUpdate.mock.calls[0]![0].options).toEqual({
+      history: 'replace',
+      shallow: true,
+      scroll: false
+    })
+  })
 
   it('extends with a set of parsers', () => {
     const base = defineSearchParams({
@@ -213,7 +269,7 @@ describe('Unified API', () => {
       }
     )
     const onUrlUpdate = vi.fn<OnUrlUpdateFunction>()
-    const { result } = renderHook(
+    const { result, act } = await renderHook(
       () =>
         useQueryStates(out, {
           urlKeys: {
