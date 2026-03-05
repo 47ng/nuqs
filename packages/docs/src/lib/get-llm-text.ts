@@ -5,7 +5,10 @@ export async function getLLMText(page: Page) {
   const processed = await page.data.getText('processed')
 
   // Collapse 3+ consecutive newlines to 2 (removes extra blank lines from removed content)
-  const normalized = processed.replace(/\n{3,}/g, '\n\n')
+  const normalized = processed
+    .replace(/\n{3,}/g, '\n\n')
+    // Strip Fumadocs inline code syntax highlighting hints (e.g. `code{:ts}` -> `code`)
+    .replace(/`([^`]+)\{:\w+\}`/g, '`$1`')
 
   return `# ${page.data.title}
 
