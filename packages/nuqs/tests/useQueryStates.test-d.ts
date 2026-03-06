@@ -2,6 +2,7 @@ import { describe, expectTypeOf, it } from 'vitest'
 import {
   debounce,
   defaultRateLimit,
+  defineSearchParams,
   parseAsInteger,
   parseAsString,
   throttle,
@@ -136,5 +137,22 @@ describe('types/useQueryStates', () => {
     setState(null, { limitUrlUpdates: throttle(100) })
     setState(null, { limitUrlUpdates: debounce(100) })
     setState(null, { limitUrlUpdates: defaultRateLimit })
+  })
+
+  it('accepts a unified object argument', () => {
+    const unified = defineSearchParams({
+      a: parseAsString,
+      b: parseAsInteger
+    })
+    const [state] = useQueryStates(unified)
+    expectTypeOf(state).toEqualTypeOf<{ a: string | null; b: number | null }>()
+  })
+  it('accepts a unified object argument and options', () => {
+    const unified = defineSearchParams({
+      a: parseAsString,
+      b: parseAsInteger
+    })
+    const [state] = useQueryStates(unified, { shallow: false })
+    expectTypeOf(state).toEqualTypeOf<{ a: string | null; b: number | null }>()
   })
 })
