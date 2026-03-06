@@ -2,12 +2,12 @@ import { describe, expectTypeOf, it } from 'vitest'
 import {
   debounce,
   defaultRateLimit,
-  defineSearchParams,
   parseAsInteger,
   parseAsString,
   throttle,
   useQueryStates
 } from '../dist'
+import { defineSearchParams } from '../server'
 
 describe('types/useQueryStates', () => {
   const parsers = {
