@@ -56,6 +56,17 @@ describe('Unified API', () => {
       b: parseAsInteger
     })
   })
+  it('does not allow picking an unknown key', () => {
+    const base = defineSearchParams({
+      a: parseAsString,
+      b: parseAsInteger
+    })
+    const picked = base.pick({
+      // @ts-expect-error - 'c' is not a key of the parsers
+      c: true
+    })
+    expect(picked.parsers).toEqual({})
+  })
   it('conforms to StandardSchemaV1', async () => {
     const out = defineSearchParams({
       a: parseAsString,
