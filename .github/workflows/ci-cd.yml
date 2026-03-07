@@ -56,6 +56,13 @@ jobs:
           pnpm run lint:knip --workspace packages/e2e/react-router/v7
           pnpm run lint:knip --workspace packages/e2e/remix
           pnpm run lint:knip --workspace packages/e2e/tanstack-router
+      - name: Run Knip (docs)
+        run: pnpm run lint:knip --workspace packages/docs
+      - name: Run Knip (examples)
+        run: |
+          pnpm run --filter "examples-trpc" typegen
+          pnpm run lint:knip --workspace packages/examples/next-app
+          pnpm run lint:knip --workspace packages/examples/trpc
 
   publint:
     name: Package Linting

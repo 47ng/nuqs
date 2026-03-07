@@ -300,6 +300,7 @@ export function SponsorsSection() {
 
 // --
 
+/** @public - used in MDX blog posts via path alias (not traceable by knip) */
 export function InlineSponsorsList({
   className,
   ...props

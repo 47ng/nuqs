@@ -1,6 +1,6 @@
 import { blog } from '@/src/app/source'
 
-export type BlogPost = ReturnType<typeof blog.getPages>[number]
+type BlogPost = ReturnType<typeof blog.getPages>[number]
 
 export function getBlogPosts() {
   return blog.getPages().sort((a, b) => {

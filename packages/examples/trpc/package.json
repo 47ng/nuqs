@@ -6,6 +6,7 @@
     "build": "react-router build",
     "dev": "react-router dev --port 4000",
     "start": "cross-env NODE_ENV=production ./server.mjs",
+    "typegen": "react-router typegen",
     "test": "react-router typegen && tsc"
   },
   "dependencies": {

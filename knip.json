@@ -1,18 +1,53 @@
 {
   "$schema": "https://unpkg.com/knip@5/schema.json",
+  "ignoreExportsUsedInFile": true,
   "workspaces": {
     "packages/nuqs": {
-      "project": ["src/**/*.ts"]
+      "project": ["src/**/*.ts"],
+      "ignoreDependencies": ["@vitejs/plugin-react"]
     },
     "packages/docs": {
       "entry": [
-        "content/**/*.mdx",
+        "source.config.ts",
+        "rehype-code.config.ts",
+        "content/**/*.{ts,tsx,mdx}",
         "src/app/**/page.tsx",
         "src/app/**/layout.tsx",
-        "src/app/**/route.ts"
+        "src/app/**/route.ts",
+        "src/components/audience.tsx",
+        "src/components/code-block-highlighter.ts",
+        "src/components/feature-support-matrix.tsx",
+        "src/components/frameworks.tsx"
       ],
-      "project": ["src/**/*.{ts,tsx}"],
-      "next": true
+      "project": [
+        "source.config.ts",
+        "rehype-code.config.ts",
+        "content/**/*.{ts,tsx}",
+        "src/**/*.{ts,tsx}"
+      ],
+      "paths": {
+        "@/*": ["./*"]
+      },
+      "next": true,
+      "ignoreFiles": [
+        "src/components/code-block-highlighter.skeleton.ts",
+        "src/components/github-profile.tsx",
+        "src/components/kibo-ui/**",
+        "src/components/release-contribution-graph.client.tsx",
+        "src/components/release-contribution-graph.tsx",
+        "src/components/ui/pr-line.tsx",
+        "src/components/vercel-oss-badge.tsx"
+      ],
+      "ignoreDependencies": [
+        "@headlessui/tailwindcss",
+        "@tailwindcss/container-queries",
+        "@types/mdx",
+        "date-fns",
+        "hast-util-to-jsx-runtime",
+        "import-in-the-middle",
+        "require-in-the-middle",
+        "tailwindcss-animate"
+      ]
     },
     "packages/e2e/shared": {
       "entry": [
@@ -65,7 +100,21 @@
       "entry": ["app/**/*.{ts,tsx}", "server.mjs", "specs/**/*.ts"],
       "project": ["**/*.{ts,tsx}"],
       "ignore": ["build/**", ".react-router/**"]
+    },
+    "packages/examples/next-app": {
+      "entry": ["src/app/**/*.{ts,tsx}", "next.config.ts"],
+      "project": ["src/**/*.{ts,tsx}"],
+      "next": true,
+      "ignoreDependencies": ["postcss", "tailwindcss"]
+    },
+    "packages/examples/trpc": {
+      "entry": ["app/**/*.{ts,tsx}", "server.mjs"],
+      "project": ["**/*.{ts,tsx}"],
+      "ignore": ["build/**", ".react-router/**"]
     }
+  },
+  "ignoreIssues": {
+    "packages/docs/src/components/ui/**": ["exports", "types"]
   },
   "rules": {
     "optionalPeerDependencies": "off"
