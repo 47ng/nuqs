@@ -425,9 +425,10 @@ jobs:
       - uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238
         with:
           node-version-file: .node-version
-          cache: pnpm
-      # Note: we do not use an external Turbo cache for publishing
-      # to prevent against possible cache collision attacks.
+          # No pnpm cache restore in CD: a poisoned cache could inject
+          # compromised packages into the published build. Fresh install
+          # from the registry ensures integrity (same rationale as
+          # skipping external Turbo cache below).
       - name: Update npm # Ensure npm 11.5.1 or later is installed for OIDC trusted publishing
         run: npm install -g npm@latest
       - name: Install dependencies
