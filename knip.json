@@ -36,10 +36,12 @@
         "src/components/release-contribution-graph.client.tsx",
         "src/components/release-contribution-graph.tsx",
         "src/components/ui/pr-line.tsx",
+        "src/components/ui/switch.tsx",
         "src/components/vercel-oss-badge.tsx"
       ],
       "ignoreDependencies": [
         "@headlessui/tailwindcss",
+        "@radix-ui/react-switch",
         "@tailwindcss/container-queries",
         "@types/mdx",
         "date-fns",

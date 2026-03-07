@@ -1,7 +1,29 @@
 // Note: top-level banners go into src/app/layout.tsx
 // Note: sidebar banners go into src/app/docs/layout.tsx & playground/layout.tsx
+//
+// Conference components (Countdown, etc.) are imported unconditionally so that
+// knip can trace them as used. Their rendering is controlled at runtime via
+// NEXT_PUBLIC_CONFERENCE_COUNTDOWN_DATE (ISO 8601). Set that env var to show
+// the countdown in TopBanner / SideBanner during conference season.
 
 import type { ComponentProps } from 'react'
+import { Suspense } from 'react'
+import { Countdown } from '../components/countdown'
+
+// Env-flag: set to an ISO 8601 date string to enable the conference countdown.
+const conferenceCountdownDate = process.env.NEXT_PUBLIC_CONFERENCE_COUNTDOWN_DATE
+  ? new Date(process.env.NEXT_PUBLIC_CONFERENCE_COUNTDOWN_DATE)
+  : null
+
+export function TopBanner() {
+  // Activate by setting NEXT_PUBLIC_CONFERENCE_COUNTDOWN_DATE
+  if (!conferenceCountdownDate) return null
+  return (
+    <Suspense>
+      <Countdown targetDate={conferenceCountdownDate} />
+    </Suspense>
+  )
+}
 
 export function SideBanner() {
   // Note: add banners here to enable them
