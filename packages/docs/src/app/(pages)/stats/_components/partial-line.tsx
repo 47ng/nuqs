@@ -1,46 +1,9 @@
 'use client'
 
-import { Line, LineProps, usePlotArea, useYAxisDomain } from 'recharts'
-
-const Y_AXIS_TICK_COUNT = 5
-const Y_AXIS_STEP_COUNT = Y_AXIS_TICK_COUNT * 2
-
-function map(
-  input: number,
-  inMin: number,
-  inMax: number,
-  outMin: number,
-  outMax: number
-) {
-  return ((input - inMin) * (outMax - outMin)) / (inMax - inMin) + outMin
-}
+import { Line, LineProps, usePlotArea, useYAxisScale } from 'recharts'
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(Math.max(value, min), max)
-}
-
-function tickStep(start: number, stop: number, count: number) {
-  const span = Math.abs(stop - start)
-  if (span === 0 || !Number.isFinite(span)) return 0
-  const step0 = span / Math.max(1, count)
-  const power = Math.floor(Math.log10(step0))
-  const error = step0 / Math.pow(10, power)
-  let step = 1
-  if (error >= Math.sqrt(50)) {
-    step = 10
-  } else if (error >= Math.sqrt(10)) {
-    step = 5
-  } else if (error >= Math.sqrt(2)) {
-    step = 2
-  }
-  return step * Math.pow(10, power)
-}
-
-function niceTickMax(min: number, max: number, ticks: number) {
-  if (ticks <= 0) return max
-  const step = tickStep(min, max, ticks)
-  if (step === 0) return max
-  return Math.ceil(max / step) * step
 }
 
 function getMonotoneSlopes(points: Point[]) {
@@ -169,7 +132,6 @@ type UseStrokeDashArrayProps = {
 }
 
 type Point = { x: number; y: number }
-type Tangent = { x: number; y: number }
 
 function getDashArray(solidLength: number, dashedLength: number) {
   const targetDashPattern = [2, 2]
@@ -191,22 +153,19 @@ function useStrokeDashArray({
   padding = {}
 }: UseStrokeDashArrayProps) {
   const area = usePlotArea()
-  const yAxisDomain = useYAxisDomain()
-  if (!partialLast || !area || !yAxisDomain) return undefined
+  const yScale = useYAxisScale()
+  if (!partialLast || !area || !yScale) return undefined
   const p = {
     t: padding.top ?? 0,
     r: padding.right ?? 0,
     b: padding.bottom ?? 0,
     l: padding.left ?? 0
   }
-  const minY = Number(yAxisDomain[0])
-  const maxY = niceTickMax(minY, Number(yAxisDomain[1]), Y_AXIS_STEP_COUNT)
   const stepX = (area.width - (p.l + p.r)) / (data.length - 1)
-  const coordinates = data.map((d, i) => {
-    const x = area.x + p.l + i * stepX
-    const y = map(d, minY, maxY, area.y + area.height, area.y)
-    return { x, y }
-  })
+  const coordinates = data.map((d, i) => ({
+    x: area.x + p.l + i * stepX,
+    y: yScale(d)
+  }))
   const slopes = getMonotoneSlopes(coordinates)
   const { total, last } = getMonotoneLengths(coordinates, slopes)
   const solidLength = total - last
@@ -219,22 +178,19 @@ function useDebugPoints({
   enabled
 }: Pick<UseStrokeDashArrayProps, 'data' | 'padding'> & { enabled: boolean }) {
   const area = usePlotArea()
-  const yAxisDomain = useYAxisDomain()
-  if (!enabled || !area || !yAxisDomain) return null
+  const yScale = useYAxisScale()
+  if (!enabled || !area || !yScale) return null
   const p = {
     t: padding.top ?? 0,
     r: padding.right ?? 0,
     b: padding.bottom ?? 0,
     l: padding.left ?? 0
   }
-  const minY = Number(yAxisDomain[0])
-  const maxY = niceTickMax(minY, Number(yAxisDomain[1]), Y_AXIS_STEP_COUNT)
   const stepX = (area.width - (p.l + p.r)) / (data.length - 1)
-  const points = data.map((d, i) => {
-    const x = area.x + p.l + i * stepX
-    const y = map(d, minY, maxY, area.y + area.height, area.y)
-    return { x, y }
-  })
+  const points = data.map((d, i) => ({
+    x: area.x + p.l + i * stepX,
+    y: yScale(d)
+  }))
   const slopes = getMonotoneSlopes(points)
   return { points, slopes, enabled }
 }
