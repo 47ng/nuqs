@@ -3,20 +3,20 @@ packages:
 
 catalogs:
   e2e:
-    playwright: ^1.57.0
-    '@playwright/test': ^1.57.0
+    playwright: ^1.58.1
+    '@playwright/test': ^1.58.1
 
   knip:
     knip: ^5.64.1
 
   next:
-    next: ^16.1.0
+    next: ^16.1.6
 
   react19:
-    '@types/react': ^19.2.7
+    '@types/react': ^19.2.10
     '@types/react-dom': ^19.2.3
-    react: ^19.2.2
-    react-dom: ^19.2.2
+    react: ^19.2.4
+    react-dom: ^19.2.4
 
   typescript:
     typescript: ^5.9.2

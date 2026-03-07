@@ -7,17 +7,29 @@ import {
 import remarkSmartypants from 'remark-smartypants'
 import { z } from 'zod'
 import { rehypeCodeOptions } from './rehype-code.config'
+import { remarkAudience } from './src/lib/remark-audience'
 
 export default defineConfig({
   lastModifiedTime: 'git',
   mdxOptions: {
-    remarkPlugins: [remarkSmartypants],
+    remarkPlugins: [remarkSmartypants, remarkAudience],
     rehypeCodeOptions
   }
 })
 
 export const { docs, meta } = defineDocs({
-  dir: 'content/docs'
+  dir: 'content/docs',
+  docs: {
+    schema: frontmatterSchema.extend({
+      exposeTo: z
+        .array(z.enum(['user', 'llm']))
+        .min(1)
+        .default(['user', 'llm'])
+    }),
+    postprocess: {
+      includeProcessedMarkdown: true
+    }
+  }
 })
 
 export const blog = defineCollections({

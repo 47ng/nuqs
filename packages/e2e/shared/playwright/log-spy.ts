@@ -25,9 +25,13 @@ export function setupLogSpy(page: Page): LogSpy {
 export function assertLogCount(
   logSpy: LogSpy,
   message: string,
-  expectedCount: number
+  expectedCount: number,
+  assertionMessage?: string
 ) {
   return expect
-    .poll(() => logSpy.logs.filter(log => log === message).length)
+    .poll(
+      () => logSpy.logs.filter(log => log === message).length,
+      assertionMessage
+    )
     .toBe(expectedCount)
 }

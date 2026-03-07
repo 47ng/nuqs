@@ -1,7 +1,13 @@
 import { useMDXComponents } from '@/mdx-components'
 import { AsideSponsors } from '@/src/app/(pages)/_landing/sponsors'
 import { source } from '@/src/app/source'
+import {
+  CopyAsMarkdownButton,
+  CopyMarkdownUrlButton,
+  ViewOptions
+} from '@/src/components/ai/page-actions'
 import { getBaseUrl } from '@/src/lib/url'
+import { github } from '@/src/lib/utils'
 import {
   DocsBody,
   DocsDescription,
@@ -14,15 +20,12 @@ import { stat } from 'node:fs/promises'
 
 export const dynamic = 'force-static'
 
-type PageProps = {
-  params: Promise<{ slug?: string[] }>
-}
-
-export default async function Page(props: PageProps) {
+export default async function Page(props: PageProps<'/docs/[[...slug]]'>) {
   const { slug } = await props.params
   const page = source.getPage(slug)
 
-  if (page == null) {
+  // Return 404 for missing pages or llm-only pages
+  if (!page || !page.data.exposeTo.includes('user')) {
     notFound()
   }
 
@@ -37,6 +40,14 @@ export default async function Page(props: PageProps) {
     >
       <DocsTitle>{page.data.title}</DocsTitle>
       <DocsDescription>{page.data.description}</DocsDescription>
+      <div className="mb-2 flex flex-row flex-wrap items-center gap-2 border-b pb-6">
+        <CopyAsMarkdownButton markdownUrl={`${page.url}.md`} />
+        <CopyMarkdownUrlButton markdownUrl={`${page.url}.md`} />
+        <ViewOptions
+          markdownUrl={`${page.url}.md`}
+          githubUrl={`https://github.com/${github.owner}/${github.repo}/blob/${github.branch}/packages/docs/content/docs/${page.path}`}
+        />
+      </div>
       <DocsBody>
         <MDX components={useMDXComponents()} />
       </DocsBody>
@@ -45,21 +56,26 @@ export default async function Page(props: PageProps) {
 }
 
 export async function generateStaticParams() {
-  return source.getPages().map(page => ({
-    slug: page.slugs
-  }))
+  return source
+    .getPages()
+    .filter(page => page.data.exposeTo.includes('user'))
+    .map(page => ({
+      slug: page.slugs
+    }))
 }
 
-export async function generateMetadata(props: PageProps) {
+export async function generateMetadata(
+  props: PageProps<'/docs/[[...slug]]'>
+): Promise<Metadata> {
   const { slug } = await props.params
   const page = source.getPage(slug)
-  if (!page) notFound()
+  if (!page || !page.data.exposeTo.includes('user')) notFound()
 
   return {
     title: page.data.title,
     description: page.data.description,
     ...(await getSocialImages(page.slugs))
-  } satisfies Metadata
+  }
 }
 
 // --

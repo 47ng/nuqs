@@ -7,17 +7,17 @@ export const testScroll = defineTest('scroll', ({ path }) => {
     page
   }) => {
     await navigateTo(page, path, '?scroll=false')
-    await expect(page.locator('#not-at-the-top')).toBeVisible()
+    await expect(page.locator('#not-at-the-top').first()).toBeVisible()
     await page.locator('button').click()
-    await expect(page.locator('#not-at-the-top')).toBeVisible()
+    await expect(page.locator('#not-at-the-top').first()).toBeVisible()
   })
 
   it('scrolls to the top of the page when setting scroll: true', async ({
     page
   }) => {
     await navigateTo(page, path, '?scroll=true')
-    await expect(page.locator('#not-at-the-top')).toBeVisible()
+    await expect(page.locator('#not-at-the-top').first()).toBeVisible()
     await page.locator('button').click()
-    await expect(page.locator('#at-the-top')).toBeVisible()
+    await expect(page.locator('#at-the-top').first()).toBeVisible()
   })
 })

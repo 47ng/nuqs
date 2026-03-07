@@ -20,12 +20,12 @@ export function testRouting({
           page
         }) => {
           await navigateTo(page, getRoutingUrl(path, { shallow, method }))
-          await expect(page.locator('#state')).toBeEmpty()
+          await expect(page.locator('#state').first()).toBeEmpty()
           await page.locator('button').click()
-          await expect(page.locator('#state')).toHaveText('pass')
+          await expect(page.locator('#state').first()).toHaveText('pass')
           if (method === 'push') {
             await page.goBack()
-            await expect(page.locator('#state')).toBeEmpty()
+            await expect(page.locator('#state').first()).toBeEmpty()
           }
         })
 
@@ -36,12 +36,12 @@ export function testRouting({
             page,
             getRoutingUrl(path + '/other', { shallow, method })
           )
-          await expect(page.locator('#state')).toBeEmpty()
+          await expect(page.locator('#state').first()).toBeEmpty()
           await page.locator('button').click()
-          await expect(page.locator('#state')).toHaveText('pass')
+          await expect(page.locator('#state').first()).toHaveText('pass')
           if (method === 'push') {
             await page.goBack()
-            await expect(page.locator('#state')).toBeEmpty()
+            await expect(page.locator('#state').first()).toBeEmpty()
           }
         })
       }

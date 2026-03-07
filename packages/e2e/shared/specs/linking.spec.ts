@@ -16,6 +16,6 @@ export const testLinking = defineTest('Linking', ({ path }) => {
     await navigateTo(page, path + '/other')
     await expect(page.locator('#state')).toBeEmpty()
     await page.locator('a').click()
-    await expect(page.locator('#state')).toHaveText('pass')
+    await expect(page.locator('#state').first()).toHaveText('pass')
   })
 })

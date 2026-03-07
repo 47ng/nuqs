@@ -1,0 +1,17 @@
+{
+  "$schema": "https://turbo.build/schema.v2.json",
+  "extends": ["//"],
+  "tasks": {
+    "build": {
+      "outputs": ["dist/**", ".tsup/**", ".tsbuildinfo"]
+    },
+    "build:size-json": {
+      "outputs": ["size.json"],
+      "dependsOn": ["build"]
+    },
+    "test": {
+      "outputs": ["coverage/**"],
+      "dependsOn": ["build"]
+    }
+  }
+}

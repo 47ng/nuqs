@@ -17,10 +17,11 @@
   },
   "devDependencies": {
     "@playwright/test": "catalog:e2e",
-    "@types/node": "^24.3.0",
+    "@types/node": "^24.10.10",
     "@types/react": "catalog:react19",
     "nuqs": "workspace:*",
     "react": "catalog:react19",
+    "react-dom": "catalog:react19",
     "typescript": "catalog:typescript"
   }
 }
