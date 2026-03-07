@@ -164,7 +164,7 @@ function useStrokeDashArray({
   const stepX = (area.width - (p.l + p.r)) / (data.length - 1)
   const coordinates = data.map((d, i) => ({
     x: area.x + p.l + i * stepX,
-    y: yScale(d)
+    y: yScale(d) ?? 0
   }))
   const slopes = getMonotoneSlopes(coordinates)
   const { total, last } = getMonotoneLengths(coordinates, slopes)
@@ -189,7 +189,7 @@ function useDebugPoints({
   const stepX = (area.width - (p.l + p.r)) / (data.length - 1)
   const points = data.map((d, i) => ({
     x: area.x + p.l + i * stepX,
-    y: yScale(d)
+    y: yScale(d) ?? 0
   }))
   const slopes = getMonotoneSlopes(points)
   return { points, slopes, enabled }
