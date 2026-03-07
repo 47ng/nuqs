@@ -60,7 +60,7 @@
     "nuqs": "workspace:*",
     "react": "catalog:react19",
     "react-dom": "catalog:react19",
-    "recharts": "3.7.0",
+    "recharts": "3.8.0",
     "remark-smartypants": "^3.0.2",
     "res": "workspace:*",
     "server-only": "^0.0.1",
