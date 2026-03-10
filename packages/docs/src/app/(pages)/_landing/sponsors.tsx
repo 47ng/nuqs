@@ -8,7 +8,7 @@ const sponsorSchema = z.object({
   name: z.string().nullish(),
   handle: z.string(),
   url: z.string().url(),
-  img: z.string().url(),
+  img: z.string(),
   title: z.custom<ReactNode>().optional()
 })
 type Sponsors = z.infer<typeof sponsorSchema>[]
@@ -24,11 +24,11 @@ const SPONSORS: Sponsors = [
     handle: 'getsentry',
     name: 'Sentry',
     url: 'https://sentry.io/?utm_source=nuqs&utm_medium=sponsor&utm_campaign=nuqs',
-    img: 'https://avatars.githubusercontent.com/u/1396951?s=200&v=4'
+    img: '/sponsors/sentry.svg'
   },
   {
     handle: 'syntaxfm',
-    name: 'Syntax',
+    name: 'Syntax.fm',
     url: 'https://syntax.fm/?utm_source=nuqs&utm_medium=sponsor&utm_campaign=nuqs',
     img: 'https://avatars.githubusercontent.com/u/130389858?s=200&v=4'
   },
