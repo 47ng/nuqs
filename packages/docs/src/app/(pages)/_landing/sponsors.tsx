@@ -36,7 +36,7 @@ const SPONSORS: Sponsors = [
     handle: '1771-Technologies',
     name: '1771 Technologies',
     url: 'https://1771technologies.com/?utm_source=nuqs&utm_medium=sponsor&utm_campaign=nuqs',
-    img: '/sponsors/1771-technologies.svg'
+    img: 'https://avatars.githubusercontent.com/u/148620833?s=200&v=4'
   },
   {
     handle: 'unkey.com',
