@@ -100,7 +100,11 @@ export function createSerializer<
         search.delete(urlKey)
       } else {
         const serialized = parser.serialize(value)
-        search = write(serialized, urlKey, search)
+        if (serialized === null) {
+          search.delete(urlKey)
+        } else {
+          search = write(serialized, urlKey, search)
+        }
       }
     }
     if (processUrlSearchParams) {
