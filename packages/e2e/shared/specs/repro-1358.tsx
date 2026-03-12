@@ -1,6 +1,5 @@
 'use client'
 
-import { useEffect } from 'react'
 import { parseAsString, useQueryState } from 'nuqs'
 import { useLink } from '../components/link'
 
@@ -13,11 +12,9 @@ export function Repro1358RouteA({ otherPageHref }: Props) {
   const [mode, setMode] = useQueryState('mode', parseAsString)
   const Link = useLink()
 
-  useEffect(() => {
-    if (!mode) {
-      setMode('default')
-    }
-  }, [mode, setMode])
+  if (!mode) {
+    setMode('default')
+  }
 
   return (
     <>
@@ -34,11 +31,9 @@ export function Repro1358RouteB({ otherPageHref }: Props) {
   const [mode, setMode] = useQueryState('mode', parseAsString)
   const Link = useLink()
 
-  useEffect(() => {
-    if (!mode) {
-      setMode('default')
-    }
-  }, [mode, setMode])
+  if (!mode) {
+    setMode('default')
+  }
 
   return (
     <>
