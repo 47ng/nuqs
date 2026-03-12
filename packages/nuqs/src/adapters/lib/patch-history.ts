@@ -2,6 +2,7 @@ import { debug } from '../../lib/debug'
 import type { Emitter } from '../../lib/emitter'
 import { error } from '../../lib/errors'
 import { resetQueues, spinQueueResetMutex } from '../../lib/queues/reset'
+import { getSearchParams } from '../../lib/search-params'
 
 export type SearchParamsSyncEmitterEvents = { update: URLSearchParams }
 
@@ -13,20 +14,6 @@ declare global {
       version: string
       adapters: string[]
     }
-  }
-}
-
-export function getSearchParams(url: string | URL): URLSearchParams {
-  if (url instanceof URL) {
-    return url.searchParams
-  }
-  if (url.startsWith('?')) {
-    return new URLSearchParams(url)
-  }
-  try {
-    return new URL(url, location.origin).searchParams
-  } catch {
-    return new URLSearchParams(url)
   }
 }
 

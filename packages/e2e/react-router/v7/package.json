@@ -7,8 +7,9 @@
     "dev": "react-router dev --port 3007",
     "start": "cross-env NODE_ENV=production ./server.mjs",
     "pretest": "playwright install chromium",
+    "typegen": "react-router typegen",
     "test": "pnpm run --stream '/^test:/'",
-    "test:types": "react-router typegen && tsc",
+    "test:types": "pnpm run typegen && tsc",
     "test:playwright": "playwright test --project=chromium"
   },
   "dependencies": {
@@ -31,7 +32,7 @@
     "cross-env": "^10.1.0",
     "e2e-shared": "workspace:*",
     "express": "^4.22.1",
-    "typescript": "^5.9.3",
+    "typescript": "catalog:typescript",
     "vite": "^7.3.1",
     "vite-tsconfig-paths": "^6.0.5"
   }

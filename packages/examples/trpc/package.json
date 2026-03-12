@@ -6,6 +6,7 @@
     "build": "react-router build",
     "dev": "react-router dev --port 4000",
     "start": "cross-env NODE_ENV=production ./server.mjs",
+    "typegen": "react-router typegen",
     "test": "react-router typegen && tsc"
   },
   "dependencies": {
@@ -31,7 +32,7 @@
     "compression": "^1.8.1",
     "cross-env": "^10.1.0",
     "express": "^4.22.1",
-    "typescript": "^5.9.3",
+    "typescript": "catalog:typescript",
     "vite": "^7.3.1",
     "vite-tsconfig-paths": "^6.0.5"
   }
