@@ -91,7 +91,7 @@ export function createReactRouterBasedAdapter({
     return {
       searchParams,
       updateUrl,
-      autoResetQueueOnUpdate: false
+      autoResetQueueOnUpdate: true
     }
   }
   function useOptimisticSearchParams(
