@@ -8,12 +8,16 @@ type Props = {
 }
 
 export function Repro1358RouteA({ otherPageHref }: Props) {
-  const [filter] = useQueryState('filter', parseAsString.withDefault('AAA'))
+  const [filter, setFilter] = useQueryState(
+    'filter',
+    parseAsString.withDefault('AAA')
+  )
   const [mode, setMode] = useQueryState('mode', parseAsString)
   const Link = useLink()
 
   if (typeof window !== 'undefined' && !mode) {
     setMode('default')
+    setFilter('default - AAA')
   }
 
   return (
@@ -27,12 +31,16 @@ export function Repro1358RouteA({ otherPageHref }: Props) {
 }
 
 export function Repro1358RouteB({ otherPageHref }: Props) {
-  const [filter] = useQueryState('filter', parseAsString.withDefault('BBB'))
+  const [filter, setFilter] = useQueryState(
+    'filter',
+    parseAsString.withDefault('BBB')
+  )
   const [mode, setMode] = useQueryState('mode', parseAsString)
   const Link = useLink()
 
   if (typeof window !== 'undefined' && !mode) {
     setMode('default')
+    setFilter('default - BBB')
   }
 
   return (
