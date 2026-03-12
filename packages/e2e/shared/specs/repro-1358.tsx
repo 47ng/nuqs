@@ -12,7 +12,7 @@ export function Repro1358RouteA({ otherPageHref }: Props) {
   const [mode, setMode] = useQueryState('mode', parseAsString)
   const Link = useLink()
 
-  if (!mode) {
+  if (typeof window !== 'undefined' && !mode) {
     setMode('default')
   }
 
@@ -31,7 +31,7 @@ export function Repro1358RouteB({ otherPageHref }: Props) {
   const [mode, setMode] = useQueryState('mode', parseAsString)
   const Link = useLink()
 
-  if (!mode) {
+  if (typeof window !== 'undefined' && !mode) {
     setMode('default')
   }
 
