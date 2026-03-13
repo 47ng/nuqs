@@ -6,6 +6,9 @@ catalogs:
     playwright: ^1.58.1
     '@playwright/test': ^1.58.1
 
+  vite:
+    vite: ^8.0.0
+
   next:
     next: ^16.1.6
 
