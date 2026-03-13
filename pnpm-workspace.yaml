@@ -5,6 +5,8 @@ catalogs:
   e2e:
     playwright: ^1.58.1
     '@playwright/test': ^1.58.1
+
+  vite:
     vite: ^8.0.0
 
   next:
