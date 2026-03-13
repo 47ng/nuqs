@@ -32,7 +32,7 @@
     "cross-env": "^10.1.0",
     "express": "^4.22.1",
     "typescript": "^5.9.3",
-    "vite": "^7.3.1",
+    "vite": "catalog:e2e",
     "vite-tsconfig-paths": "^6.0.5"
   }
 }
