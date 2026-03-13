@@ -2,10 +2,22 @@
   "$schema": "https://turbo.build/schema.v2.json",
   "extends": ["//"],
   "tasks": {
+    "build:vinext": {
+      "outputs": ["dist"],
+      "dependsOn": ["^build"],
+      "env": [
+        "VINEXT",
+        "BASE_PATH",
+        "REACT_COMPILER",
+        "CACHE_COMPONENTS",
+        "E2E_NO_CACHE_ON_RERUN"
+      ]
+    },
     "build": {
       "outputs": [".next/**", "!.next/cache/**"],
       "dependsOn": ["^build"],
       "env": [
+        "VINEXT",
         "BASE_PATH",
         "REACT_COMPILER",
         "CACHE_COMPONENTS",
@@ -16,6 +28,7 @@
       "outputs": [".playwright/**"],
       "dependsOn": ["build"],
       "env": [
+        "VINEXT",
         "BASE_PATH",
         "REACT_COMPILER",
         "CACHE_COMPONENTS",
