@@ -10,12 +10,14 @@ dayjs.extend(minMax)
 export type Datum = {
   date: string
   downloads: number
+  estimated?: boolean
 }
 
 export type MultiDatum = {
   date: string
   nuqs: number
   'next-usequerystate': number
+  estimated?: boolean
 }
 
 export type NpmPackageStatsData = {
@@ -63,6 +65,66 @@ async function getLastNDays(pkg: string, n: number): Promise<Datum[]> {
     console.error(error)
     return []
   }
+}
+
+/**
+ * Interpolate zero-download days using weekly rhythm-aware estimation.
+ * Processes left-to-right so earlier interpolated values can feed later ones.
+ */
+function interpolateZeroDays(data: Datum[]): Datum[] {
+  for (let i = 0; i < data.length; i++) {
+    if (data[i].downloads !== 0) continue
+
+    // D-7: same weekday last week
+    if (i - 7 < 0) continue
+    const base = data[i - 7].downloads
+    if (base === 0) continue
+
+    // Backward trend: (D-1 vs D-8) week-over-week
+    let backwardTrend: number | null = null
+    if (
+      i - 1 >= 0 &&
+      i - 8 >= 0 &&
+      data[i - 1].downloads > 0 &&
+      data[i - 8].downloads > 0
+    ) {
+      backwardTrend =
+        (data[i - 1].downloads - data[i - 8].downloads) /
+        data[i - 8].downloads
+    }
+
+    // Forward trend: (D+1 vs D-6) week-over-week
+    let forwardTrend: number | null = null
+    if (
+      i + 1 < data.length &&
+      i - 6 >= 0 &&
+      data[i + 1].downloads > 0 &&
+      data[i - 6].downloads > 0
+    ) {
+      forwardTrend =
+        (data[i + 1].downloads - data[i - 6].downloads) /
+        data[i - 6].downloads
+    }
+
+    // Average available trends
+    let trend: number
+    if (backwardTrend !== null && forwardTrend !== null) {
+      trend = (backwardTrend + forwardTrend) / 2
+    } else if (backwardTrend !== null) {
+      trend = backwardTrend
+    } else if (forwardTrend !== null) {
+      trend = forwardTrend
+    } else {
+      trend = 0
+    }
+
+    data[i] = {
+      date: data[i].date,
+      downloads: Math.max(0, Math.round(base * (1 + trend))),
+      estimated: true
+    }
+  }
+  return data
 }
 
 const packageResponseSchema = z.object({
@@ -118,11 +180,13 @@ export async function fetchNpmPackage(
   // Ensure we cover 90 days + a full first week
   const startOfFirstWeek = dayjs().subtract(90, 'day').startOf('isoWeek')
   const ninetyOrSoDays = dayjs().diff(startOfFirstWeek, 'day')
-  const [allTime, last30Days, last90Days] = await Promise.all([
+  const [allTime, last30DaysRaw, last90DaysRaw] = await Promise.all([
     getAllTime(pkg),
     getLastNDays(pkg, 30),
     getLastNDays(pkg, ninetyOrSoDays)
   ])
+  const last30Days = interpolateZeroDays(last30DaysRaw)
+  const last90Days = interpolateZeroDays(last90DaysRaw)
   return {
     allTime,
     last30Days,
@@ -141,18 +205,23 @@ async function get(url: string): Promise<unknown> {
 }
 
 function groupByWeek(data: Datum[]): Datum[] {
-  const weeks = new Map<string, number>()
+  const weeks = new Map<string, { downloads: number; estimated: boolean }>()
   for (const d of data) {
     const date = dayjs(d.date)
     const key = [
       "'" + (date.isoWeekYear() - 2000),
       date.isoWeek().toFixed().padStart(2, '0')
     ].join('W')
-    weeks.set(key, (weeks.get(key) ?? 0) + d.downloads)
+    const existing = weeks.get(key) ?? { downloads: 0, estimated: false }
+    weeks.set(key, {
+      downloads: existing.downloads + d.downloads,
+      estimated: existing.estimated || (d.estimated ?? false)
+    })
   }
-  return Array.from(weeks.entries()).map(([date, downloads]) => ({
+  return Array.from(weeks.entries()).map(([date, { downloads, estimated }]) => ({
     date,
-    downloads
+    downloads,
+    ...(estimated ? { estimated: true } : {})
   }))
 }
 
@@ -165,12 +234,14 @@ export function combineStats(
     last30Days: nuqs.last30Days.map((d, i) => ({
       date: d.date,
       nuqs: d.downloads,
-      ['next-usequerystate']: n_uqs.last30Days[i].downloads
+      ['next-usequerystate']: n_uqs.last30Days[i].downloads,
+      ...(d.estimated ? { estimated: true } : {})
     })),
     last90Days: nuqs.last90Days.map((d, i) => ({
       date: d.date,
       nuqs: d.downloads,
-      ['next-usequerystate']: n_uqs.last90Days[i].downloads
+      ['next-usequerystate']: n_uqs.last90Days[i].downloads,
+      ...(d.estimated ? { estimated: true } : {})
     }))
   }
 }

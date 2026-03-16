@@ -71,6 +71,7 @@ export async function NPMDownloads() {
             // to the first N days of the previous week.
             oldValue={getPartialPreviousWeekDownloads(nuqs.last30Days)}
             newValue={nuqs.last90Days.at(-1)?.downloads ?? 0}
+            estimated={nuqs.last90Days.at(-1)?.estimated}
           />
         }
         title={
@@ -210,12 +211,16 @@ type TrendBadgeProps = {
   oldValue: number
   newValue: number
   label: string
+  estimated?: boolean
 }
 
-function TrendBadge({ oldValue, newValue, label }: TrendBadgeProps) {
+function TrendBadge({ oldValue, newValue, label, estimated }: TrendBadgeProps) {
   const diff = newValue - oldValue
   const pct = oldValue === 0 ? 100 : (diff / oldValue) * 100
   const sign = diff === 0 ? '' : diff > 0 ? '+' : '-'
+  const title = estimated
+    ? `${sign}${Math.abs(diff)} ${label} (* includes estimated data)`
+    : `${sign}${Math.abs(diff)} ${label}`
   return (
     <Badge
       variant="outline"
@@ -225,7 +230,7 @@ function TrendBadge({ oldValue, newValue, label }: TrendBadgeProps) {
         diff < 0 && 'bg-red-500/10 text-red-500',
         diff === 0 && 'bg-zinc-500/10 text-zinc-500'
       )}
-      title={`${sign}${Math.abs(diff)} ${label}`}
+      title={title}
     >
       {diff > 0 && <TrendingUp size={12} />}
       {diff < 0 && <TrendingDown size={12} />}
@@ -233,7 +238,7 @@ function TrendBadge({ oldValue, newValue, label }: TrendBadgeProps) {
       {diff > 0 ? '+' : '-'}
       {formatStatNumber(Math.abs(diff)) || 'No change'}
       {oldValue !== 0 && (
-        <span className="font-normal">({pct.toFixed(1)}%)</span>
+        <span className="font-normal">({pct.toFixed(1)}%){estimated && '*'}</span>
       )}
     </Badge>
   )
