@@ -14,6 +14,22 @@ import type { Datum, MultiDatum } from '../lib/npm'
 import { PartialLine } from './partial-line'
 import { Widget, WidgetProps } from './widget'
 
+function EstimatedDot(props: any) {
+  const { cx, cy, payload } = props
+  if (!payload?.estimated) return null
+  return (
+    <circle
+      cx={cx}
+      cy={cy}
+      r={3}
+      fill="none"
+      stroke={props.stroke}
+      strokeWidth={1.5}
+      strokeDasharray="2 2"
+    />
+  )
+}
+
 type DownloadsGraphProps = WidgetProps & {
   data: (Datum | MultiDatum)[]
   partialLast: boolean
@@ -81,6 +97,27 @@ export function DownloadsGraph({
                 valueFormatter={value =>
                   formatStatNumber(value as number).toUpperCase()
                 }
+                labelClassName="border-border border-b px-3 py-2"
+                labelFormatter={(label, payload) => {
+                  const estimated = payload?.[0]?.payload?.estimated
+                  const formattedLabel = String(label).startsWith("'")
+                    ? label
+                    : formatDate(String(label), '', {
+                        weekday: 'short',
+                        day: 'numeric',
+                        month: 'long'
+                      })
+                  return (
+                    <span>
+                      {formattedLabel}
+                      {estimated && (
+                        <span className="text-muted-foreground ml-1 text-xs font-normal">
+                          (estimated)
+                        </span>
+                      )}
+                    </span>
+                  )
+                }}
               />
             }
             isAnimationActive={false}
@@ -96,7 +133,7 @@ export function DownloadsGraph({
             type="monotone"
             stroke="var(--color-red-500)"
             className="stroke-red-500 dark:stroke-red-400"
-            dot={false}
+            dot={<EstimatedDot />}
             strokeWidth={2}
           />
           <Line
@@ -105,7 +142,7 @@ export function DownloadsGraph({
             type="monotone"
             stroke="var(--color-zinc-500)"
             strokeOpacity={0.5}
-            dot={false}
+            dot={<EstimatedDot />}
             strokeWidth={2}
           />
         </LineChart>
