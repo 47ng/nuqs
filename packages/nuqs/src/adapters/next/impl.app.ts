@@ -48,10 +48,17 @@ function patchHistory() {
   }
   const originalReplaceState = history.replaceState
   const originalPushState = history.pushState
-  // replaceState: nuqs's own calls pass the marker (stripped below).
-  // Next.js cascade calls (e.g. useInsertionEffect patching history state)
-  // also use replaceState but without the marker — we skip onHistoryStateUpdate
-  // for all replaceState calls to avoid triggering resetQueues during cascades.
+  // replaceState: nuqs's own calls carry the marker (stripped before
+  // reaching the browser). Next.js cascade calls (e.g. useInsertionEffect
+  // patching history state after our update) also use replaceState but
+  // WITHOUT the marker, and there is no reliable way to distinguish them
+  // from external replaceState calls. We skip onHistoryStateUpdate for
+  // all replaceState to avoid cascades prematurely resetting the queue.
+  // Trade-off: external history.replaceState() on the same pathname won't
+  // cancel pending nuqs work. Cross-page navigations are still covered
+  // by the pathname-based reset in NavigationSpy below, and pushState-
+  // based navigations (Link clicks, router.push) are covered by the
+  // pushState handler.
   history.replaceState = function nuqs_replaceState(state, marker, url) {
     return originalReplaceState.call(
       history,
@@ -60,9 +67,9 @@ function patchHistory() {
       url
     )
   }
-  // pushState: nuqs's own calls pass the marker (stripped below).
+  // pushState: nuqs's own calls carry the marker (stripped below).
   // External navigation (link clicks, router.push) uses pushState without
-  // the marker — this should trigger queue reset via onHistoryStateUpdate.
+  // the marker — this triggers queue reset via onHistoryStateUpdate.
   history.pushState = function nuqs_pushState(state, marker, url) {
     if (marker !== historyUpdateMarker) {
       onHistoryStateUpdate()
@@ -82,9 +89,12 @@ function patchHistory() {
 export function NavigationSpy() {
   const pathname = usePathname()
   const prevPathname = useRef(pathname)
-  // Synchronous pathname-based reset for cross-page navigation.
-  // This ensures the queue is cleared before the new page's components render,
-  // providing a stronger guarantee than the async marker-based mechanism.
+  // Intentionally in the render phase (not an effect): the queue must be
+  // cleared before the new page's components render so they don't read
+  // stale values via getQueuedQuery. This is safe because:
+  // - In StrictMode the second render sees prevPathname === pathname (no-op)
+  // - globalThrottleQueue.reset() is idempotent
+  // - No React state updates are triggered (no useSyncExternalStore emissions)
   if (prevPathname.current !== pathname) {
     prevPathname.current = pathname
     globalThrottleQueue.reset()
@@ -113,9 +123,10 @@ export function useNuqsNextAppRouterAdapter(): AdapterInterface {
       // this allows keeping a reactive URL if the network is slow.
       const updateMethod =
         options.history === 'push' ? history.pushState : history.replaceState
-      // The mutex prevents resetQueues from firing during the pushState
-      // cascade that may follow from router.replace in non-shallow mode.
-      setQueueResetMutex(options.shallow ? 0 : NUM_HISTORY_CALLS_PER_UPDATE)
+      // Since replaceState calls are not monitored (see patchHistory above),
+      // the mutex is not needed to absorb cascade calls — they go undetected.
+      // Set to 0 so that the next external pushState immediately resets.
+      setQueueResetMutex(0)
       updateMethod.call(
         history,
         // In next@14.1.0, useSearchParams becomes reactive to shallow updates,
