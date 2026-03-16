@@ -10,7 +10,7 @@ export function Repro1365() {
 
   useEffect(() => {
     effectCount.current++
-    console.log(`effect ${effectCount.current}`)
+    console.log('effect')
     void setB(prev => prev + 1)
   }, [a])
 

@@ -57,7 +57,7 @@ The `✗` period is the danger zone. If the `parseMap` `useEffect` fires during 
 
 ## 3. Historical Context: The Tension Chain
 
-Three prior issues form a tension chain around the same queue reset mechanism:
+Four issues form a tension chain around the same queue reset mechanism:
 
 | Issue | Problem | Fix | Queue needed to... |
 |-------|---------|-----|--------------------|
@@ -70,51 +70,76 @@ Three prior issues form a tension chain around the same queue reset mechanism:
 
 ## 4. Strategy
 
-### 4.1 Part 1: `autoResetQueueOnUpdate: false` + pathname-based reset in NavigationSpy
+The core insight: the queue must **persist during nuqs-initiated updates** (to bridge the gap until `useSearchParams` catches up) but **clear on external navigations** (to prevent stale values on new pages or when external code changes search params).
 
-**File: `packages/nuqs/src/adapters/next/impl.app.ts`**
+### 4.1 Existing marker mechanism
 
-1. Change `autoResetQueueOnUpdate: true` → `false` (line 103)
-2. In `NavigationSpy`, add pathname tracking to detect cross-page navigation and synchronously clear the throttle queue **during render** (before page components):
+The shared `patchHistory` function (`adapters/lib/patch-history.ts`) already distinguishes nuqs vs external history calls using `historyUpdateMarker = '__nuqs__'` passed as the second argument (the unused `title` param) to `pushState`/`replaceState`:
 
 ```typescript
-import { usePathname } from 'next/navigation.js'
-import { useRef } from 'react'
-import { globalThrottleQueue } from '../../lib/queues/throttle'
-
-export function NavigationSpy() {
-  const pathname = usePathname()
-  const prevPathname = useRef(pathname)
-  if (prevPathname.current !== pathname) {
-    prevPathname.current = pathname
-    // Cross-page navigation: clear stale queued values before children render.
-    // Uses reset() (not resetQueues()) to avoid emitting sync events during render.
-    globalThrottleQueue.reset()
+// In the shared patchHistory (used by React Router, Remix, etc.):
+history.pushState = function nuqs_pushState(state, marker, url) {
+  originalPushState.call(history, state, '', url)
+  if (url && marker !== historyUpdateMarker) {
+    sync(url)  // Only sync for non-nuqs calls
   }
-  useEffect(() => {
-    patchHistory()
-    window.addEventListener('popstate', onPopState)
-    return () => window.removeEventListener('popstate', onPopState)
-  }, [])
-  return null
 }
 ```
 
-**Why this works:**
-- `NavigationSpy` renders **before** page components (earlier sibling in the `NuqsAdapter` children array in `adapters/next/app.ts`)
-- `usePathname()` returns the new pathname during the transition render
-- `globalThrottleQueue.reset()` is safe during render: only clears `updateMap`/`transitions`/`options`, no events emitted, no AbortController touched
-- Idempotent: safe under React StrictMode double-renders and concurrent mode abandoned renders
+The React Router adapter passes this marker when calling history:
+```typescript
+// In react-router.ts updateUrl:
+updateMethod.call(history, history.state, historyUpdateMarker, url)
+```
 
-**For same-page updates:** The existing `resetQueueOnNextPush` mechanism (from #1099) handles cleanup — the queue values persist as a bridge until the next interaction, by which time `useSearchParams` has caught up.
+**The Next.js App Router adapter does NOT use this mechanism.** It has its own history patching that calls `onHistoryStateUpdate()` for ALL history calls, and relies on the mutex to determine when `resetQueues` fires. This is the root of the problem.
 
-### 4.2 Part 2: Suppress `resetQueues` for nuqs-initiated history calls
+### 4.2 Part 1: `autoResetQueueOnUpdate: false`
+
+**File: `packages/nuqs/src/adapters/next/impl.app.ts`**
+
+Change `autoResetQueueOnUpdate: true` → `false` (line 103). This makes the queue persist through the flush, bridging the gap until `useSearchParams` catches up. The existing `resetQueueOnNextPush` mechanism (from #1099) handles cleanup on the next user interaction.
+
+### 4.3 Part 2: Align history patching with the marker mechanism
+
+**File: `packages/nuqs/src/adapters/next/impl.app.ts`**
+
+The App Router adapter must use the same marker-based detection as the shared `patchHistory`:
+
+**In `updateUrl`:** Pass `historyUpdateMarker` as the second argument:
+```typescript
+updateMethod.call(history, null, historyUpdateMarker, url)
+```
+(The `null` state is preserved — Next.js 14.1.0+ needs `null` to make `useSearchParams` reactive to shallow updates.)
+
+**In `patchHistory`:** Check the marker to skip nuqs-initiated calls:
+```typescript
+history.replaceState = function nuqs_replaceState(state, marker, url) {
+  if (marker !== historyUpdateMarker) {
+    onHistoryStateUpdate()  // External call → spin mutex, may trigger reset
+  }
+  return originalReplaceState.call(history, state, marker === historyUpdateMarker ? '' : marker, url)
+}
+```
+
+nuqs-marked calls pass through without spinning the mutex. External calls (link clicks, `router.push`, etc.) spin the mutex and may trigger `resetQueues` when it drains to 0.
+
+**Adjust mutex value:** Since our own call no longer spins the mutex, the count should reflect only Next.js's cascade calls:
+```typescript
+// Before (our call + Next.js cascade):
+setQueueResetMutex(NUM_HISTORY_CALLS_PER_UPDATE)  // 3
+
+// After (only Next.js cascade):
+setQueueResetMutex(options.shallow ? 0 : NUM_HISTORY_CALLS_PER_UPDATE - 1)
+```
+- **Shallow:** Our call is skipped (marker), Next.js doesn't call `router.replace` → 0 cascade calls → mutex = 0 (no reset expected from cascade)
+- **Non-shallow:** Our call is skipped, Next.js's `router.replace` triggers ~2 internal history calls → mutex = 2
+
+### 4.4 Part 3: `isNuqsInitiated` flag for cascade protection
 
 **File: `packages/nuqs/src/lib/queues/reset.ts`**
 
-The history patching mechanism calls `spinQueueResetMutex` on every `history.pushState`/`replaceState`. When the mutex drains to 0, it fires `queueMicrotask(resetQueues)`. With `autoResetQueueOnUpdate: false`, the queue still has values after flush, so `resetQueues` would abort them and emit sync events — causing an unnecessary extra render.
-
-Add an `isNuqsInitiated` flag:
+For non-shallow updates, the mutex accounts for Next.js cascade calls (which don't have the marker). When the mutex drains to 0, we need to skip `resetQueues` because the cascade is a consequence of our own update:
 
 ```typescript
 let mutex = 0
@@ -134,21 +159,58 @@ export function spinQueueResetMutex(onReset: () => void = resetQueues): void {
   }
   if (isNuqsInitiated) {
     isNuqsInitiated = false
-    return // Queue values confirmed in URL; resetQueueOnNextPush handles cleanup
+    return // Cascade from nuqs update; resetQueueOnNextPush handles cleanup
   }
   onReset()
 }
 ```
 
-**Why:** When nuqs calls `setQueueResetMutex(3)` before its own `history.replaceState`, the flag is set. As the mutex spins down, the flag prevents the unnecessary `resetQueues`. For external navigations (link clicks, `router.push`), `isNuqsInitiated` is false, so `resetQueues` fires normally. The `onPopState` handler bypasses `spinQueueResetMutex` entirely — back/forward always resets.
+**Flow for nuqs non-shallow update:**
+1. `setQueueResetMutex(2)`, `isNuqsInitiated = true`
+2. Our `replaceState(null, historyUpdateMarker, url)` → marker detected → SKIP
+3. Next.js cascade call 1 → no marker → spin → mutex = 1
+4. Next.js cascade call 2 → no marker → spin → mutex = 0 → `isNuqsInitiated = true` → skip, clear flag
 
-**Bonus fix:** This also addresses **Gap 6** (collateral damage to unrelated debounced keys) from the scheduling gaps analysis. Previously, `resetQueues()` would call `debounceController.abortAll()` even for nuqs-initiated updates, aborting unrelated pending debounced keys. Now it only fires for external navigations.
+**Flow for external navigation (after nuqs cascade drained):**
+5. External `pushState(state, '', url)` → no marker → `onHistoryStateUpdate()` → spin → mutex = 0 → `isNuqsInitiated = false` → `resetQueues()` fires ✓
 
-### 4.3 Part 3: E2E test for repro-1365
+### 4.5 Part 4: Pathname-based reset in NavigationSpy for cross-page navigation
+
+**File: `packages/nuqs/src/adapters/next/impl.app.ts`**
+
+The marker + mutex mechanism triggers `resetQueues` via `queueMicrotask` (async). For **cross-page** navigation, we need a **synchronous** guarantee that the queue is cleared before the new page's components render. The pathname-based reset in `NavigationSpy` provides this:
+
+```typescript
+export function NavigationSpy() {
+  const pathname = usePathname()
+  const prevPathname = useRef(pathname)
+  if (prevPathname.current !== pathname) {
+    prevPathname.current = pathname
+    globalThrottleQueue.reset()  // Synchronous, render-safe, no events emitted
+  }
+  useEffect(() => {
+    patchHistory()
+    window.addEventListener('popstate', onPopState)
+    return () => window.removeEventListener('popstate', onPopState)
+  }, [])
+  return null
+}
+```
+
+**Why both mechanisms are needed:**
+
+| Navigation type | Marker-based detection | Pathname-based reset | Together |
+|----------------|----------------------|---------------------|---------|
+| **Cross-page** (pathname changes) | ✓ async (microtask) | ✓ synchronous (render) | Sync guarantee via pathname |
+| **Same-page external** (only search params change) | ✓ async (microtask) | ✗ pathname unchanged | Async reset via marker (fast enough for same-page since components are already mounted) |
+| **Popstate** (back/forward) | N/A | N/A | `onPopState` handles directly |
+| **nuqs update** | Skipped (marker) | Skipped (same pathname) | `resetQueueOnNextPush` handles |
+
+### 4.6 Part 5: E2E test for repro-1365
 
 **Note:** The bug only reproduces in dev mode. The e2e infrastructure uses `next start` (production). The test serves as a regression guard with deterministic assertions on the counter value and effect count. If the scheduling gap ever widens in production (e.g., due to a React or Next.js change), the test will catch it.
 
-**Shared component** (`packages/e2e/shared/specs/repro-1365.tsx`): Uses `parseAsInteger` for `b` (counter, not toggle) so extra effects produce a different final value (deterministic). Logs `effect` on each fire.
+**Shared component** (`packages/e2e/shared/specs/repro-1365.tsx`): Uses `parseAsInteger` for `b` (counter, not toggle) so extra effects produce a different final value (deterministic). Logs `effect N` on each fire.
 
 **Shared spec** (`packages/e2e/shared/specs/repro-1365.spec.ts`): Uses `setupLogSpy` + `assertLogCount` to verify effect count. Waits for URL to stabilize before checking.
 
@@ -161,9 +223,9 @@ Our fix addresses the highest-risk combination identified in the SCHEDULING-GAPS
 | **Gap 1** (Premature Queue Clearing) | Queue cleared before URL confirms | **Fixed** — `autoResetQueueOnUpdate: false` keeps queue populated |
 | **Gap 2** (SyncLane vs Transition Priority Inversion) | `useSyncExternalStore` commits before `useSearchParams` | **Mitigated** — no queue clear = no SyncLane snapshot change during flush |
 | **Gap 5** (Adapter searchParams Lag) | `useSearchParams` lags behind URL for shallow updates | **Fixed** — queue bridges the lag |
-| **Gap 6** (queueMicrotask resetQueues Collateral Damage) | `resetQueues` aborts unrelated debounced keys | **Fixed** — `isNuqsInitiated` flag prevents firing for nuqs updates |
-| **Gap 7** (NUM_HISTORY_CALLS_PER_UPDATE Fragility) | Mutex count depends on Next.js internals | **Mitigated** — pathname reset provides robust cross-page mechanism independent of mutex |
-| **Gap 8** (Adapter Divergence) | App Router uses different strategy than React Router | **Reduced** — both now use `autoResetQueueOnUpdate: false` |
+| **Gap 6** (queueMicrotask resetQueues Collateral Damage) | `resetQueues` aborts unrelated debounced keys | **Fixed** — marker skips nuqs calls; `isNuqsInitiated` flag skips cascade |
+| **Gap 7** (NUM_HISTORY_CALLS_PER_UPDATE Fragility) | Mutex count depends on Next.js internals | **Mitigated** — marker removes our own call from the count; pathname reset provides robust cross-page mechanism independent of mutex |
+| **Gap 8** (Adapter Divergence) | App Router uses different strategy than React Router | **Reduced** — both now use `autoResetQueueOnUpdate: false` + marker-based detection |
 | **Gap 3** (parseMap undoing emitter state) | Remains a structural concern for edge cases | **Partially mitigated** — queue retains correct value, so parseMap reads it |
 | **Gap 4** (Debounce → Throttle Handoff) | Brief visibility hole during handoff | **Not addressed** — separate issue |
 | **Gap 9** (queuedQuerySync Emission Asymmetry) | Throttle queue changes don't emit | **Compatible** — no queue clear during flush means no stale snapshot |
@@ -174,27 +236,35 @@ Our fix addresses the highest-risk combination identified in the SCHEDULING-GAPS
 
 The critical regression test. Verifies Page B doesn't see Page A's stale `count` value.
 
-**How our fix handles it:** The pathname-based reset in `NavigationSpy` clears `globalThrottleQueue` synchronously during render when pathname changes from `/a` to `/b`. Since `NavigationSpy` renders before page components, Page B sees a clean queue.
+**How our fix handles it:** Two layers of protection:
+1. **Pathname-based reset** in `NavigationSpy` clears `globalThrottleQueue` synchronously during render when pathname changes from `/a` to `/b`. Since `NavigationSpy` renders before page components, Page B sees a clean queue.
+2. **Marker-based detection** in patched history ensures the external navigation (link click) triggers `resetQueues` via microtask as a fallback.
 
 **Key assertion:** `assertLogCount(logSpy, 'b: 1', 0)` — Page B must never render with Page A's count.
 
 **Must pass after fix.**
 
-### 6.2 life-and-death (Optimistic values for mounted components) — **LOW RISK (beneficial)**
+### 6.2 flush-after-navigate (Pending updates don't leak after navigation) — **MEDIUM RISK**
+
+Tests that pending queued/debounced updates don't leak to a new page after link navigation. Also tests same-page navigation with different search params.
+
+**How our fix handles it:** Two layers:
+1. **Cross-page cases:** Pathname-based reset clears the throttle queue synchronously.
+2. **Same-page cases (search param changes):** The link navigation calls `history.pushState` without the nuqs marker → patched history detects external call → `onHistoryStateUpdate()` → `spinQueueResetMutex()` → `queueMicrotask(resetQueues)`. Since the mutex is 0 (no pending nuqs update) and `isNuqsInitiated` is false, `resetQueues` fires, aborting pending debounced updates.
+
+**Must verify both cross-page and same-page test cases pass.**
+
+### 6.3 life-and-death (Optimistic values for mounted components) — **LOW RISK (beneficial)**
 
 Tests that freshly-mounted components see queued (optimistic) values via `NullDetector`. Our fix keeps the queue populated longer → mounted components have **more** time to read queued values. This test should be **easier** to pass.
 
-### 6.3 popstate-queue-reset (Queue clearing on back/forward) — **NO RISK**
+### 6.4 popstate-queue-reset (Queue clearing on back/forward) — **NO RISK**
 
-Uses the `onPopState` handler which calls `setQueueResetMutex(0)` + `resetQueues()` **directly**, bypassing `spinQueueResetMutex` entirely. Our `isNuqsInitiated` flag has no effect on this path. Completely independent of `autoResetQueueOnUpdate`.
-
-### 6.4 flush-after-navigate (Pending updates don't leak after navigation) — **LOW RISK**
-
-Tests that pending queued updates don't leak to a new page after link navigation. The pathname-based reset in `NavigationSpy` handles this — it clears the throttle queue when the pathname changes.
+Uses the `onPopState` handler which calls `setQueueResetMutex(0)` + `resetQueues()` **directly**, bypassing `spinQueueResetMutex` entirely. Our changes to the patched history and `isNuqsInitiated` flag have no effect on this path.
 
 ### 6.5 stitching (Multiple hooks with different debounce/throttle) — **LOW RISK (beneficial)**
 
-Tests sequencing of `a=1` → `a=1&b=1` → `a=1&b=1&c=1` across hooks with different rate limits. With `autoResetQueueOnUpdate: false`, the queue retains values between staggered flushes. The `isNuqsInitiated` flag prevents `resetQueues()` from aborting unrelated debounced keys (directly fixes Gap 6).
+Tests sequencing of `a=1` → `a=1&b=1` → `a=1&b=1&c=1` across hooks with different rate limits. With `autoResetQueueOnUpdate: false`, the queue retains values between staggered flushes. The marker-based skip + `isNuqsInitiated` flag prevents `resetQueues()` from aborting unrelated debounced keys (directly fixes Gap 6).
 
 ### 6.6 repro-1099 (Transient null state) — **NO RISK (beneficial)**
 
@@ -206,20 +276,20 @@ Tests that queued values are available during initialization. Our fix keeps the 
 
 ### 6.8 render-count tests — **LOW RISK**
 
-These count exact renders per update. With `autoResetQueueOnUpdate: false`, the queue clear doesn't trigger a `useSyncExternalStore` SyncLane re-render during the flush, which may **reduce** render counts (or keep them the same if the sync event wasn't triggering a visible render). Needs verification.
+These count exact renders per update. With `autoResetQueueOnUpdate: false`, the queue clear doesn't trigger a `useSyncExternalStore` SyncLane re-render during the flush, which may **reduce** render counts. Needs verification.
 
 ## 7. Files to Modify
 
 | File | Change |
 |------|--------|
-| `packages/nuqs/src/adapters/next/impl.app.ts` | `autoResetQueueOnUpdate: false`, add `usePathname` + `useRef` imports, add `globalThrottleQueue` import, add pathname detection in `NavigationSpy` |
+| `packages/nuqs/src/adapters/next/impl.app.ts` | `autoResetQueueOnUpdate: false`; pass `historyUpdateMarker` in `updateUrl`; check marker in patched history; adjust mutex for shallow/non-shallow; add pathname detection in `NavigationSpy` |
 | `packages/nuqs/src/lib/queues/reset.ts` | Add `isNuqsInitiated` flag, update `setQueueResetMutex` and `spinQueueResetMutex` |
 
 ## 8. Files to Create (already done)
 
 | File | Purpose |
 |------|---------|
-| `packages/e2e/shared/specs/repro-1365.tsx` | Shared test component (integer counter `b`, logs `effect`) |
+| `packages/e2e/shared/specs/repro-1365.tsx` | Shared test component (integer counter `b`, logs `effect N`) |
 | `packages/e2e/shared/specs/repro-1365.spec.ts` | Shared test spec (logSpy, assertLogCount) |
 | `packages/e2e/next/src/app/app/(shared)/repro-1365/page.tsx` | Next.js app router page |
 | `packages/e2e/next/src/pages/pages/repro-1365.tsx` | Next.js pages router page |
@@ -238,27 +308,34 @@ These count exact renders per update. With `autoResetQueueOnUpdate: false`, the 
 
 ## 9. Task Breakdown
 
-### Phase 1: Fix the e2e test spec (logSpy message mismatch)
-- [ ] Fix the `assertLogCount` message in repro-1365.spec.ts to match the component's actual log format (`effect 1`, `effect 2`, etc. vs `effect`)
-- [ ] Verify the test structure works (mount settle check, click, URL stabilize, assert)
+### Phase 1: Fix the e2e test spec
+- [ ] Fix `assertLogCount` message in repro-1365.spec.ts to match component's log format
+- [ ] Verify test structure works (mount settle, click, URL stabilize, assert)
 
-### Phase 2: Apply the core fix
-- [ ] **`impl.app.ts`**: Change `autoResetQueueOnUpdate: true` → `false`
-- [ ] **`impl.app.ts`**: Add `usePathname` import from `next/navigation.js`
-- [ ] **`impl.app.ts`**: Add `useRef` to React imports
-- [ ] **`impl.app.ts`**: Import `globalThrottleQueue` from `../../lib/queues/throttle`
-- [ ] **`impl.app.ts`**: Add pathname detection logic to `NavigationSpy` (before the useEffect)
-- [ ] **`reset.ts`**: Add `isNuqsInitiated` flag
-- [ ] **`reset.ts`**: Update `setQueueResetMutex` to set the flag when value > 0
-- [ ] **`reset.ts`**: Update `spinQueueResetMutex` to skip callback when nuqs-initiated
+### Phase 2: Apply the core fix to `impl.app.ts`
+- [ ] Change `autoResetQueueOnUpdate: true` → `false`
+- [ ] Import `historyUpdateMarker` from `../lib/patch-history`
+- [ ] In `updateUrl`: pass `historyUpdateMarker` as second arg to `updateMethod.call()`
+- [ ] In `patchHistory`: check `marker !== historyUpdateMarker` before calling `onHistoryStateUpdate()`
+- [ ] In `patchHistory`: strip marker before calling original (pass `''` for nuqs calls, preserve original for external)
+- [ ] Adjust `setQueueResetMutex` value: `options.shallow ? 0 : NUM_HISTORY_CALLS_PER_UPDATE - 1`
+- [ ] Add `usePathname` import from `next/navigation.js`
+- [ ] Add `useRef` to React imports
+- [ ] Import `globalThrottleQueue` from `../../lib/queues/throttle`
+- [ ] Add pathname detection logic to `NavigationSpy` (before the useEffect)
 
-### Phase 3: Build and verify
+### Phase 3: Apply the cascade protection to `reset.ts`
+- [ ] Add `isNuqsInitiated` flag
+- [ ] Update `setQueueResetMutex` to set the flag when value > 0
+- [ ] Update `spinQueueResetMutex` to skip callback when nuqs-initiated and mutex drained to 0
+
+### Phase 4: Build and verify
 - [ ] `pnpm build --filter nuqs...`
 - [ ] Run `pnpm test --filter e2e-next` — all tests must pass
-- [ ] Specifically verify: repro-1293, repro-1365, life-and-death, popstate-queue-reset, flush-after-navigate, stitching, repro-1099, repro-359, render-count
+- [ ] Specifically verify critical tests: repro-1293, repro-1365, life-and-death, popstate-queue-reset, flush-after-navigate, stitching, repro-1099, repro-359, render-count
 - [ ] Run other framework tests if time permits
 
-### Phase 4: Manual verification
+### Phase 5: Manual verification
 - [ ] Build the repro app (`nuqs-repro-1365`) against the fixed nuqs
 - [ ] Run in dev mode, click toggle, verify no extra effect fires in console
 - [ ] Verify the `a` log doesn't oscillate (`true → false → true`)
