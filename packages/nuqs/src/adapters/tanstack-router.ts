@@ -1,15 +1,18 @@
-import { useLocation, useRouter } from '@tanstack/react-router'
+import { useRouter, useRouterState } from '@tanstack/react-router'
 import { startTransition, useCallback, useMemo } from 'react'
 import { renderQueryString } from '../lib/url-encoding'
 import { createAdapterProvider, type AdapterProvider } from './lib/context'
 import type { AdapterInterface, UpdateUrlFunction } from './lib/defs'
 
 function useNuqsTanstackRouterAdapter(watchKeys: string[]): AdapterInterface {
-  const search = useLocation({
+  const search = useRouterState({
     select: state =>
       Object.fromEntries(
-        Object.entries(state.search).filter(([key]) => watchKeys.includes(key))
-      )
+        Object.entries(state.location.search).filter(([key]) =>
+          watchKeys.includes(key)
+        )
+      ) as Record<string, string | string[]>,
+    structuralSharing: true
   })
   const router = useRouter()
   const { navigate } = router
