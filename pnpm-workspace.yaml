@@ -6,6 +6,11 @@ catalogs:
     playwright: ^1.58.1
     '@playwright/test': ^1.58.1
 
+  vitest:
+    vitest: ^4.1.0
+    '@vitest/browser-playwright': ^4.1.0
+    '@vitest/coverage-v8': ^4.1.0
+
   vite:
     vite: ^8.0.0
 
