@@ -1,10 +1,15 @@
-import { useRouter, useRouterState } from '@tanstack/react-router'
+import { useLocation, useRouter, useRouterState } from '@tanstack/react-router'
 import { startTransition, useCallback, useMemo } from 'react'
 import { renderQueryString } from '../lib/url-encoding'
 import { createAdapterProvider, type AdapterProvider } from './lib/context'
 import type { AdapterInterface, UpdateUrlFunction } from './lib/defs'
 
 function useNuqsTanstackRouterAdapter(watchKeys: string[]): AdapterInterface {
+  const pathname = useLocation({ select: state => state.pathname })
+  // Use useRouterState instead of useLocation so that structuralSharing
+  // is forwarded, stabilizing object references when search values
+  // haven't changed. Prevents infinite re-renders with viewport preloading.
+  // See https://github.com/47ng/nuqs/issues/1363
   const search = useRouterState({
     select: state =>
       Object.fromEntries(
@@ -14,8 +19,7 @@ function useNuqsTanstackRouterAdapter(watchKeys: string[]): AdapterInterface {
       ) as Record<string, string | string[]>,
     structuralSharing: true
   })
-  const router = useRouter()
-  const { navigate } = router
+  const { navigate } = useRouter()
   const searchParams = useMemo(
     () =>
       // search is a Record<string, string | number | object | Array<string | number>>,
@@ -45,12 +49,6 @@ function useNuqsTanstackRouterAdapter(watchKeys: string[]): AdapterInterface {
       // Wrapping in a startTransition seems to be necessary
       // to support scroll restoration
       startTransition(() => {
-        // Read pathname at call time from the router instance rather than
-        // from useLocation, to avoid re-creating this callback when
-        // TanStack Router's internal location state changes (e.g. during
-        // route preloading), which would cause infinite re-render loops.
-        // See https://github.com/47ng/nuqs/issues/1363
-        const pathname = router.state.location.pathname
         navigate({
           // I know the docs say to use `search` here, but it would require
           // userland code to stitch the nuqs definitions to the route declarations
@@ -71,7 +69,7 @@ function useNuqsTanstackRouterAdapter(watchKeys: string[]): AdapterInterface {
         })
       })
     },
-    [navigate]
+    [navigate, pathname]
   )
 
   return {
