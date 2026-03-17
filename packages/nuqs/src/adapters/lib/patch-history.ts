@@ -6,7 +6,15 @@ import {
   silentResetQueues,
   spinQueueResetMutex
 } from '../../lib/queues/reset'
-import { globalThrottleQueue } from '../../lib/queues/throttle'
+
+/**
+ * Set by the popstate handler before the render phase to signal that
+ * the current navigation is a back/forward navigation (#1358).
+ */
+export let popstateDetected = false
+export function clearPopstateDetected(): void {
+  popstateDetected = false
+}
 
 export type SearchParamsSyncEmitterEvents = { update: URLSearchParams }
 
@@ -82,10 +90,9 @@ export function patchHistory(
 
   window.addEventListener('popstate', () => {
     lastSearchSeen = location.search
-    globalThrottleQueue.popstateDetected = true
-    // Use silent reset to avoid triggering SyncLane re-renders of the
-    // outgoing route, which could repopulate the queue with stale values (#1358).
-    // The incoming route's render-phase pathname check ensures a clean queue.
+    popstateDetected = true
+    // Silent reset avoids SyncLane re-renders of the outgoing route
+    // that would repopulate the queue with stale values (#1358).
     silentResetQueues()
   })
 

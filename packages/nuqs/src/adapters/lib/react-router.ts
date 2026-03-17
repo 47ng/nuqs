@@ -8,8 +8,10 @@ import { createAdapterProvider, type AdapterProvider } from './context'
 import type { AdapterInterface, AdapterOptions } from './defs'
 import { applyChange, filterSearchParams } from './key-isolation'
 import {
-  patchHistory as applyHistoryPatch,
+  clearPopstateDetected,
   historyUpdateMarker,
+  patchHistory as applyHistoryPatch,
+  popstateDetected,
   type SearchParamsSyncEmitterEvents
 } from './patch-history'
 
@@ -49,19 +51,14 @@ export function createReactRouterBasedAdapter({
   function useNuqsReactRouterBasedAdapter(
     watchKeys: string[]
   ): AdapterInterface {
-    // On popstate (back/forward) navigation, freeze and reset the throttle
-    // queue to prevent cross-route state bleeding (#1358). Freezing silently
-    // drops pushes from the outgoing route's setState-during-render that would
-    // otherwise repopulate the queue with stale values due to the SyncLane
-    // priority inversion between useSyncExternalStore and startTransition.
-    // Only applies to popstate navigation — forward navigation is handled
-    // by the existing patchHistory mechanism.
+    // Freeze and reset the throttle queue on popstate (back/forward)
+    // navigation to prevent cross-route state bleeding (#1358).
+    // Forward navigation is handled by patchHistory.
     if (typeof location !== 'undefined' && location.pathname !== lastSeenPathname) {
-      const isPopstate = globalThrottleQueue.popstateDetected
-      globalThrottleQueue.popstateDetected = false
+      const isPopstate = popstateDetected
+      clearPopstateDetected()
       lastSeenPathname = location.pathname
       if (isPopstate) {
-        debug('[nuqs %s] Popstate pathname change %s, freezing queue', adapter, location.pathname)
         globalThrottleQueue.frozen = true
         globalThrottleQueue.reset()
         queueMicrotask(() => {

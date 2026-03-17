@@ -47,18 +47,12 @@ export class ThrottledQueue {
    * from repopulating the queue with stale values (#1358).
    */
   frozen = false
-  /**
-   * Set by the popstate handler before the render phase to signal that
-   * the current navigation is a back/forward navigation.
-   */
-  popstateDetected = false
 
   push(
     { key, query, options }: UpdateQueuePushArgs,
     timeMs: number = defaultRateLimit.timeMs
   ): void {
     if (this.frozen) {
-      debug('[nuqs gtq] Dropping push %s=%s (queue frozen)', key, query)
       return
     }
     if (this.resetQueueOnNextPush) {

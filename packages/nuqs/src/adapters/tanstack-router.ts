@@ -1,6 +1,5 @@
 import { useLocation, useRouter, useRouterState } from '@tanstack/react-router'
 import { startTransition, useCallback, useMemo, useRef } from 'react'
-import { debug } from '../lib/debug'
 import { globalThrottleQueue } from '../lib/queues/throttle'
 import { renderQueryString } from '../lib/url-encoding'
 import { createAdapterProvider, type AdapterProvider } from './lib/context'
@@ -18,16 +17,9 @@ function useNuqsTanstackRouterAdapter(watchKeys: string[]): AdapterInterface {
   const isFreshMount = useRef(true)
   if (isFreshMount.current) {
     isFreshMount.current = false
-    if (globalThrottleQueue.frozen) {
-      globalThrottleQueue.frozen = false
-    }
+    globalThrottleQueue.frozen = false
   }
   if (pathname !== lastSeenPathname) {
-    debug(
-      '[nuqs tanstack] Pathname changed %s → %s, freezing queue',
-      lastSeenPathname,
-      pathname
-    )
     const searchFromPreviousRoute = lastSeenSearch
     lastSeenPathname = pathname
     globalThrottleQueue.frozen = true
@@ -47,7 +39,8 @@ function useNuqsTanstackRouterAdapter(watchKeys: string[]): AdapterInterface {
       }
     }, 0)
   }
-  // Track search for the next pathname change comparison
+  // Side-effect during render: track search for the stale-param comparison
+  // on the next pathname change. Module-level, so no re-renders triggered.
   if (typeof location !== 'undefined') {
     lastSeenSearch = location.search
   }
@@ -66,11 +59,19 @@ function useNuqsTanstackRouterAdapter(watchKeys: string[]): AdapterInterface {
   })
   const searchParams = useMemo(
     () =>
+      // search is a Record<string, string | number | object | Array<string | number>>,
+      // so we need to flatten it into a list of key/value pairs,
+      // replicating keys that have multiple values before passing it
+      // to URLSearchParams, otherwise { foo: ['bar', 'baz'] }
+      // ends up as { foo → 'bar,baz' } instead of { foo → 'bar', foo → 'baz' }
       new URLSearchParams(
         Object.entries(search).flatMap(([key, value]) => {
           if (Array.isArray(value)) {
             return value.map(v => [key, v])
           } else if (typeof value === 'object' && value !== null) {
+            // TSR JSON.parses objects in the search params,
+            // but parseAsJson expects a JSON string,
+            // so we need to re-stringify it first.
             return [[key, JSON.stringify(value)]]
           } else {
             return [[key, value]]
@@ -82,8 +83,13 @@ function useNuqsTanstackRouterAdapter(watchKeys: string[]): AdapterInterface {
 
   const updateUrl: UpdateUrlFunction = useCallback(
     (search, options) => {
+      // startTransition is necessary to support scroll restoration
       startTransition(() => {
         navigate({
+          // We use `to` with the full path instead of `search` to avoid
+          // requiring userland stitching of nuqs definitions to TSR route
+          // declarations, and to support custom URL encoding.
+          // Also avoids TSR appending a trailing slash (#1215).
           from: '/',
           to: pathname + renderQueryString(search),
           replace: options.history === 'replace',
