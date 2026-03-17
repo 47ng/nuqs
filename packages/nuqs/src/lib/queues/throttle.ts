@@ -41,11 +41,26 @@ export class ThrottledQueue {
   controller: AbortController | null = null
   lastFlushedAt = 0
   resetQueueOnNextPush = false
+  /**
+   * When true, pushes are silently dropped. Used during cross-route
+   * navigation to prevent the outgoing route's setState-during-render
+   * from repopulating the queue with stale values (#1358).
+   */
+  frozen = false
+  /**
+   * Set by the popstate handler before the render phase to signal that
+   * the current navigation is a back/forward navigation.
+   */
+  popstateDetected = false
 
   push(
     { key, query, options }: UpdateQueuePushArgs,
     timeMs: number = defaultRateLimit.timeMs
   ): void {
+    if (this.frozen) {
+      debug('[nuqs gtq] Dropping push %s=%s (queue frozen)', key, query)
+      return
+    }
     if (this.resetQueueOnNextPush) {
       this.reset()
       this.resetQueueOnNextPush = false

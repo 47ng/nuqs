@@ -142,7 +142,11 @@ export class DebounceController {
     }
   }
 
-  abortAll(): void {
+  /**
+   * @param silent - When true, skip queuedQuerySync emissions to avoid
+   * triggering SyncLane re-renders during popstate navigation (#1358).
+   */
+  abortAll(silent = false): void {
     for (const [key, queue] of this.queues.entries()) {
       debug(
         '[nuqs dqc] Aborting debounce queue %s=%s',
@@ -152,7 +156,9 @@ export class DebounceController {
       queue.abort()
       // todo: Better abort handling
       queue.resolvers.resolve(new URLSearchParams()) // Don't leave the Promise pending
-      this.queuedQuerySync.emit(key)
+      if (!silent) {
+        this.queuedQuerySync.emit(key)
+      }
     }
     this.queues.clear()
   }

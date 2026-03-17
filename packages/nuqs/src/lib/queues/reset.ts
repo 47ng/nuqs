@@ -23,3 +23,19 @@ export function resetQueues(): void {
   const abortedKeys = globalThrottleQueue.abort()
   abortedKeys.forEach(key => debounceController.queuedQuerySync.emit(key))
 }
+
+/**
+ * Abort pending flushes and clear queues without emitting on queuedQuerySync.
+ *
+ * This avoids triggering a SyncLane re-render of the outgoing route during
+ * popstate-driven navigation, which can cause the outgoing route's
+ * setState-during-render to repopulate the queue with stale values (#1358).
+ * The incoming route's render-phase pathname check handles the cleanup instead.
+ */
+export function silentResetQueues(): void {
+  debug('[nuqs] Silent reset of queues')
+  // Abort all queues without emitting on queuedQuerySync to avoid
+  // triggering SyncLane re-renders that could repopulate the queue (#1358).
+  debounceController.abortAll(true)
+  globalThrottleQueue.abort()
+}

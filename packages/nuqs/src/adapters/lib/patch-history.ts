@@ -1,7 +1,12 @@
 import { debug } from '../../lib/debug'
 import type { Emitter } from '../../lib/emitter'
 import { error } from '../../lib/errors'
-import { resetQueues, spinQueueResetMutex } from '../../lib/queues/reset'
+import {
+  resetQueues,
+  silentResetQueues,
+  spinQueueResetMutex
+} from '../../lib/queues/reset'
+import { globalThrottleQueue } from '../../lib/queues/throttle'
 
 export type SearchParamsSyncEmitterEvents = { update: URLSearchParams }
 
@@ -77,7 +82,11 @@ export function patchHistory(
 
   window.addEventListener('popstate', () => {
     lastSearchSeen = location.search
-    resetQueues()
+    globalThrottleQueue.popstateDetected = true
+    // Use silent reset to avoid triggering SyncLane re-renders of the
+    // outgoing route, which could repopulate the queue with stale values (#1358).
+    // The incoming route's render-phase pathname check ensures a clean queue.
+    silentResetQueues()
   })
 
   debug(

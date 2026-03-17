@@ -1,11 +1,27 @@
 import { useLocation, useRouter } from '@tanstack/react-router'
-import { startTransition, useCallback, useMemo } from 'react'
+import { startTransition, useCallback, useMemo, useRef } from 'react'
+import { debug } from '../lib/debug'
+import { globalThrottleQueue } from '../lib/queues/throttle'
 import { renderQueryString } from '../lib/url-encoding'
 import { createAdapterProvider, type AdapterProvider } from './lib/context'
 import type { AdapterInterface, UpdateUrlFunction } from './lib/defs'
 
 function useNuqsTanstackRouterAdapter(watchKeys: string[]): AdapterInterface {
   const pathname = useLocation({ select: state => state.pathname })
+  // Freeze and reset the throttle queue when the pathname changes to prevent
+  // cross-route state bleeding (#1358). Freezing silently drops pushes from
+  // the outgoing route's setState-during-render. The queue unfreezes on the
+  // next microtask, after React has committed the route transition.
+  const prevPathnameRef = useRef(pathname)
+  if (prevPathnameRef.current !== pathname) {
+    debug('[nuqs tanstack] Pathname changed %s → %s, freezing queue', prevPathnameRef.current, pathname)
+    prevPathnameRef.current = pathname
+    globalThrottleQueue.frozen = true
+    globalThrottleQueue.reset()
+    queueMicrotask(() => {
+      globalThrottleQueue.frozen = false
+    })
+  }
   const search = useLocation({
     select: state =>
       Object.fromEntries(

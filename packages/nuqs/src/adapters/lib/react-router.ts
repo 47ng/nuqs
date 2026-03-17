@@ -2,6 +2,7 @@ import { startTransition, useCallback, useEffect, useState } from 'react'
 import { debug } from '../../lib/debug'
 import { createEmitter } from '../../lib/emitter'
 import { setQueueResetMutex } from '../../lib/queues/reset'
+import { globalThrottleQueue } from '../../lib/queues/throttle'
 import { renderQueryString } from '../../lib/url-encoding'
 import { createAdapterProvider, type AdapterProvider } from './context'
 import type { AdapterInterface, AdapterOptions } from './defs'
@@ -43,9 +44,31 @@ export function createReactRouterBasedAdapter({
   useOptimisticSearchParams: () => URLSearchParams
 } {
   const emitter = createEmitter<SearchParamsSyncEmitterEvents>()
+  let lastSeenPathname =
+    typeof location !== 'undefined' ? location.pathname : ''
   function useNuqsReactRouterBasedAdapter(
     watchKeys: string[]
   ): AdapterInterface {
+    // On popstate (back/forward) navigation, freeze and reset the throttle
+    // queue to prevent cross-route state bleeding (#1358). Freezing silently
+    // drops pushes from the outgoing route's setState-during-render that would
+    // otherwise repopulate the queue with stale values due to the SyncLane
+    // priority inversion between useSyncExternalStore and startTransition.
+    // Only applies to popstate navigation — forward navigation is handled
+    // by the existing patchHistory mechanism.
+    if (typeof location !== 'undefined' && location.pathname !== lastSeenPathname) {
+      const isPopstate = globalThrottleQueue.popstateDetected
+      globalThrottleQueue.popstateDetected = false
+      lastSeenPathname = location.pathname
+      if (isPopstate) {
+        debug('[nuqs %s] Popstate pathname change %s, freezing queue', adapter, location.pathname)
+        globalThrottleQueue.frozen = true
+        globalThrottleQueue.reset()
+        queueMicrotask(() => {
+          globalThrottleQueue.frozen = false
+        })
+      }
+    }
     const navigate = useNavigate()
     const searchParams = useOptimisticSearchParams(watchKeys)
     const updateUrl = useCallback(
