@@ -11,6 +11,7 @@
     "playwright/log-spy.ts",
     "playwright/navigate.ts",
     "playwright/url-spy.ts",
+    "playwright/agent-reporter.ts",
     "define-test.ts"
   ],
   "peerDependencies": {
@@ -21,6 +22,7 @@
     "@types/node": "^24.10.10",
     "@types/react": "catalog:react19",
     "@types/react-dom": "catalog:react19",
+    "@vercel/detect-agent": "^1.2.1",
     "nuqs": "workspace:*",
     "react": "catalog:react19",
     "react-dom": "catalog:react19",

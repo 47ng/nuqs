@@ -65,5 +65,6 @@ export default [
     route('/repro-1293/b',              './routes/repro-1293.b.tsx'),
     route('/repro-1358/a',              './routes/repro-1358.a.tsx'),
     route('/repro-1358/b',              './routes/repro-1358.b.tsx'),
+    route('/repro-1365',                './routes/repro-1365.tsx'),
   ])
 ] satisfies RouteConfig

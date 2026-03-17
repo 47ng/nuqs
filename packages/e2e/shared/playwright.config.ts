@@ -1,5 +1,8 @@
+import { determineAgent } from '@vercel/detect-agent'
 import { defineConfig, devices } from '@playwright/test'
 import { resolve } from 'node:path'
+
+const { isAgent } = await determineAgent()
 
 type ConfigurePlaywright = {
   startCommand: string
@@ -15,7 +18,7 @@ export function configurePlaywright({
   const customReporter = resolve(
     import.meta.dirname,
     'playwright',
-    'reporter.ts'
+    isAgent ? 'agent-reporter.ts' : 'reporter.ts'
   )
   return defineConfig({
     testDir: './specs',
@@ -24,11 +27,12 @@ export function configurePlaywright({
     retries: process.env.CI ? 2 : 0,
     workers: process.env.CI ? 3 : undefined,
     timeout: 5_000,
-    reporter: [
-      [customReporter],
-
-      ['html', { open: 'never', outputFolder: '.playwright/report' }]
-    ],
+    reporter: isAgent
+      ? [[customReporter]]
+      : [
+          [customReporter],
+          ['html', { open: 'never', outputFolder: '.playwright/report' }]
+        ],
     use: {
       baseURL: ensureTrailingSlash(`http://localhost:${port}${basePath}`),
       trace: 'on-first-retry',
