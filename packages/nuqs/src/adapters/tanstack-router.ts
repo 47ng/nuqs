@@ -30,6 +30,7 @@ function useNuqsTanstackRouterAdapter(watchKeys: string[]): AdapterInterface {
     setTimeout(() => {
       globalThrottleQueue.frozen = false
       if (
+        typeof location !== 'undefined' &&
         searchFromPreviousRoute &&
         location.search === searchFromPreviousRoute
       ) {

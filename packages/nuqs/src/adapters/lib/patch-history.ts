@@ -1,11 +1,7 @@
 import { debug } from '../../lib/debug'
 import type { Emitter } from '../../lib/emitter'
 import { error } from '../../lib/errors'
-import {
-  resetQueues,
-  silentResetQueues,
-  spinQueueResetMutex
-} from '../../lib/queues/reset'
+import { silentResetQueues, spinQueueResetMutex } from '../../lib/queues/reset'
 
 /**
  * Set by the popstate handler before the render phase to signal that

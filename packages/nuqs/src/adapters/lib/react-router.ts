@@ -54,12 +54,12 @@ export function createReactRouterBasedAdapter({
     // Freeze and reset the throttle queue on popstate (back/forward)
     // navigation to prevent cross-route state bleeding (#1358).
     // Forward navigation is handled by patchHistory.
+    const isPopstate = popstateDetected
+    clearPopstateDetected()
     if (
       typeof location !== 'undefined' &&
       location.pathname !== lastSeenPathname
     ) {
-      const isPopstate = popstateDetected
-      clearPopstateDetected()
       lastSeenPathname = location.pathname
       if (isPopstate) {
         globalThrottleQueue.frozen = true
