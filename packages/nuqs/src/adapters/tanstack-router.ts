@@ -1,8 +1,13 @@
-import { useLocation, useRouter } from '@tanstack/react-router'
-import { startTransition, useCallback, useMemo } from 'react'
+import { useLocation, useRouter, useRouterState } from '@tanstack/react-router'
+import { startTransition, useCallback, useMemo, useRef } from 'react'
 import { renderQueryString } from '../lib/url-encoding'
 import { createAdapterProvider, type AdapterProvider } from './lib/context'
 import type { AdapterInterface, UpdateUrlFunction } from './lib/defs'
+
+type SearchRecord = Record<
+  string,
+  string | number | object | Array<string | number>
+>
 
 function useNuqsTanstackRouterAdapter(watchKeys: string[]): AdapterInterface {
   const pathname = useLocation({ select: state => state.pathname })
@@ -10,9 +15,29 @@ function useNuqsTanstackRouterAdapter(watchKeys: string[]): AdapterInterface {
     select: state =>
       Object.fromEntries(
         Object.entries(state.search).filter(([key]) => watchKeys.includes(key))
-      )
+      ) as SearchRecord
+  })
+  const resolvedPathname = useRouterState({
+    select: state => state.resolvedLocation?.pathname ?? state.location.pathname
   })
   const { navigate } = useRouter()
+  // Track which pathname this hook instance was mounted under to
+  // keep its last stable search during cross-page transitions.
+  const ownedPathnameRef = useRef(pathname)
+  // Cache the last stable search for the owned pathname so we don't
+  // leak destination params while the source is still mounted.
+  const cachedSearchRef = useRef<SearchRecord>(search)
+
+  // Keep per-hook search stable during cross-page transitions
+  // to avoid leaking destination params before unmount.
+  const isPathStable = pathname === resolvedPathname
+  if (isPathStable) {
+    ownedPathnameRef.current = pathname
+    cachedSearchRef.current = search
+  }
+  const shouldUseCachedSearch =
+    !isPathStable && ownedPathnameRef.current !== pathname
+  const activeSearch = shouldUseCachedSearch ? cachedSearchRef.current : search
   const searchParams = useMemo(
     () =>
       // search is a Record<string, string | number | object | Array<string | number>>,
@@ -21,7 +46,7 @@ function useNuqsTanstackRouterAdapter(watchKeys: string[]): AdapterInterface {
       // to URLSearchParams, otherwise { foo: ['bar', 'baz'] }
       // ends up as { foo → 'bar,baz' } instead of { foo → 'bar', foo → 'baz' }
       new URLSearchParams(
-        Object.entries(search).flatMap(([key, value]) => {
+        Object.entries(activeSearch).flatMap(([key, value]) => {
           if (Array.isArray(value)) {
             return value.map(v => [key, v])
           } else if (typeof value === 'object' && value !== null) {
@@ -34,7 +59,7 @@ function useNuqsTanstackRouterAdapter(watchKeys: string[]): AdapterInterface {
           }
         })
       ),
-    [search, watchKeys.join(',')]
+    [activeSearch, watchKeys.join(',')]
   )
 
   const updateUrl: UpdateUrlFunction = useCallback(
