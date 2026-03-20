@@ -75,10 +75,50 @@ jobs:
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
+  docs:
+    name: Docs (next@${{ inputs.version }})
+    if: ${{ startsWith(inputs.version, '16.') }}
+    runs-on: ubuntu-24.04-arm
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+      - uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061
+      - uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile --filter docs...
+      - name: Install Next.js version ${{ env.VERSION }}
+        run: pnpm add --filter docs --filter nuqs "next@${{ env.VERSION }}"
+      - name: Type-check docs
+        run: pnpm run test --filter docs
+        env:
+          TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+          TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
+      - name: Build docs
+        run: pnpm run build --filter docs
+        env:
+          TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+          TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - uses: 47ng/actions-slack-notify@main
+        name: Notify on Slack
+        if: failure()
+        with:
+          status: ${{ job.status }}
+          jobName: docs (next@${{ env.VERSION }})
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
   invalidate-isr-cache:
     name: Invalidate ISR cache
     runs-on: ubuntu-24.04-arm
-    needs: test_against_nextjs_release
+    needs:
+      - test_against_nextjs_release
+      - docs
     if: ${{ always() }}
     steps:
       - name: Invalidate ISR cache for GitHub Actions status on landing page
@@ -89,6 +129,8 @@ jobs:
     runs-on: ubuntu-24.04-arm
     needs:
       - test_against_nextjs_release
+      - docs
+    if: ${{ needs.test_against_nextjs_release.result == 'success' && (needs.docs.result == 'success' || needs.docs.result == 'skipped') }}
     steps:
       - uses: 47ng/actions-slack-notify@main
         with:
