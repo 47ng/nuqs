@@ -130,6 +130,7 @@ jobs:
     needs:
       - test_against_nextjs_release
       - docs
+    if: ${{ needs.test_against_nextjs_release.result == 'success' && (needs.docs.result == 'success' || needs.docs.result == 'skipped') }}
     steps:
       - uses: 47ng/actions-slack-notify@main
         with:
