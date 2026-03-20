@@ -18,6 +18,11 @@ export type CreateStandardSchemaV1Options<
    * @default false
    */
   partialOutput?: PartialOutput
+
+  // Pass-in serialize and load functions if they already exist.
+  // Used in the unified API to avoid recreating them.
+  serialize?: ReturnType<typeof createSerializer<Parsers>>
+  load?: ReturnType<typeof createLoader<Parsers>>
 }
 
 type MaybePartial<Condition, Type> = Condition extends true
@@ -31,11 +36,11 @@ export function createStandardSchemaV1<
   parsers: Parsers,
   {
     urlKeys,
-    partialOutput = false as PartialOutput
+    partialOutput = false as PartialOutput,
+    serialize = createSerializer(parsers, { urlKeys }),
+    load = createLoader(parsers, { urlKeys })
   }: CreateStandardSchemaV1Options<Parsers, PartialOutput> = {}
 ): StandardSchemaV1<MaybePartial<PartialOutput, inferParserType<Parsers>>> {
-  const serialize = createSerializer(parsers, { urlKeys })
-  const load = createLoader(parsers, { urlKeys })
   return {
     '~standard': {
       version: 1,
