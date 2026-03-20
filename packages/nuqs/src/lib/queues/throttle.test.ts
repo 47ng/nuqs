@@ -118,6 +118,25 @@ describe('throttle: ThrottleQueue option combination logic', () => {
   })
 })
 
+describe('throttle: frozen queue (#1358)', () => {
+  it('should silently drop pushes when frozen', () => {
+    const queue = new ThrottledQueue()
+    queue.frozen = true
+    queue.push({ key: 'a', query: 'a', options: {} })
+    expect(queue.getQueuedQuery('a')).toBeUndefined()
+    expect(queue.updateMap.size).toBe(0)
+  })
+  it('should resume normal queueing after unfreezing', () => {
+    const queue = new ThrottledQueue()
+    queue.frozen = true
+    queue.push({ key: 'a', query: 'a', options: {} })
+    queue.frozen = false
+    queue.push({ key: 'b', query: 'b', options: {} })
+    expect(queue.getQueuedQuery('a')).toBeUndefined()
+    expect(queue.getQueuedQuery('b')).toEqual('b')
+  })
+})
+
 describe('throttle: Abort & reset logic', () => {
   beforeEach(() => {
     vi.useFakeTimers()

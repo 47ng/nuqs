@@ -1,7 +1,16 @@
 import { debug } from '../../lib/debug'
 import type { Emitter } from '../../lib/emitter'
 import { error } from '../../lib/errors'
-import { resetQueues, spinQueueResetMutex } from '../../lib/queues/reset'
+import { silentResetQueues, spinQueueResetMutex } from '../../lib/queues/reset'
+
+/**
+ * Set by the popstate handler before the render phase to signal that
+ * the current navigation is a back/forward navigation (#1358).
+ */
+export let popstateDetected = false
+export function clearPopstateDetected(): void {
+  popstateDetected = false
+}
 
 export type SearchParamsSyncEmitterEvents = { update: URLSearchParams }
 
@@ -77,7 +86,10 @@ export function patchHistory(
 
   window.addEventListener('popstate', () => {
     lastSearchSeen = location.search
-    resetQueues()
+    popstateDetected = true
+    // Silent reset avoids SyncLane re-renders of the outgoing route
+    // that would repopulate the queue with stale values (#1358).
+    silentResetQueues()
   })
 
   debug(

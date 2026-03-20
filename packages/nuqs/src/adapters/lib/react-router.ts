@@ -2,13 +2,16 @@ import { startTransition, useCallback, useEffect, useState } from 'react'
 import { debug } from '../../lib/debug'
 import { createEmitter } from '../../lib/emitter'
 import { setQueueResetMutex } from '../../lib/queues/reset'
+import { globalThrottleQueue } from '../../lib/queues/throttle'
 import { renderQueryString } from '../../lib/url-encoding'
 import { createAdapterProvider, type AdapterProvider } from './context'
 import type { AdapterInterface, AdapterOptions } from './defs'
 import { applyChange, filterSearchParams } from './key-isolation'
 import {
-  patchHistory as applyHistoryPatch,
+  clearPopstateDetected,
   historyUpdateMarker,
+  patchHistory as applyHistoryPatch,
+  popstateDetected,
   type SearchParamsSyncEmitterEvents
 } from './patch-history'
 
@@ -43,9 +46,29 @@ export function createReactRouterBasedAdapter({
   useOptimisticSearchParams: () => URLSearchParams
 } {
   const emitter = createEmitter<SearchParamsSyncEmitterEvents>()
+  let lastSeenPathname =
+    typeof location !== 'undefined' ? location.pathname : ''
   function useNuqsReactRouterBasedAdapter(
     watchKeys: string[]
   ): AdapterInterface {
+    // Freeze and reset the throttle queue on popstate (back/forward)
+    // navigation to prevent cross-route state bleeding (#1358).
+    // Forward navigation is handled by patchHistory.
+    const isPopstate = popstateDetected
+    clearPopstateDetected()
+    if (
+      typeof location !== 'undefined' &&
+      location.pathname !== lastSeenPathname
+    ) {
+      lastSeenPathname = location.pathname
+      if (isPopstate) {
+        globalThrottleQueue.frozen = true
+        globalThrottleQueue.reset()
+        queueMicrotask(() => {
+          globalThrottleQueue.frozen = false
+        })
+      }
+    }
     const navigate = useNavigate()
     const searchParams = useOptimisticSearchParams(watchKeys)
     const updateUrl = useCallback(

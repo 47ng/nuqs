@@ -1,11 +1,50 @@
 import { useLocation, useRouter, useRouterState } from '@tanstack/react-router'
-import { startTransition, useCallback, useMemo } from 'react'
+import { startTransition, useCallback, useMemo, useRef } from 'react'
+import { globalThrottleQueue } from '../lib/queues/throttle'
 import { renderQueryString } from '../lib/url-encoding'
 import { createAdapterProvider, type AdapterProvider } from './lib/context'
 import type { AdapterInterface, UpdateUrlFunction } from './lib/defs'
 
+// Module-level so a fresh mount on a new route still detects the change.
+let lastSeenPathname = typeof location !== 'undefined' ? location.pathname : ''
+let lastSeenSearch = typeof location !== 'undefined' ? location.search : ''
+
 function useNuqsTanstackRouterAdapter(watchKeys: string[]): AdapterInterface {
   const pathname = useLocation({ select: state => state.pathname })
+  const { navigate } = useRouter()
+  // Freeze + reset on pathname change to prevent cross-route state bleeding
+  // (#1358). Fresh mounts (the new route) unfreeze so their pushes go through.
+  const isFreshMount = useRef(true)
+  if (isFreshMount.current) {
+    isFreshMount.current = false
+    globalThrottleQueue.frozen = false
+  }
+  if (pathname !== lastSeenPathname) {
+    const searchFromPreviousRoute = lastSeenSearch
+    lastSeenPathname = pathname
+    globalThrottleQueue.frozen = true
+    globalThrottleQueue.reset()
+    // After the render commits, strip stale search params carried over by
+    // TanStack Router's <Link>. Only strip if the search params match the
+    // previous route's (i.e., they were carried over, not set by the link).
+    setTimeout(() => {
+      globalThrottleQueue.frozen = false
+      if (
+        typeof location !== 'undefined' &&
+        searchFromPreviousRoute &&
+        location.search === searchFromPreviousRoute
+      ) {
+        const url = new URL(location.href)
+        url.search = ''
+        history.replaceState(history.state, '', url.href)
+      }
+    }, 0)
+  }
+  // Side-effect during render: track search for the stale-param comparison
+  // on the next pathname change. Module-level, so no re-renders triggered.
+  if (typeof location !== 'undefined') {
+    lastSeenSearch = location.search
+  }
   // Use useRouterState instead of useLocation so that structuralSharing
   // is forwarded, stabilizing object references when search values
   // haven't changed. Prevents infinite re-renders with viewport preloading.
@@ -19,7 +58,6 @@ function useNuqsTanstackRouterAdapter(watchKeys: string[]): AdapterInterface {
       ) as Record<string, string | string[]>,
     structuralSharing: true
   })
-  const { navigate } = useRouter()
   const searchParams = useMemo(
     () =>
       // search is a Record<string, string | number | object | Array<string | number>>,
@@ -46,20 +84,13 @@ function useNuqsTanstackRouterAdapter(watchKeys: string[]): AdapterInterface {
 
   const updateUrl: UpdateUrlFunction = useCallback(
     (search, options) => {
-      // Wrapping in a startTransition seems to be necessary
-      // to support scroll restoration
+      // startTransition is necessary to support scroll restoration
       startTransition(() => {
         navigate({
-          // I know the docs say to use `search` here, but it would require
-          // userland code to stitch the nuqs definitions to the route declarations
-          // in order for TSR to serialize them, which kind of breaks the
-          // "works out of the box" promise, and it also wouldn't support
-          // the custom URL encoding.
-          // TBC if it causes issues with consuming those search params
-          // in other parts of the app.
-          //
-          // Note: we need to specify pathname + search here to avoid TSR appending
-          // a trailing slash to the pathname, see https://github.com/47ng/nuqs/issues/1215
+          // We use `to` with the full path instead of `search` to avoid
+          // requiring userland stitching of nuqs definitions to TSR route
+          // declarations, and to support custom URL encoding.
+          // Also avoids TSR appending a trailing slash (#1215).
           from: '/',
           to: pathname + renderQueryString(search),
           replace: options.history === 'replace',
