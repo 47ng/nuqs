@@ -298,8 +298,19 @@ const quotes: QuoteData[] = [
   }
 ]
 
-const firstRow = quotes.slice(0, 17)
-const secondRow = quotes.slice(17)
+// Sort quotes by text length: shorter quotes on top row, longer on bottom row
+function getTextLength(text: React.ReactNode): number {
+  if (typeof text === 'string') return text.length
+  // React nodes (e.g. multi-paragraph) are treated as long
+  return 999
+}
+
+const sorted = [...quotes].sort(
+  (a, b) => getTextLength(a.text) - getTextLength(b.text)
+)
+const mid = Math.ceil(sorted.length / 2)
+const firstRow = sorted.slice(0, mid)
+const secondRow = sorted.slice(mid)
 
 function QuoteCard({ quote }: { quote: QuoteData }) {
   const handle = getHandle(quote.author.avatar)

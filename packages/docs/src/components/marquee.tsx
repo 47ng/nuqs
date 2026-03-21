@@ -21,7 +21,7 @@ export function MarqueeContent({
       data-slot="marquee-content"
       pauseOnHover
       speed={30}
-      className={cn(className)}
+      className={cn('[&_.rfm-child]:h-full [&_.rfm-initial-child-container]:items-stretch [&_.rfm-marquee]:items-stretch', className)}
       {...props}
     />
   )
@@ -74,7 +74,7 @@ export function MarqueeItem({ className, ...props }: ComponentProps<'div'>) {
   return (
     <div
       data-slot="marquee-item"
-      className={cn('flex shrink-0', className)}
+      className={cn('flex shrink-0 items-stretch h-full', className)}
       {...props}
     />
   )
