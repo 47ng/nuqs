@@ -1,5 +1,6 @@
 'use client'
 
+import type { ReactNode } from 'react'
 import {
   Marquee,
   MarqueeContent,
@@ -50,7 +51,7 @@ function getHandle(avatar: Avatar): string | null {
 }
 
 type QuoteData = {
-  text: React.ReactNode
+  text: ReactNode
   author: {
     name: string
     avatar: Avatar
@@ -70,7 +71,7 @@ const quotes: QuoteData[] = [
     url: 'https://x.com/mfts0/status/1814577051703066783'
   },
   {
-    text: 'We use nuqs pretty much everywhere',
+    text: <>We use nuqs pretty much everywhere 🖤</>,
     author: {
       name: 'Pontus Abrahamsson',
       avatar: { service: 'x', handle: 'pontusab' }
@@ -96,7 +97,19 @@ const quotes: QuoteData[] = [
     url: 'https://x.com/bruvimtired/status/1944437102562759144'
   },
   {
-    text: "Just used the nuqs library for the first time today\u2026 and wow - syncing URL query params in Next.js has never felt this elegant. Parsing, defaults, clearOnDefault \u2014 it's pretty wild. Where has this been all my life?",
+    text: (
+      <>
+        <p>
+          Just used the nuqs library for the first time today… and wow -
+          syncing URL query params in Next.js has never felt this elegant.
+        </p>
+        <p>
+          Parsing, defaults, clearOnDefault — it's pretty wild
+          <br />
+          Where has this been all my life?
+        </p>
+      </>
+    ),
     author: { name: 'Aryan', avatar: { service: 'x', handle: 'AryaAmour08' } },
     url: 'https://x.com/AryaAmour08/status/1946565369537446127'
   },
@@ -160,7 +173,7 @@ const quotes: QuoteData[] = [
     url: 'https://x.com/joshtriedcoding/status/1981561126254235959'
   },
   {
-    text: 'Just did first custom parser today, pretty simple .. great API design',
+    text: 'Just did first custom parser today, pretty simple .. great API design 👌',
     author: {
       name: 'Pavel Svitek',
       avatar: { service: 'x', handle: 'pavelsvitek_' }
@@ -255,7 +268,12 @@ const quotes: QuoteData[] = [
     url: 'https://x.com/jamesperkins/status/1981744427132424690'
   },
   {
-    text: 'thank you for your hard work. nuqs is awesome',
+    text: (
+      <>
+        <p>thank you for your hard work 🫶</p>
+        <p>nuqs is awesome</p>
+      </>
+    ),
     author: { name: 'dmytro', avatar: { service: 'x', handle: 'pqoqubbw' } },
     url: 'https://x.com/pqoqubbw/status/1981753810654494892'
   },
@@ -276,7 +294,23 @@ const quotes: QuoteData[] = [
     url: 'https://x.com/shibbicodes/status/2002396495832817803'
   },
   {
-    text: 'Big thanks to nuqs for making URL state management actually enjoyable! useState but synced with the URL? Type-safe? Works everywhere (Next.js, Remix, React Router)? Only 6kb? Happy to support such a well-crafted library',
+    text: (
+      <>
+        <p>
+          Big thanks to nuqs for making URL state management actually
+          enjoyable! 🙌
+        </p>
+        <br />
+        <ul>
+          <li>useState but synced with the URL? ✅</li>
+          <li>Type-safe? ✅</li>
+          <li>Works everywhere (Next.js, Remix, React Router)? ✅</li>
+          <li>Only 6kb? ✅</li>
+        </ul>
+        <br />
+        <p>Happy to support such a well-crafted library 😇</p>
+      </>
+    ),
     author: {
       name: 'Ajay Patel',
       avatar: { service: 'x', handle: 'ajaypatel_aj' }
@@ -284,7 +318,7 @@ const quotes: QuoteData[] = [
     url: 'https://x.com/ajaypatel_aj/status/2004082719047778362'
   },
   {
-    text: 'I LOVE NUQS I LOVE PARAMS THAT JUST WORK AHAHA WOOHOOO',
+    text: 'I LOVE NUQS I LOVE PARAMS THAT JUST WORK AHAHA WOOHOOO❤️❤️❤️❤️',
     author: {
       name: 'anarki supreme',
       avatar: { service: 'x', handle: 'basedanarki' }
@@ -292,14 +326,14 @@ const quotes: QuoteData[] = [
     url: 'https://x.com/basedanarki/status/2001970260426318003'
   },
   {
-    text: "this is a huge time saver. nuqs is literally the first thing i add to a project after some basic ui like tabs & toggles",
+    text: "this is a huge time saver 😍 nuqs is literally the first thing i add to a project after some basic ui like tabs & toggles",
     author: { name: 'Matt', avatar: { service: 'x', handle: 'uixmat' } },
     url: 'https://x.com/uixmat/status/1987809486329860602'
   }
 ]
 
 // Sort quotes by text length: shorter quotes on top row, longer on bottom row
-function getTextLength(text: React.ReactNode): number {
+function getTextLength(text: ReactNode): number {
   if (typeof text === 'string') return text.length
   // React nodes (e.g. multi-paragraph) are treated as long
   return 999
@@ -353,8 +387,8 @@ export function QuotesSection() {
       <Marquee>
         <MarqueeFadeLeft />
         <MarqueeContent>
-          {firstRow.map((quote, i) => (
-            <MarqueeItem key={i} className="px-2">
+          {firstRow.map(quote => (
+            <MarqueeItem key={quote.url} className="px-2">
               <QuoteCard quote={quote} />
             </MarqueeItem>
           ))}
@@ -364,8 +398,8 @@ export function QuotesSection() {
       <Marquee>
         <MarqueeFadeLeft />
         <MarqueeContent direction="right">
-          {secondRow.map((quote, i) => (
-            <MarqueeItem key={i} className="px-2">
+          {secondRow.map(quote => (
+            <MarqueeItem key={quote.url} className="px-2">
               <QuoteCard quote={quote} />
             </MarqueeItem>
           ))}

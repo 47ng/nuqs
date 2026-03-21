@@ -30,6 +30,7 @@ export function MarqueeContent({
 export function MarqueeFade({ className, ...props }: ComponentProps<'div'>) {
   return (
     <div
+      aria-hidden="true"
       data-slot="marquee-fade"
       className={cn(
         'pointer-events-none absolute inset-y-0 z-10 w-16 sm:w-24',
