@@ -42,6 +42,10 @@ export function encodeQueryValue(input: string): string {
       .replace(/`/g, '%60')
       .replace(/</g, '%3C')
       .replace(/>/g, '%3E')
+      // Encode curly braces to prevent AWS API Gateway 400 errors
+      // See: https://github.com/47ng/nuqs/issues/1114
+      .replace(/{/g, '%7B')
+      .replace(/}/g, '%7D')
       // Encode invisible ASCII control characters
       .replace(/[\x00-\x1F]/g, char => encodeURIComponent(char))
   )
