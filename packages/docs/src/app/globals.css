@@ -161,7 +161,15 @@
   }
 }
 
-/* Force equal-height cards inside react-fast-marquee rows */
+/*
+ * Force equal-height cards inside react-fast-marquee rows.
+ *
+ * Used by:
+ * - src/components/marquee.tsx
+ * - src/app/(pages)/_landing/quotes/quotes-section.tsx
+ *
+ * See: https://github.com/47ng/nuqs/pull/1374
+ */
 @layer components {
   .rfm-marquee-container {
     display: flex !important;
