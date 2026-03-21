@@ -21,7 +21,7 @@ export function MarqueeContent({
       data-slot="marquee-content"
       pauseOnHover
       speed={30}
-      className={cn('[&_.rfm-child]:h-full [&_.rfm-initial-child-container]:items-stretch [&_.rfm-marquee]:items-stretch', className)}
+      className={className}
       {...props}
     />
   )

@@ -160,3 +160,20 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Force equal-height cards inside react-fast-marquee rows */
+@layer components {
+  .rfm-marquee-container {
+    display: flex !important;
+    align-items: stretch !important;
+  }
+  .rfm-marquee,
+  .rfm-initial-child-container {
+    align-items: stretch !important;
+  }
+  .rfm-child {
+    display: flex !important;
+    align-items: stretch !important;
+    height: auto !important;
+  }
+}
