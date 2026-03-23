@@ -1,5 +1,5 @@
 import { source } from '@/src/app/source'
-import { getLLMText } from '@/src/lib/get-llm-text'
+import { getLLMText, llmFooter } from '@/src/lib/get-llm-text'
 import { notFound } from 'next/navigation'
 import { type NextRequest, NextResponse } from 'next/server'
 
@@ -13,9 +13,10 @@ export async function GET(
   const page = source.getPage(slug)
   if (!page) notFound()
 
-  return new NextResponse(await getLLMText(page), {
+  const text = await getLLMText(page)
+  return new NextResponse(`${text}\n${llmFooter}\n`, {
     headers: {
-      'Content-Type': 'text/markdown'
+      'Content-Type': 'text/markdown; charset=utf-8'
     }
   })
 }
