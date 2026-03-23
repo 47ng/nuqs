@@ -60,6 +60,7 @@
     "nuqs": "workspace:*",
     "react": "catalog:react19",
     "react-dom": "catalog:react19",
+    "react-fast-marquee": "^1.6.5",
     "recharts": "3.8.0",
     "remark-smartypants": "^3.0.2",
     "res": "workspace:*",
