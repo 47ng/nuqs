@@ -20,10 +20,11 @@ export default function BuilderPatternDemoPage() {
           console.log('Promise cached: ', p1 === p2)
           p1.then(search => console.log('Awaited: %s', search.toString()))
         }}
+        className="mb-2"
       >
         Random coordinates
       </Button>
-      <ul>
+      <ul className="mb-4 space-y-2">
         <li>Latitude: {lat}</li>
         <li>Longitude: {lng}</li>
       </ul>
