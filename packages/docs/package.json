@@ -49,7 +49,7 @@
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
     "dayjs": "^1.11.19",
-    "effect": "^3.19.15",
+    "effect": "^3.20.0",
     "fumadocs-core": "16.0.4",
     "fumadocs-mdx": "13.0.2",
     "fumadocs-ui": "16.0.4",
