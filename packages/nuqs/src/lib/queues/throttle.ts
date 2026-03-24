@@ -41,20 +41,10 @@ export class ThrottledQueue {
   controller: AbortController | null = null
   lastFlushedAt = 0
   resetQueueOnNextPush = false
-  /**
-   * When true, pushes are silently dropped. Used during cross-route
-   * navigation to prevent the outgoing route's setState-during-render
-   * from repopulating the queue with stale values (#1358).
-   */
-  frozen = false
-
   push(
     { key, query, options }: UpdateQueuePushArgs,
     timeMs: number = defaultRateLimit.timeMs
   ): void {
-    if (this.frozen) {
-      return
-    }
     if (this.resetQueueOnNextPush) {
       this.reset()
       this.resetQueueOnNextPush = false
@@ -202,7 +192,9 @@ export class ThrottledQueue {
     if (adapter.autoResetQueueOnUpdate) {
       this.reset()
     }
-    debug('[nuqs gtq] Flushing queue %O with options %O', items, options)
+    if (items.length === 0) {
+      return [search, null]
+    }
     for (const [key, value] of items) {
       if (value === null) {
         search.delete(key)

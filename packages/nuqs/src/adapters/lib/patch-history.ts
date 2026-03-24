@@ -3,18 +3,14 @@ import type { Emitter } from '../../lib/emitter'
 import { error } from '../../lib/errors'
 import { silentResetQueues, spinQueueResetMutex } from '../../lib/queues/reset'
 
-/**
- * Set by the popstate handler before the render phase to signal that
- * the current navigation is a back/forward navigation (#1358).
- */
-export let popstateDetected = false
-export function clearPopstateDetected(): void {
-  popstateDetected = false
-}
-
 export type SearchParamsSyncEmitterEvents = { update: URLSearchParams }
 
 export const historyUpdateMarker = '__nuqs__'
+
+let pendingPopstateLocation: {
+  pathname: string
+  search: string
+} | null = null
 
 declare global {
   interface History {
@@ -70,6 +66,23 @@ export function markHistoryAsPatched(adapter: string): void {
   history.nuqs.adapters.push(adapter)
 }
 
+export function hasPendingPopstate(): boolean {
+  return pendingPopstateLocation !== null
+}
+
+export function getPendingPopstateSearch(pathname: string): string | null {
+  if (pendingPopstateLocation?.pathname !== pathname) {
+    return null
+  }
+  return pendingPopstateLocation.search
+}
+
+export function clearPendingPopstateSearch(pathname: string): void {
+  if (pendingPopstateLocation?.pathname === pathname) {
+    pendingPopstateLocation = null
+  }
+}
+
 export function patchHistory(
   emitter: Emitter<SearchParamsSyncEmitterEvents>,
   adapter: string
@@ -85,8 +98,11 @@ export function patchHistory(
   })
 
   window.addEventListener('popstate', () => {
+    pendingPopstateLocation = {
+      pathname: location.pathname,
+      search: location.search
+    }
     lastSearchSeen = location.search
-    popstateDetected = true
     // Silent reset avoids SyncLane re-renders of the outgoing route
     // that would repopulate the queue with stale values (#1358).
     silentResetQueues()
