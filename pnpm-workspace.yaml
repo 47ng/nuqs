@@ -31,6 +31,8 @@ catalogs:
 
 enablePrePostScripts: true
 
+trustPolicy: no-downgrade
+
 allowBuilds:
   '@swc/core': true
   '@tailwindcss/oxide': true
