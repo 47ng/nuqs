@@ -25,6 +25,8 @@ catalogs:
 
 enablePrePostScripts: true
 
+trustPolicy: no-downgrade
+
 onlyBuiltDependencies:
   - '@sentry/cli'
   - '@swc/core'
