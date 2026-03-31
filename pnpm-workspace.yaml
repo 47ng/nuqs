@@ -32,6 +32,10 @@ catalogs:
 enablePrePostScripts: true
 
 trustPolicy: no-downgrade
+trustPolicyExclude:
+  # chokidar 4.0.3 lost provenance attestation (restored in 5.0.0),
+  # pinned by fumadocs-mdx
+  - chokidar@4.0.3
 
 allowBuilds:
   '@swc/core': true
