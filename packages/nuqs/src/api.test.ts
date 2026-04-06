@@ -66,6 +66,10 @@ const exports = `
     "NuqsAdapter": "function",
     "useOptimisticSearchParams": "function",
   },
+  "./adapters/storybook": {
+    "NuqsStorybookAdapter": "function",
+    "withNuqsStorybookAdapter": "function",
+  },
   "./adapters/tanstack-router": {
     "NuqsAdapter": "function",
   },
