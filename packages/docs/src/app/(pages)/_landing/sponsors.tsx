@@ -390,6 +390,9 @@ export function AsideSponsors() {
         <li>
           <ShadcnStudioAsideSponsor />
         </li>
+        <li>
+          <LyteNyteGridAsideSponsor />
+        </li>
       </ul>
     </aside>
   )
@@ -423,6 +426,34 @@ export function NextJSWeeklyAsideSponsor() {
         <p className="text-sm">Stay up to date on Next.js</p>
         <p className="text-muted-foreground text-xs">
           A weekly newsletter to keep up with what's happening in the ecosystem.
+        </p>
+      </section>
+    </a>
+  )
+}
+
+export function LyteNyteGridAsideSponsor() {
+  return (
+    <a
+      href="https://1771technologies.com/?utm_source=nuqs&utm_medium=banner&utm_campaign=nuqs"
+      target="_blank"
+      rel="noopener noreferrer"
+      className="group"
+    >
+      <section className="text-muted-foreground space-y-4 rounded-md border border-dashed px-4 py-6 transition-colors group-hover:text-current group-active:text-current">
+        <header className="mx-auto flex items-center justify-center gap-2">
+          <img
+            src="https://avatars.githubusercontent.com/u/148620833?s=200&v=4"
+            alt="1771 Technologies"
+            className="size-8 rounded-full grayscale opacity-50 transition-all group-hover:grayscale-0 group-hover:opacity-100 group-active:grayscale-0 group-active:opacity-100"
+            width={32}
+            height={32}
+          />
+          <span className="font-semibold">1771 Technologies</span>
+        </header>
+        <p className="text-muted-foreground text-center text-xs">
+          Ship faster with LyteNyte Grid. The fastest React data grid ever built
+          on the modern web.
         </p>
       </section>
     </a>
