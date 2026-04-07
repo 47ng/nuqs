@@ -385,20 +385,20 @@ export function AsideSponsors() {
       </a>
       <ul className="space-y-2">
         <li>
-          <NextJSWeeklyAsideSponsor />
+          <AsideSponsorNextJSWeekly />
         </li>
         <li>
-          <ShadcnStudioAsideSponsor />
+          <AsideSponsorShadcnStudio />
         </li>
         <li>
-          <LyteNyteGridAsideSponsor />
+          <AsideSponsor1771Technologies />
         </li>
       </ul>
     </aside>
   )
 }
 
-export function NextJSWeeklyAsideSponsor() {
+export function AsideSponsorNextJSWeekly() {
   return (
     <a
       href="https://nextjsweekly.com?utm_source=nuqs&utm_medium=sponsor&utm_campaign=nuqs"
@@ -432,7 +432,7 @@ export function NextJSWeeklyAsideSponsor() {
   )
 }
 
-export function LyteNyteGridAsideSponsor() {
+export function AsideSponsor1771Technologies() {
   return (
     <a
       href="https://1771technologies.com/?utm_source=nuqs&utm_medium=banner&utm_campaign=nuqs"
@@ -460,7 +460,7 @@ export function LyteNyteGridAsideSponsor() {
   )
 }
 
-export function ShadcnStudioAsideSponsor() {
+export function AsideSponsorShadcnStudio() {
   return (
     <a
       href="https://shadcnstudio.com/?utm_source=nuqs&utm_medium=banner&utm_campaign=github"
