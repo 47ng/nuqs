@@ -11,6 +11,7 @@ export default [
     route('/form/useQueryState',                        './routes/form.useQueryState.tsx'),
     route('/form/useQueryStates',                       './routes/form.useQueryStates.tsx'),
     route('/hash-preservation',                         './routes/hash-preservation.tsx'),
+    route('/history-sync',                              './routes/history-sync.tsx'),
     route('/json',                                      './routes/json.tsx'),
     route('/life-and-death',                            './routes/life-and-death.tsx'),
     route('/linking/useQueryState',                     './routes/linking.useQueryState.tsx'),
@@ -41,6 +42,8 @@ export default [
     route('/key-isolation/useQueryState',               './routes/key-isolation.useQueryState.tsx'),
     route('/key-isolation/useQueryStates',              './routes/key-isolation.useQueryStates.tsx'),
     route('/loader',                                    './routes/loader.tsx'),
+    route('/popstate-queue-reset',                      './routes/popstate-queue-reset.tsx'),
+    route('/popstate-queue-reset/other',                './routes/popstate-queue-reset.other.tsx'),
     route('/push/useQueryState',                        './routes/push.useQueryState.tsx'),
     route('/push/useQueryStates',                       './routes/push.useQueryStates.tsx'),
     route('/rate-limits',                               './routes/rate-limits.tsx'),
@@ -59,5 +62,8 @@ export default [
     route('/repro-982',                 './routes/repro-982.tsx'),
     route('/repro-1099/useQueryState',  './routes/repro-1099.useQueryState.tsx'),
     route('/repro-1099/useQueryStates', './routes/repro-1099.useQueryStates.tsx'),
+    route('/repro-1293/a',              './routes/repro-1293.a.tsx'),
+    route('/repro-1293/b',              './routes/repro-1293.b.tsx'),
+    route('/repro-1365',                './routes/repro-1365.tsx'),
   ])
 ] satisfies RouteConfig

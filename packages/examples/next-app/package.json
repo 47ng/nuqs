@@ -11,15 +11,15 @@
   "dependencies": {
     "next": "catalog:next",
     "nuqs": "latest",
-    "react": "^19.1.1",
-    "react-dom": "^19.1.1"
+    "react": "catalog:react19",
+    "react-dom": "catalog:react19"
   },
   "devDependencies": {
-    "@tailwindcss/postcss": "^4.1.12",
-    "@types/node": "^24.3.0",
-    "@types/react": "^19.1.10",
-    "@types/react-dom": "^19.1.7",
-    "tailwindcss": "^4.1.12",
-    "typescript": "^5.9.2"
+    "@tailwindcss/postcss": "^4.1.18",
+    "@types/node": "^24.10.10",
+    "@types/react": "catalog:react19",
+    "@types/react-dom": "catalog:react19",
+    "tailwindcss": "^4.1.18",
+    "typescript": "^5.9.3"
   }
 }

@@ -24,7 +24,7 @@
     // Misc
     "skipLibCheck": true,
     "skipDefaultLibCheck": true,
-    "types": ["node", "cypress"]
+    "types": ["node"]
   },
   "include": ["**/*.ts", "**/*.tsx"],
   "exclude": ["node_modules"]

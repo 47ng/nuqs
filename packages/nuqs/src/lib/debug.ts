@@ -31,6 +31,13 @@ export function sprintf(base: string, ...args: any[]): string {
 }
 
 function isDebugEnabled(): boolean {
+  // Issue: https://github.com/47ng/nuqs/issues/1336
+  // Backend (Node/server): use DEBUG env var, never touch localStorage.
+  // --localstorage-file triggers a warning.
+  if (typeof window === 'undefined') {
+    return (process.env.DEBUG || '').includes('nuqs')
+  }
+
   // Check if localStorage is available.
   // It may be unavailable in some environments,
   // like Safari in private browsing mode.

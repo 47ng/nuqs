@@ -3,18 +3,25 @@ packages:
 
 catalogs:
   e2e:
-    cypress: ^14.5.4
-    start-server-and-test: ^2.0.13
-    playwright: ^1.57.0
+    playwright: ^1.58.1
+    '@playwright/test': ^1.58.1
+
+  vitest:
+    vitest: ^4.1.0
+    '@vitest/browser-playwright': ^4.1.0
+    '@vitest/coverage-v8': ^4.1.0
+
+  vite:
+    vite: ^8.0.0
 
   next:
-    next: ^16.0.9
+    next: 16.2.1-canary.3
 
   react19:
-    '@types/react': ^19.2.7
+    '@types/react': ^19.2.10
     '@types/react-dom': ^19.2.3
-    react: ^19.2.2
-    react-dom: ^19.2.2
+    react: ^19.2.4
+    react-dom: ^19.2.4
 
 enablePrePostScripts: true
 
@@ -22,7 +29,6 @@ onlyBuiltDependencies:
   - '@sentry/cli'
   - '@swc/core'
   - '@tailwindcss/oxide'
-  - cypress
   - playwright
   - esbuild
   - sharp

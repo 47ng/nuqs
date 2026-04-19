@@ -8,13 +8,13 @@ export function setQueueResetMutex(value = 1): void {
   mutex = value
 }
 
-export function spinQueueResetMutex(): void {
+export function spinQueueResetMutex(onReset: () => void = resetQueues): void {
   // Don't let values become too negatively large and wrap around
   mutex = Math.max(0, mutex - 1)
   if (mutex > 0) {
     return
   }
-  resetQueues()
+  onReset()
 }
 
 export function resetQueues(): void {

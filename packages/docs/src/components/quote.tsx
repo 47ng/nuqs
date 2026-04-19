@@ -3,11 +3,35 @@
  * @see https://v0.dev/t/3bPRztjwG1M
  */
 
+type AvatarX = {
+  service: 'x'
+  handle: string
+}
+type AvatarGitHub = {
+  service: 'github'
+  handle: string
+}
+type AvatarOther = {
+  service: 'http'
+  href: string
+}
+type Avatar = AvatarX | AvatarGitHub | AvatarOther
+
+function getAvatarUrl(avatar: Avatar) {
+  switch (avatar.service) {
+    case 'x':
+      return `https://unavatar.io/x/${avatar.handle}`
+    case 'github':
+      return `https://unavatar.io/github/${avatar.handle}`
+    case 'http':
+      return avatar.href
+  }
+}
+
 type QuoteProps = {
   author: {
     name: string
-    avatar: string
-    handle?: string
+    avatar: Avatar
   }
   text: React.ReactNode
   url?: string
@@ -18,7 +42,7 @@ export function Quote({ text, author, url }: QuoteProps) {
     <div className="mx-auto flex w-full max-w-md flex-col gap-4 rounded-lg bg-white p-6 shadow-md dark:bg-zinc-900">
       <div className="flex items-center gap-3">
         <img
-          src={author.avatar}
+          src={getAvatarUrl(author.avatar)}
           alt={author.name}
           width={36}
           height={36}
@@ -33,14 +57,15 @@ export function Quote({ text, author, url }: QuoteProps) {
           ) : (
             <div className="font-semibold">{author.name}</div>
           )}
-          {author.handle && (
-            <div className="text-zinc-500 dark:text-zinc-400">
-              {author.handle}
-            </div>
-          )}
+          {author.avatar.service === 'x' ||
+            (author.avatar.service === 'github' && (
+              <div className="text-zinc-500 dark:text-zinc-400">
+                {author.avatar.handle}
+              </div>
+            ))}
         </div>
       </div>
-      <blockquote className="text-md font-medium leading-snug text-zinc-800 dark:text-zinc-200">
+      <blockquote className="text-md leading-snug font-medium text-zinc-800 dark:text-zinc-200">
         {text}
       </blockquote>
     </div>

@@ -28,6 +28,7 @@ const router = createBrowserRouter(
       <Route path="form/useQueryState"                        lazy={load(import('./routes/form.useQueryState'))} />
       <Route path="form/useQueryStates"                       lazy={load(import('./routes/form.useQueryStates'))} />
       <Route path="hash-preservation"                         lazy={load(import('./routes/hash-preservation'))} />
+      <Route path="history-sync"                              lazy={load(import('./routes/history-sync'))} />
       <Route path="json"                                      lazy={load(import('./routes/json'))} />
       <Route path="life-and-death"                            lazy={load(import('./routes/life-and-death'))} />
       <Route path="linking/useQueryState"                     lazy={load(import('./routes/linking.useQueryState'))} />
@@ -58,6 +59,8 @@ const router = createBrowserRouter(
       <Route path="key-isolation/useQueryState"               lazy={load(import('./routes/key-isolation.useQueryState'))} />
       <Route path="key-isolation/useQueryStates"              lazy={load(import('./routes/key-isolation.useQueryStates'))} />
       <Route path="loader"                                    lazy={load(import('./routes/loader'))} />
+      <Route path="popstate-queue-reset"                      lazy={load(import('./routes/popstate-queue-reset'))} />
+      <Route path="popstate-queue-reset/other"                lazy={load(import('./routes/popstate-queue-reset.other'))} />
       <Route path="push/useQueryState"                        lazy={load(import('./routes/push.useQueryState'))} />
       <Route path="push/useQueryState"                        lazy={load(import('./routes/push.useQueryState'))} />
       <Route path="push/useQueryStates"                       lazy={load(import('./routes/push.useQueryStates'))} />
@@ -78,6 +81,9 @@ const router = createBrowserRouter(
       <Route path="repro-982"                 lazy={load(import('./routes/repro-982'))} />
       <Route path="repro-1099/useQueryState"  lazy={load(import('./routes/repro-1099.useQueryState'))} />
       <Route path="repro-1099/useQueryStates" lazy={load(import('./routes/repro-1099.useQueryStates'))} />
+      <Route path="repro-1293/a"              lazy={load(import('./routes/repro-1293.a'))} />
+      <Route path="repro-1293/b"              lazy={load(import('./routes/repro-1293.b'))} />
+      <Route path="repro-1365"                lazy={load(import('./routes/repro-1365'))} />
     </Route>
   ))
 

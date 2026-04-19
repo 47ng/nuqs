@@ -9,6 +9,9 @@ export default defineConfig({
     tanstackRouter({ autoCodeSplitting: true, target: 'react' }),
     viteReact()
   ],
+  build: {
+    sourcemap: true
+  },
   resolve: {
     alias: {
       '@': resolve(__dirname, './src')

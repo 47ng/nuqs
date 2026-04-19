@@ -32,8 +32,8 @@ function StitchingUseQueryState() {
 
   const testOnSameTick = () => {
     setA(x => x + 1)
-    setB(x => x + 1, { limitUrlUpdates: debounce(100) })
-    setC(x => x + 1, { limitUrlUpdates: debounce(200) })
+    setB(x => x + 1, { limitUrlUpdates: debounce(250) })
+    setC(x => x + 1, { limitUrlUpdates: debounce(500) })
   }
   const testStaggered = () => {
     setC(x => x + 1, { limitUrlUpdates: debounce(500) })
@@ -68,20 +68,19 @@ function StitchingUseQueryStates() {
   const testOnSameTick = () => {
     setSearchParams(old => ({ a: old.a + 1 }))
     setSearchParams(old => ({ b: old.b + 1 }), {
-      limitUrlUpdates: debounce(100)
+      limitUrlUpdates: debounce(250)
     })
     setSearchParams(old => ({ c: old.c + 1 }), {
-      limitUrlUpdates: debounce(200)
+      limitUrlUpdates: debounce(500)
     })
   }
   const testStaggered = () => {
-    // Shorter timeouts work but lead to race conditions with Cypress' URL detection
     setSearchParams(old => ({ c: old.c + 1 }), {
-      limitUrlUpdates: debounce(400)
+      limitUrlUpdates: debounce(500)
     })
     setTimeout(() => {
       setSearchParams(old => ({ b: old.b + 1 }), {
-        limitUrlUpdates: debounce(200)
+        limitUrlUpdates: debounce(250)
       })
       setTimeout(() => {
         setSearchParams(old => ({ a: old.a + 1 }))

@@ -60,7 +60,7 @@ const links: LinkTreeItemProps[] = [
     label: 'YouTube'
   },
   {
-    href: 'https://www.twitch.tv/fortysevenfx',
+    href: 'https://www.twitch.tv/francoisbest',
     icon: <SiTwitch className="size-5 text-purple-500" />,
     label: 'Twitch'
   },
