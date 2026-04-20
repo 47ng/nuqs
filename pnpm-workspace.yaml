@@ -26,7 +26,6 @@ catalogs:
 enablePrePostScripts: true
 
 onlyBuiltDependencies:
-  - '@sentry/cli'
   - '@swc/core'
   - '@tailwindcss/oxide'
   - playwright
