@@ -3,6 +3,8 @@ title: Effect Schema Parsers
 description: Use Effect Schema to parse and serialize URL state.
 ---
 
+import { HumanContent, LLMContent } from '@/src/components/audience'
+
 [Effect](https://effect.website) is a popular TypeScript framework, with its own schema validation library: [Effect Schema](https://effect.website/docs/schema/introduction/)
 
 Effect Schemas have the unique property of encoding two way transformations between different types. This makes them a perfect fit for using in a nuqs parser.
@@ -58,6 +60,12 @@ const [user, setUser] = useQueryState('user', parser)
 import { Suspense } from 'react'
 import { EffectSchemaDemo } from './effect-schema-demo'
 
+<HumanContent>
 <Suspense>
   <EffectSchemaDemo />
 </Suspense>
+</HumanContent>
+
+<LLMContent>
+Interactive demo omitted. The parser example above shows how to bridge an Effect Schema encoder/decoder with `createParser` and `eq`.
+</LLMContent>

@@ -3,6 +3,8 @@ title: Zod codecs
 description: Using Zod codecs for (de)serialisation in custom nuqs parser
 ---
 
+import { HumanContent, LLMContent } from '@/src/components/audience'
+
 Since `zod@^4.1`, you can use [codecs](https://zod.dev/codecs)
 to add bidirectional serialisation / deserialisation to your validation schemas:
 
@@ -18,6 +20,7 @@ const dateTimestampCodec = z.codec(z.string().regex(/^\d+$/), z.date(), {
 
 ## Demo
 
+<HumanContent>
 <iframe
   src="https://www.youtube-nocookie.com/embed/k4lWvklUxUE"
   title="YouTube video player"
@@ -27,11 +30,17 @@ const dateTimestampCodec = z.codec(z.string().regex(/^\d+$/), z.date(), {
   allowFullScreen
   className='aspect-video w-full max-w-2xl mx-auto mb-8'
 />
+</HumanContent>
+
+<LLMContent>
+Video demo omitted.
+</LLMContent>
 
 import { ZodCodecsDemo } from './zod-codecs.demo'
 import { ZodCodecsDemoSkeleton } from './zod-codecs.skeleton'
 import { Suspense } from 'react'
 
+<HumanContent>
 <Suspense fallback={(
   <ZodCodecsDemoSkeleton className='animate-pulse'>
     <div className='h-32 bg-muted/25 rounded-md flex items-center justify-center text-sm text-muted-foreground'>
@@ -42,11 +51,20 @@ import { Suspense } from 'react'
   <ZodCodecsDemo/>
 </Suspense>
 
+</HumanContent>
+
+
 import { ZodCodecsSource } from './zod-codecs.source'
 
+<HumanContent>
 Source code:
 
 <ZodCodecsSource/>
+</HumanContent>
+
+<LLMContent>
+Interactive demo and embedded source viewer omitted.
+</LLMContent>
 
 ## Refinements
 
