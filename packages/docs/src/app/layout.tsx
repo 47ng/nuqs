@@ -1,5 +1,4 @@
 import { Databuddy } from '@databuddy/sdk/react'
-import * as Sentry from '@sentry/nextjs'
 import { RootProvider } from 'fumadocs-ui/provider/next'
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
@@ -42,9 +41,6 @@ export const metadata = {
         }
       ] as const
     }
-  },
-  other: {
-    ...Sentry.getTraceData()
   }
 } satisfies Metadata
 
