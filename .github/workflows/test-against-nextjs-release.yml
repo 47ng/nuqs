@@ -17,6 +17,8 @@ jobs:
   test_against_nextjs_release:
     name: CI (next@${{ inputs.version }}${{ (matrix.base-path || matrix.cache-components || matrix.react-compiler) && ' ' || ''}}${{ matrix.base-path && '⚾' || ''}}${{ matrix.react-compiler && '⚛️' || ''}}${{ matrix.cache-components && '💾' || ''}})
     runs-on: ubuntu-24.04-arm
+    permissions:
+      contents: read
     strategy:
       fail-fast: false
       matrix:
@@ -51,13 +53,15 @@ jobs:
         run: pnpm run cacheComponents:codemod
         working-directory: packages/e2e/next
       - name: Run integration tests
+        # TURBO_TOKEN/TURBO_TEAM are intentionally omitted: this job installs
+        # and executes an arbitrary, caller-supplied Next.js version, so a
+        # compromised release must not be able to exfiltrate or poison the
+        # shared Turborepo remote cache.
         run: pnpm run test --filter e2e-next
         env:
           BASE_PATH: ${{ matrix.base-path && matrix.base-path || '/' }}
           REACT_COMPILER: ${{ matrix.react-compiler }}
           CACHE_COMPONENTS: ${{ matrix.cache-components }}
-          TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
-          TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
           E2E_NO_CACHE_ON_RERUN: ${{ github.run_attempt }}
       - name: Save Playwright report
         uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f
@@ -93,16 +97,15 @@ jobs:
         run: pnpm install --frozen-lockfile --filter docs...
       - name: Install Next.js version ${{ env.VERSION }}
         run: pnpm add --filter docs --filter nuqs "next@${{ env.VERSION }}"
+      # TURBO_TOKEN/TURBO_TEAM are intentionally omitted below: these steps
+      # execute an arbitrary, caller-supplied Next.js version, so a compromised
+      # release must not be able to exfiltrate or poison the shared Turborepo
+      # remote cache.
       - name: Type-check docs
         run: pnpm run test --filter docs
-        env:
-          TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
-          TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
       - name: Build docs
         run: pnpm run build --filter docs
         env:
-          TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
-          TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - uses: 47ng/actions-slack-notify@main
         name: Notify on Slack
