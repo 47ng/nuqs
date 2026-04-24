@@ -1,5 +1,5 @@
 {
-  "$schema": "https://unpkg.com/knip@5/schema.json",
+  "$schema": "https://unpkg.com/knip@6/schema.json",
   "ignoreExportsUsedInFile": true,
   "workspaces": {
     ".": {
@@ -14,6 +14,22 @@
       "project": ["**/*.ts"]
     },
     "packages/nuqs": {
+      "entry": [
+        "src/index.ts",
+        "src/index.server.ts",
+        "src/testing.ts",
+        "src/adapters/react.ts",
+        "src/adapters/next.ts",
+        "src/adapters/next/app.ts",
+        "src/adapters/next/pages.ts",
+        "src/adapters/remix.ts",
+        "src/adapters/react-router.ts",
+        "src/adapters/react-router/v6.ts",
+        "src/adapters/react-router/v7.ts",
+        "src/adapters/tanstack-router.ts",
+        "src/adapters/custom.ts",
+        "src/adapters/testing.ts"
+      ],
       "project": ["src/**/*.ts"],
       "ignoreDependencies": ["@vitejs/plugin-react"]
     },
