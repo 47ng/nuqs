@@ -7,7 +7,7 @@ catalogs:
     '@playwright/test': ^1.58.1
 
   knip:
-    knip: ^5.64.1
+    knip: ^6.6.2
 
   vitest:
     vitest: ^4.1.0
