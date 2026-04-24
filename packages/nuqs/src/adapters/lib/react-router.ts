@@ -1,14 +1,23 @@
-import { startTransition, useCallback, useEffect, useState } from 'react'
+import {
+  startTransition,
+  useCallback,
+  useEffect,
+  useRef,
+  useState
+} from 'react'
 import { debug } from '../../lib/debug'
 import { createEmitter } from '../../lib/emitter'
-import { setQueueResetMutex } from '../../lib/queues/reset'
+import { setQueueResetMutex, silentResetQueues } from '../../lib/queues/reset'
 import { renderQueryString } from '../../lib/url-encoding'
 import { createAdapterProvider, type AdapterProvider } from './context'
 import type { AdapterInterface, AdapterOptions } from './defs'
 import { applyChange, filterSearchParams } from './key-isolation'
 import {
-  patchHistory as applyHistoryPatch,
+  clearPendingPopstateSearch,
+  getPendingPopstateSearch,
+  hasPendingPopstate,
   historyUpdateMarker,
+  patchHistory as applyHistoryPatch,
   type SearchParamsSyncEmitterEvents
 } from './patch-history'
 
@@ -25,6 +34,8 @@ type NavigateOptions = {
 type NavigateFn = (url: NavigateUrl, options: NavigateOptions) => void
 type UseNavigate = () => NavigateFn
 type UseSearchParams = (initial: URLSearchParams) => [URLSearchParams, {}]
+
+let lastSeenPathname = typeof location === 'undefined' ? '' : location.pathname
 
 // --
 
@@ -46,10 +57,29 @@ export function createReactRouterBasedAdapter({
   function useNuqsReactRouterBasedAdapter(
     watchKeys: string[]
   ): AdapterInterface {
+    if (
+      typeof location !== 'undefined' &&
+      location.pathname !== lastSeenPathname
+    ) {
+      lastSeenPathname = location.pathname
+      silentResetQueues()
+      if (hasPendingPopstate()) {
+        // Catch render-time setState calls from the outgoing route that
+        // repopulate the queue after the reset (React concurrent rendering
+        // can reset transition state during popstate navigation).
+        queueMicrotask(() => silentResetQueues())
+      }
+    }
     const navigate = useNavigate()
+    const mountedPathnameRef = useRef(
+      typeof location === 'undefined' ? '' : location.pathname
+    )
     const searchParams = useOptimisticSearchParams(watchKeys)
     const updateUrl = useCallback(
       (search: URLSearchParams, options: AdapterOptions) => {
+        if (location.pathname !== mountedPathnameRef.current) {
+          return
+        }
         startTransition(() => {
           emitter.emit('update', search)
         })
@@ -97,6 +127,8 @@ export function createReactRouterBasedAdapter({
   function useOptimisticSearchParams(
     watchKeys: string[] = []
   ): URLSearchParams {
+    const pathname = typeof location === 'undefined' ? '' : location.pathname
+    const mountedPathnameRef = useRef(pathname)
     const [serverSearchParams] = useSearchParams(
       // Note: this will only be taken into account the first time the hook is called,
       // and cached for subsequent calls, causing problems when mounting components
@@ -118,9 +150,38 @@ export function createReactRouterBasedAdapter({
             false // No need for a copy here
           )
     })
+    const pendingPopstateSearch = getPendingPopstateSearch(mountedPathnameRef.current)
+    const pendingPopstateRef = useRef(pendingPopstateSearch)
+
+    if (pendingPopstateSearch !== null) {
+      pendingPopstateRef.current = pendingPopstateSearch
+    }
+
+    let resolvedSearchParams = searchParams
+
+    if (pathname && pendingPopstateRef.current !== null) {
+      resolvedSearchParams = applyChange(
+        new URLSearchParams(pendingPopstateRef.current),
+        watchKeys,
+        false
+      )(searchParams)
+    }
+
+    useEffect(() => {
+      if (mountedPathnameRef.current && pendingPopstateRef.current !== null) {
+        pendingPopstateRef.current = null
+        clearPendingPopstateSearch(mountedPathnameRef.current)
+      }
+    }, [pathname])
+
     useEffect(() => {
       function onPopState() {
+        if (location.pathname !== mountedPathnameRef.current) {
+          return
+        }
         startTransition(() => {
+          pendingPopstateRef.current = null
+          clearPendingPopstateSearch(location.pathname)
           setSearchParams(
             applyChange(new URLSearchParams(location.search), watchKeys, false)
           )
@@ -138,7 +199,7 @@ export function createReactRouterBasedAdapter({
         window.removeEventListener('popstate', onPopState)
       }
     }, [watchKeys.join('&')])
-    return searchParams
+    return resolvedSearchParams
   }
   /**
    * Sync shallow updates of the URL with the useOptimisticSearchParams hook.

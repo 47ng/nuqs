@@ -1,11 +1,16 @@
 import { debug } from '../../lib/debug'
 import type { Emitter } from '../../lib/emitter'
 import { error } from '../../lib/errors'
-import { resetQueues, spinQueueResetMutex } from '../../lib/queues/reset'
+import { silentResetQueues, spinQueueResetMutex } from '../../lib/queues/reset'
 
 export type SearchParamsSyncEmitterEvents = { update: URLSearchParams }
 
 export const historyUpdateMarker = '__nuqs__'
+
+let pendingPopstateLocation: {
+  pathname: string
+  search: string
+} | null = null
 
 declare global {
   interface History {
@@ -61,6 +66,23 @@ export function markHistoryAsPatched(adapter: string): void {
   history.nuqs.adapters.push(adapter)
 }
 
+export function hasPendingPopstate(): boolean {
+  return pendingPopstateLocation !== null
+}
+
+export function getPendingPopstateSearch(pathname: string): string | null {
+  if (pendingPopstateLocation?.pathname !== pathname) {
+    return null
+  }
+  return pendingPopstateLocation.search
+}
+
+export function clearPendingPopstateSearch(pathname: string): void {
+  if (pendingPopstateLocation?.pathname === pathname) {
+    pendingPopstateLocation = null
+  }
+}
+
 export function patchHistory(
   emitter: Emitter<SearchParamsSyncEmitterEvents>,
   adapter: string
@@ -76,8 +98,14 @@ export function patchHistory(
   })
 
   window.addEventListener('popstate', () => {
+    pendingPopstateLocation = {
+      pathname: location.pathname,
+      search: location.search
+    }
     lastSearchSeen = location.search
-    resetQueues()
+    // Silent reset avoids SyncLane re-renders of the outgoing route
+    // that would repopulate the queue with stale values (#1358).
+    silentResetQueues()
   })
 
   debug(

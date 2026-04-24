@@ -78,7 +78,7 @@ export class DebounceController {
     return useSyncExternalStores(
       keys,
       (key, callback) => this.queuedQuerySync.on(key, callback),
-      (key: string) => this.getQueuedQuery(key)
+      getQueuedQuerySnapshot.bind(this)
     )
   }
 
@@ -152,7 +152,6 @@ export class DebounceController {
       queue.abort()
       // todo: Better abort handling
       queue.resolvers.resolve(new URLSearchParams()) // Don't leave the Promise pending
-      this.queuedQuerySync.emit(key)
     }
     this.queues.clear()
   }
@@ -161,7 +160,8 @@ export class DebounceController {
     // The debounced queued values are more likely to be up-to-date
     // than any updates pending in the throttle queue, which comes last
     // in the update chain.
-    const debouncedQueued = this.queues.get(key)?.queuedValue?.query
+    const queuedValue = this.queues.get(key)?.queuedValue
+    const debouncedQueued = queuedValue?.query
     if (debouncedQueued !== undefined) {
       return debouncedQueued
     }
@@ -172,3 +172,7 @@ export class DebounceController {
 export const debounceController: DebounceController = new DebounceController(
   globalThrottleQueue
 )
+
+function getQueuedQuerySnapshot(this: DebounceController, key: string) {
+  return this.getQueuedQuery(key)
+}

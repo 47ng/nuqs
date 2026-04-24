@@ -19,7 +19,24 @@ export function spinQueueResetMutex(onReset: () => void = resetQueues): void {
 
 export function resetQueues(): void {
   debug('[nuqs] Aborting queues')
+  const keys = [
+    ...debounceController.queues.keys(),
+    ...globalThrottleQueue.updateMap.keys()
+  ]
   debounceController.abortAll()
-  const abortedKeys = globalThrottleQueue.abort()
-  abortedKeys.forEach(key => debounceController.queuedQuerySync.emit(key))
+  globalThrottleQueue.abort()
+  keys.forEach(key => debounceController.queuedQuerySync.emit(key))
+}
+
+/**
+ * Abort pending flushes and clear queues without emitting on queuedQuerySync.
+ *
+ * This avoids triggering a SyncLane re-render of the outgoing route during
+ * popstate-driven navigation, which can cause the outgoing route's
+ * setState-during-render to repopulate the queue with stale values (#1358).
+ * The incoming route's render-phase pathname check handles the cleanup instead.
+ */
+export function silentResetQueues(): void {
+  debounceController.abortAll()
+  globalThrottleQueue.abort()
 }
