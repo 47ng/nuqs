@@ -20,5 +20,10 @@ export {
 export * from './parsers'
 export { createSerializer, type CreateSerializerOptions } from './serializer'
 export { createStandardSchemaV1 } from './standard-schema'
+export {
+  defineSearchParams,
+  type UnifiedAPI,
+  type UnifiedOptions
+} from './unified'
 export * from './useQueryState'
 export * from './useQueryStates'

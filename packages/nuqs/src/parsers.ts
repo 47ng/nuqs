@@ -1,6 +1,7 @@
 import type { StandardSchemaV1 } from '@standard-schema/spec'
 import type { Options } from './defs'
 import { safeParse } from './lib/safe-parse'
+import type { $unified } from './unified'
 
 type Require<T, Keys extends keyof T> = Pick<Required<T>, Keys> & Omit<T, Keys>
 
@@ -583,9 +584,13 @@ type inferParserRecordType<
 export type inferParserType<Input> =
   Input extends GenericParserBuilder<any>
     ? inferSingleParserType<Input>
-    : Input extends Record<string, GenericParserBuilder<any>>
-      ? inferParserRecordType<Input>
-      : never
+    : Input extends { [$unified]: true; parsers: infer Parsers }
+      ? Parsers extends Record<string, GenericParserBuilder<any>>
+        ? inferParserRecordType<Parsers>
+        : never
+      : Input extends Record<string, GenericParserBuilder<any>>
+        ? inferParserRecordType<Input>
+        : never
 
 export type ParserWithOptionalDefault<T> = GenericParserBuilder<T> & {
   defaultValue?: T
