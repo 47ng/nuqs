@@ -564,9 +564,11 @@ export function CustomMultiParserDemo() {
         return Object.entries(values)
           .map(([key, value]) => {
             if (!itemParser.serialize) return null
+            const serialized = itemParser.serialize(value)
+            if (serialized === null) return null
             return parseAsKeyValue.serialize({
               key,
-              value: itemParser.serialize(value)
+              value: serialized
             })
           })
           .filter(v => v !== null)

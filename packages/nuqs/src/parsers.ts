@@ -3,8 +3,15 @@ import type { Options } from './defs'
 import { safeParse } from './lib/safe-parse'
 
 type Require<T, Keys extends keyof T> = Pick<Required<T>, Keys> & Omit<T, Keys>
+type InferSerializeNullable<P> = P extends {
+  serialize: (...args: any[]) => infer R
+}
+  ? null extends R
+    ? true
+    : false
+  : false
 
-export type SingleParser<T> = {
+export type SingleParser<T, Nullable extends boolean = false> = {
   type?: 'single'
   /**
    * Convert a query string value into a state value.
@@ -17,7 +24,7 @@ export type SingleParser<T> = {
   /**
    * Render the state value into a query string value.
    */
-  serialize?: (value: T) => string
+  serialize?: (value: T) => Nullable extends true ? string | null : string
 
   /**
    * Check if two state values are equal.
@@ -49,7 +56,9 @@ export type Parser<T> = SingleParser<T>
 /** @deprecated use SingleParserBuilder instead */
 export type ParserBuilder<T> = SingleParserBuilder<T>
 
-export type SingleParserBuilder<T> = Required<SingleParser<T>> &
+export type SingleParserBuilder<T, Nullable extends boolean = false> = Required<
+  SingleParser<T, Nullable>
+> &
   Options & {
     /**
      * Set history type, shallow routing and scroll restoration options
@@ -149,7 +158,7 @@ export type MultiParserBuilder<T> = Required<MultiParser<T>> &
  */
 export function createParser<T>(
   parser: Require<SingleParser<T>, 'parse' | 'serialize'>
-): SingleParserBuilder<T> {
+): SingleParserBuilder<T, InferSerializeNullable<typeof parser>> {
   function parseServerSideNullable(value: string | string[] | undefined) {
     if (typeof value === 'undefined') {
       return null
@@ -492,7 +501,7 @@ export function parseAsArrayOf<ItemType>(
       values
         .map<string>(value => {
           const str = itemParser.serialize
-            ? itemParser.serialize(value)
+            ? (itemParser.serialize(value) ?? '')
             : String(value)
           return str.replaceAll(separator, encodedSeparator)
         })
