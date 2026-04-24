@@ -1,12 +1,15 @@
 import dayjs from 'dayjs'
-import type { Metadata } from 'next'
-import { z } from 'zod'
+import { Heading } from 'fumadocs-ui/components/heading'
 import {
   DocsBody,
   DocsDescription,
   DocsPage,
   DocsTitle
 } from 'fumadocs-ui/page'
+import type { Metadata } from 'next'
+import { Fragment } from 'react'
+import { z } from 'zod'
+import { H2 } from '../../../components/typography'
 import { PullRequestLine } from '../../../components/ui/pr-line'
 
 export const metadata: Metadata = {
@@ -143,70 +146,79 @@ export default async function ChangelogPage() {
   return (
     <DocsPage>
       <DocsTitle>Changelog</DocsTitle>
-      <DocsDescription>
-        Summary of changes across releases of{' '}
-        <a
-          href="https://github.com/47ng/nuqs"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          47ng/nuqs
-        </a>
-        . Grouped by category, with links and attribution to contributors.
-      </DocsDescription>
+      <DocsDescription>What's new in nuqs.</DocsDescription>
 
       <DocsBody>
         {releases.length === 0 ? (
           <p>No releases could be loaded from GitHub at this time.</p>
         ) : (
-          <div className="space-y-12">
-            {releases.map(release => {
-              const categories = parseReleaseBody(release.body)
-              const date = formatDate(release.published_at)
-              const hasAnyItems = CATEGORY_ORDER.some(
-                id => categories[id].length > 0
+          <div className="space-y-10 sm:space-y-16">
+            {releases
+              .map(release => ({
+                release,
+                categories: parseReleaseBody(release.body)
+              }))
+              .filter(({ categories }) =>
+                CATEGORY_ORDER.some(id => categories[id].length > 0)
               )
+              .map(({ release, categories }, index) => {
+                const date = formatDate(release.published_at)
+                const tag = release.tag_name
+                const title = release.name || tag
 
-              if (!hasAnyItems) {
-                return null
-              }
+                return (
+                  <Fragment key={release.id}>
+                    {index > 0 && <hr className="border-border" />}
+                    <section>
+                      <H2 id={tag} className="mb-2">
+                        {title}
+                      </H2>
+                      <div className="not-prose flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-fd-muted-foreground">
+                        {date && <span>Published on {date}</span>}
+                        {date && (
+                          <span
+                            aria-hidden
+                            className="text-fd-muted-foreground/60"
+                          >
+                            •
+                          </span>
+                        )}
+                        <a
+                          href={release.html_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="hover:underline"
+                        >
+                          View on GitHub
+                        </a>
+                      </div>
 
-              return (
-                <section key={release.id}>
-                  <h2>{release.name || release.tag_name}</h2>
-                  <div className="flex flex-wrap gap-3 text-sm text-gray-600 dark:text-gray-400">
-                    {date && <span>Published on {date}</span>}
-                    <a
-                      href={release.html_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      View on GitHub
-                    </a>
-                  </div>
+                      <div className="mt-6 space-y-6">
+                        {CATEGORY_ORDER.map(categoryId => {
+                          const items = categories[categoryId]
+                          if (!items.length) return null
 
-                  <div className="space-y-6">
-                    {CATEGORY_ORDER.map(categoryId => {
-                      const items = categories[categoryId]
-                      if (!items.length) return null
-
-                      return (
-                        <section key={categoryId}>
-                          <h3>{CATEGORY_LABELS[categoryId]}</h3>
-                          <ul className="space-y-3">
-                            {items.map((item, index) => (
-                              <li key={`${categoryId}-${release.id}-${index}`}>
-                                <PullRequestLine number={item.number} />
-                              </li>
-                            ))}
-                          </ul>
-                        </section>
-                      )
-                    })}
-                  </div>
-                </section>
-              )
-            })}
+                          return (
+                            <section key={categoryId}>
+                              <Heading as="h3" id={`${tag}-${categoryId}`}>
+                                {CATEGORY_LABELS[categoryId]}
+                              </Heading>
+                              <ul className="not-prose mt-3 list-none space-y-2 pl-0">
+                                {items.map((item, itemIndex) => (
+                                  <PullRequestLine
+                                    key={`${categoryId}-${release.id}-${itemIndex}`}
+                                    number={item.number}
+                                  />
+                                ))}
+                              </ul>
+                            </section>
+                          )
+                        })}
+                      </div>
+                    </section>
+                  </Fragment>
+                )
+              })}
           </div>
         )}
       </DocsBody>
