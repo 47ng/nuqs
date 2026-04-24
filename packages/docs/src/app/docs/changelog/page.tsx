@@ -1,3 +1,4 @@
+import { AsideSponsors } from '@/src/app/(pages)/_landing/sponsors'
 import {
   CopyAsMarkdownButton,
   CopyMarkdownUrlButton,
@@ -34,9 +35,27 @@ const SOURCE_URL = `https://github.com/${github.owner}/${github.repo}/blob/${git
 
 export default async function ChangelogPage() {
   const releases = await fetchReleases()
+  const visibleReleases = releases
+    .map(release => ({
+      release,
+      categories: parseReleaseBody(release.body)
+    }))
+    .filter(({ categories }) =>
+      CATEGORY_ORDER.some(id => categories[id].length > 0)
+    )
+  const toc = visibleReleases.map(({ release }) => ({
+    url: `#${release.tag_name}`,
+    title: release.name || release.tag_name,
+    depth: 2
+  }))
 
   return (
-    <DocsPage>
+    <DocsPage
+      toc={toc}
+      tableOfContent={{
+        footer: <AsideSponsors />
+      }}
+    >
       <DocsTitle>Changelog</DocsTitle>
       <DocsDescription>What's new in nuqs.</DocsDescription>
       <div className="mb-2 flex flex-row flex-wrap items-center gap-2 border-b pb-6">
@@ -46,19 +65,11 @@ export default async function ChangelogPage() {
       </div>
 
       <DocsBody>
-        {releases.length === 0 ? (
+        {visibleReleases.length === 0 ? (
           <p>No releases could be loaded from GitHub at this time.</p>
         ) : (
           <div className="space-y-10 pb-12 sm:space-y-16">
-            {releases
-              .map(release => ({
-                release,
-                categories: parseReleaseBody(release.body)
-              }))
-              .filter(({ categories }) =>
-                CATEGORY_ORDER.some(id => categories[id].length > 0)
-              )
-              .map(({ release, categories }, index) => {
+            {visibleReleases.map(({ release, categories }, index) => {
                 const date = formatDate(release.published_at)
                 const tag = release.tag_name
                 const title = release.name || tag
