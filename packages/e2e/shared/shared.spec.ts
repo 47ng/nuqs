@@ -10,6 +10,7 @@ import { testLinking } from './specs/linking.spec'
 import { testPrettyUrls } from './specs/pretty-urls.spec'
 import { testReferentialStability } from './specs/referential-stability.spec'
 import { testRouting } from './specs/routing.spec'
+import { testHistorySync } from './specs/history-sync.spec'
 import { testScroll } from './specs/scroll.spec'
 
 export function runSharedTests(
@@ -124,6 +125,13 @@ export function runSharedTests(
   testRouting({
     path: `${pathPrefix}/routing/useQueryStates`,
     hook: 'useQueryStates',
+    ...config
+  })
+
+  // --
+
+  testHistorySync({
+    path: `${pathPrefix}/history-sync`,
     ...config
   })
 

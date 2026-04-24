@@ -1,5 +1,4 @@
 import { CodeBlock } from '@/src/components/code-block'
-import * as Sentry from '@sentry/nextjs'
 import { FileCode2 } from 'lucide-react'
 import fs from 'node:fs/promises'
 
@@ -44,12 +43,6 @@ function readSourceCode(demoPath: string) {
       throw error
     }
     console.error(error)
-    Sentry.captureException(error, {
-      extra: {
-        demoPath,
-        demoFilePath
-      }
-    })
     return null
   })
 }

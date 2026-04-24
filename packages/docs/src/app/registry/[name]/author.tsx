@@ -12,7 +12,7 @@ export function Author({ author }: { author: string }) {
         <img
           src={`https://github.com/${githubUser}.png`}
           role="presentation"
-          alt=""
+          alt={name}
           className="size-9 rounded-full"
         />
         <div>

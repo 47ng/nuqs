@@ -9,8 +9,16 @@ catalogs:
   knip:
     knip: ^5.64.1
 
+  vitest:
+    vitest: ^4.1.0
+    '@vitest/browser-playwright': ^4.1.0
+    '@vitest/coverage-v8': ^4.1.0
+
+  vite:
+    vite: ^8.0.0
+
   next:
-    next: ^16.1.6
+    next: 16.2.1-canary.3
 
   react19:
     '@types/react': ^19.2.10
@@ -24,7 +32,6 @@ catalogs:
 enablePrePostScripts: true
 
 onlyBuiltDependencies:
-  - '@sentry/cli'
   - '@swc/core'
   - '@tailwindcss/oxide'
   - playwright

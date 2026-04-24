@@ -8,7 +8,7 @@ const sponsorSchema = z.object({
   name: z.string().nullish(),
   handle: z.string(),
   url: z.string().url(),
-  img: z.string().url(),
+  img: z.string(),
   title: z.custom<ReactNode>().optional()
 })
 type Sponsors = z.infer<typeof sponsorSchema>[]
@@ -19,6 +19,24 @@ const SPONSORS: Sponsors = [
     name: 'Vercel',
     url: 'https://vercel.com/',
     img: 'https://avatars.githubusercontent.com/u/14985020?s=200&v=4'
+  },
+  {
+    handle: 'getsentry',
+    name: 'Sentry',
+    url: 'https://sentry.io/?utm_source=nuqs&utm_medium=sponsor&utm_campaign=nuqs',
+    img: '/sponsors/sentry.svg'
+  },
+  {
+    handle: 'syntaxfm',
+    name: 'Syntax.fm',
+    url: 'https://syntax.fm/?utm_source=nuqs&utm_medium=sponsor&utm_campaign=nuqs',
+    img: 'https://avatars.githubusercontent.com/u/130389858?s=200&v=4'
+  },
+  {
+    handle: '1771-Technologies',
+    name: '1771 Technologies',
+    url: 'https://1771technologies.com/?utm_source=nuqs&utm_medium=sponsor&utm_campaign=nuqs',
+    img: 'https://avatars.githubusercontent.com/u/148620833?s=200&v=4'
   },
   {
     handle: 'unkey.com',
@@ -368,17 +386,20 @@ export function AsideSponsors() {
       </a>
       <ul className="space-y-2">
         <li>
-          <NextJSWeeklyAsideSponsor />
+          <AsideSponsorNextJSWeekly />
         </li>
         <li>
-          <ShadcnStudioAsideSponsor />
+          <AsideSponsorShadcnStudio />
+        </li>
+        <li>
+          <AsideSponsor1771Technologies />
         </li>
       </ul>
     </aside>
   )
 }
 
-export function NextJSWeeklyAsideSponsor() {
+export function AsideSponsorNextJSWeekly() {
   return (
     <a
       href="https://nextjsweekly.com?utm_source=nuqs&utm_medium=sponsor&utm_campaign=nuqs"
@@ -412,7 +433,35 @@ export function NextJSWeeklyAsideSponsor() {
   )
 }
 
-export function ShadcnStudioAsideSponsor() {
+export function AsideSponsor1771Technologies() {
+  return (
+    <a
+      href="https://1771technologies.com/?utm_source=nuqs&utm_medium=banner&utm_campaign=nuqs"
+      target="_blank"
+      rel="noopener noreferrer"
+      className="group"
+    >
+      <section className="text-muted-foreground space-y-4 rounded-md border border-dashed px-4 py-6 transition-colors group-hover:text-current group-active:text-current">
+        <header className="mx-auto flex items-center justify-center gap-2">
+          <img
+            src="https://avatars.githubusercontent.com/u/148620833?s=200&v=4"
+            alt="1771 Technologies"
+            className="size-8 rounded-full grayscale opacity-50 transition-all group-hover:grayscale-0 group-hover:opacity-100 group-active:grayscale-0 group-active:opacity-100"
+            width={32}
+            height={32}
+          />
+          <span className="font-semibold">1771 Technologies</span>
+        </header>
+        <p className="text-muted-foreground text-center text-xs">
+          Ship faster with LyteNyte Grid. The fastest React data grid ever built
+          on the modern web.
+        </p>
+      </section>
+    </a>
+  )
+}
+
+export function AsideSponsorShadcnStudio() {
   return (
     <a
       href="https://shadcnstudio.com/?utm_source=nuqs&utm_medium=banner&utm_campaign=github"

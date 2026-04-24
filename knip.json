@@ -2,6 +2,17 @@
   "$schema": "https://unpkg.com/knip@5/schema.json",
   "ignoreExportsUsedInFile": true,
   "workspaces": {
+    ".": {
+      "ignoreDependencies": ["@commitlint/config-conventional"]
+    },
+    "packages/scripts": {
+      "entry": [
+        "next-release-analyser.ts",
+        "release-notes-automation.ts",
+        "release-notes-automation.test.ts"
+      ],
+      "project": ["**/*.ts"]
+    },
     "packages/nuqs": {
       "project": ["src/**/*.ts"],
       "ignoreDependencies": ["@vitejs/plugin-react"]

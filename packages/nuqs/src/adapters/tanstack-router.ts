@@ -1,4 +1,4 @@
-import { useLocation, useRouter } from '@tanstack/react-router'
+import { useLocation, useRouter, useRouterState } from '@tanstack/react-router'
 import { startTransition, useCallback, useMemo } from 'react'
 import { renderQueryString } from '../lib/url-encoding'
 import { createAdapterProvider, type AdapterProvider } from './lib/context'
@@ -6,11 +6,18 @@ import type { AdapterInterface, UpdateUrlFunction } from './lib/defs'
 
 function useNuqsTanstackRouterAdapter(watchKeys: string[]): AdapterInterface {
   const pathname = useLocation({ select: state => state.pathname })
-  const search = useLocation({
+  // Use useRouterState instead of useLocation so that structuralSharing
+  // is forwarded, stabilizing object references when search values
+  // haven't changed. Prevents infinite re-renders with viewport preloading.
+  // See https://github.com/47ng/nuqs/issues/1363
+  const search = useRouterState({
     select: state =>
       Object.fromEntries(
-        Object.entries(state.search).filter(([key]) => watchKeys.includes(key))
-      )
+        Object.entries(state.location.search).filter(([key]) =>
+          watchKeys.includes(key)
+        )
+      ) as Record<string, string | string[]>,
+    structuralSharing: true
   })
   const { navigate } = useRouter()
   const searchParams = useMemo(

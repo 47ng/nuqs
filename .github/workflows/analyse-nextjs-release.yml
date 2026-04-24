@@ -9,6 +9,9 @@ on:
         required: true
         type: string
 
+permissions:
+  contents: read # for actions/checkout
+
 env:
   FORCE_COLOR: 3 # Diplay chalk colors
   VERSION: ${{ inputs.version }}
@@ -37,7 +40,7 @@ jobs:
           node-version-file: .node-version
           cache: pnpm
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm install --filter scripts...
       - name: Check for changes in app router
         run: ./next-release-analyser.ts --version "${{ env.VERSION }}"
         working-directory: packages/scripts
