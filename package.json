@@ -18,6 +18,7 @@
     "test": "turbo run test --log-order=stream",
     "prepare": "husky",
     "lint": "pnpm run -w --parallel --stream '/^lint:/'",
+    "lint:knip": "knip",
     "lint:prettier": "prettier --check ./packages/nuqs/src/**/*.ts",
     "lint:sherif": "sherif"
   },
@@ -25,12 +26,13 @@
     "@commitlint/config-conventional": "^20.4.1",
     "commitlint": "^20.4.1",
     "husky": "^9.1.7",
+    "knip": "catalog:knip",
     "prettier": "3.6.2",
     "publint": "^0.3.17",
     "semantic-release": "^25.0.3",
     "sherif": "^1.10.0",
     "turbo": "^2.8.2",
-    "typescript": "^5.9.3"
+    "typescript": "catalog:typescript"
   },
   "packageManager": "pnpm@10.28.2",
   "prettier": {

@@ -6,6 +6,9 @@ catalogs:
     playwright: ^1.58.1
     '@playwright/test': ^1.58.1
 
+  knip:
+    knip: ^5.64.1
+
   vitest:
     vitest: ^4.1.0
     '@vitest/browser-playwright': ^4.1.0
@@ -22,6 +25,9 @@ catalogs:
     '@types/react-dom': ^19.2.3
     react: ^19.2.4
     react-dom: ^19.2.4
+
+  typescript:
+    typescript: ^5.9.2
 
 enablePrePostScripts: true
 
