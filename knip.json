@@ -47,7 +47,8 @@
         "src/components/release-contribution-graph.client.tsx",
         "src/components/release-contribution-graph.tsx",
         "src/components/ui/pr-line.tsx",
-        "src/components/vercel-oss-badge.tsx"
+        "src/components/vercel-oss-badge.tsx",
+        "src/lib/typed-links.ts"
       ],
       "ignoreDependencies": [
         "@headlessui/tailwindcss",
