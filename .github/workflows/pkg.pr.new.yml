@@ -28,11 +28,14 @@ jobs:
       - name: Build package
         run: pnpm build --filter nuqs
       - name: Set package version
+        env:
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
-          pnpm pkg set version=0.0.0-preview.${{ github.event.pull_request.head.sha }}
-          echo "::notice title=Install (PR)::pnpm add https://pkg.pr.new/nuqs@${{ github.event.pull_request.number }}"
-          echo "::notice title=Install (SHA)::pnpm add https://pkg.pr.new/nuqs@${{ github.event.pull_request.head.sha }}"
-          echo "::notice title=Version::0.0.0-preview.${{ github.event.pull_request.head.sha }}"
+          pnpm pkg set "version=0.0.0-preview.${HEAD_SHA}"
+          echo "::notice title=Install (PR)::pnpm add https://pkg.pr.new/nuqs@${PR_NUMBER}"
+          echo "::notice title=Install (SHA)::pnpm add https://pkg.pr.new/nuqs@${HEAD_SHA}"
+          echo "::notice title=Version::0.0.0-preview.${HEAD_SHA}"
         working-directory: packages/nuqs
       - name: Publish to pkg.pr.new
         run: pnpx pkg-pr-new publish --compact './packages/nuqs' --no-template --packageManager=pnpm --pnpm
