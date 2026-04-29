@@ -28,7 +28,6 @@ function isDebugEnabled(): boolean {
   }
   // localStorage may be unavailable (e.g. Safari private mode). #588
   try {
-    if (typeof localStorage === 'undefined') return false
     const k = 'nuqs-localStorage-test'
     localStorage.setItem(k, k)
     const ok = localStorage.getItem(k) === k
