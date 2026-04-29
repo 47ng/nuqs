@@ -183,9 +183,7 @@ export function createMultiParser<T>(
   const parseServerSideNullable = (
     value: string | string[] | undefined
   ): T | null =>
-    value === undefined
-      ? null
-      : safeParse(parser.parse, Array.isArray(value) ? value : [value])
+    value === undefined ? null : safeParse(parser.parse, ([] as string[]).concat(value))
   return {
     type: 'multi',
     eq: (a, b) => a === b,
