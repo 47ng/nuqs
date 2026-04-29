@@ -83,19 +83,20 @@ export function createSerializer<
     }
     const values = (isB ? arg2 : arg1) as Values | null
     for (const key in parsers) {
-      const parser = parsers[key]
-      const urlKey = urlKeys[key] ?? key
-      const value = values === null ? null : values[key]
-      if (!parser || value === undefined) continue
+      const p = parsers[key]
+      const u = urlKeys[key] ?? key
+      const v = values === null ? null : values[key]
+      if (!p || v === undefined) continue
+      const def = p.defaultValue
       if (
-        value === null ||
-        ((parser.clearOnDefault ?? clearOnDefault ?? true) &&
-          parser.defaultValue !== undefined &&
-          (parser.eq ?? ((a, b) => a === b))(value, parser.defaultValue))
+        v === null ||
+        ((p.clearOnDefault ?? clearOnDefault) &&
+          def !== undefined &&
+          (p.eq ?? ((a, b) => a === b))(v, def))
       ) {
-        search.delete(urlKey)
+        search.delete(u)
       } else {
-        search = write(search, urlKey, parser.serialize(value))
+        search = write(search, u, p.serialize(v))
       }
     }
     if (processUrlSearchParams) search = processUrlSearchParams(search)
