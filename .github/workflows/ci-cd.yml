@@ -10,6 +10,9 @@ on:
     types: [opened, reopened, synchronize]
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 env:
   FORCE_COLOR: 3 # Diplay chalk colors
 
@@ -19,7 +22,7 @@ jobs:
     runs-on: ubuntu-24.04-arm
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
-      - uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061
+      - uses: pnpm/action-setup@903f9c1a6ebcba6cf41d87230be49611ac97822e # v6.0.3
       - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
         with:
           node-version-file: .node-version
@@ -70,7 +73,7 @@ jobs:
     needs: [ci-core]
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
-      - uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061
+      - uses: pnpm/action-setup@903f9c1a6ebcba6cf41d87230be49611ac97822e # v6.0.3
       - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
         with:
           node-version-file: .node-version
@@ -81,7 +84,7 @@ jobs:
         run: pnpm build --filter nuqs
       - name: Run publint on package.json
         run: pnpm publint packages/nuqs
-      - uses: 47ng/actions-slack-notify@main
+      - uses: 47ng/actions-slack-notify@0917ccc17666d2ca5eb8b8a1afced5048da8c8b5 # 1.0.2
         name: Notify on Slack
         if: failure()
         with:
@@ -95,7 +98,7 @@ jobs:
     runs-on: ubuntu-24.04-arm
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
-      - uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061
+      - uses: pnpm/action-setup@903f9c1a6ebcba6cf41d87230be49611ac97822e # v6.0.3
       - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
         with:
           node-version-file: .node-version
@@ -110,7 +113,7 @@ jobs:
     runs-on: ubuntu-24.04-arm
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
-      - uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061
+      - uses: pnpm/action-setup@903f9c1a6ebcba6cf41d87230be49611ac97822e # v6.0.3
       - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
         with:
           node-version-file: .node-version
@@ -136,7 +139,7 @@ jobs:
       actions: read
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
-      - uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061
+      - uses: pnpm/action-setup@903f9c1a6ebcba6cf41d87230be49611ac97822e # v6.0.3
       - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
         with:
           node-version-file: .node-version
@@ -154,7 +157,7 @@ jobs:
           TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
           TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - uses: 47ng/actions-slack-notify@main
+      - uses: 47ng/actions-slack-notify@0917ccc17666d2ca5eb8b8a1afced5048da8c8b5 # 1.0.2
         name: Notify on Slack
         if: failure()
         with:
@@ -208,7 +211,7 @@ jobs:
             react-compiler: true
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
-      - uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061
+      - uses: pnpm/action-setup@903f9c1a6ebcba6cf41d87230be49611ac97822e # v6.0.3
       - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
         with:
           node-version-file: .node-version
@@ -238,7 +241,7 @@ jobs:
           path: packages/e2e/next/.playwright/*
           name: playwright-next-${{ matrix.next-version }}${{ matrix.base-path && '-basePath' || ''}}${{ matrix.react-compiler && '-react-compiler' || ''}}${{ matrix.cache-components && '-cache-components' || ''}}
           include-hidden-files: true
-      - uses: 47ng/actions-slack-notify@main
+      - uses: 47ng/actions-slack-notify@0917ccc17666d2ca5eb8b8a1afced5048da8c8b5 # 1.0.2
         name: Notify on Slack
         if: failure()
         with:
@@ -257,7 +260,7 @@ jobs:
         full-page-nav-on-shallow-false: [false, true]
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
-      - uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061
+      - uses: pnpm/action-setup@903f9c1a6ebcba6cf41d87230be49611ac97822e # v6.0.3
       - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
         with:
           node-version-file: .node-version
@@ -278,7 +281,7 @@ jobs:
           path: packages/e2e/react/.playwright/*
           name: playwright-react-fpn-${{ matrix.full-page-nav-on-shallow-false }}
           include-hidden-files: true
-      - uses: 47ng/actions-slack-notify@main
+      - uses: 47ng/actions-slack-notify@0917ccc17666d2ca5eb8b8a1afced5048da8c8b5 # 1.0.2
         name: Notify on Slack
         if: failure()
         with:
@@ -299,7 +302,7 @@ jobs:
           - "v7"
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
-      - uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061
+      - uses: pnpm/action-setup@903f9c1a6ebcba6cf41d87230be49611ac97822e # v6.0.3
       - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
         with:
           node-version-file: .node-version
@@ -319,7 +322,7 @@ jobs:
           path: packages/e2e/react-router/${{ matrix.react-router-version }}/.playwright/*
           name: playwright-react-router-${{ matrix.react-router-version }}
           include-hidden-files: true
-      - uses: 47ng/actions-slack-notify@main
+      - uses: 47ng/actions-slack-notify@0917ccc17666d2ca5eb8b8a1afced5048da8c8b5 # 1.0.2
         name: Notify on Slack
         if: failure()
         with:
@@ -334,7 +337,7 @@ jobs:
     needs: [ci-core]
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
-      - uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061
+      - uses: pnpm/action-setup@903f9c1a6ebcba6cf41d87230be49611ac97822e # v6.0.3
       - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
         with:
           node-version-file: .node-version
@@ -354,7 +357,7 @@ jobs:
           path: packages/e2e/remix/.playwright/*
           name: playwright-remix
           include-hidden-files: true
-      - uses: 47ng/actions-slack-notify@main
+      - uses: 47ng/actions-slack-notify@0917ccc17666d2ca5eb8b8a1afced5048da8c8b5 # 1.0.2
         name: Notify on Slack
         if: failure()
         with:
@@ -369,7 +372,7 @@ jobs:
     needs: [ci-core]
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
-      - uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061
+      - uses: pnpm/action-setup@903f9c1a6ebcba6cf41d87230be49611ac97822e # v6.0.3
       - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
         with:
           node-version-file: .node-version
@@ -389,7 +392,7 @@ jobs:
           path: packages/e2e/tanstack-router/.playwright/*
           name: playwright-tanstack-router
           include-hidden-files: true
-      - uses: 47ng/actions-slack-notify@main
+      - uses: 47ng/actions-slack-notify@0917ccc17666d2ca5eb8b8a1afced5048da8c8b5 # 1.0.2
         name: Notify on Slack
         if: failure()
         with:
@@ -413,7 +416,7 @@ jobs:
       - e2e-remix
       - e2e-tanstack-router
     steps:
-      - uses: 47ng/actions-slack-notify@main
+      - uses: 47ng/actions-slack-notify@0917ccc17666d2ca5eb8b8a1afced5048da8c8b5 # 1.0.2
         with:
           status: ${{ job.status }}
           jobName: Continuous Integration
@@ -442,16 +445,20 @@ jobs:
     if: ${{ github.ref_name == 'master' || github.ref_name == 'beta' }}
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
-      - uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061
+      - uses: pnpm/action-setup@903f9c1a6ebcba6cf41d87230be49611ac97822e # v6.0.3
       - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
         with:
+          # Node.js pinned via .node-version must ship npm >= 11.5.1
+          # so that OIDC trusted publishing works (semantic-release ->
+          # npm publish). The bundled npm in current Node satisfies
+          # this; if .node-version is downgraded to a Node release
+          # with older bundled npm, the publish step will fail with
+          # a clear OIDC error and this comment is the breadcrumb.
           node-version-file: .node-version
           # No pnpm cache restore in CD: a poisoned cache could inject
           # compromised packages into the published build. Fresh install
           # from the registry ensures integrity (same rationale as
           # skipping external Turbo cache below).
-      - name: Update npm # Ensure npm 11.5.1 or later is installed for OIDC trusted publishing
-        run: npm install -g npm@latest
       - name: Install dependencies
         run: pnpm install --ignore-scripts --frozen-lockfile --filter nuqs...
       - name: Verify the integrity of provenance attestations and registry signatures for installed dependencies
@@ -482,20 +489,23 @@ jobs:
         if: ${{ github.event_name == 'push' && steps.package-version.outputs.version != '0.0.0-semantically-released' }}
         run: |
           NOTES=$(./release-notes-automation.ts)
-          echo "$NOTES" >> $GITHUB_STEP_SUMMARY
+          echo "$NOTES" >> "$GITHUB_STEP_SUMMARY"
+          # Random delimiter so notes content cannot close the heredoc
+          # early and inject additional output variables.
+          delim="EOF_$(openssl rand -hex 16)"
           {
-            echo 'notes<<EOF'
-            echo "$NOTES"
-            echo 'EOF'
-          } >> $GITHUB_OUTPUT
+            printf 'notes<<%s\n' "$delim"
+            printf '%s\n' "$NOTES"
+            printf '%s\n' "$delim"
+          } >> "$GITHUB_OUTPUT"
         working-directory: packages/scripts
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Update GitHub release notes
         if: ${{ github.event_name == 'push' && steps.package-version.outputs.version != '0.0.0-semantically-released' }}
-        run: |
-          echo "${{ steps.release-notes.outputs.notes }}" | \
-           gh release edit "v${{ steps.package-version.outputs.version }}" \
-            --notes-file -
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NOTES: ${{ steps.release-notes.outputs.notes }}
+          VERSION: ${{ steps.package-version.outputs.version }}
+        run: |
+          printf '%s' "$NOTES" | gh release edit "v$VERSION" --notes-file -

@@ -4,7 +4,9 @@
   "version": "0.0.0-internal",
   "type": "module",
   "scripts": {
-    "test": "vitest run"
+    "test": "pnpm run --stream '/^test:/'",
+    "test:unit": "vitest run",
+    "test:types": "tsc --noEmit"
   },
   "dependencies": {
     "@mailpace/mailpace.js": "^0.1.3",
