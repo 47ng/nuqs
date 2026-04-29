@@ -448,13 +448,17 @@ jobs:
       - uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061
       - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
         with:
+          # Node.js pinned via .node-version must ship npm >= 11.5.1
+          # so that OIDC trusted publishing works (semantic-release ->
+          # npm publish). The bundled npm in current Node satisfies
+          # this; if .node-version is downgraded to a Node release
+          # with older bundled npm, the publish step will fail with
+          # a clear OIDC error and this comment is the breadcrumb.
           node-version-file: .node-version
           # No pnpm cache restore in CD: a poisoned cache could inject
           # compromised packages into the published build. Fresh install
           # from the registry ensures integrity (same rationale as
           # skipping external Turbo cache below).
-      - name: Update npm # Ensure npm 11.5.1 or later is installed for OIDC trusted publishing
-        run: npm install -g npm@latest
       - name: Install dependencies
         run: pnpm install --ignore-scripts --frozen-lockfile --filter nuqs...
       - name: Verify the integrity of provenance attestations and registry signatures for installed dependencies
