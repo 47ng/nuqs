@@ -8,6 +8,9 @@ export type SearchParamsSyncEmitterEvents = { update: URLSearchParams }
 
 export const historyUpdateMarker = '__nuqs__'
 
+// version replaced by the prepack script
+const V = '0.0.0-inject-version-here'
+
 declare global {
   interface History {
     nuqs?: {
@@ -20,19 +23,15 @@ declare global {
 export function shouldPatchHistory(adapter: string): boolean {
   if (typeof history === 'undefined') return false
   const v = history.nuqs?.version
-  if (v && v !== '0.0.0-inject-version-here') {
-    console.error(error(409), v, `0.0.0-inject-version-here`, adapter)
+  if (v && v !== V) {
+    console.error(error(409), v, V, adapter)
     return false
   }
   return !history.nuqs?.adapters?.includes(adapter)
 }
 
 export function markHistoryAsPatched(adapter: string): void {
-  // version replaced by the prepack script
-  ;(history.nuqs ??= {
-    version: '0.0.0-inject-version-here',
-    adapters: []
-  }).adapters.push(adapter)
+  ;(history.nuqs ??= { version: V, adapters: [] }).adapters.push(adapter)
 }
 
 export function patchHistory(
@@ -52,11 +51,7 @@ export function patchHistory(
     resetQueues()
   })
 
-  debug(
-    '[nuqs %s] Patching history (%s adapter)',
-    '0.0.0-inject-version-here',
-    adapter
-  )
+  debug('[nuqs %s] Patching history (%s adapter)', V, adapter)
   function sync(url: URL | string) {
     spinQueueResetMutex()
     try {
