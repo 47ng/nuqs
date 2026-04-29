@@ -65,7 +65,7 @@ export function patchHistory(
   }
   for (const m of ['pushState', 'replaceState'] as const) {
     const orig = history[m]
-    history[m] = function (state, marker, url) {
+    history[m] = (state, marker, url) => {
       orig.call(history, state, '', url)
       if (url && marker !== historyUpdateMarker) sync(url)
     }
