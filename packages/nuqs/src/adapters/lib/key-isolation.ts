@@ -38,8 +38,6 @@ export function filterSearchParams(
 ): URLSearchParams {
   if (!keys.length) return search
   const filtered = copy ? new URLSearchParams(search) : search
-  for (const key of search.keys()) {
-    if (!keys.includes(key)) filtered.delete(key)
-  }
+  for (const k of search.keys()) keys.includes(k) || filtered.delete(k)
   return filtered
 }
