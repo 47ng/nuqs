@@ -69,13 +69,15 @@ export function createAdapterProvider(
     )
 }
 
+const useCtx = () => useContext(context)
+
 export function useAdapter(watchKeys: string[]): AdapterInterface {
-  return useContext(context).useAdapter(watchKeys)
+  return useCtx().useAdapter(watchKeys)
 }
 
 export const useAdapterDefaultOptions = (): AdapterProps['defaultOptions'] =>
-  useContext(context).defaultOptions
+  useCtx().defaultOptions
 
 export const useAdapterProcessUrlSearchParams =
   (): AdapterProps['processUrlSearchParams'] =>
-    useContext(context).processUrlSearchParams
+    useCtx().processUrlSearchParams
