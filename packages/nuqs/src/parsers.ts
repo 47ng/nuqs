@@ -150,25 +150,14 @@ export type MultiParserBuilder<T> = Required<MultiParser<T>> &
 export function createParser<T>(
   parser: Require<SingleParser<T>, 'parse' | 'serialize'>
 ): SingleParserBuilder<T> {
-  function parseServerSideNullable(value: string | string[] | undefined) {
-    if (typeof value === 'undefined') {
-      return null
-    }
-    let str = ''
-    if (Array.isArray(value)) {
-      // Follow the spec:
-      // https://url.spec.whatwg.org/#dom-urlsearchparams-get
-      if (value[0] === undefined) {
-        return null
-      }
-      str = value[0]
-    }
-    if (typeof value === 'string') {
-      str = value
-    }
-    return safeParse(parser.parse, str)
+  const parseServerSideNullable = (
+    value: string | string[] | undefined
+  ): T | null => {
+    // Follow the spec:
+    // https://url.spec.whatwg.org/#dom-urlsearchparams-get
+    const str = Array.isArray(value) ? value[0] : value
+    return str === undefined ? null : safeParse(parser.parse, str)
   }
-
   return {
     type: 'single',
     eq: (a, b) => a === b,
@@ -195,13 +184,12 @@ export function createParser<T>(
 export function createMultiParser<T>(
   parser: Omit<Require<MultiParser<T>, 'parse' | 'serialize'>, 'type'>
 ): MultiParserBuilder<T> {
-  function parseServerSideNullable(value: string | string[] | undefined) {
-    if (typeof value === 'undefined') {
-      return null
-    }
-    return safeParse(parser.parse, Array.isArray(value) ? value : [value])
-  }
-
+  const parseServerSideNullable = (
+    value: string | string[] | undefined
+  ): T | null =>
+    value === undefined
+      ? null
+      : safeParse(parser.parse, Array.isArray(value) ? value : [value])
   return {
     type: 'multi',
     eq: (a, b) => a === b,
