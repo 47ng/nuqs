@@ -362,12 +362,9 @@ export function parseAsNumberLiteral<const Literal extends number>(
   validValues: readonly Literal[]
 ): SingleParserBuilder<Literal> {
   return createParser({
-    parse: (query: string) => {
-      const asConst = parseFloat(query) as unknown as Literal
-      if (validValues.includes(asConst)) {
-        return asConst
-      }
-      return null
+    parse: query => {
+      const v = parseFloat(query) as Literal
+      return validValues.includes(v) ? v : null
     },
     serialize: String
   })
@@ -424,41 +421,33 @@ export function parseAsArrayOf<ItemType>(
   const encodedSeparator = encodeURIComponent(separator)
   // todo: Handle default item values and make return type non-nullable
   return createParser({
-    parse: query => {
-      if (query === '') {
-        // Empty query should not go through the split/map/filter logic,
-        // see https://github.com/47ng/nuqs/issues/329
-        return [] as ItemType[]
-      }
-      return query
-        .split(separator)
-        .map((item, index) =>
-          safeParse(
-            itemParser.parse,
-            item.replaceAll(encodedSeparator, separator),
-            `[${index}]`
-          )
-        )
-        .filter(value => value !== null && value !== undefined) as ItemType[]
-    },
+    parse: query =>
+      query === ''
+        ? // Empty query should not go through the split/map/filter logic,
+          // see https://github.com/47ng/nuqs/issues/329
+          ([] as ItemType[])
+        : (query
+            .split(separator)
+            .map((item, index) =>
+              safeParse(
+                itemParser.parse,
+                item.replaceAll(encodedSeparator, separator),
+                `[${index}]`
+              )
+            )
+            .filter(v => v != null) as ItemType[]),
     serialize: values =>
       values
-        .map<string>(value => {
-          const str = itemParser.serialize
-            ? itemParser.serialize(value)
-            : String(value)
-          return str.replaceAll(separator, encodedSeparator)
-        })
+        .map<string>(value =>
+          (itemParser.serialize?.(value) ?? String(value)).replaceAll(
+            separator,
+            encodedSeparator
+          )
+        )
         .join(separator),
-    eq(a, b) {
-      if (a === b) {
-        return true // Referentially stable
-      }
-      if (a.length !== b.length) {
-        return false
-      }
-      return a.every((value, index) => itemEq(value, b[index]!))
-    }
+    eq: (a, b) =>
+      a === b ||
+      (a.length === b.length && a.every((v, i) => itemEq(v, b[i]!)))
   })
 }
 
@@ -470,26 +459,18 @@ export function parseAsNativeArrayOf<ItemType>(
     parse: query => {
       const parsed = query
         .map((item, index) => safeParse(itemParser.parse, item, `[${index}]`))
-        .filter(value => value !== null && value !== undefined) as ItemType[]
-      return parsed.length === 0 ? null : parsed
+        .filter(v => v != null) as ItemType[]
+      return parsed.length ? parsed : null
     },
-    serialize: values => {
+    serialize: values =>
       // defensive check because we potentially get a single value passed from a standard schema
-      const safeValues = Array.isArray(values) ? values : [values]
-      return safeValues.flatMap(value => {
-        const serialized = itemParser.serialize?.(value) ?? String(value)
-        return typeof serialized === 'string' ? [serialized] : [...serialized]
-      })
-    },
-    eq(a, b) {
-      if (a === b) {
-        return true // Referentially stable
-      }
-      if (a.length !== b.length) {
-        return false
-      }
-      return a.every((value, index) => itemEq(value, b[index]!))
-    }
+      (Array.isArray(values) ? values : [values]).flatMap(value => {
+        const s = itemParser.serialize?.(value) ?? String(value)
+        return typeof s === 'string' ? [s] : [...s]
+      }),
+    eq: (a, b) =>
+      a === b ||
+      (a.length === b.length && a.every((v, i) => itemEq(v, b[i]!)))
   }).withDefault([])
 }
 
