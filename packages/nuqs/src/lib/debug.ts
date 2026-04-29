@@ -12,10 +12,6 @@ export function debug(message: string, ...args: any[]): void {
   }
 }
 
-export function warn(message: string, ...args: any[]): void {
-  if (debugEnabled) console.warn(message, ...args)
-}
-
 export function sprintf(base: string, ...args: any[]): string {
   return base.replace(/%[sfdO]/g, m => {
     const a = args.shift()

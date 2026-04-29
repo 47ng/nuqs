@@ -1,4 +1,4 @@
-import { warn } from './debug'
+import { debugEnabled } from './debug'
 
 export function safeParse<I, R>(
   parser: (arg: I) => R,
@@ -8,13 +8,15 @@ export function safeParse<I, R>(
   try {
     return parser(value)
   } catch (e) {
-    warn(
-      '[nuqs] Error while parsing value `%s`: %O' +
-        (key ? ' (for key `%s`)' : ''),
-      value,
-      e,
-      key
-    )
+    if (debugEnabled) {
+      console.warn(
+        '[nuqs] Error while parsing value `%s`: %O' +
+          (key ? ' (for key `%s`)' : ''),
+        value,
+        e,
+        key
+      )
+    }
     return null
   }
 }
