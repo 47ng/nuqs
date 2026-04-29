@@ -45,9 +45,7 @@ export function readTypeEnum(packageJsonContents: string): string[] {
     !Array.isArray(value) ||
     !value.every((t: unknown) => typeof t === 'string')
   ) {
-    throw new Error(
-      'package.json missing commitlint.rules.type-enum string[]'
-    )
+    throw new Error('package.json missing commitlint.rules.type-enum string[]')
   }
   return value as string[]
 }
