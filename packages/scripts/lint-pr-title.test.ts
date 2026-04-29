@@ -46,6 +46,11 @@ describe('parseTitle', () => {
   it('returns null for non-letter prefix', () => {
     expect(parseTitle('123: subject')).toBeNull()
   })
+
+  it('returns null for an uppercase type prefix', () => {
+    expect(parseTitle('Feat: add parser')).toBeNull()
+    expect(parseTitle('FIX: bug')).toBeNull()
+  })
 })
 
 describe('readTypeEnum', () => {
@@ -101,6 +106,21 @@ describe('validateTitle', () => {
     const longSubject = 'feat: ' + 'x'.repeat(HEADER_MAX_LENGTH)
     const errors = validateTitle(longSubject, allowed)
     expect(errors.some(e => /exceeds.*characters/.test(e))).toBe(true)
+  })
+
+  it('accepts a title at exactly the max length', () => {
+    const prefix = 'feat: '
+    const title = prefix + 'x'.repeat(HEADER_MAX_LENGTH - prefix.length)
+    expect(title.length).toBe(HEADER_MAX_LENGTH)
+    expect(validateTitle(title, allowed)).toEqual([])
+  })
+
+  it('flags a title one character over the max length', () => {
+    const prefix = 'feat: '
+    const title = prefix + 'x'.repeat(HEADER_MAX_LENGTH - prefix.length + 1)
+    expect(title.length).toBe(HEADER_MAX_LENGTH + 1)
+    const errors = validateTitle(title, allowed)
+    expect(errors.some(e => /exceeds/.test(e))).toBe(true)
   })
 
   it('reports format and length errors together', () => {
