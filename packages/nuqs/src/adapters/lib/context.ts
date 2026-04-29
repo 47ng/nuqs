@@ -79,5 +79,4 @@ export const useAdapterDefaultOptions = (): AdapterProps['defaultOptions'] =>
   useCtx().defaultOptions
 
 export const useAdapterProcessUrlSearchParams =
-  (): AdapterProps['processUrlSearchParams'] =>
-    useCtx().processUrlSearchParams
+  (): AdapterProps['processUrlSearchParams'] => useCtx().processUrlSearchParams

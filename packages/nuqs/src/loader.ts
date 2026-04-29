@@ -111,7 +111,8 @@ export function createLoader<Parsers extends ParserMap>(
         // we have properly narrowed `query` here, but TS doesn't keep track of that
         parsedValue = parser.parse(query as string & Array<string>)
       } catch (error) {
-        if (strict) throw new Error(`[nuqs] Error while parsing query ${ctx}: ${error}`)
+        if (strict)
+          throw new Error(`[nuqs] Error while parsing query ${ctx}: ${error}`)
         parsedValue = null
       }
       if (strict && query && parsedValue === null) {

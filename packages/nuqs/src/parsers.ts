@@ -183,7 +183,9 @@ export function createMultiParser<T>(
   const parseServerSideNullable = (
     value: string | string[] | undefined
   ): T | null =>
-    value === undefined ? null : safeParse(parser.parse, ([] as string[]).concat(value))
+    value === undefined
+      ? null
+      : safeParse(parser.parse, ([] as string[]).concat(value))
   return {
     type: 'multi',
     eq: (a, b) => a === b,
@@ -225,7 +227,10 @@ export const parseAsIndex: SingleParserBuilder<number> = createParser({
 
 export const parseAsHex: SingleParserBuilder<number> = createParser({
   parse: v => ok(parseInt(v, 16)),
-  serialize: v => Math.round(v).toString(16).replace(/^.(..)*$/, '0$&')
+  serialize: v =>
+    Math.round(v)
+      .toString(16)
+      .replace(/^.(..)*$/, '0$&')
 })
 
 export const parseAsFloat: SingleParserBuilder<number> = createParser({
@@ -443,8 +448,7 @@ export function parseAsArrayOf<ItemType>(
         )
         .join(separator),
     eq: (a, b) =>
-      a === b ||
-      (a.length === b.length && a.every((v, i) => itemEq(v, b[i]!)))
+      a === b || (a.length === b.length && a.every((v, i) => itemEq(v, b[i]!)))
   })
 }
 
@@ -466,8 +470,7 @@ export function parseAsNativeArrayOf<ItemType>(
         return typeof s === 'string' ? [s] : [...s]
       }),
     eq: (a, b) =>
-      a === b ||
-      (a.length === b.length && a.every((v, i) => itemEq(v, b[i]!)))
+      a === b || (a.length === b.length && a.every((v, i) => itemEq(v, b[i]!)))
   }).withDefault([])
 }
 
