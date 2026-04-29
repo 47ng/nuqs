@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import { appendFileSync, readFileSync } from 'node:fs'
+import { createEnv } from '@t3-oss/env-core'
 import { z } from 'zod'
 
 // Matches the @commitlint/config-conventional default. If the project ever
@@ -30,7 +31,7 @@ export function parseTitle(title: string): ParsedTitle | null {
 // Validates only the subset of package.json we care about. The third tuple
 // element is the rule's value per @commitlint/types — the first two slots
 // (severity, applicable) are intentionally unconstrained here.
-const PackageJsonSchema = z.object({
+const packageJsonSchema = z.object({
   commitlint: z.object({
     rules: z.object({
       'type-enum': z.tuple([z.unknown(), z.unknown(), z.array(z.string())])
@@ -39,7 +40,7 @@ const PackageJsonSchema = z.object({
 })
 
 export function readTypeEnum(packageJsonContents: string): string[] {
-  const parsed = PackageJsonSchema.safeParse(JSON.parse(packageJsonContents))
+  const parsed = packageJsonSchema.safeParse(JSON.parse(packageJsonContents))
   if (!parsed.success) {
     throw new Error('package.json missing commitlint.rules.type-enum string[]')
   }
@@ -74,12 +75,18 @@ export function formatSummary(errors: string[]): string {
 }
 
 function main(): void {
-  const title = process.env.TITLE ?? ''
+  const env = createEnv({
+    server: {
+      TITLE: z.string(),
+      GITHUB_STEP_SUMMARY: z.string().optional()
+    },
+    isServer: true,
+    runtimeEnv: process.env
+  })
   const types = readTypeEnum(readFileSync('./package.json', 'utf8'))
-  const errors = validateTitle(title, types)
-  const summaryFile = process.env.GITHUB_STEP_SUMMARY
-  if (summaryFile) {
-    appendFileSync(summaryFile, formatSummary(errors))
+  const errors = validateTitle(env.TITLE, types)
+  if (env.GITHUB_STEP_SUMMARY) {
+    appendFileSync(env.GITHUB_STEP_SUMMARY, formatSummary(errors))
   }
   if (errors.length > 0) {
     for (const e of errors) console.error(e)

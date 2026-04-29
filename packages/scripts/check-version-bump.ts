@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 
 import { appendFileSync } from 'node:fs'
+import { createEnv } from '@t3-oss/env-core'
+import { z } from 'zod'
 
 export const BUMPING_TYPES = ['feat', 'fix', 'perf', 'revert'] as const
 export const NON_BUMPING_TYPES = [
@@ -74,10 +76,16 @@ export function formatFailSummary(type: string): string {
 }
 
 function main(): void {
-  const title = process.env.TITLE ?? ''
-  const changedRaw = process.env.CHANGED_FILES ?? ''
-  const type = extractType(title)
-  const summaryFile = process.env.GITHUB_STEP_SUMMARY
+  const env = createEnv({
+    server: {
+      TITLE: z.string(),
+      CHANGED_FILES: z.string().default(''),
+      GITHUB_STEP_SUMMARY: z.string().optional()
+    },
+    isServer: true,
+    runtimeEnv: process.env
+  })
+  const type = extractType(env.TITLE)
 
   if (!isVersionBumping(type)) {
     console.log(
@@ -90,16 +98,16 @@ function main(): void {
     `Commit type \`${type}\` triggers a version bump. Checking for changes in ${CORE_PACKAGE_PREFIX}...`
   )
 
-  const files = parseChangedFiles(changedRaw)
+  const files = parseChangedFiles(env.CHANGED_FILES)
   if (hasCoreChanges(files)) {
-    if (summaryFile) {
-      appendFileSync(summaryFile, formatPassSummary(type))
+    if (env.GITHUB_STEP_SUMMARY) {
+      appendFileSync(env.GITHUB_STEP_SUMMARY, formatPassSummary(type))
     }
     process.exit(0)
   }
 
-  if (summaryFile) {
-    appendFileSync(summaryFile, formatFailSummary(type))
+  if (env.GITHUB_STEP_SUMMARY) {
+    appendFileSync(env.GITHUB_STEP_SUMMARY, formatFailSummary(type))
   }
   console.error(
     `Error: PR title uses version-bumping type "${type}" but contains no changes in ${CORE_PACKAGE_PREFIX}`
