@@ -167,16 +167,12 @@ export function createParser<T>(
       return {
         ...this,
         defaultValue,
-        parseServerSide(value) {
-          return parseServerSideNullable(value) ?? defaultValue
-        }
+        parseServerSide: (value: string | string[] | undefined) =>
+          parseServerSideNullable(value) ?? defaultValue
       }
     },
     withOptions(options: Options) {
-      return {
-        ...this,
-        ...options
-      }
+      return { ...this, ...options }
     }
   }
 }
@@ -199,16 +195,12 @@ export function createMultiParser<T>(
       return {
         ...this,
         defaultValue,
-        parseServerSide(value) {
-          return parseServerSideNullable(value) ?? defaultValue
-        }
+        parseServerSide: (value: string | string[] | undefined) =>
+          parseServerSideNullable(value) ?? defaultValue
       }
     },
     withOptions(options: Options) {
-      return {
-        ...this,
-        ...options
-      }
+      return { ...this, ...options }
     }
   }
 }
