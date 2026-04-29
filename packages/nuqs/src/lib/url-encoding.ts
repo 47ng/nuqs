@@ -1,7 +1,7 @@
 import { error } from './errors'
 
 const pe = (c: string): string =>
-  '%' + c.charCodeAt(0).toString(16).padStart(2, '0').toUpperCase()
+  '%' + (c.charCodeAt(0) | 256).toString(16).slice(-2).toUpperCase()
 
 export function renderQueryString(search: URLSearchParams): string {
   if (search.size === 0) {
