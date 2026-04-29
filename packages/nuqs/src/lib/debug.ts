@@ -26,20 +26,18 @@ export function sprintf(base: string, ...args: any[]): string {
 }
 
 function isDebugEnabled(): boolean {
-  // Issue: https://github.com/47ng/nuqs/issues/1336
-  // Backend (Node/server): use DEBUG env var, never touch localStorage.
+  // Backend (Node/server): use DEBUG env var, never touch localStorage. #1336
   if (typeof window === 'undefined') {
-    return (process.env.DEBUG || '').includes('nuqs')
+    return !!process.env.DEBUG?.includes('nuqs')
   }
-  // localStorage may be unavailable (e.g. Safari private mode).
-  // See https://github.com/47ng/nuqs/pull/588
+  // localStorage may be unavailable (e.g. Safari private mode). #588
   try {
     if (typeof localStorage === 'undefined') return false
     const k = 'nuqs-localStorage-test'
     localStorage.setItem(k, k)
     const ok = localStorage.getItem(k) === k
     localStorage.removeItem(k)
-    return ok && (localStorage.getItem('debug') || '').includes('nuqs')
+    return ok && !!localStorage.getItem('debug')?.includes('nuqs')
   } catch {
     return false
   }
