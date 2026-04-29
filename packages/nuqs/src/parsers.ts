@@ -398,11 +398,8 @@ export function parseAsJson<T>(
         return null
       }
     },
-    serialize: value => JSON.stringify(value),
-    eq(a, b) {
-      // Check for referential equality first
-      return a === b || JSON.stringify(a) === JSON.stringify(b)
-    }
+    serialize: JSON.stringify,
+    eq: (a, b) => a === b || JSON.stringify(a) === JSON.stringify(b)
   })
 }
 
