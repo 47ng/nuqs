@@ -7,12 +7,12 @@ export function safeParse<I, R>(
 ): R | null {
   try {
     return parser(value)
-  } catch (error) {
+  } catch (e) {
     warn(
       '[nuqs] Error while parsing value `%s`: %O' +
         (key ? ' (for key `%s`)' : ''),
       value,
-      error,
+      e,
       key
     )
     return null
