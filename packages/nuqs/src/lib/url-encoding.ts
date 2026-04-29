@@ -1,7 +1,6 @@
 import { error } from './errors'
 
-const pe = (c: string): string =>
-  c === "'" ? '%27' : encodeURIComponent(c)
+const pe = (c: string): string => (c === "'" ? '%27' : encodeURIComponent(c))
 
 export function renderQueryString(search: URLSearchParams): string {
   if (search.size === 0) {
@@ -23,9 +22,7 @@ export function encodeQueryValue(input: string): string {
   // Encode % first (escape sequence safety), pre-encode + so spaces->+
   // doesn't get re-encoded, then handle other reserved & control chars,
   // and finally turn spaces into +.
-  return input
-    .replace(/[%+#&"'`<>\x00-\x1F]/g, pe)
-    .replace(/ /g, '+')
+  return input.replace(/[%+#&"'`<>\x00-\x1F]/g, pe).replace(/ /g, '+')
 }
 
 // Note: change error documentation (NUQS-414) when changing this value.

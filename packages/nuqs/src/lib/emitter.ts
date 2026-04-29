@@ -19,13 +19,23 @@ export function createEmitter<
   type H = (event: Events[keyof Events]) => any
   const all = new Map<keyof Events, H[]>()
   return {
-    on<Key extends keyof Events>(type: Key, handler: (event: Events[Key]) => any) {
+    on<Key extends keyof Events>(
+      type: Key,
+      handler: (event: Events[Key]) => any
+    ) {
       all.set(type, [...(all.get(type) ?? []), handler as H])
       return () => this.off(type, handler)
     },
-    off<Key extends keyof Events>(type: Key, handler: (event: Events[Key]) => any) {
+    off<Key extends keyof Events>(
+      type: Key,
+      handler: (event: Events[Key]) => any
+    ) {
       const h = all.get(type)
-      if (h) all.set(type, h.filter(x => x !== handler))
+      if (h)
+        all.set(
+          type,
+          h.filter(x => x !== handler)
+        )
     },
     emit<Key extends keyof Events>(
       type: Key,
