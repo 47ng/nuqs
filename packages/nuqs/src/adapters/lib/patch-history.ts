@@ -18,48 +18,33 @@ declare global {
 }
 
 export function shouldPatchHistory(adapter: string): boolean {
-  if (typeof history === 'undefined') {
+  if (typeof history === 'undefined') return false
+  const v = history.nuqs?.version
+  if (v && v !== '0.0.0-inject-version-here') {
+    console.error(error(409), v, `0.0.0-inject-version-here`, adapter)
     return false
   }
-  if (
-    history.nuqs?.version &&
-    history.nuqs.version !== '0.0.0-inject-version-here'
-  ) {
-    console.error(
-      error(409),
-      history.nuqs.version,
-      `0.0.0-inject-version-here`,
-      adapter
-    )
-    return false
-  }
-  if (history.nuqs?.adapters?.includes(adapter)) {
-    return false
-  }
-  return true
+  return !history.nuqs?.adapters?.includes(adapter)
 }
 
 export function markHistoryAsPatched(adapter: string): void {
-  history.nuqs = history.nuqs ?? {
-    // This will be replaced by the prepack script
+  // version replaced by the prepack script
+  ;(history.nuqs ??= {
     version: '0.0.0-inject-version-here',
     adapters: []
-  }
-  history.nuqs.adapters.push(adapter)
+  }).adapters.push(adapter)
 }
 
 export function patchHistory(
   emitter: Emitter<SearchParamsSyncEmitterEvents>,
   adapter: string
 ): void {
-  if (!shouldPatchHistory(adapter)) {
-    return
-  }
+  if (!shouldPatchHistory(adapter)) return
   let lastSearchSeen = typeof location === 'object' ? location.search : ''
 
   emitter.on('update', search => {
-    const searchString = search.toString()
-    lastSearchSeen = searchString.length ? '?' + searchString : ''
+    const s = search.toString()
+    lastSearchSeen = s ? '?' + s : ''
   })
 
   window.addEventListener('popstate', () => {
@@ -75,10 +60,7 @@ export function patchHistory(
   function sync(url: URL | string) {
     spinQueueResetMutex()
     try {
-      const newSearch = new URL(url, location.origin).search
-      if (newSearch === lastSearchSeen) {
-        return
-      }
+      if (new URL(url, location.origin).search === lastSearchSeen) return
     } catch {}
     try {
       emitter.emit('update', getSearchParams(url))
@@ -86,18 +68,11 @@ export function patchHistory(
       console.error(e)
     }
   }
-  const originalPushState = history.pushState
-  const originalReplaceState = history.replaceState
-  history.pushState = function nuqs_pushState(state, marker, url) {
-    originalPushState.call(history, state, '', url)
-    if (url && marker !== historyUpdateMarker) {
-      sync(url)
-    }
-  }
-  history.replaceState = function nuqs_replaceState(state, marker, url) {
-    originalReplaceState.call(history, state, '', url)
-    if (url && marker !== historyUpdateMarker) {
-      sync(url)
+  for (const m of ['pushState', 'replaceState'] as const) {
+    const orig = history[m]
+    history[m] = function (state, marker, url) {
+      orig.call(history, state, '', url)
+      if (url && marker !== historyUpdateMarker) sync(url)
     }
   }
   markHistoryAsPatched(adapter)

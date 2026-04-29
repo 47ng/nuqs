@@ -7,13 +7,10 @@ export function applyChange(
   copy: boolean
 ): (oldValue: URLSearchParams) => URLSearchParams {
   return (oldValue: URLSearchParams) => {
-    const hasChanged =
-      keys.length === 0
-        ? true
-        : keys.some(
-            key => !compareQuery(oldValue.getAll(key), newValue.getAll(key))
-          )
-    if (!hasChanged) {
+    if (
+      keys.length &&
+      keys.every(k => compareQuery(oldValue.getAll(k), newValue.getAll(k)))
+    ) {
       debug(
         '[nuqs `%s`] no change, returning previous',
         keys.join(','),
@@ -39,14 +36,10 @@ export function filterSearchParams(
   keys: string[],
   copy: boolean
 ): URLSearchParams {
-  if (keys.length === 0) {
-    return search
-  }
+  if (!keys.length) return search
   const filtered = copy ? new URLSearchParams(search) : search
   for (const key of search.keys()) {
-    if (!keys.includes(key)) {
-      filtered.delete(key)
-    }
+    if (!keys.includes(key)) filtered.delete(key)
   }
   return filtered
 }
