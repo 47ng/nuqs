@@ -70,7 +70,7 @@ jobs:
           path: packages/e2e/next/.playwright/*
           name: playwright-next-${{ env.VERSION }}${{ matrix.base-path && '-basePath' || ''}}${{ matrix.react-compiler && '-react-compiler' || ''}}${{ matrix.cache-components && '-cache-components' || ''}}
           include-hidden-files: true
-      - uses: 47ng/actions-slack-notify@main
+      - uses: 47ng/actions-slack-notify@0917ccc17666d2ca5eb8b8a1afced5048da8c8b5 # 1.0.2
         name: Notify on Slack
         if: failure()
         with:
@@ -107,7 +107,7 @@ jobs:
         run: pnpm run build --filter docs
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - uses: 47ng/actions-slack-notify@main
+      - uses: 47ng/actions-slack-notify@0917ccc17666d2ca5eb8b8a1afced5048da8c8b5 # 1.0.2
         name: Notify on Slack
         if: failure()
         with:
@@ -135,7 +135,7 @@ jobs:
       - docs
     if: ${{ needs.test_against_nextjs_release.result == 'success' && (needs.docs.result == 'success' || needs.docs.result == 'skipped') }}
     steps:
-      - uses: 47ng/actions-slack-notify@main
+      - uses: 47ng/actions-slack-notify@0917ccc17666d2ca5eb8b8a1afced5048da8c8b5 # 1.0.2
         with:
           status: ${{ job.status }}
           jobName: "${{ env.VERSION }}"
