@@ -205,43 +205,31 @@ export function createMultiParser<T>(
 
 // Parsers implementations -----------------------------------------------------
 
+// NaN-check helper: works for numbers and Dates (via unary + coercion).
+const ok = <T extends number | Date>(v: T): T | null => (+v == +v ? v : null)
+
 export const parseAsString: SingleParserBuilder<string> = createParser({
   parse: v => v,
   serialize: String
 })
 
 export const parseAsInteger: SingleParserBuilder<number> = createParser({
-  parse: v => {
-    const int = parseInt(v)
-    return int == int ? int : null // NaN check at low bundle size cost
-  },
+  parse: v => ok(parseInt(v)),
   serialize: v => '' + Math.round(v)
 })
 
 export const parseAsIndex: SingleParserBuilder<number> = createParser({
-  parse: v => {
-    const int = parseInt(v)
-    return int == int ? int - 1 : null // NaN check at low bundle size cost
-  },
+  parse: v => ok(parseInt(v) - 1),
   serialize: v => '' + Math.round(v + 1)
 })
 
 export const parseAsHex: SingleParserBuilder<number> = createParser({
-  parse: v => {
-    const int = parseInt(v, 16)
-    return int == int ? int : null // NaN check at low bundle size cost
-  },
-  serialize: v => {
-    const hex = Math.round(v).toString(16)
-    return (hex.length & 1 ? '0' : '') + hex
-  }
+  parse: v => ok(parseInt(v, 16)),
+  serialize: v => Math.round(v).toString(16).replace(/^.(..)*$/, '0$&')
 })
 
 export const parseAsFloat: SingleParserBuilder<number> = createParser({
-  parse: v => {
-    const float = parseFloat(v)
-    return float == float ? float : null // NaN check at low bundle size cost
-  },
+  parse: v => ok(parseFloat(v)),
   serialize: String
 })
 
@@ -250,20 +238,15 @@ export const parseAsBoolean: SingleParserBuilder<boolean> = createParser({
   serialize: String
 })
 
-function compareDates(a: Date, b: Date) {
-  return a.valueOf() === b.valueOf()
-}
+const compareDates = (a: Date, b: Date) => +a === +b
 
 /**
  * Querystring encoded as the number of milliseconds since epoch,
  * and returned as a Date object.
  */
 export const parseAsTimestamp: SingleParserBuilder<Date> = createParser({
-  parse: v => {
-    const ms = parseInt(v)
-    return ms == ms ? new Date(ms) : null // NaN check at low bundle size cost
-  },
-  serialize: (v: Date) => '' + v.valueOf(),
+  parse: v => ok(new Date(parseInt(v))),
+  serialize: (v: Date) => '' + +v,
   eq: compareDates
 })
 
@@ -272,11 +255,7 @@ export const parseAsTimestamp: SingleParserBuilder<Date> = createParser({
  * and returned as a Date object.
  */
 export const parseAsIsoDateTime: SingleParserBuilder<Date> = createParser({
-  parse: v => {
-    const date = new Date(v)
-    // NaN check at low bundle size cost
-    return date.valueOf() == date.valueOf() ? date : null
-  },
+  parse: v => ok(new Date(v)),
   serialize: (v: Date) => v.toISOString(),
   eq: compareDates
 })
@@ -290,11 +269,7 @@ export const parseAsIsoDateTime: SingleParserBuilder<Date> = createParser({
  * making it at 00:00:00 UTC.
  */
 export const parseAsIsoDate: SingleParserBuilder<Date> = createParser({
-  parse: v => {
-    const date = new Date(v.slice(0, 10))
-    // NaN check at low bundle size cost
-    return date.valueOf() == date.valueOf() ? date : null
-  },
+  parse: v => ok(new Date(v.slice(0, 10))),
   serialize: (v: Date) => v.toISOString().slice(0, 10),
   eq: compareDates
 })
