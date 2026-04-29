@@ -14,15 +14,20 @@ export const NON_BUMPING_TYPES = [
   'test'
 ] as const
 
+export type BumpingType = (typeof BUMPING_TYPES)[number]
+
 export const CORE_PACKAGE_PREFIX = 'packages/nuqs/'
 
 export function extractType(title: string): string | undefined {
   return title.match(/^([a-z]+)/)?.[1]
 }
 
-export function isVersionBumping(type: string | undefined): boolean {
-  if (!type) return false
-  return (BUMPING_TYPES as readonly string[]).includes(type)
+export function isVersionBumping(
+  type: string | undefined
+): type is BumpingType {
+  return (
+    type !== undefined && (BUMPING_TYPES as readonly string[]).includes(type)
+  )
 }
 
 export function hasCoreChanges(files: string[]): boolean {
@@ -88,13 +93,13 @@ function main(): void {
   const files = parseChangedFiles(changedRaw)
   if (hasCoreChanges(files)) {
     if (summaryFile) {
-      appendFileSync(summaryFile, formatPassSummary(type!))
+      appendFileSync(summaryFile, formatPassSummary(type))
     }
     process.exit(0)
   }
 
   if (summaryFile) {
-    appendFileSync(summaryFile, formatFailSummary(type!))
+    appendFileSync(summaryFile, formatFailSummary(type))
   }
   console.error(
     `Error: PR title uses version-bumping type "${type}" but contains no changes in ${CORE_PACKAGE_PREFIX}`

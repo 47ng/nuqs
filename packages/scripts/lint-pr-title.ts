@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import { appendFileSync, readFileSync } from 'node:fs'
+import { z } from 'zod'
 
 // Matches the @commitlint/config-conventional default. If the project ever
 // overrides header-max-length in package.json, update this constant.
@@ -26,28 +27,23 @@ export function parseTitle(title: string): ParsedTitle | null {
   }
 }
 
+// Validates only the subset of package.json we care about. The third tuple
+// element is the rule's value per @commitlint/types — the first two slots
+// (severity, applicable) are intentionally unconstrained here.
+const PackageJsonSchema = z.object({
+  commitlint: z.object({
+    rules: z.object({
+      'type-enum': z.tuple([z.unknown(), z.unknown(), z.array(z.string())])
+    })
+  })
+})
+
 export function readTypeEnum(packageJsonContents: string): string[] {
-  const pkg: unknown = JSON.parse(packageJsonContents)
-  const types =
-    typeof pkg === 'object' && pkg !== null
-      ? (pkg as Record<string, unknown>).commitlint
-      : undefined
-  const rules =
-    typeof types === 'object' && types !== null
-      ? (types as Record<string, unknown>).rules
-      : undefined
-  const typeEnum =
-    typeof rules === 'object' && rules !== null
-      ? (rules as Record<string, unknown>)['type-enum']
-      : undefined
-  const value = Array.isArray(typeEnum) ? typeEnum[2] : undefined
-  if (
-    !Array.isArray(value) ||
-    !value.every((t: unknown) => typeof t === 'string')
-  ) {
+  const parsed = PackageJsonSchema.safeParse(JSON.parse(packageJsonContents))
+  if (!parsed.success) {
     throw new Error('package.json missing commitlint.rules.type-enum string[]')
   }
-  return value as string[]
+  return parsed.data.commitlint.rules['type-enum'][2]
 }
 
 export function validateTitle(
