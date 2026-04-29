@@ -24,38 +24,7 @@ jobs:
       - name: Lint PR title
         env:
           TITLE: ${{ github.event.pull_request.title }}
-        run: |
-          node --input-type=module -e '
-            import { readFileSync, appendFileSync } from "node:fs";
-            const pkg = JSON.parse(readFileSync("./package.json", "utf8"));
-            const types = pkg.commitlint?.rules?.["type-enum"]?.[2];
-            if (!Array.isArray(types) || !types.every((t) => typeof t === "string")) {
-              throw new Error("package.json missing commitlint.rules.type-enum string[]");
-            }
-            // Matches the @commitlint/config-conventional default. Update if
-            // the project ever overrides header-max-length in package.json.
-            const MAX_LEN = 100;
-            const FORMAT = /^([a-z]+)(?:\(([^)]+)\))?(!)?: (.+)$/;
-            const title = process.env.TITLE ?? "";
-            const errors = [];
-            const m = title.match(FORMAT);
-            if (!m) {
-              errors.push("Title does not match `type(scope)?(!)?: subject` format");
-            } else if (!types.includes(m[1])) {
-              errors.push(`Type \`${m[1]}\` is not allowed. Allowed types: ${types.join(", ")}`);
-            }
-            if (title.length > MAX_LEN) {
-              errors.push(`Title exceeds ${MAX_LEN} characters (got ${title.length})`);
-            }
-            const summary = errors.length
-              ? `## ❌ PR Title Lint\n${errors.map((e) => `- ${e}`).join("\n")}\n`
-              : `## ✅ PR Title Lint\n- Valid\n`;
-            appendFileSync(process.env.GITHUB_STEP_SUMMARY, summary);
-            if (errors.length) {
-              for (const e of errors) console.error(e);
-              process.exit(1);
-            }
-          '
+        run: ./packages/scripts/lint-pr-title.ts
       - name: Get changed files
         id: changed-files
         env:
@@ -68,55 +37,4 @@ jobs:
         env:
           TITLE: ${{ github.event.pull_request.title }}
           CHANGED_FILES: ${{ steps.changed-files.outputs.files }}
-        run: |
-          node --input-type=module -e '
-            import { appendFileSync } from "node:fs";
-            const VERSION_BUMPING = ["feat", "fix", "perf", "revert"];
-            const NON_BUMPING = ["build", "chore", "ci", "clean", "doc", "ref", "style", "test"];
-            const m = (process.env.TITLE ?? "").match(/^([a-z]+)/);
-            const type = m?.[1];
-            if (!VERSION_BUMPING.includes(type)) {
-              console.log(`Commit type \`${type}\` does not trigger a version bump. Skipping core package check.`);
-              process.exit(0);
-            }
-            console.log(`Commit type \`${type}\` triggers a version bump. Checking for changes in packages/nuqs...`);
-            const files = (process.env.CHANGED_FILES ?? "").trim().split(" ").filter(Boolean);
-            if (files.some((f) => f.startsWith("packages/nuqs/"))) {
-              appendFileSync(
-                process.env.GITHUB_STEP_SUMMARY,
-                `## ✅ Version Bump Check Passed\n\nCommit type \`${type}\` is valid because the PR includes changes to \`packages/nuqs\`.\n`
-              );
-              process.exit(0);
-            }
-            const summary = [
-              `## ❌ Version Bump Check Failed`,
-              ``,
-              `Your PR title uses the commit type **\`${type}\`** which triggers a version bump, but no changes were found in the core package (\`packages/nuqs\`).`,
-              ``,
-              `### What to do:`,
-              ``,
-              `If this PR does not include changes to the core \`nuqs\` package, please use a non-bumping commit type instead:`,
-              ``,
-              `| Type | Use for |`,
-              `|------|---------|`,
-              `| \`doc\` | Documentation updates |`,
-              `| \`chore\` | Maintenance, CI/CD, dependencies |`,
-              `| \`test\` | Test additions or modifications |`,
-              `| \`ci\` | CI configuration changes |`,
-              `| \`build\` | Build system changes |`,
-              `| \`style\` | Code style/formatting |`,
-              `| \`ref\` | Refactoring (non-core) |`,
-              ``,
-              `### Version-bumping types (require core package changes):`,
-              `- \`feat\` → minor version bump`,
-              `- \`fix\` → patch version bump`,
-              `- \`perf\` → patch version bump`,
-              `- \`revert\` → depends on reverted commit`,
-              ``,
-            ].join("\n");
-            appendFileSync(process.env.GITHUB_STEP_SUMMARY, summary);
-            console.error(`Error: PR title uses version-bumping type "${type}" but contains no changes in packages/nuqs`);
-            console.error(`Changed files: ${files.join(", ")}`);
-            console.error(`\nPlease use a non-bumping commit type: ${NON_BUMPING.join(", ")}`);
-            process.exit(1);
-          '
+        run: ./packages/scripts/check-version-bump.ts
