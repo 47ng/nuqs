@@ -385,13 +385,13 @@ export function parseAsJson<T>(
       try {
         const obj = JSON.parse(query)
         if ('~standard' in validator) {
-          const result = validator['~standard'].validate(obj)
-          if (result instanceof Promise) {
+          const r = validator['~standard'].validate(obj)
+          if (r instanceof Promise) {
             throw new Error(
               '[nuqs] Only synchronous Standard Schemas are supported in parseAsJson.'
             )
           }
-          return result.issues ? null : result.value
+          return r.issues ? null : r.value
         }
         return validator(obj)
       } catch {
