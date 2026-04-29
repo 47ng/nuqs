@@ -35,8 +35,14 @@ jobs:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
-          files=$(git diff --name-only "$BASE_SHA...$HEAD_SHA" | tr '\n' ' ')
-          echo "files=$files" >> "$GITHUB_OUTPUT"
+          # NUL-delimited from git, then NUL -> newline for $GITHUB_OUTPUT
+          # transport. Filenames containing whitespace survive the round trip.
+          delim="EOF_$(openssl rand -hex 16)"
+          {
+            printf 'files<<%s\n' "$delim"
+            git diff -z --name-only "$BASE_SHA...$HEAD_SHA" | tr '\0' '\n'
+            printf '%s\n' "$delim"
+          } >> "$GITHUB_OUTPUT"
       - name: Check version-bumping commits target core package
         env:
           TITLE: ${{ github.event.pull_request.title }}

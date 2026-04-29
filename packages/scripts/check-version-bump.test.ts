@@ -69,12 +69,26 @@ describe('hasCoreChanges', () => {
 })
 
 describe('parseChangedFiles', () => {
-  it('splits space-separated entries and trims', () => {
-    expect(parseChangedFiles('  a.ts b.ts  c.ts ')).toEqual([
+  it('splits newline-separated entries and trims', () => {
+    expect(parseChangedFiles('a.ts\nb.ts\nc.ts')).toEqual([
       'a.ts',
       'b.ts',
       'c.ts'
     ])
+  })
+
+  it('preserves filenames containing spaces', () => {
+    expect(
+      parseChangedFiles('packages/nuqs/src/My Component.ts\ndocs/README.md')
+    ).toEqual(['packages/nuqs/src/My Component.ts', 'docs/README.md'])
+  })
+
+  it('tolerates a trailing newline', () => {
+    expect(parseChangedFiles('a.ts\nb.ts\n')).toEqual(['a.ts', 'b.ts'])
+  })
+
+  it('drops blank lines', () => {
+    expect(parseChangedFiles('a.ts\n\nb.ts')).toEqual(['a.ts', 'b.ts'])
   })
 
   it('returns empty array for empty input', () => {

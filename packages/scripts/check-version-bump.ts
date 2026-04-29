@@ -37,7 +37,14 @@ export function hasCoreChanges(files: string[]): boolean {
 }
 
 export function parseChangedFiles(raw: string): string[] {
-  return raw.trim().split(' ').filter(Boolean)
+  // The workflow emits one filename per line (NUL-delimited from git, then
+  // converted to newlines for $GITHUB_OUTPUT). Newlines are not legal in
+  // filenames on the filesystems we care about, so splitting on '\n' is the
+  // unambiguous choice and survives whitespace-in-filenames.
+  return raw
+    .split('\n')
+    .map(s => s.trim())
+    .filter(Boolean)
 }
 
 export function formatPassSummary(type: string): string {
