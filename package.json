@@ -34,7 +34,7 @@
     "turbo": "^2.8.2",
     "typescript": "catalog:typescript"
   },
-  "packageManager": "pnpm@10.28.2",
+  "packageManager": "pnpm@11.0.9",
   "prettier": {
     "arrowParens": "avoid",
     "semi": false,
