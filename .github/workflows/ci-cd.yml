@@ -22,7 +22,7 @@ jobs:
     runs-on: ubuntu-24.04-arm
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
-      - uses: pnpm/action-setup@ab5d408e9d066b8ffe7503f789d50fd7e35c0c92 # v6.0.7
+      - uses: pnpm/action-setup@739bfe42ca9233c5e6aca07c1a25a9d34aca49b0 # v6.0.7
       - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
         with:
           node-version-file: .node-version
@@ -73,7 +73,7 @@ jobs:
     needs: [ci-core]
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
-      - uses: pnpm/action-setup@ab5d408e9d066b8ffe7503f789d50fd7e35c0c92 # v6.0.7
+      - uses: pnpm/action-setup@739bfe42ca9233c5e6aca07c1a25a9d34aca49b0 # v6.0.7
       - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
         with:
           node-version-file: .node-version
@@ -98,7 +98,7 @@ jobs:
     runs-on: ubuntu-24.04-arm
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
-      - uses: pnpm/action-setup@ab5d408e9d066b8ffe7503f789d50fd7e35c0c92 # v6.0.7
+      - uses: pnpm/action-setup@739bfe42ca9233c5e6aca07c1a25a9d34aca49b0 # v6.0.7
       - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
         with:
           node-version-file: .node-version
@@ -113,7 +113,7 @@ jobs:
     runs-on: ubuntu-24.04-arm
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
-      - uses: pnpm/action-setup@ab5d408e9d066b8ffe7503f789d50fd7e35c0c92 # v6.0.7
+      - uses: pnpm/action-setup@739bfe42ca9233c5e6aca07c1a25a9d34aca49b0 # v6.0.7
       - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
         with:
           node-version-file: .node-version
@@ -139,7 +139,7 @@ jobs:
       actions: read
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
-      - uses: pnpm/action-setup@ab5d408e9d066b8ffe7503f789d50fd7e35c0c92 # v6.0.7
+      - uses: pnpm/action-setup@739bfe42ca9233c5e6aca07c1a25a9d34aca49b0 # v6.0.7
       - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
         with:
           node-version-file: .node-version
@@ -211,7 +211,7 @@ jobs:
             react-compiler: true
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
-      - uses: pnpm/action-setup@ab5d408e9d066b8ffe7503f789d50fd7e35c0c92 # v6.0.7
+      - uses: pnpm/action-setup@739bfe42ca9233c5e6aca07c1a25a9d34aca49b0 # v6.0.7
       - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
         with:
           node-version-file: .node-version
@@ -260,7 +260,7 @@ jobs:
         full-page-nav-on-shallow-false: [false, true]
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
-      - uses: pnpm/action-setup@ab5d408e9d066b8ffe7503f789d50fd7e35c0c92 # v6.0.7
+      - uses: pnpm/action-setup@739bfe42ca9233c5e6aca07c1a25a9d34aca49b0 # v6.0.7
       - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
         with:
           node-version-file: .node-version
@@ -302,7 +302,7 @@ jobs:
           - "v7"
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
-      - uses: pnpm/action-setup@ab5d408e9d066b8ffe7503f789d50fd7e35c0c92 # v6.0.7
+      - uses: pnpm/action-setup@739bfe42ca9233c5e6aca07c1a25a9d34aca49b0 # v6.0.7
       - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
         with:
           node-version-file: .node-version
@@ -337,7 +337,7 @@ jobs:
     needs: [ci-core]
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
-      - uses: pnpm/action-setup@ab5d408e9d066b8ffe7503f789d50fd7e35c0c92 # v6.0.7
+      - uses: pnpm/action-setup@739bfe42ca9233c5e6aca07c1a25a9d34aca49b0 # v6.0.7
       - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
         with:
           node-version-file: .node-version
@@ -372,7 +372,7 @@ jobs:
     needs: [ci-core]
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
-      - uses: pnpm/action-setup@ab5d408e9d066b8ffe7503f789d50fd7e35c0c92 # v6.0.7
+      - uses: pnpm/action-setup@739bfe42ca9233c5e6aca07c1a25a9d34aca49b0 # v6.0.7
       - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
         with:
           node-version-file: .node-version
@@ -445,7 +445,7 @@ jobs:
     if: ${{ github.ref_name == 'master' || github.ref_name == 'beta' }}
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
-      - uses: pnpm/action-setup@ab5d408e9d066b8ffe7503f789d50fd7e35c0c92 # v6.0.7
+      - uses: pnpm/action-setup@739bfe42ca9233c5e6aca07c1a25a9d34aca49b0 # v6.0.7
       - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
         with:
           # Node.js pinned via .node-version must ship npm >= 11.5.1
