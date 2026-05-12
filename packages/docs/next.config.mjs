@@ -32,6 +32,16 @@ const config = {
         destination: '/docs/parsers/community/tanstack-table',
         permanent: false
       },
+      {
+        source: '/changelog', // Shorthand
+        destination: '/docs/changelog',
+        permanent: false
+      },
+      {
+        source: '/changelog.md', // Shorthand
+        destination: '/docs/changelog.md',
+        permanent: false
+      },
       // Cool URLs don't break
       {
         source: '/docs/parsers',
