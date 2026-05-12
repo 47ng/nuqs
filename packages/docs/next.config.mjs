@@ -37,6 +37,11 @@ const config = {
         destination: '/docs/changelog',
         permanent: false
       },
+      {
+        source: '/changelog.md', // Shorthand
+        destination: '/docs/changelog.md',
+        permanent: false
+      },
       // Cool URLs don't break
       {
         source: '/docs/parsers',
