@@ -8,6 +8,7 @@ import { type ReactNode } from 'react'
 import { TopBanner } from './banners'
 import { Favicon } from '../components/favicon'
 import { ResponsiveHelper } from '../components/responsive-helpers'
+import { Toaster } from '../components/ui/sonner'
 import { cn } from '../lib/utils'
 import './globals.css'
 
@@ -59,6 +60,7 @@ export default function Layout({ children }: { children: ReactNode }) {
         <TopBanner />
         <RootProvider>
           <NuqsAdapter>{children}</NuqsAdapter>
+          <Toaster />
         </RootProvider>
         {enableAnalytics && (
           <>
