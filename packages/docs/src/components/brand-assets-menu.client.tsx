@@ -1,7 +1,7 @@
 'use client'
 
-import { DownloadIcon, TypeIcon } from 'lucide-react'
-import { type ReactElement } from 'react'
+import { CheckIcon, CopyIcon, DownloadIcon, TypeIcon } from 'lucide-react'
+import { type ReactElement, useRef, useState } from 'react'
 import { toast } from 'sonner'
 
 import {
@@ -26,13 +26,28 @@ export function BrandAssetsMenuClient({
   downloadableAssets,
   children
 }: BrandAssetsMenuClientProps) {
+  const [copiedAssetId, setCopiedAssetId] = useState<string | null>(null)
+  const copyingAssetId = useRef<string | null>(null)
+
   const copyAsset = async (asset: BrandAsset) => {
+    if (copyingAssetId.current === asset.id) {
+      return
+    }
+    copyingAssetId.current = asset.id
+    setCopiedAssetId(asset.id)
     const copied = await copyText(asset.svg)
     if (copied) {
       toast.success(`${asset.toastLabel} copied`)
     } else {
       toast.error(`Failed to copy ${asset.toastLabel.toLowerCase()}`)
     }
+    window.setTimeout(() => {
+      copyingAssetId.current = null
+      setCopiedAssetId(null)
+      document.dispatchEvent(
+        new KeyboardEvent('keydown', { key: 'Escape', bubbles: true })
+      )
+    }, 450)
   }
 
   const downloadBrandAssets = () => {
@@ -53,14 +68,21 @@ export function BrandAssetsMenuClient({
   }
 
   return (
-    <ContextMenu>
+    <ContextMenu onOpenChange={open => !open && setCopiedAssetId(null)}>
       <ContextMenuTrigger asChild>
         <span className="inline-flex items-center">{children}</span>
       </ContextMenuTrigger>
 
       <ContextMenuContent className="w-fit">
         {assets.map(asset => (
-          <ContextMenuItem key={asset.id} onClick={() => void copyAsset(asset)}>
+          <ContextMenuItem
+            key={asset.id}
+            onClick={() => void copyAsset(asset)}
+            onSelect={event => {
+              event.preventDefault()
+              void copyAsset(asset)
+            }}
+          >
             {asset.preview === 'logotype' ? (
               <TypeIcon />
             ) : (
@@ -72,7 +94,12 @@ export function BrandAssetsMenuClient({
                 dangerouslySetInnerHTML={{ __html: asset.svg }}
               />
             )}
-            {asset.actionLabel}
+            <span>{asset.actionLabel}</span>
+            {copiedAssetId === asset.id ? (
+              <CheckIcon className="ml-auto text-green-600 dark:text-green-400" />
+            ) : (
+              <CopyIcon className="ml-auto" />
+            )}
           </ContextMenuItem>
         ))}
 
