@@ -2,7 +2,6 @@
 
 import { CheckIcon, CopyIcon, DownloadIcon, TypeIcon } from 'lucide-react'
 import { type ReactElement, useRef, useState } from 'react'
-import { toast } from 'sonner'
 
 import {
   ContextMenu,
@@ -35,12 +34,7 @@ export function BrandAssetsMenuClient({
     }
     copyingAssetId.current = asset.id
     setCopiedAssetId(asset.id)
-    const copied = await copyText(asset.svg)
-    if (copied) {
-      toast.success(`${asset.toastLabel} copied`)
-    } else {
-      toast.error(`Failed to copy ${asset.toastLabel.toLowerCase()}`)
-    }
+    await copyText(asset.svg)
     window.setTimeout(() => {
       copyingAssetId.current = null
       setCopiedAssetId(null)
@@ -117,9 +111,8 @@ export function BrandAssetsMenuClient({
 const copyText = async (text: string) => {
   try {
     await navigator.clipboard.writeText(text)
-    return true
   } catch {
-    return false
+    // The icon feedback is intentionally local-only; browsers may deny clipboard access.
   }
 }
 

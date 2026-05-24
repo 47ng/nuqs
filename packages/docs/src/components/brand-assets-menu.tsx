@@ -11,7 +11,6 @@ export type BrandAssetsMenuProps = {
 export type BrandAsset = {
   id: string
   actionLabel: string
-  toastLabel: string
   filename: string
   preview: 'logomark' | 'logotype'
   previewClassName: string
@@ -29,7 +28,6 @@ const assets = [
   {
     id: 'logomark',
     actionLabel: 'Copy Logomark as SVG',
-    toastLabel: 'Logomark as SVG',
     filename: 'logo.dark.svg',
     preview: 'logomark',
     previewClassName: 'size-4'
@@ -37,7 +35,6 @@ const assets = [
   {
     id: 'logotype',
     actionLabel: 'Copy Logotype as SVG',
-    toastLabel: 'Logotype as SVG',
     filename: 'wordmark.svg',
     preview: 'logotype',
     previewClassName: 'size-4'
