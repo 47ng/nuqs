@@ -63,6 +63,12 @@ const SPONSORS: Sponsors = [
     img: 'https://avatars.githubusercontent.com/u/57156815?s=200&v=4'
   },
   {
+    handle: 'TradingGoose',
+    name: 'TradingGoose',
+    url: 'https://www.tradinggoose.ai/?utm_source=nuqs&utm_medium=sponsor&utm_campaign=nuqs',
+    img: 'https://avatars.githubusercontent.com/u/226357056?s=200&v=4'
+  },
+  {
     handle: 'pqoqubbw',
     name: 'dmytro',
     url: 'https://pqoqubbw.dev/',
@@ -446,7 +452,7 @@ export function AsideSponsor1771Technologies() {
           <img
             src="https://avatars.githubusercontent.com/u/148620833?s=200&v=4"
             alt="1771 Technologies"
-            className="size-8 rounded-full grayscale opacity-50 transition-all group-hover:grayscale-0 group-hover:opacity-100 group-active:grayscale-0 group-active:opacity-100"
+            className="size-8 rounded-full opacity-50 grayscale transition-all group-hover:opacity-100 group-hover:grayscale-0 group-active:opacity-100 group-active:grayscale-0"
             width={32}
             height={32}
           />
