@@ -185,6 +185,12 @@ const SPONSORS: Sponsors = [
     name: 'Hayden Bleasel',
     url: 'https://www.haydenbleasel.com/',
     img: 'https://avatars.githubusercontent.com/u/4142719?s=200&v=4'
+  },
+  {
+    handle: 'TradingGoose',
+    name: 'TradingGoose',
+    url: 'https://www.tradinggoose.ai/?utm_source=nuqs&utm_medium=sponsor&utm_campaign=nuqs',
+    img: 'https://avatars.githubusercontent.com/u/226357056?s=200&v=4'
   }
 ]
 
