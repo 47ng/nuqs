@@ -7,10 +7,9 @@
     "build": "remix vite:build",
     "dev": "remix vite:dev --port 3003",
     "start": "cross-env NODE_ENV=production PORT=3003 remix-serve ./build/server/index.js",
-    "pretest": "playwright install chromium",
     "test": "pnpm run --stream '/^test:/'",
     "test:types": "tsc",
-    "test:playwright": "playwright test --project=chromium"
+    "test:playwright": "playwright install chromium && playwright test --project=chromium"
   },
   "dependencies": {
     "@remix-run/node": "^2.17.4",
