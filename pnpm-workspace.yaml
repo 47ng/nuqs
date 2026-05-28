@@ -38,9 +38,3 @@ allowBuilds:
   esbuild: true
   sharp: true
   msw: false
-
-# Next.js canary releases must install immediately for the test-against-nextjs
-# workflows, which run ~15min after a GitHub release. The 24h minimumReleaseAge
-# default would force a fallback to an older version.
-minimumReleaseAgeExclude:
-  - next
