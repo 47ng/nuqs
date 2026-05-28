@@ -6,11 +6,7 @@
       "ignoreDependencies": ["@commitlint/config-conventional"]
     },
     "packages/scripts": {
-      "entry": [
-        "next-release-analyser.ts",
-        "release-notes-automation.ts",
-        "release-notes-automation.test.ts"
-      ],
+      "entry": ["next-release-analyser.ts", "release-notes-automation.ts"],
       "project": ["**/*.ts"]
     },
     "packages/nuqs": {
@@ -46,12 +42,7 @@
         "src/components/feature-support-matrix.tsx",
         "src/components/frameworks.tsx"
       ],
-      "project": [
-        "source.config.ts",
-        "rehype-code.config.ts",
-        "content/**/*.{ts,tsx}",
-        "src/**/*.{ts,tsx}"
-      ],
+      "project": ["content/**/*.{ts,tsx}", "src/**/*.{ts,tsx}"],
       "paths": {
         "@/*": ["./*"]
       },
@@ -62,7 +53,6 @@
         "src/components/kibo-ui/**",
         "src/components/release-contribution-graph.client.tsx",
         "src/components/release-contribution-graph.tsx",
-        "src/components/ui/pr-line.tsx",
         "src/components/vercel-oss-badge.tsx",
         "src/lib/typed-links.ts"
       ],
@@ -72,14 +62,11 @@
         "@types/mdx",
         "date-fns",
         "hast-util-to-jsx-runtime",
-        "import-in-the-middle",
-        "require-in-the-middle",
         "tailwindcss-animate"
       ]
     },
     "packages/e2e/shared": {
       "entry": [
-        "shared.spec.ts",
         "playwright/*.ts",
         "specs/**/*.{ts,tsx}",
         "components/**/*.tsx",
@@ -94,51 +81,45 @@
         "src/components/**/*.tsx",
         "specs/**/*.ts"
       ],
-      "project": ["**/*.{ts,tsx}"],
-      "ignore": [".next/**"]
+      "project": ["**/*.{ts,tsx}"]
     },
     "packages/e2e/react": {
-      "entry": ["src/main.tsx", "specs/**/*.ts"],
+      "entry": ["specs/**/*.ts"],
       "project": ["**/*.{ts,tsx}"]
     },
     "packages/e2e/remix": {
       "entry": ["app/**/*.{ts,tsx}", "specs/**/*.ts"],
-      "project": ["**/*.{ts,tsx}"],
-      "ignore": ["build/**"]
+      "project": ["**/*.{ts,tsx}"]
     },
     "packages/e2e/tanstack-router": {
       "entry": [
-        "src/main.tsx",
         "src/routes/**/*.tsx",
         "src/routeTree.gen.ts",
         "specs/**/*.ts"
       ],
-      "project": ["**/*.{ts,tsx}"],
-      "ignore": ["node_modules/**"]
+      "project": ["**/*.{ts,tsx}"]
     },
     "packages/e2e/react-router/v5": {
-      "entry": ["src/main.tsx", "specs/**/*.ts"],
+      "entry": ["specs/**/*.ts"],
       "project": ["**/*.{ts,tsx}"]
     },
     "packages/e2e/react-router/v6": {
-      "entry": ["src/main.tsx", "src/routes/**/*.tsx", "specs/**/*.ts"],
+      "entry": ["src/routes/**/*.tsx", "specs/**/*.ts"],
       "project": ["**/*.{ts,tsx}"]
     },
     "packages/e2e/react-router/v7": {
-      "entry": ["app/**/*.{ts,tsx}", "server.mjs", "specs/**/*.ts"],
-      "project": ["**/*.{ts,tsx}"],
-      "ignore": ["build/**", ".react-router/**"]
+      "entry": ["app/**/*.{ts,tsx}", "specs/**/*.ts"],
+      "project": ["**/*.{ts,tsx}"]
     },
     "packages/examples/next-app": {
-      "entry": ["src/app/**/*.{ts,tsx}", "next.config.ts"],
+      "entry": ["src/app/**/*.{ts,tsx}"],
       "project": ["src/**/*.{ts,tsx}"],
       "next": true,
-      "ignoreDependencies": ["postcss", "tailwindcss"]
+      "ignoreDependencies": ["tailwindcss"]
     },
     "packages/examples/trpc": {
-      "entry": ["app/**/*.{ts,tsx}", "server.mjs"],
-      "project": ["**/*.{ts,tsx}"],
-      "ignore": ["build/**", ".react-router/**"]
+      "entry": ["app/**/*.{ts,tsx}"],
+      "project": ["**/*.{ts,tsx}"]
     }
   },
   "ignoreIssues": {
