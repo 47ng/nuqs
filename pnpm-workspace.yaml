@@ -29,7 +29,7 @@ catalogs:
   typescript:
     typescript: ^5.9.2
 
-enablePrePostScripts: true
+enablePrePostScripts: false
 
 allowBuilds:
   '@swc/core': true

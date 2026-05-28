@@ -6,11 +6,10 @@
     "build": "react-router build",
     "dev": "react-router dev --port 3007",
     "start": "cross-env NODE_ENV=production ./server.mjs",
-    "pretest": "playwright install chromium",
     "typegen": "react-router typegen",
     "test": "pnpm run --stream '/^test:/'",
     "test:types": "pnpm run typegen && tsc",
-    "test:playwright": "playwright test --project=chromium"
+    "test:playwright": "playwright install chromium && playwright test --project=chromium"
   },
   "dependencies": {
     "@react-router/node": "^7.13.0",

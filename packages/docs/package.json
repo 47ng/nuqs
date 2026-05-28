@@ -20,8 +20,7 @@
     "build:registry": "./src/registry/assemble.ts && shadcn build",
     "start": "next start",
     "postinstall": "fumadocs-mdx",
-    "pretest": "fumadocs-mdx && next typegen && fumadocs-mdx",
-    "test": "tsc"
+    "test": "fumadocs-mdx && next typegen && fumadocs-mdx && tsc"
   },
   "dependencies": {
     "@databuddy/sdk": "^2.3.29",
