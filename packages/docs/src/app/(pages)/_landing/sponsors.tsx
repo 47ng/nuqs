@@ -45,6 +45,12 @@ const SPONSORS: Sponsors = [
     img: '/sponsors/upstash.svg'
   },
   {
+    handle: 'coderabbitai',
+    name: 'CodeRabbit',
+    url: 'https://www.coderabbit.ai/?utm_source=nuqs&utm_medium=sponsor&utm_campaign=nuqs',
+    img: '/sponsors/coderabbit.svg'
+  },
+  {
     handle: 'unkey.com',
     name: 'Unkey',
     url: 'https://unkey.com',
