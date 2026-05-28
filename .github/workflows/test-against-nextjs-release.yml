@@ -52,7 +52,7 @@ jobs:
       - name: Install dependencies
         run: pnpm install
       - name: Install Next.js version ${{ env.VERSION }}
-        run: pnpm add --filter e2e-next --filter nuqs "next@${{ env.VERSION }}"
+        run: pnpm add --filter e2e-next --filter nuqs --config.minimumReleaseAgeExclude=next "next@${{ env.VERSION }}"
       - name: Run cacheComponents codemod
         if: ${{ matrix.cache-components }}
         run: pnpm run cacheComponents:codemod
