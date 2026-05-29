@@ -105,22 +105,18 @@ export function createLoader<Parsers extends ParserMap>(
         result[key] = parser.defaultValue ?? null
         continue
       }
+      const ctx = `\`${query}\` for key \`${key}\``
       let parsedValue
       try {
         // we have properly narrowed `query` here, but TS doesn't keep track of that
         parsedValue = parser.parse(query as string & Array<string>)
       } catch (error) {
-        if (strict) {
-          throw new Error(
-            `[nuqs] Error while parsing query \`${query}\` for key \`${key}\`: ${error}`
-          )
-        }
+        if (strict)
+          throw new Error(`[nuqs] Error while parsing query ${ctx}: ${error}`)
         parsedValue = null
       }
       if (strict && query && parsedValue === null) {
-        throw new Error(
-          `[nuqs] Failed to parse query \`${query}\` for key \`${key}\` (got null)`
-        )
+        throw new Error(`[nuqs] Failed to parse query ${ctx} (got null)`)
       }
       result[key] = parsedValue ?? parser.defaultValue ?? null
     }
@@ -134,30 +130,20 @@ function extractSearchParams(input: LoaderInput): URLSearchParams {
     if (input instanceof Request) {
       return input.url ? new URL(input.url).searchParams : new URLSearchParams()
     }
-    if (input instanceof URL) {
-      return input.searchParams
-    }
-    if (input instanceof URLSearchParams) {
-      return input
+    if (input instanceof URL) return input.searchParams
+    if (input instanceof URLSearchParams) return input
+    if (typeof input === 'string') {
+      return URL.hasOwnProperty('canParse') && URL.canParse(input)
+        ? new URL(input).searchParams
+        : new URLSearchParams(input)
     }
     if (typeof input === 'object') {
-      const searchParams = new URLSearchParams()
-      for (const [key, value] of Object.entries(input)) {
-        if (Array.isArray(value)) {
-          for (const v of value) {
-            searchParams.append(key, v)
-          }
-        } else if (value !== undefined) {
-          searchParams.set(key, value)
-        }
+      const sp = new URLSearchParams()
+      for (const [k, v] of Object.entries(input)) {
+        if (Array.isArray(v)) v.forEach(x => sp.append(k, x))
+        else if (v !== undefined) sp.set(k, v)
       }
-      return searchParams
-    }
-    if (typeof input === 'string') {
-      if (URL.hasOwnProperty('canParse') && URL.canParse(input)) {
-        return new URL(input).searchParams
-      }
-      return new URLSearchParams(input)
+      return sp
     }
   } catch {}
   return new URLSearchParams()

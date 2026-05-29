@@ -19,7 +19,7 @@
     "prepare": "husky",
     "lint": "pnpm run -w --parallel --stream '/^lint:/'",
     "lint:knip": "knip",
-    "lint:prettier": "prettier --check ./packages/nuqs/src/**/*.ts",
+    "lint:prettier": "prettier --list-different './packages/nuqs/src/**/*.ts'",
     "lint:sherif": "sherif"
   },
   "devDependencies": {

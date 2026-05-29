@@ -16,38 +16,32 @@ export type Emitter<Events extends Record<string, unknown>> = {
 export function createEmitter<
   Events extends Record<string, unknown>
 >(): Emitter<Events> {
-  const all: Map<
-    keyof Events,
-    Array<(event: Events[keyof Events]) => any>
-  > = new Map()
+  type H = (event: Events[keyof Events]) => any
+  const all = new Map<keyof Events, H[]>()
   return {
     on<Key extends keyof Events>(
       type: Key,
       handler: (event: Events[Key]) => any
-    ): () => void {
-      const handlers = all.get(type) || []
-      handlers.push(handler as (event: Events[keyof Events]) => any)
-      all.set(type, handlers)
+    ) {
+      all.set(type, [...(all.get(type) ?? []), handler as H])
       return () => this.off(type, handler)
     },
     off<Key extends keyof Events>(
       type: Key,
       handler: (event: Events[Key]) => any
-    ): void {
-      const handlers = all.get(type)
-      if (handlers) {
+    ) {
+      const h = all.get(type)
+      if (h)
         all.set(
           type,
-          handlers.filter(h => h !== handler)
+          h.filter(x => x !== handler)
         )
-      }
     },
     emit<Key extends keyof Events>(
       type: Key,
       event?: Events[Key] extends undefined ? never : Events[Key]
-    ): void {
-      const handlers = all.get(type)
-      handlers?.forEach(handler => handler(event as Events[keyof Events]))
+    ) {
+      all.get(type)?.forEach(h => h(event as Events[keyof Events]))
     }
   }
 }

@@ -150,25 +150,14 @@ export type MultiParserBuilder<T> = Required<MultiParser<T>> &
 export function createParser<T>(
   parser: Require<SingleParser<T>, 'parse' | 'serialize'>
 ): SingleParserBuilder<T> {
-  function parseServerSideNullable(value: string | string[] | undefined) {
-    if (typeof value === 'undefined') {
-      return null
-    }
-    let str = ''
-    if (Array.isArray(value)) {
-      // Follow the spec:
-      // https://url.spec.whatwg.org/#dom-urlsearchparams-get
-      if (value[0] === undefined) {
-        return null
-      }
-      str = value[0]
-    }
-    if (typeof value === 'string') {
-      str = value
-    }
-    return safeParse(parser.parse, str)
+  const parseServerSideNullable = (
+    value: string | string[] | undefined
+  ): T | null => {
+    // Follow the spec:
+    // https://url.spec.whatwg.org/#dom-urlsearchparams-get
+    const str = Array.isArray(value) ? value[0] : value
+    return str === undefined ? null : safeParse(parser.parse, str)
   }
-
   return {
     type: 'single',
     eq: (a, b) => a === b,
@@ -178,16 +167,12 @@ export function createParser<T>(
       return {
         ...this,
         defaultValue,
-        parseServerSide(value) {
-          return parseServerSideNullable(value) ?? defaultValue
-        }
+        parseServerSide: (value: string | string[] | undefined) =>
+          parseServerSideNullable(value) ?? defaultValue
       }
     },
     withOptions(options: Options) {
-      return {
-        ...this,
-        ...options
-      }
+      return { ...this, ...options }
     }
   }
 }
@@ -195,13 +180,12 @@ export function createParser<T>(
 export function createMultiParser<T>(
   parser: Omit<Require<MultiParser<T>, 'parse' | 'serialize'>, 'type'>
 ): MultiParserBuilder<T> {
-  function parseServerSideNullable(value: string | string[] | undefined) {
-    if (typeof value === 'undefined') {
-      return null
-    }
-    return safeParse(parser.parse, Array.isArray(value) ? value : [value])
-  }
-
+  const parseServerSideNullable = (
+    value: string | string[] | undefined
+  ): T | null =>
+    value === undefined
+      ? null
+      : safeParse(parser.parse, ([] as string[]).concat(value))
   return {
     type: 'multi',
     eq: (a, b) => a === b,
@@ -211,21 +195,20 @@ export function createMultiParser<T>(
       return {
         ...this,
         defaultValue,
-        parseServerSide(value) {
-          return parseServerSideNullable(value) ?? defaultValue
-        }
+        parseServerSide: (value: string | string[] | undefined) =>
+          parseServerSideNullable(value) ?? defaultValue
       }
     },
     withOptions(options: Options) {
-      return {
-        ...this,
-        ...options
-      }
+      return { ...this, ...options }
     }
   }
 }
 
 // Parsers implementations -----------------------------------------------------
+
+// NaN-check helper: works for numbers and Dates (via unary + coercion).
+const ok = <T extends number | Date>(v: T): T | null => (+v == +v ? v : null)
 
 export const parseAsString: SingleParserBuilder<string> = createParser({
   parse: v => v,
@@ -233,37 +216,25 @@ export const parseAsString: SingleParserBuilder<string> = createParser({
 })
 
 export const parseAsInteger: SingleParserBuilder<number> = createParser({
-  parse: v => {
-    const int = parseInt(v)
-    return int == int ? int : null // NaN check at low bundle size cost
-  },
+  parse: v => ok(parseInt(v)),
   serialize: v => '' + Math.round(v)
 })
 
 export const parseAsIndex: SingleParserBuilder<number> = createParser({
-  parse: v => {
-    const int = parseInt(v)
-    return int == int ? int - 1 : null // NaN check at low bundle size cost
-  },
+  parse: v => ok(parseInt(v) - 1),
   serialize: v => '' + Math.round(v + 1)
 })
 
 export const parseAsHex: SingleParserBuilder<number> = createParser({
-  parse: v => {
-    const int = parseInt(v, 16)
-    return int == int ? int : null // NaN check at low bundle size cost
-  },
-  serialize: v => {
-    const hex = Math.round(v).toString(16)
-    return (hex.length & 1 ? '0' : '') + hex
-  }
+  parse: v => ok(parseInt(v, 16)),
+  serialize: v =>
+    Math.round(v)
+      .toString(16)
+      .replace(/^.(..)*$/, '0$&')
 })
 
 export const parseAsFloat: SingleParserBuilder<number> = createParser({
-  parse: v => {
-    const float = parseFloat(v)
-    return float == float ? float : null // NaN check at low bundle size cost
-  },
+  parse: v => ok(parseFloat(v)),
   serialize: String
 })
 
@@ -272,20 +243,15 @@ export const parseAsBoolean: SingleParserBuilder<boolean> = createParser({
   serialize: String
 })
 
-function compareDates(a: Date, b: Date) {
-  return a.valueOf() === b.valueOf()
-}
+const compareDates = (a: Date, b: Date) => +a === +b
 
 /**
  * Querystring encoded as the number of milliseconds since epoch,
  * and returned as a Date object.
  */
 export const parseAsTimestamp: SingleParserBuilder<Date> = createParser({
-  parse: v => {
-    const ms = parseInt(v)
-    return ms == ms ? new Date(ms) : null // NaN check at low bundle size cost
-  },
-  serialize: (v: Date) => '' + v.valueOf(),
+  parse: v => ok(new Date(parseInt(v))),
+  serialize: (v: Date) => '' + +v,
   eq: compareDates
 })
 
@@ -294,11 +260,7 @@ export const parseAsTimestamp: SingleParserBuilder<Date> = createParser({
  * and returned as a Date object.
  */
 export const parseAsIsoDateTime: SingleParserBuilder<Date> = createParser({
-  parse: v => {
-    const date = new Date(v)
-    // NaN check at low bundle size cost
-    return date.valueOf() == date.valueOf() ? date : null
-  },
+  parse: v => ok(new Date(v)),
   serialize: (v: Date) => v.toISOString(),
   eq: compareDates
 })
@@ -312,11 +274,7 @@ export const parseAsIsoDateTime: SingleParserBuilder<Date> = createParser({
  * making it at 00:00:00 UTC.
  */
 export const parseAsIsoDate: SingleParserBuilder<Date> = createParser({
-  parse: v => {
-    const date = new Date(v.slice(0, 10))
-    // NaN check at low bundle size cost
-    return date.valueOf() == date.valueOf() ? date : null
-  },
+  parse: v => ok(new Date(v.slice(0, 10))),
   serialize: (v: Date) => v.toISOString().slice(0, 10),
   eq: compareDates
 })
@@ -409,12 +367,9 @@ export function parseAsNumberLiteral<const Literal extends number>(
   validValues: readonly Literal[]
 ): SingleParserBuilder<Literal> {
   return createParser({
-    parse: (query: string) => {
-      const asConst = parseFloat(query) as unknown as Literal
-      if (validValues.includes(asConst)) {
-        return asConst
-      }
-      return null
+    parse: query => {
+      const v = parseFloat(query) as Literal
+      return validValues.includes(v) ? v : null
     },
     serialize: String
   })
@@ -435,24 +390,21 @@ export function parseAsJson<T>(
       try {
         const obj = JSON.parse(query)
         if ('~standard' in validator) {
-          const result = validator['~standard'].validate(obj)
-          if (result instanceof Promise) {
+          const r = validator['~standard'].validate(obj)
+          if (r instanceof Promise) {
             throw new Error(
               '[nuqs] Only synchronous Standard Schemas are supported in parseAsJson.'
             )
           }
-          return result.issues ? null : result.value
+          return r.issues ? null : r.value
         }
         return validator(obj)
       } catch {
         return null
       }
     },
-    serialize: value => JSON.stringify(value),
-    eq(a, b) {
-      // Check for referential equality first
-      return a === b || JSON.stringify(a) === JSON.stringify(b)
-    }
+    serialize: JSON.stringify,
+    eq: (a, b) => a === b || JSON.stringify(a) === JSON.stringify(b)
   })
 }
 
@@ -471,41 +423,32 @@ export function parseAsArrayOf<ItemType>(
   const encodedSeparator = encodeURIComponent(separator)
   // todo: Handle default item values and make return type non-nullable
   return createParser({
-    parse: query => {
-      if (query === '') {
-        // Empty query should not go through the split/map/filter logic,
-        // see https://github.com/47ng/nuqs/issues/329
-        return [] as ItemType[]
-      }
-      return query
-        .split(separator)
-        .map((item, index) =>
-          safeParse(
-            itemParser.parse,
-            item.replaceAll(encodedSeparator, separator),
-            `[${index}]`
-          )
-        )
-        .filter(value => value !== null && value !== undefined) as ItemType[]
-    },
+    parse: query =>
+      query === ''
+        ? // Empty query should not go through the split/map/filter logic,
+          // see https://github.com/47ng/nuqs/issues/329
+          ([] as ItemType[])
+        : (query
+            .split(separator)
+            .map((item, index) =>
+              safeParse(
+                itemParser.parse,
+                item.replaceAll(encodedSeparator, separator),
+                `[${index}]`
+              )
+            )
+            .filter(v => v != null) as ItemType[]),
     serialize: values =>
       values
-        .map<string>(value => {
-          const str = itemParser.serialize
-            ? itemParser.serialize(value)
-            : String(value)
-          return str.replaceAll(separator, encodedSeparator)
-        })
+        .map<string>(value =>
+          (itemParser.serialize?.(value) ?? String(value)).replaceAll(
+            separator,
+            encodedSeparator
+          )
+        )
         .join(separator),
-    eq(a, b) {
-      if (a === b) {
-        return true // Referentially stable
-      }
-      if (a.length !== b.length) {
-        return false
-      }
-      return a.every((value, index) => itemEq(value, b[index]!))
-    }
+    eq: (a, b) =>
+      a === b || (a.length === b.length && a.every((v, i) => itemEq(v, b[i]!)))
   })
 }
 
@@ -517,26 +460,17 @@ export function parseAsNativeArrayOf<ItemType>(
     parse: query => {
       const parsed = query
         .map((item, index) => safeParse(itemParser.parse, item, `[${index}]`))
-        .filter(value => value !== null && value !== undefined) as ItemType[]
-      return parsed.length === 0 ? null : parsed
+        .filter(v => v != null) as ItemType[]
+      return parsed.length ? parsed : null
     },
-    serialize: values => {
+    serialize: values =>
       // defensive check because we potentially get a single value passed from a standard schema
-      const safeValues = Array.isArray(values) ? values : [values]
-      return safeValues.flatMap(value => {
-        const serialized = itemParser.serialize?.(value) ?? String(value)
-        return typeof serialized === 'string' ? [serialized] : [...serialized]
-      })
-    },
-    eq(a, b) {
-      if (a === b) {
-        return true // Referentially stable
-      }
-      if (a.length !== b.length) {
-        return false
-      }
-      return a.every((value, index) => itemEq(value, b[index]!))
-    }
+      (Array.isArray(values) ? values : [values]).flatMap(value => {
+        const s = itemParser.serialize?.(value) ?? String(value)
+        return typeof s === 'string' ? [s] : [...s]
+      }),
+    eq: (a, b) =>
+      a === b || (a.length === b.length && a.every((v, i) => itemEq(v, b[i]!)))
   }).withDefault([])
 }
 

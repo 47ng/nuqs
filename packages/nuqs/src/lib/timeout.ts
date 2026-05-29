@@ -6,14 +6,14 @@ export function timeout(
   ms: number,
   signal: AbortSignal
 ): void {
-  function onTick() {
+  const off = () => signal.removeEventListener('abort', onAbort)
+  const id = setTimeout(() => {
     callback()
-    signal.removeEventListener('abort', onAbort)
-  }
-  const id = setTimeout(onTick, ms)
+    off()
+  }, ms)
   function onAbort() {
     clearTimeout(id)
-    signal.removeEventListener('abort', onAbort)
+    off()
   }
   signal.addEventListener('abort', onAbort)
 }

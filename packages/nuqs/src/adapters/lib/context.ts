@@ -28,7 +28,6 @@ export const context: Context<AdapterContext> = createContext<AdapterContext>({
     throw new Error(error(404))
   }
 })
-context.displayName = 'NuqsAdapterContext'
 
 declare global {
   interface Window {
@@ -37,9 +36,8 @@ declare global {
 }
 
 if (debugEnabled && typeof window !== 'undefined') {
-  if (window.__NuqsAdapterContext && window.__NuqsAdapterContext !== context) {
-    console.error(error(303))
-  }
+  const prev = window.__NuqsAdapterContext
+  if (prev && prev !== context) console.error(error(303))
   window.__NuqsAdapterContext = context
 }
 
@@ -71,17 +69,14 @@ export function createAdapterProvider(
     )
 }
 
+const useCtx = () => useContext(context)
+
 export function useAdapter(watchKeys: string[]): AdapterInterface {
-  const value = useContext(context)
-  if (!('useAdapter' in value)) {
-    throw new Error(error(404))
-  }
-  return value.useAdapter(watchKeys)
+  return useCtx().useAdapter(watchKeys)
 }
 
 export const useAdapterDefaultOptions = (): AdapterProps['defaultOptions'] =>
-  useContext(context).defaultOptions
+  useCtx().defaultOptions
 
 export const useAdapterProcessUrlSearchParams =
-  (): AdapterProps['processUrlSearchParams'] =>
-    useContext(context).processUrlSearchParams
+  (): AdapterProps['processUrlSearchParams'] => useCtx().processUrlSearchParams

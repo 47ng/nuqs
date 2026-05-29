@@ -9,7 +9,5 @@ export const errors = {
   501: 'Search params cache already populated. Have you called `parse` twice?'
 } as const
 
-export function error(code: keyof typeof errors) {
-  return `[nuqs] ${errors[code]}
-  See https://nuqs.dev/NUQS-${code}`
-}
+export const error = (code: keyof typeof errors): string =>
+  `[nuqs] ${errors[code]}\n  See https://nuqs.dev/NUQS-${code}`

@@ -6,8 +6,5 @@ export type CrossHookSyncPayload = {
   query: Query | null
 }
 
-type EventMap = {
-  [key: string]: CrossHookSyncPayload
-}
-
-export const emitter: Emitter<EventMap> = createEmitter()
+export const emitter: Emitter<Record<string, CrossHookSyncPayload>> =
+  createEmitter()
