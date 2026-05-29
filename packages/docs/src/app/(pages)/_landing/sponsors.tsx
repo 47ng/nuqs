@@ -156,7 +156,7 @@ const SPONSORS: Sponsors = [
     title: (
       <>
         Founder of{' '}
-        <a href="https://usenotra.com" className="hover:underline">
+        <a href="https://www.usenotra.com" className="hover:underline">
           Notra
         </a>
       </>
