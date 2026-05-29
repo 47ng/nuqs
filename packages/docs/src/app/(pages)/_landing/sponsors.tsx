@@ -47,7 +47,7 @@ const SPONSORS: Sponsors = [
   {
     handle: 'coderabbitai',
     name: 'CodeRabbit',
-    url: 'https://www.coderabbit.ai/?utm_source=nuqs&utm_medium=sponsor&utm_campaign=nuqs',
+    url: 'https://www.coderabbit.ai/?dub_id=4fJt7M9XtciYhwpj',
     img: '/sponsors/coderabbit.svg'
   },
   {
