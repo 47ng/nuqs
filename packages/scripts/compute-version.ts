@@ -157,10 +157,13 @@ function main(): void {
   })
 
   if (plan === null) {
+    // Not a failure: signal "no release" so the workflow stops cleanly
+    // (the ci/stage jobs gate on release=true) instead of going red.
     console.error(
       `No version-bumping commits since ${lastGATag ?? 'the beginning'}. Nothing to release.`
     )
-    process.exit(1)
+    process.stdout.write('needsReleasing=false\n')
+    return
   }
 
   // Human-readable trace on stderr; the caller routes stdout where it wants
@@ -176,9 +179,10 @@ function main(): void {
     ].join('\n')
   )
 
-  // Machine-readable `key=value` lines on stdout.
+  // Machine-readable `key=value` lines on stdout (only what the workflow
+  // consumes; `bump` stays an internal detail shown in the trace above).
   process.stdout.write(
-    `version=${plan.version}\ntag=${plan.tag}\ndist-tag=${plan.distTag}\nbump=${plan.bump}\n`
+    `needsReleasing=true\nversion=${plan.version}\ntag=${plan.tag}\ndist-tag=${plan.distTag}\n`
   )
 }
 

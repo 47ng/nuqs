@@ -43,10 +43,10 @@ jobs:
     name: Compute version
     runs-on: ubuntu-24.04-arm
     outputs:
+      needsReleasing: ${{ steps.compute.outputs.needsReleasing }}
       version: ${{ steps.compute.outputs.version }}
       tag: ${{ steps.compute.outputs.tag }}
       dist-tag: ${{ steps.compute.outputs.dist-tag }}
-      bump: ${{ steps.compute.outputs.bump }}
     steps:
       - name: Enforce dispatch from the next branch
         # Releases are cut from `next` only. Failing here (before the `ci`
@@ -88,8 +88,9 @@ jobs:
   ci:
     name: CI gate
     needs: compute-version
-    # Skipped on dry-run for a fast version/build-only rehearsal.
-    if: ${{ !inputs.dry-run }}
+    # Only gate a real release: skip when there's nothing to ship (the flow
+    # stops cleanly) and on dry-run (fast version/build-only rehearsal).
+    if: ${{ needs.compute-version.outputs.needsReleasing == 'true' && !inputs.dry-run }}
     permissions:
       contents: read
       actions: read
@@ -105,9 +106,9 @@ jobs:
     name: Stage & draft
     runs-on: ubuntu-24.04-arm
     needs: [compute-version, ci]
-    # Run once the version is known and CI passed — or was skipped on a
-    # dry-run. The stage/draft steps below self-skip on dry-run.
-    if: ${{ always() && needs.compute-version.result == 'success' && (needs.ci.result == 'success' || needs.ci.result == 'skipped') }}
+    # Run only when there's a release to ship, once CI passed — or was
+    # skipped on a dry-run. The stage/draft steps below self-skip on dry-run.
+    if: ${{ always() && needs.compute-version.outputs.needsReleasing == 'true' && (needs.ci.result == 'success' || needs.ci.result == 'skipped') }}
     permissions:
       contents: write # create the draft GitHub release
       id-token: write # OIDC trusted publishing for `npm stage publish`
