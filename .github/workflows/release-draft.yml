@@ -1,0 +1,207 @@
+name: Draft Release
+
+# Phase 1 of the two-phase, human-gated release pipeline (see the
+# "Phasing out semantic-release" design doc). Dispatch-only on purpose:
+# the npm trusted-publisher authorization is pinned to this single,
+# rarely-changed file rather than the sprawling multi-trigger CI workflow.
+#
+# Flow: compute-version -> ci (the gate, re-runs the full matrix on the
+# exact dispatched SHA via workflow_call) -> stage (set version ephemerally,
+# build, `npm stage publish` via OIDC, then create a DRAFT GitHub release
+# with milestone notes). Nothing is installable or irreversible here: the
+# tarball sits in npm staging until a human approves it on npmjs.com with
+# 2FA, and the git tag is only created when the draft release is published.
+
+on:
+  workflow_dispatch:
+    inputs:
+      channel:
+        description: Release channel
+        type: choice
+        options:
+          - stable
+          - beta
+        default: stable
+      dry-run:
+        # Temporary: lets a rehearsal validate version computation + build
+        # without staging or drafting. Remove once the pipeline is trusted.
+        description: Compute the version and build, but do not stage or draft
+        type: boolean
+        default: false
+
+# Queue double-dispatches instead of racing:
+# never cancel an in-flight stage+draft mid-way.
+concurrency:
+  group: release-draft
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  compute-version:
+    name: Compute version
+    runs-on: ubuntu-24.04-arm
+    outputs:
+      version: ${{ steps.compute.outputs.version }}
+      tag: ${{ steps.compute.outputs.tag }}
+      dist-tag: ${{ steps.compute.outputs.dist-tag }}
+      bump: ${{ steps.compute.outputs.bump }}
+    steps:
+      - name: Enforce dispatch from the next branch
+        # Releases are cut from `next` only. Failing here (before the `ci`
+        # job invokes ci-cd.yml) also keeps ci-cd.yml's legacy `publish` job
+        # — which keys off `github.ref_name` — from ever running as the gate.
+        env:
+          REF_NAME: ${{ github.ref_name }}
+        run: |
+          if [ "$REF_NAME" != "next" ]; then
+            echo "::error::Draft Release must be dispatched from the 'next' branch (got '$REF_NAME')."
+            exit 1
+          fi
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          # Need the full history + all tags to find the last GA tag and
+          # walk the conventional commits since it.
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093 # v6.0.8
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - name: Install scripts dependencies
+        run: pnpm install --ignore-scripts --frozen-lockfile --filter scripts
+      - name: Compute next version from conventional commits
+        id: compute
+        # Bump from conventional commits since the last GA tag. The logic
+        # lives in the tested packages/scripts/compute-version.ts module,
+        # which prints `key=value` lines on stdout (human trace on stderr);
+        # we route them to $GITHUB_OUTPUT here. Commit messages reach the
+        # script only through git's stdout (no shell), so a crafted message
+        # cannot inject commands.
+        run: ./compute-version.ts >> "$GITHUB_OUTPUT"
+        working-directory: packages/scripts
+        env:
+          CHANNEL: ${{ inputs.channel }}
+
+  ci:
+    name: CI gate
+    needs: compute-version
+    # Skipped on dry-run for a fast version/build-only rehearsal.
+    if: ${{ !inputs.dry-run }}
+    permissions:
+      contents: read
+      actions: read
+    # Re-run the full matrix on the exact dispatched commit, so the staged
+    # bytes are the bytes that passed CI. Secrets passed explicitly (no
+    # `secrets: inherit`) to keep the credential surface minimal.
+    uses: ./.github/workflows/ci-cd.yml
+    secrets:
+      TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+      TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
+
+  stage:
+    name: Stage & draft
+    runs-on: ubuntu-24.04-arm
+    needs: [compute-version, ci]
+    # Run once the version is known and CI passed — or was skipped on a
+    # dry-run. The stage/draft steps below self-skip on dry-run.
+    if: ${{ always() && needs.compute-version.result == 'success' && (needs.ci.result == 'success' || needs.ci.result == 'skipped') }}
+    permissions:
+      contents: write # create the draft GitHub release
+      id-token: write # OIDC trusted publishing for `npm stage publish`
+    env:
+      VERSION: ${{ needs.compute-version.outputs.version }}
+      TAG: ${{ needs.compute-version.outputs.tag }}
+      DIST_TAG: ${{ needs.compute-version.outputs.dist-tag }}
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093 # v6.0.8
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
+        with:
+          node-version-file: .node-version
+          registry-url: https://registry.npmjs.org
+          # Fresh install from the registry (same rationale as the old
+          # publish job): a poisoned local cache must not reach the tarball.
+          package-manager-cache: false
+      - name: Install staging-capable npm
+        # `npm stage` first shipped in npm 11.15.0; the npm bundled with
+        # the pinned Node is older. Pinned (not @latest) because this is the
+        # privileged publish path — bump deliberately.
+        run: npm install --global npm@11.16.0
+      - name: Install dependencies
+        run: pnpm install --ignore-scripts --frozen-lockfile --filter nuqs... --filter scripts
+      - name: Verify provenance + registry signatures of dependencies
+        run: npm audit signatures
+      - name: Set the computed version (ephemeral, never committed)
+        run: npm pkg set version="$VERSION"
+        working-directory: packages/nuqs
+      - name: Build package
+        run: pnpm build --filter nuqs
+      - name: Stage tarball to npm (OIDC trusted publishing)
+        id: stage
+        if: ${{ !inputs.dry-run }}
+        working-directory: packages/nuqs
+        # `npm stage publish` defers 2FA: it stages the tarball (with
+        # provenance, per publishConfig) without making it installable.
+        # Prerelease versions require an explicit --tag. Stage BEFORE the
+        # draft so a duplicate-version 409 fails here without orphaning a
+        # draft.
+        run: |
+          set -euo pipefail
+          OUTPUT=$(npm stage publish --tag "$DIST_TAG" --json)
+          echo "$OUTPUT"
+          STAGE_ID=$(echo "$OUTPUT" | jq -r '[.. | objects | .stageId? // empty][0] // empty')
+          if [ -z "$STAGE_ID" ]; then
+            echo "::error::Could not parse stage id from npm output"
+            exit 1
+          fi
+          echo "stage-id=$STAGE_ID" >> "$GITHUB_OUTPUT"
+      - name: Generate milestone release notes
+        # Only feeds the draft, so skip on dry-run — avoids a live GitHub API
+        # call (and a hard failure if the milestone is absent) during a
+        # version/build-only rehearsal.
+        if: ${{ !inputs.dry-run }}
+        run: ./release-notes-automation.ts > "$RUNNER_TEMP/notes.md"
+        working-directory: packages/scripts
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Create draft GitHub release
+        if: ${{ !inputs.dry-run }}
+        # Draft + untagged: the git tag is created server-side only when the
+        # maintainer publishes this draft, which is what fires Finalize.
+        run: |
+          set -euo pipefail
+          PRERELEASE=()
+          if [ "$DIST_TAG" = "beta" ]; then PRERELEASE=(--prerelease); fi
+          gh release create "$TAG" \
+            --draft \
+            --title "$TAG" \
+            --target "$GITHUB_SHA" \
+            --notes-file "$RUNNER_TEMP/notes.md" \
+            "${PRERELEASE[@]}"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Summary
+        env:
+          STAGE_ID: ${{ steps.stage.outputs.stage-id }}
+        run: |
+          {
+            echo "## ${{ inputs.dry-run && 'Dry run' || 'Draft release staged' }}"
+            echo ""
+            echo "| | |"
+            echo "|---|---|"
+            echo "| Version | \`$VERSION\` |"
+            echo "| Tag | \`$TAG\` |"
+            echo "| Dist-tag | \`$DIST_TAG\` |"
+            echo "| npm stage id | \`${STAGE_ID:-(not staged)}\` |"
+            echo ""
+            if [ "${{ inputs.dry-run }}" != "true" ]; then
+              echo "**Next:** review the draft notes, approve the staged"
+              echo "package on npmjs.com with 2FA, then publish the draft"
+              echo "release to create the tag and fire Finalize."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
