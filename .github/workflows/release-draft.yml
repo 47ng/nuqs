@@ -103,18 +103,19 @@ jobs:
       TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
 
   stage:
-    name: Stage & draft
+    name: Stage to npm
     runs-on: ubuntu-24.04-arm
     needs: [compute-version, ci]
     # Run only when there's a release to ship, once CI passed — or was
-    # skipped on a dry-run. The stage/draft steps below self-skip on dry-run.
+    # skipped on a dry-run (build-only validation; the publish step self-skips).
     if: ${{ always() && needs.compute-version.outputs.needsReleasing == 'true' && (needs.ci.result == 'success' || needs.ci.result == 'skipped') }}
     permissions:
-      contents: write # create the draft GitHub release
+      contents: read # checkout only — drafting (contents: write) is its own job
       id-token: write # OIDC trusted publishing for `npm stage publish`
+    outputs:
+      stage-id: ${{ steps.stage.outputs.stage-id }}
     env:
       VERSION: ${{ needs.compute-version.outputs.version }}
-      TAG: ${{ needs.compute-version.outputs.tag }}
       DIST_TAG: ${{ needs.compute-version.outputs.dist-tag }}
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
@@ -134,7 +135,7 @@ jobs:
         # privileged publish path — bump deliberately.
         run: npm install --global npm@11.16.0
       - name: Install dependencies
-        run: pnpm install --ignore-scripts --frozen-lockfile --filter nuqs... --filter scripts
+        run: pnpm install --ignore-scripts --frozen-lockfile --filter nuqs...
       - name: Verify provenance + registry signatures of dependencies
         run: npm audit signatures
       - name: Set the computed version (ephemeral, never committed)
@@ -148,9 +149,7 @@ jobs:
         working-directory: packages/nuqs
         # `npm stage publish` defers 2FA: it stages the tarball (with
         # provenance, per publishConfig) without making it installable.
-        # Prerelease versions require an explicit --tag. Stage BEFORE the
-        # draft so a duplicate-version 409 fails here without orphaning a
-        # draft.
+        # Prerelease versions require an explicit --tag.
         run: |
           set -euo pipefail
           OUTPUT=$(npm stage publish --tag "$DIST_TAG" --json)
@@ -161,17 +160,40 @@ jobs:
             exit 1
           fi
           echo "stage-id=$STAGE_ID" >> "$GITHUB_OUTPUT"
+
+  draft:
+    name: Draft GitHub release
+    runs-on: ubuntu-24.04-arm
+    needs: [compute-version, stage]
+    # Real releases only (nothing is staged on a dry-run). Split from `stage`
+    # so the npm OIDC token's lifetime is bounded to staging: this job holds
+    # only contents:write and never sees id-token. The implicit needs-success
+    # gate already skips this job if `stage` didn't succeed.
+    if: ${{ !inputs.dry-run }}
+    permissions:
+      contents: write # create the draft GitHub release
+    env:
+      VERSION: ${{ needs.compute-version.outputs.version }}
+      TAG: ${{ needs.compute-version.outputs.tag }}
+      DIST_TAG: ${{ needs.compute-version.outputs.dist-tag }}
+      STAGE_ID: ${{ needs.stage.outputs.stage-id }}
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093 # v6.0.8
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - name: Install scripts dependencies
+        run: pnpm install --ignore-scripts --frozen-lockfile --filter scripts
       - name: Generate milestone release notes
-        # Only feeds the draft, so skip on dry-run — avoids a live GitHub API
-        # call (and a hard failure if the milestone is absent) during a
-        # version/build-only rehearsal.
-        if: ${{ !inputs.dry-run }}
         run: ./release-notes-automation.ts > "$RUNNER_TEMP/notes.md"
         working-directory: packages/scripts
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Create draft GitHub release
-        if: ${{ !inputs.dry-run }}
         # Draft + untagged: the git tag is created server-side only when the
         # maintainer publishes this draft, which is what fires Finalize.
         run: |
@@ -187,22 +209,18 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Summary
-        env:
-          STAGE_ID: ${{ steps.stage.outputs.stage-id }}
         run: |
           {
-            echo "## ${{ inputs.dry-run && 'Dry run' || 'Draft release staged' }}"
+            echo "## Draft release staged"
             echo ""
             echo "| | |"
             echo "|---|---|"
             echo "| Version | \`$VERSION\` |"
             echo "| Tag | \`$TAG\` |"
             echo "| Dist-tag | \`$DIST_TAG\` |"
-            echo "| npm stage id | \`${STAGE_ID:-(not staged)}\` |"
+            echo "| npm stage id | \`$STAGE_ID\` |"
             echo ""
-            if [ "${{ inputs.dry-run }}" != "true" ]; then
-              echo "**Next:** review the draft notes, approve the staged"
-              echo "package on npmjs.com with 2FA, then publish the draft"
-              echo "release to create the tag and fire Finalize."
-            fi
+            echo "**Next:** review the draft notes, then"
+            echo "[approve the staged package on npmjs.com](https://www.npmjs.com/settings/franky47/staged-packages/?page=0&perPage=10&filterPackage=nuqs)"
+            echo "with 2FA, and publish the draft release to create the tag and fire Finalize."
           } >> "$GITHUB_STEP_SUMMARY"
