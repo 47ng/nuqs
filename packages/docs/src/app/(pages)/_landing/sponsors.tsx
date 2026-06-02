@@ -181,28 +181,16 @@ const SPONSORS: Sponsors = [
     img: 'https://avatars.githubusercontent.com/u/5913254?s=200&v=4'
   },
   {
-    handle: 'ruchernchong',
-    name: 'Ru Chern Chong',
-    url: 'https://github.com/ruchernchong',
-    img: 'https://avatars.githubusercontent.com/u/10343662?s=200&v=4'
+    handle: 'haydenbleasel',
+    name: 'Hayden Bleasel',
+    url: 'https://www.haydenbleasel.com/',
+    img: 'https://avatars.githubusercontent.com/u/4142719?s=200&v=4'
   },
   {
     handle: 'DavidHDev',
     name: 'David Haz',
     url: 'https://github.com/DavidHDev',
     img: 'https://avatars.githubusercontent.com/u/48634587?s=200&v=4'
-  },
-  {
-    handle: 'basedanarki',
-    name: 'anarki',
-    url: 'https://github.com/basedanarki',
-    img: 'https://avatars.githubusercontent.com/u/161698650?s=200&v=4'
-  },
-  {
-    handle: 'haydenbleasel',
-    name: 'Hayden Bleasel',
-    url: 'https://www.haydenbleasel.com/',
-    img: 'https://avatars.githubusercontent.com/u/4142719?s=200&v=4'
   }
 ]
 
@@ -291,7 +279,7 @@ export function SponsorsSection() {
           <span className="mb-px text-3xl font-semibold">shadcn/studio</span>
         </a>
       </div>
-      <ul className="container flex flex-wrap justify-center gap-x-4 gap-y-12 md:gap-x-6 lg:gap-x-8">
+      <ul className="container flex flex-wrap justify-center gap-x-4 gap-y-8 md:gap-x-6 lg:gap-x-0">
         {SPONSORS.map(sponsor => (
           <li
             key={sponsor.handle}
