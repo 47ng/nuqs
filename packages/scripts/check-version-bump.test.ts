@@ -1,7 +1,5 @@
 import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
-import { classify } from './lib/conventional-commits'
-import { readTypeEnum } from './lint-pr-title'
 import {
   formatFailSummary,
   formatPassSummary,
@@ -9,6 +7,8 @@ import {
   NON_BUMPING_TYPES,
   parseChangedFiles
 } from './check-version-bump'
+import { classify } from './lib/conventional-commits'
+import { readTypeEnum } from './lint-pr-title'
 
 describe('NON_BUMPING_TYPES', () => {
   // The failure summary lists these as the alternatives to a bumping type, so
@@ -20,8 +20,8 @@ describe('NON_BUMPING_TYPES', () => {
     )
     const nonBumping = types.filter(
       t => classify(`${t}: subject`).bump === null
-    )
-    expect([...NON_BUMPING_TYPES]).toEqual(nonBumping)
+    ).sort()
+    expect(NON_BUMPING_TYPES.toSorted()).toEqual(nonBumping)
   })
 })
 
