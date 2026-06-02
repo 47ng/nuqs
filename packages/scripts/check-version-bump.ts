@@ -3,8 +3,8 @@
 import { appendFileSync } from 'node:fs'
 import { createEnv } from '@t3-oss/env-core'
 import { z } from 'zod'
+import { classify } from './lib/conventional-commits'
 
-export const BUMPING_TYPES = ['feat', 'fix', 'perf', 'revert'] as const
 export const NON_BUMPING_TYPES = [
   'build',
   'chore',
@@ -16,21 +16,7 @@ export const NON_BUMPING_TYPES = [
   'test'
 ] as const
 
-export type BumpingType = (typeof BUMPING_TYPES)[number]
-
 export const CORE_PACKAGE_PREFIX = 'packages/nuqs/'
-
-export function extractType(title: string): string | undefined {
-  return title.match(/^([a-z]+)/)?.[1]
-}
-
-export function isVersionBumping(
-  type: string | undefined
-): type is BumpingType {
-  return (
-    type !== undefined && (BUMPING_TYPES as readonly string[]).includes(type)
-  )
-}
 
 export function hasCoreChanges(files: string[]): boolean {
   return files.some(f => f.startsWith(CORE_PACKAGE_PREFIX))
@@ -92,9 +78,9 @@ function main(): void {
     isServer: true,
     runtimeEnv: process.env
   })
-  const type = extractType(env.TITLE)
+  const { bump, type } = classify(env.TITLE)
 
-  if (!isVersionBumping(type)) {
+  if (bump === null) {
     console.log(
       `Commit type \`${type ?? '(none)'}\` does not trigger a version bump. Skipping core package check.`
     )

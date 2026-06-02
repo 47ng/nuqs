@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import { z } from 'zod'
+import { classify } from './lib/conventional-commits'
 
 // Schema for the GraphQL response
 const participantsSchema = z.object({
@@ -124,36 +125,26 @@ async function fetchMilestonePRs(): Promise<PR[]> {
   return parsed.data.repository.milestone.pullRequests.nodes
 }
 
-export function splitCategoryTitle(title: string): [Category, string] {
-  // Regex to match conventional commit prefix with optional scope
-  // Matches: feat:, feat(scope):, fix:, docs:, doc:, etc.
-  const conventionalCommitRegex = /^(\w+)(?:\([^)]+\))?:\s*(.+)$/
-  const match = title.match(conventionalCommitRegex)
-
-  let category: Category
-  let cleanTitle: string
-
-  if (match) {
-    const [, type = '', titleWithoutPrefix = ''] = match
-    cleanTitle = titleWithoutPrefix.trim()
-
-    const typeLower = type.toLowerCase()
-
-    if (typeLower === 'feat') {
-      category = 'Features'
-    } else if (typeLower === 'fix') {
-      category = 'Bug fixes'
-    } else if (typeLower === 'doc' || typeLower === 'docs') {
-      category = 'Documentation'
-    } else {
-      category = 'Other changes'
-    }
-  } else {
-    // No conventional commit prefix found
-    category = 'Other changes'
-    cleanTitle = title
+function categoryForType(type: string | undefined): Category {
+  switch (type) {
+    case 'feat':
+      return 'Features'
+    case 'fix':
+      return 'Bug fixes'
+    case 'doc':
+    case 'docs':
+      return 'Documentation'
+    default:
+      return 'Other changes'
   }
-  return [category, cleanTitle] as const
+}
+
+export function splitCategoryTitle(title: string): [Category, string] {
+  // Note: classify is case-sensitive, so commits that haven't been
+  // linted by commitlint (e.g. a "Feat: whatever" from the GitHub web UI)
+  // will be categorised as "Other changes".
+  const { type, description } = classify(title)
+  return [categoryForType(type), description]
 }
 
 export type CategorizedPR = {

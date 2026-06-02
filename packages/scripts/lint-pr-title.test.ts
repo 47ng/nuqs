@@ -2,56 +2,9 @@ import { describe, expect, it } from 'vitest'
 import {
   formatSummary,
   HEADER_MAX_LENGTH,
-  parseTitle,
   readTypeEnum,
   validateTitle
 } from './lint-pr-title'
-
-describe('parseTitle', () => {
-  it('parses simple type and subject', () => {
-    expect(parseTitle('feat: add parser')).toEqual({
-      type: 'feat',
-      scope: undefined,
-      breaking: false,
-      subject: 'add parser'
-    })
-  })
-
-  it('parses type with scope', () => {
-    expect(parseTitle('fix(parser): handle null')).toEqual({
-      type: 'fix',
-      scope: 'parser',
-      breaking: false,
-      subject: 'handle null'
-    })
-  })
-
-  it('parses breaking marker', () => {
-    expect(parseTitle('feat(parser)!: drop legacy adapter')).toEqual({
-      type: 'feat',
-      scope: 'parser',
-      breaking: true,
-      subject: 'drop legacy adapter'
-    })
-  })
-
-  it('returns null for missing colon', () => {
-    expect(parseTitle('no colon here')).toBeNull()
-  })
-
-  it('returns null for empty title', () => {
-    expect(parseTitle('')).toBeNull()
-  })
-
-  it('returns null for non-letter prefix', () => {
-    expect(parseTitle('123: subject')).toBeNull()
-  })
-
-  it('returns null for an uppercase type prefix', () => {
-    expect(parseTitle('Feat: add parser')).toBeNull()
-    expect(parseTitle('FIX: bug')).toBeNull()
-  })
-})
 
 describe('readTypeEnum', () => {
   it('extracts the third element of type-enum', () => {
@@ -100,6 +53,19 @@ describe('validateTitle', () => {
   it('flags missing colon (format)', () => {
     const errors = validateTitle('no colon here', allowed)
     expect(errors[0]).toMatch(/format/)
+  })
+
+  it('flags an uppercase type as a format error', () => {
+    expect(validateTitle('Feat: add parser', allowed)[0]).toMatch(/format/)
+    expect(validateTitle('FIX: bug', allowed)[0]).toMatch(/format/)
+  })
+
+  it('flags a non-letter prefix as a format error', () => {
+    expect(validateTitle('123: subject', allowed)[0]).toMatch(/format/)
+  })
+
+  it('flags a type-only title with no subject as a format error', () => {
+    expect(validateTitle('feat:', allowed)[0]).toMatch(/format/)
   })
 
   it('flags titles over the max length', () => {

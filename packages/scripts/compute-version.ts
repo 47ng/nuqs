@@ -3,10 +3,9 @@
 import { createEnv } from '@t3-oss/env-core'
 import { execFileSync } from 'node:child_process'
 import { z } from 'zod'
+import { type Bump, classify } from './lib/conventional-commits'
 
 export type Channel = 'stable' | 'beta'
-export type Bump = 'major' | 'minor' | 'patch'
-export type Commit = { subject: string; body?: string }
 export type ReleasePlan = {
   version: string
   tag: string
@@ -40,24 +39,10 @@ function compareParts(a: number[], b: number[]): number {
   return 0
 }
 
-// Uppercase footer only, per the conventional-commits spec; a lowercase
-// "breaking change" mention in prose is deliberately ignored.
-const BREAKING_FOOTER = /^BREAKING[ -]CHANGE:/m
-
-function commitBump({ subject, body = '' }: Commit): Bump | null {
-  const match = subject.match(/^([a-z]+)(?:\([^)]*\))?(!)?:/)
-  if (!match) return null
-  const [, type, breakingMarker] = match
-  if (breakingMarker || BREAKING_FOOTER.test(body)) return 'major'
-  if (type === 'feat') return 'minor'
-  if (type === 'fix' || type === 'perf' || type === 'revert') return 'patch'
-  return null
-}
-
-function highestBump(commits: Commit[]): Bump | null {
+function highestBump(commits: string[]): Bump | null {
   let highest: Bump | null = null
   for (const commit of commits) {
-    const bump = commitBump(commit)
+    const { bump } = classify(commit)
     if (bump && (highest === null || RANKS[bump] > RANKS[highest])) {
       highest = bump
     }
@@ -75,7 +60,7 @@ function incrementGA(version: string, bump: Bump): string {
 export function computeVersion(args: {
   channel: Channel
   lastGATag: string | null
-  commits: Commit[]
+  commits: string[]
   tags: string[]
 }): ReleasePlan | null {
   const bump = highestBump(args.commits)
@@ -125,18 +110,14 @@ function readAllTags(): string[] {
 }
 
 // Commit messages reach the parser only through git's stdout — never a
-// shell — so a crafted message cannot inject commands. Records split on
-// \x1e, fields (subject, body) on \x1f; neither can occur in a message.
-function readCommitsSince(lastGATag: string | null): Commit[] {
+// shell — so a crafted message cannot inject commands. Each record is a full
+// message (subject + body, %B) split on \x1e, which cannot occur in a message.
+function readCommitsSince(lastGATag: string | null): string[] {
   const range = lastGATag ? `${lastGATag}..HEAD` : 'HEAD'
-  return git(['log', range, '--format=%s%x1f%b%x1e'])
+  return git(['log', range, '--format=%B%x1e'])
     .split('\x1e')
     .map(record => record.trim())
     .filter(Boolean)
-    .map(record => {
-      const [subject = '', body = ''] = record.split('\x1f')
-      return { subject: subject.trim(), body }
-    })
 }
 
 function main(): void {

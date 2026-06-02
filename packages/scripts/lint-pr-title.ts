@@ -3,30 +3,11 @@
 import { appendFileSync, readFileSync } from 'node:fs'
 import { createEnv } from '@t3-oss/env-core'
 import { z } from 'zod'
+import { classify } from './lib/conventional-commits'
 
 // Matches the @commitlint/config-conventional default. If the project ever
 // overrides header-max-length in package.json, update this constant.
 export const HEADER_MAX_LENGTH = 100
-
-const TITLE_FORMAT = /^([a-z]+)(?:\(([^)]+)\))?(!)?: (.+)$/
-
-export type ParsedTitle = {
-  type: string
-  scope: string | undefined
-  breaking: boolean
-  subject: string
-}
-
-export function parseTitle(title: string): ParsedTitle | null {
-  const m = title.match(TITLE_FORMAT)
-  if (!m || !m[1] || !m[4]) return null
-  return {
-    type: m[1],
-    scope: m[2],
-    breaking: m[3] === '!',
-    subject: m[4]
-  }
-}
 
 // Validates only the subset of package.json we care about. The third tuple
 // element is the rule's value per @commitlint/types — the first two slots
@@ -53,12 +34,12 @@ export function validateTitle(
   maxLen: number = HEADER_MAX_LENGTH
 ): string[] {
   const errors: string[] = []
-  const parsed = parseTitle(title)
-  if (!parsed) {
+  const { type } = classify(title)
+  if (type === undefined) {
     errors.push('Title does not match `type(scope)?(!)?: subject` format')
-  } else if (!allowedTypes.includes(parsed.type)) {
+  } else if (!allowedTypes.includes(type)) {
     errors.push(
-      `Type \`${parsed.type}\` is not allowed. Allowed types: ${allowedTypes.join(', ')}`
+      `Type \`${type}\` is not allowed. Allowed types: ${allowedTypes.join(', ')}`
     )
   }
   if (title.length > maxLen) {

@@ -23,7 +23,7 @@ describe('computeVersion', () => {
     const plan = computeVersion({
       channel: 'stable',
       lastGATag: 'v1.2.3',
-      commits: [{ subject: 'fix: a bug' }],
+      commits: ['fix: a bug'],
       tags: ['v1.2.3']
     })
     expect(plan).toEqual({
@@ -38,66 +38,27 @@ describe('computeVersion', () => {
     const plan = computeVersion({
       channel: 'stable',
       lastGATag: 'v1.2.3',
-      commits: [{ subject: 'feat: a feature' }],
+      commits: ['feat: a feature'],
       tags: ['v1.2.3']
     })
     expect(plan).toMatchObject({ version: '1.3.0', bump: 'minor' })
   })
 
-  it('bumps a major on a "!" breaking marker', () => {
+  it('bumps a major (1.x -> 2.0.0) for a breaking commit', () => {
     const plan = computeVersion({
       channel: 'stable',
       lastGATag: 'v1.2.3',
-      commits: [{ subject: 'feat(scope)!: a breaking feature' }],
+      commits: ['feat(scope)!: a breaking feature'],
       tags: ['v1.2.3']
     })
     expect(plan).toMatchObject({ version: '2.0.0', bump: 'major' })
-  })
-
-  it('bumps a major on an uppercase BREAKING CHANGE footer', () => {
-    const plan = computeVersion({
-      channel: 'stable',
-      lastGATag: 'v1.2.3',
-      commits: [
-        { subject: 'fix: a fix', body: 'BREAKING CHANGE: removed an API' }
-      ],
-      tags: ['v1.2.3']
-    })
-    expect(plan).toMatchObject({ version: '2.0.0', bump: 'major' })
-  })
-
-  it('bumps a major on a BREAKING-CHANGE (hyphenated) footer', () => {
-    const plan = computeVersion({
-      channel: 'stable',
-      lastGATag: 'v1.2.3',
-      commits: [
-        { subject: 'fix: a fix', body: 'BREAKING-CHANGE: removed an API' }
-      ],
-      tags: ['v1.2.3']
-    })
-    expect(plan).toMatchObject({ version: '2.0.0', bump: 'major' })
-  })
-
-  it('ignores a lowercase "breaking change" in prose', () => {
-    const plan = computeVersion({
-      channel: 'stable',
-      lastGATag: 'v1.2.3',
-      commits: [
-        {
-          subject: 'feat: a feature',
-          body: 'this is a breaking change in prose'
-        }
-      ],
-      tags: ['v1.2.3']
-    })
-    expect(plan).toMatchObject({ version: '1.3.0', bump: 'minor' })
   })
 
   it('computes the first beta for a target with no existing betas', () => {
     const plan = computeVersion({
       channel: 'beta',
       lastGATag: 'v1.2.3',
-      commits: [{ subject: 'feat: a feature' }],
+      commits: ['feat: a feature'],
       tags: ['v1.2.3']
     })
     expect(plan).toEqual({
@@ -112,7 +73,7 @@ describe('computeVersion', () => {
     const plan = computeVersion({
       channel: 'beta',
       lastGATag: 'v1.2.3',
-      commits: [{ subject: 'feat: a feature' }],
+      commits: ['feat: a feature'],
       tags: ['v1.2.3', 'v1.3.0-beta.1', 'v1.3.0-beta.2']
     })
     expect(plan).toMatchObject({ version: '1.3.0-beta.3' })
@@ -124,40 +85,17 @@ describe('computeVersion', () => {
     const plan = computeVersion({
       channel: 'beta',
       lastGATag: 'v1.2.3',
-      commits: [{ subject: 'feat: a feature' }],
+      commits: ['feat: a feature'],
       tags: ['v1.2.3', 'v1.2.4-beta.1']
     })
     expect(plan).toMatchObject({ version: '1.3.0-beta.1' })
-  })
-
-  it('treats perf and revert as patch bumps', () => {
-    expect(
-      computeVersion({
-        channel: 'stable',
-        lastGATag: 'v1.2.3',
-        commits: [{ subject: 'perf: speed up' }],
-        tags: ['v1.2.3']
-      })
-    ).toMatchObject({ version: '1.2.4', bump: 'patch' })
-    expect(
-      computeVersion({
-        channel: 'stable',
-        lastGATag: 'v1.2.3',
-        commits: [{ subject: 'revert: undo a change' }],
-        tags: ['v1.2.3']
-      })
-    ).toMatchObject({ version: '1.2.4', bump: 'patch' })
   })
 
   it('takes the highest bump across a mix of commits', () => {
     const plan = computeVersion({
       channel: 'stable',
       lastGATag: 'v1.2.3',
-      commits: [
-        { subject: 'fix: a fix' },
-        { subject: 'feat: a feature' },
-        { subject: 'chore: housekeeping' }
-      ],
+      commits: ['fix: a fix', 'feat: a feature', 'chore: housekeeping'],
       tags: ['v1.2.3']
     })
     expect(plan).toMatchObject({ version: '1.3.0', bump: 'minor' })
@@ -167,7 +105,20 @@ describe('computeVersion', () => {
     const plan = computeVersion({
       channel: 'stable',
       lastGATag: 'v1.2.3',
-      commits: [{ subject: 'chore: deps' }, { subject: 'doc: typo' }],
+      commits: ['chore: deps', 'doc: typo'],
+      tags: ['v1.2.3']
+    })
+    expect(plan).toBeNull()
+  })
+
+  it('does not bump on a malformed header with no subject', () => {
+    // A conventional header requires a subject; a bare `feat:` (which
+    // commitlint's subject-empty rule rejects at commit time anyway) is not a
+    // valid bump trigger and must not produce a release.
+    const plan = computeVersion({
+      channel: 'stable',
+      lastGATag: 'v1.2.3',
+      commits: ['feat:'],
       tags: ['v1.2.3']
     })
     expect(plan).toBeNull()
@@ -177,7 +128,7 @@ describe('computeVersion', () => {
     const plan = computeVersion({
       channel: 'stable',
       lastGATag: null,
-      commits: [{ subject: 'feat: first feature' }],
+      commits: ['feat: first feature'],
       tags: []
     })
     expect(plan).toMatchObject({ version: '0.1.0', bump: 'minor' })

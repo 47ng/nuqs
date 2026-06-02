@@ -1,50 +1,27 @@
+import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
+import { classify } from './lib/conventional-commits'
+import { readTypeEnum } from './lint-pr-title'
 import {
-  extractType,
   formatFailSummary,
   formatPassSummary,
   hasCoreChanges,
-  isVersionBumping,
+  NON_BUMPING_TYPES,
   parseChangedFiles
 } from './check-version-bump'
 
-describe('extractType', () => {
-  it('extracts type from "feat: subject"', () => {
-    expect(extractType('feat: subject')).toBe('feat')
-  })
-
-  it('extracts type from "fix(scope): subject"', () => {
-    expect(extractType('fix(scope): subject')).toBe('fix')
-  })
-
-  it('returns undefined for empty title', () => {
-    expect(extractType('')).toBeUndefined()
-  })
-
-  it('returns undefined for non-letter prefix', () => {
-    expect(extractType('123 something')).toBeUndefined()
-  })
-})
-
-describe('isVersionBumping', () => {
-  it('returns true for bumping types', () => {
-    for (const t of ['feat', 'fix', 'perf', 'revert']) {
-      expect(isVersionBumping(t)).toBe(true)
-    }
-  })
-
-  it('returns false for non-bumping types', () => {
-    for (const t of ['chore', 'doc', 'ci', 'build', 'style']) {
-      expect(isVersionBumping(t)).toBe(false)
-    }
-  })
-
-  it('returns false for undefined', () => {
-    expect(isVersionBumping(undefined)).toBe(false)
-  })
-
-  it('returns false for empty string', () => {
-    expect(isVersionBumping('')).toBe(false)
+describe('NON_BUMPING_TYPES', () => {
+  // The failure summary lists these as the alternatives to a bumping type, so
+  // they must stay in sync with the commitlint config: exactly the allowed
+  // types that `classify` decides do not trigger a release.
+  it('matches the non-bumping types in the commitlint config', () => {
+    const types = readTypeEnum(
+      readFileSync(new URL('../../package.json', import.meta.url), 'utf8')
+    )
+    const nonBumping = types.filter(
+      t => classify(`${t}: subject`).bump === null
+    )
+    expect([...NON_BUMPING_TYPES]).toEqual(nonBumping)
   })
 })
 
