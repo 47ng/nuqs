@@ -4,23 +4,23 @@ packages:
 catalogs:
   e2e:
     playwright: ^1.58.1
-    '@playwright/test': ^1.58.1
+    "@playwright/test": ^1.58.1
 
   next:
-    next: ^16.1.6
+    next: 16.2.7
 
   react19:
-    '@types/react': ^19.2.10
-    '@types/react-dom': ^19.2.3
+    "@types/react": ^19.2.10
+    "@types/react-dom": ^19.2.3
     react: ^19.2.4
     react-dom: ^19.2.4
 
 enablePrePostScripts: true
 
 onlyBuiltDependencies:
-  - '@sentry/cli'
-  - '@swc/core'
-  - '@tailwindcss/oxide'
+  - "@sentry/cli"
+  - "@swc/core"
+  - "@tailwindcss/oxide"
   - playwright
   - esbuild
   - sharp
