@@ -3,7 +3,7 @@
 import { createEnv } from '@t3-oss/env-core'
 import { execFileSync } from 'node:child_process'
 import { z } from 'zod'
-import { type Bump, classify } from './lib/conventional-commits'
+import { type Bump, classify } from './lib/conventional-commits.ts'
 
 export type Channel = 'stable' | 'beta'
 export type ReleasePlan = {
@@ -155,7 +155,7 @@ function main(): void {
       `Last GA:  ${lastGATag ?? '(none)'}`,
       `Bump:     ${plan.bump}`,
       `Version:  ${plan.version}`,
-      `Tag:      ${plan.tag}`,
+      `Tag:     ${plan.tag}`,
       `Dist-tag: ${plan.distTag}`
     ].join('\n')
   )

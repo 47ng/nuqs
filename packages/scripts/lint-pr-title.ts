@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
-import { appendFileSync, readFileSync } from 'node:fs'
 import { createEnv } from '@t3-oss/env-core'
+import { appendFileSync, readFileSync } from 'node:fs'
 import { z } from 'zod'
 import { classify } from './lib/conventional-commits'
 
@@ -75,10 +75,6 @@ function main(): void {
   }
 }
 
-const isMainModule =
-  import.meta.url === `file://${process.argv[1]}` ||
-  process.argv[1]?.endsWith('lint-pr-title.ts')
-
-if (isMainModule) {
+if (import.meta.main) {
   main()
 }

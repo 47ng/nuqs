@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 
-import { appendFileSync } from 'node:fs'
 import { createEnv } from '@t3-oss/env-core'
+import { appendFileSync } from 'node:fs'
 import { z } from 'zod'
-import { classify } from './lib/conventional-commits'
+import { classify } from './lib/conventional-commits.ts'
 
 export const NON_BUMPING_TYPES = [
   'build',
@@ -112,10 +112,6 @@ function main(): void {
   process.exit(1)
 }
 
-const isMainModule =
-  import.meta.url === `file://${process.argv[1]}` ||
-  process.argv[1]?.endsWith('check-version-bump.ts')
-
-if (isMainModule) {
+if (import.meta.main) {
   main()
 }

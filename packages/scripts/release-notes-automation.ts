@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import { z } from 'zod'
-import { classify } from './lib/conventional-commits'
+import { classify } from './lib/conventional-commits.ts'
 
 // Schema for the GraphQL response
 const participantsSchema = z.object({
@@ -295,11 +295,6 @@ async function main() {
   }
 }
 
-// Only run main when executed directly (not when imported)
-const isMainModule =
-  import.meta.url === `file://${process.argv[1]}` ||
-  process.argv[1]?.endsWith('release-notes-automation.ts')
-
-if (isMainModule) {
+if (import.meta.main) {
   main()
 }
