@@ -26,10 +26,6 @@ jobs:
           cache: pnpm
       - name: Install scripts dependencies
         run: pnpm install --ignore-scripts --frozen-lockfile --filter scripts
-      - name: Lint PR title
-        env:
-          TITLE: ${{ github.event.pull_request.title }}
-        run: ./packages/scripts/lint-pr-title.ts
       - name: Get changed files
         id: changed-files
         env:
@@ -44,8 +40,8 @@ jobs:
             git diff -z --name-only "$BASE_SHA...$HEAD_SHA" | tr '\0' '\n'
             printf '%s\n' "$delim"
           } >> "$GITHUB_OUTPUT"
-      - name: Check version-bumping commits target core package
+      - name: Validate PR title
         env:
           TITLE: ${{ github.event.pull_request.title }}
           CHANGED_FILES: ${{ steps.changed-files.outputs.files }}
-        run: ./packages/scripts/check-version-bump.ts
+        run: ./packages/scripts/validate-pr-title.ts

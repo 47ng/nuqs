@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
-import { readTypeEnum } from '../lint-pr-title'
-import { classify } from './conventional-commits'
+import { readTypeEnum } from '../validate-pr-title.ts'
+import { classify } from './conventional-commits.ts'
 
 describe('classify', () => {
   it('classifies a fix as a patch bump', () => {
