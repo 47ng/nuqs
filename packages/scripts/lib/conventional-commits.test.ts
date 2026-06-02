@@ -21,10 +21,26 @@ describe('classify', () => {
   })
 
   it('classifies a "!" marker as a major bump, keeping the type', () => {
+    expect(classify('feat!: a breaking feature')).toEqual({
+      bump: 'major',
+      type: 'feat',
+      description: 'a breaking feature'
+    })
+  })
+
+  it('classifies a "!" marker as a major bump, keeping the type (with scope)', () => {
     expect(classify('feat(scope)!: a breaking feature')).toEqual({
       bump: 'major',
       type: 'feat',
       description: 'a breaking feature'
+    })
+  })
+
+  it('classifies a "!" marker as a major bump even for non-bumping types', () => {
+    expect(classify('chore!: boom')).toEqual({
+      bump: 'major',
+      type: 'chore',
+      description: 'boom'
     })
   })
 
@@ -107,7 +123,7 @@ describe('classify', () => {
 describe('classify vs. commitlint type-enum', () => {
   const types = readTypeEnum(
     readFileSync(new URL('../../../package.json', import.meta.url), 'utf8')
-  )
+  ).sort() // sort for deterministic comparison order
 
   it('recognises every allowed type as conventional', () => {
     for (const type of types) {
