@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
-import { execFileSync } from 'node:child_process'
 import { createEnv } from '@t3-oss/env-core'
+import { execFileSync } from 'node:child_process'
 import { z } from 'zod'
 
 export type Channel = 'stable' | 'beta'
@@ -186,10 +186,6 @@ function main(): void {
   )
 }
 
-const isMainModule =
-  import.meta.url === `file://${process.argv[1]}` ||
-  process.argv[1]?.endsWith('compute-version.ts')
-
-if (isMainModule) {
+if (import.meta.main) {
   main()
 }
