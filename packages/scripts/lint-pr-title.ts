@@ -3,7 +3,7 @@
 import { createEnv } from '@t3-oss/env-core'
 import { appendFileSync, readFileSync } from 'node:fs'
 import { z } from 'zod'
-import { classify } from './lib/conventional-commits'
+import { classify } from './lib/conventional-commits.ts'
 
 // Matches the @commitlint/config-conventional default. If the project ever
 // overrides header-max-length in package.json, update this constant.
