@@ -457,7 +457,7 @@ describe('useQueryState: edge cases & repros', () => {
     function TestComponent() {
       const [state, setState] = useQueryState('test')
       const [isNullDetectorEnabled, setIsNullDetectorEnabled] = useState(false)
-      const isLoading = useFakeLoadingState(state)
+      const { isLoading, stopLoading } = useFakeLoadingState(state)
       return (
         <>
           <button
@@ -468,6 +468,7 @@ describe('useQueryState: edge cases & repros', () => {
           >
             Start
           </button>
+          <button onClick={stopLoading}>Stop</button>
           <NullDetector
             state={state}
             enabled={isNullDetectorEnabled}
@@ -490,7 +491,9 @@ describe('useQueryState: edge cases & repros', () => {
       .toHaveTextContent('pass')
     await expect.element(page.getByText('isLoading: false')).toBeInTheDocument()
     await user.click(page.getByRole('button', { name: 'Start' }))
+    // Held until we click Stop, so this no longer races a wall clock.
     await expect.element(page.getByText('isLoading: true')).toBeInTheDocument()
+    await user.click(page.getByRole('button', { name: 'Stop' }))
     await expect.element(page.getByText('isLoading: false')).toBeInTheDocument()
     await expect
       .element(page.getByTestId('null-detector'))
