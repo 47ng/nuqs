@@ -114,6 +114,8 @@ jobs:
       id-token: write # OIDC trusted publishing for `npm stage publish`
     outputs:
       stage-id: ${{ steps.stage.outputs.stage-id }}
+      shasum: ${{ steps.stage.outputs.shasum }}
+      integrity: ${{ steps.stage.outputs.integrity }}
     # todo: scope the env to whatever steps need it.
     env:
       VERSION: ${{ needs.compute-version.outputs.version }}
@@ -170,13 +172,21 @@ jobs:
             exit 1
           fi
           STAGE_ID=$(printf '%s' "$PKG" | jq -r '.stageId')
+          SHASUM=$(printf '%s' "$PKG" | jq -r '.shasum')
+          INTEGRITY=$(printf '%s' "$PKG" | jq -r '.integrity')
           # Reject anything carrying control chars before writing: a newline
           # would let crafted npm output inject extra $GITHUB_OUTPUT lines.
-          if [ -z "$STAGE_ID" ] || printf '%s' "$STAGE_ID" | LC_ALL=C grep -q '[^[:print:]]'; then
-            echo "::error::Unexpected characters in npm stage metadata"
-            exit 1
-          fi
+          for v in "$STAGE_ID" "$SHASUM" "$INTEGRITY"; do
+            if [ -z "$v" ] || printf '%s' "$v" | LC_ALL=C grep -q '[^[:print:]]'; then
+              echo "::error::Unexpected characters in npm stage metadata"
+              exit 1
+            fi
+          done
+          # stage-id gates the draft; shasum + integrity are surfaced in the
+          # job summary so a reviewer can match the staged tarball before 2FA.
           echo "stage-id=$STAGE_ID" >> "$GITHUB_OUTPUT"
+          echo "shasum=$SHASUM" >> "$GITHUB_OUTPUT"
+          echo "integrity=$INTEGRITY" >> "$GITHUB_OUTPUT"
 
   draft:
     name: Draft GitHub release
@@ -192,6 +202,8 @@ jobs:
       TAG: ${{ needs.compute-version.outputs.tag }}
       DIST_TAG: ${{ needs.compute-version.outputs.dist-tag }}
       STAGE_ID: ${{ needs.stage.outputs.stage-id }}
+      SHASUM: ${{ needs.stage.outputs.shasum }}
+      INTEGRITY: ${{ needs.stage.outputs.integrity }}
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
@@ -238,6 +250,8 @@ jobs:
             echo "| Tag | \`$TAG\` |"
             echo "| Dist-tag | \`$DIST_TAG\` |"
             echo "| npm stage id | \`$STAGE_ID\` |"
+            echo "| shasum | \`$SHASUM\` |"
+            echo "| integrity | \`$INTEGRITY\` |"
             echo ""
             echo "**Next:** review the draft notes, then"
             echo "[approve the staged package on npmjs.com](https://www.npmjs.com/settings/franky47/staged-packages/?page=0&perPage=10&filterPackage=nuqs)"
