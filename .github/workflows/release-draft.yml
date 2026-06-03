@@ -160,9 +160,20 @@ jobs:
           set -euo pipefail
           OUTPUT=$(npm stage publish --tag "$DIST_TAG" --json)
           echo "$OUTPUT"
-          STAGE_ID=$(echo "$OUTPUT" | jq -r '[.. | objects | .stageId? // empty][0] // empty')
-          if [ -z "$STAGE_ID" ]; then
-            echo "::error::Could not parse stage id from npm output"
+          # Isolate the JSON object before parsing: even with --json, a publish
+          # lifecycle hook can prepend diagnostics to stdout. Drop everything
+          # before the first line that opens the object, then pull out the
+          # staged package node (keyed by name) — the one carrying a stageId.
+          PKG=$(printf '%s' "$OUTPUT" | sed -n '/^{/,$p' | jq -c '[.. | objects | select(.stageId)][0] // empty')
+          if [ -z "$PKG" ]; then
+            echo "::error::Could not parse stage metadata from npm output"
+            exit 1
+          fi
+          STAGE_ID=$(printf '%s' "$PKG" | jq -r '.stageId')
+          # Reject anything carrying control chars before writing: a newline
+          # would let crafted npm output inject extra $GITHUB_OUTPUT lines.
+          if [ -z "$STAGE_ID" ] || printf '%s' "$STAGE_ID" | LC_ALL=C grep -q '[^[:print:]]'; then
+            echo "::error::Unexpected characters in npm stage metadata"
             exit 1
           fi
           echo "stage-id=$STAGE_ID" >> "$GITHUB_OUTPUT"
