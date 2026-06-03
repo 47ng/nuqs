@@ -133,7 +133,12 @@ jobs:
         # `npm stage` first shipped in npm 11.15.0; the npm bundled with
         # the pinned Node is older. Pinned (not @latest) because this is the
         # privileged publish path — bump deliberately.
-        run: npm install --global npm@11.16.0
+        run: |
+          which npm
+          npm --version
+          npm install --global npm@11.16.0
+          which npm
+          npm --version
       - name: Install dependencies
         run: pnpm install --ignore-scripts --frozen-lockfile --filter nuqs...
       - name: Verify provenance + registry signatures of dependencies
@@ -143,7 +148,7 @@ jobs:
         working-directory: packages/nuqs
       - name: Build package
         run: pnpm build --filter nuqs
-      - name: Stage tarball to npm (OIDC trusted publishing)
+      - name: Stage tarball to npm (OIDC staged trusted publishing)
         id: stage
         if: ${{ !inputs.dry-run }}
         working-directory: packages/nuqs
@@ -193,7 +198,11 @@ jobs:
         working-directory: packages/scripts
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Debug release notes
+        if: ${{ inputs.dry-run }}
+        run: cat "$RUNNER_TEMP/notes.md"
       - name: Create draft GitHub release
+        if: ${{ !inputs.dry-run }}
         # Draft + untagged: the git tag is created server-side only when the
         # maintainer publishes this draft, which is what fires Finalize.
         run: |
