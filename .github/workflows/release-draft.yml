@@ -114,6 +114,7 @@ jobs:
       id-token: write # OIDC trusted publishing for `npm stage publish`
     outputs:
       stage-id: ${{ steps.stage.outputs.stage-id }}
+    # todo: scope the env to whatever steps need it.
     env:
       VERSION: ${{ needs.compute-version.outputs.version }}
       DIST_TAG: ${{ needs.compute-version.outputs.dist-tag }}
@@ -170,6 +171,7 @@ jobs:
     name: Draft GitHub release
     runs-on: ubuntu-24.04-arm
     needs: [compute-version, stage]
+    if: ${{ always() && needs.stage.result == 'success' }}
     # Split from `stage` so the npm OIDC token's lifetime is bounded to staging:
     # this job holds only contents:write and never sees id-token.
     permissions:
