@@ -76,11 +76,13 @@ describe('splitCategoryTitle', () => {
     expect(title).toBe('Some random title')
   })
 
-  it('is case insensitive for type prefix', () => {
-    const [category1] = splitCategoryTitle('FEAT: uppercase')
-    const [category2] = splitCategoryTitle('Feat: titlecase')
-    expect(category1).toBe('Features')
-    expect(category2).toBe('Features')
+  it('categorises a non-lowercase type prefix as "Other changes"', () => {
+    const [category1, title1] = splitCategoryTitle('FEAT: uppercase')
+    const [category2, title2] = splitCategoryTitle('Feat: TitleCase desc')
+    expect(category1).toBe('Other changes')
+    expect(title1).toBe('FEAT: uppercase')
+    expect(category2).toBe('Other changes')
+    expect(title2).toBe('Feat: TitleCase desc')
   })
 })
 

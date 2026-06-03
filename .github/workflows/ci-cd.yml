@@ -9,6 +9,22 @@ on:
   pull_request:
     types: [opened, reopened, synchronize]
   workflow_dispatch:
+  # Invoked as the release gate by release-draft.yml: re-runs the full
+  # matrix on the exact commit being staged, so the published bytes are
+  # the bytes that passed CI. The caller passes only TURBO_* (no
+  # `secrets: inherit`) to keep the credential surface minimal; the other
+  # secrets are declared so this workflow type-checks under all triggers,
+  # and resolve to empty (their steps no-op) when called.
+  workflow_call:
+    secrets:
+      TURBO_TOKEN:
+        required: false
+      TURBO_TEAM:
+        required: false
+      SLACK_WEBHOOK_URL:
+        required: false
+      ISR_TOKEN:
+        required: false
 
 permissions:
   contents: read
