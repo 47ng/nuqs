@@ -170,11 +170,8 @@ jobs:
     name: Draft GitHub release
     runs-on: ubuntu-24.04-arm
     needs: [compute-version, stage]
-    # Real releases only (nothing is staged on a dry-run). Split from `stage`
-    # so the npm OIDC token's lifetime is bounded to staging: this job holds
-    # only contents:write and never sees id-token. The implicit needs-success
-    # gate already skips this job if `stage` didn't succeed.
-    if: ${{ !inputs.dry-run }}
+    # Split from `stage` so the npm OIDC token's lifetime is bounded to staging:
+    # this job holds only contents:write and never sees id-token.
     permissions:
       contents: write # create the draft GitHub release
     env:
