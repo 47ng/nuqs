@@ -3,7 +3,14 @@ import { computeVersion, selectLastGATag } from './compute-version'
 
 describe('selectLastGATag', () => {
   it('returns the highest GA tag, ignoring betas', () => {
-    const tags = ['v1.2.3', 'v2.8.9', 'v2.7.3-beta.1', 'v2.8.0', 'v2.10.0', 'v1.2.4']
+    const tags = [
+      'v1.2.3',
+      'v2.8.9',
+      'v2.7.3-beta.1',
+      'v2.8.0',
+      'v2.10.0',
+      'v1.2.4'
+    ]
     expect(selectLastGATag(tags)).toBe('v2.10.0')
   })
 

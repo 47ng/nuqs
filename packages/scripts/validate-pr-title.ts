@@ -146,7 +146,9 @@ function main(): void {
   // 1. The title must be a well-formed, allowed conventional-commit header.
   //    A malformed title makes the bump classification meaningless, so we
   //    stop here rather than reporting a second, derived failure.
-  const types = readTypeEnum(readFileSync('./package.json', 'utf8'))
+  const types = readTypeEnum(
+    readFileSync(new URL('../../package.json', import.meta.url), 'utf8')
+  )
   const titleErrors = validateTitle(env.TITLE, types)
   writeSummary(formatSummary(titleErrors))
   if (titleErrors.length > 0) {

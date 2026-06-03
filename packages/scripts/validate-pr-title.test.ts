@@ -129,9 +129,9 @@ describe('NON_BUMPING_TYPES', () => {
     const types = readTypeEnum(
       readFileSync(new URL('../../package.json', import.meta.url), 'utf8')
     )
-    const nonBumping = types.filter(
-      t => classify(`${t}: subject`).bump === null
-    ).sort()
+    const nonBumping = types
+      .filter(t => classify(`${t}: subject`).bump === null)
+      .sort()
     expect(NON_BUMPING_TYPES.toSorted()).toEqual(nonBumping)
   })
 })
