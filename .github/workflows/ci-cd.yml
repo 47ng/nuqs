@@ -104,7 +104,7 @@ jobs:
         run: pnpm build --filter nuqs
       - name: Run publint on package.json
         run: pnpm publint packages/nuqs
-      - uses: 47ng/actions-slack-notify@0917ccc17666d2ca5eb8b8a1afced5048da8c8b5 # 1.0.2
+      - uses: 47ng/actions-slack-notify@454fe45e7ca3f21d7f7be774044de1664f1b22c1
         name: Notify on Slack
         if: failure()
         with:
@@ -183,7 +183,7 @@ jobs:
           TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
           TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - uses: 47ng/actions-slack-notify@0917ccc17666d2ca5eb8b8a1afced5048da8c8b5 # 1.0.2
+      - uses: 47ng/actions-slack-notify@454fe45e7ca3f21d7f7be774044de1664f1b22c1
         name: Notify on Slack
         if: failure()
         with:
@@ -269,7 +269,7 @@ jobs:
           path: packages/e2e/next/.playwright/*
           name: playwright-next-${{ matrix.next-version }}${{ matrix.base-path && '-basePath' || ''}}${{ matrix.react-compiler && '-react-compiler' || ''}}${{ matrix.cache-components && '-cache-components' || ''}}
           include-hidden-files: true
-      - uses: 47ng/actions-slack-notify@0917ccc17666d2ca5eb8b8a1afced5048da8c8b5 # 1.0.2
+      - uses: 47ng/actions-slack-notify@454fe45e7ca3f21d7f7be774044de1664f1b22c1
         name: Notify on Slack
         if: failure()
         with:
@@ -311,7 +311,7 @@ jobs:
           path: packages/e2e/react/.playwright/*
           name: playwright-react-fpn-${{ matrix.full-page-nav-on-shallow-false }}
           include-hidden-files: true
-      - uses: 47ng/actions-slack-notify@0917ccc17666d2ca5eb8b8a1afced5048da8c8b5 # 1.0.2
+      - uses: 47ng/actions-slack-notify@454fe45e7ca3f21d7f7be774044de1664f1b22c1
         name: Notify on Slack
         if: failure()
         with:
@@ -354,7 +354,7 @@ jobs:
           path: packages/e2e/react-router/${{ matrix.react-router-version }}/.playwright/*
           name: playwright-react-router-${{ matrix.react-router-version }}
           include-hidden-files: true
-      - uses: 47ng/actions-slack-notify@0917ccc17666d2ca5eb8b8a1afced5048da8c8b5 # 1.0.2
+      - uses: 47ng/actions-slack-notify@454fe45e7ca3f21d7f7be774044de1664f1b22c1
         name: Notify on Slack
         if: failure()
         with:
@@ -391,7 +391,7 @@ jobs:
           path: packages/e2e/remix/.playwright/*
           name: playwright-remix
           include-hidden-files: true
-      - uses: 47ng/actions-slack-notify@0917ccc17666d2ca5eb8b8a1afced5048da8c8b5 # 1.0.2
+      - uses: 47ng/actions-slack-notify@454fe45e7ca3f21d7f7be774044de1664f1b22c1
         name: Notify on Slack
         if: failure()
         with:
@@ -428,7 +428,7 @@ jobs:
           path: packages/e2e/tanstack-router/.playwright/*
           name: playwright-tanstack-router
           include-hidden-files: true
-      - uses: 47ng/actions-slack-notify@0917ccc17666d2ca5eb8b8a1afced5048da8c8b5 # 1.0.2
+      - uses: 47ng/actions-slack-notify@454fe45e7ca3f21d7f7be774044de1664f1b22c1
         name: Notify on Slack
         if: failure()
         with:
@@ -452,7 +452,7 @@ jobs:
       - e2e-remix
       - e2e-tanstack-router
     steps:
-      - uses: 47ng/actions-slack-notify@0917ccc17666d2ca5eb8b8a1afced5048da8c8b5 # 1.0.2
+      - uses: 47ng/actions-slack-notify@454fe45e7ca3f21d7f7be774044de1664f1b22c1
         with:
           status: ${{ job.status }}
           jobName: Continuous Integration
