@@ -93,7 +93,7 @@ jobs:
     if: ${{ needs.compute-version.outputs.needsReleasing == 'true' && !inputs.dry-run }}
     permissions:
       contents: read
-      actions: read
+      actions: read # ci-cd.yml's docs build reads the workflow-run status when rendering the landing-page CI component.
     # Re-run the full matrix on the exact dispatched commit, so the staged
     # bytes are the bytes that passed CI. Secrets passed explicitly (no
     # `secrets: inherit`) to keep the credential surface minimal.
