@@ -116,10 +116,6 @@ jobs:
       stage-id: ${{ steps.stage.outputs.stage-id }}
       shasum: ${{ steps.stage.outputs.shasum }}
       integrity: ${{ steps.stage.outputs.integrity }}
-    # todo: scope the env to whatever steps need it.
-    env:
-      VERSION: ${{ needs.compute-version.outputs.version }}
-      DIST_TAG: ${{ needs.compute-version.outputs.dist-tag }}
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
@@ -149,12 +145,16 @@ jobs:
       - name: Set the computed version (ephemeral, never committed)
         run: npm pkg set version="$VERSION"
         working-directory: packages/nuqs
+        env:
+          VERSION: ${{ needs.compute-version.outputs.version }}
       - name: Build package
         run: pnpm build --filter nuqs
       - name: Stage tarball to npm (OIDC staged trusted publishing)
         id: stage
         if: ${{ !inputs.dry-run }}
         working-directory: packages/nuqs
+        env:
+          DIST_TAG: ${{ needs.compute-version.outputs.dist-tag }}
         # `npm stage publish` defers 2FA: it stages the tarball (with
         # provenance, per publishConfig) without making it installable.
         # Prerelease versions require an explicit --tag.
@@ -184,6 +184,8 @@ jobs:
           done
           # stage-id gates the draft; shasum + integrity are surfaced in the
           # job summary so a reviewer can match the staged tarball before 2FA.
+          # Kept as separate echoes (not a grouped redirect) for readability.
+          # shellcheck disable=SC2129
           echo "stage-id=$STAGE_ID" >> "$GITHUB_OUTPUT"
           echo "shasum=$SHASUM" >> "$GITHUB_OUTPUT"
           echo "integrity=$INTEGRITY" >> "$GITHUB_OUTPUT"
@@ -197,13 +199,6 @@ jobs:
     # this job holds only contents:write and never sees id-token.
     permissions:
       contents: write # create the draft GitHub release
-    env:
-      VERSION: ${{ needs.compute-version.outputs.version }}
-      TAG: ${{ needs.compute-version.outputs.tag }}
-      DIST_TAG: ${{ needs.compute-version.outputs.dist-tag }}
-      STAGE_ID: ${{ needs.stage.outputs.stage-id }}
-      SHASUM: ${{ needs.stage.outputs.shasum }}
-      INTEGRITY: ${{ needs.stage.outputs.integrity }}
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
@@ -239,6 +234,8 @@ jobs:
             "${PRERELEASE[@]}"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ needs.compute-version.outputs.tag }}
+          DIST_TAG: ${{ needs.compute-version.outputs.dist-tag }}
       - name: Summary
         run: |
           {
@@ -270,3 +267,10 @@ jobs:
             echo "[approve the staged package on npmjs.com](https://www.npmjs.com/settings/franky47/staged-packages/?page=0&perPage=10&filterPackage=nuqs)"
             echo "with 2FA, and publish the draft release to create the tag and fire Finalize."
           } >> "$GITHUB_STEP_SUMMARY"
+        env:
+          VERSION: ${{ needs.compute-version.outputs.version }}
+          TAG: ${{ needs.compute-version.outputs.tag }}
+          DIST_TAG: ${{ needs.compute-version.outputs.dist-tag }}
+          STAGE_ID: ${{ needs.stage.outputs.stage-id }}
+          SHASUM: ${{ needs.stage.outputs.shasum }}
+          INTEGRITY: ${{ needs.stage.outputs.integrity }}
