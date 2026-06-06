@@ -56,6 +56,15 @@ fi
 # --- per-file diff for common files that differ -----------------------------
 is_text() { grep -Iq . "$1" 2>/dev/null; } # -I => binary counts as no-match
 
+# Summarise a divergence by size + sha1 instead of dumping bytes. Used for
+# binaries and for sourcemaps (single-line JSON blobs that are technically text
+# but unreadable as a line diff — and a chunk-hash change rewrites the whole
+# `mappings` string anyway, so a textual diff is pure noise).
+size_sha_summary() { # $1 = staged path, $2 = local path
+  printf '  staged: sha1 %s · %8s bytes\n' "$(sha1sum "$1" | cut -d' ' -f1)" "$(wc -c <"$1")"
+  printf '   local: sha1 %s · %8s bytes\n' "$(sha1sum "$2" | cut -d' ' -f1)" "$(wc -c <"$2")"
+}
+
 DIFFERED=0
 while IFS= read -r rel; do
   [ -n "${rel}" ] || continue
@@ -63,14 +72,21 @@ while IFS= read -r rel; do
   cmp -s "${l}" "${s}" && continue # identical
   DIFFERED=1
   echo "------------------------------------------------------------------"
-  if is_text "${l}" && is_text "${s}"; then
-    echo "TEXT DIFFERS: ${rel}  (staged vs local)"
-    diff -u --label "staged/${rel}" "${s}" --label "local/${rel}" "${l}" || true
-  else
-    echo "BINARY DIFFERS: ${rel}"
-    printf '  staged: %8s bytes  sha1 %s\n' "$(wc -c <"${s}")" "$(sha1sum "${s}" | cut -d' ' -f1)"
-    printf '  local : %8s bytes  sha1 %s\n' "$(wc -c <"${l}")" "$(sha1sum "${l}" | cut -d' ' -f1)"
-  fi
+  case "${rel}" in
+    *.map)
+      echo "SOURCEMAP DIFFERS: ${rel}"
+      size_sha_summary "${s}" "${l}"
+      ;;
+    *)
+      if is_text "${l}" && is_text "${s}"; then
+        echo "TEXT DIFFERS: ${rel}  (staged vs local)"
+        diff -u --label "staged/${rel}" "${s}" --label "local/${rel}" "${l}" || true
+      else
+        echo "BINARY DIFFERS: ${rel}"
+        size_sha_summary "${s}" "${l}"
+      fi
+      ;;
+  esac
 done <<<"${COMMON}"
 
 echo "=================================================================="
