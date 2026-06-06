@@ -44,9 +44,12 @@ RUN set -eux; \
 
 # The analysis is baked into the image (NOT taken from the untrusted source
 # archive) so that, under the runtime read-only rootfs, a malicious build
-# cannot rewrite the verdict logic. Lives in a root-owned, read-only path.
-COPY analyze.sh /usr/local/bin/analyze.sh
-RUN chmod 0555 /usr/local/bin/analyze.sh
+# cannot rewrite the verdict logic. Two stages, two scripts, both root-owned
+# and read-only; the host selects which one to run as the container command:
+#   run1.match-hash.sh   — reproduce + match digests (git archive on stdin)
+#   run2.diff-contents.sh — extract + diff the two tarballs (/in mount, ro)
+COPY run1.match-hash.sh run2.diff-contents.sh /usr/local/bin/
+RUN chmod 0555 /usr/local/bin/run1.match-hash.sh /usr/local/bin/run2.diff-contents.sh
 
 # Run reproductions as a non-root user (ubuntu:24.04 already ships a uid-1000
 # `ubuntu` user, so let useradd pick a free uid rather than collide).
@@ -54,4 +57,5 @@ RUN useradd --create-home verifier
 USER verifier
 WORKDIR /home/verifier
 
-ENTRYPOINT ["/usr/local/bin/analyze.sh"]
+# No ENTRYPOINT: the host passes the script name (run1.match-hash.sh /
+# run2.diff-contents.sh) as the container command.
