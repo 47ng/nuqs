@@ -113,22 +113,31 @@ const missing = (Object.entries({
 if (missing) die(1, `block missing '${missing[0]}='`)
 
 // --- clean-tree guard: HEAD must BE the staged commit -----------------------
-const dirty = spawnSync('git', ['-C', REPO_ROOT, 'diff', '--quiet', 'HEAD']).status !== 0
-if (dirty) {
-  die(
-    1,
-    'FAIL: working tree is dirty — commit or stash so HEAD is exactly the',
-    '      staged commit before verifying.',
-  )
-}
+// Escape hatch (TEST MODE ONLY): VERIFY_ALLOW_TREE_MISMATCH=1 skips the
+// clean-tree + HEAD==sha guards so the escalation/diff machinery can be
+// exercised from an arbitrary checkout. `git archive HEAD` still ships the
+// committed tree, so this only loosens *which* commit is reproduced.
 const HEAD_SHA = capture('git', ['-C', REPO_ROOT, 'rev-parse', 'HEAD']).trim()
-if (HEAD_SHA !== SHA) {
-  die(
-    1,
-    `FAIL: HEAD (${HEAD_SHA})`,
-    `      != block sha (${SHA}).`,
-    '      Check out the staged commit, then re-run.',
-  )
+if (process.env.VERIFY_ALLOW_TREE_MISMATCH === '1') {
+  err('WARN: VERIFY_ALLOW_TREE_MISMATCH=1 — skipping clean-tree + HEAD==sha guards (TEST MODE).')
+  err(`      Reproducing from HEAD ${HEAD_SHA.slice(0, 8)}, not block sha ${SHA.slice(0, 8)}.`)
+} else {
+  const dirty = spawnSync('git', ['-C', REPO_ROOT, 'diff', '--quiet', 'HEAD']).status !== 0
+  if (dirty) {
+    die(
+      1,
+      'FAIL: working tree is dirty — commit or stash so HEAD is exactly the',
+      '      staged commit before verifying.',
+    )
+  }
+  if (HEAD_SHA !== SHA) {
+    die(
+      1,
+      `FAIL: HEAD (${HEAD_SHA})`,
+      `      != block sha (${SHA}).`,
+      '      Check out the staged commit, then re-run.',
+    )
+  }
 }
 
 err('==> Building canonical image')
