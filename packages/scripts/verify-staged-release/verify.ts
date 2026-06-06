@@ -22,6 +22,7 @@ import { spawn, spawnSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
 import { mkdirSync, readdirSync, readFileSync, renameSync, rmSync } from 'node:fs'
 import { join } from 'node:path'
+import { createInterface } from 'node:readline'
 import { parseArgs } from 'node:util'
 import { z } from 'zod'
 
@@ -76,12 +77,28 @@ const BLOCK_FILE = positionals[0] ?? ''
 const REPO_ROOT = capture('git', ['rev-parse', '--show-toplevel']).trim()
 
 // --- read + parse the run-summary block -------------------------------------
+/**
+ * Read the run-summary block from stdin, submitting on the first blank line
+ * (press Enter to submit after paste). EOF also terminates, so piped /
+ * heredoc input keeps working unchanged.
+ */
+async function readBlockFromStdin(): Promise<string> {
+  const rl = createInterface({ input: process.stdin })
+  const lines: string[] = []
+  for await (const line of rl) {
+    if (line.trim() === '') break
+    lines.push(line)
+  }
+  rl.close()
+  return lines.join('\n')
+}
+
 let summaryBlock: string
 if (BLOCK_FILE) {
   summaryBlock = readFileSync(BLOCK_FILE, 'utf8')
 } else {
-  err('Paste the run-summary block, then Ctrl-D:')
-  summaryBlock = readFileSync(0, 'utf8') // stdin
+  err('Paste the run-summary block, then press Enter on a blank line to start:')
+  summaryBlock = await readBlockFromStdin()
 }
 
 // Keep only key=value lines (tolerate pasted ``` fences and stray prose).
