@@ -11,18 +11,18 @@
 // contributor collection) is unit-tested; the IO shell (git log, octokit
 // GraphQL) is thin glue over it and untested by design.
 
-import semver from 'semver'
 import { z } from 'zod'
 import type { Channel } from '../compute-version.ts'
 import { git, readAllTags } from './git.ts'
+import { greatestTag, isGA, isValidSemver, precedes } from './version.ts'
 
 // --- Pure core: channel detection -----------------------------------------
 
-// A version/tag with a prerelease segment (`-beta.N`) is a beta; otherwise it
-// is a stable GA. `HEAD` has no version, so the channel is supplied explicitly
-// in the draft phase — this is only used at finalize time on a real tag.
+// A GA tag is stable; a tag with a prerelease segment (`-beta.N`) is a beta.
+// `HEAD` has no version, so the channel is supplied explicitly in the draft
+// phase — this is only used at finalize time on a real tag.
 export function resolveChannel(ref: string): Channel {
-  return semver.prerelease(ref) ? 'beta' : 'stable'
+  return isGA(ref) ? 'stable' : 'beta'
 }
 
 // --- Pure core: range resolution ------------------------------------------
@@ -30,9 +30,6 @@ export function resolveChannel(ref: string): Channel {
 // The git range `(from, to]` to walk for a release. `from` is null for the
 // first-ever release (walk from the beginning of history).
 export type Range = { from: string | null; to: string }
-
-// A GA tag has no prerelease segment: vX.Y.Z exactly.
-const GA_TAG = /^v\d+\.\d+\.\d+$/
 
 // Resolve the commit range a release covers, asymmetric by channel:
 //   - GA `vX`      → (previous GA tag, this]      cumulative; betas skipped.
@@ -52,24 +49,16 @@ export function resolveRange(args: {
   tags: string[]
 }): Range {
   const { channel, currentRef, tags } = args
-  const candidates = tags
-    .filter(tag => semver.valid(tag) !== null)
-    .filter(tag => (channel === 'stable' ? GA_TAG.test(tag) : true))
+  const candidates = tags.filter(tag =>
+    channel === 'stable' ? isGA(tag) : isValidSemver(tag)
+  )
   // HEAD is above every tag, so every candidate is "below" it; a real tag is
   // compared by semver precedence (which also excludes the tag itself).
   const below =
     currentRef === 'HEAD'
       ? candidates
-      : candidates.filter(tag => semver.lt(tag, currentRef))
-  return { from: selectGreatest(below), to: currentRef }
-}
-
-function selectGreatest(tags: string[]): string | null {
-  let best: string | null = null
-  for (const tag of tags) {
-    if (best === null || semver.gt(tag, best)) best = tag
-  }
-  return best
+      : candidates.filter(tag => precedes(tag, currentRef))
+  return { from: greatestTag(below), to: currentRef }
 }
 
 // --- Pure core: PR-number extraction --------------------------------------

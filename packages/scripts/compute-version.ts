@@ -4,6 +4,7 @@ import { createEnv } from '@t3-oss/env-core'
 import { z } from 'zod'
 import { type Bump, classify } from './lib/conventional-commits.ts'
 import { git, readAllTags } from './lib/git.ts'
+import { bumpGA, greatestGATag, highestBetaNumber } from './lib/version.ts'
 
 export type Channel = 'stable' | 'beta'
 export type ReleasePlan = {
@@ -15,29 +16,9 @@ export type ReleasePlan = {
 
 const RANKS: Record<Bump, number> = { major: 3, minor: 2, patch: 1 }
 
-// Returns the highest GA tag (e.g. "v2.10.0"), ignoring -beta.* tags, or
-// null when there are no GA tags. Comparison is numeric, so v2.10.0 sorts
-// above v2.8.9.
-export function selectLastGATag(tags: string[]): string | null {
-  let best: { tag: string; parts: number[] } | null = null
-  for (const tag of tags) {
-    const match = tag.match(/^v(\d+)\.(\d+)\.(\d+)$/)
-    if (!match) continue
-    const parts = [Number(match[1]), Number(match[2]), Number(match[3])]
-    if (best === null || compareParts(parts, best.parts) > 0) {
-      best = { tag, parts }
-    }
-  }
-  return best?.tag ?? null
-}
-
-function compareParts(a: number[], b: number[]): number {
-  for (let i = 0; i < 3; i++) {
-    const diff = (a[i] ?? 0) - (b[i] ?? 0)
-    if (diff !== 0) return diff
-  }
-  return 0
-}
+// The highest GA tag (e.g. "v2.10.0"), ignoring -beta.* tags, or null when
+// there are none — the previous stable checkpoint.
+export const selectLastGATag = greatestGATag
 
 function highestBump(commits: string[]): Bump | null {
   let highest: Bump | null = null
@@ -50,13 +31,6 @@ function highestBump(commits: string[]): Bump | null {
   return highest
 }
 
-function incrementGA(version: string, bump: Bump): string {
-  const [major = 0, minor = 0, patch = 0] = version.split('.').map(Number)
-  if (bump === 'major') return `${major + 1}.0.0`
-  if (bump === 'minor') return `${major}.${minor + 1}.0`
-  return `${major}.${minor}.${patch + 1}`
-}
-
 export function computeVersion(args: {
   channel: Channel
   lastGATag: string | null
@@ -66,7 +40,7 @@ export function computeVersion(args: {
   const bump = highestBump(args.commits)
   if (!bump) return null
   const lastGA = args.lastGATag?.replace(/^v/, '') ?? '0.0.0'
-  const targetGA = incrementGA(lastGA, bump)
+  const targetGA = bumpGA(lastGA, bump)
 
   if (args.channel === 'stable') {
     return { version: targetGA, tag: `v${targetGA}`, distTag: 'latest', bump }
@@ -75,23 +49,6 @@ export function computeVersion(args: {
   const next = highestBetaNumber(args.tags, targetGA) + 1
   const version = `${targetGA}-beta.${next}`
   return { version, tag: `v${version}`, distTag: 'beta', bump }
-}
-
-// One past the highest existing beta number for THIS exact target. Using the
-// max (not a count) guarantees the new tag can't collide with an existing one
-// even if earlier betas were deleted; and since a recomputed, higher target
-// has no matching betas, the sequence naturally resets to 1.
-function highestBetaNumber(tags: string[], targetGA: string): number {
-  const prefix = `v${targetGA}-beta.`
-  let highest = 0
-  for (const tag of tags) {
-    if (!tag.startsWith(prefix)) continue
-    const suffix = tag.slice(prefix.length)
-    if (!/^\d+$/.test(suffix)) continue // only canonical -beta.N tags
-    const n = Number(suffix)
-    if (n > highest) highest = n
-  }
-  return highest
 }
 
 // --- IO layer (untested by design: the pure core above is the unit) -------
