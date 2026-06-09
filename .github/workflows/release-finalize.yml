@@ -15,12 +15,6 @@ on:
   release:
     types: [published]
 
-# Never read `contents`, never mint an id-token: finalize only writes to
-# issues/PRs. The npm publish authorization lives in release-draft.yml.
-permissions:
-  issues: write
-  pull-requests: write
-
 # One finalize per tag; queue (don't cancel) a re-run so a manual
 # "Re-run failed jobs" never races an in-flight loop.
 concurrency:
@@ -31,6 +25,11 @@ jobs:
   finalize:
     name: Comment + label impacted issues/PRs
     runs-on: ubuntu-24.04-arm
+    # Never read `contents`, never mint an id-token: finalize only writes to
+    # issues/PRs. The npm publish authorization lives in release-draft.yml.
+    permissions:
+      issues: write
+      pull-requests: write
     env:
       # `release.tag_name` is the only release field read — never the body, so
       # the maintainer can freely edit published notes without affecting who
