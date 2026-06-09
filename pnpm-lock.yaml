@@ -807,6 +807,9 @@ importers:
       minimist:
         specifier: ^1.2.8
         version: 1.2.8
+      semver:
+        specifier: ^7.7.3
+        version: 7.7.3
       zod:
         specifier: ^4.3.6
         version: 4.3.6
@@ -817,6 +820,9 @@ importers:
       '@types/node':
         specifier: ^24.10.10
         version: 24.10.10
+      '@types/semver':
+        specifier: ^7.7.1
+        version: 7.7.1
       typescript:
         specifier: catalog:typescript
         version: 5.9.3
@@ -3976,6 +3982,9 @@ packages:
 
   '@types/react@19.2.10':
     resolution: {integrity: sha512-WPigyYuGhgZ/cTPRXB2EwUw+XvsRA3GqHlsP4qteqrnnjDrApbS7MxcGr/hke5iUoeB7E/gQtrs9I37zAJ0Vjw==}
+
+  '@types/semver@7.7.1':
+    resolution: {integrity: sha512-FmgJfu+MOcQ370SD0ev7EI8TlCAfKYU+B4m5T3yXc1CiRN94g/SZPtsCkk506aUDtlMnFZvasDwHHUcZUEaYuA==}
 
   '@types/statuses@2.0.6':
     resolution: {integrity: sha512-xMAgYwceFhRA2zY+XbEA7mxYbA093wdiW8Vu6gZPGWy9cmOyU9XesH1tNcEWsKFd5Vzrqx5T3D38PWx1FIIXkA==}
@@ -11687,6 +11696,8 @@ snapshots:
   '@types/react@19.2.10':
     dependencies:
       csstype: 3.2.3
+
+  '@types/semver@7.7.1': {}
 
   '@types/statuses@2.0.6': {}
 

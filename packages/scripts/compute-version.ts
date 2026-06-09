@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 
 import { createEnv } from '@t3-oss/env-core'
-import { execFileSync } from 'node:child_process'
 import { z } from 'zod'
 import { type Bump, classify } from './lib/conventional-commits.ts'
+import { git, readAllTags } from './lib/git.ts'
 
 export type Channel = 'stable' | 'beta'
 export type ReleasePlan = {
@@ -95,19 +95,6 @@ function highestBetaNumber(tags: string[], targetGA: string): number {
 }
 
 // --- IO layer (untested by design: the pure core above is the unit) -------
-
-// execFileSync (no shell) so git arguments are never subject to shell
-// interpretation, regardless of tag or commit content.
-function git(args: string[]): string {
-  return execFileSync('git', args, { encoding: 'utf8' })
-}
-
-function readAllTags(): string[] {
-  return git(['tag', '--list', 'v*'])
-    .split('\n')
-    .map(line => line.trim())
-    .filter(Boolean)
-}
 
 // Commit messages reach the parser only through git's stdout — never a
 // shell — so a crafted message cannot inject commands. Each record is a full

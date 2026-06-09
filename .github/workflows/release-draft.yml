@@ -207,6 +207,9 @@ jobs:
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
+          # Full history + tags: the notes engine resolves the release range
+          # from the commit graph between tag checkpoints (see commit-graph.ts).
+          fetch-depth: 0
           persist-credentials: false
       - uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093 # v6.0.8
       - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
@@ -215,10 +218,15 @@ jobs:
           cache: pnpm
       - name: Install scripts dependencies
         run: pnpm install --ignore-scripts --frozen-lockfile --filter scripts
-      - name: Generate milestone release notes
+      - name: Generate release notes
+        # Draft phase: the tag isn't created yet, so the engine walks from HEAD.
+        # CHANNEL selects the asymmetric range (incremental beta / cumulative GA)
+        # — the same engine finalize re-runs post-publish, so the notes list
+        # exactly the PRs/issues finalize will comment on.
         run: ./release-notes-automation.ts > "$RUNNER_TEMP/notes.md"
         working-directory: packages/scripts
         env:
+          CHANNEL: ${{ inputs.channel }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Debug release notes
         if: ${{ inputs.dry-run }}

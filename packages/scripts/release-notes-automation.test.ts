@@ -1,12 +1,11 @@
 import { describe, expect, it } from 'vitest'
+import type { PR } from './lib/commit-graph'
 import {
-  collectContributors,
   formatClosingIssues,
   formatThanksSection,
   formatTitle,
   groupPRsByCategory,
-  splitCategoryTitle,
-  type PR
+  splitCategoryTitle
 } from './release-notes-automation'
 
 // Helper to create a minimal PR object for testing
@@ -131,170 +130,6 @@ describe('formatClosingIssues', () => {
     expect(formatClosingIssues([{ number: 123 }, { number: 456 }])).toBe(
       ' (closes #123, #456)'
     )
-  })
-})
-
-describe('collectContributors', () => {
-  it('returns empty array when no PRs', () => {
-    expect(collectContributors([])).toEqual([])
-  })
-
-  it('excludes franky47 from contributors', () => {
-    const prs: PR[] = [
-      createPR({
-        number: 1,
-        title: 'test: should ignore @franky47',
-        participants: { nodes: [{ login: 'franky47' }] }
-      })
-    ]
-    expect(collectContributors(prs)).toEqual([])
-  })
-
-  it('excludes bot accounts from contributors', () => {
-    const prs: PR[] = [
-      createPR({
-        number: 1,
-        title: 'chore: update deps',
-        participants: { nodes: [{ login: 'dependabot[bot]' }] }
-      }),
-      createPR({
-        number: 2,
-        title: 'chore: ci',
-        participants: { nodes: [{ login: 'github-actions[bot]' }] }
-      }),
-      createPR({
-        number: 3,
-        title: 'chore: renovate',
-        participants: { nodes: [{ login: 'renovate[bot]' }] }
-      })
-    ]
-    expect(collectContributors(prs)).toEqual([])
-  })
-
-  it('collects external contributors', () => {
-    const prs: PR[] = [
-      createPR({
-        number: 1,
-        title: 'feat: test',
-        participants: { nodes: [{ login: 'contributor1' }] }
-      }),
-      createPR({
-        number: 2,
-        title: 'fix: bug',
-        participants: { nodes: [{ login: 'contributor2' }] }
-      })
-    ]
-    expect(collectContributors(prs)).toEqual(['contributor1', 'contributor2'])
-  })
-
-  it('deduplicates contributors', () => {
-    const prs: PR[] = [
-      createPR({
-        number: 1,
-        title: 'feat: test',
-        participants: { nodes: [{ login: 'contributor1' }] }
-      }),
-      createPR({
-        number: 2,
-        title: 'fix: bug',
-        participants: { nodes: [{ login: 'contributor1' }] }
-      })
-    ]
-    expect(collectContributors(prs)).toEqual(['contributor1'])
-  })
-
-  it('includes issue participants as contributors', () => {
-    const prs: PR[] = [
-      createPR({
-        number: 1,
-        title: 'fix: bug',
-        participants: { nodes: [{ login: 'franky47' }] },
-        closingIssuesReferences: {
-          edges: [
-            {
-              node: {
-                number: 100,
-                participants: { nodes: [{ login: 'issueReporter' }] }
-              }
-            }
-          ]
-        }
-      })
-    ]
-    expect(collectContributors(prs)).toEqual(['issueReporter'])
-  })
-
-  it('includes PR discussion participants as contributors', () => {
-    const prs: PR[] = [
-      createPR({
-        number: 1,
-        title: 'feat: test',
-        author: { login: 'prAuthor' },
-        participants: {
-          nodes: [
-            { login: 'prAuthor' },
-            { login: 'commenter1' },
-            { login: 'commenter2' }
-          ]
-        }
-      })
-    ]
-    expect(collectContributors(prs)).toEqual([
-      'commenter1',
-      'commenter2',
-      'prAuthor'
-    ])
-  })
-
-  it('deduplicates across PR author, PR participants, and issue participants', () => {
-    const prs: PR[] = [
-      createPR({
-        number: 1,
-        title: 'fix: bug',
-        author: { login: 'contributor1' },
-        participants: {
-          nodes: [{ login: 'contributor1' }, { login: 'contributor2' }]
-        },
-        closingIssuesReferences: {
-          edges: [
-            {
-              node: {
-                number: 100,
-                participants: {
-                  nodes: [{ login: 'contributor2' }, { login: 'contributor3' }]
-                }
-              }
-            }
-          ]
-        }
-      })
-    ]
-    expect(collectContributors(prs)).toEqual([
-      'contributor1',
-      'contributor2',
-      'contributor3'
-    ])
-  })
-
-  it('sorts contributors alphabetically (case insensitive)', () => {
-    const prs: PR[] = [
-      createPR({
-        number: 1,
-        title: 'feat: test',
-        participants: { nodes: [{ login: 'Zara' }] }
-      }),
-      createPR({
-        number: 2,
-        title: 'fix: bug',
-        participants: { nodes: [{ login: 'alice' }] }
-      }),
-      createPR({
-        number: 3,
-        title: 'doc: readme',
-        participants: { nodes: [{ login: 'Bob' }] }
-      })
-    ]
-    expect(collectContributors(prs)).toEqual(['alice', 'Bob', 'Zara'])
   })
 })
 

@@ -1,51 +1,9 @@
 #!/usr/bin/env node
 
+import { createEnv } from '@t3-oss/env-core'
 import { z } from 'zod'
 import { classify } from './lib/conventional-commits.ts'
-
-// Schema for the GraphQL response
-const participantsSchema = z.object({
-  nodes: z.array(z.object({ login: z.string() }))
-})
-
-const issueReferenceSchema = z.object({
-  number: z.number(),
-  participants: participantsSchema
-})
-
-export const prSchema = z.object({
-  number: z.number(),
-  title: z.string(),
-  author: z
-    .object({
-      login: z.string()
-    })
-    .nullable(),
-  participants: participantsSchema,
-  closingIssuesReferences: z.object({
-    edges: z.array(
-      z.object({
-        node: issueReferenceSchema
-      })
-    )
-  })
-})
-
-const responseSchema = z.object({
-  data: z.object({
-    repository: z.object({
-      milestone: z
-        .object({
-          pullRequests: z.object({
-            nodes: z.array(prSchema)
-          })
-        })
-        .nullable()
-    })
-  })
-})
-
-export type PR = z.infer<typeof prSchema>
+import { discoverRelease, type PR } from './lib/commit-graph.ts'
 
 export const CATEGORIES = [
   'Features',
@@ -54,76 +12,6 @@ export const CATEGORIES = [
   'Other changes'
 ] as const
 export type Category = (typeof CATEGORIES)[number]
-
-async function fetchMilestonePRs(): Promise<PR[]> {
-  const token = process.env.GITHUB_TOKEN
-  if (!token) {
-    throw new Error('GITHUB_TOKEN environment variable is required')
-  }
-
-  // GraphQL query to fetch PRs with milestone ID 2 and their closing issues
-  const query = `
-    query {
-      repository(owner: "47ng", name: "nuqs") {
-        milestone(number: 2) {
-          pullRequests(first: 100) {
-            nodes {
-              number
-              title
-              author {
-                login
-              }
-              participants(first: 20) {
-                nodes {
-                  login
-                }
-              }
-              closingIssuesReferences(first: 10) {
-                edges {
-                  node {
-                    number
-                    participants(first: 20) {
-                      nodes {
-                        login
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  `.replace(/\s+/g, ' ')
-
-  const response = await fetch(
-    'https://api.github.com/graphql?fn=fetchMilestonesPRs',
-    {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ query })
-    }
-  )
-
-  if (!response.ok) {
-    throw new Error(
-      `GitHub API error: ${response.status} ${response.statusText}`
-    )
-  }
-
-  const json = await response.json()
-  const parsed = responseSchema.parse(json)
-
-  if (!parsed.data.repository.milestone) {
-    throw new Error('Milestone not found')
-  }
-
-  return parsed.data.repository.milestone.pullRequests.nodes
-}
 
 function categoryForType(type: string | undefined): Category {
   switch (type) {
@@ -186,49 +74,6 @@ export function groupPRsByCategory(
   return categories
 }
 
-// Known bot accounts to exclude
-const botAccounts = new Set([
-  'copilot',
-  'dependabot',
-  'github-actions',
-  'pkg-pr-new',
-  'renovate',
-  'vercel'
-])
-
-function isBot(login: string) {
-  return login.endsWith('[bot]') || botAccounts.has(login.toLowerCase())
-}
-
-export function collectContributors(prs: PR[]): string[] {
-  const contributors = new Set<string>()
-
-  for (const pr of prs) {
-    // Add all PR discussion participants (includes the PR author)
-    for (const { login } of pr.participants.nodes) {
-      if (!isBot(login)) {
-        contributors.add(login)
-      }
-    }
-
-    // Add participants of closing issues
-    for (const { node } of pr.closingIssuesReferences.edges) {
-      for (const { login } of node.participants.nodes) {
-        if (!isBot(login)) {
-          contributors.add(login)
-        }
-      }
-    }
-  }
-
-  // Remove myself from the list
-  contributors.delete('franky47')
-
-  return Array.from(contributors).sort((a, b) =>
-    a.toLowerCase().localeCompare(b.toLowerCase())
-  )
-}
-
 export function formatClosingIssues(
   issues: CategorizedPR['closingIssues']
 ): string {
@@ -256,7 +101,19 @@ export function formatThanksSection(contributors: string[]): string | null {
 // Main execution
 async function main() {
   try {
-    const prs = await fetchMilestonePRs()
+    // Draft phase: the tag does not exist yet, so the range is resolved from
+    // HEAD. The channel selects the asymmetric range (incremental beta vs
+    // cumulative GA) — the same engine finalize runs post-publish, so the
+    // drafted notes list exactly the PRs/issues finalize will comment on.
+    const env = createEnv({
+      server: { CHANNEL: z.enum(['stable', 'beta']) },
+      isServer: true,
+      runtimeEnv: process.env
+    })
+    const { prs, contributors } = await discoverRelease({
+      channel: env.CHANNEL,
+      currentRef: 'HEAD'
+    })
 
     // Group by category
     const categories = groupPRsByCategory(prs)
@@ -282,8 +139,7 @@ async function main() {
       console.log() // Empty line between categories
     }
 
-    // Collect and display contributors
-    const contributors = collectContributors(prs)
+    // Display contributors
     const thanksSection = formatThanksSection(contributors)
     if (thanksSection) {
       console.log('## Thanks\n')
