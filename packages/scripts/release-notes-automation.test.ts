@@ -1,10 +1,13 @@
 import { describe, expect, it } from 'vitest'
 import type { Change } from './lib/commit-graph'
 import {
+  breakingChanges,
+  formatChangeLine,
   formatClosingIssues,
   formatThanksSection,
   formatTitle,
-  groupChangesByCategory
+  groupChangesByCategory,
+  renderReleaseNotes
 } from './release-notes-automation'
 
 // Helper to create a minimal change for testing.
@@ -13,6 +16,7 @@ function createChange(
 ): Change {
   return {
     type: undefined,
+    breaking: false,
     description: '',
     author: null,
     closingIssues: [],
@@ -65,6 +69,23 @@ describe('groupChangesByCategory', () => {
     expect(result.Features.map(c => c.number)).toEqual([10, 20, 30])
   })
 
+  it('keeps a breaking change in its type category and carries the breaking flag', () => {
+    // Additive, not exclusive: a `feat!` is still a Feature; the section is
+    // driven separately by the breaking filter. The flag rides along so the
+    // renderer can decorate the line.
+    const changes: Change[] = [
+      createChange({ prNumber: 1, type: 'feat', breaking: true }),
+      createChange({ prNumber: 2, type: 'feat', breaking: false })
+    ]
+    const result = groupChangesByCategory(changes)
+    expect(
+      result.Features.map(c => ({ number: c.number, breaking: c.breaking }))
+    ).toEqual([
+      { number: 1, breaking: true },
+      { number: 2, breaking: false }
+    ])
+  })
+
   it('includes author information', () => {
     const changes: Change[] = [
       createChange({ prNumber: 1, type: 'feat', author: 'testuser' })
@@ -88,6 +109,82 @@ describe('groupChangesByCategory', () => {
       { number: 100 },
       { number: 101 }
     ])
+  })
+})
+
+describe('breakingChanges', () => {
+  it('returns empty when nothing is breaking', () => {
+    const changes: Change[] = [
+      createChange({ prNumber: 1, type: 'feat' }),
+      createChange({ prNumber: 2, type: 'fix' })
+    ]
+    expect(breakingChanges(changes)).toEqual([])
+  })
+
+  it('selects only breaking changes, across categories, ordered by PR number', () => {
+    // A breaking change cross-cuts categories: a `feat!` and a `fix!` both
+    // surface here regardless of type, sorted by PR number.
+    const changes: Change[] = [
+      createChange({ prNumber: 30, type: 'fix', breaking: true }),
+      createChange({ prNumber: 10, type: 'feat', breaking: true }),
+      createChange({ prNumber: 20, type: 'feat', breaking: false })
+    ]
+    expect(breakingChanges(changes).map(c => c.prNumber)).toEqual([10, 30])
+  })
+})
+
+describe('renderReleaseNotes', () => {
+  it('leads with the breaking-changes section + migration placeholder, then decorates type sections', () => {
+    const changes: Change[] = [
+      createChange({
+        prNumber: 1,
+        type: 'feat',
+        breaking: true,
+        description: 'drop legacy',
+        author: 'alice'
+      }),
+      createChange({
+        prNumber: 2,
+        type: 'fix',
+        breaking: false,
+        description: 'fix bug',
+        author: 'bob',
+        closingIssues: [{ number: 9 }]
+      })
+    ]
+    expect(renderReleaseNotes(changes, ['alice', 'bob'])).toBe(
+      [
+        '## Breaking changes',
+        '',
+        '- #1 - drop legacy, by @alice',
+        '',
+        '### Migration guide',
+        '',
+        '<!-- todo: Add migration steps for breaking changes -->',
+        '',
+        '## Features',
+        '',
+        '- #1 - drop legacy, by @alice - ⚠️ breaking change',
+        '',
+        '## Bug fixes',
+        '',
+        '- #2 - fix bug, by @bob (closes #9)',
+        '',
+        '## Thanks',
+        '',
+        'Huge thanks to @alice and @bob for helping!'
+      ].join('\n')
+    )
+  })
+
+  it('omits the breaking section entirely when nothing is breaking', () => {
+    const changes: Change[] = [
+      createChange({ prNumber: 1, type: 'feat', description: 'a feature' })
+    ]
+    const output = renderReleaseNotes(changes, [])
+    expect(output).not.toContain('Breaking changes')
+    expect(output).not.toContain('Migration guide')
+    expect(output).toBe(['## Features', '', '- #1 - a feature'].join('\n'))
   })
 })
 
@@ -120,6 +217,51 @@ describe('formatTitle', () => {
 
   it('handles code at the end of title', () => {
     expect(formatTitle('Check out `nuqs`')).toBe('Check out <code>nuqs</code>')
+  })
+})
+
+describe('formatChangeLine', () => {
+  const line = {
+    number: 123,
+    description: 'add `useQueryState`',
+    author: 'alice',
+    closingIssues: [{ number: 5 }],
+    breaking: true
+  }
+
+  it('renders number, formatted title, author and closing issues', () => {
+    expect(formatChangeLine({ ...line, breaking: false })).toBe(
+      '- #123 - add <code>useQueryState</code>, by @alice (closes #5)'
+    )
+  })
+
+  it('omits the author segment when there is no author', () => {
+    expect(
+      formatChangeLine({
+        ...line,
+        author: null,
+        closingIssues: [],
+        breaking: false
+      })
+    ).toBe('- #123 - add <code>useQueryState</code>')
+  })
+
+  it('appends the ⚠️ marker when decorating a breaking change', () => {
+    expect(formatChangeLine(line, { decorateBreaking: true })).toBe(
+      '- #123 - add <code>useQueryState</code>, by @alice (closes #5) - ⚠️ breaking change'
+    )
+  })
+
+  it('does not decorate a non-breaking change even when asked', () => {
+    expect(
+      formatChangeLine({ ...line, breaking: false }, { decorateBreaking: true })
+    ).toBe('- #123 - add <code>useQueryState</code>, by @alice (closes #5)')
+  })
+
+  it('does not decorate a breaking change in the undecorated (top-section) render', () => {
+    expect(formatChangeLine(line)).toBe(
+      '- #123 - add <code>useQueryState</code>, by @alice (closes #5)'
+    )
   })
 })
 

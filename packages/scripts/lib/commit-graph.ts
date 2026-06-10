@@ -22,7 +22,7 @@
 
 import { z } from 'zod'
 import type { Channel } from '../compute-version.ts'
-import { parseSubject } from './conventional-commits.ts'
+import { parseCommit, parseSubject } from './conventional-commits.ts'
 import { git, readAllTags } from './git.ts'
 import { greatestTag, isGA, isValidSemver, precedes } from './version.ts'
 
@@ -163,6 +163,7 @@ export type PRClosingIssues = z.infer<typeof prClosingIssuesSchema>
 export type Change = {
   prNumber: number
   type: string | undefined
+  breaking: boolean
   description: string
   author: string | null
   closingIssues: Array<{ number: number }>
@@ -193,7 +194,7 @@ export type ReleaseTargets = {
 // issue numbers finalize comments on.
 export type ReleaseGraphReader = {
   readTags: () => string[]
-  readCommitSubjects: (range: Range) => string[]
+  readCommits: (range: Range) => string[]
   fetchChangeDetails: (numbers: number[]) => Promise<PR[]>
   fetchClosingIssues: (numbers: number[]) => Promise<PRClosingIssues[]>
 }
@@ -201,7 +202,7 @@ export type ReleaseGraphReader = {
 export function makeGitHubGraphReader(githubToken: string): ReleaseGraphReader {
   return {
     readTags: readAllTags,
-    readCommitSubjects,
+    readCommits,
     fetchChangeDetails: numbers => fetchChangeDetails(numbers, githubToken),
     fetchClosingIssues: numbers => fetchClosingIssues(numbers, githubToken)
   }
@@ -209,13 +210,16 @@ export function makeGitHubGraphReader(githubToken: string): ReleaseGraphReader {
 
 // --- IO shell (untested by design) ----------------------------------------
 
-// Commit subjects (first line, %s) for a range. Subjects reach the parser only
-// through git's stdout (no shell), so a crafted subject cannot inject commands.
-function readCommitSubjects(range: Range): string[] {
+// Full commit messages (subject + body, %B) for a range, one record per commit.
+// The body is needed so a `BREAKING CHANGE:` footer (which lives below the
+// subject) is detected. Records are split on \x1e, which cannot occur in a
+// message. Messages reach the parser only through git's stdout (no shell), so a
+// crafted message cannot inject commands.
+function readCommits(range: Range): string[] {
   const spec = range.from ? `${range.from}..${range.to}` : range.to
-  return git(['log', spec, '--format=%s'])
-    .split('\n')
-    .map(line => line.trim())
+  return git(['log', spec, '--format=%B%x1e'])
+    .split('\x1e')
+    .map(record => record.trim())
     .filter(Boolean)
 }
 
@@ -338,28 +342,41 @@ export function collectIssues(
   return [...numbers].map(number => ({ number }))
 }
 
-// Map each PR number appearing in the range to its squash commit's type,
-// first-seen winning (a `(#N)` may recur across subjects; the first occurrence
-// is authoritative). The squash commit subject is the classification authority —
-// the PR title is not consulted for type.
-function changeTypeByPR(subjects: string[]): Map<number, string | undefined> {
-  const types = new Map<number, string | undefined>()
-  for (const subject of subjects) {
-    const number = extractPRNumber(subject)
+// The squash commit's classification for a PR: its conventional `type` and
+// whether it is `breaking`. Both come from the commit message, the
+// classification authority — the PR title is never consulted.
+type Classification = { type: string | undefined; breaking: boolean }
+
+// Map each PR number appearing in the range to its squash commit's
+// classification, first-seen winning (a `(#N)` may recur across commits; the
+// first occurrence is authoritative). `extractPRNumber` reads the first line
+// (the squash suffix), `parseCommit` the whole message — so a break flagged only
+// by a `BREAKING CHANGE:` body footer (no subject `!`) is still detected.
+function changeTypeByPR(records: string[]): Map<number, Classification> {
+  const types = new Map<number, Classification>()
+  for (const record of records) {
+    const firstLine = record.split('\n')[0] ?? ''
+    const number = extractPRNumber(firstLine)
     if (number !== null && !types.has(number)) {
-      types.set(number, parseSubject(subject).type)
+      const { type, breaking } = parseCommit(record)
+      types.set(number, { type, breaking })
     }
   }
   return types
 }
 
-// Project a fetched PR into a change: `type` from the squash commit (via
-// `typeByPR`), `description` from the PR title as prose (its type prefix stripped
-// for display, never classified).
-function toChange(pr: PR, typeByPR: Map<number, string | undefined>): Change {
+// Project a fetched PR into a change: `type`/`breaking` from the squash commit
+// (via `typeByPR`), `description` from the PR title as prose (its type prefix
+// stripped for display, never classified).
+function toChange(pr: PR, typeByPR: Map<number, Classification>): Change {
+  const { type, breaking } = typeByPR.get(pr.number) ?? {
+    type: undefined,
+    breaking: false
+  }
   return {
     prNumber: pr.number,
-    type: typeByPR.get(pr.number),
+    type,
+    breaking,
     description: parseSubject(pr.title).description,
     author: pr.author?.login ?? null,
     closingIssues: pr.closingIssuesReferences.edges.map(edge => ({
@@ -369,13 +386,17 @@ function toChange(pr: PR, typeByPR: Map<number, string | undefined>): Change {
 }
 
 // A change reference: the identity + classification both phases derive for free
-// from the squash commit subjects alone (no GraphQL). The shared discovery core.
-export type ChangeRef = { prNumber: number; type: string | undefined }
+// from the squash commit messages alone (no GraphQL). The shared discovery core.
+export type ChangeRef = {
+  prNumber: number
+  type: string | undefined
+  breaking: boolean
+}
 
 // The shared range → PR-number core both phases build on. Resolve the
-// channel-asymmetric range, read its commit subjects (the type authority), and
-// project each referenced PR to its `{ prNumber, type }`. This is the SSOT: the
-// identical PR set feeds whichever phase-specific fetch follows.
+// channel-asymmetric range, read its commit messages (the type authority), and
+// project each referenced PR to its `{ prNumber, type, breaking }`. This is the
+// SSOT: the identical PR set feeds whichever phase-specific fetch follows.
 export function changeRefsInRange(args: {
   channel: Channel
   currentRef: string
@@ -383,8 +404,12 @@ export function changeRefsInRange(args: {
 }): ChangeRef[] {
   const { reader } = args
   const range = resolveRange({ ...args, tags: reader.readTags() })
-  const typeByPR = changeTypeByPR(reader.readCommitSubjects(range))
-  return [...typeByPR].map(([prNumber, type]) => ({ prNumber, type }))
+  const typeByPR = changeTypeByPR(reader.readCommits(range))
+  return [...typeByPR].map(([prNumber, { type, breaking }]) => ({
+    prNumber,
+    type,
+    breaking
+  }))
 }
 
 // Notes-path discovery: the shared core + `fetchChangeDetails`, projected into
@@ -400,7 +425,9 @@ export async function discoverChanges(args: {
   if (refs.length === 0) {
     return { changes: [], contributors: [] }
   }
-  const typeByPR = new Map(refs.map(({ prNumber, type }) => [prNumber, type]))
+  const typeByPR = new Map(
+    refs.map(({ prNumber, type, breaking }) => [prNumber, { type, breaking }])
+  )
   const prs = await reader.fetchChangeDetails(refs.map(ref => ref.prNumber))
   return {
     changes: prs.map(pr => toChange(pr, typeByPR)),

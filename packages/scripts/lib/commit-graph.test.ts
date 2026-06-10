@@ -394,7 +394,7 @@ describe('discoverChanges', () => {
   it('returns empty changes without fetching when no commit references a PR', async () => {
     const reader: ReleaseGraphReader = {
       readTags: () => ['v1.0.0'],
-      readCommitSubjects: () => ['chore: direct push', 'docs: fix typo'],
+      readCommits: () => ['chore: direct push', 'docs: fix typo'],
       fetchChangeDetails: () => {
         throw new Error(
           'fetchChangeDetails should not be called for an empty range'
@@ -429,7 +429,7 @@ describe('discoverChanges', () => {
     })
     const reader: ReleaseGraphReader = {
       readTags: () => [],
-      readCommitSubjects: () => [
+      readCommits: () => [
         'feat: first (#1)',
         'chore: direct push',
         'fix: second (#2)',
@@ -445,6 +445,7 @@ describe('discoverChanges', () => {
         {
           prNumber: 1,
           type: 'feat',
+          breaking: false,
           description: 'first',
           author: null,
           closingIssues: [{ number: 100 }]
@@ -452,6 +453,7 @@ describe('discoverChanges', () => {
         {
           prNumber: 2,
           type: 'fix',
+          breaking: false,
           description: 'second',
           author: null,
           closingIssues: []
@@ -464,16 +466,39 @@ describe('discoverChanges', () => {
     expect(reader.fetchClosingIssues).not.toHaveBeenCalled()
   })
 
+  it('flags a change breaking from the squash subject "!" marker', async () => {
+    const reader: ReleaseGraphReader = {
+      readTags: () => [],
+      readCommits: () => ['feat!: breaking (#1)', 'feat: normal (#2)'],
+      fetchChangeDetails: async () => [
+        createPR({ number: 1, title: 'feat!: breaking' }),
+        createPR({ number: 2, title: 'feat: normal' })
+      ],
+      fetchClosingIssues: async () => []
+    }
+    const { changes } = await discoverChanges({
+      channel: 'beta',
+      currentRef: 'HEAD',
+      reader
+    })
+    expect(
+      changes.map(c => ({ prNumber: c.prNumber, breaking: c.breaking }))
+    ).toEqual([
+      { prNumber: 1, breaking: true },
+      { prNumber: 2, breaking: false }
+    ])
+  })
+
   it('resolves the channel-asymmetric range before reading commit subjects', async () => {
     const reader: ReleaseGraphReader = {
       readTags: () => ['v1.2.3', 'v1.3.0-beta.1', 'v1.3.0'],
-      readCommitSubjects: vi.fn(() => []),
+      readCommits: vi.fn(() => []),
       fetchChangeDetails: async () => [],
       fetchClosingIssues: async () => []
     }
     // GA finalize: cumulative since the previous GA, skipping the beta.
     await discoverChanges({ channel: 'stable', currentRef: 'v1.3.0', reader })
-    expect(reader.readCommitSubjects).toHaveBeenCalledExactlyOnceWith({
+    expect(reader.readCommits).toHaveBeenCalledExactlyOnceWith({
       from: 'v1.2.3',
       to: 'v1.3.0'
     })
@@ -484,7 +509,7 @@ describe('discoverTargets', () => {
   it('returns empty targets without fetching when no commit references a PR', async () => {
     const reader: ReleaseGraphReader = {
       readTags: () => ['v1.0.0'],
-      readCommitSubjects: () => ['chore: direct push', 'docs: fix typo'],
+      readCommits: () => ['chore: direct push', 'docs: fix typo'],
       fetchChangeDetails: () => {
         throw new Error('discoverTargets must not take the notes path')
       },
@@ -502,7 +527,7 @@ describe('discoverTargets', () => {
   it('projects each PR into a target and derives its closing issues, never fetching the change details', async () => {
     const reader: ReleaseGraphReader = {
       readTags: () => [],
-      readCommitSubjects: () => [
+      readCommits: () => [
         'feat: first (#1)',
         'chore: direct push',
         'fix: second (#2)'
@@ -535,15 +560,16 @@ describe('discoverTargets', () => {
 })
 
 // An in-memory ReleaseGraphReader over a single linear history (oldest first),
-// so readTags, readCommitSubjects and both PR fetchers stay mutually
-// consistent — letting scenario tests query the same history the two ways the
-// release phases do. A commit's optional `tag` marks the tag pointing at it;
-// readCommitSubjects mirrors `git log from..to`: the (from, to] slice, with
-// `to: 'HEAD'` reaching the end of history. Both fetchers project the same
-// underlying PRs, so the finalize view is the notes view minus the fields
-// finalize never reads — mirroring production's two GraphQL queries.
+// so readTags, readCommits and both PR fetchers stay mutually consistent —
+// letting scenario tests query the same history the two ways the release phases
+// do. A commit's `message` is the full squash message (subject + optional body,
+// so a `BREAKING CHANGE:` footer can be exercised); its optional `tag` marks the
+// tag pointing at it. readCommits mirrors `git log from..to`: the (from, to]
+// slice, with `to: 'HEAD'` reaching the end of history. Both fetchers project
+// the same underlying PRs, so the finalize view is the notes view minus the
+// fields finalize never reads — mirroring production's two GraphQL queries.
 function makeHistoryReader(history: {
-  commits: Array<{ subject: string; tag?: string }>
+  commits: Array<{ message: string; tag?: string }>
   prs: PR[]
 }): ReleaseGraphReader {
   const { commits, prs } = history
@@ -553,10 +579,10 @@ function makeHistoryReader(history: {
     prs.filter(pr => numbers.includes(pr.number))
   return {
     readTags: () => commits.flatMap(({ tag }) => (tag ? [tag] : [])),
-    readCommitSubjects: range => {
+    readCommits: range => {
       const from = range.from ? indexOfTag(range.from) : -1
       const to = range.to === 'HEAD' ? commits.length - 1 : indexOfTag(range.to)
-      return commits.slice(from + 1, to + 1).map(({ subject }) => subject)
+      return commits.slice(from + 1, to + 1).map(({ message }) => message)
     },
     fetchChangeDetails: async numbers => select(numbers),
     fetchClosingIssues: async numbers =>
@@ -608,9 +634,9 @@ describe('discovery (history scenarios)', () => {
       })
     ]
     const commitsBeforePublish = [
-      { subject: 'feat: previous (#1)', tag: 'v1.2.3' },
-      { subject: 'feat: new thing (#2)' },
-      { subject: 'fix: regression (#3)' }
+      { message: 'feat: previous (#1)', tag: 'v1.2.3' },
+      { message: 'feat: new thing (#2)' },
+      { message: 'fix: regression (#3)' }
     ]
     const tag = 'v1.3.0-beta.1'
     const draft = await discoverChanges({
@@ -625,7 +651,7 @@ describe('discovery (history scenarios)', () => {
         commits: [
           // Tag is now published on the last commit (amend history for finalize)
           ...commitsBeforePublish.slice(0, -1),
-          { subject: 'fix: regression (#3)', tag }
+          { message: 'fix: regression (#3)', tag }
         ],
         prs
       })
@@ -646,10 +672,10 @@ describe('discovery (history scenarios)', () => {
     // re-includes every beta's PRs and beta-only contributors.
     const history = {
       commits: [
-        { subject: 'fix: base (#1)', tag: 'v1.2.3' },
-        { subject: 'feat: beta feature (#2)', tag: 'v1.3.0-beta.1' },
-        { subject: 'fix: beta fix (#3)', tag: 'v1.3.0-beta.2' },
-        { subject: 'docs: final touch (#4)', tag: 'v1.3.0' }
+        { message: 'fix: base (#1)', tag: 'v1.2.3' },
+        { message: 'feat: beta feature (#2)', tag: 'v1.3.0-beta.1' },
+        { message: 'fix: beta fix (#3)', tag: 'v1.3.0-beta.2' },
+        { message: 'docs: final touch (#4)', tag: 'v1.3.0' }
       ],
       prs: [
         createPR({
@@ -683,15 +709,58 @@ describe('discovery (history scenarios)', () => {
     expect(ga.contributors).toEqual(['alice', 'bob'])
   })
 
+  it('detects a break flagged only by a BREAKING CHANGE body footer', async () => {
+    // The squash subject has no `!`; the break lives in the body footer (the
+    // reason the shared core reads full messages, not just subjects).
+    const reader = makeHistoryReader({
+      commits: [
+        { message: 'fix: base (#1)', tag: 'v1.2.3' },
+        {
+          message:
+            'feat: drop the legacy option (#2)\n\n' +
+            'BREAKING CHANGE: the legacy option is gone.'
+        }
+      ],
+      prs: [createPR({ number: 2, title: 'feat: drop the legacy option' })]
+    })
+    const { changes } = await discoverChanges({
+      channel: 'beta',
+      currentRef: 'HEAD',
+      reader
+    })
+    expect(changes).toEqual([
+      expect.objectContaining({ prNumber: 2, breaking: true })
+    ])
+  })
+
+  it('reads the squash PR number from the first line, not a (#N) in the body', async () => {
+    // The squash suffix `(#1)` is on the subject; a `(#999)` in the body (e.g.
+    // "reverts #999") must not shadow it, or the change would resolve the wrong
+    // PR once the core reads full messages.
+    const reader = makeHistoryReader({
+      commits: [
+        { message: 'fix: base (#1)', tag: 'v1.2.3' },
+        { message: 'feat: real (#2)\n\nSupersedes the approach in (#999).' }
+      ],
+      prs: [createPR({ number: 2, title: 'feat: real' })]
+    })
+    const { changes } = await discoverChanges({
+      channel: 'beta',
+      currentRef: 'HEAD',
+      reader
+    })
+    expect(changes.map(c => c.prNumber)).toEqual([2])
+  })
+
   it('tolerates a commit referencing a PR neither path can resolve', async () => {
     // A `(#N)` can point at nothing (e.g. a transferred issue): the reader
     // returns a subset of the requested numbers, and both phases derive their
     // output from the survivors alone — no crash, no phantom entries.
     const reader = makeHistoryReader({
       commits: [
-        { subject: 'fix: base (#1)', tag: 'v1.2.3' },
-        { subject: 'feat: real (#2)' },
-        { subject: 'chore: vanished (#999)' }
+        { message: 'fix: base (#1)', tag: 'v1.2.3' },
+        { message: 'feat: real (#2)' },
+        { message: 'chore: vanished (#999)' }
       ],
       prs: [
         createPR({
