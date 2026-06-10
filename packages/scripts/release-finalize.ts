@@ -139,14 +139,16 @@ export async function commentAndLabel(args: {
 
 // --- IO shell (untested by design: thin glue over the tested core) --------
 
-// PRs ∪ their closing issues, the full comment set. Numbers are unique across
-// issues and PRs in one repo, so the two lists never collide.
+// Changes (by PR number) ∪ their closing issues, the full comment set. Numbers
+// are unique across issues and PRs in one repo, so the two lists never collide.
 function collectTargets(
-  prs: Array<{ number: number }>,
+  changes: Array<{ prNumber: number }>,
   issues: Array<{ number: number }>
 ): Target[] {
   return [
-    ...prs.map(({ number }): Target => ({ number, kind: 'PR' })),
+    ...changes.map(
+      ({ prNumber }): Target => ({ number: prNumber, kind: 'PR' })
+    ),
     ...issues.map(({ number }): Target => ({ number, kind: 'issue' }))
   ]
 }
@@ -223,12 +225,12 @@ async function main(): Promise<void> {
   const info = resolveChannelInfo(env.TAG)
   // Finalize phase: the just-published tag exists on the drafted HEAD, so the
   // shared engine resolves the identical set the draft notes listed.
-  const { prs, issues } = await discoverRelease({
+  const { changes, issues } = await discoverRelease({
     channel: info.channel,
     currentRef: env.TAG,
     reader: makeGitHubGraphReader(env.GITHUB_TOKEN)
   })
-  const targets = collectTargets(prs, issues)
+  const targets = collectTargets(changes, issues)
   console.log(
     `Finalizing ${env.TAG} (${info.channel}) → ${targets.length} issue(s)/PR(s)`
   )

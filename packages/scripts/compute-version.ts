@@ -2,7 +2,11 @@
 
 import { createEnv } from '@t3-oss/env-core'
 import { z } from 'zod'
-import { type Bump, classify } from './lib/conventional-commits.ts'
+import {
+  type Bump,
+  bumpForType,
+  parseCommit
+} from './lib/conventional-commits.ts'
 import { git, readAllTags } from './lib/git.ts'
 import { bumpGA, greatestGATag, highestBetaNumber } from './lib/version.ts'
 
@@ -23,7 +27,8 @@ export const selectLastGATag = greatestGATag
 function highestBump(commits: string[]): Bump | null {
   let highest: Bump | null = null
   for (const commit of commits) {
-    const { bump } = classify(commit)
+    const { type, breaking } = parseCommit(commit)
+    const bump = bumpForType(type, breaking)
     if (bump && (highest === null || RANKS[bump] > RANKS[highest])) {
       highest = bump
     }
@@ -53,9 +58,10 @@ export function computeVersion(args: {
 
 // --- IO layer (untested by design: the pure core above is the unit) -------
 
-// Commit messages reach the parser only through git's stdout — never a
-// shell — so a crafted message cannot inject commands. Each record is a full
-// message (subject + body, %B) split on \x1e, which cannot occur in a message.
+// Commit messages reach the parser only through git's stdout — never a shell —
+// so a crafted message cannot inject commands. Each record is a full message
+// (subject + body, %B) split on \x1e, which cannot occur in a message: the body
+// is needed so a `BREAKING CHANGE:` footer triggers a major bump per the spec.
 function readCommitsSince(lastGATag: string | null): string[] {
   const range = lastGATag ? `${lastGATag}..HEAD` : 'HEAD'
   return git(['log', range, '--format=%B%x1e'])

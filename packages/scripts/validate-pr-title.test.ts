@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
-import { classify } from './lib/conventional-commits.ts'
+import { bumpForType } from './lib/conventional-commits.ts'
 import {
   formatFailSummary,
   formatPassSummary,
@@ -124,14 +124,12 @@ describe('formatSummary', () => {
 describe('NON_BUMPING_TYPES', () => {
   // The failure summary lists these as the alternatives to a bumping type, so
   // they must stay in sync with the commitlint config: exactly the allowed
-  // types that `classify` decides do not trigger a release.
+  // types that `bumpForType` decides do not trigger a release.
   it('matches the non-bumping types in the commitlint config', () => {
     const types = readTypeEnum(
       readFileSync(new URL('../../package.json', import.meta.url), 'utf8')
     )
-    const nonBumping = types
-      .filter(t => classify(`${t}: subject`).bump === null)
-      .sort()
+    const nonBumping = types.filter(t => bumpForType(t, false) === null).sort()
     expect(NON_BUMPING_TYPES.toSorted()).toEqual(nonBumping)
   })
 })

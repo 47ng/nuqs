@@ -3,11 +3,10 @@
 import { createEnv } from '@t3-oss/env-core'
 import { z } from 'zod'
 import {
+  type Change,
   discoverRelease,
-  makeGitHubGraphReader,
-  type PR
+  makeGitHubGraphReader
 } from './lib/commit-graph.ts'
-import { classify } from './lib/conventional-commits.ts'
 
 export const CATEGORIES = [
   'Features',
@@ -31,43 +30,36 @@ function categoryForType(type: string | undefined): Category {
   }
 }
 
-export function splitCategoryTitle(title: string): [Category, string] {
-  // Note: classify is case-sensitive, so commits that haven't been
-  // linted by commitlint (e.g. a "Feat: whatever" from the GitHub web UI)
-  // will be categorised as "Other changes".
-  const { type, description } = classify(title)
-  return [categoryForType(type), description]
-}
-
-export type CategorizedPR = {
+export type CategorizedChange = {
   category: Category
   number: number
-  title: string
+  description: string
   author: string | null
   closingIssues: Array<{ number: number }>
 }
 
-export function groupPRsByCategory(
-  prs: PR[]
-): Record<Category, CategorizedPR[]> {
-  const categories: Record<Category, CategorizedPR[]> = {
+// Group changes into their changelog categories. The category is derived from
+// the change's `type` (the squash commit's classification) — never the PR
+// title, whose prefix is irrelevant prose. Within each category, changes are
+// ordered by PR number.
+export function groupChangesByCategory(
+  changes: Change[]
+): Record<Category, CategorizedChange[]> {
+  const categories: Record<Category, CategorizedChange[]> = {
     Features: [],
     'Bug fixes': [],
     Documentation: [],
     'Other changes': []
   }
 
-  for (const pr of prs) {
-    const [category, cleanTitle] = splitCategoryTitle(pr.title)
-    const closingIssues = pr.closingIssuesReferences.edges.map(edge => ({
-      number: edge.node.number
-    }))
+  for (const change of changes) {
+    const category = categoryForType(change.type)
     categories[category].push({
       category,
-      number: pr.number,
-      title: cleanTitle,
-      author: pr.author?.login ?? null,
-      closingIssues
+      number: change.prNumber,
+      description: change.description,
+      author: change.author,
+      closingIssues: change.closingIssues
     })
   }
 
@@ -79,7 +71,7 @@ export function groupPRsByCategory(
 }
 
 export function formatClosingIssues(
-  issues: CategorizedPR['closingIssues']
+  issues: CategorizedChange['closingIssues']
 ): string {
   if (issues.length === 0) return ''
   const issueNumbers = issues.map(i => `#${i.number}`).join(', ')
@@ -117,30 +109,30 @@ async function main() {
       isServer: true,
       runtimeEnv: process.env
     })
-    const { prs, contributors } = await discoverRelease({
+    const { changes, contributors } = await discoverRelease({
       channel: env.CHANNEL,
       currentRef: 'HEAD',
       reader: makeGitHubGraphReader(env.GITHUB_TOKEN)
     })
 
     // Group by category
-    const categories = groupPRsByCategory(prs)
+    const categories = groupChangesByCategory(changes)
 
     // Display results
     for (const category of CATEGORIES) {
-      const prsInCategory = categories[category]
+      const changesInCategory = categories[category]
 
-      if (prsInCategory.length === 0) {
+      if (changesInCategory.length === 0) {
         continue // Skip empty categories
       }
 
       console.log(`## ${category}\n`)
 
-      for (const pr of prsInCategory) {
-        const author = pr.author ? `, by @${pr.author}` : ''
-        const closingIssues = formatClosingIssues(pr.closingIssues)
+      for (const change of changesInCategory) {
+        const author = change.author ? `, by @${change.author}` : ''
+        const closingIssues = formatClosingIssues(change.closingIssues)
         console.log(
-          `- #${pr.number} - ${formatTitle(pr.title)}${author}${closingIssues}`
+          `- #${change.number} - ${formatTitle(change.description)}${author}${closingIssues}`
         )
       }
 

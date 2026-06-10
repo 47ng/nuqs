@@ -4,7 +4,6 @@ import {
   collectIssues,
   discoverRelease,
   extractPRNumber,
-  extractPRNumbers,
   isBot,
   resolveChannel,
   resolveRange,
@@ -154,23 +153,6 @@ describe('extractPRNumber', () => {
 
   it('takes the last (#N) when several appear in the subject', () => {
     expect(extractPRNumber('fix: reconcile (#1) and (#2) (#456)')).toBe(456)
-  })
-})
-
-describe('extractPRNumbers', () => {
-  it('collects, deduplicates, and ignores non-PR commits', () => {
-    expect(
-      extractPRNumbers([
-        'feat: first (#1)',
-        'chore: a direct push',
-        'fix: second (#2)',
-        'docs: touches the same PR (#1)'
-      ])
-    ).toEqual([1, 2])
-  })
-
-  it('returns an empty array when no subject carries a PR number', () => {
-    expect(extractPRNumbers(['chore: deps', 'docs: typo'])).toEqual([])
   })
 })
 
@@ -420,10 +402,10 @@ describe('discoverRelease', () => {
     }
     await expect(
       discoverRelease({ channel: 'stable', currentRef: 'HEAD', reader })
-    ).resolves.toEqual({ prs: [], issues: [], contributors: [] })
+    ).resolves.toEqual({ changes: [], issues: [], contributors: [] })
   })
 
-  it('fetches the deduplicated PR numbers and derives issues and contributors', async () => {
+  it('projects changes (type from the commit, description from the title) and derives issues and contributors', async () => {
     const pr1 = createPR({
       number: 1,
       title: 'feat: first',
@@ -454,7 +436,22 @@ describe('discoverRelease', () => {
     await expect(
       discoverRelease({ channel: 'beta', currentRef: 'HEAD', reader })
     ).resolves.toEqual({
-      prs: [pr1, pr2],
+      changes: [
+        {
+          prNumber: 1,
+          type: 'feat',
+          description: 'first',
+          author: null,
+          closingIssues: [{ number: 100 }]
+        },
+        {
+          prNumber: 2,
+          type: 'fix',
+          description: 'second',
+          author: null,
+          closingIssues: []
+        }
+      ],
       issues: [{ number: 100 }],
       contributors: ['alice', 'bob']
     })
@@ -549,7 +546,7 @@ describe('discoverRelease (history scenarios)', () => {
       })
     })
     expect(finalize).toEqual(draft)
-    expect(draft.prs.map(pr => pr.number)).toEqual([2, 3])
+    expect(draft.changes.map(c => c.prNumber)).toEqual([2, 3])
     expect(draft.issues).toEqual([{ number: 100 }])
     expect(draft.contributors).toEqual(['alice', 'bob'])
   })
@@ -585,7 +582,7 @@ describe('discoverRelease (history scenarios)', () => {
       currentRef: 'v1.3.0-beta.2',
       reader
     })
-    expect(beta2.prs.map(pr => pr.number)).toEqual([3])
+    expect(beta2.changes.map(c => c.prNumber)).toEqual([3])
     expect(beta2.contributors).toEqual(['bob'])
 
     const ga = await discoverRelease({
@@ -593,7 +590,7 @@ describe('discoverRelease (history scenarios)', () => {
       currentRef: 'v1.3.0',
       reader
     })
-    expect(ga.prs.map(pr => pr.number)).toEqual([2, 3, 4])
+    expect(ga.changes.map(c => c.prNumber)).toEqual([2, 3, 4])
     expect(ga.contributors).toEqual(['alice', 'bob'])
   })
 
@@ -620,7 +617,7 @@ describe('discoverRelease (history scenarios)', () => {
       })
     })
     expect(release).toEqual({
-      prs: [expect.objectContaining({ number: 2 })],
+      changes: [expect.objectContaining({ prNumber: 2, type: 'feat' })],
       issues: [],
       contributors: ['alice']
     })

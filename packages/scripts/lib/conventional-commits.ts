@@ -1,31 +1,55 @@
 export type Bump = 'major' | 'minor' | 'patch'
 
-export type Classification =
-  | { bump: null; type: string | undefined; description: string }
-  | { bump: 'patch'; type: 'fix' | 'perf' | 'revert'; description: string }
-  | { bump: 'minor'; type: 'feat'; description: string }
-  | { bump: 'major'; type: string; description: string }
+// The conventional parts of a commit subject (git's `%s`, the first line).
+// `breaking` is the subject's `!` marker only — the `BREAKING CHANGE:` body
+// footer is archaeology and is deliberately not consulted here.
+export type ParsedSubject = {
+  type: string | undefined
+  breaking: boolean
+  description: string
+}
 
-export function classify(message: string): Classification {
-  const subject = message.split('\n')[0] ?? ''
-  const match = subject.match(/^([a-z]+)(?:\([^)]+\))?(!)?: (.+)$/)
-  if (!match) return { bump: null, type: undefined, description: subject }
-  const type = match[1] ?? ''
-  const description = match[3] ?? ''
-  // Uppercase footer only, per the conventional-commits spec; a lowercase
-  // "breaking change" mention in prose is deliberately ignored.
-  const body = message.slice(subject.length)
-  if (match[2] || /^BREAKING[ -]CHANGE:/m.test(body)) {
-    return { bump: 'major', type, description }
-  }
+// A change's bump, derived from its type and breaking flag. A breaking change
+// is always major; otherwise feat→minor, fix/perf/revert→patch, anything else
+// (incl. unknown/config-driven types and undefined) does not bump.
+export function bumpForType(
+  type: string | undefined,
+  breaking: boolean
+): Bump | null {
+  if (breaking) return 'major'
   switch (type) {
     case 'feat':
-      return { bump: 'minor', type, description }
+      return 'minor'
     case 'fix':
     case 'perf':
     case 'revert':
-      return { bump: 'patch', type, description }
+      return 'patch'
     default:
-      return { bump: null, type, description }
+      return null
   }
+}
+
+export function parseSubject(subject: string): ParsedSubject {
+  const firstLine = subject.split('\n')[0] ?? ''
+  const match = firstLine.match(/^([a-z]+)(?:\([^)]+\))?(!)?: (.+)$/)
+  if (!match) {
+    return { type: undefined, breaking: false, description: firstLine }
+  }
+  return {
+    type: match[1],
+    breaking: Boolean(match[2]),
+    description: match[3] ?? ''
+  }
+}
+
+// Parse a full commit message (subject + body). Identical to `parseSubject`,
+// but `breaking` also honours an uppercase `BREAKING CHANGE:`/`BREAKING-CHANGE:`
+// footer per the Conventional Commits spec — so a break flagged only in the body
+// (no subject `!`) is still detected. A lowercase mention in prose is ignored.
+export function parseCommit(message: string): ParsedSubject {
+  const subject = parseSubject(message)
+  if (subject.breaking) return subject
+  const firstLine = message.split('\n')[0] ?? ''
+  const body = message.slice(firstLine.length)
+  return { ...subject, breaking: /^BREAKING[ -]CHANGE:/m.test(body) }
 }

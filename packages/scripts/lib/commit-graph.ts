@@ -14,6 +14,7 @@
 
 import { z } from 'zod'
 import type { Channel } from '../compute-version.ts'
+import { parseSubject } from './conventional-commits.ts'
 import { git, readAllTags } from './git.ts'
 import { greatestTag, isGA, isValidSemver, precedes } from './version.ts'
 
@@ -71,17 +72,6 @@ export function extractPRNumber(subject: string): number | null {
   const matches = [...subject.matchAll(/\(#(\d+)\)/g)]
   const last = matches.at(-1)
   return last ? Number(last[1]) : null
-}
-
-// Collect the deduplicated PR numbers from a list of commit subjects, in first
-// -seen order. Subjects without a `(#N)` (direct pushes) are ignored.
-export function extractPRNumbers(subjects: string[]): number[] {
-  const seen = new Set<number>()
-  for (const subject of subjects) {
-    const number = extractPRNumber(subject)
-    if (number !== null) seen.add(number)
-  }
-  return [...seen]
 }
 
 // --- Pure core: contributors ----------------------------------------------
@@ -144,12 +134,25 @@ export const prSchema = z.object({
 
 export type PR = z.infer<typeof prSchema>
 
-// The full discovery output. `prs` drive the changelog/comments; `issues` are
-// their (deduplicated) closing issues to also comment on; `contributors` feed
-// the "Thanks" section. Finalize uses prs ∪ issues; notes uses prs +
-// contributors.
+// A change: the atomic unit of a release, one squash commit joined to its PR.
+// `type` comes from the squash commit subject (the classification authority);
+// `description` is the PR title as prose (its type prefix stripped for display,
+// never classified). The notes phase renders changes; finalize needs only
+// `prNumber`.
+export type Change = {
+  prNumber: number
+  type: string | undefined
+  description: string
+  author: string | null
+  closingIssues: Array<{ number: number }>
+}
+
+// The full discovery output. `changes` drive the changelog/comments; `issues`
+// are their (deduplicated) closing issues to also comment on; `contributors`
+// feed the "Thanks" section. Finalize uses changes ∪ issues; notes uses changes
+// + contributors.
 export type ReleaseData = {
-  prs: PR[]
+  changes: Change[]
   issues: Array<{ number: number }>
   contributors: string[]
 }
@@ -255,9 +258,40 @@ export function collectIssues(prs: PR[]): Array<{ number: number }> {
   return [...numbers].map(number => ({ number }))
 }
 
-// End-to-end discovery for one release: resolve the range, extract PR numbers
-// from the commit subjects in it, batch-fetch them, and derive issues +
-// contributors. Both phases call this with the same logic.
+// Map each PR number appearing in the range to its squash commit's type,
+// first-seen winning (a `(#N)` may recur across subjects; the first occurrence
+// is authoritative). The squash commit subject is the classification authority —
+// the PR title is not consulted for type.
+function changeTypeByPR(subjects: string[]): Map<number, string | undefined> {
+  const types = new Map<number, string | undefined>()
+  for (const subject of subjects) {
+    const number = extractPRNumber(subject)
+    if (number !== null && !types.has(number)) {
+      types.set(number, parseSubject(subject).type)
+    }
+  }
+  return types
+}
+
+// Project a fetched PR into a change: `type` from the squash commit (via
+// `typeByPR`), `description` from the PR title as prose (its type prefix stripped
+// for display, never classified).
+function toChange(pr: PR, typeByPR: Map<number, string | undefined>): Change {
+  return {
+    prNumber: pr.number,
+    type: typeByPR.get(pr.number),
+    description: parseSubject(pr.title).description,
+    author: pr.author?.login ?? null,
+    closingIssues: pr.closingIssuesReferences.edges.map(edge => ({
+      number: edge.node.number
+    }))
+  }
+}
+
+// End-to-end discovery for one release: resolve the range, read its commit
+// subjects (the type authority), batch-fetch the referenced PRs, and project
+// them into changes + derive issues and contributors. Both phases call this
+// with the same logic.
 export async function discoverRelease(args: {
   channel: Channel
   currentRef: string
@@ -265,13 +299,14 @@ export async function discoverRelease(args: {
 }): Promise<ReleaseData> {
   const { reader } = args
   const range = resolveRange({ ...args, tags: reader.readTags() })
-  const prNumbers = extractPRNumbers(reader.readCommitSubjects(range))
+  const typeByPR = changeTypeByPR(reader.readCommitSubjects(range))
+  const prNumbers = [...typeByPR.keys()]
   if (prNumbers.length === 0) {
-    return { prs: [], issues: [], contributors: [] }
+    return { changes: [], issues: [], contributors: [] }
   }
   const prs = await reader.fetchPullRequests(prNumbers)
   return {
-    prs,
+    changes: prs.map(pr => toChange(pr, typeByPR)),
     issues: collectIssues(prs),
     contributors: collectContributors(prs)
   }

@@ -1,87 +1,93 @@
 import { describe, expect, it } from 'vitest'
-import type { PR } from './lib/commit-graph'
+import type { Change } from './lib/commit-graph'
 import {
   formatClosingIssues,
   formatThanksSection,
   formatTitle,
-  groupPRsByCategory,
-  splitCategoryTitle
+  groupChangesByCategory
 } from './release-notes-automation'
 
-// Helper to create a minimal PR object for testing
-function createPR(
-  overrides: Partial<PR> & { number: number; title: string }
-): PR {
+// Helper to create a minimal change for testing.
+function createChange(
+  overrides: Partial<Change> & { prNumber: number }
+): Change {
   return {
+    type: undefined,
+    description: '',
     author: null,
-    participants: { nodes: [] },
-    closingIssuesReferences: { edges: [] },
+    closingIssues: [],
     ...overrides
   }
 }
 
-describe('splitCategoryTitle', () => {
-  it('parses feat: prefix as Features', () => {
-    const [category, title] = splitCategoryTitle('feat: add new feature')
-    expect(category).toBe('Features')
-    expect(title).toBe('add new feature')
+describe('groupChangesByCategory', () => {
+  it('categorises by the squash commit type, never the (reworded) PR description', () => {
+    // The squash commit was `fix:`; the PR title was later reworded to arbitrary
+    // prose. Category must follow the immutable commit type, and the rendered
+    // text is the prose description as-is.
+    const changes: Change[] = [
+      createChange({ prNumber: 1, type: 'fix', description: 'reworded prose' })
+    ]
+    const result = groupChangesByCategory(changes)
+    expect(result['Bug fixes']).toHaveLength(1)
+    expect(result['Bug fixes'][0]!.number).toBe(1)
+    expect(result['Bug fixes'][0]!.description).toBe('reworded prose')
+    expect(result.Features).toHaveLength(0)
   })
 
-  it('parses feat(scope): prefix as Features', () => {
-    const [category, title] = splitCategoryTitle('feat(core): add new feature')
-    expect(category).toBe('Features')
-    expect(title).toBe('add new feature')
+  it('maps each type to its category, falling back to Other changes', () => {
+    const changes: Change[] = [
+      createChange({ prNumber: 1, type: 'feat', description: 'new feature' }),
+      createChange({ prNumber: 2, type: 'fix', description: 'bug fix' }),
+      createChange({ prNumber: 3, type: 'doc', description: 'update docs' }),
+      createChange({ prNumber: 4, type: 'docs', description: 'more docs' }),
+      createChange({ prNumber: 5, type: 'chore', description: 'maintenance' }),
+      createChange({ prNumber: 6, type: undefined, description: 'no type' })
+    ]
+
+    const result = groupChangesByCategory(changes)
+
+    expect(result.Features.map(c => c.number)).toEqual([1])
+    expect(result['Bug fixes'].map(c => c.number)).toEqual([2])
+    expect(result.Documentation.map(c => c.number)).toEqual([3, 4])
+    expect(result['Other changes'].map(c => c.number)).toEqual([5, 6])
   })
 
-  it('parses fix: prefix as Bug fixes', () => {
-    const [category, title] = splitCategoryTitle('fix: resolve issue')
-    expect(category).toBe('Bug fixes')
-    expect(title).toBe('resolve issue')
+  it('sorts changes by PR number within each category', () => {
+    const changes: Change[] = [
+      createChange({ prNumber: 30, type: 'feat', description: 'third' }),
+      createChange({ prNumber: 10, type: 'feat', description: 'first' }),
+      createChange({ prNumber: 20, type: 'feat', description: 'second' })
+    ]
+
+    const result = groupChangesByCategory(changes)
+
+    expect(result.Features.map(c => c.number)).toEqual([10, 20, 30])
   })
 
-  it('parses fix(scope): prefix as Bug fixes', () => {
-    const [category, title] = splitCategoryTitle('fix(parser): resolve issue')
-    expect(category).toBe('Bug fixes')
-    expect(title).toBe('resolve issue')
+  it('includes author information', () => {
+    const changes: Change[] = [
+      createChange({ prNumber: 1, type: 'feat', author: 'testuser' })
+    ]
+
+    const result = groupChangesByCategory(changes)
+    expect(result.Features[0]!.author).toBe('testuser')
   })
 
-  it('parses doc: prefix as Documentation', () => {
-    const [category, title] = splitCategoryTitle('doc: update readme')
-    expect(category).toBe('Documentation')
-    expect(title).toBe('update readme')
-  })
+  it('includes closing issues information', () => {
+    const changes: Change[] = [
+      createChange({
+        prNumber: 1,
+        type: 'fix',
+        closingIssues: [{ number: 100 }, { number: 101 }]
+      })
+    ]
 
-  it('parses docs: prefix as Documentation', () => {
-    const [category, title] = splitCategoryTitle('docs: update readme')
-    expect(category).toBe('Documentation')
-    expect(title).toBe('update readme')
-  })
-
-  it('parses chore: prefix as Other changes', () => {
-    const [category, title] = splitCategoryTitle('chore: update deps')
-    expect(category).toBe('Other changes')
-    expect(title).toBe('update deps')
-  })
-
-  it('parses refactor: prefix as Other changes', () => {
-    const [category, title] = splitCategoryTitle('refactor: clean up code')
-    expect(category).toBe('Other changes')
-    expect(title).toBe('clean up code')
-  })
-
-  it('handles titles without conventional commit prefix', () => {
-    const [category, title] = splitCategoryTitle('Some random title')
-    expect(category).toBe('Other changes')
-    expect(title).toBe('Some random title')
-  })
-
-  it('categorises a non-lowercase type prefix as "Other changes"', () => {
-    const [category1, title1] = splitCategoryTitle('FEAT: uppercase')
-    const [category2, title2] = splitCategoryTitle('Feat: TitleCase desc')
-    expect(category1).toBe('Other changes')
-    expect(title1).toBe('FEAT: uppercase')
-    expect(category2).toBe('Other changes')
-    expect(title2).toBe('Feat: TitleCase desc')
+    const result = groupChangesByCategory(changes)
+    expect(result['Bug fixes'][0]!.closingIssues).toEqual([
+      { number: 100 },
+      { number: 101 }
+    ])
   })
 })
 
@@ -154,79 +160,5 @@ describe('formatThanksSection', () => {
     expect(formatThanksSection(['alice', 'bob', 'charlie'])).toBe(
       'Huge thanks to @alice, @bob, and @charlie for helping!'
     )
-  })
-})
-
-describe('groupPRsByCategory', () => {
-  it('groups PRs by their category', () => {
-    const prs: PR[] = [
-      createPR({ number: 1, title: 'feat: new feature' }),
-      createPR({ number: 2, title: 'fix: bug fix' }),
-      createPR({ number: 3, title: 'docs: update docs' }),
-      createPR({ number: 4, title: 'chore: maintenance' })
-    ]
-
-    const result = groupPRsByCategory(prs)
-
-    expect(result.Features).toHaveLength(1)
-    expect(result.Features[0]!.number).toBe(1)
-    expect(result.Features[0]!.title).toBe('new feature')
-
-    expect(result['Bug fixes']).toHaveLength(1)
-    expect(result['Bug fixes'][0]!.number).toBe(2)
-    expect(result['Bug fixes'][0]!.title).toBe('bug fix')
-
-    expect(result.Documentation).toHaveLength(1)
-    expect(result.Documentation[0]!.number).toBe(3)
-    expect(result.Documentation[0]!.title).toBe('update docs')
-    expect(result['Other changes']).toHaveLength(1)
-    expect(result['Other changes'][0]!.number).toBe(4)
-    expect(result['Other changes'][0]!.title).toBe('maintenance')
-  })
-
-  it('sorts PRs by number within each category', () => {
-    const prs: PR[] = [
-      createPR({ number: 30, title: 'feat: third' }),
-      createPR({ number: 10, title: 'feat: first' }),
-      createPR({ number: 20, title: 'feat: second' })
-    ]
-
-    const result = groupPRsByCategory(prs)
-
-    expect(result.Features.map(pr => pr.number)).toEqual([10, 20, 30])
-  })
-
-  it('includes author information', () => {
-    const prs: PR[] = [
-      createPR({
-        number: 1,
-        title: 'feat: test',
-        author: { login: 'testuser' }
-      })
-    ]
-
-    const result = groupPRsByCategory(prs)
-    expect(result.Features[0]!.author).toBe('testuser')
-  })
-
-  it('includes closing issues information', () => {
-    const prs: PR[] = [
-      createPR({
-        number: 1,
-        title: 'fix: resolve bug',
-        closingIssuesReferences: {
-          edges: [
-            { node: { number: 100, participants: { nodes: [] } } },
-            { node: { number: 101, participants: { nodes: [] } } }
-          ]
-        }
-      })
-    ]
-
-    const result = groupPRsByCategory(prs)
-    expect(result['Bug fixes'][0]!.closingIssues).toEqual([
-      { number: 100 },
-      { number: 101 }
-    ])
   })
 })
