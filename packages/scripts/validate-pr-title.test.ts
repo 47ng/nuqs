@@ -55,8 +55,10 @@ describe('validateTitle', () => {
 
   it('flags disallowed type', () => {
     const errors = validateTitle('wip: experiment', allowed)
-    expect(errors).toHaveLength(1)
+    // The violation plus the trailing Conventional Commits note.
+    expect(errors).toHaveLength(2)
     expect(errors[0]).toMatch(/wip.*not allowed/)
+    expect(errors[1]).toMatch(/Conventional Commits/)
   })
 
   it('flags missing colon (format)', () => {
@@ -100,7 +102,9 @@ describe('validateTitle', () => {
 
   it('reports format and length errors together', () => {
     const errors = validateTitle('x'.repeat(150), allowed)
-    expect(errors).toHaveLength(2)
+    // Format + length violations, plus the trailing Conventional Commits note.
+    expect(errors).toHaveLength(3)
+    expect(errors[2]).toMatch(/Conventional Commits/)
   })
 })
 
