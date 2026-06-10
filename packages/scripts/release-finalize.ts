@@ -6,7 +6,7 @@ import { Octokit } from 'octokit'
 import { z } from 'zod'
 import type { Channel } from './compute-version.ts'
 import {
-  discoverRelease,
+  discoverTargets,
   makeGitHubGraphReader,
   resolveChannel
 } from './lib/commit-graph.ts'
@@ -224,8 +224,8 @@ async function main(): Promise<void> {
   const [owner, repo] = env.GITHUB_REPOSITORY.split('/') as [string, string]
   const info = resolveChannelInfo(env.TAG)
   // Finalize phase: the just-published tag exists on the drafted HEAD, so the
-  // shared engine resolves the identical set the draft notes listed.
-  const { changes, issues } = await discoverRelease({
+  // lean path resolves the identical set the draft notes listed.
+  const { changes, issues } = await discoverTargets({
     channel: info.channel,
     currentRef: env.TAG,
     reader: makeGitHubGraphReader(env.GITHUB_TOKEN)

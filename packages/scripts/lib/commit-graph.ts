@@ -1,14 +1,22 @@
 // Shared commit-graph discovery engine.
 //
-// The single source of truth both release phases consume: Phase 1 (draft
-// notes, `release-notes-automation.ts`) and Phase 2 (finalize comments). The
-// work runs twice — once at draft time (currentRef = HEAD, tag not yet
+// The single source of truth both release phases consume, split per phase over
+// one shared range → PR-number core (`changeRefsInRange`):
+//   - Phase 1 (draft notes, `release-notes-automation.ts`) → `discoverChanges`:
+//     fetches the full pull-request fields (title, author, closing issues,
+//     participants) the changelog lines and the Thanks section render.
+//   - Phase 2 (finalize comments, `release-finalize.ts`) → `discoverTargets`:
+//     fetches only each pull request's closing issue numbers (the comment
+//     targets), not the title/author/participants it would never render.
+// The work runs twice — once at draft time (currentRef = HEAD, tag not yet
 // created) and once at finalize time (currentRef = the just-published tag, on
-// the same drafted HEAD) — but the logic is identical, so the drafted notes
-// always list exactly the issues/PRs finalize comments on.
+// the same drafted HEAD). Both paths share the range core (same PRs) and
+// resolve closing issues from the same field over the same numbers (same
+// issues), so the drafted notes always list exactly what finalize comments on;
+// only the extra notes-only fields differ between them.
 //
 // Pure core (range resolution, PR-number extraction, channel detection,
-// contributor collection) is unit-tested, and `discoverRelease` is tested
+// contributor collection) is unit-tested, and both discovery paths are tested
 // through an injected `ReleaseGraphReader`; the production reader (git log,
 // GitHub GraphQL) is thin glue and untested by design.
 
@@ -134,6 +142,19 @@ export const prSchema = z.object({
 
 export type PR = z.infer<typeof prSchema>
 
+// What the finalize path fetches per pull request: its number and its closing
+// issue numbers, nothing else. The title, author, and participant nodes the
+// notes path renders are omitted — finalize never reads them (and the
+// participant nodes are the bulk of the payload).
+export const prClosingIssuesSchema = z.object({
+  number: z.number(),
+  closingIssuesReferences: z.object({
+    edges: z.array(z.object({ node: z.object({ number: z.number() }) }))
+  })
+})
+
+export type PRClosingIssues = z.infer<typeof prClosingIssuesSchema>
+
 // A change: the atomic unit of a release, one squash commit joined to its PR.
 // `type` comes from the squash commit subject (the classification authority);
 // `description` is the PR title as prose (its type prefix stripped for display,
@@ -147,32 +168,42 @@ export type Change = {
   closingIssues: Array<{ number: number }>
 }
 
-// The full discovery output. `changes` drive the changelog/comments; `issues`
-// are their (deduplicated) closing issues to also comment on; `contributors`
-// feed the "Thanks" section. Finalize uses changes ∪ issues; notes uses changes
-// + contributors.
-export type ReleaseData = {
+// The notes-path output: the full `changes` driving the changelog, plus the
+// release `contributors` feeding the "Thanks" section.
+export type ReleaseChanges = {
   changes: Change[]
-  issues: Array<{ number: number }>
   contributors: string[]
+}
+
+// The finalize-path output: the comment targets, split into the release's PRs
+// (`changes`, by number) and their deduplicated closing `issues`. Finalize
+// comments on both.
+export type ReleaseTargets = {
+  changes: Array<{ prNumber: number }>
+  issues: Array<{ number: number }>
 }
 
 // --- Reader port -----------------------------------------------------------
 
-// The IO surface `discoverRelease` consumes. Production uses
+// The IO surface both discovery paths consume. Production uses
 // `makeGitHubGraphReader` (git + GitHub GraphQL); tests inject an in-memory
-// reader built from plain data.
+// reader built from plain data. The two PR fetchers are segregated so each
+// phase fetches only the fields it renders: `fetchChangeDetails` pulls the full
+// pull-request fields for the notes, `fetchClosingIssues` only the closing
+// issue numbers finalize comments on.
 export type ReleaseGraphReader = {
   readTags: () => string[]
   readCommitSubjects: (range: Range) => string[]
-  fetchPullRequests: (numbers: number[]) => Promise<PR[]>
+  fetchChangeDetails: (numbers: number[]) => Promise<PR[]>
+  fetchClosingIssues: (numbers: number[]) => Promise<PRClosingIssues[]>
 }
 
 export function makeGitHubGraphReader(githubToken: string): ReleaseGraphReader {
   return {
     readTags: readAllTags,
     readCommitSubjects,
-    fetchPullRequests: numbers => fetchPullRequests(numbers, githubToken)
+    fetchChangeDetails: numbers => fetchChangeDetails(numbers, githubToken),
+    fetchClosingIssues: numbers => fetchClosingIssues(numbers, githubToken)
   }
 }
 
@@ -188,23 +219,66 @@ function readCommitSubjects(range: Range): string[] {
     .filter(Boolean)
 }
 
-const responseSchema = z.object({
-  data: z.object({
-    repository: z.record(z.string(), prSchema.nullable())
-  })
-})
-
-// One batched, aliased GraphQL query fetching every PR (and its closing issues
-// + participants) by number. Squash-merge means PR numbers come straight from
-// commit subjects, so no per-commit `associatedPullRequests` lookup is needed.
-async function fetchPullRequests(
-  prNumbers: number[],
+// One batched, aliased GraphQL query selecting `selection` on every PR by
+// number, validated per node by `nodeSchema`. Squash-merge means PR numbers
+// come straight from commit subjects, so no per-commit `associatedPullRequests`
+// lookup is needed. `fnLabel` only tags the request URL for observability.
+async function fetchPRNodes<T>(args: {
+  prNumbers: number[]
   githubToken: string
-): Promise<PR[]> {
+  fnLabel: string
+  selection: string
+  nodeSchema: z.ZodType<T>
+}): Promise<T[]> {
+  const { prNumbers, githubToken, fnLabel, selection, nodeSchema } = args
   const aliases = prNumbers
     .map(
       number => `
       pr${number}: pullRequest(number: ${number}) {
+        ${selection}
+      }`
+    )
+    .join('\n')
+  const query = `query { repository(owner: "47ng", name: "nuqs") { ${aliases} } }`
+
+  const response = await fetch(`https://api.github.com/graphql?fn=${fnLabel}`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${githubToken}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ query })
+  })
+  if (!response.ok) {
+    throw new Error(
+      `GitHub API error: ${response.status} ${response.statusText}`
+    )
+  }
+  const responseSchema = z.object({
+    data: z.object({
+      repository: z.record(z.string(), nodeSchema.nullable())
+    })
+  })
+  const parsed = responseSchema.parse(await response.json())
+  // A null node means the PR number resolved to nothing (e.g. a transferred
+  // issue); drop it rather than failing the whole release.
+  return Object.values(parsed.data.repository).filter(
+    (node): node is T => node !== null
+  )
+}
+
+// Notes path: every PR with its title, author, closing issues, and participants
+// (the participant nodes dominate the payload, but the Thanks section needs
+// them).
+function fetchChangeDetails(
+  prNumbers: number[],
+  githubToken: string
+): Promise<PR[]> {
+  return fetchPRNodes({
+    prNumbers,
+    githubToken,
+    fnLabel: 'fetchChangeDetails',
+    selection: `
         number
         title
         author { login }
@@ -216,39 +290,45 @@ async function fetchPullRequests(
               participants(first: 20) { nodes { login } }
             }
           }
-        }
-      }`
-    )
-    .join('\n')
-  const query = `query { repository(owner: "47ng", name: "nuqs") { ${aliases} } }`
+        }`,
+    nodeSchema: prSchema
+  })
+}
 
-  const response = await fetch(
-    'https://api.github.com/graphql?fn=fetchPullRequests',
-    {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${githubToken}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ query })
-    }
-  )
-  if (!response.ok) {
-    throw new Error(
-      `GitHub API error: ${response.status} ${response.statusText}`
-    )
-  }
-  const parsed = responseSchema.parse(await response.json())
-  // A null node means the PR number resolved to nothing (e.g. a transferred
-  // issue); drop it rather than failing the whole release.
-  return Object.values(parsed.data.repository).filter(
-    (pr): pr is PR => pr !== null
-  )
+// Finalize path: every PR with only its closing issue numbers — no title,
+// author, or participant nodes (the fields finalize never reads).
+function fetchClosingIssues(
+  prNumbers: number[],
+  githubToken: string
+): Promise<PRClosingIssues[]> {
+  return fetchPRNodes({
+    prNumbers,
+    githubToken,
+    fnLabel: 'fetchClosingIssues',
+    selection: `
+        number
+        closingIssuesReferences(first: 10) {
+          edges {
+            node {
+              number
+            }
+          }
+        }`,
+    nodeSchema: prClosingIssuesSchema
+  })
+}
+
+// The closing-issues facet shared by `PR` and `PRClosingIssues`, so
+// `collectIssues` serves both discovery paths from the same field.
+type WithClosingIssues = {
+  closingIssuesReferences: { edges: Array<{ node: { number: number } }> }
 }
 
 // Deduplicate closing issues across all PRs (a single issue can be closed by
 // more than one PR across the range).
-export function collectIssues(prs: PR[]): Array<{ number: number }> {
+export function collectIssues(
+  prs: WithClosingIssues[]
+): Array<{ number: number }> {
   const numbers = new Set<number>()
   for (const pr of prs) {
     for (const { node } of pr.closingIssuesReferences.edges) {
@@ -288,26 +368,64 @@ function toChange(pr: PR, typeByPR: Map<number, string | undefined>): Change {
   }
 }
 
-// End-to-end discovery for one release: resolve the range, read its commit
-// subjects (the type authority), batch-fetch the referenced PRs, and project
-// them into changes + derive issues and contributors. Both phases call this
-// with the same logic.
-export async function discoverRelease(args: {
+// A change reference: the identity + classification both phases derive for free
+// from the squash commit subjects alone (no GraphQL). The shared discovery core.
+export type ChangeRef = { prNumber: number; type: string | undefined }
+
+// The shared range → PR-number core both phases build on. Resolve the
+// channel-asymmetric range, read its commit subjects (the type authority), and
+// project each referenced PR to its `{ prNumber, type }`. This is the SSOT: the
+// identical PR set feeds whichever phase-specific fetch follows.
+export function changeRefsInRange(args: {
   channel: Channel
   currentRef: string
   reader: ReleaseGraphReader
-}): Promise<ReleaseData> {
+}): ChangeRef[] {
   const { reader } = args
   const range = resolveRange({ ...args, tags: reader.readTags() })
   const typeByPR = changeTypeByPR(reader.readCommitSubjects(range))
-  const prNumbers = [...typeByPR.keys()]
-  if (prNumbers.length === 0) {
-    return { changes: [], issues: [], contributors: [] }
+  return [...typeByPR].map(([prNumber, type]) => ({ prNumber, type }))
+}
+
+// Notes-path discovery: the shared core + `fetchChangeDetails`, projected into
+// the full change aggregate (type from the commit, the rest from the PR) plus
+// the release contributors. `fetchClosingIssues` is never touched.
+export async function discoverChanges(args: {
+  channel: Channel
+  currentRef: string
+  reader: ReleaseGraphReader
+}): Promise<ReleaseChanges> {
+  const { reader } = args
+  const refs = changeRefsInRange(args)
+  if (refs.length === 0) {
+    return { changes: [], contributors: [] }
   }
-  const prs = await reader.fetchPullRequests(prNumbers)
+  const typeByPR = new Map(refs.map(({ prNumber, type }) => [prNumber, type]))
+  const prs = await reader.fetchChangeDetails(refs.map(ref => ref.prNumber))
   return {
     changes: prs.map(pr => toChange(pr, typeByPR)),
-    issues: collectIssues(prs),
     contributors: collectContributors(prs)
+  }
+}
+
+// Finalize-path discovery: the shared core + `fetchClosingIssues`, projected
+// into comment targets — the release's PRs (by number) and their deduplicated
+// closing issues. `fetchChangeDetails` is never touched. The PRs come from the
+// fetched (surviving) nodes, so a `(#N)` that resolves to nothing is dropped
+// from the targets exactly as it is from the notes.
+export async function discoverTargets(args: {
+  channel: Channel
+  currentRef: string
+  reader: ReleaseGraphReader
+}): Promise<ReleaseTargets> {
+  const { reader } = args
+  const refs = changeRefsInRange(args)
+  if (refs.length === 0) {
+    return { changes: [], issues: [] }
+  }
+  const prs = await reader.fetchClosingIssues(refs.map(ref => ref.prNumber))
+  return {
+    changes: prs.map(pr => ({ prNumber: pr.number })),
+    issues: collectIssues(prs)
   }
 }

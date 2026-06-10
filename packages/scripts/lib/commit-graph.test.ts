@@ -2,7 +2,8 @@ import { describe, expect, it, vi } from 'vitest'
 import {
   collectContributors,
   collectIssues,
-  discoverRelease,
+  discoverChanges,
+  discoverTargets,
   extractPRNumber,
   isBot,
   resolveChannel,
@@ -389,23 +390,26 @@ describe('collectIssues', () => {
   })
 })
 
-describe('discoverRelease', () => {
-  it('returns an empty release without fetching when no commit references a PR', async () => {
+describe('discoverChanges', () => {
+  it('returns empty changes without fetching when no commit references a PR', async () => {
     const reader: ReleaseGraphReader = {
       readTags: () => ['v1.0.0'],
       readCommitSubjects: () => ['chore: direct push', 'docs: fix typo'],
-      fetchPullRequests: () => {
+      fetchChangeDetails: () => {
         throw new Error(
-          'fetchPullRequests should not be called for an empty range'
+          'fetchChangeDetails should not be called for an empty range'
         )
+      },
+      fetchClosingIssues: () => {
+        throw new Error('discoverChanges must not take the finalize path')
       }
     }
     await expect(
-      discoverRelease({ channel: 'stable', currentRef: 'HEAD', reader })
-    ).resolves.toEqual({ changes: [], issues: [], contributors: [] })
+      discoverChanges({ channel: 'stable', currentRef: 'HEAD', reader })
+    ).resolves.toEqual({ changes: [], contributors: [] })
   })
 
-  it('projects changes (type from the commit, description from the title) and derives issues and contributors', async () => {
+  it('projects changes (type from the commit, description from the title) and derives contributors', async () => {
     const pr1 = createPR({
       number: 1,
       title: 'feat: first',
@@ -431,10 +435,11 @@ describe('discoverRelease', () => {
         'fix: second (#2)',
         'docs: same PR again (#1)'
       ],
-      fetchPullRequests: vi.fn(async () => [pr1, pr2])
+      fetchChangeDetails: vi.fn(async () => [pr1, pr2]),
+      fetchClosingIssues: vi.fn(async () => [])
     }
     await expect(
-      discoverRelease({ channel: 'beta', currentRef: 'HEAD', reader })
+      discoverChanges({ channel: 'beta', currentRef: 'HEAD', reader })
     ).resolves.toEqual({
       changes: [
         {
@@ -452,20 +457,22 @@ describe('discoverRelease', () => {
           closingIssues: []
         }
       ],
-      issues: [{ number: 100 }],
       contributors: ['alice', 'bob']
     })
-    expect(reader.fetchPullRequests).toHaveBeenCalledExactlyOnceWith([1, 2])
+    // Notes fetches the change details only; the finalize fetch is untouched.
+    expect(reader.fetchChangeDetails).toHaveBeenCalledExactlyOnceWith([1, 2])
+    expect(reader.fetchClosingIssues).not.toHaveBeenCalled()
   })
 
   it('resolves the channel-asymmetric range before reading commit subjects', async () => {
     const reader: ReleaseGraphReader = {
       readTags: () => ['v1.2.3', 'v1.3.0-beta.1', 'v1.3.0'],
       readCommitSubjects: vi.fn(() => []),
-      fetchPullRequests: async () => []
+      fetchChangeDetails: async () => [],
+      fetchClosingIssues: async () => []
     }
     // GA finalize: cumulative since the previous GA, skipping the beta.
-    await discoverRelease({ channel: 'stable', currentRef: 'v1.3.0', reader })
+    await discoverChanges({ channel: 'stable', currentRef: 'v1.3.0', reader })
     expect(reader.readCommitSubjects).toHaveBeenCalledExactlyOnceWith({
       from: 'v1.2.3',
       to: 'v1.3.0'
@@ -473,12 +480,68 @@ describe('discoverRelease', () => {
   })
 })
 
+describe('discoverTargets', () => {
+  it('returns empty targets without fetching when no commit references a PR', async () => {
+    const reader: ReleaseGraphReader = {
+      readTags: () => ['v1.0.0'],
+      readCommitSubjects: () => ['chore: direct push', 'docs: fix typo'],
+      fetchChangeDetails: () => {
+        throw new Error('discoverTargets must not take the notes path')
+      },
+      fetchClosingIssues: () => {
+        throw new Error(
+          'fetchClosingIssues should not be called for an empty range'
+        )
+      }
+    }
+    await expect(
+      discoverTargets({ channel: 'stable', currentRef: 'HEAD', reader })
+    ).resolves.toEqual({ changes: [], issues: [] })
+  })
+
+  it('projects each PR into a target and derives its closing issues, never fetching the change details', async () => {
+    const reader: ReleaseGraphReader = {
+      readTags: () => [],
+      readCommitSubjects: () => [
+        'feat: first (#1)',
+        'chore: direct push',
+        'fix: second (#2)'
+      ],
+      fetchChangeDetails: vi.fn(async () => []),
+      fetchClosingIssues: vi.fn(async () => [
+        {
+          number: 1,
+          closingIssuesReferences: {
+            edges: [{ node: { number: 100 } }, { node: { number: 101 } }]
+          }
+        },
+        {
+          number: 2,
+          closingIssuesReferences: { edges: [{ node: { number: 100 } }] }
+        }
+      ])
+    }
+    await expect(
+      discoverTargets({ channel: 'beta', currentRef: 'HEAD', reader })
+    ).resolves.toEqual({
+      changes: [{ prNumber: 1 }, { prNumber: 2 }],
+      // #100 is closed by both PRs but listed once.
+      issues: [{ number: 100 }, { number: 101 }]
+    })
+    // Finalize fetches the closing issues only; the change details are untouched.
+    expect(reader.fetchClosingIssues).toHaveBeenCalledExactlyOnceWith([1, 2])
+    expect(reader.fetchChangeDetails).not.toHaveBeenCalled()
+  })
+})
+
 // An in-memory ReleaseGraphReader over a single linear history (oldest first),
-// so readTags, readCommitSubjects and fetchPullRequests stay mutually
+// so readTags, readCommitSubjects and both PR fetchers stay mutually
 // consistent — letting scenario tests query the same history the two ways the
 // release phases do. A commit's optional `tag` marks the tag pointing at it;
 // readCommitSubjects mirrors `git log from..to`: the (from, to] slice, with
-// `to: 'HEAD'` reaching the end of history.
+// `to: 'HEAD'` reaching the end of history. Both fetchers project the same
+// underlying PRs, so the finalize view is the notes view minus the fields
+// finalize never reads — mirroring production's two GraphQL queries.
 function makeHistoryReader(history: {
   commits: Array<{ subject: string; tag?: string }>
   prs: PR[]
@@ -486,6 +549,8 @@ function makeHistoryReader(history: {
   const { commits, prs } = history
   const indexOfTag = (tag: string) =>
     commits.findIndex(commit => commit.tag === tag)
+  const select = (numbers: number[]) =>
+    prs.filter(pr => numbers.includes(pr.number))
   return {
     readTags: () => commits.flatMap(({ tag }) => (tag ? [tag] : [])),
     readCommitSubjects: range => {
@@ -493,17 +558,37 @@ function makeHistoryReader(history: {
       const to = range.to === 'HEAD' ? commits.length - 1 : indexOfTag(range.to)
       return commits.slice(from + 1, to + 1).map(({ subject }) => subject)
     },
-    fetchPullRequests: async numbers =>
-      prs.filter(pr => numbers.includes(pr.number))
+    fetchChangeDetails: async numbers => select(numbers),
+    fetchClosingIssues: async numbers =>
+      select(numbers).map(pr => ({
+        number: pr.number,
+        closingIssuesReferences: {
+          edges: pr.closingIssuesReferences.edges.map(({ node }) => ({
+            node: { number: node.number }
+          }))
+        }
+      }))
   }
 }
 
-describe('discoverRelease (history scenarios)', () => {
-  it('drafts (HEAD) and finalizes (published tag) the same release', async () => {
+// The set of issue numbers a notes run would comment on (its changes' closing
+// issues, deduplicated), to compare against the finalize path's `issues`.
+function issuesOf(changes: { closingIssues: Array<{ number: number }> }[]) {
+  return collectIssues(
+    changes.map(change => ({
+      closingIssuesReferences: {
+        edges: change.closingIssues.map(node => ({ node }))
+      }
+    }))
+  )
+}
+
+describe('discovery (history scenarios)', () => {
+  it('drafts (notes, HEAD) and finalizes (targets, published tag) the same set', async () => {
     // The module's core promise: the drafted notes list exactly what finalize
-    // comments on. Draft runs on HEAD with the channel from the environment;
-    // finalize runs on the just-published tag (now in the tag list) with the
-    // channel re-derived from it.
+    // comments on. Notes drafts on HEAD via `fetchChangeDetails`; finalize runs
+    // on the just-published tag via `fetchClosingIssues` — yet both resolve the
+    // identical PR set and closing issues, only the notes-only fields differ.
     const prs = [
       createPR({
         number: 2,
@@ -528,12 +613,12 @@ describe('discoverRelease (history scenarios)', () => {
       { subject: 'fix: regression (#3)' }
     ]
     const tag = 'v1.3.0-beta.1'
-    const draft = await discoverRelease({
+    const draft = await discoverChanges({
       channel: 'beta',
       currentRef: 'HEAD',
       reader: makeHistoryReader({ commits: commitsBeforePublish, prs })
     })
-    const finalize = await discoverRelease({
+    const finalize = await discoverTargets({
       channel: resolveChannel(tag),
       currentRef: tag,
       reader: makeHistoryReader({
@@ -545,9 +630,13 @@ describe('discoverRelease (history scenarios)', () => {
         prs
       })
     })
-    expect(finalize).toEqual(draft)
+    // Same PRs, same closing issues across the two phase-specific paths.
+    expect(finalize.changes).toEqual(
+      draft.changes.map(c => ({ prNumber: c.prNumber }))
+    )
+    expect(finalize.issues).toEqual(issuesOf(draft.changes))
     expect(draft.changes.map(c => c.prNumber)).toEqual([2, 3])
-    expect(draft.issues).toEqual([{ number: 100 }])
+    expect(finalize.issues).toEqual([{ number: 100 }])
     expect(draft.contributors).toEqual(['alice', 'bob'])
   })
 
@@ -577,7 +666,7 @@ describe('discoverRelease (history scenarios)', () => {
       ]
     }
     const reader = makeHistoryReader(history)
-    const beta2 = await discoverRelease({
+    const beta2 = await discoverChanges({
       channel: 'beta',
       currentRef: 'v1.3.0-beta.2',
       reader
@@ -585,7 +674,7 @@ describe('discoverRelease (history scenarios)', () => {
     expect(beta2.changes.map(c => c.prNumber)).toEqual([3])
     expect(beta2.contributors).toEqual(['bob'])
 
-    const ga = await discoverRelease({
+    const ga = await discoverChanges({
       channel: 'stable',
       currentRef: 'v1.3.0',
       reader
@@ -594,32 +683,38 @@ describe('discoverRelease (history scenarios)', () => {
     expect(ga.contributors).toEqual(['alice', 'bob'])
   })
 
-  it('tolerates a commit referencing a PR the reader cannot resolve', async () => {
+  it('tolerates a commit referencing a PR neither path can resolve', async () => {
     // A `(#N)` can point at nothing (e.g. a transferred issue): the reader
-    // returns a subset of the requested numbers, and the release is derived
-    // from the survivors alone — no crash, no phantom entries.
-    const release = await discoverRelease({
-      channel: 'beta',
-      currentRef: 'HEAD',
-      reader: makeHistoryReader({
-        commits: [
-          { subject: 'fix: base (#1)', tag: 'v1.2.3' },
-          { subject: 'feat: real (#2)' },
-          { subject: 'chore: vanished (#999)' }
-        ],
-        prs: [
-          createPR({
-            number: 2,
-            title: 'feat: real',
-            participants: { nodes: [{ login: 'alice' }] }
-          })
-        ]
-      })
+    // returns a subset of the requested numbers, and both phases derive their
+    // output from the survivors alone — no crash, no phantom entries.
+    const reader = makeHistoryReader({
+      commits: [
+        { subject: 'fix: base (#1)', tag: 'v1.2.3' },
+        { subject: 'feat: real (#2)' },
+        { subject: 'chore: vanished (#999)' }
+      ],
+      prs: [
+        createPR({
+          number: 2,
+          title: 'feat: real',
+          participants: { nodes: [{ login: 'alice' }] },
+          closingIssuesReferences: {
+            edges: [{ node: { number: 50, participants: { nodes: [] } } }]
+          }
+        })
+      ]
     })
-    expect(release).toEqual({
+    expect(
+      await discoverChanges({ channel: 'beta', currentRef: 'HEAD', reader })
+    ).toEqual({
       changes: [expect.objectContaining({ prNumber: 2, type: 'feat' })],
-      issues: [],
       contributors: ['alice']
+    })
+    expect(
+      await discoverTargets({ channel: 'beta', currentRef: 'HEAD', reader })
+    ).toEqual({
+      changes: [{ prNumber: 2 }],
+      issues: [{ number: 50 }]
     })
   })
 })

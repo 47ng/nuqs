@@ -4,7 +4,7 @@ import { createEnv } from '@t3-oss/env-core'
 import { z } from 'zod'
 import {
   type Change,
-  discoverRelease,
+  discoverChanges,
   makeGitHubGraphReader
 } from './lib/commit-graph.ts'
 
@@ -109,7 +109,7 @@ async function main() {
       isServer: true,
       runtimeEnv: process.env
     })
-    const { changes, contributors } = await discoverRelease({
+    const { changes, contributors } = await discoverChanges({
       channel: env.CHANNEL,
       currentRef: 'HEAD',
       reader: makeGitHubGraphReader(env.GITHUB_TOKEN)
