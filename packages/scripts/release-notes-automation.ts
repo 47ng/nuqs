@@ -2,8 +2,12 @@
 
 import { createEnv } from '@t3-oss/env-core'
 import { z } from 'zod'
+import {
+  discoverRelease,
+  makeGitHubGraphReader,
+  type PR
+} from './lib/commit-graph.ts'
 import { classify } from './lib/conventional-commits.ts'
-import { discoverRelease, type PR } from './lib/commit-graph.ts'
 
 export const CATEGORIES = [
   'Features',
@@ -106,13 +110,17 @@ async function main() {
     // cumulative GA) — the same engine finalize runs post-publish, so the
     // drafted notes list exactly the PRs/issues finalize will comment on.
     const env = createEnv({
-      server: { CHANNEL: z.enum(['stable', 'beta']) },
+      server: {
+        CHANNEL: z.enum(['stable', 'beta']),
+        GITHUB_TOKEN: z.string().min(1)
+      },
       isServer: true,
       runtimeEnv: process.env
     })
     const { prs, contributors } = await discoverRelease({
       channel: env.CHANNEL,
-      currentRef: 'HEAD'
+      currentRef: 'HEAD',
+      reader: makeGitHubGraphReader(env.GITHUB_TOKEN)
     })
 
     // Group by category

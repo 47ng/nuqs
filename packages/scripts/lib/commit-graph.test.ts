@@ -1,13 +1,15 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import {
   collectContributors,
   collectIssues,
+  discoverRelease,
   extractPRNumber,
   extractPRNumbers,
   isBot,
   resolveChannel,
   resolveRange,
-  type PR
+  type PR,
+  type ReleaseGraphReader
 } from './commit-graph'
 
 describe('resolveChannel', () => {
@@ -69,7 +71,11 @@ describe('resolveRange', () => {
 
   it('walks from the beginning for the first-ever release', () => {
     expect(
-      resolveRange({ channel: 'stable', currentRef: 'v0.1.0', tags: ['v0.1.0'] })
+      resolveRange({
+        channel: 'stable',
+        currentRef: 'v0.1.0',
+        tags: ['v0.1.0']
+      })
     ).toEqual({ from: null, to: 'v0.1.0' })
     expect(
       resolveRange({ channel: 'beta', currentRef: 'HEAD', tags: [] })
@@ -360,9 +366,9 @@ describe('collectContributors', () => {
 describe('collectIssues', () => {
   it('returns empty when no PRs and when PRs close nothing', () => {
     expect(collectIssues([])).toEqual([])
-    expect(
-      collectIssues([createPR({ number: 1, title: 'chore: x' })])
-    ).toEqual([])
+    expect(collectIssues([createPR({ number: 1, title: 'chore: x' })])).toEqual(
+      []
+    )
   })
 
   it('collects each PR’s closing issues', () => {
@@ -398,5 +404,225 @@ describe('collectIssues', () => {
       })
     ]
     expect(collectIssues(prs)).toEqual([{ number: 100 }])
+  })
+})
+
+describe('discoverRelease', () => {
+  it('returns an empty release without fetching when no commit references a PR', async () => {
+    const reader: ReleaseGraphReader = {
+      readTags: () => ['v1.0.0'],
+      readCommitSubjects: () => ['chore: direct push', 'docs: fix typo'],
+      fetchPullRequests: () => {
+        throw new Error(
+          'fetchPullRequests should not be called for an empty range'
+        )
+      }
+    }
+    await expect(
+      discoverRelease({ channel: 'stable', currentRef: 'HEAD', reader })
+    ).resolves.toEqual({ prs: [], issues: [], contributors: [] })
+  })
+
+  it('fetches the deduplicated PR numbers and derives issues and contributors', async () => {
+    const pr1 = createPR({
+      number: 1,
+      title: 'feat: first',
+      participants: { nodes: [{ login: 'alice' }] },
+      closingIssuesReferences: {
+        edges: [
+          {
+            node: { number: 100, participants: { nodes: [{ login: 'bob' }] } }
+          }
+        ]
+      }
+    })
+    const pr2 = createPR({
+      number: 2,
+      title: 'fix: second',
+      participants: { nodes: [{ login: 'renovate[bot]' }] }
+    })
+    const reader: ReleaseGraphReader = {
+      readTags: () => [],
+      readCommitSubjects: () => [
+        'feat: first (#1)',
+        'chore: direct push',
+        'fix: second (#2)',
+        'docs: same PR again (#1)'
+      ],
+      fetchPullRequests: vi.fn(async () => [pr1, pr2])
+    }
+    await expect(
+      discoverRelease({ channel: 'beta', currentRef: 'HEAD', reader })
+    ).resolves.toEqual({
+      prs: [pr1, pr2],
+      issues: [{ number: 100 }],
+      contributors: ['alice', 'bob']
+    })
+    expect(reader.fetchPullRequests).toHaveBeenCalledExactlyOnceWith([1, 2])
+  })
+
+  it('resolves the channel-asymmetric range before reading commit subjects', async () => {
+    const reader: ReleaseGraphReader = {
+      readTags: () => ['v1.2.3', 'v1.3.0-beta.1', 'v1.3.0'],
+      readCommitSubjects: vi.fn(() => []),
+      fetchPullRequests: async () => []
+    }
+    // GA finalize: cumulative since the previous GA, skipping the beta.
+    await discoverRelease({ channel: 'stable', currentRef: 'v1.3.0', reader })
+    expect(reader.readCommitSubjects).toHaveBeenCalledExactlyOnceWith({
+      from: 'v1.2.3',
+      to: 'v1.3.0'
+    })
+  })
+})
+
+// An in-memory ReleaseGraphReader over a single linear history (oldest first),
+// so readTags, readCommitSubjects and fetchPullRequests stay mutually
+// consistent — letting scenario tests query the same history the two ways the
+// release phases do. A commit's optional `tag` marks the tag pointing at it;
+// readCommitSubjects mirrors `git log from..to`: the (from, to] slice, with
+// `to: 'HEAD'` reaching the end of history.
+function makeHistoryReader(history: {
+  commits: Array<{ subject: string; tag?: string }>
+  prs: PR[]
+}): ReleaseGraphReader {
+  const { commits, prs } = history
+  const indexOfTag = (tag: string) =>
+    commits.findIndex(commit => commit.tag === tag)
+  return {
+    readTags: () => commits.flatMap(({ tag }) => (tag ? [tag] : [])),
+    readCommitSubjects: range => {
+      const from = range.from ? indexOfTag(range.from) : -1
+      const to = range.to === 'HEAD' ? commits.length - 1 : indexOfTag(range.to)
+      return commits.slice(from + 1, to + 1).map(({ subject }) => subject)
+    },
+    fetchPullRequests: async numbers =>
+      prs.filter(pr => numbers.includes(pr.number))
+  }
+}
+
+describe('discoverRelease (history scenarios)', () => {
+  it('drafts (HEAD) and finalizes (published tag) the same release', async () => {
+    // The module's core promise: the drafted notes list exactly what finalize
+    // comments on. Draft runs on HEAD with the channel from the environment;
+    // finalize runs on the just-published tag (now in the tag list) with the
+    // channel re-derived from it.
+    const prs = [
+      createPR({
+        number: 2,
+        title: 'feat: new thing',
+        participants: { nodes: [{ login: 'alice' }] }
+      }),
+      createPR({
+        number: 3,
+        title: 'fix: regression',
+        closingIssuesReferences: {
+          edges: [
+            {
+              node: { number: 100, participants: { nodes: [{ login: 'bob' }] } }
+            }
+          ]
+        }
+      })
+    ]
+    const commitsBeforePublish = [
+      { subject: 'feat: previous (#1)', tag: 'v1.2.3' },
+      { subject: 'feat: new thing (#2)' },
+      { subject: 'fix: regression (#3)' }
+    ]
+    const tag = 'v1.3.0-beta.1'
+    const draft = await discoverRelease({
+      channel: 'beta',
+      currentRef: 'HEAD',
+      reader: makeHistoryReader({ commits: commitsBeforePublish, prs })
+    })
+    const finalize = await discoverRelease({
+      channel: resolveChannel(tag),
+      currentRef: tag,
+      reader: makeHistoryReader({
+        commits: [
+          // Tag is now published on the last commit (amend history for finalize)
+          ...commitsBeforePublish.slice(0, -1),
+          { subject: 'fix: regression (#3)', tag }
+        ],
+        prs
+      })
+    })
+    expect(finalize).toEqual(draft)
+    expect(draft.prs.map(pr => pr.number)).toEqual([2, 3])
+    expect(draft.issues).toEqual([{ number: 100 }])
+    expect(draft.contributors).toEqual(['alice', 'bob'])
+  })
+
+  it('GA re-announces the PRs and contributors each beta only saw as a delta', async () => {
+    // Beta contributors get thanked again at GA: each beta announces only its own
+    // commits, but the cumulative GA walks from the previous GA and so
+    // re-includes every beta's PRs and beta-only contributors.
+    const history = {
+      commits: [
+        { subject: 'fix: base (#1)', tag: 'v1.2.3' },
+        { subject: 'feat: beta feature (#2)', tag: 'v1.3.0-beta.1' },
+        { subject: 'fix: beta fix (#3)', tag: 'v1.3.0-beta.2' },
+        { subject: 'docs: final touch (#4)', tag: 'v1.3.0' }
+      ],
+      prs: [
+        createPR({
+          number: 2,
+          title: 'feat: beta feature',
+          participants: { nodes: [{ login: 'alice' }] }
+        }),
+        createPR({
+          number: 3,
+          title: 'fix: beta fix',
+          participants: { nodes: [{ login: 'bob' }] }
+        }),
+        createPR({ number: 4, title: 'docs: final touch' })
+      ]
+    }
+    const reader = makeHistoryReader(history)
+    const beta2 = await discoverRelease({
+      channel: 'beta',
+      currentRef: 'v1.3.0-beta.2',
+      reader
+    })
+    expect(beta2.prs.map(pr => pr.number)).toEqual([3])
+    expect(beta2.contributors).toEqual(['bob'])
+
+    const ga = await discoverRelease({
+      channel: 'stable',
+      currentRef: 'v1.3.0',
+      reader
+    })
+    expect(ga.prs.map(pr => pr.number)).toEqual([2, 3, 4])
+    expect(ga.contributors).toEqual(['alice', 'bob'])
+  })
+
+  it('tolerates a commit referencing a PR the reader cannot resolve', async () => {
+    // A `(#N)` can point at nothing (e.g. a transferred issue): the reader
+    // returns a subset of the requested numbers, and the release is derived
+    // from the survivors alone — no crash, no phantom entries.
+    const release = await discoverRelease({
+      channel: 'beta',
+      currentRef: 'HEAD',
+      reader: makeHistoryReader({
+        commits: [
+          { subject: 'fix: base (#1)', tag: 'v1.2.3' },
+          { subject: 'feat: real (#2)' },
+          { subject: 'chore: vanished (#999)' }
+        ],
+        prs: [
+          createPR({
+            number: 2,
+            title: 'feat: real',
+            participants: { nodes: [{ login: 'alice' }] }
+          })
+        ]
+      })
+    })
+    expect(release).toEqual({
+      prs: [expect.objectContaining({ number: 2 })],
+      issues: [],
+      contributors: ['alice']
+    })
   })
 })

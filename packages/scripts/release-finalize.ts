@@ -5,7 +5,11 @@ import { createEnv } from '@t3-oss/env-core'
 import { Octokit } from 'octokit'
 import { z } from 'zod'
 import type { Channel } from './compute-version.ts'
-import { discoverRelease, resolveChannel } from './lib/commit-graph.ts'
+import {
+  discoverRelease,
+  makeGitHubGraphReader,
+  resolveChannel
+} from './lib/commit-graph.ts'
 import { isValidSemver } from './lib/version.ts'
 
 // --- Pure core: channel presentation --------------------------------------
@@ -221,7 +225,8 @@ async function main(): Promise<void> {
   // shared engine resolves the identical set the draft notes listed.
   const { prs, issues } = await discoverRelease({
     channel: info.channel,
-    currentRef: env.TAG
+    currentRef: env.TAG,
+    reader: makeGitHubGraphReader(env.GITHUB_TOKEN)
   })
   const targets = collectTargets(prs, issues)
   console.log(

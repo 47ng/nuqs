@@ -8,8 +8,9 @@
 // always list exactly the issues/PRs finalize comments on.
 //
 // Pure core (range resolution, PR-number extraction, channel detection,
-// contributor collection) is unit-tested; the IO shell (git log, octokit
-// GraphQL) is thin glue over it and untested by design.
+// contributor collection) is unit-tested, and `discoverRelease` is tested
+// through an injected `ReleaseGraphReader`; the production reader (git log,
+// GitHub GraphQL) is thin glue and untested by design.
 
 import { z } from 'zod'
 import type { Channel } from '../compute-version.ts'
@@ -153,11 +154,30 @@ export type ReleaseData = {
   contributors: string[]
 }
 
+// --- Reader port -----------------------------------------------------------
+
+// The IO surface `discoverRelease` consumes. Production uses
+// `makeGitHubGraphReader` (git + GitHub GraphQL); tests inject an in-memory
+// reader built from plain data.
+export type ReleaseGraphReader = {
+  readTags: () => string[]
+  readCommitSubjects: (range: Range) => string[]
+  fetchPullRequests: (numbers: number[]) => Promise<PR[]>
+}
+
+export function makeGitHubGraphReader(githubToken: string): ReleaseGraphReader {
+  return {
+    readTags: readAllTags,
+    readCommitSubjects,
+    fetchPullRequests: numbers => fetchPullRequests(numbers, githubToken)
+  }
+}
+
 // --- IO shell (untested by design) ----------------------------------------
 
 // Commit subjects (first line, %s) for a range. Subjects reach the parser only
 // through git's stdout (no shell), so a crafted subject cannot inject commands.
-function readSubjects(range: Range): string[] {
+function readCommitSubjects(range: Range): string[] {
   const spec = range.from ? `${range.from}..${range.to}` : range.to
   return git(['log', spec, '--format=%s'])
     .split('\n')
@@ -174,11 +194,10 @@ const responseSchema = z.object({
 // One batched, aliased GraphQL query fetching every PR (and its closing issues
 // + participants) by number. Squash-merge means PR numbers come straight from
 // commit subjects, so no per-commit `associatedPullRequests` lookup is needed.
-async function fetchPullRequests(prNumbers: number[]): Promise<PR[]> {
-  const token = process.env.GITHUB_TOKEN
-  if (!token) {
-    throw new Error('GITHUB_TOKEN environment variable is required')
-  }
+async function fetchPullRequests(
+  prNumbers: number[],
+  githubToken: string
+): Promise<PR[]> {
   const aliases = prNumbers
     .map(
       number => `
@@ -205,7 +224,7 @@ async function fetchPullRequests(prNumbers: number[]): Promise<PR[]> {
     {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${token}`,
+        Authorization: `Bearer ${githubToken}`,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({ query })
@@ -242,13 +261,15 @@ export function collectIssues(prs: PR[]): Array<{ number: number }> {
 export async function discoverRelease(args: {
   channel: Channel
   currentRef: string
+  reader: ReleaseGraphReader
 }): Promise<ReleaseData> {
-  const range = resolveRange({ ...args, tags: readAllTags() })
-  const prNumbers = extractPRNumbers(readSubjects(range))
+  const { reader } = args
+  const range = resolveRange({ ...args, tags: reader.readTags() })
+  const prNumbers = extractPRNumbers(reader.readCommitSubjects(range))
   if (prNumbers.length === 0) {
     return { prs: [], issues: [], contributors: [] }
   }
-  const prs = await fetchPullRequests(prNumbers)
+  const prs = await reader.fetchPullRequests(prNumbers)
   return {
     prs,
     issues: collectIssues(prs),
