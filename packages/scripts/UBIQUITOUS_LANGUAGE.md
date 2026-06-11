@@ -1,24 +1,24 @@
-# Ubiquitous Language — Release pipeline
+# Ubiquitous Language for the Release pipeline
 
 Canonical terms for the release-automation scripts (version computation, release
 notes, finalize). Use these words exactly, in code and prose. When a term has a
-single source of truth, that source is authoritative — do not read the concept
+single source of truth, that source is authoritative: do not read the concept
 from anywhere else.
 
 ## Core invariant
 
 ```
 type              → category      (type section: Features / Bug fixes / …)
-breaking          → Breaking-changes section (additive) + ⚠️ decoration in the type section
+breaking          → Breaking-changes section + ⚠️ decoration in the type section
 type + breaking   → bump          (breaking ? major : bumpForType(type))
-description       ← PR title       (free prose, reword-friendly)
+description       ← PR title      (free prose, reword-friendly)
 ```
 
-A change's **type** and **breaking** flag — both immutable, both from the squash
-commit — are the single source of truth for the changelog **category**/sections
+A change's **type** and **breaking** flag (immutable, from the squash
+commit) are the single source of truth for the changelog **category**/sections
 and the version **bump**. Because every derived value reads only those two
-tokens, the bump and the notes can never disagree. The pull request contributes
-**description** and people (author, participants) only — it never classifies.
+tokens, the bump and the notes are in sync. The pull request contributes
+**description** and people (author, participants) only.
 
 ## Terms
 
@@ -27,14 +27,10 @@ tokens, the bump and the notes can never disagree. The pull request contributes
 A group of **changes** published together under one version/tag (one GitHub
 Release, one git tag, one npm publish).
 
-> False friend: the `changesets` project reserves `Release` for _a single
-> package's bump_ and calls the batch a `ReleasePlan`. We use the GitHub/npm
-> sense (the batch). We do not depend on changesets; the clash is theirs.
-
 ### change
 
-The atomic unit of a release: one squash-merge commit joined to its pull
-request. A change carries:
+The atomic unit of a release: one squash-merge commit associated with a pull request.
+A change carries:
 
 | Field           | Source                                                      |
 | --------------- | ----------------------------------------------------------- |
