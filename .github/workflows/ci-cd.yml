@@ -52,7 +52,7 @@ jobs:
       - name: Check source code formatting
         run: |
           set +e # Allow Prettier to fail, but capture the error code
-          output=$(./node_modules/.bin/prettier --list-different ./packages/nuqs 2>&1)
+          output=$(pnpm run --silent lint:prettier)
           exit_code=$?
           set -e
           if [ $exit_code -ne 0 ]; then

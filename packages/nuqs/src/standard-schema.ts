@@ -42,23 +42,16 @@ export function createStandardSchemaV1<
       vendor: 'nuqs',
       validate(input) {
         try {
-          const url = serialize(input as any)
-          const value = load(url, { strict: true })
+          const value = load(serialize(input as any), { strict: true })
           if (partialOutput) {
             for (const key in value) {
-              if (!(key in (input as any))) {
-                delete value[key]
-              }
+              if (!(key in (input as any))) delete value[key]
             }
           }
           return { value }
-        } catch (error) {
+        } catch (e) {
           return {
-            issues: [
-              {
-                message: error instanceof Error ? error.message : String(error)
-              }
-            ]
+            issues: [{ message: e instanceof Error ? e.message : String(e) }]
           }
         }
       }
