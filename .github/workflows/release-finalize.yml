@@ -25,9 +25,12 @@ jobs:
   finalize:
     name: Comment + label impacted issues/PRs
     runs-on: ubuntu-24.04-arm
-    # Never read `contents`, never mint an id-token: finalize only writes to
-    # issues/PRs. The npm publish authorization lives in release-draft.yml.
+    # Least privilege: contents:read is checkout's documented minimum (the
+    # `fetch-depth: 0` clone needs it; only public-repo anonymous read masks
+    # its absence). Never contents:write, never an id-token — finalize only
+    # comments/labels. The npm publish authorization lives in release-draft.yml.
     permissions:
+      contents: read
       issues: write
       pull-requests: write
     env:
