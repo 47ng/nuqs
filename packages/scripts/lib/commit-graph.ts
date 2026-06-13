@@ -187,7 +187,7 @@ export type IssueRef = { readonly number: number }
 // In both, the `type`/`breaking` classification comes from the commit message,
 // never a PR title. Finalize comments only on `squashedPR` changes (a direct
 // commit has no PR/issue).
-export type PRChange = {
+export type SquashedPRChange = {
   readonly source: 'squashedPR'
   readonly prNumber: number
   readonly type: string | undefined
@@ -196,7 +196,7 @@ export type PRChange = {
   readonly author: string | null
   readonly closingIssues: readonly IssueRef[]
 }
-export type CommitChange = {
+export type DirectCommitChange = {
   readonly source: 'directCommit'
   readonly sha: string
   readonly type: string | undefined
@@ -204,7 +204,7 @@ export type CommitChange = {
   readonly description: string
   readonly author: string
 }
-export type Change = PRChange | CommitChange
+export type Change = SquashedPRChange | DirectCommitChange
 
 // The notes-path output: the full `changes` driving the changelog, plus the
 // release `contributors` feeding the "Thanks" section.
@@ -429,7 +429,7 @@ export function collectIssues(prs: WithClosingIssues[]): IssueRef[] {
 // `BREAKING CHANGE:` body footer); `prNumber` is the squash `(#N)` suffix, or
 // null for a direct commit. The notes path enriches a PR-linked entry with its
 // fetched pull-request fields; a direct entry projects straight to a
-// `CommitChange`. `sha` is the full hash, sliced to 8 only when rendered.
+// `DirectCommitChange`. `sha` is the full hash, sliced to 8 only when rendered.
 export type ParsedCommit = ParsedSubject & {
   readonly sha: string
   readonly author: string
@@ -480,7 +480,10 @@ function parseCommits(records: CommitRecord[]): ParsedCommit[] {
 // Project a fetched PR into a PR-sourced change: `type`/`breaking` from the
 // squash commit (via `byNumber`), `description` from the PR title as prose (its
 // type prefix stripped for display, never classified).
-function toPRChange(pr: PR, byNumber: Map<number, ParsedCommit>): PRChange {
+function toSquashedPRChange(
+  pr: PR,
+  byNumber: Map<number, ParsedCommit>
+): SquashedPRChange {
   const parsed = byNumber.get(pr.number)
   if (parsed === undefined) {
     // Fetched PRs are exactly the keys of `byNumber`, so a miss is an invariant
@@ -505,7 +508,7 @@ function toPRChange(pr: PR, byNumber: Map<number, ParsedCommit>): PRChange {
 
 // Project a direct (no-PR) parsed commit into a commit-sourced change: identity
 // is the 8-char SHA, prose is the commit subject, author is the git author name.
-function toCommitChange(commit: ParsedCommit): CommitChange {
+function toDirectCommitChange(commit: ParsedCommit): DirectCommitChange {
   return {
     source: 'directCommit',
     sha: commit.sha.slice(0, 8),
@@ -550,9 +553,9 @@ export async function discoverChanges(args: {
   const prNumbers = [...byNumber.keys()]
   const prs =
     prNumbers.length > 0 ? await args.reader.fetchChangeDetails(prNumbers) : []
-  const prChanges = prs.map(pr => toPRChange(pr, byNumber))
+  const prChanges = prs.map(pr => toSquashedPRChange(pr, byNumber))
   // git log is newest-first; the notes list direct commits oldest-first.
-  const commitChanges = directCommits.reverse().map(toCommitChange)
+  const commitChanges = directCommits.reverse().map(toDirectCommitChange)
   return {
     changes: [...prChanges, ...commitChanges],
     contributors: collectContributors(prs)

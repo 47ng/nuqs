@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest'
-import type { Change, CommitChange, PRChange } from './lib/commit-graph'
+import type {
+  Change,
+  DirectCommitChange,
+  SquashedPRChange
+} from './lib/commit-graph'
 import {
   breakingChanges,
   formatChangeLine,
@@ -12,8 +16,8 @@ import {
 
 // Minimal PR-sourced change for testing.
 function createChange(
-  overrides: Partial<PRChange> & { prNumber: number }
-): PRChange {
+  overrides: Partial<SquashedPRChange> & { prNumber: number }
+): SquashedPRChange {
   return {
     source: 'squashedPR',
     type: undefined,
@@ -26,9 +30,9 @@ function createChange(
 }
 
 // Minimal direct-commit change for testing.
-function createCommitChange(
-  overrides: Partial<CommitChange> & { sha: string }
-): CommitChange {
+function createDirectCommitChange(
+  overrides: Partial<DirectCommitChange> & { sha: string }
+): DirectCommitChange {
   return {
     source: 'directCommit',
     type: undefined,
@@ -92,12 +96,12 @@ describe('groupChangesByCategory', () => {
     // Discovery supplies commit changes oldest-first; grouping keeps that order
     // (stable sort) and places them after the PR changes.
     const changes: Change[] = [
-      createCommitChange({
+      createDirectCommitChange({
         sha: 'older111',
         type: 'feat',
         description: 'older'
       }),
-      createCommitChange({
+      createDirectCommitChange({
         sha: 'newer222',
         type: 'feat',
         description: 'newer'
@@ -301,7 +305,7 @@ describe('formatChangeLine', () => {
   }
 
   it('renders a direct-commit change with its SHA and author (no @, no closes)', () => {
-    const commit = createCommitChange({
+    const commit = createDirectCommitChange({
       sha: 'abcd1234',
       description: 'hot patch',
       author: 'Jane Doe',
@@ -314,7 +318,7 @@ describe('formatChangeLine', () => {
   })
 
   it('decorates a breaking direct-commit change in its type section', () => {
-    const commit = createCommitChange({
+    const commit = createDirectCommitChange({
       sha: 'abcd1234',
       description: 'remove API',
       author: 'Jane Doe',
