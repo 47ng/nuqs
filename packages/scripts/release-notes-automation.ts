@@ -35,8 +35,9 @@ function categoryForType(type: string | undefined): Category {
 // direct-commit changes in their given order (discovery supplies them
 // oldest-first). Relies on a stable sort to preserve that commit order.
 function compareChanges(a: Change, b: Change): number {
-  if (a.source !== b.source) return a.source === 'pr' ? -1 : 1
-  if (a.source === 'pr' && b.source === 'pr') return a.prNumber - b.prNumber
+  if (a.source !== b.source) return a.source === 'squashedPR' ? -1 : 1
+  if (a.source === 'squashedPR' && b.source === 'squashedPR')
+    return a.prNumber - b.prNumber
   return 0
 }
 
@@ -86,9 +87,10 @@ export function formatChangeLine(
   change: Change,
   options: { decorateBreaking?: boolean } = {}
 ): string {
-  const ref = change.source === 'pr' ? `#${change.prNumber}` : change.sha
+  const ref =
+    change.source === 'squashedPR' ? `#${change.prNumber}` : change.sha
   const author =
-    change.source === 'pr'
+    change.source === 'squashedPR'
       ? change.author
         ? `, by @${change.author}`
         : ''
@@ -96,7 +98,9 @@ export function formatChangeLine(
         ? `, by ${change.author}`
         : ''
   const closes =
-    change.source === 'pr' ? formatClosingIssues(change.closingIssues) : ''
+    change.source === 'squashedPR'
+      ? formatClosingIssues(change.closingIssues)
+      : ''
   const marker =
     options.decorateBreaking && change.breaking ? ' - ⚠️ breaking change' : ''
   return `- ${ref} - ${formatTitle(change.description)}${author}${closes}${marker}`

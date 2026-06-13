@@ -182,23 +182,24 @@ export type Classification = {
 
 // A change: the atomic unit of a release. It is sourced either from a squashed
 // pull request (the common case) or from a direct commit with no PR:
-//   - `pr`     → identity is the PR number, `description` is the PR title as
-//                prose, `author` is the GitHub login, and it carries closing
-//                issues. The notes render it as `#123 - …, by @login`.
-//   - `commit` → identity is the 8-char commit SHA, `description` is the commit
-//                subject as prose, `author` is the git author name. The notes
-//                render it as `abcd1234 - …, by Name`.
+//   - `squashedPR`   → identity is the PR number, `description` is the PR title
+//                       as prose, `author` is the GitHub login, and it carries
+//                       closing issues. Rendered as `#123 - …, by @login`.
+//   - `directCommit` → identity is the 8-char commit SHA, `description` is the
+//                       commit subject as prose, `author` is the git author
+//                       name. Rendered as `abcd1234 - …, by Name`.
 // In both, the classification (`type`/`breaking`) comes from the commit, never a
-// PR title. Finalize comments only on `pr` changes (a commit has no PR/issue).
+// PR title. Finalize comments only on `squashedPR` changes (a direct commit has
+// no PR/issue).
 export type PRChange = Classification & {
-  readonly source: 'pr'
+  readonly source: 'squashedPR'
   readonly prNumber: number
   readonly description: string
   readonly author: string | null
   readonly closingIssues: readonly IssueRef[]
 }
 export type CommitChange = Classification & {
-  readonly source: 'commit'
+  readonly source: 'directCommit'
   readonly sha: string
   readonly description: string
   readonly author: string
@@ -451,7 +452,7 @@ function changeRefs(records: CommitRecord[]): ReleaseRefs {
       // A direct commit with no PR: identity is the SHA, prose is the subject,
       // author is the git author name.
       commitChanges.push({
-        source: 'commit',
+        source: 'directCommit',
         sha: sha.slice(0, 8),
         type,
         breaking,
@@ -491,7 +492,7 @@ function toPRChange(pr: PR, byPR: Map<number, Classification>): PRChange {
     )
   }
   return {
-    source: 'pr',
+    source: 'squashedPR',
     prNumber: pr.number,
     type: classification.type,
     breaking: classification.breaking,

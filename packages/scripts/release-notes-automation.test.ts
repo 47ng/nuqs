@@ -15,7 +15,7 @@ function createChange(
   overrides: Partial<PRChange> & { prNumber: number }
 ): PRChange {
   return {
-    source: 'pr',
+    source: 'squashedPR',
     type: undefined,
     breaking: false,
     description: '',
@@ -30,7 +30,7 @@ function createCommitChange(
   overrides: Partial<CommitChange> & { sha: string }
 ): CommitChange {
   return {
-    source: 'commit',
+    source: 'directCommit',
     type: undefined,
     breaking: false,
     description: '',
@@ -41,7 +41,7 @@ function createCommitChange(
 
 // PR numbers of the PR-sourced changes (commit-sourced have none).
 const prNums = (changes: Change[]): number[] =>
-  changes.flatMap(c => (c.source === 'pr' ? [c.prNumber] : []))
+  changes.flatMap(c => (c.source === 'squashedPR' ? [c.prNumber] : []))
 
 describe('groupChangesByCategory', () => {
   it('categorises by the squash commit type, never the (reworded) PR description', () => {
@@ -106,7 +106,9 @@ describe('groupChangesByCategory', () => {
     ]
     const result = groupChangesByCategory(changes)
     expect(
-      result.Features.map(c => (c.source === 'pr' ? `#${c.prNumber}` : c.sha))
+      result.Features.map(c =>
+        c.source === 'squashedPR' ? `#${c.prNumber}` : c.sha
+      )
     ).toEqual(['#5', 'older111', 'newer222'])
   })
 
@@ -143,7 +145,7 @@ describe('groupChangesByCategory', () => {
 
     const result = groupChangesByCategory(changes)
     const change = result['Bug fixes'][0]!
-    expect(change.source === 'pr' ? change.closingIssues : []).toEqual([
+    expect(change.source === 'squashedPR' ? change.closingIssues : []).toEqual([
       { number: 100 },
       { number: 101 }
     ])
@@ -289,7 +291,7 @@ describe('formatTitle', () => {
 
 describe('formatChangeLine', () => {
   const line: Change = {
-    source: 'pr',
+    source: 'squashedPR',
     prNumber: 123,
     type: 'feat',
     description: 'add `useQueryState`',

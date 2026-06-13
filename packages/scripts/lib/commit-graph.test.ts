@@ -45,7 +45,7 @@ function records(...messages: string[]): CommitRecord[] {
 // The PR numbers of the PR-sourced changes, in order (commit-sourced changes
 // have no number).
 function prNumbersOf(changes: Change[]): number[] {
-  return changes.flatMap(c => (c.source === 'pr' ? [c.prNumber] : []))
+  return changes.flatMap(c => (c.source === 'squashedPR' ? [c.prNumber] : []))
 }
 
 describe('resolveChannel', () => {
@@ -478,7 +478,7 @@ describe('discoverChanges', () => {
     ).resolves.toEqual({
       changes: [
         {
-          source: 'commit',
+          source: 'directCommit',
           sha: 'eeee2222',
           type: 'chore',
           breaking: false,
@@ -486,7 +486,7 @@ describe('discoverChanges', () => {
           author: 'Bob Ops'
         },
         {
-          source: 'commit',
+          source: 'directCommit',
           sha: 'ffff1111',
           type: 'fix',
           breaking: false,
@@ -530,7 +530,7 @@ describe('discoverChanges', () => {
     ).resolves.toEqual({
       changes: [
         {
-          source: 'pr',
+          source: 'squashedPR',
           prNumber: 1,
           type: 'feat',
           breaking: false,
@@ -539,7 +539,7 @@ describe('discoverChanges', () => {
           closingIssues: [{ number: 100 }]
         },
         {
-          source: 'pr',
+          source: 'squashedPR',
           prNumber: 2,
           type: 'fix',
           breaking: false,
@@ -576,7 +576,7 @@ describe('discoverChanges', () => {
     })
     // PR #7 leads; then the two direct commits oldest-first (fix before chore).
     expect(
-      changes.map(c => (c.source === 'pr' ? `#${c.prNumber}` : c.sha))
+      changes.map(c => (c.source === 'squashedPR' ? `#${c.prNumber}` : c.sha))
     ).toEqual(['#7', 'aaaa1111', 'cccc3333'])
   })
 
@@ -600,7 +600,7 @@ describe('discoverChanges', () => {
     ).resolves.toEqual({
       changes: [
         {
-          source: 'pr',
+          source: 'squashedPR',
           prNumber: 417,
           type: 'fix',
           breaking: false,
@@ -756,7 +756,7 @@ function makeHistoryReader(history: {
 function issuesOf(changes: Change[]) {
   return collectIssues(
     changes.flatMap(change =>
-      change.source === 'pr'
+      change.source === 'squashedPR'
         ? [
             {
               closingIssuesReferences: {
