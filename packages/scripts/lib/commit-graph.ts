@@ -1,10 +1,11 @@
 // Shared commit-graph discovery engine.
 //
 // The single source of truth both release phases consume, split per phase over
-// one shared range → PR-number core (`changeRefsInRange`):
+// one shared range → refs core (`refsInRange`):
 //   - Phase 1 (draft notes, `release-notes-automation.ts`) → `discoverChanges`:
 //     fetches the full pull-request fields (title, author, closing issues,
-//     participants) the changelog lines and the Thanks section render.
+//     participants) the changelog lines and the Thanks section render, and adds
+//     the direct (no-PR) commits, which need no fetch.
 //   - Phase 2 (finalize comments, `release-finalize.ts`) → `discoverTargets`:
 //     fetches only each pull request's closing issue numbers (the comment
 //     targets), not the title/author/participants it would never render.
@@ -155,19 +156,41 @@ export const prClosingIssuesSchema = z.object({
 
 export type PRClosingIssues = z.infer<typeof prClosingIssuesSchema>
 
-// A change: the atomic unit of a release, one squash commit joined to its PR.
-// `type` comes from the squash commit subject (the classification authority);
-// `description` is the PR title as prose (its type prefix stripped for display,
-// never classified). The notes phase renders changes; finalize needs only
-// `prNumber`.
-export type Change = {
-  prNumber: number
-  type: string | undefined
-  breaking: boolean
-  description: string
-  author: string | null
-  closingIssues: Array<{ number: number }>
+// A closing-issue reference: the GitHub issue number a PR closes.
+export type IssueRef = { readonly number: number }
+
+// The conventional classification of a change: its `type` and whether it is
+// `breaking`. Both always come from the commit message, the classification
+// authority — a PR title is never consulted.
+export type Classification = {
+  readonly type: string | undefined
+  readonly breaking: boolean
 }
+
+// A change: the atomic unit of a release. It is sourced either from a squashed
+// pull request (the common case) or from a direct commit with no PR:
+//   - `pr`     → identity is the PR number, `description` is the PR title as
+//                prose, `author` is the GitHub login, and it carries closing
+//                issues. The notes render it as `#123 - …, by @login`.
+//   - `commit` → identity is the 8-char commit SHA, `description` is the commit
+//                subject as prose, `author` is the git committer name. The notes
+//                render it as `abcd1234 - …, by Name`.
+// In both, the classification (`type`/`breaking`) comes from the commit, never a
+// PR title. Finalize comments only on `pr` changes (a commit has no PR/issue).
+export type PRChange = Classification & {
+  readonly source: 'pr'
+  readonly prNumber: number
+  readonly description: string
+  readonly author: string | null
+  readonly closingIssues: readonly IssueRef[]
+}
+export type CommitChange = Classification & {
+  readonly source: 'commit'
+  readonly sha: string
+  readonly description: string
+  readonly author: string
+}
+export type Change = PRChange | CommitChange
 
 // The notes-path output: the full `changes` driving the changelog, plus the
 // release `contributors` feeding the "Thanks" section.
@@ -181,10 +204,19 @@ export type ReleaseChanges = {
 // comments on both.
 export type ReleaseTargets = {
   changes: Array<{ prNumber: number }>
-  issues: Array<{ number: number }>
+  issues: IssueRef[]
 }
 
 // --- Reader port -----------------------------------------------------------
+
+// One commit as read from git: its SHA, committer name (no email), and full
+// message. SHA and committer hydrate a direct (no-PR) change; the message yields
+// the classification and, for direct changes, the description.
+export type CommitRecord = {
+  sha: string
+  committer: string
+  message: string
+}
 
 // The IO surface both discovery paths consume. Production uses
 // `makeGitHubGraphReader` (git + GitHub GraphQL); tests inject an in-memory
@@ -194,7 +226,7 @@ export type ReleaseTargets = {
 // issue numbers finalize comments on.
 export type ReleaseGraphReader = {
   readTags: () => string[]
-  readCommits: (range: Range) => string[]
+  readCommits: (range: Range) => CommitRecord[]
   fetchChangeDetails: (numbers: number[]) => Promise<PR[]>
   fetchClosingIssues: (numbers: number[]) => Promise<PRClosingIssues[]>
 }
@@ -210,24 +242,37 @@ export function makeGitHubGraphReader(githubToken: string): ReleaseGraphReader {
 
 // --- IO shell (untested by design) ----------------------------------------
 
-// Full commit messages (subject + body, %B) for a range, one record per commit.
-// The body is needed so a `BREAKING CHANGE:` footer (which lives below the
-// subject) is detected. Records are split on \x1e, which cannot occur in a
-// message. Messages reach the parser only through git's stdout (no shell), so a
-// crafted message cannot inject commands.
-function readCommits(range: Range): string[] {
+// One record per commit in the range: SHA (%H), committer name (%cn), and full
+// message (subject + body, %B), field-separated by \x1f and record-separated by
+// \x1e (neither can occur in the fields). The body is needed so a `BREAKING
+// CHANGE:` footer (below the subject) is detected; the SHA and committer hydrate
+// direct (no-PR) changes. Fields reach the parser only through git's stdout (no
+// shell), so a crafted message cannot inject commands.
+function readCommits(range: Range): CommitRecord[] {
   const spec = range.from ? `${range.from}..${range.to}` : range.to
-  return git(['log', spec, '--format=%B%x1e'])
+  return git(['log', spec, '--format=%H%x1f%cn%x1f%B%x1e'])
     .split('\x1e')
     .map(record => record.trim())
     .filter(Boolean)
+    .map(record => {
+      const [sha = '', committer = '', message = ''] = record.split('\x1f')
+      return { sha, committer, message }
+    })
 }
 
 // One batched, aliased GraphQL query selecting `selection` on every PR by
 // number, validated per node by `nodeSchema`. Squash-merge means PR numbers
 // come straight from commit subjects, so no per-commit `associatedPullRequests`
 // lookup is needed. `fnLabel` only tags the request URL for observability.
-async function fetchPRNodes<T>(args: {
+//
+// A null node is dropped only when it is unaccompanied by a GraphQL error: that
+// is the "PR resolved to nothing" case (transferred/deleted issue). GitHub
+// returns HTTP 200 with a top-level `errors` array for partial failures (rate
+// limit, timeout, internal error) while nulling the affected alias — so dropping
+// every null blindly would silently lose a real PR from both the notes and the
+// finalize comments. We therefore fail loud when any error is present, and warn
+// on the (genuine) drops so they leave a trace.
+export async function fetchPRNodes<T extends { number: number }>(args: {
   prNumbers: number[]
   githubToken: string
   fnLabel: string
@@ -235,6 +280,7 @@ async function fetchPRNodes<T>(args: {
   nodeSchema: z.ZodType<T>
 }): Promise<T[]> {
   const { prNumbers, githubToken, fnLabel, selection, nodeSchema } = args
+  if (prNumbers.length === 0) return []
   const aliases = prNumbers
     .map(
       number => `
@@ -255,20 +301,40 @@ async function fetchPRNodes<T>(args: {
   })
   if (!response.ok) {
     throw new Error(
-      `GitHub API error: ${response.status} ${response.statusText}`
+      `${fnLabel}: GitHub API error ${response.status} ${response.statusText} for PRs [${prNumbers.join(', ')}]`
     )
   }
-  const responseSchema = z.object({
+  const envelopeSchema = z.object({
     data: z.object({
       repository: z.record(z.string(), nodeSchema.nullable())
-    })
+    }),
+    errors: z.array(z.object({ message: z.string() })).optional()
   })
-  const parsed = responseSchema.parse(await response.json())
-  // A null node means the PR number resolved to nothing (e.g. a transferred
-  // issue); drop it rather than failing the whole release.
-  return Object.values(parsed.data.repository).filter(
+  const envelope = envelopeSchema.safeParse(await response.json())
+  if (!envelope.success) {
+    throw new Error(
+      `${fnLabel}: unexpected GraphQL response shape for PRs [${prNumbers.join(', ')}]: ${envelope.error.message}`
+    )
+  }
+  const { data, errors } = envelope.data
+  if (errors && errors.length > 0) {
+    // A null node here is a fetch failure, not a nonexistent PR — dropping it
+    // would silently lose a real change. Fail the release instead.
+    throw new Error(
+      `${fnLabel}: GraphQL errors for PRs [${prNumbers.join(', ')}]: ${errors.map(e => e.message).join('; ')}`
+    )
+  }
+  const resolved = Object.values(data.repository).filter(
     (node): node is T => node !== null
   )
+  if (resolved.length < prNumbers.length) {
+    const returned = new Set(resolved.map(node => node.number))
+    const dropped = prNumbers.filter(number => !returned.has(number))
+    console.warn(
+      `${fnLabel}: ${dropped.length} PR(s) resolved to nothing (transferred/deleted), dropped: ${dropped.map(n => `#${n}`).join(', ')}`
+    )
+  }
+  return resolved
 }
 
 // Notes path: every PR with its title, author, closing issues, and participants
@@ -325,14 +391,12 @@ function fetchClosingIssues(
 // The closing-issues facet shared by `PR` and `PRClosingIssues`, so
 // `collectIssues` serves both discovery paths from the same field.
 type WithClosingIssues = {
-  closingIssuesReferences: { edges: Array<{ node: { number: number } }> }
+  closingIssuesReferences: { edges: Array<{ node: IssueRef }> }
 }
 
 // Deduplicate closing issues across all PRs (a single issue can be closed by
 // more than one PR across the range).
-export function collectIssues(
-  prs: WithClosingIssues[]
-): Array<{ number: number }> {
+export function collectIssues(prs: WithClosingIssues[]): IssueRef[] {
   const numbers = new Set<number>()
   for (const pr of prs) {
     for (const { node } of pr.closingIssuesReferences.edges) {
@@ -342,41 +406,79 @@ export function collectIssues(
   return [...numbers].map(number => ({ number }))
 }
 
-// The squash commit's classification for a PR: its conventional `type` and
-// whether it is `breaking`. Both come from the commit message, the
-// classification authority — the PR title is never consulted.
-type Classification = { type: string | undefined; breaking: boolean }
-
 // Map each PR number appearing in the range to its squash commit's
 // classification, first-seen winning (a `(#N)` may recur across commits; the
 // first occurrence is authoritative). `extractPRNumber` reads the first line
 // (the squash suffix), `parseCommit` the whole message — so a break flagged only
 // by a `BREAKING CHANGE:` body footer (no subject `!`) is still detected.
-function changeTypeByPR(records: string[]): Map<number, Classification> {
-  const types = new Map<number, Classification>()
-  for (const record of records) {
-    const firstLine = record.split('\n')[0] ?? ''
-    const number = extractPRNumber(firstLine)
-    if (number !== null && !types.has(number)) {
-      const { type, breaking } = parseCommit(record)
-      types.set(number, { type, breaking })
-    }
-  }
-  return types
+// The classification + provenance both phases derive from the commit messages
+// alone (no GraphQL): the per-PR classification of every squashed pull request,
+// plus the fully-built changes for every direct (no-PR) commit.
+type ReleaseRefs = {
+  prClassifications: Map<number, Classification>
+  commitChanges: CommitChange[]
 }
 
-// Project a fetched PR into a change: `type`/`breaking` from the squash commit
-// (via `typeByPR`), `description` from the PR title as prose (its type prefix
+// Split the range's commits into per-PR classifications (to hydrate from the
+// GitHub side) and complete direct-commit changes (sourced from the commit
+// itself). `extractPRNumber` reads the first line (the squash suffix);
+// `parseCommit` the whole message, so a break flagged only by a `BREAKING
+// CHANGE:` body footer is still detected.
+function changeRefs(records: CommitRecord[]): ReleaseRefs {
+  const prClassifications = new Map<number, Classification>()
+  const commitChanges: CommitChange[] = []
+  for (const { sha, committer, message } of records) {
+    const firstLine = message.split('\n')[0] ?? ''
+    const number = extractPRNumber(firstLine)
+    const { type, breaking, description } = parseCommit(message)
+    if (number === null) {
+      // A direct commit with no PR: identity is the SHA, prose is the subject,
+      // author is the git committer.
+      commitChanges.push({
+        source: 'commit',
+        sha: sha.slice(0, 8),
+        type,
+        breaking,
+        description,
+        author: committer
+      })
+      continue
+    }
+    const existing = prClassifications.get(number)
+    if (existing === undefined) {
+      prClassifications.set(number, { type, breaking })
+    } else if (existing.type !== type || existing.breaking !== breaking) {
+      // A `(#N)` recurring with a divergent classification (rare under
+      // squash-merge, where one PR == one commit). Keep the first-seen
+      // (authoritative) entry, but warn so the conflict is visible.
+      console.warn(
+        `commit-graph: PR #${number} recurs with a conflicting classification; keeping the first-seen one.`
+      )
+    }
+  }
+  // git log is newest-first; the notes list direct commits oldest-first.
+  commitChanges.reverse()
+  return { prClassifications, commitChanges }
+}
+
+// Project a fetched PR into a PR-sourced change: classification from the squash
+// commit (via `byPR`), `description` from the PR title as prose (its type prefix
 // stripped for display, never classified).
-function toChange(pr: PR, typeByPR: Map<number, Classification>): Change {
-  const { type, breaking } = typeByPR.get(pr.number) ?? {
-    type: undefined,
-    breaking: false
+function toPRChange(pr: PR, byPR: Map<number, Classification>): PRChange {
+  const classification = byPR.get(pr.number)
+  if (classification === undefined) {
+    // Fetched PRs are exactly the keys of `byPR`, so a miss is an invariant
+    // violation, not a data condition — fail loud rather than silently
+    // classifying the change as untyped (which would drop its bump/category).
+    throw new Error(
+      `commit-graph: no squash-commit classification for PR #${pr.number}`
+    )
   }
   return {
+    source: 'pr',
     prNumber: pr.number,
-    type,
-    breaking,
+    type: classification.type,
+    breaking: classification.breaking,
     description: parseSubject(pr.title).description,
     author: pr.author?.login ?? null,
     closingIssues: pr.closingIssuesReferences.edges.map(edge => ({
@@ -385,72 +487,58 @@ function toChange(pr: PR, typeByPR: Map<number, Classification>): Change {
   }
 }
 
-// A change reference: the identity + classification both phases derive for free
-// from the squash commit messages alone (no GraphQL). The shared discovery core.
-export type ChangeRef = {
-  prNumber: number
-  type: string | undefined
-  breaking: boolean
-}
-
-// The shared range → PR-number core both phases build on. Resolve the
-// channel-asymmetric range, read its commit messages (the type authority), and
-// project each referenced PR to its `{ prNumber, type, breaking }`. This is the
-// SSOT: the identical PR set feeds whichever phase-specific fetch follows.
-export function changeRefsInRange(args: {
+// The shared range → refs core both phases build on. Resolve the
+// channel-asymmetric range, read its commits (the classification authority), and
+// split them into per-PR classifications and complete direct-commit changes. The
+// PR set (the map's keys) is the SSOT both phase-specific fetches key off.
+export function refsInRange(args: {
   channel: Channel
   currentRef: string
   reader: ReleaseGraphReader
-}): ChangeRef[] {
+}): ReleaseRefs {
   const { reader } = args
   const range = resolveRange({ ...args, tags: reader.readTags() })
-  const typeByPR = changeTypeByPR(reader.readCommits(range))
-  return [...typeByPR].map(([prNumber, { type, breaking }]) => ({
-    prNumber,
-    type,
-    breaking
-  }))
+  return changeRefs(reader.readCommits(range))
 }
 
 // Notes-path discovery: the shared core + `fetchChangeDetails`, projected into
-// the full change aggregate (type from the commit, the rest from the PR) plus
-// the release contributors. `fetchClosingIssues` is never touched.
+// the full change list — the PR-sourced changes (classification from the commit,
+// the rest hydrated from the PR) followed by the direct-commit changes — plus the
+// release contributors (from the PRs only; commit committers are not GitHub
+// handles). `fetchClosingIssues` is never touched.
 export async function discoverChanges(args: {
   channel: Channel
   currentRef: string
   reader: ReleaseGraphReader
 }): Promise<ReleaseChanges> {
-  const { reader } = args
-  const refs = changeRefsInRange(args)
-  if (refs.length === 0) {
-    return { changes: [], contributors: [] }
-  }
-  const typeByPR = new Map(
-    refs.map(({ prNumber, type, breaking }) => [prNumber, { type, breaking }])
-  )
-  const prs = await reader.fetchChangeDetails(refs.map(ref => ref.prNumber))
+  const { prClassifications, commitChanges } = refsInRange(args)
+  const prNumbers = [...prClassifications.keys()]
+  const prs =
+    prNumbers.length > 0 ? await args.reader.fetchChangeDetails(prNumbers) : []
+  const prChanges = prs.map(pr => toPRChange(pr, prClassifications))
   return {
-    changes: prs.map(pr => toChange(pr, typeByPR)),
+    changes: [...prChanges, ...commitChanges],
     contributors: collectContributors(prs)
   }
 }
 
-// Finalize-path discovery: the shared core + `fetchClosingIssues`, projected
-// into comment targets — the release's PRs (by number) and their deduplicated
-// closing issues. `fetchChangeDetails` is never touched. The PRs come from the
-// fetched (surviving) nodes, so a `(#N)` that resolves to nothing is dropped
-// from the targets exactly as it is from the notes.
+// Finalize-path discovery: the shared core + `fetchClosingIssues`, projected into
+// comment targets — the release's PRs (by number) and their deduplicated closing
+// issues. Direct-commit changes have no PR/issue to comment on, so they never
+// appear here. `fetchChangeDetails` is never touched. The PRs come from the
+// fetched (surviving) nodes, so a `(#N)` that resolves to nothing is dropped from
+// the targets exactly as it is from the notes.
 export async function discoverTargets(args: {
   channel: Channel
   currentRef: string
   reader: ReleaseGraphReader
 }): Promise<ReleaseTargets> {
-  const { reader } = args
-  const refs = changeRefsInRange(args)
-  if (refs.length === 0) {
+  const { prClassifications } = refsInRange(args)
+  const prNumbers = [...prClassifications.keys()]
+  if (prNumbers.length === 0) {
     return { changes: [], issues: [] }
   }
-  const prs = await reader.fetchClosingIssues(refs.map(ref => ref.prNumber))
+  const prs = await args.reader.fetchClosingIssues(prNumbers)
   return {
     changes: prs.map(pr => ({ prNumber: pr.number })),
     issues: collectIssues(prs)

@@ -1,16 +1,47 @@
-import { describe, expect, it, vi } from 'vitest'
+import { http, HttpResponse } from 'msw'
+import { setupServer } from 'msw/node'
 import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  describe,
+  expect,
+  it,
+  vi
+} from 'vitest'
+import { z } from 'zod'
+import {
+  type Change,
   collectContributors,
   collectIssues,
+  type CommitRecord,
   discoverChanges,
   discoverTargets,
   extractPRNumber,
+  fetchPRNodes,
   isBot,
-  resolveChannel,
-  resolveRange,
   type PR,
-  type ReleaseGraphReader
+  type ReleaseGraphReader,
+  resolveChannel,
+  resolveRange
 } from './commit-graph'
+
+// Build CommitRecord[] from raw messages, with placeholder SHA/committer (PR-
+// sourced tests don't read them). For direct-commit assertions, construct
+// records inline with explicit SHA/committer.
+function records(...messages: string[]): CommitRecord[] {
+  return messages.map(message => ({
+    sha: '0000000000',
+    committer: 'Jane Doe',
+    message
+  }))
+}
+
+// The PR numbers of the PR-sourced changes, in order (commit-sourced changes
+// have no number).
+function prNumbersOf(changes: Change[]): number[] {
+  return changes.flatMap(c => (c.source === 'pr' ? [c.prNumber] : []))
+}
 
 describe('resolveChannel', () => {
   it('maps a GA tag to the stable channel', () => {
@@ -22,11 +53,18 @@ describe('resolveChannel', () => {
     expect(resolveChannel('v1.3.0-beta.1')).toBe('beta')
     expect(resolveChannel('v2.0.0-beta.42')).toBe('beta')
   })
+
+  // Not sure which of throwing or propagating null is better,
+  // but we need to be robust against suffixes that
+  // don't fall in either stable or beta.
+  it('should reject other suffixes', () => {
+    expect(() => resolveChannel('v1.3.0-alpha.1')).toThrow()
+    expect(() => resolveChannel('0.0.0-preview.12345')).toThrow()
+  })
 })
 
 describe('resolveRange', () => {
-  it('beta is incremental: checkpoint is the immediately-preceding tag', () => {
-    // A second beta for the same target announces only its own new commits.
+  it('beta is incremental: `from` is the immediately-preceding tag', () => {
     const range = resolveRange({
       channel: 'beta',
       currentRef: 'v1.3.0-beta.2',
@@ -35,7 +73,7 @@ describe('resolveRange', () => {
     expect(range).toEqual({ from: 'v1.3.0-beta.1', to: 'v1.3.0-beta.2' })
   })
 
-  it('GA is cumulative: checkpoint is the previous GA, skipping betas', () => {
+  it('GA is cumulative: `from` is the previous GA, skipping betas', () => {
     // The stable release re-announces everyone since the last GA, including
     // contributors who only ever rode the intervening betas.
     const range = resolveRange({
@@ -46,10 +84,10 @@ describe('resolveRange', () => {
     expect(range).toEqual({ from: 'v1.2.3', to: 'v1.3.0' })
   })
 
-  it('folds a recomputed-higher beta target onto the nearest preceding tag', () => {
-    // A feat landed after a patch-beta (v1.2.4-beta.1), recomputing the target
-    // up to the minor v1.3.0; the new beta still checkpoints on the nearest
-    // preceding published tag, bridging the gap.
+  it('resolves `from` as the nearest preceding tag, even across beta target bumps', () => {
+    // A feat landed after a patch-beta (v1.2.4-beta.1), bumping the target
+    // up to the minor v1.3.0; the new beta still resolves `from` as the nearest
+    // preceding published tag.
     const range = resolveRange({
       channel: 'beta',
       currentRef: 'v1.3.0-beta.1',
@@ -58,9 +96,8 @@ describe('resolveRange', () => {
     expect(range).toEqual({ from: 'v1.2.4-beta.1', to: 'v1.3.0-beta.1' })
   })
 
-  it('self-heals across a rejected beta that left no tag', () => {
-    // beta.2 was staged then rejected, so no v1.3.0-beta.2 tag exists. beta.3
-    // checkpoints on beta.1 and thereby folds in beta.2's orphaned commits.
+  it('handles a missing beta tag', () => {
+    // Edge case, but it should be able to handle gaps in tag sequences
     const range = resolveRange({
       channel: 'beta',
       currentRef: 'v1.3.0-beta.3',
@@ -82,8 +119,8 @@ describe('resolveRange', () => {
     ).toEqual({ from: null, to: 'HEAD' })
   })
 
-  it('resolves the draft phase from HEAD against the greatest published tag', () => {
-    // beta draft: checkpoint is the nearest existing tag of any channel.
+  it('resolves a HEAD currentRef against the nearest appropriate tag (draft stage)', () => {
+    // beta draft: `from` is the nearest existing tag of any channel.
     expect(
       resolveRange({
         channel: 'beta',
@@ -91,7 +128,7 @@ describe('resolveRange', () => {
         tags: ['v1.2.3', 'v1.3.0-beta.1']
       })
     ).toEqual({ from: 'v1.3.0-beta.1', to: 'HEAD' })
-    // GA draft: checkpoint is the last GA, ignoring a higher beta.
+    // GA draft: `from` is the last GA, ignoring a higher beta.
     expect(
       resolveRange({
         channel: 'stable',
@@ -101,7 +138,7 @@ describe('resolveRange', () => {
     ).toEqual({ from: 'v1.2.3', to: 'HEAD' })
   })
 
-  it('first GA over only betas walks from history start (betas are not GA checkpoints)', () => {
+  it('resolves first GA over beta-only as history start', () => {
     // No prior GA exists; the intervening betas don't count as a stable
     // checkpoint, so the cumulative GA re-announces from the beginning.
     expect(
@@ -148,6 +185,10 @@ describe('extractPRNumber', () => {
     expect(extractPRNumber('feat: add a thing (#123)')).toBe(123)
   })
 
+  it('ignores a non-parens #N suffix', () => {
+    expect(extractPRNumber('feat: add a thing from #123')).toBeNull()
+  })
+
   it('returns null for a subject without a (#N)', () => {
     expect(extractPRNumber('chore: a direct push with no PR')).toBeNull()
   })
@@ -191,7 +232,7 @@ describe('collectContributors', () => {
     const prs: PR[] = [
       createPR({
         number: 1,
-        title: 'test: should ignore @franky47',
+        title: 'test: we thank external contributors, not the author.',
         participants: { nodes: [{ login: 'franky47' }] }
       })
     ]
@@ -224,15 +265,15 @@ describe('collectContributors', () => {
       createPR({
         number: 1,
         title: 'feat: test',
-        participants: { nodes: [{ login: 'contributor1' }] }
+        participants: { nodes: [{ login: 'alice' }] }
       }),
       createPR({
         number: 2,
         title: 'fix: bug',
-        participants: { nodes: [{ login: 'contributor2' }] }
+        participants: { nodes: [{ login: 'bob' }] }
       })
     ]
-    expect(collectContributors(prs)).toEqual(['contributor1', 'contributor2'])
+    expect(collectContributors(prs)).toEqual(['alice', 'bob'])
   })
 
   it('deduplicates contributors', () => {
@@ -240,15 +281,15 @@ describe('collectContributors', () => {
       createPR({
         number: 1,
         title: 'feat: test',
-        participants: { nodes: [{ login: 'contributor1' }] }
+        participants: { nodes: [{ login: 'alice' }] }
       }),
       createPR({
         number: 2,
         title: 'fix: bug',
-        participants: { nodes: [{ login: 'contributor1' }] }
+        participants: { nodes: [{ login: 'alice' }] }
       })
     ]
-    expect(collectContributors(prs)).toEqual(['contributor1'])
+    expect(collectContributors(prs)).toEqual(['alice'])
   })
 
   it('includes issue participants as contributors', () => {
@@ -354,7 +395,7 @@ describe('collectIssues', () => {
     )
   })
 
-  it('collects each PR’s closing issues', () => {
+  it("collects each PR's closing issues", () => {
     const prs: PR[] = [
       createPR({
         number: 1,
@@ -391,14 +432,12 @@ describe('collectIssues', () => {
 })
 
 describe('discoverChanges', () => {
-  it('returns empty changes without fetching when no commit references a PR', async () => {
+  it('returns nothing without fetching when the range is empty', async () => {
     const reader: ReleaseGraphReader = {
       readTags: () => ['v1.0.0'],
-      readCommits: () => ['chore: direct push', 'docs: fix typo'],
+      readCommits: () => [],
       fetchChangeDetails: () => {
-        throw new Error(
-          'fetchChangeDetails should not be called for an empty range'
-        )
+        throw new Error('fetchChangeDetails should not be called for no PRs')
       },
       fetchClosingIssues: () => {
         throw new Error('discoverChanges must not take the finalize path')
@@ -409,7 +448,54 @@ describe('discoverChanges', () => {
     ).resolves.toEqual({ changes: [], contributors: [] })
   })
 
-  it('projects changes (type from the commit, description from the title) and derives contributors', async () => {
+  it('builds direct-commit changes (SHA, subject, committer) without fetching when no commit references a PR', async () => {
+    // git log is newest-first; the notes list direct commits oldest-first, so the
+    // older `chore` precedes the newer `fix`. SHA is truncated to 8 chars.
+    const reader: ReleaseGraphReader = {
+      readTags: () => ['v1.0.0'],
+      readCommits: () => [
+        {
+          sha: 'ffff1111aa',
+          committer: 'Alice Dev',
+          message: 'fix: hot patch'
+        },
+        { sha: 'eeee2222bb', committer: 'Bob Ops', message: 'chore: tidy up' }
+      ],
+      fetchChangeDetails: () => {
+        throw new Error('no PRs to fetch')
+      },
+      fetchClosingIssues: () => {
+        throw new Error('discoverChanges must not take the finalize path')
+      }
+    }
+    await expect(
+      discoverChanges({ channel: 'stable', currentRef: 'HEAD', reader })
+    ).resolves.toEqual({
+      changes: [
+        {
+          source: 'commit',
+          sha: 'eeee2222',
+          type: 'chore',
+          breaking: false,
+          description: 'tidy up',
+          author: 'Bob Ops'
+        },
+        {
+          source: 'commit',
+          sha: 'ffff1111',
+          type: 'fix',
+          breaking: false,
+          description: 'hot patch',
+          author: 'Alice Dev'
+        }
+      ],
+      // External contributors can't direct-commit,
+      // and are attributed as part of their release note line.
+      contributors: []
+    })
+  })
+
+  it('projects PR changes (type from the commit, description from the title) and derives contributors', async () => {
     const pr1 = createPR({
       number: 1,
       title: 'feat: first',
@@ -429,12 +515,8 @@ describe('discoverChanges', () => {
     })
     const reader: ReleaseGraphReader = {
       readTags: () => [],
-      readCommits: () => [
-        'feat: first (#1)',
-        'chore: direct push',
-        'fix: second (#2)',
-        'docs: same PR again (#1)'
-      ],
+      readCommits: () =>
+        records('feat: first (#1)', 'fix: second (#2)', 'docs: same PR (#1)'),
       fetchChangeDetails: vi.fn(async () => [pr1, pr2]),
       fetchClosingIssues: vi.fn(async () => [])
     }
@@ -443,6 +525,7 @@ describe('discoverChanges', () => {
     ).resolves.toEqual({
       changes: [
         {
+          source: 'pr',
           prNumber: 1,
           type: 'feat',
           breaking: false,
@@ -451,6 +534,7 @@ describe('discoverChanges', () => {
           closingIssues: [{ number: 100 }]
         },
         {
+          source: 'pr',
           prNumber: 2,
           type: 'fix',
           breaking: false,
@@ -466,10 +550,68 @@ describe('discoverChanges', () => {
     expect(reader.fetchClosingIssues).not.toHaveBeenCalled()
   })
 
+  it('lists PR changes first (by number) then direct-commit changes (oldest-first)', async () => {
+    const reader: ReleaseGraphReader = {
+      readTags: () => [],
+      readCommits: () => [
+        // newest-first, as git log emits
+        { sha: 'cccc3333', committer: 'Dev', message: 'chore: newer direct' },
+        { sha: 'bbbb2222', committer: 'Dev', message: 'feat: a PR (#7)' },
+        { sha: 'aaaa1111', committer: 'Dev', message: 'fix: older direct' }
+      ],
+      fetchChangeDetails: async () => [
+        createPR({ number: 7, title: 'feat: a PR' })
+      ],
+      fetchClosingIssues: async () => []
+    }
+    const { changes } = await discoverChanges({
+      channel: 'beta',
+      currentRef: 'HEAD',
+      reader
+    })
+    // PR #7 leads; then the two direct commits oldest-first (fix before chore).
+    expect(
+      changes.map(c => (c.source === 'pr' ? `#${c.prNumber}` : c.sha))
+    ).toEqual(['#7', 'aaaa1111', 'cccc3333'])
+  })
+
+  it('takes the type from the squash commit even when the PR title was reworded to a different type (#417)', async () => {
+    // The squash commit is `fix:`; the PR was later renamed to `test:`. Category
+    // must follow the immutable commit (fix → Bug fixes), and the description is
+    // the renamed title as prose. If projection ever read the title's type, this
+    // change would land in Other changes — this is the regression lock.
+    const reader: ReleaseGraphReader = {
+      readTags: () => [],
+      readCommits: () => records('fix: real regression fix (#417)'),
+      fetchChangeDetails: async () => [
+        createPR({ number: 417, title: 'test: flaky thing' })
+      ],
+      fetchClosingIssues: async () => {
+        throw new Error('notes path must not fetch closing issues')
+      }
+    }
+    await expect(
+      discoverChanges({ channel: 'beta', currentRef: 'HEAD', reader })
+    ).resolves.toEqual({
+      changes: [
+        {
+          source: 'pr',
+          prNumber: 417,
+          type: 'fix',
+          breaking: false,
+          description: 'flaky thing',
+          author: null,
+          closingIssues: []
+        }
+      ],
+      contributors: []
+    })
+  })
+
   it('flags a change breaking from the squash subject "!" marker', async () => {
     const reader: ReleaseGraphReader = {
       readTags: () => [],
-      readCommits: () => ['feat!: breaking (#1)', 'feat: normal (#2)'],
+      readCommits: () => records('feat!: breaking (#1)', 'feat: normal (#2)'),
       fetchChangeDetails: async () => [
         createPR({ number: 1, title: 'feat!: breaking' }),
         createPR({ number: 2, title: 'feat: normal' })
@@ -481,12 +623,8 @@ describe('discoverChanges', () => {
       currentRef: 'HEAD',
       reader
     })
-    expect(
-      changes.map(c => ({ prNumber: c.prNumber, breaking: c.breaking }))
-    ).toEqual([
-      { prNumber: 1, breaking: true },
-      { prNumber: 2, breaking: false }
-    ])
+    expect(changes.map(c => c.breaking)).toEqual([true, false])
+    expect(prNumbersOf(changes)).toEqual([1, 2])
   })
 
   it('resolves the channel-asymmetric range before reading commit subjects', async () => {
@@ -506,10 +644,10 @@ describe('discoverChanges', () => {
 })
 
 describe('discoverTargets', () => {
-  it('returns empty targets without fetching when no commit references a PR', async () => {
+  it('returns empty targets without fetching when no commit references a PR (direct commits are excluded)', async () => {
     const reader: ReleaseGraphReader = {
       readTags: () => ['v1.0.0'],
-      readCommits: () => ['chore: direct push', 'docs: fix typo'],
+      readCommits: () => records('chore: direct push', 'docs: fix typo'),
       fetchChangeDetails: () => {
         throw new Error('discoverTargets must not take the notes path')
       },
@@ -527,11 +665,8 @@ describe('discoverTargets', () => {
   it('projects each PR into a target and derives its closing issues, never fetching the change details', async () => {
     const reader: ReleaseGraphReader = {
       readTags: () => [],
-      readCommits: () => [
-        'feat: first (#1)',
-        'chore: direct push',
-        'fix: second (#2)'
-      ],
+      readCommits: () =>
+        records('feat: first (#1)', 'chore: direct push', 'fix: second (#2)'),
       fetchChangeDetails: vi.fn(async () => []),
       fetchClosingIssues: vi.fn(async () => [
         {
@@ -569,7 +704,12 @@ describe('discoverTargets', () => {
 // the same underlying PRs, so the finalize view is the notes view minus the
 // fields finalize never reads — mirroring production's two GraphQL queries.
 function makeHistoryReader(history: {
-  commits: Array<{ message: string; tag?: string }>
+  commits: Array<{
+    message: string
+    tag?: string
+    sha?: string
+    committer?: string
+  }>
   prs: PR[]
 }): ReleaseGraphReader {
   const { commits, prs } = history
@@ -582,7 +722,16 @@ function makeHistoryReader(history: {
     readCommits: range => {
       const from = range.from ? indexOfTag(range.from) : -1
       const to = range.to === 'HEAD' ? commits.length - 1 : indexOfTag(range.to)
-      return commits.slice(from + 1, to + 1).map(({ message }) => message)
+      // git log emits newest-first; the history array is oldest-first, so reverse
+      // the slice to mirror production ordering.
+      return commits
+        .slice(from + 1, to + 1)
+        .reverse()
+        .map(({ message, sha, committer }) => ({
+          sha: sha ?? '0000000000',
+          committer: committer ?? 'Jane Doe',
+          message
+        }))
     },
     fetchChangeDetails: async numbers => select(numbers),
     fetchClosingIssues: async numbers =>
@@ -597,15 +746,21 @@ function makeHistoryReader(history: {
   }
 }
 
-// The set of issue numbers a notes run would comment on (its changes' closing
-// issues, deduplicated), to compare against the finalize path's `issues`.
-function issuesOf(changes: { closingIssues: Array<{ number: number }> }[]) {
+// The set of issue numbers a notes run would comment on (its PR-sourced changes'
+// closing issues, deduplicated), to compare against the finalize path's `issues`.
+function issuesOf(changes: Change[]) {
   return collectIssues(
-    changes.map(change => ({
-      closingIssuesReferences: {
-        edges: change.closingIssues.map(node => ({ node }))
-      }
-    }))
+    changes.flatMap(change =>
+      change.source === 'pr'
+        ? [
+            {
+              closingIssuesReferences: {
+                edges: change.closingIssues.map(node => ({ node }))
+              }
+            }
+          ]
+        : []
+    )
   )
 }
 
@@ -658,10 +813,10 @@ describe('discovery (history scenarios)', () => {
     })
     // Same PRs, same closing issues across the two phase-specific paths.
     expect(finalize.changes).toEqual(
-      draft.changes.map(c => ({ prNumber: c.prNumber }))
+      prNumbersOf(draft.changes).map(prNumber => ({ prNumber }))
     )
     expect(finalize.issues).toEqual(issuesOf(draft.changes))
-    expect(draft.changes.map(c => c.prNumber)).toEqual([2, 3])
+    expect(prNumbersOf(draft.changes)).toEqual([2, 3])
     expect(finalize.issues).toEqual([{ number: 100 }])
     expect(draft.contributors).toEqual(['alice', 'bob'])
   })
@@ -697,7 +852,7 @@ describe('discovery (history scenarios)', () => {
       currentRef: 'v1.3.0-beta.2',
       reader
     })
-    expect(beta2.changes.map(c => c.prNumber)).toEqual([3])
+    expect(prNumbersOf(beta2.changes)).toEqual([3])
     expect(beta2.contributors).toEqual(['bob'])
 
     const ga = await discoverChanges({
@@ -705,7 +860,7 @@ describe('discovery (history scenarios)', () => {
       currentRef: 'v1.3.0',
       reader
     })
-    expect(ga.changes.map(c => c.prNumber)).toEqual([2, 3, 4])
+    expect(prNumbersOf(ga.changes)).toEqual([2, 3, 4])
     expect(ga.contributors).toEqual(['alice', 'bob'])
   })
 
@@ -749,7 +904,7 @@ describe('discovery (history scenarios)', () => {
       currentRef: 'HEAD',
       reader
     })
-    expect(changes.map(c => c.prNumber)).toEqual([2])
+    expect(prNumbersOf(changes)).toEqual([2])
   })
 
   it('tolerates a commit referencing a PR neither path can resolve', async () => {
@@ -785,5 +940,63 @@ describe('discovery (history scenarios)', () => {
       changes: [{ prNumber: 2 }],
       issues: [{ number: 50 }]
     })
+  })
+})
+
+// The GraphQL IO shell is otherwise untested by design, but the null-node
+// handling is load-bearing for the "no change is silently dropped" guarantee, so
+// it is pinned here against a mocked GitHub GraphQL endpoint (msw).
+const githubGraphql = 'https://api.github.com/graphql'
+
+describe('fetchPRNodes', () => {
+  const nodeSchema = z.object({ number: z.number() })
+  const baseArgs = {
+    prNumbers: [1, 2],
+    githubToken: 'token',
+    fnLabel: 'test',
+    selection: 'number',
+    nodeSchema
+  }
+
+  const server = setupServer()
+  beforeAll(() => server.listen({ onUnhandledRequest: 'error' }))
+  afterEach(() => server.resetHandlers())
+  afterAll(() => server.close())
+
+  const replyWith = (body: Record<string, unknown>) =>
+    server.use(http.post(githubGraphql, () => HttpResponse.json(body)))
+
+  it('makes no request when there are no PR numbers', async () => {
+    let requested = false
+    server.use(
+      http.post(githubGraphql, () => {
+        requested = true
+        return HttpResponse.json({ data: { repository: {} } })
+      })
+    )
+    await expect(fetchPRNodes({ ...baseArgs, prNumbers: [] })).resolves.toEqual(
+      []
+    )
+    expect(requested).toBe(false)
+  })
+
+  it('throws on a GraphQL error rather than silently dropping the nulled PR', async () => {
+    // A null node accompanied by an error is a fetch failure (rate limit,
+    // timeout), not a nonexistent PR — dropping it would lose a real change.
+    replyWith({
+      data: { repository: { pr1: { number: 1 }, pr2: null } },
+      errors: [{ message: 'RATE_LIMITED' }]
+    })
+    await expect(fetchPRNodes(baseArgs)).rejects.toThrow(/RATE_LIMITED/)
+  })
+
+  it('drops a genuinely-null PR (no errors) and returns the survivors', async () => {
+    replyWith({ data: { repository: { pr1: { number: 1 }, pr2: null } } })
+    await expect(fetchPRNodes(baseArgs)).resolves.toEqual([{ number: 1 }])
+  })
+
+  it('throws on an unexpected response shape', async () => {
+    replyWith({ unexpected: true })
+    await expect(fetchPRNodes(baseArgs)).rejects.toThrow(/unexpected GraphQL/)
   })
 })

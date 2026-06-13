@@ -239,6 +239,25 @@ describe('commentAndLabel', () => {
     ).resolves.toBeUndefined()
   })
 
+  it('fails when every one of multiple targets is unrecoverable (misconfiguration, not a green no-op)', async () => {
+    // A wrong token/repo 404s every target. A lone deletion stays green, but a
+    // whole release all-404/403 must not look like a successful finalize.
+    const { writer } = makeFakeWriter({
+      failOn: {
+        1: { op: 'getLabels', status: 404 },
+        2: { op: 'getLabels', status: 404 }
+      }
+    })
+    await expect(
+      commentAndLabel({
+        writer,
+        tag: 'v1.2.3',
+        info: gaInfo,
+        targets: twoTargets
+      })
+    ).rejects.toThrow(/misconfiguration/)
+  })
+
   it('collects a recoverable error, processes the rest, then fails at the end', async () => {
     const { writer, calls } = makeFakeWriter({
       failOn: { 1: { op: 'comment', status: 500 } }

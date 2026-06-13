@@ -5,6 +5,7 @@ import { z } from 'zod'
 import {
   type Change,
   discoverChanges,
+  type IssueRef,
   makeGitHubGraphReader
 } from './lib/commit-graph.ts'
 
@@ -30,83 +31,75 @@ function categoryForType(type: string | undefined): Category {
   }
 }
 
-export type CategorizedChange = {
-  category: Category
-  number: number
-  description: string
-  author: string | null
-  closingIssues: Array<{ number: number }>
-  breaking: boolean
+// Order within a section: PR-sourced changes first (ascending PR number), then
+// direct-commit changes in their given order (discovery supplies them
+// oldest-first). Relies on a stable sort to preserve that commit order.
+function compareChanges(a: Change, b: Change): number {
+  if (a.source !== b.source) return a.source === 'pr' ? -1 : 1
+  if (a.source === 'pr' && b.source === 'pr') return a.prNumber - b.prNumber
+  return 0
 }
 
 // Group changes into their changelog categories. The category is derived from
-// the change's `type` (the squash commit's classification) — never the PR
-// title, whose prefix is irrelevant prose. Within each category, changes are
-// ordered by PR number.
+// the change's `type` (the commit's classification) — never a PR title, whose
+// prefix is irrelevant prose. The category is the bucket key, not a field on the
+// change, so the two can't drift.
 export function groupChangesByCategory(
   changes: Change[]
-): Record<Category, CategorizedChange[]> {
-  const categories: Record<Category, CategorizedChange[]> = {
+): Record<Category, Change[]> {
+  const categories: Record<Category, Change[]> = {
     Features: [],
     'Bug fixes': [],
     Documentation: [],
     'Other changes': []
   }
-
   for (const change of changes) {
-    const category = categoryForType(change.type)
-    categories[category].push({
-      category,
-      number: change.prNumber,
-      description: change.description,
-      author: change.author,
-      closingIssues: change.closingIssues,
-      breaking: change.breaking
-    })
+    categories[categoryForType(change.type)].push(change)
   }
-
   for (const category of CATEGORIES) {
-    categories[category].sort((a, b) => a.number - b.number)
+    categories[category].sort(compareChanges)
   }
-
   return categories
 }
 
-// The breaking-changes cross-cut: every change flagged `breaking`, ordered by PR
-// number. This is a filter over `breaking`, NOT a category — a `feat!` stays in
-// Features and also appears here. It drives the top "Breaking changes" section,
-// the maintainer's editing surface for the migration guide.
+// The breaking-changes cross-cut: every change flagged `breaking`, in the same
+// PR-first / commit-oldest order. A filter over `breaking`, NOT a category — a
+// `feat!` stays in its type section and also appears here. Drives the top
+// "Breaking changes" section, the maintainer's editing surface for the guide.
 export function breakingChanges(changes: Change[]): Change[] {
-  return changes
-    .filter(change => change.breaking)
-    .sort((a, b) => a.prNumber - b.prNumber)
+  return changes.filter(change => change.breaking).sort(compareChanges)
 }
 
-export function formatClosingIssues(
-  issues: CategorizedChange['closingIssues']
-): string {
+export function formatClosingIssues(issues: readonly IssueRef[]): string {
   if (issues.length === 0) return ''
   const issueNumbers = issues.map(i => `#${i.number}`).join(', ')
   return ` (closes ${issueNumbers})`
 }
 
-// What a single changelog bullet needs: a `CategorizedChange` minus its category
-// (a top-section breaking change has no category), so the two stay in lockstep.
-type ChangeLine = Omit<CategorizedChange, 'category'>
-
-// Render one changelog bullet. With `decorateBreaking`, a breaking change gets a
-// trailing ⚠️ marker — used in the type sections so a `feat!` is flagged inline.
-// The top "Breaking changes" section renders undecorated (the whole section is
-// already breaking, so a per-line marker would be noise).
+// Render one changelog bullet. A PR-sourced change renders as
+// `#123 - …, by @login (closes #N)`; a direct-commit change as
+// `abcd1234 - …, by Committer Name` (no `@`, no closing issues). With
+// `decorateBreaking`, a breaking change gets a trailing ⚠️ marker — used in the
+// type sections so a `feat!` is flagged inline; the top "Breaking changes"
+// section renders undecorated (the whole section is already breaking).
 export function formatChangeLine(
-  change: ChangeLine,
+  change: Change,
   options: { decorateBreaking?: boolean } = {}
 ): string {
-  const author = change.author ? `, by @${change.author}` : ''
-  const closes = formatClosingIssues(change.closingIssues)
+  const ref = change.source === 'pr' ? `#${change.prNumber}` : change.sha
+  const author =
+    change.source === 'pr'
+      ? change.author
+        ? `, by @${change.author}`
+        : ''
+      : change.author
+        ? `, by ${change.author}`
+        : ''
+  const closes =
+    change.source === 'pr' ? formatClosingIssues(change.closingIssues) : ''
   const marker =
     options.decorateBreaking && change.breaking ? ' - ⚠️ breaking change' : ''
-  return `- #${change.number} - ${formatTitle(change.description)}${author}${closes}${marker}`
+  return `- ${ref} - ${formatTitle(change.description)}${author}${closes}${marker}`
 }
 
 export function formatTitle(title: string): string {
@@ -137,9 +130,7 @@ export function renderReleaseNotes(
 
   const breaking = breakingChanges(changes)
   if (breaking.length > 0) {
-    const lines = breaking.map(change =>
-      formatChangeLine({ ...change, number: change.prNumber })
-    )
+    const lines = breaking.map(change => formatChangeLine(change))
     blocks.push(
       [
         '## Breaking changes',

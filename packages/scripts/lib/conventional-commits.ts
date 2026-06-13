@@ -1,12 +1,15 @@
 export type Bump = 'major' | 'minor' | 'patch'
 
-// The conventional parts of a commit subject (git's `%s`, the first line).
-// `breaking` is the subject's `!` marker only — the `BREAKING CHANGE:` body
-// footer is archaeology and is deliberately not consulted here.
+// The conventional parts of a commit's `type(scope)?(!)?: description`. How
+// `breaking` is populated depends on the parser: `parseSubject` reads only the
+// subject `!`, while `parseCommit` also honours a `BREAKING CHANGE:` body footer.
+// `parseCommit` can therefore reach `{ type: undefined, breaking: true }` (a
+// footer-only break with a non-conventional subject) — a legal, desirable state
+// that still forces a major bump.
 export type ParsedSubject = {
-  type: string | undefined
-  breaking: boolean
-  description: string
+  readonly type: string | undefined
+  readonly breaking: boolean
+  readonly description: string
 }
 
 // A change's bump, derived from its type and breaking flag. A breaking change
@@ -29,6 +32,9 @@ export function bumpForType(
   }
 }
 
+// Parse a commit subject (first line) into its conventional parts. `breaking`
+// reflects only the subject's `!` marker; the body footer is `parseCommit`'s
+// concern. Used for the prose title strip, where there is no body to consult.
 export function parseSubject(subject: string): ParsedSubject {
   const firstLine = subject.split('\n')[0] ?? ''
   const match = firstLine.match(/^([a-z]+)(?:\([^)]+\))?(!)?: (.+)$/)

@@ -79,6 +79,9 @@ export const NON_BUMPING_TYPES = [
 
 export const CORE_PACKAGE_PREFIX = 'packages/nuqs/'
 
+// The same path without its trailing slash, for display in the summaries.
+const CORE_PACKAGE = CORE_PACKAGE_PREFIX.replace(/\/$/, '')
+
 export function hasCoreChanges(files: string[]): boolean {
   return files.some(f => f.startsWith(CORE_PACKAGE_PREFIX))
 }
@@ -95,16 +98,14 @@ export function parseChangedFiles(raw: string): string[] {
 }
 
 export function formatPassSummary(type: string): string {
-  const corePath = CORE_PACKAGE_PREFIX.replace(/\/$/, '')
-  return `## ✅ Version Bump Check Passed\n\nCommit type \`${type}\` is valid because the PR includes changes to \`${corePath}\`.\n`
+  return `## ✅ Version Bump Check Passed\n\nCommit type \`${type}\` is valid because the PR includes changes to \`${CORE_PACKAGE}\`.\n`
 }
 
 export function formatFailSummary(type: string): string {
-  const corePath = CORE_PACKAGE_PREFIX.replace(/\/$/, '')
   return [
     `## ❌ Version Bump Check Failed`,
     ``,
-    `Your PR title uses the commit type **\`${type}\`** which triggers a version bump, but no changes were found in the core package (\`${corePath}\`).`,
+    `Your PR title uses the commit type **\`${type}\`** which triggers a version bump, but no changes were found in the core package (\`${CORE_PACKAGE}\`).`,
     ``,
     `### What to do:`,
     ``,

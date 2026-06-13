@@ -53,6 +53,10 @@ describe('validateTitle', () => {
     expect(validateTitle('feat: add parser', allowed)).toEqual([])
   })
 
+  it('accepts a breaking title (the `!` marker is valid on an allowed type)', () => {
+    expect(validateTitle('feat!: drop the legacy API', allowed)).toEqual([])
+  })
+
   it('flags disallowed type', () => {
     const errors = validateTitle('wip: experiment', allowed)
     // The violation plus the trailing Conventional Commits note.

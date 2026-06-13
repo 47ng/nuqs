@@ -21,6 +21,7 @@
     "@types/minimist": "^1.2.5",
     "@types/node": "^24.10.10",
     "@types/semver": "^7.7.1",
+    "msw": "^2.14.6",
     "typescript": "catalog:typescript",
     "vitest": "catalog:vitest"
   }

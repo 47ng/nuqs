@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import type { Change } from './lib/commit-graph'
+import type { Change, CommitChange, PRChange } from './lib/commit-graph'
 import {
   breakingChanges,
   formatChangeLine,
@@ -10,11 +10,12 @@ import {
   renderReleaseNotes
 } from './release-notes-automation'
 
-// Helper to create a minimal change for testing.
+// Minimal PR-sourced change for testing.
 function createChange(
-  overrides: Partial<Change> & { prNumber: number }
-): Change {
+  overrides: Partial<PRChange> & { prNumber: number }
+): PRChange {
   return {
+    source: 'pr',
     type: undefined,
     breaking: false,
     description: '',
@@ -23,6 +24,24 @@ function createChange(
     ...overrides
   }
 }
+
+// Minimal direct-commit change for testing.
+function createCommitChange(
+  overrides: Partial<CommitChange> & { sha: string }
+): CommitChange {
+  return {
+    source: 'commit',
+    type: undefined,
+    breaking: false,
+    description: '',
+    author: 'Committer',
+    ...overrides
+  }
+}
+
+// PR numbers of the PR-sourced changes (commit-sourced have none).
+const prNums = (changes: Change[]): number[] =>
+  changes.flatMap(c => (c.source === 'pr' ? [c.prNumber] : []))
 
 describe('groupChangesByCategory', () => {
   it('categorises by the squash commit type, never the (reworded) PR description', () => {
@@ -34,7 +53,7 @@ describe('groupChangesByCategory', () => {
     ]
     const result = groupChangesByCategory(changes)
     expect(result['Bug fixes']).toHaveLength(1)
-    expect(result['Bug fixes'][0]!.number).toBe(1)
+    expect(prNums(result['Bug fixes'])).toEqual([1])
     expect(result['Bug fixes'][0]!.description).toBe('reworded prose')
     expect(result.Features).toHaveLength(0)
   })
@@ -51,10 +70,10 @@ describe('groupChangesByCategory', () => {
 
     const result = groupChangesByCategory(changes)
 
-    expect(result.Features.map(c => c.number)).toEqual([1])
-    expect(result['Bug fixes'].map(c => c.number)).toEqual([2])
-    expect(result.Documentation.map(c => c.number)).toEqual([3, 4])
-    expect(result['Other changes'].map(c => c.number)).toEqual([5, 6])
+    expect(prNums(result.Features)).toEqual([1])
+    expect(prNums(result['Bug fixes'])).toEqual([2])
+    expect(prNums(result.Documentation)).toEqual([3, 4])
+    expect(prNums(result['Other changes'])).toEqual([5, 6])
   })
 
   it('sorts changes by PR number within each category', () => {
@@ -66,7 +85,29 @@ describe('groupChangesByCategory', () => {
 
     const result = groupChangesByCategory(changes)
 
-    expect(result.Features.map(c => c.number)).toEqual([10, 20, 30])
+    expect(prNums(result.Features)).toEqual([10, 20, 30])
+  })
+
+  it('orders a category PR-first (by number) then direct commits (oldest-first input order)', () => {
+    // Discovery supplies commit changes oldest-first; grouping keeps that order
+    // (stable sort) and places them after the PR changes.
+    const changes: Change[] = [
+      createCommitChange({
+        sha: 'older111',
+        type: 'feat',
+        description: 'older'
+      }),
+      createCommitChange({
+        sha: 'newer222',
+        type: 'feat',
+        description: 'newer'
+      }),
+      createChange({ prNumber: 5, type: 'feat', description: 'a PR' })
+    ]
+    const result = groupChangesByCategory(changes)
+    expect(
+      result.Features.map(c => (c.source === 'pr' ? `#${c.prNumber}` : c.sha))
+    ).toEqual(['#5', 'older111', 'newer222'])
   })
 
   it('keeps a breaking change in its type category and carries the breaking flag', () => {
@@ -78,12 +119,8 @@ describe('groupChangesByCategory', () => {
       createChange({ prNumber: 2, type: 'feat', breaking: false })
     ]
     const result = groupChangesByCategory(changes)
-    expect(
-      result.Features.map(c => ({ number: c.number, breaking: c.breaking }))
-    ).toEqual([
-      { number: 1, breaking: true },
-      { number: 2, breaking: false }
-    ])
+    expect(prNums(result.Features)).toEqual([1, 2])
+    expect(result.Features.map(c => c.breaking)).toEqual([true, false])
   })
 
   it('includes author information', () => {
@@ -105,7 +142,8 @@ describe('groupChangesByCategory', () => {
     ]
 
     const result = groupChangesByCategory(changes)
-    expect(result['Bug fixes'][0]!.closingIssues).toEqual([
+    const change = result['Bug fixes'][0]!
+    expect(change.source === 'pr' ? change.closingIssues : []).toEqual([
       { number: 100 },
       { number: 101 }
     ])
@@ -129,7 +167,7 @@ describe('breakingChanges', () => {
       createChange({ prNumber: 10, type: 'feat', breaking: true }),
       createChange({ prNumber: 20, type: 'feat', breaking: false })
     ]
-    expect(breakingChanges(changes).map(c => c.prNumber)).toEqual([10, 30])
+    expect(prNums(breakingChanges(changes))).toEqual([10, 30])
   })
 })
 
@@ -173,6 +211,35 @@ describe('renderReleaseNotes', () => {
         '## Thanks',
         '',
         'Huge thanks to @alice and @bob for helping!'
+      ].join('\n')
+    )
+  })
+
+  it('surfaces a breaking non-bumping type in both the Breaking section and its Other-changes section', () => {
+    // breaking is orthogonal to category: a `chore!` is Other changes, yet still
+    // leads the Breaking section (undecorated) and is flagged ⚠️ in its section.
+    const changes: Change[] = [
+      createChange({
+        prNumber: 1,
+        type: 'chore',
+        breaking: true,
+        description: 'drop Node 18 support',
+        author: 'alice'
+      })
+    ]
+    expect(renderReleaseNotes(changes, [])).toBe(
+      [
+        '## Breaking changes',
+        '',
+        '- #1 - drop Node 18 support, by @alice',
+        '',
+        '### Migration guide',
+        '',
+        '<!-- todo: Add migration steps for breaking changes -->',
+        '',
+        '## Other changes',
+        '',
+        '- #1 - drop Node 18 support, by @alice - ⚠️ breaking change'
       ].join('\n')
     )
   })
@@ -221,13 +288,40 @@ describe('formatTitle', () => {
 })
 
 describe('formatChangeLine', () => {
-  const line = {
-    number: 123,
+  const line: Change = {
+    source: 'pr',
+    prNumber: 123,
+    type: 'feat',
     description: 'add `useQueryState`',
     author: 'alice',
     closingIssues: [{ number: 5 }],
     breaking: true
   }
+
+  it('renders a direct-commit change with its SHA and committer (no @, no closes)', () => {
+    const commit = createCommitChange({
+      sha: 'abcd1234',
+      description: 'hot patch',
+      author: 'Jane Doe',
+      breaking: false
+    })
+    expect(formatChangeLine(commit)).toBe('- abcd1234 - hot patch, by Jane Doe')
+    expect(formatChangeLine(commit, { decorateBreaking: true })).toBe(
+      '- abcd1234 - hot patch, by Jane Doe'
+    )
+  })
+
+  it('decorates a breaking direct-commit change in its type section', () => {
+    const commit = createCommitChange({
+      sha: 'abcd1234',
+      description: 'remove API',
+      author: 'Jane Doe',
+      breaking: true
+    })
+    expect(formatChangeLine(commit, { decorateBreaking: true })).toBe(
+      '- abcd1234 - remove API, by Jane Doe - ⚠️ breaking change'
+    )
+  })
 
   it('renders number, formatted title, author and closing issues', () => {
     expect(formatChangeLine({ ...line, breaking: false })).toBe(

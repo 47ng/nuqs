@@ -96,7 +96,7 @@ describe('parseSubject', () => {
     })
   })
 
-  it('does NOT treat a BREAKING CHANGE body footer as breaking (archaeology only)', () => {
+  it("does NOT treat a BREAKING CHANGE body footer as breaking (the subject parser reads the `!` only; the footer is parseCommit's job)", () => {
     expect(
       parseSubject('fix: a fix\n\nBREAKING CHANGE: removed an API')
     ).toEqual({ type: 'fix', breaking: false, description: 'a fix' })

@@ -110,6 +110,7 @@ export async function commentAndLabel(args: {
 }): Promise<void> {
   const { writer, tag, info, targets } = args
   const errors: unknown[] = []
+  let unrecoverable = 0
   for (const { number, kind } of targets) {
     try {
       if (shouldSkip(await writer.getLabels(number), info.label)) {
@@ -123,6 +124,7 @@ export async function commentAndLabel(args: {
       console.log(`#${number}: commented + labelled "${info.label}"`)
     } catch (error) {
       if (isUnrecoverable(error)) {
+        unrecoverable++
         console.warn(`#${number}: skipped (unrecoverable):`, error)
         continue
       }
@@ -133,6 +135,15 @@ export async function commentAndLabel(args: {
   if (errors.length > 0) {
     throw new Error(
       `${errors.length} issue(s)/PR(s) failed to finalize; re-run to complete the stragglers.`
+    )
+  }
+  // A whole release's worth of targets (more than one) all failing 403/404 is a
+  // misconfiguration signature — a wrong token scope or GITHUB_REPOSITORY — not N
+  // genuine deletions. Fail loud rather than report an all-green no-op. (A lone
+  // skipped target stays green: an isolated deleted issue is plausible.)
+  if (targets.length > 1 && unrecoverable === targets.length) {
+    throw new Error(
+      `All ${targets.length} targets failed with 403/404 — likely a token/repository misconfiguration, not genuine deletions.`
     )
   }
 }
