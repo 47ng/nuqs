@@ -555,6 +555,45 @@ describe('discoverChanges', () => {
     expect(reader.fetchClosingIssues).not.toHaveBeenCalled()
   })
 
+  it('keeps the first-seen classification and warns when a PR number recurs with a divergent type', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const reader: ReleaseGraphReader = {
+      readTags: () => [],
+      // PR #1's squash commit classifies it `feat`; a later commit re-uses the
+      // (#1) suffix with a divergent `fix`. First-seen wins; the conflict warns.
+      readCommits: () => records('feat: kept (#1)', 'fix: divergent (#1)'),
+      fetchChangeDetails: vi.fn(async () => [
+        createPR({ number: 1, title: 'feat: kept' })
+      ]),
+      fetchClosingIssues: vi.fn(async () => [])
+    }
+    try {
+      const { changes } = await discoverChanges({
+        channel: 'stable',
+        currentRef: 'HEAD',
+        reader
+      })
+      expect(changes).toEqual([
+        {
+          source: 'squashedPR',
+          prNumber: 1,
+          type: 'feat', // first-seen, not the later `fix`
+          breaking: false,
+          description: 'kept',
+          author: null,
+          closingIssues: []
+        }
+      ])
+      expect(warn).toHaveBeenCalledExactlyOnceWith(
+        expect.stringContaining('#1')
+      )
+    } finally {
+      // Restore even if an assertion throws, so the suppressing spy never
+      // leaks into later tests (the config does not auto-restore mocks).
+      warn.mockRestore()
+    }
+  })
+
   it('lists PR changes first (by number) then direct-commit changes (oldest-first)', async () => {
     const reader: ReleaseGraphReader = {
       readTags: () => [],
