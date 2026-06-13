@@ -61,6 +61,27 @@ export type SingleParserBuilder<T> = Required<SingleParser<T>> &
     withOptions<This>(this: This, options: Options): This
 
     /**
+     * Pass in a validation function to perform runtime checks on the parsed
+     * value. If the validation fails, the value will be set to `null` (or
+     * the default value if specified).
+     *
+     * Validation must be synchronous, and must throw an error on invalid
+     * inputs.
+     *
+     * Example with Zod:
+     * ```ts
+     * const [posInt, setPosInt] = useQueryState(
+     *  'value',
+     *  parseAsInteger.withValidation(z.number().positive().parse)
+     * )
+     * ```
+     *
+     * @param this
+     * @param validate
+     */
+    withValidation<This>(this: This, validate: (input: unknown) => T): This
+
+    /**
      * Specifying a default value makes the hook state non-nullable when the
      * query is missing from the URL: the default value is returned instead
      * of `null`.
@@ -207,6 +228,18 @@ export function createMultiParser<T>(
     eq: (a, b) => a === b,
     ...parser,
     parseServerSide: parseServerSideNullable,
+    withValidation(validate) {
+      return {
+        ...this,
+        parse: (value: string) => {
+          const parsed = parser.parse(value)
+          if (parsed === null) {
+            return null
+          }
+          return validate(parsed)
+        }
+      }
+    },
     withDefault(defaultValue) {
       return {
         ...this,
@@ -216,7 +249,7 @@ export function createMultiParser<T>(
         }
       }
     },
-    withOptions(options: Options) {
+    withOptions(options) {
       return {
         ...this,
         ...options
