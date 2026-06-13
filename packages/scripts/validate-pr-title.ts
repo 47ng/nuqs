@@ -3,7 +3,7 @@
 import { createEnv } from '@t3-oss/env-core'
 import { appendFileSync, readFileSync } from 'node:fs'
 import { z } from 'zod'
-import { classify } from './lib/conventional-commits.ts'
+import { bumpForType, parseSubject } from './lib/conventional-commits.ts'
 
 // --- PR title format / type / length -----------------------------------------
 
@@ -36,9 +36,9 @@ export function validateTitle(
   maxLen: number = HEADER_MAX_LENGTH
 ): string[] {
   const errors: string[] = []
-  const { type } = classify(title)
+  const { type } = parseSubject(title)
   if (type === undefined) {
-    errors.push('Title does not match `type(scope)?(!)?: subject` format')
+    errors.push('Title does not match `type(scope)?(!)?: description` format')
   } else if (!allowedTypes.includes(type)) {
     errors.push(
       `Type \`${type}\` is not allowed. Allowed types: ${allowedTypes.join(', ')}`
@@ -46,6 +46,11 @@ export function validateTitle(
   }
   if (title.length > maxLen) {
     errors.push(`Title exceeds ${maxLen} characters (got ${title.length})`)
+  }
+  if (errors.length > 0) {
+    errors.push(
+      'Note: we follow the Conventional Commits specification for PR titles. See https://www.conventionalcommits.org/ for more details.'
+    )
   }
   return errors
 }
@@ -74,6 +79,9 @@ export const NON_BUMPING_TYPES = [
 
 export const CORE_PACKAGE_PREFIX = 'packages/nuqs/'
 
+// The same path without its trailing slash, for display in the summaries.
+const CORE_PACKAGE = CORE_PACKAGE_PREFIX.replace(/\/$/, '')
+
 export function hasCoreChanges(files: string[]): boolean {
   return files.some(f => f.startsWith(CORE_PACKAGE_PREFIX))
 }
@@ -90,16 +98,14 @@ export function parseChangedFiles(raw: string): string[] {
 }
 
 export function formatPassSummary(type: string): string {
-  const corePath = CORE_PACKAGE_PREFIX.replace(/\/$/, '')
-  return `## ✅ Version Bump Check Passed\n\nCommit type \`${type}\` is valid because the PR includes changes to \`${corePath}\`.\n`
+  return `## ✅ Version Bump Check Passed\n\nCommit type \`${type}\` is valid because the PR includes changes to \`${CORE_PACKAGE}\`.\n`
 }
 
 export function formatFailSummary(type: string): string {
-  const corePath = CORE_PACKAGE_PREFIX.replace(/\/$/, '')
   return [
     `## ❌ Version Bump Check Failed`,
     ``,
-    `Your PR title uses the commit type **\`${type}\`** which triggers a version bump, but no changes were found in the core package (\`${corePath}\`).`,
+    `Your PR title uses the commit type **\`${type}\`** which triggers a version bump, but no changes were found in the core package (\`${CORE_PACKAGE}\`).`,
     ``,
     `### What to do:`,
     ``,
@@ -143,7 +149,7 @@ function main(): void {
     }
   }
 
-  // 1. The title must be a well-formed, allowed conventional-commit header.
+  // 1. The title must be a well-formed, allowed conventional-commit subject.
   //    A malformed title makes the bump classification meaningless, so we
   //    stop here rather than reporting a second, derived failure.
   const types = readTypeEnum(
@@ -157,8 +163,12 @@ function main(): void {
   }
 
   // 2. A version-bumping title must include changes to the core package.
-  const { bump, type } = classify(env.TITLE)
-  if (bump === null) {
+  const { type, breaking } = parseSubject(env.TITLE)
+  const bump = bumpForType(type, breaking)
+  // A non-null bump always implies a defined type (only a matched subject can be
+  // breaking or carry a bumping type); the `type === undefined` arm narrows it
+  // for the summaries below and never fires when `bump` is set.
+  if (bump === null || type === undefined) {
     console.log(
       `Commit type \`${type ?? '(none)'}\` does not trigger a version bump. Skipping core package check.`
     )

@@ -1,51 +1,13 @@
 #!/usr/bin/env node
 
+import { createEnv } from '@t3-oss/env-core'
 import { z } from 'zod'
-import { classify } from './lib/conventional-commits.ts'
-
-// Schema for the GraphQL response
-const participantsSchema = z.object({
-  nodes: z.array(z.object({ login: z.string() }))
-})
-
-const issueReferenceSchema = z.object({
-  number: z.number(),
-  participants: participantsSchema
-})
-
-export const prSchema = z.object({
-  number: z.number(),
-  title: z.string(),
-  author: z
-    .object({
-      login: z.string()
-    })
-    .nullable(),
-  participants: participantsSchema,
-  closingIssuesReferences: z.object({
-    edges: z.array(
-      z.object({
-        node: issueReferenceSchema
-      })
-    )
-  })
-})
-
-const responseSchema = z.object({
-  data: z.object({
-    repository: z.object({
-      milestone: z
-        .object({
-          pullRequests: z.object({
-            nodes: z.array(prSchema)
-          })
-        })
-        .nullable()
-    })
-  })
-})
-
-export type PR = z.infer<typeof prSchema>
+import {
+  type Change,
+  discoverChanges,
+  type IssueRef,
+  makeGitHubGraphReader
+} from './lib/commit-graph.ts'
 
 export const CATEGORIES = [
   'Features',
@@ -54,76 +16,6 @@ export const CATEGORIES = [
   'Other changes'
 ] as const
 export type Category = (typeof CATEGORIES)[number]
-
-async function fetchMilestonePRs(): Promise<PR[]> {
-  const token = process.env.GITHUB_TOKEN
-  if (!token) {
-    throw new Error('GITHUB_TOKEN environment variable is required')
-  }
-
-  // GraphQL query to fetch PRs with milestone ID 2 and their closing issues
-  const query = `
-    query {
-      repository(owner: "47ng", name: "nuqs") {
-        milestone(number: 2) {
-          pullRequests(first: 100) {
-            nodes {
-              number
-              title
-              author {
-                login
-              }
-              participants(first: 20) {
-                nodes {
-                  login
-                }
-              }
-              closingIssuesReferences(first: 10) {
-                edges {
-                  node {
-                    number
-                    participants(first: 20) {
-                      nodes {
-                        login
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  `.replace(/\s+/g, ' ')
-
-  const response = await fetch(
-    'https://api.github.com/graphql?fn=fetchMilestonesPRs',
-    {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ query })
-    }
-  )
-
-  if (!response.ok) {
-    throw new Error(
-      `GitHub API error: ${response.status} ${response.statusText}`
-    )
-  }
-
-  const json = await response.json()
-  const parsed = responseSchema.parse(json)
-
-  if (!parsed.data.repository.milestone) {
-    throw new Error('Milestone not found')
-  }
-
-  return parsed.data.repository.milestone.pullRequests.nodes
-}
 
 function categoryForType(type: string | undefined): Category {
   switch (type) {
@@ -139,102 +31,79 @@ function categoryForType(type: string | undefined): Category {
   }
 }
 
-export function splitCategoryTitle(title: string): [Category, string] {
-  // Note: classify is case-sensitive, so commits that haven't been
-  // linted by commitlint (e.g. a "Feat: whatever" from the GitHub web UI)
-  // will be categorised as "Other changes".
-  const { type, description } = classify(title)
-  return [categoryForType(type), description]
+// Order within a section: PR-sourced changes first (ascending PR number), then
+// direct-commit changes in their given order (discovery supplies them
+// oldest-first). Relies on a stable sort to preserve that commit order.
+function compareChanges(a: Change, b: Change): number {
+  if (a.source !== b.source) return a.source === 'squashedPR' ? -1 : 1
+  if (a.source === 'squashedPR' && b.source === 'squashedPR')
+    return a.prNumber - b.prNumber
+  return 0
 }
 
-export type CategorizedPR = {
-  category: Category
-  number: number
-  title: string
-  author: string | null
-  closingIssues: Array<{ number: number }>
-}
-
-export function groupPRsByCategory(
-  prs: PR[]
-): Record<Category, CategorizedPR[]> {
-  const categories: Record<Category, CategorizedPR[]> = {
+// Group changes into their changelog categories. The category is derived from
+// the change's `type` (the commit's classification) — never a PR title, whose
+// prefix is irrelevant prose. The category is the bucket key, not a field on the
+// change, so the two can't drift.
+export function groupChangesByCategory(
+  changes: Change[]
+): Record<Category, Change[]> {
+  const categories: Record<Category, Change[]> = {
     Features: [],
     'Bug fixes': [],
     Documentation: [],
     'Other changes': []
   }
-
-  for (const pr of prs) {
-    const [category, cleanTitle] = splitCategoryTitle(pr.title)
-    const closingIssues = pr.closingIssuesReferences.edges.map(edge => ({
-      number: edge.node.number
-    }))
-    categories[category].push({
-      category,
-      number: pr.number,
-      title: cleanTitle,
-      author: pr.author?.login ?? null,
-      closingIssues
-    })
+  for (const change of changes) {
+    categories[categoryForType(change.type)].push(change)
   }
-
   for (const category of CATEGORIES) {
-    categories[category].sort((a, b) => a.number - b.number)
+    categories[category].sort(compareChanges)
   }
-
   return categories
 }
 
-// Known bot accounts to exclude
-const botAccounts = new Set([
-  'copilot',
-  'dependabot',
-  'github-actions',
-  'pkg-pr-new',
-  'renovate',
-  'vercel'
-])
-
-function isBot(login: string) {
-  return login.endsWith('[bot]') || botAccounts.has(login.toLowerCase())
+// The breaking-changes cross-cut: every change flagged `breaking`, in the same
+// PR-first / commit-oldest order. A filter over `breaking`, NOT a category — a
+// `feat!` stays in its type section and also appears here. Drives the top
+// "Breaking changes" section, the maintainer's editing surface for the guide.
+export function breakingChanges(changes: Change[]): Change[] {
+  return changes.filter(change => change.breaking).sort(compareChanges)
 }
 
-export function collectContributors(prs: PR[]): string[] {
-  const contributors = new Set<string>()
-
-  for (const pr of prs) {
-    // Add all PR discussion participants (includes the PR author)
-    for (const { login } of pr.participants.nodes) {
-      if (!isBot(login)) {
-        contributors.add(login)
-      }
-    }
-
-    // Add participants of closing issues
-    for (const { node } of pr.closingIssuesReferences.edges) {
-      for (const { login } of node.participants.nodes) {
-        if (!isBot(login)) {
-          contributors.add(login)
-        }
-      }
-    }
-  }
-
-  // Remove myself from the list
-  contributors.delete('franky47')
-
-  return Array.from(contributors).sort((a, b) =>
-    a.toLowerCase().localeCompare(b.toLowerCase())
-  )
-}
-
-export function formatClosingIssues(
-  issues: CategorizedPR['closingIssues']
-): string {
+export function formatClosingIssues(issues: readonly IssueRef[]): string {
   if (issues.length === 0) return ''
   const issueNumbers = issues.map(i => `#${i.number}`).join(', ')
   return ` (closes ${issueNumbers})`
+}
+
+// Render one changelog bullet. A PR-sourced change renders as
+// `#123 - …, by @login (closes #N)`; a direct-commit change as
+// `abcd1234 - …, by Committer Name` (no `@`, no closing issues). With
+// `decorateBreaking`, a breaking change gets a trailing ⚠️ marker — used in the
+// type sections so a `feat!` is flagged inline; the top "Breaking changes"
+// section renders undecorated (the whole section is already breaking).
+export function formatChangeLine(
+  change: Change,
+  options: { decorateBreaking?: boolean } = {}
+): string {
+  const ref =
+    change.source === 'squashedPR' ? `#${change.prNumber}` : change.sha
+  const author =
+    change.source === 'squashedPR'
+      ? change.author
+        ? `, by @${change.author}`
+        : ''
+      : change.author
+        ? `, by ${change.author}`
+        : ''
+  const closes =
+    change.source === 'squashedPR'
+      ? formatClosingIssues(change.closingIssues)
+      : ''
+  const marker =
+    options.decorateBreaking && change.breaking ? ' - ⚠️ breaking change' : ''
+  return `- ${ref} - ${formatTitle(change.description)}${author}${closes}${marker}`
 }
 
 export function formatTitle(title: string): string {
@@ -253,42 +122,72 @@ export function formatThanksSection(contributors: string[]): string | null {
   return `Huge thanks to ${allContributors} for helping!`
 }
 
+// Assemble the full release-notes markdown: the breaking-changes cross-cut
+// first (its own section + a migration-guide placeholder for the maintainer to
+// fill in), then the type sections (with breaking lines flagged ⚠️), then the
+// Thanks section. Empty sections are dropped. Pure: `main` only prints the result.
+export function renderReleaseNotes(
+  changes: Change[],
+  contributors: string[]
+): string {
+  const blocks: string[] = []
+
+  const breaking = breakingChanges(changes)
+  if (breaking.length > 0) {
+    const lines = breaking.map(change => formatChangeLine(change))
+    blocks.push(
+      [
+        '## Breaking changes',
+        '',
+        ...lines,
+        '',
+        '### Migration guide',
+        '',
+        '<!-- todo: Add migration steps for breaking changes -->'
+      ].join('\n')
+    )
+  }
+
+  const categories = groupChangesByCategory(changes)
+  for (const category of CATEGORIES) {
+    const changesInCategory = categories[category]
+    if (changesInCategory.length === 0) continue
+    const lines = changesInCategory.map(change =>
+      formatChangeLine(change, { decorateBreaking: true })
+    )
+    blocks.push([`## ${category}`, '', ...lines].join('\n'))
+  }
+
+  const thanksSection = formatThanksSection(contributors)
+  if (thanksSection) {
+    blocks.push(['## Thanks', '', thanksSection].join('\n'))
+  }
+
+  return blocks.join('\n\n')
+}
+
 // Main execution
 async function main() {
   try {
-    const prs = await fetchMilestonePRs()
+    // Draft phase: the tag does not exist yet, so the range is resolved from
+    // HEAD. The channel selects the asymmetric range (incremental beta vs
+    // cumulative GA) — the same engine finalize runs post-publish, so the
+    // drafted notes list exactly the PRs/issues finalize will comment on.
+    const env = createEnv({
+      server: {
+        CHANNEL: z.enum(['stable', 'beta']),
+        GITHUB_TOKEN: z.string().min(1)
+      },
+      isServer: true,
+      runtimeEnv: process.env
+    })
+    const { changes, contributors } = await discoverChanges({
+      channel: env.CHANNEL,
+      currentRef: 'HEAD',
+      reader: makeGitHubGraphReader(env.GITHUB_TOKEN)
+    })
 
-    // Group by category
-    const categories = groupPRsByCategory(prs)
-
-    // Display results
-    for (const category of CATEGORIES) {
-      const prsInCategory = categories[category]
-
-      if (prsInCategory.length === 0) {
-        continue // Skip empty categories
-      }
-
-      console.log(`## ${category}\n`)
-
-      for (const pr of prsInCategory) {
-        const author = pr.author ? `, by @${pr.author}` : ''
-        const closingIssues = formatClosingIssues(pr.closingIssues)
-        console.log(
-          `- #${pr.number} - ${formatTitle(pr.title)}${author}${closingIssues}`
-        )
-      }
-
-      console.log() // Empty line between categories
-    }
-
-    // Collect and display contributors
-    const contributors = collectContributors(prs)
-    const thanksSection = formatThanksSection(contributors)
-    if (thanksSection) {
-      console.log('## Thanks\n')
-      console.log(`${thanksSection}\n`)
-    }
+    console.log(renderReleaseNotes(changes, contributors))
   } catch (error) {
     console.error('Error:', error)
     process.exit(1)

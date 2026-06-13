@@ -1,0 +1,94 @@
+name: Finalize Release
+
+# Phase 2 of the two-phase, human-gated release pipeline (see the
+# "Phasing out semantic-release" design doc). Fires when the maintainer
+# publishes the draft GitHub release (which creates the git tag server-side),
+# replacing @semantic-release/github's "released" commenting/labelling.
+#
+# Flow: confirm the version is actually live on npm (a plain registry curl,
+# before any checkout) -> discover the impacted issues/PRs from the commit
+# graph between tag checkpoints (the shared engine, identical to the draft
+# notes) -> comment + label every one of them, channel-aware and re-run-safe
+# (the channel label is the idempotency filter).
+
+on:
+  release:
+    types: [published]
+
+# One finalize per tag; queue (don't cancel) a re-run so a manual
+# "Re-run failed jobs" never races an in-flight loop.
+concurrency:
+  group: release-finalize-${{ github.event.release.tag_name }}
+  cancel-in-progress: false
+
+jobs:
+  finalize:
+    name: Comment + label impacted issues/PRs
+    runs-on: ubuntu-24.04-arm
+    # Least privilege: contents:read is checkout's documented minimum (the
+    # `fetch-depth: 0` clone needs it; only public-repo anonymous read masks
+    # its absence). Never contents:write, never an id-token — finalize only
+    # comments/labels. The npm publish authorization lives in release-draft.yml.
+    permissions:
+      contents: read
+      issues: write
+      pull-requests: write
+    env:
+      # `release.tag_name` is the only release field read — never the body, so
+      # the maintainer can freely edit published notes without affecting who
+      # gets commented. Passed via env (not inlined into a run script) to keep
+      # the tag out of any shell-expansion context.
+      TAG: ${{ github.event.release.tag_name }}
+    steps:
+      - name: Ensure version is published on NPM
+        # The very first step, before any checkout or npm CLI: a single
+        # registry curl for the per-version document. A not-yet-published
+        # release (npm 2FA approval skipped/failed) bails early and cheaply —
+        # no polling, since the manual approve->publish flow gives the registry
+        # ample propagation time and a transient failure is trivially re-run.
+        run: |
+          set -euo pipefail
+          if ! [[ "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-beta\.[0-9]+)?$ ]]; then
+            echo "::error::Unexpected release tag '$TAG'."
+            exit 1
+          fi
+          VERSION="${TAG#v}"
+          if ! curl -fsSL -o /dev/null "https://registry.npmjs.org/nuqs/$VERSION"; then
+            echo "::error::nuqs@$VERSION is not resolvable on the npm registry. Approve the staged package with 2FA, then re-run."
+            exit 1
+          fi
+          echo "nuqs@$VERSION is live on npm."
+
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          # Full history + tags: the engine resolves the release range from the
+          # commit graph between tag checkpoints (see lib/commit-graph.ts).
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093 # v6.0.8
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
+        with:
+          node-version-file: .node-version
+          # No package-manager cache: this job holds a write-capable token and
+          # runs installed code, so it must not restore a potentially-poisoned
+          # store (same stance as release-draft.yml's staging job). The install
+          # is tiny (the scripts package only) and lockfile-frozen.
+          package-manager-cache: false
+      - name: Install scripts dependencies
+        run: pnpm install --ignore-scripts --frozen-lockfile --filter scripts
+
+      - name: Comment + label impacted issues/PRs
+        # Discover the impacted set from the commit graph (same engine as the
+        # draft notes), then comment + label each one sequentially through an
+        # octokit throttling layer. Re-run-safe: the channel label is the
+        # idempotency filter, so a re-run completes stragglers without
+        # double-commenting. Never aborts mid-loop; fails at the end if any
+        # recoverable error was collected.
+        run: ./release-finalize.ts
+        working-directory: packages/scripts
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # P4 appends the housekeeping tail here:
+      #   - Contributors ISR invalidation (if: success(), GA-only)
+      #   - Slack release card (if: always())
