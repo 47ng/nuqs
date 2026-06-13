@@ -4,6 +4,7 @@ import {
   greatestGATag,
   greatestTag,
   highestBetaNumber,
+  isBeta,
   isGA,
   isValidSemver,
   precedes
@@ -35,6 +36,23 @@ describe('isGA', () => {
   })
 })
 
+describe('isBeta', () => {
+  it('is true only for a vX.Y.Z-beta.N tag (N numeric)', () => {
+    expect(isBeta('v1.2.3-beta.4')).toBe(true)
+    expect(isBeta('1.2.3-beta.0')).toBe(true)
+  })
+
+  it('rejects GA, other prereleases, and malformed beta shapes', () => {
+    expect(isBeta('v1.2.3')).toBe(false) // GA, no prerelease
+    expect(isBeta('v1.2.3-alpha.1')).toBe(false) // another prerelease id
+    expect(isBeta('v1.2.3-rc.1')).toBe(false)
+    expect(isBeta('v1.2.3-beta')).toBe(false) // no number
+    expect(isBeta('v1.2.3-beta.x')).toBe(false) // non-numeric
+    expect(isBeta('v1.2.3-beta.1.2')).toBe(false) // extra segment
+    expect(isBeta('latest')).toBe(false) // junk
+  })
+})
+
 describe('precedes', () => {
   it('orders strictly by semver precedence', () => {
     expect(precedes('v1.2.3', 'v1.2.4')).toBe(true)
@@ -63,7 +81,9 @@ describe('greatestTag', () => {
 
 describe('greatestGATag', () => {
   it('returns the highest GA tag, ignoring betas', () => {
-    expect(greatestGATag(['v1.2.3', 'v1.3.0-beta.1', 'v1.2.10'])).toBe('v1.2.10')
+    expect(greatestGATag(['v1.2.3', 'v1.3.0-beta.1', 'v1.2.10'])).toBe(
+      'v1.2.10'
+    )
   })
 
   it('returns null when only betas exist', () => {
@@ -74,22 +94,31 @@ describe('greatestGATag', () => {
 describe('highestBetaNumber', () => {
   it('returns the max beta number for the exact target', () => {
     expect(
-      highestBetaNumber(['v1.3.0-beta.1', 'v1.3.0-beta.3', 'v1.3.0-beta.2'], '1.3.0')
+      highestBetaNumber(
+        ['v1.3.0-beta.1', 'v1.3.0-beta.3', 'v1.3.0-beta.2'],
+        '1.3.0'
+      )
     ).toBe(3)
   })
 
   it('uses the max, not a count (so a deleted beta cannot cause collision)', () => {
     // beta.2 was deleted; the next must still be 4, not 3.
-    expect(highestBetaNumber(['v1.3.0-beta.1', 'v1.3.0-beta.3'], '1.3.0')).toBe(3)
+    expect(highestBetaNumber(['v1.3.0-beta.1', 'v1.3.0-beta.3'], '1.3.0')).toBe(
+      3
+    )
   })
 
   it('resets to 0 when the target has no matching betas', () => {
     // A recomputed-higher target sees none of the lower target's betas.
-    expect(highestBetaNumber(['v1.2.4-beta.1', 'v1.2.4-beta.2'], '1.3.0')).toBe(0)
+    expect(highestBetaNumber(['v1.2.4-beta.1', 'v1.2.4-beta.2'], '1.3.0')).toBe(
+      0
+    )
   })
 
   it('ignores non-beta prereleases for the same target', () => {
-    expect(highestBetaNumber(['v1.3.0-alpha.5', 'v1.3.0-rc.2'], '1.3.0')).toBe(0)
+    expect(highestBetaNumber(['v1.3.0-alpha.5', 'v1.3.0-rc.2'], '1.3.0')).toBe(
+      0
+    )
   })
 })
 

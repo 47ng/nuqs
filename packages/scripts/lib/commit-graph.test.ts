@@ -1,3 +1,7 @@
+import { execFileSync } from 'node:child_process'
+import { mkdtempSync, rmSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import { http, HttpResponse } from 'msw'
 import { setupServer } from 'msw/node'
 import {
@@ -21,18 +25,19 @@ import {
   fetchPRNodes,
   isBot,
   type PR,
+  readCommits,
   type ReleaseGraphReader,
   resolveChannel,
   resolveRange
 } from './commit-graph'
 
-// Build CommitRecord[] from raw messages, with placeholder SHA/committer (PR-
+// Build CommitRecord[] from raw messages, with placeholder SHA/author (PR-
 // sourced tests don't read them). For direct-commit assertions, construct
-// records inline with explicit SHA/committer.
+// records inline with explicit SHA/author.
 function records(...messages: string[]): CommitRecord[] {
   return messages.map(message => ({
     sha: '0000000000',
-    committer: 'Jane Doe',
+    author: 'Jane Doe',
     message
   }))
 }
@@ -448,7 +453,7 @@ describe('discoverChanges', () => {
     ).resolves.toEqual({ changes: [], contributors: [] })
   })
 
-  it('builds direct-commit changes (SHA, subject, committer) without fetching when no commit references a PR', async () => {
+  it('builds direct-commit changes (SHA, subject, author) without fetching when no commit references a PR', async () => {
     // git log is newest-first; the notes list direct commits oldest-first, so the
     // older `chore` precedes the newer `fix`. SHA is truncated to 8 chars.
     const reader: ReleaseGraphReader = {
@@ -456,10 +461,10 @@ describe('discoverChanges', () => {
       readCommits: () => [
         {
           sha: 'ffff1111aa',
-          committer: 'Alice Dev',
+          author: 'Alice Dev',
           message: 'fix: hot patch'
         },
-        { sha: 'eeee2222bb', committer: 'Bob Ops', message: 'chore: tidy up' }
+        { sha: 'eeee2222bb', author: 'Bob Ops', message: 'chore: tidy up' }
       ],
       fetchChangeDetails: () => {
         throw new Error('no PRs to fetch')
@@ -555,9 +560,9 @@ describe('discoverChanges', () => {
       readTags: () => [],
       readCommits: () => [
         // newest-first, as git log emits
-        { sha: 'cccc3333', committer: 'Dev', message: 'chore: newer direct' },
-        { sha: 'bbbb2222', committer: 'Dev', message: 'feat: a PR (#7)' },
-        { sha: 'aaaa1111', committer: 'Dev', message: 'fix: older direct' }
+        { sha: 'cccc3333', author: 'Dev', message: 'chore: newer direct' },
+        { sha: 'bbbb2222', author: 'Dev', message: 'feat: a PR (#7)' },
+        { sha: 'aaaa1111', author: 'Dev', message: 'fix: older direct' }
       ],
       fetchChangeDetails: async () => [
         createPR({ number: 7, title: 'feat: a PR' })
@@ -708,7 +713,7 @@ function makeHistoryReader(history: {
     message: string
     tag?: string
     sha?: string
-    committer?: string
+    author?: string
   }>
   prs: PR[]
 }): ReleaseGraphReader {
@@ -727,9 +732,9 @@ function makeHistoryReader(history: {
       return commits
         .slice(from + 1, to + 1)
         .reverse()
-        .map(({ message, sha, committer }) => ({
+        .map(({ message, sha, author }) => ({
           sha: sha ?? '0000000000',
-          committer: committer ?? 'Jane Doe',
+          author: author ?? 'Jane Doe',
           message
         }))
     },
@@ -998,5 +1003,50 @@ describe('fetchPRNodes', () => {
   it('throws on an unexpected response shape', async () => {
     replyWith({ unexpected: true })
     await expect(fetchPRNodes(baseArgs)).rejects.toThrow(/unexpected GraphQL/)
+  })
+})
+
+// readCommits is otherwise IO-shell glue (untested by design), but reading the
+// author (%an) rather than the committer (%cn) is load-bearing for attribution:
+// a web-UI edit commits as `GitHub`, and crediting that instead of the real
+// person was the bug this guards against. Pinned against a real one-commit repo
+// whose committer differs from its author.
+describe('readCommits (real git)', () => {
+  it('records the commit author, not the `GitHub` committer of a web-UI edit', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'commit-graph-'))
+    const run = (...args: string[]) =>
+      execFileSync('git', args, {
+        cwd: dir,
+        env: {
+          ...process.env,
+          // Ignore the contributor's global/system git config so a personal
+          // `commit.gpgsign`, hooks path, or commit template can't make this
+          // commit prompt, hang, or fail in an unattended/CI run.
+          GIT_CONFIG_GLOBAL: '/dev/null',
+          GIT_CONFIG_SYSTEM: '/dev/null',
+          GIT_AUTHOR_NAME: 'François Best',
+          GIT_AUTHOR_EMAIL: 'github@francoisbest.com',
+          // A commit made through the GitHub web UI records `GitHub` as committer.
+          GIT_COMMITTER_NAME: 'GitHub',
+          GIT_COMMITTER_EMAIL: 'noreply@github.com'
+        }
+      })
+    const cwd = process.cwd()
+    try {
+      run('init', '-q')
+      run('commit', '-q', '--allow-empty', '-m', 'doc: tidy readme')
+      // readCommits runs git in process.cwd(), so point it at the temp repo.
+      process.chdir(dir)
+      expect(readCommits({ from: null, to: 'HEAD' })).toEqual([
+        {
+          sha: expect.any(String),
+          author: 'François Best',
+          message: expect.stringContaining('doc: tidy readme')
+        }
+      ])
+    } finally {
+      process.chdir(cwd)
+      rmSync(dir, { recursive: true, force: true })
+    }
   })
 })

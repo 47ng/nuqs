@@ -25,15 +25,28 @@ import { z } from 'zod'
 import type { Channel } from '../compute-version.ts'
 import { parseCommit, parseSubject } from './conventional-commits.ts'
 import { git, readAllTags } from './git.ts'
-import { greatestTag, isGA, isValidSemver, precedes } from './version.ts'
+import {
+  greatestTag,
+  isBeta,
+  isGA,
+  isValidSemver,
+  precedes
+} from './version.ts'
 
 // --- Pure core: channel detection -----------------------------------------
 
-// A GA tag is stable; a tag with a prerelease segment (`-beta.N`) is a beta.
-// `HEAD` has no version, so the channel is supplied explicitly in the draft
-// phase — this is only used at finalize time on a real tag.
+// A GA tag (vX.Y.Z) is the stable channel; a vX.Y.Z-beta.N tag is the beta
+// channel. Any other ref — a non-beta prerelease (`-rc`/`-alpha`), a malformed
+// `-beta`, or junk — throws, so a bad finalize TAG aborts the release rather than
+// silently publishing to @beta. `HEAD` has no version, so the draft phase
+// supplies the channel explicitly; this derivation runs only at finalize, on a
+// real tag.
 export function resolveChannel(ref: string): Channel {
-  return isGA(ref) ? 'stable' : 'beta'
+  if (isGA(ref)) return 'stable'
+  if (isBeta(ref)) return 'beta'
+  throw new Error(
+    `resolveChannel: "${ref}" is neither a GA (vX.Y.Z) nor a beta (vX.Y.Z-beta.N) tag`
+  )
 }
 
 // --- Pure core: range resolution ------------------------------------------
@@ -173,7 +186,7 @@ export type Classification = {
 //                prose, `author` is the GitHub login, and it carries closing
 //                issues. The notes render it as `#123 - …, by @login`.
 //   - `commit` → identity is the 8-char commit SHA, `description` is the commit
-//                subject as prose, `author` is the git committer name. The notes
+//                subject as prose, `author` is the git author name. The notes
 //                render it as `abcd1234 - …, by Name`.
 // In both, the classification (`type`/`breaking`) comes from the commit, never a
 // PR title. Finalize comments only on `pr` changes (a commit has no PR/issue).
@@ -209,12 +222,12 @@ export type ReleaseTargets = {
 
 // --- Reader port -----------------------------------------------------------
 
-// One commit as read from git: its SHA, committer name (no email), and full
-// message. SHA and committer hydrate a direct (no-PR) change; the message yields
+// One commit as read from git: its SHA, author name (no email), and full
+// message. SHA and author hydrate a direct (no-PR) change; the message yields
 // the classification and, for direct changes, the description.
 export type CommitRecord = {
   sha: string
-  committer: string
+  author: string
   message: string
 }
 
@@ -242,21 +255,24 @@ export function makeGitHubGraphReader(githubToken: string): ReleaseGraphReader {
 
 // --- IO shell (untested by design) ----------------------------------------
 
-// One record per commit in the range: SHA (%H), committer name (%cn), and full
+// One record per commit in the range: SHA (%H), author name (%an), and full
 // message (subject + body, %B), field-separated by \x1f and record-separated by
 // \x1e (neither can occur in the fields). The body is needed so a `BREAKING
-// CHANGE:` footer (below the subject) is detected; the SHA and committer hydrate
-// direct (no-PR) changes. Fields reach the parser only through git's stdout (no
-// shell), so a crafted message cannot inject commands.
-function readCommits(range: Range): CommitRecord[] {
+// CHANGE:` footer (below the subject) is detected; the SHA and author hydrate
+// direct (no-PR) changes. We read the author (%an), not the committer (%cn): a
+// web-UI edit records `GitHub` as the committer but the real person as the
+// author, so the change is credited `, by <author>` rather than `, by GitHub`.
+// Fields reach the parser only through git's stdout (no shell), so a crafted
+// message cannot inject commands.
+export function readCommits(range: Range): CommitRecord[] {
   const spec = range.from ? `${range.from}..${range.to}` : range.to
-  return git(['log', spec, '--format=%H%x1f%cn%x1f%B%x1e'])
+  return git(['log', spec, '--format=%H%x1f%an%x1f%B%x1e'])
     .split('\x1e')
     .map(record => record.trim())
     .filter(Boolean)
     .map(record => {
-      const [sha = '', committer = '', message = ''] = record.split('\x1f')
-      return { sha, committer, message }
+      const [sha = '', author = '', message = ''] = record.split('\x1f')
+      return { sha, author, message }
     })
 }
 
@@ -427,20 +443,20 @@ type ReleaseRefs = {
 function changeRefs(records: CommitRecord[]): ReleaseRefs {
   const prClassifications = new Map<number, Classification>()
   const commitChanges: CommitChange[] = []
-  for (const { sha, committer, message } of records) {
+  for (const { sha, author, message } of records) {
     const firstLine = message.split('\n')[0] ?? ''
     const number = extractPRNumber(firstLine)
     const { type, breaking, description } = parseCommit(message)
     if (number === null) {
       // A direct commit with no PR: identity is the SHA, prose is the subject,
-      // author is the git committer.
+      // author is the git author name.
       commitChanges.push({
         source: 'commit',
         sha: sha.slice(0, 8),
         type,
         breaking,
         description,
-        author: committer
+        author
       })
       continue
     }
@@ -504,7 +520,7 @@ export function refsInRange(args: {
 // Notes-path discovery: the shared core + `fetchChangeDetails`, projected into
 // the full change list — the PR-sourced changes (classification from the commit,
 // the rest hydrated from the PR) followed by the direct-commit changes — plus the
-// release contributors (from the PRs only; commit committers are not GitHub
+// release contributors (from the PRs only; commit authors are not GitHub
 // handles). `fetchClosingIssues` is never touched.
 export async function discoverChanges(args: {
   channel: Channel

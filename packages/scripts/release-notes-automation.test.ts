@@ -298,7 +298,7 @@ describe('formatChangeLine', () => {
     breaking: true
   }
 
-  it('renders a direct-commit change with its SHA and committer (no @, no closes)', () => {
+  it('renders a direct-commit change with its SHA and author (no @, no closes)', () => {
     const commit = createCommitChange({
       sha: 'abcd1234',
       description: 'hot patch',

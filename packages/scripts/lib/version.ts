@@ -16,6 +16,20 @@ export function isGA(tag: string): boolean {
   return isValidSemver(tag) && semver.prerelease(tag) === null
 }
 
+// A beta tag is a valid version whose prerelease is exactly `beta.<N>`, N a
+// number (vX.Y.Z-beta.N) — the only shape `computeVersion` emits. A bare `-beta`,
+// a non-numeric `-beta.x`, an extra segment `-beta.N.M`, or another prerelease id
+// (`-rc`/`-alpha`) is not a channel we publish, so it is not a beta.
+export function isBeta(tag: string): boolean {
+  const pre = semver.prerelease(tag)
+  return (
+    pre !== null &&
+    pre.length === 2 &&
+    pre[0] === 'beta' &&
+    typeof pre[1] === 'number'
+  )
+}
+
 // Whether `tag` orders strictly before `ref` by semver precedence. Equal
 // versions do not precede each other (so a tag never precedes itself).
 export function precedes(tag: string, ref: string): boolean {
