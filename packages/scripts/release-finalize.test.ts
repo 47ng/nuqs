@@ -1,5 +1,5 @@
 import { RequestError } from 'octokit'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import {
   commentAndLabel,
   hasReleaseComment,
@@ -163,6 +163,11 @@ function makeFakeWriter(
   } = {}
 ) {
   const calls: Recorded[] = []
+  // Spies that capture the *payload* the loop writes (body, label), which the
+  // ordering `calls` list deliberately drops. They let a test assert the version
+  // and channel actually rendered into the comment and the label.
+  const commentSpy = vi.fn<(issueNumber: number, body: string) => void>()
+  const addLabelSpy = vi.fn<(issueNumber: number, label: string) => void>()
   function maybeThrow(number: number, op: Recorded['op']) {
     const failure = opts.failOn?.[number]
     if (!failure || failure.op !== op) return
@@ -193,16 +198,18 @@ function makeFakeWriter(
         comments: opts.existingComments?.[number] ?? []
       }
     },
-    async comment(number) {
+    async comment(number, body) {
       calls.push({ op: 'comment', number })
+      commentSpy(number, body)
       maybeThrow(number, 'comment')
     },
-    async addLabel(number) {
+    async addLabel(number, label) {
       calls.push({ op: 'addLabel', number })
+      addLabelSpy(number, label)
       maybeThrow(number, 'addLabel')
     }
   }
-  return { writer, calls }
+  return { writer, calls, commentSpy, addLabelSpy }
 }
 
 const gaInfo = resolveChannelInfo('v1.2.3') // label "released"
@@ -233,6 +240,43 @@ describe('commentAndLabel', () => {
       { op: 'comment', number: 2 },
       { op: 'addLabel', number: 2 }
     ])
+  })
+
+  it('writes a GA PR the stable channel + version and the released label', async () => {
+    const { writer, commentSpy, addLabelSpy } = makeFakeWriter()
+    await commentAndLabel({
+      writer,
+      tag: 'v1.2.3',
+      info: gaInfo,
+      targets: [{ number: 1, kind: 'PR' }]
+    })
+    // The rendered body carries the kind noun, the stable 🚀 channel, and the GA
+    // version; the label is the stable channel label.
+    expect(commentSpy).toHaveBeenCalledExactlyOnceWith(
+      1,
+      expect.stringMatching(/🚀 This PR is included in nuqs@1\.2\.3\b/)
+    )
+    expect(addLabelSpy).toHaveBeenCalledExactlyOnceWith(1, 'released')
+  })
+
+  it('writes a beta issue the beta channel + version and the @beta label', async () => {
+    const { writer, commentSpy, addLabelSpy } = makeFakeWriter()
+    await commentAndLabel({
+      writer,
+      tag: 'v1.2.3-beta.2',
+      info: resolveChannelInfo('v1.2.3-beta.2'),
+      targets: [{ number: 100, kind: 'issue' }]
+    })
+    expect(commentSpy).toHaveBeenCalledExactlyOnceWith(
+      100,
+      expect.stringMatching(
+        /🧪 This issue is included in nuqs@1\.2\.3-beta\.2\b/
+      )
+    )
+    expect(addLabelSpy).toHaveBeenCalledExactlyOnceWith(
+      100,
+      'released on @beta'
+    )
   })
 
   it('skips a target with both marker and label already present', async () => {
