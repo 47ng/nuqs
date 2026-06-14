@@ -6,7 +6,10 @@
 #
 # Pins:
 #   - Ubuntu 24.04   : matches the runner OS (glibc/zlib provenance)
-#   - Node           : from .node-version (official nodejs.org tarball)
+#   - Node           : verify.ts passes --build-arg NODE_VERSION from the
+#                      repo-root .node-version (the file actions/setup-node
+#                      reads in CI). The ARG default below is only a fallback
+#                      for a standalone `docker build` and may drift.
 #   - pnpm           : from package.json "packageManager"
 #   - npm            : hardcoded to match release-draft.yml's pinned npm.
 #                      TODO(unify): extract a shared .npm-version once the

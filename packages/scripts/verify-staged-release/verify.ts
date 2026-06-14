@@ -166,12 +166,30 @@ if (process.env.VERIFY_ALLOW_TREE_MISMATCH === '1') {
   }
 }
 
-err('==> Building canonical image')
+// Node version: single source of truth is the repo-root .node-version — the
+// same file actions/setup-node reads in CI. Feed it to the image build so the
+// sandbox Node matches the runner's bundled zlib (which decides the gzip layer
+// of the tarball). The Dockerfile's ARG default is only a fallback for a manual
+// `docker build` without this launcher; this --build-arg always overrides it.
+const NODE_VERSION = (() => {
+  const raw = readFileSync(join(REPO_ROOT, '.node-version'), 'utf8').trim()
+  const v = raw.replace(/^v/, '')
+  if (!/^\d+\.\d+\.\d+$/.test(v)) {
+    die(2, `FAIL: .node-version is not a plain x.y.z version: '${raw}'`)
+  }
+  return v
+})()
+
+err(`==> Building canonical image (Node ${NODE_VERSION} from .node-version)`)
 {
-  const r = spawnSync('docker', ['build', '-q', '-t', IMAGE, '.'], {
-    cwd: SCRIPT_DIR,
-    stdio: ['ignore', 'ignore', 'inherit'],
-  })
+  const r = spawnSync(
+    'docker',
+    ['build', '-q', '--build-arg', `NODE_VERSION=${NODE_VERSION}`, '-t', IMAGE, '.'],
+    {
+      cwd: SCRIPT_DIR,
+      stdio: ['ignore', 'ignore', 'inherit'],
+    },
+  )
   if (r.status !== 0) process.exit(r.status ?? 1)
 }
 
