@@ -1,3 +1,4 @@
+import { RequestError } from 'octokit'
 import { describe, expect, it } from 'vitest'
 import {
   commentAndLabel,
@@ -167,8 +168,8 @@ function makeFakeWriter(
     if (!failure || failure.op !== op) return
     // getThread is GraphQL: field errors arrive HTTP 200 with no numeric status,
     // carrying an `errors` array (NOT_FOUND for a deleted/transferred target,
-    // FORBIDDEN for a token-scope problem) — the GraphqlResponseError shape.
-    // The REST verbs (comment/addLabel) reject with a numeric `.status`.
+    // FORBIDDEN for a token-scope problem), the GraphqlResponseError shape.
+    // The REST verbs (comment/addLabel) reject with a real RequestError.
     if (failure.graphqlType !== undefined) {
       throw Object.assign(
         new Error(`simulated GraphQL ${failure.graphqlType}`),
@@ -177,9 +178,11 @@ function makeFakeWriter(
         }
       )
     }
-    throw Object.assign(new Error(`simulated ${failure.status}`), {
-      status: failure.status
-    })
+    if (failure.status !== undefined) {
+      throw new RequestError(`simulated ${failure.status}`, failure.status, {
+        request: { method: 'POST', url: '/', headers: {} }
+      })
+    }
   }
   const writer: IssueWriter = {
     async getThread(number) {
@@ -368,6 +371,34 @@ describe('commentAndLabel', () => {
   it('skips a throttling-survived 403 without failing the job', async () => {
     const { writer } = makeFakeWriter({
       failOn: { 1: { op: 'comment', status: 403 } }
+    })
+    await expect(
+      commentAndLabel({
+        writer,
+        tag: 'v1.2.3',
+        info: gaInfo,
+        targets: [{ number: 1, kind: 'PR' }]
+      })
+    ).resolves.toBeUndefined()
+  })
+
+  it('skips a 404 REST write (target deleted) without failing the job', async () => {
+    const { writer } = makeFakeWriter({
+      failOn: { 1: { op: 'addLabel', status: 404 } }
+    })
+    await expect(
+      commentAndLabel({
+        writer,
+        tag: 'v1.2.3',
+        info: gaInfo,
+        targets: [{ number: 1, kind: 'PR' }]
+      })
+    ).resolves.toBeUndefined()
+  })
+
+  it('skips a FORBIDDEN thread read on a single target without failing', async () => {
+    const { writer } = makeFakeWriter({
+      failOn: { 1: { op: 'getThread', graphqlType: 'FORBIDDEN' } }
     })
     await expect(
       commentAndLabel({

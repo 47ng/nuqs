@@ -2,7 +2,7 @@
 
 import type { ThrottlingOptions } from '@octokit/plugin-throttling'
 import { createEnv } from '@t3-oss/env-core'
-import { Octokit } from 'octokit'
+import { Octokit, RequestError } from 'octokit'
 import { z } from 'zod'
 import type { Channel } from './compute-version.ts'
 import {
@@ -122,25 +122,54 @@ export type IssueWriter = {
   addLabel(issueNumber: number, label: string): Promise<void>
 }
 
-// Unrecoverable per-target failures are skipped with a warning rather than
-// collected: a deleted/transferred target (the issue was removed — PRs cannot
-// be) or a perms/abuse edge that survived the throttling retries. Collecting one
-// would keep the run permanently red and block re-run convergence + the tail.
-// Two error shapes reach here: the REST verbs (comment/addLabel) reject with a
-// numeric HTTP `.status`; the GraphQL thread read rejects with a
-// GraphqlResponseError — HTTP 200, no `.status`, carrying an `errors` array
-// (`NOT_FOUND` for a gone target, `FORBIDDEN` for a scope problem). Both the 404
-// and the NOT_FOUND (resp. 403/FORBIDDEN) mean the same thing, so map them alike.
-function isUnrecoverable(error: unknown): boolean {
-  const status = (error as { status?: number }).status
-  if (status === 404 || status === 403) return true
-  const graphqlErrors = (error as { errors?: Array<{ type?: string }> }).errors
+// A GraphQL field error: a thrown Error carrying GraphQL's `errors` array (the
+// GraphqlResponseError shape). octokit re-exports RequestError but not
+// GraphqlResponseError, so we recognise it by shape with a type guard rather than
+// an `as` cast. Only each entry's `type` discriminant matters to us.
+type GraphqlFieldError = Error & {
+  errors: ReadonlyArray<{ type?: string }>
+}
+
+function isGraphqlFieldError(error: unknown): error is GraphqlFieldError {
   return (
-    Array.isArray(graphqlErrors) &&
-    graphqlErrors.some(
+    error instanceof Error && 'errors' in error && Array.isArray(error.errors)
+  )
+}
+
+// Unrecoverable per-target failures are skipped with a warning rather than
+// collected: a deleted/transferred target (an issue can be removed; a PR cannot)
+// or a genuine perms/abuse refusal. Collecting one would keep the run permanently
+// red and block both re-run convergence and the tail.
+//
+// Two error shapes reach here, one per transport:
+//   - the REST verbs (comment/addLabel) reject with a RequestError carrying a
+//     numeric HTTP `.status`;
+//   - the GraphQL thread read rejects with a GraphqlResponseError: HTTP 200, no
+//     `.status`, carrying an `errors` array (`NOT_FOUND` for a gone target,
+//     `FORBIDDEN` for a scope problem), matched by `isGraphqlFieldError`.
+//
+// On 403 specifically (reviewers keep reading this as a dropped rate limit, so to
+// be explicit): a 403 here is NEVER a transient rate limit. The throttling plugin
+// absorbs rate limits before they reach this catch — secondary limits retry
+// indefinitely, primary limits retry with backoff until the quota resets (see the
+// `throttle` config in `makeOctokitWriter`). A rate-limited request is retried,
+// not rejected, so it never lands here. A 403 that does survive to here is a real
+// permissions/abuse refusal, equivalent to 404 for our purposes (this one target
+// cannot be written), so we skip it. A misconfiguration that 403s *every* target
+// is caught downstream by `commentAndLabel`'s all-unrecoverable guard.
+//
+// Anything else (a network error, a non-RequestError throw) is treated as
+// recoverable: collected, so the job fails loud and a re-run retries the target.
+function isUnrecoverable(error: unknown): boolean {
+  if (error instanceof RequestError) {
+    return error.status === 404 || error.status === 403
+  }
+  if (isGraphqlFieldError(error)) {
+    return error.errors.some(
       ({ type }) => type === 'NOT_FOUND' || type === 'FORBIDDEN'
     )
-  )
+  }
+  return false
 }
 
 // Comment on and label every impacted issue/PR, sequentially (to stay clear of
