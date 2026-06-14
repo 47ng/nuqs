@@ -77,6 +77,16 @@ export function formatClosingIssues(issues: readonly IssueRef[]): string {
   return ` (closes ${issueNumbers})`
 }
 
+// A PR's author is a GitHub login, rendered `@handle`; a direct commit's is a
+// git author name, rendered as-is. Either may be absent (a deleted GitHub
+// account resolves to null), in which case the attribution is omitted.
+function formatAuthor(change: Change): string {
+  if (!change.author) return ''
+  const handle =
+    change.source === 'squashedPR' ? `@${change.author}` : change.author
+  return `, by ${handle}`
+}
+
 // Render one changelog bullet. A PR-sourced change renders as
 // `#123 - …, by @login (closes #N)`; a direct-commit change as
 // `abcd1234 - …, by Committer Name` (no `@`, no closing issues). With
@@ -89,14 +99,7 @@ export function formatChangeLine(
 ): string {
   const ref =
     change.source === 'squashedPR' ? `#${change.prNumber}` : change.sha
-  const author =
-    change.source === 'squashedPR'
-      ? change.author
-        ? `, by @${change.author}`
-        : ''
-      : change.author
-        ? `, by ${change.author}`
-        : ''
+  const author = formatAuthor(change)
   const closes =
     change.source === 'squashedPR'
       ? formatClosingIssues(change.closingIssues)
