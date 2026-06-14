@@ -169,34 +169,30 @@ export function renderReleaseNotes(
   return blocks.join('\n\n')
 }
 
-// Main execution
-async function main() {
-  try {
-    // Draft phase: the tag does not exist yet, so the range is resolved from
-    // HEAD. The channel selects the asymmetric range (incremental beta vs
-    // cumulative GA) — the same engine finalize runs post-publish, so the
-    // drafted notes list exactly the PRs/issues finalize will comment on.
-    const env = createEnv({
-      server: {
-        CHANNEL: z.enum(['stable', 'beta']),
-        GITHUB_TOKEN: z.string().min(1)
-      },
-      isServer: true,
-      runtimeEnv: process.env
-    })
-    const { changes, contributors } = await discoverChanges({
-      channel: env.CHANNEL,
-      currentRef: 'HEAD',
-      reader: makeGitHubGraphReader(env.GITHUB_TOKEN)
-    })
-
-    console.log(renderReleaseNotes(changes, contributors))
-  } catch (error) {
-    console.error('Error:', error)
-    process.exit(1)
-  }
+async function main(): Promise<void> {
+  // Draft phase: the tag does not exist yet, so the range is resolved from
+  // HEAD. The channel selects the asymmetric range (incremental beta vs
+  // cumulative GA) — the same engine finalize runs post-publish, so the
+  // drafted notes list exactly the PRs/issues finalize will comment on.
+  const env = createEnv({
+    server: {
+      CHANNEL: z.enum(['stable', 'beta']),
+      GITHUB_TOKEN: z.string().min(1)
+    },
+    isServer: true,
+    runtimeEnv: process.env
+  })
+  const { changes, contributors } = await discoverChanges({
+    channel: env.CHANNEL,
+    currentRef: 'HEAD',
+    reader: makeGitHubGraphReader(env.GITHUB_TOKEN)
+  })
+  console.log(renderReleaseNotes(changes, contributors))
 }
 
 if (import.meta.main) {
-  main()
+  main().catch(error => {
+    console.error('Error:', error)
+    process.exit(1)
+  })
 }
