@@ -6,13 +6,13 @@
 #
 # Reads the clean committed source tree as a tar stream on stdin, reproduces
 # `npm pack`, copies the reproduction to the host via the /out mount, and
-# asserts its digests against the staged values from the run-summary block.
+# asserts its digests against the staged values from the run-summary fields.
 #
 # Inputs (env):
 #   PACKAGE          package dir/name under packages/ (e.g. nuqs)
-#   VERSION          version to set before packing (from the run-summary block)
-#   EXPECTED_SHASUM  staged .tgz sha1 (block.shasum)
-#   EXPECTED_INTEGRITY  staged .tgz sha512 integrity (block.integrity, optional)
+#   VERSION          version to set before packing (from --version)
+#   EXPECTED_SHASUM  staged .tgz sha1 (from --shasum)
+#   EXPECTED_INTEGRITY  staged .tgz sha512 integrity (from --integrity, optional)
 # Inputs (stdin):    `git archive HEAD` of the clean committed tree
 # Outputs (mount):   /out/local.tgz  — the reproduced tarball, for run 2
 #
@@ -72,7 +72,7 @@ if [ "${SHA_OK}" = 1 ] && [ "${INT_OK}" = 1 ]; then
   if [ -n "${EXPECTED_INTEGRITY:-}" ]; then
     echo "HASH MATCH : PASS — reproduced .tgz == staged shasum + integrity"
   else
-    echo "HASH MATCH : PASS — reproduced .tgz == staged shasum (no integrity in block)"
+    echo "HASH MATCH : PASS — reproduced .tgz == staged shasum (no --integrity given)"
   fi
   echo "RESULT     : PASS"
   exit 0

@@ -3,11 +3,13 @@
 // Staged-release verification — host launcher.
 //
 // Usage:
-//   verify.ts [block-file]    # paste the run-summary block on stdin if omitted
+//   verify.ts --package <name> --version <v> --sha <sha> --shasum <s> \
+//             [--stage-id <id>] [--integrity <i>]
+//   (copy the single ready-to-run command from the Draft Release job summary)
 //
 // Flow (result-driven, no flags):
 //   1. Build the canonical image, reproduce the package inside it, and match
-//      the reproduction's digests against the run-summary block (run 1).
+//      the reproduction's digests against the run-summary fields (run 1).
 //   2. On a hash mismatch, the host downloads the actual staged tarball
 //      (assumed safe), cross-checks digests, enumerates the staged list for
 //      version-squats, then runs a second sandboxed container that extracts
@@ -22,18 +24,20 @@ import { spawn, spawnSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
 import { mkdirSync, readdirSync, readFileSync, renameSync, rmSync } from 'node:fs'
 import { join } from 'node:path'
-import { createInterface } from 'node:readline'
 import { parseArgs } from 'node:util'
 import { z } from 'zod'
 
 const HELP = `Staged-release verification — host launcher.
 
 Usage:
-  verify.ts [block-file]    # paste the run-summary block on stdin if omitted
+  verify.ts --package <name> --version <v> --sha <sha> --shasum <s> \\
+            [--stage-id <id>] [--integrity <i>]
 
-Reproduces the package in a hardened sandbox and matches its digests against
-the run-summary block. On a mismatch it downloads the staged tarball and diffs
-its contents to show what diverged. Escalation is automatic — no flags.`
+Pass the run-summary fields as flags — copy the single command the Draft
+Release job summary prints. Reproduces the package in a hardened sandbox and
+matches its digests against those fields. On a mismatch it downloads the
+staged tarball and diffs its contents to show what diverged. Escalation is
+automatic.`
 
 const IMAGE = 'nuqs-verify-staged:latest'
 const SCRIPT_DIR = import.meta.dirname
@@ -61,73 +65,78 @@ function die(code: number, ...lines: string[]): never {
 const sha1 = (path: string): string =>
   createHash('sha1').update(readFileSync(path)).digest('hex')
 
-// --- args -------------------------------------------------------------------
-const { values, positionals } = parseArgs({
-  options: { help: { type: 'boolean', short: 'h', default: false } },
-  allowPositionals: true,
-})
+// --- args: the run-summary fields as flags ----------------------------------
+// The Draft Release job summary prints a single ready-to-run command, each
+// field passed as a --flag (no stdin, no block file to paste). parseArgs is
+// strict: an unknown flag or a flag missing its value fails loud below.
+const { values } = (() => {
+  try {
+    return parseArgs({
+      options: {
+        help: { type: 'boolean', short: 'h', default: false },
+        package: { type: 'string' },
+        version: { type: 'string' },
+        sha: { type: 'string' },
+        'stage-id': { type: 'string' },
+        shasum: { type: 'string' },
+        integrity: { type: 'string' },
+      },
+      allowPositionals: false,
+    })
+  } catch (e) {
+    return die(2, (e as Error).message, '', HELP)
+  }
+})()
 
 if (values.help) {
   console.log(HELP)
   process.exit(0)
 }
-if (positionals.length > 1) die(2, `too many arguments: ${positionals.join(' ')}`)
-const BLOCK_FILE = positionals[0] ?? ''
+
+// Validate + normalise the flags into the shape the rest of the script uses.
+// shasum is a tarball sha1 (40 hex); sha is the git commit (40 hex today, 64
+// if the repo ever moves to SHA-256). stage-id and integrity are only needed
+// for the mismatch-escalation path, so they default to '' (treated as absent).
+const releaseFieldsSchema = z.object({
+  package: z.string({ error: 'missing required --package' }).min(1, '--package must not be empty'),
+  version: z.string({ error: 'missing required --version' }).min(1, '--version must not be empty'),
+  sha: z
+    .string({ error: 'missing required --sha' })
+    .regex(/^([0-9a-f]{40}|[0-9a-f]{64})$/, '--sha must be a 40- or 64-char hex commit SHA'),
+  shasum: z
+    .string({ error: 'missing required --shasum' })
+    .regex(/^[0-9a-f]{40}$/, '--shasum must be a 40-char hex sha1'),
+  stageId: z.string().min(1, '--stage-id must not be empty').default(''),
+  integrity: z
+    .string()
+    .regex(/^sha\d+-[A-Za-z0-9+/]+={0,2}$/, "--integrity must look like 'sha512-…'")
+    .default(''),
+})
+type ReleaseFields = z.infer<typeof releaseFieldsSchema>
+
+const parsed = releaseFieldsSchema.safeParse({
+  package: values.package,
+  version: values.version,
+  sha: values.sha,
+  shasum: values.shasum,
+  stageId: values['stage-id'],
+  integrity: values.integrity,
+})
+if (!parsed.success) {
+  die(2, ...parsed.error.issues.map(i => i.message), '', HELP)
+}
+const fields: ReleaseFields = parsed.data
 
 const REPO_ROOT = capture('git', ['rev-parse', '--show-toplevel']).trim()
 
-// --- read + parse the run-summary block -------------------------------------
-/**
- * Read the run-summary block from stdin, submitting on the first blank line
- * (press Enter to submit after paste). EOF also terminates, so piped /
- * heredoc input keeps working unchanged.
- */
-async function readBlockFromStdin(): Promise<string> {
-  const rl = createInterface({ input: process.stdin })
-  const lines: string[] = []
-  for await (const line of rl) {
-    if (line.trim() === '') break
-    lines.push(line)
-  }
-  rl.close()
-  return lines.join('\n')
-}
-
-let summaryBlock: string
-if (BLOCK_FILE) {
-  summaryBlock = readFileSync(BLOCK_FILE, 'utf8')
-} else {
-  err('Paste the run-summary block, then press Enter on a blank line to start:')
-  summaryBlock = await readBlockFromStdin()
-}
-
-// Keep only key=value lines (tolerate pasted ``` fences and stray prose).
-const summaryFields = new Map<string, string>()
-for (const line of summaryBlock.split('\n')) {
-  const m = /^([a-z_]+)=(.*)$/.exec(line)
-  if (!m) continue
-  if (!m[1] || !m[2]) {
-    err(`WARN: skipping malformed line in summary block: '${line}'`)
-    continue
-  }
-  if (!summaryFields.has(m[1])) summaryFields.set(m[1], m[2]) // first wins, like `head -1`
-}
-const field = (k: string): string => summaryFields.get(k) ?? ''
-
-const PACKAGE = field('package')
-const VERSION = field('version')
-const SHA = field('sha')
-const STAGE_ID = field('stage_id')
-const SHASUM = field('shasum')
-const INTEGRITY = field('integrity')
-
-const missing = (Object.entries({
+const {
   package: PACKAGE,
   version: VERSION,
   sha: SHA,
+  stageId: STAGE_ID,
   shasum: SHASUM,
-}) as [string, string][]).find(([, v]) => !v)
-if (missing) die(1, `block missing '${missing[0]}='`)
+  integrity: INTEGRITY,
+} = fields
 
 // --- clean-tree guard: HEAD must BE the staged commit -----------------------
 // Escape hatch (TEST MODE ONLY): VERIFY_ALLOW_TREE_MISMATCH=1 skips the
@@ -137,7 +146,7 @@ if (missing) die(1, `block missing '${missing[0]}='`)
 const HEAD_SHA = capture('git', ['-C', REPO_ROOT, 'rev-parse', 'HEAD']).trim()
 if (process.env.VERIFY_ALLOW_TREE_MISMATCH === '1') {
   err('WARN: VERIFY_ALLOW_TREE_MISMATCH=1 — skipping clean-tree + HEAD==sha guards (TEST MODE).')
-  err(`      Reproducing from HEAD ${HEAD_SHA.slice(0, 8)}, not block sha ${SHA.slice(0, 8)}.`)
+  err(`      Reproducing from HEAD ${HEAD_SHA.slice(0, 8)}, not the given --sha ${SHA.slice(0, 8)}.`)
 } else {
   const dirty = spawnSync('git', ['-C', REPO_ROOT, 'diff', '--quiet', 'HEAD']).status !== 0
   if (dirty) {
@@ -151,7 +160,7 @@ if (process.env.VERIFY_ALLOW_TREE_MISMATCH === '1') {
     die(
       1,
       `FAIL: HEAD (${HEAD_SHA})`,
-      `      != block sha (${SHA}).`,
+      `      != the given --sha (${SHA}).`,
       '      Check out the staged commit, then re-run.',
     )
   }
@@ -241,8 +250,8 @@ if (run1 !== 20) {
 
 // --- escalation (run 1 exited 20: reproduction succeeded but digests differ) -
 if (!STAGE_ID) {
-  die(1, "==> Hash mismatch, but the block has no 'stage_id=' to download the",
-       '    staged tarball. Re-run with a block that includes stage_id=.')
+  die(1, '==> Hash mismatch, but no --stage-id was given to download the staged',
+       '    tarball. Re-run with the --stage-id option included.')
 }
 
 // 1. Download the actual staged tarball (host-side; npm CLI assumed auth'd).
@@ -281,13 +290,13 @@ if (newTgz.length !== 1) {
 }
 renameSync(join(TARBALLS_DIR, newTgz[0]!), join(TARBALLS_DIR, STAGED_TGZ))
 
-// 2. Host-side digest cross-check matrix. Distinguishes a stale/lying block
+// 2. Host-side digest cross-check matrix. Distinguishes stale/lying arguments
 //    from a lying registry from a genuine source divergence.
 const localSha = sha1(join(TARBALLS_DIR, LOCAL_TGZ))
 const stagedSha = sha1(join(TARBALLS_DIR, STAGED_TGZ))
 err('')
 err('==> Digest cross-check')
-err(`    block.shasum     : ${SHASUM}`)
+err(`    --shasum         : ${SHASUM}`)
 err(`    registry.shasum  : ${stagedMeta?.shasum ?? '<unparsed>'}`)
 err(`    staged.tgz sha1  : ${stagedSha}`)
 err(`    local.tgz  sha1  : ${localSha}`)
@@ -295,10 +304,10 @@ if (stagedMeta && stagedMeta.shasum !== stagedSha) {
   err('    !! downloaded bytes do NOT match the registry-reported shasum (corruption or lying registry).')
 }
 if (stagedMeta && stagedMeta.shasum !== SHASUM) {
-  err('    !! registry shasum differs from the run-summary block (stale or tampered block).')
+  err('    !! registry shasum differs from the given --shasum (stale or tampered argument).')
 }
 if (stagedSha === localSha) {
-  err('    note: staged.tgz == local.tgz — the run-summary block digests were wrong/stale.')
+  err('    note: staged.tgz == local.tgz — the given --shasum/--integrity were wrong/stale.')
 }
 
 // 3. Enumerate the staged list and flag version-squats (a staged entry on our
