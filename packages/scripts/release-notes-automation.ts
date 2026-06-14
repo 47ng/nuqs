@@ -89,7 +89,7 @@ function formatAuthor(change: Change): string {
 
 // Render one changelog bullet. A PR-sourced change renders as
 // `#123 - …, by @login (closes #N)`; a direct-commit change as
-// `abcd1234 - …, by Committer Name` (no `@`, no closing issues). With
+// `abcd1234 - …, by Author Name` (no `@`, no closing issues). With
 // `decorateBreaking`, a breaking change gets a trailing ⚠️ marker — used in the
 // type sections so a `feat!` is flagged inline; the top "Breaking changes"
 // section renders undecorated (the whole section is already breaking).

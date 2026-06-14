@@ -38,7 +38,7 @@ function createDirectCommitChange(
     type: undefined,
     breaking: false,
     description: '',
-    author: 'Committer',
+    author: 'Author Name',
     ...overrides
   }
 }
