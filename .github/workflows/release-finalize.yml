@@ -58,6 +58,10 @@ jobs:
             exit 1
           fi
           echo "nuqs@$VERSION is live on npm."
+          # Surface the v-stripped version (computed here from the validated tag)
+          # for the Slack release card's `version` input. Only set once the
+          # version is confirmed live, so the card never announces a phantom.
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
 
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
@@ -89,6 +93,34 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # P4 appends the housekeeping tail here:
-      #   - Contributors ISR invalidation (if: success(), GA-only)
-      #   - Slack release card (if: always())
+      - name: Invalidate contributors ISR cache in the docs
+        # GA-only, and gated on the comment loop succeeding: the public
+        # contributors page repaints once — when a stable release actually
+        # ships, not on betas, and not while a red finalize is mid-convergence.
+        # `success()` is what skips it on a failed comment loop; a re-run that
+        # completes the stragglers green is what finally fires it. Not
+        # best-effort: a failed bust fails the job (so the maintainer re-runs
+        # rather than leaving the page silently stale) — the curl is idempotent.
+        if: ${{ success() && !contains(github.event.release.tag_name, '-beta.') }}
+        run: curl -fsS "https://nuqs.dev/api/isr?tag=contributors&token=$ISR_TOKEN"
+        env:
+          # Passed via env and read as $ISR_TOKEN at runtime, so the literal
+          # secret never appears in the workflow YAML text (same stance as TAG).
+          ISR_TOKEN: ${{ secrets.ISR_TOKEN }}
+
+      - name: Notify on Slack
+        # Last, and always: on success a 🚀/🧪 release card (packageName +
+        # version + channel → the action derives the npm + release-notes links);
+        # on a red run (a failed comment loop, or a failed ISR bust above) the
+        # standard step-breakdown notice instead. So a shipped release and a
+        # finalize failure are both visible without watching the Actions tab.
+        if: always()
+        uses: 47ng/actions-slack-notify@df42545060c07ca99a040d0a520ab8457ce3c222
+        with:
+          status: ${{ job.status }}
+          steps: ${{ toJson(steps) }}
+          packageName: nuqs
+          version: ${{ env.VERSION }}
+          channel: ${{ contains(github.event.release.tag_name, '-beta.') && '🧪 beta' || '🚀 latest' }}
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
