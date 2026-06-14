@@ -98,6 +98,10 @@ jobs:
     # bytes are the bytes that passed CI. Secrets passed explicitly (no
     # `secrets: inherit`) to keep the credential surface minimal.
     uses: ./.github/workflows/ci-cd.yml
+    with:
+      # Release runs are announced once by Finalize (the 🚀/🧪 release card),
+      # so suppress ci-cd's aggregate "CI passed" ping to avoid a double Slack.
+      finalNotification: false
     secrets:
       TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
       TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
@@ -184,6 +188,9 @@ jobs:
           done
           # stage-id gates the draft; shasum + integrity are surfaced in the
           # job summary so a reviewer can match the staged tarball before 2FA.
+          # One redirect per line (not a `{ … } >> file` group) is the deliberate
+          # house style — easier to scan — so the SC2129 hint is disabled here.
+          # shellcheck disable=SC2129
           echo "stage-id=$STAGE_ID" >> "$GITHUB_OUTPUT"
           echo "shasum=$SHASUM" >> "$GITHUB_OUTPUT"
           echo "integrity=$INTEGRITY" >> "$GITHUB_OUTPUT"
