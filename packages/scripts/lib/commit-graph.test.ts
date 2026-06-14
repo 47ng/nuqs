@@ -59,9 +59,8 @@ describe('resolveChannel', () => {
     expect(resolveChannel('v2.0.0-beta.42')).toBe('beta')
   })
 
-  // Not sure which of throwing or propagating null is better,
-  // but we need to be robust against suffixes that
-  // don't fall in either stable or beta.
+  // An unrecognised suffix must throw, not return null: a bad finalize TAG aborts
+  // the release rather than silently publishing to @beta (see resolveChannel).
   it('should reject other suffixes', () => {
     expect(() => resolveChannel('v1.3.0-alpha.1')).toThrow()
     expect(() => resolveChannel('0.0.0-preview.12345')).toThrow()

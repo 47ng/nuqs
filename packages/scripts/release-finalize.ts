@@ -278,8 +278,8 @@ const threadSchema = z.object({
 // The octokit-backed IssueWriter adapter. An octokit pre-wired with the
 // throttling plugin (secondary-rate-limit responses retried with backoff
 // rather than dropping a comment; primary limits retried a few times, secondary
-// always — they are transient), wrapped in the three port verbs.
-// The thread read goes through GraphQL (see `getThread`);
+// always — they are transient), wrapped in the three port verbs. The thread
+// read goes through GraphQL; `getThread` explains why.
 function makeOctokitWriter(args: {
   auth: string
   owner: string

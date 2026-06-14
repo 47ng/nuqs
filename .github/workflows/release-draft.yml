@@ -8,7 +8,8 @@ name: Draft Release
 # Flow: compute-version -> ci (the gate, re-runs the full matrix on the
 # exact dispatched SHA via workflow_call) -> stage (set version ephemerally,
 # build, `npm stage publish` via OIDC, then create a DRAFT GitHub release
-# with milestone notes). Nothing is installable or irreversible here: the
+# with notes built from the commit graph, see lib/commit-graph.ts). Nothing
+# is installable or irreversible here: the
 # tarball sits in npm staging until a human approves it on npmjs.com with
 # 2FA, and the git tag is only created when the draft release is published.
 
