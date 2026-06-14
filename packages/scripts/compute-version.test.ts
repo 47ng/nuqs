@@ -153,4 +153,19 @@ describe('computeVersion', () => {
     })
     expect(plan).toMatchObject({ version: '0.1.0', bump: 'minor' })
   })
+
+  it('computes the first-ever beta (no GA tag, no betas) from 0.0.0', () => {
+    const plan = computeVersion({
+      channel: 'beta',
+      lastGATag: null,
+      commits: ['feat: first feature'],
+      tags: []
+    })
+    expect(plan).toEqual({
+      version: '0.1.0-beta.1',
+      tag: 'v0.1.0-beta.1',
+      distTag: 'beta',
+      bump: 'minor'
+    })
+  })
 })
