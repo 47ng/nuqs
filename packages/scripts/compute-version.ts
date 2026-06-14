@@ -105,7 +105,7 @@ function main(): void {
       `Last GA:  ${lastGATag ?? '(none)'}`,
       `Bump:     ${plan.bump}`,
       `Version:  ${plan.version}`,
-      `Tag:     ${plan.tag}`,
+      `Tag:      ${plan.tag}`,
       `Dist-tag: ${plan.distTag}`
     ].join('\n')
   )
