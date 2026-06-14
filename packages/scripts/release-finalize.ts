@@ -15,8 +15,9 @@ import { isValidSemver } from './lib/version.ts'
 // --- Pure core: channel presentation --------------------------------------
 
 // Everything that differs between channels: the comment emoji, the npm
-// dist-tag the release lands on, and the existing semantic-release label
-// reused verbatim as the idempotency marker.
+// dist-tag the release lands on, and the existing semantic-release label,
+// reused verbatim as a queryable channel tag — applied idempotently but no
+// longer the idempotency record (the comment's embedded marker is).
 type ChannelInfo = {
   channel: Channel
   emoji: string
@@ -40,6 +41,14 @@ export function resolveChannelInfo(tag: string): ChannelInfo {
 // A PR (from a commit subject) or an issue (from closingIssuesReferences).
 export type Kind = 'PR' | 'issue'
 
+// The HTML-comment idempotency marker embedded in every finalize comment.
+// Invisible in rendered markdown, matched verbatim on re-run, and keyed by
+// release version (tag minus the leading `v`) — so a GA finalize is not
+// suppressed by a PR's earlier beta marker, mirroring the old per-channel label.
+export function releaseMarker(tag: string): string {
+  return `<!-- release-finalize:nuqs@${tag.replace(/^v/, '')} -->`
+}
+
 // The released-in comment, a single editable template literal. Channel drives
 // the emoji and dist-tag; the version (tag without the leading `v`) drives the
 // npmx package link and install snippet; the tag drives the release-notes link.
@@ -56,21 +65,41 @@ The release is available on:
 \`\`\`
 pnpm add nuqs@${version}
 \`\`\`
+
+${releaseMarker(tag)}
 `
 }
 
 // --- Pure core: idempotency -----------------------------------------------
 
-// The channel label itself is the idempotency marker: skip any issue/PR that
-// already carries this release's channel label. Sound because the asymmetric
-// range visits each issue at most once per channel, and a GA re-commenting a
-// beta'd PR uses a different label (so it is not suppressed). Re-running a
-// partially-failed finalize thus converges without double-commenting.
-export function shouldSkip(
-  issueLabels: string[],
-  channelLabel: string
+// A comment as read from a thread: the author login (for the bot-author guard)
+// and the raw body (scanned for the marker). The minimal projection the marker
+// check needs — no ids, timestamps, or reactions.
+export type ThreadComment = { author: string; body: string }
+
+// Comments are posted by the release CI job under GITHUB_TOKEN, authoring as
+// `github-actions[bot]`. The marker check requires this author: the sentinel is
+// plain text visible in the page source, so a human — or an AI agent that echoes
+// it back in a comment — could otherwise suppress a real release notification by
+// posting the marker themselves.
+export const RELEASE_BOT_LOGIN = 'github-actions[bot]'
+
+// Comment gate: this bot has already posted this release's marker comment.
+// The marker lives in the comment body, so posting the comment and persisting the
+// record are one write — a target is never double-notified (a re-run finds the
+// marker and skips) nor silently missed (a failed comment leaves no marker, so a
+// re-run re-posts). Per-version scoping keeps a GA finalize commenting a PR that
+// earlier carried only a beta marker; it relies on `discoverTargets`' invariant
+// that each target appears in at most one beta finalize (the incremental beta
+// range), so a per-version marker never double-comments where the old
+// per-channel label would have suppressed.
+export function hasReleaseComment(
+  comments: ThreadComment[],
+  marker: string
 ): boolean {
-  return issueLabels.includes(channelLabel)
+  return comments.some(
+    ({ author, body }) => author === RELEASE_BOT_LOGIN && body.includes(marker)
+  )
 }
 
 // --- Use-case: the comment + label loop (tested at the IssueWriter port) ---
@@ -79,29 +108,49 @@ export function shouldSkip(
 // discovery (PRs from commit subjects, issues from closingIssuesReferences).
 export type Target = { number: number; kind: Kind }
 
-// The port the loop writes through. A narrow surface (read labels, comment,
-// add a label) that hides octokit, REST shapes, and throttling behind three
-// verbs — so the loop's failure handling is exercised without any network.
+// One read of a target's idempotency state: its labels (does the channel label
+// already exist?) and recent comments (did this bot already post the marker?).
+// Both come from a single GraphQL query, so the two gates cost one round-trip.
+export type Thread = { labels: string[]; comments: ThreadComment[] }
+
+// The port the loop writes through. A narrow surface (read the thread, comment,
+// add a label) that hides octokit, REST/GraphQL shapes, and throttling behind
+// three verbs — so the loop's failure handling is exercised without any network.
 export type IssueWriter = {
-  getLabels(issueNumber: number): Promise<string[]>
+  getThread(issueNumber: number): Promise<Thread>
   comment(issueNumber: number, body: string): Promise<void>
   addLabel(issueNumber: number, label: string): Promise<void>
 }
 
 // Unrecoverable per-target failures are skipped with a warning rather than
-// collected: a 404 (the issue was deleted — PRs cannot be) or a 403 that
-// survived the throttling retries (a genuine perms/abuse edge). Collecting one
+// collected: a deleted/transferred target (the issue was removed — PRs cannot
+// be) or a perms/abuse edge that survived the throttling retries. Collecting one
 // would keep the run permanently red and block re-run convergence + the tail.
+// Two error shapes reach here: the REST verbs (comment/addLabel) reject with a
+// numeric HTTP `.status`; the GraphQL thread read rejects with a
+// GraphqlResponseError — HTTP 200, no `.status`, carrying an `errors` array
+// (`NOT_FOUND` for a gone target, `FORBIDDEN` for a scope problem). Both the 404
+// and the NOT_FOUND (resp. 403/FORBIDDEN) mean the same thing, so map them alike.
 function isUnrecoverable(error: unknown): boolean {
   const status = (error as { status?: number }).status
-  return status === 404 || status === 403
+  if (status === 404 || status === 403) return true
+  const graphqlErrors = (error as { errors?: Array<{ type?: string }> }).errors
+  return (
+    Array.isArray(graphqlErrors) &&
+    graphqlErrors.some(
+      ({ type }) => type === 'NOT_FOUND' || type === 'FORBIDDEN'
+    )
+  )
 }
 
 // Comment on and label every impacted issue/PR, sequentially (to stay clear of
-// secondary rate limits). Per target: skip if it already carries this release's
-// channel label (idempotency); otherwise comment then label. Never aborts
-// mid-loop — unrecoverable failures are skipped, all others collected and
-// re-thrown at the end so the job goes red and a re-run completes the rest.
+// secondary rate limits). One thread read drives two independent idempotency
+// gates: the marker decides the comment (its body *is* the record), the label's
+// own presence decides the label. Both converge on re-run — a half-finished
+// target completes only its missing side, with no duplicate comment and no
+// useless label mutation. Never aborts mid-loop — unrecoverable failures are
+// skipped, all others collected and re-thrown so the job goes red and a re-run
+// completes the rest.
 export async function commentAndLabel(args: {
   writer: IssueWriter
   tag: string
@@ -109,19 +158,28 @@ export async function commentAndLabel(args: {
   targets: Target[]
 }): Promise<void> {
   const { writer, tag, info, targets } = args
+  const marker = releaseMarker(tag)
   const errors: unknown[] = []
   let unrecoverable = 0
   for (const { number, kind } of targets) {
     try {
-      if (shouldSkip(await writer.getLabels(number), info.label)) {
-        console.log(`#${number}: already labelled "${info.label}", skipping`)
+      const { labels, comments } = await writer.getThread(number)
+      const needsComment = !hasReleaseComment(comments, marker)
+      const needsLabel = !labels.includes(info.label)
+      if (!needsComment && !needsLabel) {
+        console.log(`#${number}: already finalized, skipping`)
         continue
       }
-      // Comment before labelling, mirroring @semantic-release/github: the label
-      // is the idempotency marker, so it lands last (a labelled target is done).
-      await writer.comment(number, renderComment({ tag, kind }))
-      await writer.addLabel(number, info.label)
-      console.log(`#${number}: commented + labelled "${info.label}"`)
+      const did: string[] = []
+      if (needsComment) {
+        await writer.comment(number, renderComment({ tag, kind }))
+        did.push('commented')
+      }
+      if (needsLabel) {
+        await writer.addLabel(number, info.label)
+        did.push(`labelled "${info.label}"`)
+      }
+      console.log(`#${number}: ${did.join(' + ')}`)
     } catch (error) {
       if (isUnrecoverable(error)) {
         unrecoverable++
@@ -137,13 +195,13 @@ export async function commentAndLabel(args: {
       `${errors.length} issue(s)/PR(s) failed to finalize; re-run to complete the stragglers.`
     )
   }
-  // A whole release's worth of targets (more than one) all failing 403/404 is a
+  // A whole release's worth of targets (more than one) all unrecoverable is a
   // misconfiguration signature — a wrong token scope or GITHUB_REPOSITORY — not N
   // genuine deletions. Fail loud rather than report an all-green no-op. (A lone
   // skipped target stays green: an isolated deleted issue is plausible.)
   if (targets.length > 1 && unrecoverable === targets.length) {
     throw new Error(
-      `All ${targets.length} targets failed with 403/404 — likely a token/repository misconfiguration, not genuine deletions.`
+      `All ${targets.length} targets failed unrecoverably (403/404 or GraphQL FORBIDDEN/NOT_FOUND) — likely a token/repository misconfiguration, not genuine deletions.`
     )
   }
 }
@@ -164,11 +222,35 @@ function collectTargets(
   ]
 }
 
+// How many of a thread's most-recent comments to scan for the marker.
+const COMMENT_SCAN_WINDOW = 20
+
+// `issueOrPullRequest` resolves either kind by number, so one query serves PRs
+// and issues. octokit.graphql returns the unwrapped `data`;
+// author is nullable (ghost/deleted accounts), labels and body are not.
+const threadSchema = z.object({
+  repository: z.object({
+    issueOrPullRequest: z
+      .object({
+        labels: z.object({ nodes: z.array(z.object({ name: z.string() })) }),
+        comments: z.object({
+          nodes: z.array(
+            z.object({
+              author: z.object({ login: z.string() }).nullable(),
+              body: z.string()
+            })
+          )
+        })
+      })
+      .nullable()
+  })
+})
+
 // The octokit-backed IssueWriter adapter. An octokit pre-wired with the
 // throttling plugin (secondary-rate-limit responses retried with backoff
 // rather than dropping a comment; primary limits retried a few times, secondary
-// always — they are transient), wrapped in the three port verbs. addLabels does
-// not auto-create labels — moot, the channel labels pre-exist.
+// always — they are transient), wrapped in the three port verbs.
+// The thread read goes through GraphQL (see `getThread`);
 function makeOctokitWriter(args: {
   auth: string
   owner: string
@@ -189,15 +271,43 @@ function makeOctokitWriter(args: {
   const octokit = new Octokit({ auth: args.auth, throttle })
   const { owner, repo } = args
   return {
-    async getLabels(issue_number) {
-      const { data } = await octokit.rest.issues.get({
-        owner,
-        repo,
-        issue_number
-      })
-      return data.labels.map(label =>
-        typeof label === 'string' ? label : (label.name ?? '')
+    async getThread(issue_number) {
+      // GraphQL, not REST: the REST issue-comments endpoint is oldest-first with
+      // no direction param, so the freshly-posted marker sits on the last page;
+      // `comments(last: N)` fetches the recent tail where it lives, and the same
+      // query returns the labels — both gates in one round-trip. Goes through the
+      // throttling plugin like every other request.
+      const data = await octokit.graphql(
+        `query ($owner: String!, $repo: String!, $number: Int!, $window: Int!) {
+          repository(owner: $owner, name: $repo) {
+            issueOrPullRequest(number: $number) {
+              ... on Issue {
+                labels(first: 10) { nodes { name } }
+                comments(last: $window) { nodes { author { login } body } }
+              }
+              ... on PullRequest {
+                labels(first: 10) { nodes { name } }
+                comments(last: $window) { nodes { author { login } body } }
+              }
+            }
+          }
+        }`,
+        { owner, repo, number: issue_number, window: COMMENT_SCAN_WINDOW }
       )
+      const parsed = threadSchema.safeParse(data)
+      if (!parsed.success) {
+        throw new Error(
+          `getThread(#${issue_number}): unexpected GraphQL response: ${parsed.error.message}`
+        )
+      }
+      const node = parsed.data.repository.issueOrPullRequest
+      return {
+        labels: node?.labels.nodes.map(label => label.name) ?? [],
+        comments: (node?.comments.nodes ?? []).map(comment => ({
+          author: comment.author?.login ?? '',
+          body: comment.body
+        }))
+      }
     },
     async comment(issue_number, body) {
       await octokit.rest.issues.createComment({

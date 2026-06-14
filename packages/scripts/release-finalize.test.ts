@@ -1,12 +1,29 @@
 import { describe, expect, it } from 'vitest'
 import {
   commentAndLabel,
+  hasReleaseComment,
+  releaseMarker,
   renderComment,
   resolveChannelInfo,
-  shouldSkip,
   type IssueWriter,
-  type Target
+  type Target,
+  type ThreadComment
 } from './release-finalize'
+
+// The login finalize comments author as (the CI GITHUB_TOKEN identity).
+const githubActionsBot = 'github-actions[bot]'
+
+describe('releaseMarker', () => {
+  it('keys the marker by release version (GA tag, no leading v)', () => {
+    expect(releaseMarker('v1.2.3')).toBe('<!-- release-finalize:nuqs@1.2.3 -->')
+  })
+
+  it('keeps the -beta suffix so betas and GAs get distinct markers', () => {
+    expect(releaseMarker('v1.2.3-beta.4')).toBe(
+      '<!-- release-finalize:nuqs@1.2.3-beta.4 -->'
+    )
+  })
+})
 
 describe('resolveChannelInfo', () => {
   it('maps a GA tag to the 🚀 / @latest / released presentation', () => {
@@ -40,6 +57,8 @@ The release is available on:
 \`\`\`
 pnpm add nuqs@1.2.3
 \`\`\`
+
+<!-- release-finalize:nuqs@1.2.3 -->
 `
     )
   })
@@ -55,6 +74,8 @@ The release is available on:
 \`\`\`
 pnpm add nuqs@1.2.3
 \`\`\`
+
+<!-- release-finalize:nuqs@1.2.3 -->
 `
     )
   })
@@ -70,6 +91,8 @@ The release is available on:
 \`\`\`
 pnpm add nuqs@1.2.3-beta.4
 \`\`\`
+
+<!-- release-finalize:nuqs@1.2.3-beta.4 -->
 `
     )
   })
@@ -85,50 +108,87 @@ The release is available on:
 \`\`\`
 pnpm add nuqs@1.2.3-beta.4
 \`\`\`
+
+<!-- release-finalize:nuqs@1.2.3-beta.4 -->
 `
     )
   })
 })
 
-describe('shouldSkip', () => {
-  it('skips an issue already carrying this release’s channel label', () => {
-    expect(shouldSkip(['bug', 'released'], 'released')).toBe(true)
+describe('hasReleaseComment', () => {
+  const marker = releaseMarker('v1.2.3')
+
+  it("returns true when the bot has posted a comment bearing this release's marker", () => {
+    const comments: ThreadComment[] = [
+      { author: githubActionsBot, body: `done\n${marker}\n` }
+    ]
+    expect(hasReleaseComment(comments, marker)).toBe(true)
   })
 
-  it('does not skip an issue missing this release’s channel label', () => {
-    expect(shouldSkip(['bug'], 'released')).toBe(false)
+  it('returns false when no comment carries the marker', () => {
+    const comments: ThreadComment[] = [
+      { author: githubActionsBot, body: 'unrelated chatter' }
+    ]
+    expect(hasReleaseComment(comments, marker)).toBe(false)
   })
 
-  it('does not skip a beta-labelled issue when the GA label is the filter', () => {
-    // A PR that rode betas carries `released on @beta`; the GA finalize uses
-    // the `released` label, so it must still comment (different channel).
-    expect(shouldSkip(['released on @beta'], 'released')).toBe(false)
+  it("returns false for a different release's marker (per-version scoping)", () => {
+    const comments: ThreadComment[] = [
+      { author: githubActionsBot, body: releaseMarker('v1.2.3-beta.4') }
+    ]
+    expect(hasReleaseComment(comments, marker)).toBe(false)
+  })
+
+  it('returns false when the marker is present but the author is not the bot (anti-spoof)', () => {
+    const comments: ThreadComment[] = [{ author: 'eve', body: marker }]
+    expect(hasReleaseComment(comments, marker)).toBe(false)
   })
 })
+
+type Recorded = { op: 'getThread' | 'comment' | 'addLabel'; number: number }
 
 // A fake IssueWriter records every call and can be programmed to reject a
 // specific (issue, op) with an HTTP-ish status — letting the loop's failure
 // handling be exercised at the port boundary, with no octokit or network.
+// The thread read returns whatever labels/comments the target is seeded with.
 function makeFakeWriter(
   opts: {
     existingLabels?: Record<number, string[]>
-    failOn?: Record<number, { op: Recorded['op']; status: number }>
+    existingComments?: Record<number, ThreadComment[]>
+    failOn?: Record<
+      number,
+      { op: Recorded['op']; status?: number; graphqlType?: string }
+    >
   } = {}
 ) {
   const calls: Recorded[] = []
   function maybeThrow(number: number, op: Recorded['op']) {
     const failure = opts.failOn?.[number]
-    if (failure && failure.op === op) {
-      throw Object.assign(new Error(`simulated ${failure.status}`), {
-        status: failure.status
-      })
+    if (!failure || failure.op !== op) return
+    // getThread is GraphQL: field errors arrive HTTP 200 with no numeric status,
+    // carrying an `errors` array (NOT_FOUND for a deleted/transferred target,
+    // FORBIDDEN for a token-scope problem) — the GraphqlResponseError shape.
+    // The REST verbs (comment/addLabel) reject with a numeric `.status`.
+    if (failure.graphqlType !== undefined) {
+      throw Object.assign(
+        new Error(`simulated GraphQL ${failure.graphqlType}`),
+        {
+          errors: [{ type: failure.graphqlType }]
+        }
+      )
     }
+    throw Object.assign(new Error(`simulated ${failure.status}`), {
+      status: failure.status
+    })
   }
   const writer: IssueWriter = {
-    async getLabels(number) {
-      calls.push({ op: 'getLabels', number })
-      maybeThrow(number, 'getLabels')
-      return opts.existingLabels?.[number] ?? []
+    async getThread(number) {
+      calls.push({ op: 'getThread', number })
+      maybeThrow(number, 'getThread')
+      return {
+        labels: opts.existingLabels?.[number] ?? [],
+        comments: opts.existingComments?.[number] ?? []
+      }
     },
     async comment(number) {
       calls.push({ op: 'comment', number })
@@ -142,16 +202,19 @@ function makeFakeWriter(
   return { writer, calls }
 }
 
-type Recorded = { op: 'getLabels' | 'comment' | 'addLabel'; number: number }
-
 const gaInfo = resolveChannelInfo('v1.2.3') // label "released"
 const twoTargets: Target[] = [
   { number: 1, kind: 'PR' },
   { number: 2, kind: 'issue' }
 ]
 
+// A target carrying this bot's marker for `tag` (i.e. already commented).
+function finalized(tag: string): ThreadComment[] {
+  return [{ author: githubActionsBot, body: `done\n${releaseMarker(tag)}\n` }]
+}
+
 describe('commentAndLabel', () => {
-  it('comments then labels every target, in target order', async () => {
+  it('comments then labels every fresh target, in target order', async () => {
     const { writer, calls } = makeFakeWriter()
     await commentAndLabel({
       writer,
@@ -160,17 +223,18 @@ describe('commentAndLabel', () => {
       targets: twoTargets
     })
     expect(calls).toEqual([
-      { op: 'getLabels', number: 1 },
+      { op: 'getThread', number: 1 },
       { op: 'comment', number: 1 },
       { op: 'addLabel', number: 1 },
-      { op: 'getLabels', number: 2 },
+      { op: 'getThread', number: 2 },
       { op: 'comment', number: 2 },
       { op: 'addLabel', number: 2 }
     ])
   })
 
-  it('skips a target already carrying this channel label (no comment, no label)', async () => {
+  it('skips a target with both marker and label already present', async () => {
     const { writer, calls } = makeFakeWriter({
+      existingComments: { 1: finalized('v1.2.3') },
       existingLabels: { 1: ['released'] }
     })
     await commentAndLabel({
@@ -180,15 +244,50 @@ describe('commentAndLabel', () => {
       targets: twoTargets
     })
     expect(calls).toEqual([
-      { op: 'getLabels', number: 1 },
-      { op: 'getLabels', number: 2 },
+      { op: 'getThread', number: 1 },
+      { op: 'getThread', number: 2 },
       { op: 'comment', number: 2 },
       { op: 'addLabel', number: 2 }
     ])
   })
 
-  it('still comments a beta-labelled target during a GA finalize', async () => {
+  it('adds only the missing label when the comment already exists', async () => {
     const { writer, calls } = makeFakeWriter({
+      existingComments: { 1: finalized('v1.2.3') }
+    })
+    await commentAndLabel({
+      writer,
+      tag: 'v1.2.3',
+      info: gaInfo,
+      targets: [{ number: 1, kind: 'PR' }]
+    })
+    expect(calls).toEqual([
+      { op: 'getThread', number: 1 },
+      { op: 'addLabel', number: 1 }
+    ])
+  })
+
+  it('re-posts only the comment when the label already exists', async () => {
+    const { writer, calls } = makeFakeWriter({
+      existingLabels: { 1: ['released'] }
+    })
+    await commentAndLabel({
+      writer,
+      tag: 'v1.2.3',
+      info: gaInfo,
+      targets: [{ number: 1, kind: 'PR' }]
+    })
+    expect(calls).toEqual([
+      { op: 'getThread', number: 1 },
+      { op: 'comment', number: 1 }
+    ])
+  })
+
+  it('still comments a beta-finalized target during a GA finalize', async () => {
+    // The PR rode betas: it carries the beta marker + `released on @beta`. The GA
+    // finalize finds neither its own marker nor `released`, so it does both.
+    const { writer, calls } = makeFakeWriter({
+      existingComments: { 1: finalized('v1.2.3-beta.4') },
       existingLabels: { 1: ['released on @beta'] }
     })
     await commentAndLabel({
@@ -198,15 +297,56 @@ describe('commentAndLabel', () => {
       targets: [{ number: 1, kind: 'PR' }]
     })
     expect(calls).toEqual([
-      { op: 'getLabels', number: 1 },
+      { op: 'getThread', number: 1 },
       { op: 'comment', number: 1 },
       { op: 'addLabel', number: 1 }
     ])
   })
 
-  it('skips a 404 (deleted issue) without failing, and processes the rest', async () => {
+  it('comments the new beta on a reopened-then-refixed issue, without re-adding its existing @beta label', async () => {
+    // #100 shipped a failed fix in beta.1 (so it carries the beta.1 marker comment
+    // and `released on @beta`), was reopened, and is genuinely refixed in beta.2.
+    // The beta.2 finalize must post a fresh comment — the older beta.1 marker does
+    // not suppress it (per-version scoping) — but the label is already present, so
+    // it is not re-added.
     const { writer, calls } = makeFakeWriter({
-      failOn: { 1: { op: 'getLabels', status: 404 } }
+      existingComments: { 100: finalized('v1.2.3-beta.1') },
+      existingLabels: { 100: ['released on @beta'] }
+    })
+    await commentAndLabel({
+      writer,
+      tag: 'v1.2.3-beta.2',
+      info: resolveChannelInfo('v1.2.3-beta.2'),
+      targets: [{ number: 100, kind: 'issue' }]
+    })
+    expect(calls).toEqual([
+      { op: 'getThread', number: 100 },
+      { op: 'comment', number: 100 }
+    ])
+  })
+
+  it('still comments when a non-bot comment carries the marker (anti-spoof)', async () => {
+    const { writer, calls } = makeFakeWriter({
+      existingComments: {
+        1: [{ author: 'eve', body: releaseMarker('v1.2.3') }]
+      }
+    })
+    await commentAndLabel({
+      writer,
+      tag: 'v1.2.3',
+      info: gaInfo,
+      targets: [{ number: 1, kind: 'PR' }]
+    })
+    expect(calls).toEqual([
+      { op: 'getThread', number: 1 },
+      { op: 'comment', number: 1 },
+      { op: 'addLabel', number: 1 }
+    ])
+  })
+
+  it('skips a NOT_FOUND thread read (deleted/transferred target) without failing, and processes the rest', async () => {
+    const { writer, calls } = makeFakeWriter({
+      failOn: { 1: { op: 'getThread', graphqlType: 'NOT_FOUND' } }
     })
     await expect(
       commentAndLabel({
@@ -216,10 +356,10 @@ describe('commentAndLabel', () => {
         targets: twoTargets
       })
     ).resolves.toBeUndefined()
-    // #1 bailed at getLabels; #2 fully processed (never aborts mid-loop).
+    // #1 bailed at getThread; #2 fully processed (never aborts mid-loop).
     expect(calls).toEqual([
-      { op: 'getLabels', number: 1 },
-      { op: 'getLabels', number: 2 },
+      { op: 'getThread', number: 1 },
+      { op: 'getThread', number: 2 },
       { op: 'comment', number: 2 },
       { op: 'addLabel', number: 2 }
     ])
@@ -244,8 +384,8 @@ describe('commentAndLabel', () => {
     // whole release all-404/403 must not look like a successful finalize.
     const { writer } = makeFakeWriter({
       failOn: {
-        1: { op: 'getLabels', status: 404 },
-        2: { op: 'getLabels', status: 404 }
+        1: { op: 'getThread', graphqlType: 'NOT_FOUND' },
+        2: { op: 'getThread', graphqlType: 'NOT_FOUND' }
       }
     })
     await expect(
@@ -272,9 +412,9 @@ describe('commentAndLabel', () => {
     ).rejects.toThrow(/re-run/)
     // #1 failed at comment (so no addLabel); #2 still fully processed.
     expect(calls).toEqual([
-      { op: 'getLabels', number: 1 },
+      { op: 'getThread', number: 1 },
       { op: 'comment', number: 1 },
-      { op: 'getLabels', number: 2 },
+      { op: 'getThread', number: 2 },
       { op: 'comment', number: 2 },
       { op: 'addLabel', number: 2 }
     ])
