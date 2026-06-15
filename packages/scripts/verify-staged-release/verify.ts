@@ -185,7 +185,7 @@ if (!SHA) {
     styleText(
       'yellow',
       `WARN: no --sha argument provided: skipping clean-tree + HEAD==sha guards (TEST MODE).
-  Reproducing from HEAD ${HEAD_SHA.slice(0, 8)}.`
+  Reproducing from HEAD (${HEAD_SHA.slice(0, 8)}).`
     )
   )
 } else {
@@ -280,6 +280,19 @@ err(
 rmSync(TARBALLS_DIR, { recursive: true, force: true })
 mkdirSync(TARBALLS_DIR, { recursive: true })
 
+// Decide colour for the sandboxed scripts. Their stdout is inherited by this
+// process (docker runs without -t — a pseudo-TTY would corrupt run 1's binary
+// git-archive stdin), so the relevant terminal is ours, not the container's.
+// We translate that decision into the standard FORCE_COLOR knob the scripts
+// (and the build tooling whose logs run 1 surfaces on failure) already honour,
+// rather than a bespoke variable. Same NO_COLOR / FORCE_COLOR conventions
+// styleText applies to our own messages.
+const wantColor =
+  !('NO_COLOR' in process.env) &&
+  (process.env.FORCE_COLOR
+    ? process.env.FORCE_COLOR !== '0'
+    : process.stdout.isTTY === true)
+
 // --- hardened sandbox flags -------------------------------------------------
 const DOCKER_FLAGS = [
   '--rm',
@@ -302,7 +315,10 @@ const DOCKER_FLAGS = [
   '-e',
   `PACKAGE=${PACKAGE}`,
   '-e',
-  `VERSION=${VERSION}`
+  `VERSION=${VERSION}`,
+  // Only forward FORCE_COLOR when we want colour; absent, the scripts fall back
+  // to their own (always-false) in-sandbox TTY check and stay plain.
+  ...(wantColor ? ['-e', 'FORCE_COLOR=1'] : [])
 ]
 
 /**
@@ -356,7 +372,9 @@ const run1 = await runContainer(
 )
 
 if (run1 === 0) {
-  err('==> PASS — reproduced .tgz matches the staged digests.')
+  err(
+    styleText('green', '==> PASS — reproduced .tgz matches the staged digests.')
+  )
   process.exit(0)
 }
 if (run1 !== 20) {
@@ -370,8 +388,11 @@ if (run1 !== 20) {
 if (!STAGE_ID) {
   die(
     1,
-    '==> Hash mismatch, but no --stage-id was given to download the staged',
-    '    tarball. Re-run with the --stage-id option included.'
+    styleText(
+      'red',
+      `==> Hash mismatch, but no --stage-id was given to download the staged tarball.
+  Re-run with the --stage-id option included.`
+    )
   )
 }
 
@@ -484,5 +505,8 @@ const run2 = await runContainer('run2.diff-contents.sh', [
 err('')
 die(
   run2 || 21,
-  '==> FAIL — staged bytes are NOT reproducible from HEAD. Do not approve; investigate.'
+  styleText(
+    'red',
+    '==> FAIL — staged bytes are NOT reproducible from HEAD. Do not approve; investigate.'
+  )
 )

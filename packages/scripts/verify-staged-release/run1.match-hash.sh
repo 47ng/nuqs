@@ -21,6 +21,27 @@ set -euo pipefail
 
 : "${PACKAGE:?}" "${VERSION:?}" "${EXPECTED_SHASUM:?}"
 
+# --- colour ----------------------------------------------------------------
+# Standard knobs: NO_COLOR wins, else FORCE_COLOR forces, else fall back to a
+# stdout-TTY check. The sandbox has no TTY of its own (the host runs `docker
+# run` without -t to keep run 1's binary git-archive stdin clean), so verify.ts
+# sets FORCE_COLOR=1 when ITS stdout is an interactive terminal — making this
+# script behave correctly both inside the sandbox and if run directly.
+use_color=0
+if [ -n "${NO_COLOR:-}" ]; then
+  use_color=0
+elif [ -n "${FORCE_COLOR:-}" ] && [ "${FORCE_COLOR}" != 0 ] && [ "${FORCE_COLOR}" != false ]; then
+  use_color=1
+elif [ -t 1 ]; then
+  use_color=1
+fi
+if [ "${use_color}" = 1 ]; then
+  c_reset=$'\e[0m'; c_bold=$'\e[1m'; c_dim=$'\e[2m'
+  c_red=$'\e[31m'; c_green=$'\e[32m'
+else
+  c_reset=''; c_bold=''; c_dim=''; c_red=''; c_green=''
+fi
+
 run() { # run a noisy step, surface its log only on failure
   local log="$1"; shift
   "$@" >"$log" 2>&1 || { cat "$log" >&2; return 1; }
@@ -51,7 +72,7 @@ REPRO_INTEGRITY="sha512-$(openssl dgst -sha512 -binary "${REPRO_TGZ_PATH}" | ope
 cp "${REPRO_TGZ_PATH}" /out/local.tgz
 
 echo "=================================================================="
-echo " package            : ${PACKAGE}@${VERSION}"
+echo " package             : ${PACKAGE}@${VERSION}"
 echo " reproduced .tgz     : $(basename "${REPRO_TGZ_PATH}")"
 echo " reproduced sha1     : ${REPRO_TGZ_SHA}"
 echo " staged shasum       : ${EXPECTED_SHASUM}"
@@ -70,15 +91,15 @@ if [ -n "${EXPECTED_INTEGRITY:-}" ]; then
 fi
 if [ "${SHA_OK}" = 1 ] && [ "${INT_OK}" = 1 ]; then
   if [ -n "${EXPECTED_INTEGRITY:-}" ]; then
-    echo "HASH MATCH : PASS — reproduced .tgz == staged shasum + integrity"
+    echo "${c_green}HASH MATCH : PASS — reproduced .tgz == staged shasum + integrity${c_reset}"
   else
-    echo "HASH MATCH : PASS — reproduced .tgz == staged shasum (no --integrity given)"
+    echo "${c_green}HASH MATCH : PASS — reproduced .tgz == staged shasum (no --integrity given)${c_reset}"
   fi
-  echo "RESULT     : PASS"
+  echo "${c_bold}${c_green}RESULT     : PASS${c_reset}"
   exit 0
 fi
 
-echo "HASH MATCH : FAIL — sha1 match=${SHA_OK}, sha512 match=${INT_OK}"
-echo "RESULT     : FAIL — reproduced .tgz != staged digests."
-echo "             Host will download the staged tarball and diff its contents."
+echo "${c_red}HASH MATCH : FAIL — sha1 match=${SHA_OK}, sha512 match=${INT_OK}${c_reset}"
+echo "${c_bold}${c_red}RESULT     : FAIL — reproduced .tgz != staged digests.${c_reset}"
+echo "${c_dim}             Host will download the staged tarball and diff its contents.${c_reset}"
 exit 20
