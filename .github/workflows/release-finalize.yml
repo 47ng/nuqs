@@ -14,27 +14,11 @@ name: Finalize Release
 on:
   release:
     types: [published]
-  # todo: Remove this once we've validated the finalize workflow contents.
-  # Manual re-finalize for a release whose automatic finalize failed in a way a
-  # plain "Re-run failed jobs" cannot fix: a re-run replays against the tag's
-  # tree, so a fix landed on the branch afterwards (e.g. a missing exec bit on
-  # this script) is only picked up through a fresh dispatch off the fixed branch.
-  # Runs identically to the release path — same runner, same GITHUB_TOKEN, same
-  # least-privilege block — so comments still author as github-actions[bot] and
-  # the marker idempotency holds. The tag must already be live on npm (the first
-  # step enforces it); the range is resolved from the tag ref, not the dispatched
-  # HEAD, so dispatching off any branch that has the tag yields the same targets.
-  workflow_dispatch:
-    inputs:
-      tag:
-        description: Release tag to finalize, e.g. v1.2.3-beta.4
-        required: true
-        type: string
 
 # One finalize per tag; queue (don't cancel) a re-run so a manual
 # "Re-run failed jobs" never races an in-flight loop.
 concurrency:
-  group: release-finalize-${{ github.event.release.tag_name || inputs.tag }}
+  group: release-finalize-${{ github.event.release.tag_name }}
   cancel-in-progress: false
 
 jobs:
@@ -50,14 +34,11 @@ jobs:
       issues: write
       pull-requests: write
     env:
-      # The tag to finalize: `release.tag_name` on the publish event, or the
-      # `tag` input on a manual dispatch (the `||` fallback). `release.tag_name`
-      # is the only release field read — never the body — so the maintainer can
-      # freely edit published notes without affecting who gets commented. Passed
-      # via env (not inlined into a run script) to keep the tag out of any
-      # shell-expansion context; the first step's anchored regex rejects a
-      # malformed dispatch input before it reaches any consumer.
-      TAG: ${{ github.event.release.tag_name || inputs.tag }}
+      # `release.tag_name` is the only release field read — never the body, so
+      # the maintainer can freely edit published notes without affecting who
+      # gets commented. Passed via env (not inlined into a run script) to keep
+      # the tag out of any shell-expansion context.
+      TAG: ${{ github.event.release.tag_name }}
     steps:
       - name: Ensure version is published on NPM
         # The very first step, before any checkout or npm CLI: a single
@@ -120,7 +101,7 @@ jobs:
         # completes the stragglers green is what finally fires it. Not
         # best-effort: a failed bust fails the job (so the maintainer re-runs
         # rather than leaving the page silently stale) — the curl is idempotent.
-        if: ${{ success() && !contains(env.TAG, '-beta.') }}
+        if: ${{ success() && !contains(github.event.release.tag_name, '-beta.') }}
         run: curl -fsS "https://nuqs.dev/api/isr?tag=contributors&token=$ISR_TOKEN"
         env:
           # Passed via env and read as $ISR_TOKEN at runtime, so the literal
@@ -140,6 +121,6 @@ jobs:
           steps: ${{ toJson(steps) }}
           packageName: nuqs
           version: ${{ env.VERSION }}
-          channel: ${{ contains(env.TAG, '-beta.') && '🧪 beta' || '🚀 latest' }}
+          channel: ${{ contains(github.event.release.tag_name, '-beta.') && '🧪 beta' || '🚀 latest' }}
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
