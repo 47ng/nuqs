@@ -3,8 +3,8 @@
 // Staged-release verification — host launcher.
 //
 // Usage:
-//   verify.ts --package <name> --version <v> --sha <sha> --shasum <s> \
-//             [--stage-id <id>] [--integrity <i>]
+//   verify.ts --package <name> --version <v> --shasum <s> \
+//             [--sha <sha>] [--stage-id <id>] [--integrity <i>]
 //   (copy the single ready-to-run command from the Draft Release job summary)
 //
 // Flow (result-driven, no flags):
@@ -175,10 +175,10 @@ const {
 } = fields
 
 // --- clean-tree guard: HEAD must BE the staged commit -----------------------
-// Escape hatch (TEST MODE ONLY): VERIFY_ALLOW_TREE_MISMATCH=1 skips the
-// clean-tree + HEAD==sha guards so the escalation/diff machinery can be
-// exercised from an arbitrary checkout. `git archive HEAD` still ships the
-// committed tree, so this only loosens *which* commit is reproduced.
+// Test-mode escape hatch: omitting --sha skips the clean-tree + HEAD==sha
+// guards so the escalation/diff machinery can be exercised from an arbitrary
+// checkout. `git archive HEAD` still ships the committed tree, so this only
+// loosens *which* commit is reproduced.
 const HEAD_SHA = capture('git', ['-C', REPO_ROOT, 'rev-parse', 'HEAD']).trim()
 if (!SHA) {
   err(
