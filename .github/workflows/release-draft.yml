@@ -8,7 +8,8 @@ name: Draft Release
 # Flow: compute-version -> ci (the gate, re-runs the full matrix on the
 # exact dispatched SHA via workflow_call) -> stage (set version ephemerally,
 # build, `npm stage publish` via OIDC, then create a DRAFT GitHub release
-# with milestone notes). Nothing is installable or irreversible here: the
+# with notes built from the commit graph, see lib/commit-graph.ts). Nothing
+# is installable or irreversible here: the
 # tarball sits in npm staging until a human approves it on npmjs.com with
 # 2FA, and the git tag is only created when the draft release is published.
 
@@ -98,6 +99,10 @@ jobs:
     # bytes are the bytes that passed CI. Secrets passed explicitly (no
     # `secrets: inherit`) to keep the credential surface minimal.
     uses: ./.github/workflows/ci-cd.yml
+    with:
+      # Release runs are announced once by Finalize (the 🚀/🧪 release card),
+      # so suppress ci-cd's aggregate "CI passed" ping to avoid a double Slack.
+      finalNotification: false
     secrets:
       TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
       TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
@@ -194,11 +199,11 @@ jobs:
           done
           # stage-id gates the draft; shasum + integrity are surfaced in the
           # job summary so a reviewer can match the staged tarball before 2FA.
-          # Kept as separate echoes (not a grouped redirect) for readability.
-          # shellcheck disable=SC2129
-          echo "stage-id=$STAGE_ID" >> "$GITHUB_OUTPUT"
-          echo "shasum=$SHASUM" >> "$GITHUB_OUTPUT"
-          echo "integrity=$INTEGRITY" >> "$GITHUB_OUTPUT"
+          {
+            echo "stage-id=$STAGE_ID"
+            echo "shasum=$SHASUM"
+            echo "integrity=$INTEGRITY"
+          } >> "$GITHUB_OUTPUT"
 
   draft:
     name: Draft GitHub release
@@ -212,6 +217,9 @@ jobs:
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
+          # Full history + tags: the notes engine resolves the release range
+          # from the commit graph between tag checkpoints (see commit-graph.ts).
+          fetch-depth: 0
           persist-credentials: false
       - uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093 # v6.0.8
       - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
@@ -220,10 +228,15 @@ jobs:
           cache: pnpm
       - name: Install scripts dependencies
         run: pnpm install --ignore-scripts --frozen-lockfile --filter scripts
-      - name: Generate milestone release notes
+      - name: Generate release notes
+        # Draft phase: the tag isn't created yet, so the engine walks from HEAD.
+        # CHANNEL selects the asymmetric range (incremental beta / cumulative GA)
+        # — the same engine finalize re-runs post-publish, so the notes list
+        # exactly the PRs/issues finalize will comment on.
         run: ./release-notes-automation.ts > "$RUNNER_TEMP/notes.md"
         working-directory: packages/scripts
         env:
+          CHANNEL: ${{ inputs.channel }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Debug release notes
         if: ${{ inputs.dry-run }}

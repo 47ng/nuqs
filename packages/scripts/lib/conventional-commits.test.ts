@@ -1,138 +1,145 @@
 import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import { readTypeEnum } from '../validate-pr-title.ts'
-import { classify } from './conventional-commits.ts'
+import {
+  bumpForType,
+  parseCommit,
+  parseSubject
+} from './conventional-commits.ts'
 
-describe('classify', () => {
-  it('classifies a fix as a patch bump', () => {
-    expect(classify('fix: a bug')).toEqual({
-      bump: 'patch',
-      type: 'fix',
-      description: 'a bug'
-    })
-  })
-
-  it('classifies a feat as a minor bump', () => {
-    expect(classify('feat: a feature')).toEqual({
-      bump: 'minor',
+describe('parseCommit', () => {
+  it('parses a subject-only message like parseSubject', () => {
+    expect(parseCommit('feat: a feature')).toEqual({
       type: 'feat',
+      breaking: false,
       description: 'a feature'
     })
   })
 
-  it('classifies a "!" marker as a major bump, keeping the type', () => {
-    expect(classify('feat!: a breaking feature')).toEqual({
-      bump: 'major',
+  it('flags the subject "!" as breaking', () => {
+    expect(parseCommit('feat!: boom')).toMatchObject({
       type: 'feat',
-      description: 'a breaking feature'
+      breaking: true
     })
   })
 
-  it('classifies a "!" marker as a major bump, keeping the type (with scope)', () => {
-    expect(classify('feat(scope)!: a breaking feature')).toEqual({
-      bump: 'major',
-      type: 'feat',
-      description: 'a breaking feature'
-    })
+  it('flags an uppercase BREAKING CHANGE body footer as breaking, keeping the type', () => {
+    expect(
+      parseCommit('fix: a fix\n\nBREAKING CHANGE: removed an API')
+    ).toEqual({ type: 'fix', breaking: true, description: 'a fix' })
   })
 
-  it('classifies a "!" marker as a major bump even for non-bumping types', () => {
-    expect(classify('chore!: boom')).toEqual({
-      bump: 'major',
-      type: 'chore',
-      description: 'boom'
-    })
-  })
-
-  it('classifies an uppercase BREAKING CHANGE footer as a major bump', () => {
-    const message = 'fix: a fix\n\nBREAKING CHANGE: removed an API'
-    expect(classify(message)).toMatchObject({ bump: 'major', type: 'fix' })
-  })
-
-  it('classifies a hyphenated BREAKING-CHANGE footer as a major bump', () => {
-    const message = 'fix: a fix\n\nBREAKING-CHANGE: removed an API'
-    expect(classify(message)).toMatchObject({ bump: 'major', type: 'fix' })
+  it('flags a hyphenated BREAKING-CHANGE footer as breaking', () => {
+    expect(
+      parseCommit('fix: a fix\n\nBREAKING-CHANGE: removed an API')
+    ).toMatchObject({ type: 'fix', breaking: true })
   })
 
   it('ignores a lowercase "breaking change" mention in prose', () => {
-    const message = 'feat: a feature\n\nthis is a breaking change in prose'
-    expect(classify(message)).toMatchObject({ bump: 'minor', type: 'feat' })
+    expect(
+      parseCommit('feat: a feature\n\nthis is a breaking change in prose')
+    ).toMatchObject({ type: 'feat', breaking: false })
+  })
+})
+
+describe('bumpForType', () => {
+  it('maps feat to minor and fix/perf/revert to patch', () => {
+    expect(bumpForType('feat', false)).toBe('minor')
+    expect(bumpForType('fix', false)).toBe('patch')
+    expect(bumpForType('perf', false)).toBe('patch')
+    expect(bumpForType('revert', false)).toBe('patch')
   })
 
-  it('treats perf and revert as patch bumps', () => {
-    expect(classify('perf: speed up')).toMatchObject({
-      bump: 'patch',
-      type: 'perf'
-    })
-    expect(classify('revert: undo a change')).toMatchObject({
-      bump: 'patch',
-      type: 'revert'
+  it('returns null for non-bumping and unknown types', () => {
+    expect(bumpForType('chore', false)).toBeNull()
+    expect(bumpForType('whatever', false)).toBeNull()
+    expect(bumpForType(undefined, false)).toBeNull()
+  })
+
+  it('forces major when breaking, regardless of type', () => {
+    expect(bumpForType('feat', true)).toBe('major')
+    expect(bumpForType('chore', true)).toBe('major')
+    expect(bumpForType(undefined, true)).toBe('major')
+  })
+})
+
+describe('parseSubject', () => {
+  it('parses type and description from a conventional subject', () => {
+    expect(parseSubject('feat: a feature')).toEqual({
+      type: 'feat',
+      breaking: false,
+      description: 'a feature'
     })
   })
 
-  it('classifies a known non-bumping type with no bump, keeping the type', () => {
-    expect(classify('chore: housekeeping')).toEqual({
-      bump: null,
-      type: 'chore',
-      description: 'housekeeping'
+  it('flags the "!" breaking marker, keeping the type', () => {
+    expect(parseSubject('feat!: a breaking feature')).toEqual({
+      type: 'feat',
+      breaking: true,
+      description: 'a breaking feature'
     })
   })
 
   it('strips an optional scope from the description', () => {
-    expect(classify('feat(parser): add support')).toEqual({
-      bump: 'minor',
+    expect(parseSubject('feat(parser): add support')).toEqual({
       type: 'feat',
+      breaking: false,
       description: 'add support'
     })
   })
 
-  it('uses the first line as the description when the message is unparseable', () => {
-    expect(classify('not a conventional commit')).toEqual({
-      bump: null,
+  it('flags "!" after a scope', () => {
+    expect(parseSubject('feat(scope)!: boom')).toEqual({
+      type: 'feat',
+      breaking: true,
+      description: 'boom'
+    })
+  })
+
+  it("does NOT treat a BREAKING CHANGE body footer as breaking (the subject parser reads the `!` only; the footer is parseCommit's job)", () => {
+    expect(
+      parseSubject('fix: a fix\n\nBREAKING CHANGE: removed an API')
+    ).toEqual({ type: 'fix', breaking: false, description: 'a fix' })
+  })
+
+  it('returns an undefined type and the raw first line when unparseable', () => {
+    expect(parseSubject('not a conventional commit')).toEqual({
       type: undefined,
+      breaking: false,
       description: 'not a conventional commit'
     })
   })
 
   it('requires a subject after the colon (strict format)', () => {
-    expect(classify('feat:')).toEqual({
-      bump: null,
-      type: undefined,
-      description: 'feat:'
-    })
-  })
-
-  it('rejects an empty scope', () => {
-    expect(classify('feat(): a feature')).toMatchObject({
-      bump: null,
-      type: undefined
-    })
+    expect(parseSubject('feat:')).toMatchObject({ type: undefined })
   })
 
   it('does not treat an uppercase type as conventional', () => {
-    expect(classify('FEAT: shout')).toMatchObject({
-      bump: null,
-      type: undefined
-    })
+    expect(parseSubject('FEAT: shout')).toMatchObject({ type: undefined })
+  })
+
+  it('rejects an empty scope', () => {
+    expect(parseSubject('feat(): a feature')).toMatchObject({ type: undefined })
   })
 })
 
-// Guards against drift between the bump taxonomy hard-coded in `classify` and
-// the canonical list of allowed commit types in the root commitlint config. If
-// a type is added/removed/renamed there, or the switch changes, this fails.
-describe('classify vs. commitlint type-enum', () => {
+// Guards against drift between the bump/type taxonomy hard-coded in
+// `parseSubject`/`bumpForType` and the canonical list of allowed commit types in
+// the root commitlint config. If a type is added/removed/renamed there, or the
+// derivations change, this fails.
+describe('parseSubject/bumpForType vs. commitlint type-enum', () => {
   const types = readTypeEnum(
     readFileSync(new URL('../../../package.json', import.meta.url), 'utf8')
   ).sort() // sort for deterministic comparison order
 
   it('recognises every allowed type as conventional', () => {
     for (const type of types) {
-      expect(classify(`${type}: subject`).type).toBe(type)
+      expect(parseSubject(`${type}: subject`).type).toBe(type)
     }
   })
 
   it('bumps on exactly feat/fix/perf/revert', () => {
-    const bumping = types.filter(t => classify(`${t}: subject`).bump !== null)
+    const bumping = types.filter(t => bumpForType(t, false) !== null)
     expect(bumping).toEqual(['feat', 'fix', 'perf', 'revert'])
   })
 })

@@ -16,6 +16,22 @@ on:
   # secrets are declared so this workflow type-checks under all triggers,
   # and resolve to empty (their steps no-op) when called.
   workflow_call:
+    inputs:
+      finalNotification:
+        description: >-
+          Post the aggregate "CI passed" Slack ping when the whole matrix
+          succeeds. Defaults true (normal push/PR/dispatch); release-draft's
+          gate passes false so a release run isn't pinged twice (Finalize
+          posts the release card).
+        type: boolean
+        default: true
+        required: false
+        # Callers MUST pass a literal boolean (`finalNotification: false`), never
+        # an expression (`finalNotification: ${{ … }}`). A reusable-workflow input
+        # produced by an expression is delivered as a string regardless of the
+        # declared `type`, and the ci-notify gate (`toJSON(...) != 'false'`) skips
+        # only on the boolean token "false" — a string "false" stringifies to the
+        # quoted `"false"`, which is unequal, so the ping would no longer suppress.
     secrets:
       TURBO_TOKEN:
         required: false
@@ -104,7 +120,7 @@ jobs:
         run: pnpm build --filter nuqs
       - name: Run publint on package.json
         run: pnpm publint packages/nuqs
-      - uses: 47ng/actions-slack-notify@454fe45e7ca3f21d7f7be774044de1664f1b22c1
+      - uses: 47ng/actions-slack-notify@df42545060c07ca99a040d0a520ab8457ce3c222
         name: Notify on Slack
         if: failure()
         with:
@@ -183,7 +199,7 @@ jobs:
           TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
           TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - uses: 47ng/actions-slack-notify@454fe45e7ca3f21d7f7be774044de1664f1b22c1
+      - uses: 47ng/actions-slack-notify@df42545060c07ca99a040d0a520ab8457ce3c222
         name: Notify on Slack
         if: failure()
         with:
@@ -269,7 +285,7 @@ jobs:
           path: packages/e2e/next/.playwright/*
           name: playwright-next-${{ matrix.next-version }}${{ matrix.base-path && '-basePath' || ''}}${{ matrix.react-compiler && '-react-compiler' || ''}}${{ matrix.cache-components && '-cache-components' || ''}}
           include-hidden-files: true
-      - uses: 47ng/actions-slack-notify@454fe45e7ca3f21d7f7be774044de1664f1b22c1
+      - uses: 47ng/actions-slack-notify@df42545060c07ca99a040d0a520ab8457ce3c222
         name: Notify on Slack
         if: failure()
         with:
@@ -311,7 +327,7 @@ jobs:
           path: packages/e2e/react/.playwright/*
           name: playwright-react-fpn-${{ matrix.full-page-nav-on-shallow-false }}
           include-hidden-files: true
-      - uses: 47ng/actions-slack-notify@454fe45e7ca3f21d7f7be774044de1664f1b22c1
+      - uses: 47ng/actions-slack-notify@df42545060c07ca99a040d0a520ab8457ce3c222
         name: Notify on Slack
         if: failure()
         with:
@@ -354,7 +370,7 @@ jobs:
           path: packages/e2e/react-router/${{ matrix.react-router-version }}/.playwright/*
           name: playwright-react-router-${{ matrix.react-router-version }}
           include-hidden-files: true
-      - uses: 47ng/actions-slack-notify@454fe45e7ca3f21d7f7be774044de1664f1b22c1
+      - uses: 47ng/actions-slack-notify@df42545060c07ca99a040d0a520ab8457ce3c222
         name: Notify on Slack
         if: failure()
         with:
@@ -391,7 +407,7 @@ jobs:
           path: packages/e2e/remix/.playwright/*
           name: playwright-remix
           include-hidden-files: true
-      - uses: 47ng/actions-slack-notify@454fe45e7ca3f21d7f7be774044de1664f1b22c1
+      - uses: 47ng/actions-slack-notify@df42545060c07ca99a040d0a520ab8457ce3c222
         name: Notify on Slack
         if: failure()
         with:
@@ -428,7 +444,7 @@ jobs:
           path: packages/e2e/tanstack-router/.playwright/*
           name: playwright-tanstack-router
           include-hidden-files: true
-      - uses: 47ng/actions-slack-notify@454fe45e7ca3f21d7f7be774044de1664f1b22c1
+      - uses: 47ng/actions-slack-notify@df42545060c07ca99a040d0a520ab8457ce3c222
         name: Notify on Slack
         if: failure()
         with:
@@ -451,8 +467,19 @@ jobs:
       - e2e-react-router
       - e2e-remix
       - e2e-tanstack-router
+    # Suppress the success ping only when a caller explicitly passes
+    # finalNotification: false. toJSON is load-bearing: a bare comparison hits
+    # GitHub's mismatched-type coercion (booleans and unset → numbers, the
+    # string 'false' → NaN), so both naive forms are wrong — `!= false` skips
+    # normal runs (an unset input coerces equal to false) and `!= 'false'` keeps
+    # the ping on the gate (boolean false ≠ NaN). toJSON stringifies first,
+    # rendering only a real boolean false as the token "false"; every other
+    # state (true, or unset on push/PR/dispatch) compares unequal and runs. No
+    # status function here, so the implicit needs-success gate still applies →
+    # this stays a success-only ping.
+    if: ${{ toJSON(inputs.finalNotification) != 'false' }}
     steps:
-      - uses: 47ng/actions-slack-notify@454fe45e7ca3f21d7f7be774044de1664f1b22c1
+      - uses: 47ng/actions-slack-notify@df42545060c07ca99a040d0a520ab8457ce3c222
         with:
           status: ${{ job.status }}
           jobName: Continuous Integration

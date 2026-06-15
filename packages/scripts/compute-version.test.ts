@@ -118,8 +118,8 @@ describe('computeVersion', () => {
     expect(plan).toBeNull()
   })
 
-  it('does not bump on a malformed header with no subject', () => {
-    // A conventional header requires a subject; a bare `feat:` (which
+  it('does not bump on a malformed subject with no description', () => {
+    // A conventional subject requires a description; a bare `feat:` (which
     // commitlint's subject-empty rule rejects at commit time anyway) is not a
     // valid bump trigger and must not produce a release.
     const plan = computeVersion({
@@ -131,6 +131,19 @@ describe('computeVersion', () => {
     expect(plan).toBeNull()
   })
 
+  it('major-bumps on a BREAKING CHANGE body footer even without a subject "!"', () => {
+    // Per Conventional Commits, the footer is an equivalent breaking trigger. A
+    // fix carrying the footer bumps major (1.x -> 2.0.0), so a footer-only break
+    // never silently ships as a patch.
+    const plan = computeVersion({
+      channel: 'stable',
+      lastGATag: 'v1.2.3',
+      commits: ['fix: a fix\n\nBREAKING CHANGE: removed an API'],
+      tags: ['v1.2.3']
+    })
+    expect(plan).toMatchObject({ version: '2.0.0', bump: 'major' })
+  })
+
   it('counts from 0.0.0 when there is no prior GA tag', () => {
     const plan = computeVersion({
       channel: 'stable',
@@ -139,5 +152,20 @@ describe('computeVersion', () => {
       tags: []
     })
     expect(plan).toMatchObject({ version: '0.1.0', bump: 'minor' })
+  })
+
+  it('computes the first-ever beta (no GA tag, no betas) from 0.0.0', () => {
+    const plan = computeVersion({
+      channel: 'beta',
+      lastGATag: null,
+      commits: ['feat: first feature'],
+      tags: []
+    })
+    expect(plan).toEqual({
+      version: '0.1.0-beta.1',
+      tag: 'v0.1.0-beta.1',
+      distTag: 'beta',
+      bump: 'minor'
+    })
   })
 })
