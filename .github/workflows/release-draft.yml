@@ -23,12 +23,6 @@ on:
           - stable
           - beta
         default: stable
-      dry-run:
-        # Temporary: lets a rehearsal validate version computation + build
-        # without staging or drafting. Remove once the pipeline is trusted.
-        description: Compute the version and build, but do not stage or draft
-        type: boolean
-        default: false
 
 # Queue double-dispatches instead of racing:
 # never cancel an in-flight stage+draft mid-way.
@@ -89,9 +83,9 @@ jobs:
   ci:
     name: CI gate
     needs: compute-version
-    # Only gate a real release: skip when there's nothing to ship (the flow
-    # stops cleanly) and on dry-run (fast version/build-only rehearsal).
-    if: ${{ needs.compute-version.outputs.needsReleasing == 'true' && !inputs.dry-run }}
+    # Only gate a real release: skip when there's nothing to ship, so the
+    # flow stops cleanly.
+    if: ${{ needs.compute-version.outputs.needsReleasing == 'true' }}
     permissions:
       contents: read
       actions: read # ci-cd.yml's docs build reads the workflow-run status when rendering the landing-page CI component.
@@ -111,9 +105,9 @@ jobs:
     name: Stage to npm
     runs-on: ubuntu-24.04-arm
     needs: [compute-version, ci]
-    # Run only when there's a release to ship, once CI passed — or was
-    # skipped on a dry-run (build-only validation; the publish step self-skips).
-    if: ${{ always() && needs.compute-version.outputs.needsReleasing == 'true' && (needs.ci.result == 'success' || needs.ci.result == 'skipped') }}
+    # Run only when there's a release to ship and CI passed. The implicit
+    # success() on `needs` halts the chain (stage + draft skip) if CI fails.
+    if: ${{ needs.compute-version.outputs.needsReleasing == 'true' }}
     permissions:
       contents: read # checkout only — drafting (contents: write) is its own job
       id-token: write # OIDC trusted publishing for `npm stage publish`
@@ -166,7 +160,6 @@ jobs:
         run: pnpm build --filter nuqs
       - name: Stage tarball to npm (OIDC staged trusted publishing)
         id: stage
-        if: ${{ !inputs.dry-run }}
         working-directory: packages/nuqs
         env:
           DIST_TAG: ${{ needs.compute-version.outputs.dist-tag }}
@@ -209,7 +202,9 @@ jobs:
     name: Draft GitHub release
     runs-on: ubuntu-24.04-arm
     needs: [compute-version, stage]
-    if: ${{ always() && needs.stage.result == 'success' }}
+    # No explicit `if`: the default success() on `needs` runs this only when
+    # `stage` succeeds — and skips it whenever `stage` doesn't (it failed, or was
+    # itself skipped because CI failed or there was nothing to ship).
     # Split from `stage` so the npm OIDC token's lifetime is bounded to staging:
     # this job holds only contents:write and never sees id-token.
     permissions:
@@ -238,12 +233,8 @@ jobs:
         env:
           CHANNEL: ${{ inputs.channel }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Debug release notes
-        if: ${{ inputs.dry-run }}
-        run: cat "$RUNNER_TEMP/notes.md"
       - name: Create draft GitHub release
         id: create-release
-        if: ${{ !inputs.dry-run }}
         # Draft + untagged: the git tag is created server-side only when the
         # maintainer publishes this draft, which is what fires Finalize.
         run: |
