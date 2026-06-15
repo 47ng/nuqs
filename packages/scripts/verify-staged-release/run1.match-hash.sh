@@ -63,7 +63,7 @@ cd "${PKG_DIR}"
 run /tmp/pack.log npm pack
 REPRO_TGZ="$(ls -1t ./*.tgz | head -1)"
 REPRO_TGZ_PATH="${PKG_DIR}/${REPRO_TGZ#./}"
-REPRO_TGZ_SHA="$(sha1sum "${REPRO_TGZ_PATH}" | cut -d' ' -f1)"
+REPRO_TGZ_SHASUM="$(sha1sum "${REPRO_TGZ_PATH}" | cut -d' ' -f1)"
 # npm's `integrity` is sha512 of the .tgz, base64, prefixed `sha512-`.
 REPRO_INTEGRITY="sha512-$(openssl dgst -sha512 -binary "${REPRO_TGZ_PATH}" | openssl base64 -A)"
 
@@ -72,19 +72,19 @@ REPRO_INTEGRITY="sha512-$(openssl dgst -sha512 -binary "${REPRO_TGZ_PATH}" | ope
 cp "${REPRO_TGZ_PATH}" /out/local.tgz
 
 echo "=================================================================="
-echo " package             : ${PACKAGE}@${VERSION}"
-echo " reproduced .tgz     : $(basename "${REPRO_TGZ_PATH}")"
-echo " reproduced sha1     : ${REPRO_TGZ_SHA}"
-echo " staged shasum       : ${EXPECTED_SHASUM}"
-echo " reproduced integ.   : ${REPRO_INTEGRITY}"
-echo " staged integrity    : ${EXPECTED_INTEGRITY:-<not provided>}"
+echo " package              : ${PACKAGE}@${VERSION}"
+echo " reproduced .tgz      : $(basename "${REPRO_TGZ_PATH}")"
+echo " reproduced shasum    : ${REPRO_TGZ_SHASUM}"
+echo " staged shasum        : ${EXPECTED_SHASUM}"
+echo " reproduced integrity : ${REPRO_INTEGRITY}"
+echo " staged integrity     : ${EXPECTED_INTEGRITY:-<not provided>}"
 echo "=================================================================="
 
 # 4. Match: sha1 == staged shasum AND (when provided) sha512 == staged
 #    integrity. Gating on the sha512 too closes the sha1-collision gap a blob
 #    attacker would otherwise target.
 SHA_OK=0; INT_OK=1
-[ "${REPRO_TGZ_SHA}" = "${EXPECTED_SHASUM}" ] && SHA_OK=1
+[ "${REPRO_TGZ_SHASUM}" = "${EXPECTED_SHASUM}" ] && SHA_OK=1
 if [ -n "${EXPECTED_INTEGRITY:-}" ]; then
   INT_OK=0
   [ "${REPRO_INTEGRITY}" = "${EXPECTED_INTEGRITY}" ] && INT_OK=1
@@ -99,7 +99,14 @@ if [ "${SHA_OK}" = 1 ] && [ "${INT_OK}" = 1 ]; then
   exit 0
 fi
 
-echo "${c_red}HASH MATCH : FAIL — sha1 match=${SHA_OK}, sha512 match=${INT_OK}${c_reset}"
+# INT_OK is a gate sentinel (defaults to 1 when no --integrity was given), so
+# report sha512 as "not checked" rather than claiming a match that never ran.
+if [ -n "${EXPECTED_INTEGRITY:-}" ]; then
+  int_status="sha512 match=${INT_OK}"
+else
+  int_status="sha512 not checked (no --integrity)"
+fi
+echo "${c_red}HASH MATCH : FAIL — sha1 match=${SHA_OK}, ${int_status}${c_reset}"
 echo "${c_bold}${c_red}RESULT     : FAIL — reproduced .tgz != staged digests.${c_reset}"
 echo "${c_dim}             Host will download the staged tarball and diff its contents.${c_reset}"
 exit 20
