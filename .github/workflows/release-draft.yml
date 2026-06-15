@@ -219,6 +219,7 @@ jobs:
         if: ${{ inputs.dry-run }}
         run: cat "$RUNNER_TEMP/notes.md"
       - name: Create draft GitHub release
+        id: create-release
         if: ${{ !inputs.dry-run }}
         # Draft + untagged: the git tag is created server-side only when the
         # maintainer publishes this draft, which is what fires Finalize.
@@ -226,12 +227,23 @@ jobs:
           set -euo pipefail
           PRERELEASE=()
           if [ "$DIST_TAG" = "beta" ]; then PRERELEASE=(--prerelease); fi
-          gh release create "$TAG" \
+          # `gh release create` prints the new release's html_url on stdout.
+          # For a draft that's the untagged form (…/releases/tag/untagged-<hash>),
+          # which we can't construct by hand from $TAG — the tag only exists once
+          # the draft is published. Capture it so the summary links to the draft.
+          DRAFT_URL=$(gh release create "$TAG" \
             --draft \
             --title "$TAG" \
             --target "$GITHUB_SHA" \
             --notes-file "$RUNNER_TEMP/notes.md" \
-            "${PRERELEASE[@]}"
+            "${PRERELEASE[@]}")
+          # Same untagged slug, but the Publish button lives on the edit page:
+          # /releases/tag/ -> /releases/edit/.
+          EDIT_URL=${DRAFT_URL/\/releases\/tag\//\/releases\/edit\/}
+          {
+            echo "draft-url=$DRAFT_URL"
+            echo "edit-url=$EDIT_URL"
+          } >> "$GITHUB_OUTPUT"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAG: ${{ needs.compute-version.outputs.tag }}
@@ -243,16 +255,17 @@ jobs:
             echo ""
             echo "| | |"
             echo "|---|---|"
-            echo "| Version | \`$VERSION\` |"
-            echo "| Tag | \`$TAG\` |"
-            echo "| Dist-tag | \`$DIST_TAG\` |"
+            echo "| sha | \`$GITHUB_SHA\` |"
+            echo "| version | \`$VERSION\` |"
+            echo "| git tag | \`$TAG\` |"
+            echo "| npm dist-tag | \`$DIST_TAG\` |"
             echo "| npm stage id | \`$STAGE_ID\` |"
             echo "| shasum | \`$SHASUM\` |"
             echo "| integrity | \`$INTEGRITY\` |"
             echo ""
-            echo "**Verify before approving** — run this one command from the"
-            echo "repo root (reproduces \`$GITHUB_SHA\` in a sandbox, no checkout):"
+            echo "## Next steps"
             echo ""
+            echo "1. Run this command from the repo root to reproduce & verify the build:"
             echo '```bash'
             echo "packages/scripts/verify-staged-release/verify.ts \\"
             echo "  --package nuqs \\"
@@ -262,10 +275,9 @@ jobs:
             echo "  --shasum '$SHASUM' \\"
             echo "  --integrity '$INTEGRITY'"
             echo '```'
-            echo ""
-            echo "**Next:** review the draft notes, then"
-            echo "[approve the staged package on npmjs.com](https://www.npmjs.com/settings/franky47/staged-packages/?page=0&perPage=10&filterPackage=nuqs)"
-            echo "with 2FA, and publish the draft release to create the tag and fire Finalize."
+            echo "2. Review the [draft release notes]($RELEASE_DRAFT_URL)"
+            echo "3. Approve the [staged package on npmjs.com](https://www.npmjs.com/settings/franky47/staged-packages/?page=0&perPage=10&filterPackage=nuqs) with 2FA"
+            echo "4. Publish the [draft release]($RELEASE_EDIT_URL) to finalize the release."
           } >> "$GITHUB_STEP_SUMMARY"
         env:
           VERSION: ${{ needs.compute-version.outputs.version }}
@@ -274,3 +286,5 @@ jobs:
           STAGE_ID: ${{ needs.stage.outputs.stage-id }}
           SHASUM: ${{ needs.stage.outputs.shasum }}
           INTEGRITY: ${{ needs.stage.outputs.integrity }}
+          RELEASE_DRAFT_URL: ${{ steps.create-release.outputs.draft-url }}
+          RELEASE_EDIT_URL: ${{ steps.create-release.outputs.edit-url }}
