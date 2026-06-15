@@ -18,11 +18,17 @@
 // The host only ever transports bytes and compares registry *metadata* (no
 // untrusted-code execution); the package build and the untrusted-tarball
 // extraction both happen inside the hardened, read-only sandbox. Runs on
-// Node 24 directly via native type-stripping — no build step.
+// Node.js 24 directly via native type-stripping — no build step.
 
 import { spawn, spawnSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
-import { mkdirSync, readdirSync, readFileSync, renameSync, rmSync } from 'node:fs'
+import {
+  mkdirSync,
+  readdirSync,
+  readFileSync,
+  renameSync,
+  rmSync
+} from 'node:fs'
 import { join } from 'node:path'
 import { parseArgs } from 'node:util'
 import { z } from 'zod'
@@ -79,9 +85,9 @@ const { values } = (() => {
         sha: { type: 'string' },
         'stage-id': { type: 'string' },
         shasum: { type: 'string' },
-        integrity: { type: 'string' },
+        integrity: { type: 'string' }
       },
-      allowPositionals: false,
+      allowPositionals: false
     })
   } catch (e) {
     return die(2, (e as Error).message, '', HELP)
@@ -98,19 +104,29 @@ if (values.help) {
 // if the repo ever moves to SHA-256). stage-id and integrity are only needed
 // for the mismatch-escalation path, so they default to '' (treated as absent).
 const releaseFieldsSchema = z.object({
-  package: z.string({ error: 'missing required --package' }).min(1, '--package must not be empty'),
-  version: z.string({ error: 'missing required --version' }).min(1, '--version must not be empty'),
+  package: z
+    .string({ error: 'missing required --package' })
+    .min(1, '--package must not be empty'),
+  version: z
+    .string({ error: 'missing required --version' })
+    .min(1, '--version must not be empty'),
   sha: z
     .string({ error: 'missing required --sha' })
-    .regex(/^([0-9a-f]{40}|[0-9a-f]{64})$/, '--sha must be a 40- or 64-char hex commit SHA'),
+    .regex(
+      /^([0-9a-f]{40}|[0-9a-f]{64})$/,
+      '--sha must be a 40- or 64-char hex commit SHA'
+    ),
   shasum: z
     .string({ error: 'missing required --shasum' })
     .regex(/^[0-9a-f]{40}$/, '--shasum must be a 40-char hex sha1'),
   stageId: z.string().min(1, '--stage-id must not be empty').default(''),
   integrity: z
     .string()
-    .regex(/^sha\d+-[A-Za-z0-9+/]+={0,2}$/, "--integrity must look like 'sha512-…'")
-    .default(''),
+    .regex(
+      /^sha\d+-[A-Za-z0-9+/]+={0,2}$/,
+      "--integrity must look like 'sha512-…'"
+    )
+    .default('')
 })
 type ReleaseFields = z.infer<typeof releaseFieldsSchema>
 
@@ -120,7 +136,7 @@ const parsed = releaseFieldsSchema.safeParse({
   sha: values.sha,
   shasum: values.shasum,
   stageId: values['stage-id'],
-  integrity: values.integrity,
+  integrity: values.integrity
 })
 if (!parsed.success) {
   die(2, ...parsed.error.issues.map(i => i.message), '', HELP)
@@ -135,7 +151,7 @@ const {
   sha: SHA,
   stageId: STAGE_ID,
   shasum: SHASUM,
-  integrity: INTEGRITY,
+  integrity: INTEGRITY
 } = fields
 
 // --- clean-tree guard: HEAD must BE the staged commit -----------------------
@@ -145,15 +161,20 @@ const {
 // committed tree, so this only loosens *which* commit is reproduced.
 const HEAD_SHA = capture('git', ['-C', REPO_ROOT, 'rev-parse', 'HEAD']).trim()
 if (process.env.VERIFY_ALLOW_TREE_MISMATCH === '1') {
-  err('WARN: VERIFY_ALLOW_TREE_MISMATCH=1 — skipping clean-tree + HEAD==sha guards (TEST MODE).')
-  err(`      Reproducing from HEAD ${HEAD_SHA.slice(0, 8)}, not the given --sha ${SHA.slice(0, 8)}.`)
+  err(
+    'WARN: VERIFY_ALLOW_TREE_MISMATCH=1 — skipping clean-tree + HEAD==sha guards (TEST MODE).'
+  )
+  err(
+    `      Reproducing from HEAD ${HEAD_SHA.slice(0, 8)}, not the given --sha ${SHA.slice(0, 8)}.`
+  )
 } else {
-  const dirty = spawnSync('git', ['-C', REPO_ROOT, 'diff', '--quiet', 'HEAD']).status !== 0
+  const dirty =
+    spawnSync('git', ['-C', REPO_ROOT, 'diff', '--quiet', 'HEAD']).status !== 0
   if (dirty) {
     die(
       1,
       'FAIL: working tree is dirty — commit or stash so HEAD is exactly the',
-      '      staged commit before verifying.',
+      '      staged commit before verifying.'
     )
   }
   if (HEAD_SHA !== SHA) {
@@ -161,14 +182,14 @@ if (process.env.VERIFY_ALLOW_TREE_MISMATCH === '1') {
       1,
       `FAIL: HEAD (${HEAD_SHA})`,
       `      != the given --sha (${SHA}).`,
-      '      Check out the staged commit, then re-run.',
+      '      Check out the staged commit, then re-run.'
     )
   }
 }
 
 // Tool versions for the sandbox come straight from the canonical sources CI
 // uses, so the image matches the runner that produced the staged tarball:
-//   - Node : repo-root .node-version (what actions/setup-node reads); its
+//   - node : repo-root .node-version (what actions/setup-node reads); its
 //            bundled zlib decides the gzip layer of the tarball.
 //   - npm  : repo-root .npm-version — the same file release-draft.yml's stage
 //            job reads to install the npm that builds the staged tarball.
@@ -178,39 +199,51 @@ if (process.env.VERIFY_ALLOW_TREE_MISMATCH === '1') {
 function derivePin(
   label: string,
   file: string,
-  extract: (raw: string) => string | undefined,
+  extract: (raw: string) => string | undefined
 ): string {
   const v = extract(readFileSync(join(REPO_ROOT, file), 'utf8'))
     ?.trim()
     .replace(/^v/, '')
   if (!v || !/^\d+\.\d+\.\d+$/.test(v)) {
-    die(2, `FAIL: could not derive a pinned x.y.z ${label} version from ${file}${v ? ` (got '${v}')` : ''}`)
+    die(
+      2,
+      `FAIL: could not derive a pinned x.y.z ${label} version from ${file}${v ? ` (got '${v}')` : ''}`
+    )
   }
   return v
 }
 
-const NODE_VERSION = derivePin('Node', '.node-version', raw => raw)
+const NODE_VERSION = derivePin('node', '.node-version', raw => raw)
 const NPM_VERSION = derivePin('npm', '.npm-version', raw => raw)
 const PNPM_VERSION = derivePin('pnpm', 'package.json', raw => {
-  const pm = (JSON.parse(raw) as { packageManager?: string }).packageManager ?? ''
+  const pm =
+    (JSON.parse(raw) as { packageManager?: string }).packageManager ?? ''
   return /^pnpm@(\d+\.\d+\.\d+)/.exec(pm)?.[1]
 })
 
-err(`==> Building canonical image (Node ${NODE_VERSION}, npm ${NPM_VERSION}, pnpm ${PNPM_VERSION})`)
+err(
+  `==> Building canonical image (node ${NODE_VERSION}, npm ${NPM_VERSION}, pnpm ${PNPM_VERSION})`
+)
 {
   const r = spawnSync(
     'docker',
     [
-      'build', '-q',
-      '--build-arg', `NODE_VERSION=${NODE_VERSION}`,
-      '--build-arg', `NPM_VERSION=${NPM_VERSION}`,
-      '--build-arg', `PNPM_VERSION=${PNPM_VERSION}`,
-      '-t', IMAGE, '.',
+      'build',
+      '-q',
+      '--build-arg',
+      `NODE_VERSION=${NODE_VERSION}`,
+      '--build-arg',
+      `NPM_VERSION=${NPM_VERSION}`,
+      '--build-arg',
+      `PNPM_VERSION=${PNPM_VERSION}`,
+      '-t',
+      IMAGE,
+      '.'
     ],
     {
       cwd: SCRIPT_DIR,
-      stdio: ['ignore', 'ignore', 'inherit'],
-    },
+      stdio: ['ignore', 'ignore', 'inherit']
+    }
   )
   if (r.status !== 0) process.exit(r.status ?? 1)
 }
@@ -221,15 +254,27 @@ mkdirSync(TARBALLS_DIR, { recursive: true })
 
 // --- hardened sandbox flags -------------------------------------------------
 const DOCKER_FLAGS = [
-  '--rm', '-i',
+  '--rm',
+  '-i',
   '--read-only',
-  '--tmpfs', '/tmp:exec,mode=1777',
-  '--tmpfs', '/home/verifier:exec,mode=1777',
-  '--cap-drop', 'ALL',
-  '--security-opt', 'no-new-privileges',
-  '--memory', '6g', '--cpus', '4', '--pids-limit', '2048',
-  '-e', `PACKAGE=${PACKAGE}`,
-  '-e', `VERSION=${VERSION}`,
+  '--tmpfs',
+  '/tmp:exec,mode=1777',
+  '--tmpfs',
+  '/home/verifier:exec,mode=1777',
+  '--cap-drop',
+  'ALL',
+  '--security-opt',
+  'no-new-privileges',
+  '--memory',
+  '6g',
+  '--cpus',
+  '4',
+  '--pids-limit',
+  '2048',
+  '-e',
+  `PACKAGE=${PACKAGE}`,
+  '-e',
+  `VERSION=${VERSION}`
 ]
 
 /**
@@ -239,19 +284,19 @@ const DOCKER_FLAGS = [
 function runContainer(
   cmd: string,
   extra: string[],
-  opts: { archive?: boolean } = {},
+  opts: { archive?: boolean } = {}
 ): Promise<number> {
   return new Promise((resolve, reject) => {
     const docker = spawn(
       'docker',
       ['run', ...DOCKER_FLAGS, ...extra, IMAGE, cmd],
-      { stdio: [opts.archive ? 'pipe' : 'ignore', 'inherit', 'inherit'] },
+      { stdio: [opts.archive ? 'pipe' : 'ignore', 'inherit', 'inherit'] }
     )
     docker.on('error', reject)
     docker.on('close', code => resolve(code ?? 1))
     if (opts.archive) {
       const git = spawn('git', ['-C', REPO_ROOT, 'archive', 'HEAD'], {
-        stdio: ['ignore', 'pipe', 'inherit'],
+        stdio: ['ignore', 'pipe', 'inherit']
       })
       git.on('error', reject)
       if (!git.stdout || !docker.stdin) {
@@ -266,15 +311,20 @@ function runContainer(
 const shortSha = HEAD_SHA.slice(0, 8)
 
 // --- run 1: reproduce + match digests ---------------------------------------
-err(`==> Verifying ${PACKAGE}@${VERSION} from HEAD (${shortSha}) — reproduce & match hash`)
+err(
+  `==> Verifying ${PACKAGE}@${VERSION} from HEAD (${shortSha}) — reproduce & match hash`
+)
 const run1 = await runContainer(
   'run1.match-hash.sh',
   [
-    '-v', `${TARBALLS_DIR}:/out`,
-    '-e', `EXPECTED_SHASUM=${SHASUM}`,
-    '-e', `EXPECTED_INTEGRITY=${INTEGRITY}`,
+    '-v',
+    `${TARBALLS_DIR}:/out`,
+    '-e',
+    `EXPECTED_SHASUM=${SHASUM}`,
+    '-e',
+    `EXPECTED_INTEGRITY=${INTEGRITY}`
   ],
-  { archive: true },
+  { archive: true }
 )
 
 if (run1 === 0) {
@@ -290,8 +340,11 @@ if (run1 !== 20) {
 
 // --- escalation (run 1 exited 20: reproduction succeeded but digests differ) -
 if (!STAGE_ID) {
-  die(1, '==> Hash mismatch, but no --stage-id was given to download the staged',
-       '    tarball. Re-run with the --stage-id option included.')
+  die(
+    1,
+    '==> Hash mismatch, but no --stage-id was given to download the staged',
+    '    tarball. Re-run with the --stage-id option included.'
+  )
 }
 
 // 1. Download the actual staged tarball (host-side; npm CLI assumed auth'd).
@@ -304,29 +357,35 @@ const downloadJson = (() => {
   const r = spawnSync('npm', ['stage', 'download', STAGE_ID, '--json'], {
     cwd: TARBALLS_DIR,
     encoding: 'utf8',
-    stdio: ['ignore', 'pipe', 'inherit'],
+    stdio: ['ignore', 'pipe', 'inherit']
   })
-  if (r.status !== 0) die(3, `==> ABORT — 'npm stage download' failed (exit ${r.status}).`)
+  if (r.status !== 0)
+    die(3, `==> ABORT — 'npm stage download' failed (exit ${r.status}).`)
   return r.stdout
 })()
 
 const downloadSchema = z.record(
   z.string(),
-  z.object({ shasum: z.string(), integrity: z.string() }),
+  z.object({ shasum: z.string(), integrity: z.string() })
 )
 let stagedMeta: { shasum: string; integrity: string } | undefined
 try {
   const parsed = downloadSchema.parse(JSON.parse(downloadJson))
   stagedMeta = parsed[PACKAGE] ?? Object.values(parsed)[0]
 } catch {
-  err("WARN: could not parse 'npm stage download --json' metadata; continuing on file bytes.")
+  err(
+    "WARN: could not parse 'npm stage download --json' metadata; continuing on file bytes."
+  )
 }
 
 const newTgz = readdirSync(TARBALLS_DIR).filter(
-  f => f.endsWith('.tgz') && f !== LOCAL_TGZ && !beforeDownload.has(f),
+  f => f.endsWith('.tgz') && f !== LOCAL_TGZ && !beforeDownload.has(f)
 )
 if (newTgz.length !== 1) {
-  die(3, `==> ABORT — expected exactly one new .tgz from the download, got ${newTgz.length}.`)
+  die(
+    3,
+    `==> ABORT — expected exactly one new .tgz from the download, got ${newTgz.length}.`
+  )
 }
 renameSync(join(TARBALLS_DIR, newTgz[0]!), join(TARBALLS_DIR, STAGED_TGZ))
 
@@ -341,13 +400,19 @@ err(`    registry.shasum  : ${stagedMeta?.shasum ?? '<unparsed>'}`)
 err(`    staged.tgz sha1  : ${stagedSha}`)
 err(`    local.tgz  sha1  : ${localSha}`)
 if (stagedMeta && stagedMeta.shasum !== stagedSha) {
-  err('    !! downloaded bytes do NOT match the registry-reported shasum (corruption or lying registry).')
+  err(
+    '    !! downloaded bytes do NOT match the registry-reported shasum (corruption or lying registry).'
+  )
 }
 if (stagedMeta && stagedMeta.shasum !== SHASUM) {
-  err('    !! registry shasum differs from the given --shasum (stale or tampered argument).')
+  err(
+    '    !! registry shasum differs from the given --shasum (stale or tampered argument).'
+  )
 }
 if (stagedSha === localSha) {
-  err('    note: staged.tgz == local.tgz — the given --shasum/--integrity were wrong/stale.')
+  err(
+    '    note: staged.tgz == local.tgz — the given --shasum/--integrity were wrong/stale.'
+  )
 }
 
 // 3. Enumerate the staged list and flag version-squats (a staged entry on our
@@ -362,15 +427,18 @@ try {
       tag: z.string().optional(),
       actor: z.string().optional(),
       createdAt: z.string().optional(),
-      shasum: z.string(),
-    }),
+      shasum: z.string()
+    })
   )
   for (const e of listSchema.parse(JSON.parse(listJson))) {
     let note = '(other version — informational)'
     if (e.shasum === localSha) note = '<= MATCHES your reproduction'
     else if (e.version === VERSION)
-      note = '!! SAME VERSION, shasum you CANNOT reproduce — squat? reject + investigate'
-    err(`    ${e.version}  ${e.tag ?? '-'}  by ${e.actor ?? '?'}  ${e.createdAt ?? ''}`)
+      note =
+        '!! SAME VERSION, shasum you CANNOT reproduce — squat? reject + investigate'
+    err(
+      `    ${e.version}  ${e.tag ?? '-'}  by ${e.actor ?? '?'}  ${e.createdAt ?? ''}`
+    )
     err(`      shasum ${e.shasum}  ${note}`)
   }
 } catch (e) {
@@ -380,7 +448,13 @@ try {
 // 4. Run 2: extract both tarballs in the sandbox and diff their contents.
 err('')
 err('==> Diffing staged vs local contents in the sandbox')
-const run2 = await runContainer('run2.diff-contents.sh', ['-v', `${TARBALLS_DIR}:/in:ro`])
+const run2 = await runContainer('run2.diff-contents.sh', [
+  '-v',
+  `${TARBALLS_DIR}:/in:ro`
+])
 
 err('')
-die(run2 || 21, '==> FAIL — staged bytes are NOT reproducible from HEAD. Do not approve; investigate.')
+die(
+  run2 || 21,
+  '==> FAIL — staged bytes are NOT reproducible from HEAD. Do not approve; investigate.'
+)
