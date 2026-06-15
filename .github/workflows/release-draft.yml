@@ -199,12 +199,11 @@ jobs:
           done
           # stage-id gates the draft; shasum + integrity are surfaced in the
           # job summary so a reviewer can match the staged tarball before 2FA.
-          # One redirect per line (not a `{ … } >> file` group) is the deliberate
-          # house style — easier to scan — so the SC2129 hint is disabled here.
-          # shellcheck disable=SC2129
-          echo "stage-id=$STAGE_ID" >> "$GITHUB_OUTPUT"
-          echo "shasum=$SHASUM" >> "$GITHUB_OUTPUT"
-          echo "integrity=$INTEGRITY" >> "$GITHUB_OUTPUT"
+          {
+            echo "stage-id=$STAGE_ID"
+            echo "shasum=$SHASUM"
+            echo "integrity=$INTEGRITY"
+          } >> "$GITHUB_OUTPUT"
 
   draft:
     name: Draft GitHub release
