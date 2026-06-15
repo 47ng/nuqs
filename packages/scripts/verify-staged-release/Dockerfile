@@ -4,16 +4,15 @@
 # tarball (ubuntu-24.04-arm + actions/setup-node's official nodejs.org
 # binary), so a local `npm pack` reproduces the staged `.tgz` byte-for-byte.
 #
-# Pins:
+# Pins (verify.ts passes Node/npm/pnpm as --build-args from the canonical
+# sources CI uses; the ARG defaults below are only fallbacks for a standalone
+# `docker build` and may drift):
 #   - Ubuntu 24.04   : matches the runner OS (glibc/zlib provenance)
-#   - Node           : verify.ts passes --build-arg NODE_VERSION from the
-#                      repo-root .node-version (the file actions/setup-node
-#                      reads in CI). The ARG default below is only a fallback
-#                      for a standalone `docker build` and may drift.
-#   - pnpm           : from package.json "packageManager"
-#   - npm            : hardcoded to match release-draft.yml's pinned npm.
-#                      TODO(unify): extract a shared .npm-version once the
-#                      workflow is editable, and read it on both sides.
+#   - Node           : repo-root .node-version (the file actions/setup-node
+#                      reads in CI); its bundled zlib decides the gzip layer.
+#   - npm            : repo-root .npm-version (same file release-draft.yml's
+#                      stage job reads to install the publishing npm).
+#   - pnpm           : package.json "packageManager" (pnpm@x.y.z).
 #   - jq             : required by packages/nuqs/scripts/prepack.sh
 FROM ubuntu:24.04
 

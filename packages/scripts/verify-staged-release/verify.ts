@@ -166,25 +166,47 @@ if (process.env.VERIFY_ALLOW_TREE_MISMATCH === '1') {
   }
 }
 
-// Node version: single source of truth is the repo-root .node-version — the
-// same file actions/setup-node reads in CI. Feed it to the image build so the
-// sandbox Node matches the runner's bundled zlib (which decides the gzip layer
-// of the tarball). The Dockerfile's ARG default is only a fallback for a manual
-// `docker build` without this launcher; this --build-arg always overrides it.
-const NODE_VERSION = (() => {
-  const raw = readFileSync(join(REPO_ROOT, '.node-version'), 'utf8').trim()
-  const v = raw.replace(/^v/, '')
-  if (!/^\d+\.\d+\.\d+$/.test(v)) {
-    die(2, `FAIL: .node-version is not a plain x.y.z version: '${raw}'`)
+// Tool versions for the sandbox come straight from the canonical sources CI
+// uses, so the image matches the runner that produced the staged tarball:
+//   - Node : repo-root .node-version (what actions/setup-node reads); its
+//            bundled zlib decides the gzip layer of the tarball.
+//   - npm  : repo-root .npm-version — the same file release-draft.yml's stage
+//            job reads to install the npm that builds the staged tarball.
+//   - pnpm : package.json "packageManager" (what corepack/CI resolves).
+// Each is passed as a --build-arg that always overrides the Dockerfile ARG
+// default (those defaults exist only for a standalone `docker build`).
+function derivePin(
+  label: string,
+  file: string,
+  extract: (raw: string) => string | undefined,
+): string {
+  const v = extract(readFileSync(join(REPO_ROOT, file), 'utf8'))
+    ?.trim()
+    .replace(/^v/, '')
+  if (!v || !/^\d+\.\d+\.\d+$/.test(v)) {
+    die(2, `FAIL: could not derive a pinned x.y.z ${label} version from ${file}${v ? ` (got '${v}')` : ''}`)
   }
   return v
-})()
+}
 
-err(`==> Building canonical image (Node ${NODE_VERSION} from .node-version)`)
+const NODE_VERSION = derivePin('Node', '.node-version', raw => raw)
+const NPM_VERSION = derivePin('npm', '.npm-version', raw => raw)
+const PNPM_VERSION = derivePin('pnpm', 'package.json', raw => {
+  const pm = (JSON.parse(raw) as { packageManager?: string }).packageManager ?? ''
+  return /^pnpm@(\d+\.\d+\.\d+)/.exec(pm)?.[1]
+})
+
+err(`==> Building canonical image (Node ${NODE_VERSION}, npm ${NPM_VERSION}, pnpm ${PNPM_VERSION})`)
 {
   const r = spawnSync(
     'docker',
-    ['build', '-q', '--build-arg', `NODE_VERSION=${NODE_VERSION}`, '-t', IMAGE, '.'],
+    [
+      'build', '-q',
+      '--build-arg', `NODE_VERSION=${NODE_VERSION}`,
+      '--build-arg', `NPM_VERSION=${NPM_VERSION}`,
+      '--build-arg', `PNPM_VERSION=${PNPM_VERSION}`,
+      '-t', IMAGE, '.',
+    ],
     {
       cwd: SCRIPT_DIR,
       stdio: ['ignore', 'ignore', 'inherit'],
