@@ -276,6 +276,68 @@ err(
   if (r.status !== 0) process.exit(r.status ?? 1)
 }
 
+// --- toolchain assertion ----------------------------------------------------
+// The --build-args above are meant to override the Dockerfile's ARG defaults; a
+// typo in a flag name or default drift would silently bake the wrong toolchain
+// and surface only as a confusing hash mismatch later. So run the freshly built
+// image and assert its node/npm/pnpm are exactly what we fed the build. This is
+// a runtime check, not a build-time print: a cached RUN layer never re-runs, and
+// `docker build -q` swallows build output anyway. No mounts, all caps dropped —
+// it only invokes `--version`.
+err('==> Verifying sandbox toolchain matches the pinned versions')
+{
+  const r = spawnSync(
+    'docker',
+    [
+      'run',
+      '--rm',
+      '--cap-drop',
+      'ALL',
+      '--security-opt',
+      'no-new-privileges',
+      IMAGE,
+      'sh',
+      '-c',
+      'node --version; npm --version; pnpm --version'
+    ],
+    { encoding: 'utf8' }
+  )
+  if (r.status !== 0) {
+    die(
+      r.status ?? 1,
+      styleText(
+        'red',
+        `FAIL: could not query the sandbox toolchain (docker exit ${r.status}).`
+      ),
+      r.stderr ?? ''
+    )
+  }
+  const [gotNode, gotNpm, gotPnpm] = r.stdout
+    .trim()
+    .split('\n')
+    .map(s => s.trim().replace(/^v/, ''))
+  const mismatches = (
+    [
+      ['node', gotNode, NODE_VERSION],
+      ['npm', gotNpm, NPM_VERSION],
+      ['pnpm', gotPnpm, PNPM_VERSION]
+    ] as const
+  ).filter(([, got, want]) => got !== want)
+  if (mismatches.length > 0) {
+    die(
+      2,
+      styleText(
+        'red',
+        'FAIL: sandbox toolchain does not match the pinned versions — the\n  --build-args did not take (check the verify.ts ↔ Dockerfile wiring):'
+      ),
+      ...mismatches.map(
+        ([label, got, want]) =>
+          `  ${label}: image has ${got || '<none>'}, expected ${want}`
+      )
+    )
+  }
+}
+
 // Fresh tarballs/ each run: clear stale artifacts, recreate the mount target.
 rmSync(TARBALLS_DIR, { recursive: true, force: true })
 mkdirSync(TARBALLS_DIR, { recursive: true })

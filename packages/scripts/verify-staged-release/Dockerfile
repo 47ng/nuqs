@@ -41,8 +41,7 @@ RUN set -eux; \
     tar -xJf /tmp/node.tar.xz -C /usr/local --strip-components=1; \
     rm /tmp/node.tar.xz; \
     npm install --global "npm@${NPM_VERSION}"; \
-    npm install --global "pnpm@${PNPM_VERSION}"; \
-    node --version; npm --version; pnpm --version
+    npm install --global "pnpm@${PNPM_VERSION}"
 
 # The analysis is baked into the image (NOT taken from the untrusted source
 # archive) so that, under the runtime read-only rootfs, a malicious build
