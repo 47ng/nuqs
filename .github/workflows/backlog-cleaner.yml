@@ -1,0 +1,98 @@
+name: Backlog Cleaner
+
+# Drops merged PRs and closed issues out of the "🪵 Backlog" (milestone #3)
+# triage queue. Replaces milestone-automation.yml, which promoted Backlog items
+# into the now-retired "🚀 Shipping next" milestone via `pull_request_target`
+# (the repo's only one). This workflow uses no `pull_request_target` and never
+# checks out code — the security goal of P5.
+#
+# Two fork-safe triggers, asymmetric by necessity:
+#
+#   issues: closed  — the issue event always runs in base-repo context with a
+#     write token (issues have no fork notion), so we clear directly. GitHub
+#     auto-closes a PR's linked issues on merge, firing this same event, so
+#     PR-closed and hand-closed issues are both covered here — no
+#     closingIssuesReferences plumbing needed.
+#
+#   push: next      — a merged PR's milestone CANNOT be cleared from a
+#     `pull_request: closed` event, because that event from a fork carries a
+#     read-only token. A push to the protected `next` branch is a trusted,
+#     writable context, so we recover the PR number from the squash-merge
+#     subject's trailing `(#N)` instead (the same mechanism the release engine's
+#     extractPRNumber relies on; direct pushes have no `(#N)` and are skipped).
+
+on:
+  issues:
+    types: [closed]
+  push:
+    branches: [next]
+
+# Default to no token scope; each job grants only what it writes.
+permissions: {}
+
+env:
+  BACKLOG_MILESTONE_NUMBER: 3 # "🪵 Backlog"
+
+jobs:
+  clear-issue-from-backlog:
+    name: Clear Backlog from closed issue
+    # Skip the runner entirely unless a Backlog issue just closed (any reason).
+    # `env` is not available in a job-level `if`, so the milestone number is
+    # inlined here — keep it in sync with BACKLOG_MILESTONE_NUMBER above.
+    if: github.event_name == 'issues' && github.event.issue.milestone.number == 3
+    runs-on: ubuntu-24.04-arm
+    permissions:
+      issues: write
+    steps:
+      - name: Clear milestone
+        run: gh api -X PATCH "repos/$GITHUB_REPOSITORY/issues/$ISSUE_NUMBER" -F milestone=null --silent
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Passed via env (not inlined) so no event value reaches the script body.
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+
+  clear-prs-from-backlog:
+    name: Clear Backlog from merged PRs
+    if: github.event_name == 'push'
+    runs-on: ubuntu-24.04-arm
+    # A PR's milestone is set through the shared /issues/{n} endpoint, so both
+    # scopes are needed to clear it.
+    permissions:
+      issues: write
+      pull-requests: write
+    steps:
+      - name: Clear Backlog from PRs in this push
+        run: |
+          set -euo pipefail
+
+          # PR numbers from squash-merge subjects: the last `(#N)` on each
+          # commit's first line. Commit messages are contributor-controlled, so
+          # they never enter the shell — jq reads $COMMITS_JSON and emits only
+          # digit strings.
+          pr_numbers=$(jq -r '
+            (. // []) | .[]
+            | (.message | split("\n")[0])
+            | [scan("\\(#([0-9]+)\\)")]
+            | (last // empty)
+            | .[0] | tonumber
+          ' <<< "$COMMITS_JSON" | sort -un)
+
+          if [[ -z "$pr_numbers" ]]; then
+            echo "No PR-numbered commits in this push."
+            exit 0
+          fi
+
+          for n in $pr_numbers; do
+            current=$(gh api "repos/$GITHUB_REPOSITORY/issues/$n" --jq '.milestone.number // empty')
+            if [[ "$current" == "$BACKLOG_MILESTONE_NUMBER" ]]; then
+              echo "Clearing Backlog from PR #$n"
+              gh api -X PATCH "repos/$GITHUB_REPOSITORY/issues/$n" -F milestone=null --silent
+            else
+              echo "PR #$n not in Backlog (milestone=${current:-none}); skipping."
+            fi
+          done
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # toJson keeps the contributor-controlled messages as JSON data, never
+          # interpolated into the script text (template-injection safe).
+          COMMITS_JSON: ${{ toJson(github.event.commits) }}
