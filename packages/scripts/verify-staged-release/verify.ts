@@ -30,20 +30,39 @@ import {
   rmSync
 } from 'node:fs'
 import { join } from 'node:path'
-import { parseArgs } from 'node:util'
+import { parseArgs, styleText } from 'node:util'
 import { z } from 'zod'
 
 const HELP = `Staged-release verification — host launcher.
 
 Usage:
-  verify.ts --package <name> --version <v> --sha <sha> --shasum <s> \\
-            [--stage-id <id>] [--integrity <i>]
+  verify.ts --package <name> --version <v> --shasum <s> \\
+            [--sha <sha>] [--stage-id <id>] [--integrity <i>]
 
 Pass the run-summary fields as flags — copy the single command the Draft
 Release job summary prints. Reproduces the package in a hardened sandbox and
 matches its digests against those fields. On a mismatch it downloads the
 staged tarball and diffs its contents to show what diverged. Escalation is
-automatic.`
+automatic.
+
+Required arguments:
+  --package <name>      The package name (e.g. nuqs, @47ng/codec).
+  --version <v>         The version string (e.g. 1.2.3).
+  --shasum <s>          The staged tarball's SHA1 (40 hex chars).
+
+Optional:
+  --sha <sha>           The staged commit SHA1 (40 or 64 hex chars).
+                        If provided, checks that <sha> == HEAD on a clean working tree.
+                        If omitted, the script reproduces from HEAD instead.
+
+  --stage-id <id>       The staged release ID (UUID).
+                        Only needed if the reproduction fails and you want to
+                        download the staged tarball for diffing.
+
+  --integrity <i>       The staged tarball's integrity (e.g. sha512-…).
+                        Only needed if the reproduction fails and you want to
+                        download the staged tarball for diffing.
+`
 
 const IMAGE = 'nuqs-verify-staged:latest'
 const SCRIPT_DIR = import.meta.dirname
@@ -111,11 +130,12 @@ const releaseFieldsSchema = z.object({
     .string({ error: 'missing required --version' })
     .min(1, '--version must not be empty'),
   sha: z
-    .string({ error: 'missing required --sha' })
+    .string()
     .regex(
       /^([0-9a-f]{40}|[0-9a-f]{64})$/,
       '--sha must be a 40- or 64-char hex commit SHA'
-    ),
+    )
+    .optional(),
   shasum: z
     .string({ error: 'missing required --shasum' })
     .regex(/^[0-9a-f]{40}$/, '--shasum must be a 40-char hex sha1'),
@@ -160,12 +180,13 @@ const {
 // exercised from an arbitrary checkout. `git archive HEAD` still ships the
 // committed tree, so this only loosens *which* commit is reproduced.
 const HEAD_SHA = capture('git', ['-C', REPO_ROOT, 'rev-parse', 'HEAD']).trim()
-if (process.env.VERIFY_ALLOW_TREE_MISMATCH === '1') {
+if (!SHA) {
   err(
-    'WARN: VERIFY_ALLOW_TREE_MISMATCH=1 — skipping clean-tree + HEAD==sha guards (TEST MODE).'
-  )
-  err(
-    `      Reproducing from HEAD ${HEAD_SHA.slice(0, 8)}, not the given --sha ${SHA.slice(0, 8)}.`
+    styleText(
+      'yellow',
+      `WARN: no --sha argument provided: skipping clean-tree + HEAD==sha guards (TEST MODE).
+  Reproducing from HEAD ${HEAD_SHA.slice(0, 8)}.`
+    )
   )
 } else {
   const dirty =
@@ -173,16 +194,23 @@ if (process.env.VERIFY_ALLOW_TREE_MISMATCH === '1') {
   if (dirty) {
     die(
       1,
-      'FAIL: working tree is dirty — commit or stash so HEAD is exactly the',
-      '      staged commit before verifying.'
+      styleText(
+        'red',
+        `FAIL: working tree is dirty — commit or stash so HEAD is exactly the
+  staged commit before verifying.`
+      )
     )
   }
   if (HEAD_SHA !== SHA) {
     die(
       1,
-      `FAIL: HEAD (${HEAD_SHA})`,
-      `      != the given --sha (${SHA}).`,
-      '      Check out the staged commit, then re-run.'
+      styleText(
+        'red',
+        `FAIL: Git tree mismatch:
+   HEAD ${HEAD_SHA}
+  --sha ${SHA}
+  Check out the staged commit, then re-run.`
+      )
     )
   }
 }
