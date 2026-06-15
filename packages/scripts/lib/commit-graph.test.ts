@@ -200,6 +200,10 @@ describe('extractPRNumber', () => {
   it('takes the last (#N) when several appear in the subject', () => {
     expect(extractPRNumber('fix: reconcile (#1) and (#2) (#456)')).toBe(456)
   })
+
+  it('is not shadowed by conventional-commit scope parens', () => {
+    expect(extractPRNumber('fix(deps): bump turbo (#42)')).toBe(42)
+  })
 })
 
 describe('isBot', () => {
