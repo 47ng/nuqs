@@ -176,7 +176,7 @@ jobs:
     needs: [ci-core]
     permissions:
       contents: read
-      actions: read
+      actions: read # the docs build reads the workflow-run status when rendering the landing-page CI component.
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:

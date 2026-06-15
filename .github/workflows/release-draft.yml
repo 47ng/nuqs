@@ -94,7 +94,7 @@ jobs:
     if: ${{ needs.compute-version.outputs.needsReleasing == 'true' && !inputs.dry-run }}
     permissions:
       contents: read
-      actions: read
+      actions: read # ci-cd.yml's docs build reads the workflow-run status when rendering the landing-page CI component.
     # Re-run the full matrix on the exact dispatched commit, so the staged
     # bytes are the bytes that passed CI. Secrets passed explicitly (no
     # `secrets: inherit`) to keep the credential surface minimal.
@@ -121,10 +121,6 @@ jobs:
       stage-id: ${{ steps.stage.outputs.stage-id }}
       shasum: ${{ steps.stage.outputs.shasum }}
       integrity: ${{ steps.stage.outputs.integrity }}
-    # todo: scope the env to whatever steps need it.
-    env:
-      VERSION: ${{ needs.compute-version.outputs.version }}
-      DIST_TAG: ${{ needs.compute-version.outputs.dist-tag }}
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
@@ -138,15 +134,25 @@ jobs:
           # publish job): a poisoned local cache must not reach the tarball.
           package-manager-cache: false
       - name: Install staging-capable npm
-        # `npm stage` first shipped in npm 11.15.0; the npm bundled with
-        # the pinned Node is older. Pinned (not @latest) because this is the
-        # privileged publish path — bump deliberately.
+        # `npm stage` first shipped in npm 11.15.0; the npm bundled with the
+        # pinned Node is older. The exact version is pinned in the repo-root
+        # .npm-version — the single source of truth, also read by
+        # packages/scripts/verify-staged-release so the sandbox reproduces with
+        # the same npm. Pinned (not @latest) because this is the privileged
+        # publish path — bump deliberately.
         run: |
-          which npm
-          npm --version
-          npm install --global npm@11.16.0
-          which npm
-          npm --version
+          set -euo pipefail
+          NPM_VERSION=$(tr -d '[:space:]' < .npm-version)
+          NPM_VERSION=${NPM_VERSION#v} # tolerate a leading v, like verify.ts
+          if ! printf '%s' "$NPM_VERSION" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "::error::.npm-version is not a plain x.y.z version: '$NPM_VERSION'"
+            exit 1
+          fi
+          # Surface the runner's built-in npm (bundled with the pinned Node)
+          # before overriding it, then confirm the pinned npm took effect.
+          echo "built-in npm: $(npm --version) ($(which npm))"
+          npm install --global "npm@$NPM_VERSION"
+          echo "pinned npm:   $(npm --version) ($(which npm))"
       - name: Install dependencies
         run: pnpm install --ignore-scripts --frozen-lockfile --filter nuqs...
       - name: Verify provenance + registry signatures of dependencies
@@ -154,12 +160,16 @@ jobs:
       - name: Set the computed version (ephemeral, never committed)
         run: npm pkg set version="$VERSION"
         working-directory: packages/nuqs
+        env:
+          VERSION: ${{ needs.compute-version.outputs.version }}
       - name: Build package
         run: pnpm build --filter nuqs
       - name: Stage tarball to npm (OIDC staged trusted publishing)
         id: stage
         if: ${{ !inputs.dry-run }}
         working-directory: packages/nuqs
+        env:
+          DIST_TAG: ${{ needs.compute-version.outputs.dist-tag }}
         # `npm stage publish` defers 2FA: it stages the tarball (with
         # provenance, per publishConfig) without making it installable.
         # Prerelease versions require an explicit --tag.
@@ -205,13 +215,6 @@ jobs:
     # this job holds only contents:write and never sees id-token.
     permissions:
       contents: write # create the draft GitHub release
-    env:
-      VERSION: ${{ needs.compute-version.outputs.version }}
-      TAG: ${{ needs.compute-version.outputs.tag }}
-      DIST_TAG: ${{ needs.compute-version.outputs.dist-tag }}
-      STAGE_ID: ${{ needs.stage.outputs.stage-id }}
-      SHASUM: ${{ needs.stage.outputs.shasum }}
-      INTEGRITY: ${{ needs.stage.outputs.integrity }}
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
@@ -240,6 +243,7 @@ jobs:
         if: ${{ inputs.dry-run }}
         run: cat "$RUNNER_TEMP/notes.md"
       - name: Create draft GitHub release
+        id: create-release
         if: ${{ !inputs.dry-run }}
         # Draft + untagged: the git tag is created server-side only when the
         # maintainer publishes this draft, which is what fires Finalize.
@@ -247,14 +251,27 @@ jobs:
           set -euo pipefail
           PRERELEASE=()
           if [ "$DIST_TAG" = "beta" ]; then PRERELEASE=(--prerelease); fi
-          gh release create "$TAG" \
+          # `gh release create` prints the new release's html_url on stdout.
+          # For a draft that's the untagged form (…/releases/tag/untagged-<hash>),
+          # which we can't construct by hand from $TAG — the tag only exists once
+          # the draft is published. Capture it so the summary links to the draft.
+          DRAFT_URL=$(gh release create "$TAG" \
             --draft \
             --title "$TAG" \
             --target "$GITHUB_SHA" \
             --notes-file "$RUNNER_TEMP/notes.md" \
-            "${PRERELEASE[@]}"
+            "${PRERELEASE[@]}")
+          # Same untagged slug, but the Publish button lives on the edit page:
+          # /releases/tag/ -> /releases/edit/.
+          EDIT_URL=${DRAFT_URL/\/releases\/tag\//\/releases\/edit\/}
+          {
+            echo "draft-url=$DRAFT_URL"
+            echo "edit-url=$EDIT_URL"
+          } >> "$GITHUB_OUTPUT"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ needs.compute-version.outputs.tag }}
+          DIST_TAG: ${{ needs.compute-version.outputs.dist-tag }}
       - name: Summary
         run: |
           {
@@ -262,14 +279,36 @@ jobs:
             echo ""
             echo "| | |"
             echo "|---|---|"
-            echo "| Version | \`$VERSION\` |"
-            echo "| Tag | \`$TAG\` |"
-            echo "| Dist-tag | \`$DIST_TAG\` |"
+            echo "| sha | \`$GITHUB_SHA\` |"
+            echo "| version | \`$VERSION\` |"
+            echo "| git tag | \`$TAG\` |"
+            echo "| npm dist-tag | \`$DIST_TAG\` |"
             echo "| npm stage id | \`$STAGE_ID\` |"
             echo "| shasum | \`$SHASUM\` |"
             echo "| integrity | \`$INTEGRITY\` |"
             echo ""
-            echo "**Next:** review the draft notes, then"
-            echo "[approve the staged package on npmjs.com](https://www.npmjs.com/settings/franky47/staged-packages/?page=0&perPage=10&filterPackage=nuqs)"
-            echo "with 2FA, and publish the draft release to create the tag and fire Finalize."
+            echo "## Next steps"
+            echo ""
+            echo "1. Run this command from the repo root to reproduce & verify the build:"
+            echo '```bash'
+            echo "packages/scripts/verify-staged-release/verify.ts \\"
+            echo "  --package nuqs \\"
+            echo "  --version '$VERSION' \\"
+            echo "  --sha '$GITHUB_SHA' \\"
+            echo "  --stage-id '$STAGE_ID' \\"
+            echo "  --shasum '$SHASUM' \\"
+            echo "  --integrity '$INTEGRITY'"
+            echo '```'
+            echo "2. Review the [draft release notes]($RELEASE_DRAFT_URL)"
+            echo "3. Approve the [staged package on npmjs.com](https://www.npmjs.com/settings/franky47/staged-packages/?page=0&perPage=10&filterPackage=nuqs) with 2FA"
+            echo "4. Publish the [draft release]($RELEASE_EDIT_URL) to finalize the release."
           } >> "$GITHUB_STEP_SUMMARY"
+        env:
+          VERSION: ${{ needs.compute-version.outputs.version }}
+          TAG: ${{ needs.compute-version.outputs.tag }}
+          DIST_TAG: ${{ needs.compute-version.outputs.dist-tag }}
+          STAGE_ID: ${{ needs.stage.outputs.stage-id }}
+          SHASUM: ${{ needs.stage.outputs.shasum }}
+          INTEGRITY: ${{ needs.stage.outputs.integrity }}
+          RELEASE_DRAFT_URL: ${{ steps.create-release.outputs.draft-url }}
+          RELEASE_EDIT_URL: ${{ steps.create-release.outputs.edit-url }}
