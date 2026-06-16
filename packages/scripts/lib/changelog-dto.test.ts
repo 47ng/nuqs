@@ -281,6 +281,71 @@ describe('groupChangesByCategory', () => {
       'untyped commit'
     ])
   })
+
+  // Slice 2: a squashed PR and a direct commit sharing a category must coexist
+  // in one section, PRs first (ascending number), then commits in their given
+  // (discovery oldest-first) order — the ordering the page now renders directly.
+  it('coexists squashed PRs and direct commits in one category, in the correct order', () => {
+    const changes: Change[] = [
+      {
+        source: 'directCommit',
+        sha: 'aaaa1111',
+        type: 'fix',
+        breaking: false,
+        description: 'first commit',
+        author: 'Alice'
+      },
+      {
+        source: 'squashedPR',
+        prNumber: 9,
+        type: 'fix',
+        breaking: false,
+        description: 'pr nine',
+        author: null,
+        closingIssues: []
+      },
+      {
+        source: 'directCommit',
+        sha: 'bbbb2222',
+        type: 'fix',
+        breaking: false,
+        description: 'second commit',
+        author: 'Bob'
+      },
+      {
+        source: 'squashedPR',
+        prNumber: 3,
+        type: 'fix',
+        breaking: false,
+        description: 'pr three',
+        author: null,
+        closingIssues: []
+      }
+    ]
+    expect(
+      groupChangesByCategory(changes)['Bug fixes'].map(c => c.description)
+    ).toEqual(['pr three', 'pr nine', 'first commit', 'second commit'])
+  })
+
+  // Grouping must preserve every direct commit by identity (no dedup/collapse),
+  // so the page can render each — keyed on its distinct `sha` — instead of
+  // dropping any (the v2.8.10-beta.1 class of seven untyped direct commits).
+  it('preserves every direct commit by distinct sha when grouping', () => {
+    const shas = Array.from({ length: 7 }, (_, index) => `c0ffee0${index}`)
+    const changes: Change[] = shas.map(sha => ({
+      source: 'directCommit',
+      sha,
+      type: null,
+      breaking: false,
+      description: `direct commit ${sha}`,
+      author: 'François Best'
+    }))
+    expect(
+      groupChangesByCategory(changes)['Other changes'].map(c =>
+        c.source === 'directCommit' ? c.sha : c.prNumber
+      )
+    ).toEqual(shas)
+  })
 })
 
 describe('stripChangelogComment', () => {

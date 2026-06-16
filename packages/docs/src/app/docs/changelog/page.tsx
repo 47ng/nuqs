@@ -4,6 +4,7 @@ import {
   CopyMarkdownUrlButton,
   ViewOptions
 } from '@/src/components/ai/page-actions'
+import { CommitLine } from '@/src/components/changelog/commit-line'
 import { PullRequestLine } from '@/src/components/changelog/pr-line'
 import { github } from '@/src/lib/utils'
 import { Heading } from 'fumadocs-ui/components/heading'
@@ -16,7 +17,7 @@ import {
 import { ExternalLink } from 'lucide-react'
 import type { Metadata } from 'next'
 import { Fragment } from 'react'
-import { CATEGORIES, type Change } from 'scripts/lib/changelog-dto'
+import { CATEGORIES } from 'scripts/lib/changelog-dto'
 import { H2 } from '../../../components/typography'
 import { buildReleaseModel, fetchReleases, formatDate } from './_lib'
 
@@ -98,14 +99,7 @@ export default async function ChangelogPage() {
                     {grouped && (
                       <div className="mt-6 space-y-6">
                         {CATEGORIES.map(category => {
-                          const items = grouped[category].filter(
-                            (
-                              change
-                            ): change is Extract<
-                              Change,
-                              { source: 'squashedPR' }
-                            > => change.source === 'squashedPR'
-                          )
+                          const items = grouped[category]
                           if (items.length === 0) return null
 
                           return (
@@ -117,14 +111,23 @@ export default async function ChangelogPage() {
                                 {category}
                               </Heading>
                               <ul className="not-prose mt-3 list-none space-y-2 pl-0">
-                                {items.map(item => (
-                                  <PullRequestLine
-                                    key={item.prNumber}
-                                    prNumber={item.prNumber}
-                                    description={item.description}
-                                    author={item.author}
-                                  />
-                                ))}
+                                {items.map(item =>
+                                  item.source === 'squashedPR' ? (
+                                    <PullRequestLine
+                                      key={`pr-${item.prNumber}`}
+                                      prNumber={item.prNumber}
+                                      description={item.description}
+                                      author={item.author}
+                                    />
+                                  ) : (
+                                    <CommitLine
+                                      key={`commit-${item.sha}`}
+                                      sha={item.sha}
+                                      description={item.description}
+                                      author={item.author}
+                                    />
+                                  )
+                                )}
                               </ul>
                             </section>
                           )
