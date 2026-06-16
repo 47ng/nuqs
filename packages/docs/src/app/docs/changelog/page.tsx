@@ -145,10 +145,15 @@ export default async function ChangelogPage() {
                           })}
                         </div>
                       )}
-                      <Heading as="h3" id={`${tag}-contributors`}>
-                        Contributors
-                      </Heading>
-                      <ContributorsFooter contributors={contributors} />
+
+                      {contributors.length > 0 && (
+                        <>
+                          <Heading as="h3" id={`${tag}-contributors`}>
+                            Contributors
+                          </Heading>
+                          <ContributorsFooter contributors={contributors} />
+                        </>
+                      )}
                     </section>
                   </Fragment>
                 )
