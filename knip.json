@@ -46,7 +46,8 @@
         "src/components/audience.tsx",
         "src/components/code-block-highlighter.ts",
         "src/components/feature-support-matrix.tsx",
-        "src/components/frameworks.tsx"
+        "src/components/frameworks.tsx",
+        "src/schemas/changelog-dto.gen.ts"
       ],
       "project": ["content/**/*.{ts,tsx}", "src/**/*.{ts,tsx}"],
       "paths": {

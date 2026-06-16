@@ -47,6 +47,16 @@ export function toChangelogDTO(release: ReleaseChanges): ChangelogDTO {
   return { $schema: CHANGELOG_DTO_SCHEMA_URL, ...release }
 }
 
+// The JSON Schema artifact (Draft 2020-12) derived from the Zod SSOT. Served
+// out-of-band at `CHANGELOG_DTO_SCHEMA_URL` for editor/tooling validation —
+// consumers never fetch it and validate at runtime with Zod, never this. The
+// derivation lives here, beside the schema, so the throwaway generator (which
+// writes the committed artifact) and the drift test (which guards it) share one
+// source and cannot disagree about what the artifact should contain.
+export function changelogJsonSchema() {
+  return z.toJSONSchema(changelogDtoSchema)
+}
+
 // --- Embedding: the HTML comment block --------------------------------------
 
 const HINT =
