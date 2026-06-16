@@ -242,6 +242,31 @@ describe('preamble extraction', () => {
       'See the [migration guide](/docs/migrations/v2.9).'
     )
   })
+
+  // Slice 5: the maintainer authors a filled preamble (multi-line markdown with
+  // a code fence) in the draft; docs renders it above the change list. The raw
+  // markdown — newlines, blank lines and the ``` fence intact — must come back
+  // verbatim (trimmed), since the page renders exactly this string.
+  it('extracts a multi-line preamble with a code fence verbatim', () => {
+    const preamble = [
+      'nuqs v2.9 changes parser error handling — see the [migration guide](/docs/migrations/v2.9).',
+      '',
+      '```ts',
+      'const value = parseAsInteger.parse(input) // null on bad input, no longer throws',
+      '```'
+    ].join('\n')
+    const body = [
+      '<!--',
+      '<changelog:preamble>',
+      preamble,
+      '</changelog:preamble>',
+      '<changelog:dto>',
+      JSON.stringify(expectedDto),
+      '</changelog:dto>',
+      '-->'
+    ].join('\n')
+    expect(parseChangelogComment(body)?.preamble).toBe(preamble)
+  })
 })
 
 describe('groupChangesByCategory', () => {
