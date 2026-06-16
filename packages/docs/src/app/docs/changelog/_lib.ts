@@ -59,10 +59,12 @@ export async function fetchReleases(): Promise<GithubRelease[]> {
 // The render model for one release. `grouped` is null when the release has no
 // valid DTO (missing/malformed/unrecognized) — the page renders a degraded entry
 // (title + date + link) for it rather than dropping it or failing the build.
+// `contributors` is empty in that degraded case (no footer).
 export type ReleaseModel = {
   release: GithubRelease
   grouped: Record<Category, Change[]> | null
   preamble: string | null
+  contributors: string[]
 }
 
 export function buildReleaseModel(release: GithubRelease): ReleaseModel {
@@ -72,12 +74,13 @@ export function buildReleaseModel(release: GithubRelease): ReleaseModel {
       'changelog: release %s has no valid changelog DTO — rendering a degraded entry.',
       release.tag_name
     )
-    return { release, grouped: null, preamble: null }
+    return { release, grouped: null, preamble: null, contributors: [] }
   }
   return {
     release,
     grouped: groupChangesByCategory(parsed.dto.changes),
-    preamble: parsed.preamble
+    preamble: parsed.preamble,
+    contributors: parsed.dto.contributors
   }
 }
 

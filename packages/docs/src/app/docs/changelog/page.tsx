@@ -5,6 +5,7 @@ import {
   ViewOptions
 } from '@/src/components/ai/page-actions'
 import { CommitLine } from '@/src/components/changelog/commit-line'
+import { ContributorsFooter } from '@/src/components/changelog/contributors-footer'
 import { PullRequestLine } from '@/src/components/changelog/pr-line'
 import { github } from '@/src/lib/utils'
 import { Heading } from 'fumadocs-ui/components/heading'
@@ -64,7 +65,7 @@ export default async function ChangelogPage() {
           <p>No releases could be loaded from GitHub at this time.</p>
         ) : (
           <div className="space-y-10 pb-12 sm:space-y-16">
-            {models.map(({ release, grouped }, index) => {
+            {models.map(({ release, grouped, contributors }, index) => {
               const date = formatDate(release.published_at)
               const tag = release.tag_name
               const title = release.name || tag
@@ -136,6 +137,8 @@ export default async function ChangelogPage() {
                         })}
                       </div>
                     )}
+
+                    <ContributorsFooter contributors={contributors} />
                   </section>
                 </Fragment>
               )
