@@ -1,4 +1,6 @@
-type GitHubProfileProps = {
+import type { ComponentProps } from 'react'
+
+type GitHubProfileProps = ComponentProps<'span'> & {
   handle: string
   name?: string
   url?: string
@@ -7,10 +9,11 @@ type GitHubProfileProps = {
 export function GitHubProfile({
   handle,
   name = handle,
-  url = `https://github.com/${handle}`
+  url = `https://github.com/${handle}`,
+  ...props
 }: GitHubProfileProps) {
   return (
-    <span>
+    <span {...props}>
       <img
         src={`https://github.com/${handle}.png`}
         alt={`${name}'s avatar`}

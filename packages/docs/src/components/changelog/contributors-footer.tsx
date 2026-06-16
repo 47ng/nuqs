@@ -1,8 +1,5 @@
 import { cn } from '@/src/lib/utils'
 
-// The locale used across the docs site for `Intl` formatting (mirrors stats).
-const LOCALE = 'en-GB'
-
 // Name at most this many contributors before collapsing the rest into an
 // "N other contributors" tail.
 const MAX_NAMED_CONTRIBUTORS = 3
@@ -10,6 +7,9 @@ const MAX_NAMED_CONTRIBUTORS = 3
 // Show at most this many overlapping avatars before a "+N" bubble; avatars are a
 // denser surface than the named summary, so this cap is higher.
 const MAX_AVATARS = 8
+
+// Needs en-US for the Oxford comma, seriously??
+const formatter = new Intl.ListFormat('en-US', { type: 'conjunction' })
 
 // Build the human-readable contributors summary purely from GitHub logins (no
 // API call). Lists everyone when the count is small, otherwise names the first
@@ -20,7 +20,6 @@ export function formatContributorsSummary(
   contributors: readonly string[]
 ): string | null {
   if (contributors.length === 0) return null
-  const formatter = new Intl.ListFormat(LOCALE, { type: 'conjunction' })
   // Collapsing is only worth it past a single hidden name — "and 1 other
   // contributor" reads longer than just naming them.
   if (contributors.length <= MAX_NAMED_CONTRIBUTORS + 1) {
@@ -75,7 +74,7 @@ export function ContributorsFooter({ contributors }: ContributorsFooterProps) {
           </li>
         )}
       </ul>
-      <p className="text-fd-muted-foreground text-sm">{summary}</p>
+      <p className="text-md">{summary}</p>
     </footer>
   )
 }

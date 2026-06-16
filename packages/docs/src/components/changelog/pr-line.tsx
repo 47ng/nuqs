@@ -35,10 +35,11 @@ export function PullRequestLine({
         target="_blank"
         rel="noopener noreferrer"
       >
-        <span className="text-sm text-gray-500 tabular-nums sm:text-base sm:font-medium">
+        <span className="text-sm text-blue-500 tabular-nums sm:text-base">
           <span aria-label="number">#</span>
           {prNumber}
         </span>
+        <span className="text-muted-foreground">·</span>
         <span className="font-medium group-hover:underline">
           {parseCodeSpans(description).map((segment, index) =>
             segment.code ? (
@@ -51,7 +52,10 @@ export function PullRequestLine({
       </a>
       {author && (
         <>
-          {' '}
+          <span className="text-muted-foreground" role="presentation">
+            ·
+          </span>
+          <span className="sr-only">by </span>
           <GitHubProfile handle={author} />
         </>
       )}

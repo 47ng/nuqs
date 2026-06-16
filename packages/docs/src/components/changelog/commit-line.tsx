@@ -34,8 +34,11 @@ export function CommitLine({
         target="_blank"
         rel="noopener noreferrer"
       >
-        <span className="font-mono text-sm text-gray-500 sm:text-base sm:font-medium">
+        <span className="font-mono text-xs text-blue-500 sm:text-sm">
           {sha}
+        </span>
+        <span className="text-muted-foreground" role="presentation">
+          ·
         </span>
         <span className="font-medium group-hover:underline">
           {parseCodeSpans(description).map((segment, index) =>
@@ -46,10 +49,11 @@ export function CommitLine({
             )
           )}
         </span>
-      </a>{' '}
-      <span className="text-sm whitespace-nowrap text-gray-500">
-        <span className="sr-only">by</span> {author}
+      </a>
+      <span className="text-muted-foreground" role="presentation">
+        ·
       </span>
+      <span className="text-sm whitespace-nowrap text-gray-500">{author}</span>
     </li>
   )
 }

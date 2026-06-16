@@ -6,8 +6,8 @@ import {
 } from '@/src/components/ai/page-actions'
 import { CommitLine } from '@/src/components/changelog/commit-line'
 import { ContributorsFooter } from '@/src/components/changelog/contributors-footer'
-import { Preamble } from '@/src/components/changelog/preamble'
 import { PullRequestLine } from '@/src/components/changelog/pr-line'
+import { Preamble } from '@/src/components/changelog/preamble'
 import { github } from '@/src/lib/utils'
 import { Heading } from 'fumadocs-ui/components/heading'
 import {
@@ -145,7 +145,9 @@ export default async function ChangelogPage() {
                           })}
                         </div>
                       )}
-
+                      <Heading as="h3" id={`${tag}-contributors`}>
+                        Contributors
+                      </Heading>
                       <ContributorsFooter contributors={contributors} />
                     </section>
                   </Fragment>
