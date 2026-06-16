@@ -1,3 +1,4 @@
+import { BreakingChangeMarker } from '@/src/components/changelog/breaking-change-marker'
 import { GitHubProfile } from '@/src/components/github-profile'
 import { cn, github } from '@/src/lib/utils'
 import type { ComponentProps } from 'react'
@@ -7,6 +8,7 @@ export type PullRequestLineProps = Omit<ComponentProps<'li'>, 'children'> & {
   prNumber: number
   description: string
   author: string | null
+  breaking: boolean
 }
 
 // Presentational, fetch-free changelog line for a squashed-PR change. Every
@@ -20,11 +22,13 @@ export function PullRequestLine({
   prNumber,
   description,
   author,
+  breaking,
   className,
   ...props
 }: PullRequestLineProps) {
   return (
     <li className={cn('not-prose space-x-2', className)} {...props}>
+      {breaking && <BreakingChangeMarker />}
       <a
         href={`https://github.com/${github.owner}/${github.repo}/pull/${prNumber}`}
         className="group space-x-1.5"

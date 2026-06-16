@@ -1,3 +1,4 @@
+import { BreakingChangeMarker } from '@/src/components/changelog/breaking-change-marker'
 import { cn, github } from '@/src/lib/utils'
 import type { ComponentProps } from 'react'
 import { parseCodeSpans } from 'scripts/lib/changelog-dto'
@@ -6,6 +7,7 @@ export type CommitLineProps = Omit<ComponentProps<'li'>, 'children'> & {
   sha: string
   description: string
   author: string
+  breaking: boolean
 }
 
 // Presentational, fetch-free changelog line for a direct-commit change (a commit
@@ -19,11 +21,13 @@ export function CommitLine({
   sha,
   description,
   author,
+  breaking,
   className,
   ...props
 }: CommitLineProps) {
   return (
     <li className={cn('not-prose space-x-2', className)} {...props}>
+      {breaking && <BreakingChangeMarker />}
       <a
         href={`https://github.com/${github.owner}/${github.repo}/commit/${sha}`}
         className="group space-x-1.5"

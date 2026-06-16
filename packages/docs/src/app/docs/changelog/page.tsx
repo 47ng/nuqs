@@ -118,6 +118,7 @@ export default async function ChangelogPage() {
                                       prNumber={item.prNumber}
                                       description={item.description}
                                       author={item.author}
+                                      breaking={item.breaking}
                                     />
                                   ) : (
                                     <CommitLine
@@ -125,6 +126,7 @@ export default async function ChangelogPage() {
                                       sha={item.sha}
                                       description={item.description}
                                       author={item.author}
+                                      breaking={item.breaking}
                                     />
                                   )
                                 )}
