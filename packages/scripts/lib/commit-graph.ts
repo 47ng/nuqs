@@ -23,6 +23,11 @@
 
 import { z } from 'zod'
 import type { Channel } from '../compute-version.ts'
+import type {
+  DirectCommitChange,
+  ReleaseChanges,
+  SquashedPRChange
+} from './change.ts'
 import {
   parseCommit,
   parseSubject,
@@ -173,59 +178,19 @@ export const prClosingIssuesSchema = z.object({
 
 export type PRClosingIssues = z.infer<typeof prClosingIssuesSchema>
 
-// A closing-issue reference: the GitHub issue number a PR closes.
-export type IssueRef = { readonly number: number }
-
-// A change: the atomic unit of a release. It is sourced either from a squashed
-// pull request (the common case) or from a direct commit with no PR:
-//   - `squashedPR`   → identity is the PR number, `description` is the PR title
-//                       as prose, `author` is the GitHub login, and it carries
-//                       closing issues. Rendered as `#123 - …, by @login`.
-//   - `directCommit` → identity is the 8-char commit SHA, `description` is the
-//                       commit subject as prose, `author` is the git author
-//                       name. Rendered as `abcd1234 - …, by Name`.
-// In both, the `type`/`breaking` classification comes from the commit message,
-// never a PR title. Finalize comments only on `squashedPR` changes (a direct
-// commit has no PR/issue).
-export type SquashedPRChange = {
-  readonly source: 'squashedPR'
-  readonly prNumber: number
-  readonly type: string | undefined
-  readonly breaking: boolean
-  readonly description: string
-  readonly author: string | null
-  readonly closingIssues: readonly IssueRef[]
-}
-export type DirectCommitChange = {
-  readonly source: 'directCommit'
-  readonly sha: string
-  readonly type: string | undefined
-  readonly breaking: boolean
-  readonly description: string
-  readonly author: string
-}
-export type Change = SquashedPRChange | DirectCommitChange
-
-// The notes-path output: the full `changes` driving the changelog, plus the
-// release `contributors` feeding the "Thanks" section.
-export type ReleaseChanges = {
-  changes: Change[]
-  contributors: string[]
-}
-
 // The finalize-path output: the comment targets, split into the release's PRs
-// (`changes`, by number) and their deduplicated closing `issues`. Finalize
-// comments on both.
+// (`changes`, by number) and their deduplicated closing `issues` (issue
+// numbers). Finalize comments on both.
 export type ReleaseTargets = {
   changes: Array<{ prNumber: number }>
-  issues: IssueRef[]
+  issues: number[]
 }
 
 // --- Reader port -----------------------------------------------------------
 
 // One commit as read from git: its SHA, author name (no email), and full
 // message. SHA and author hydrate a direct (no-PR) change; the message yields
-// the classification and, for direct changes, the description.
+// the type/breaking and, for direct changes, the description.
 export type CommitRecord = {
   sha: string
   author: string
@@ -408,19 +373,19 @@ function fetchClosingIssues(
 // The closing-issues facet shared by `PR` and `PRClosingIssues`, so
 // `collectIssues` serves both discovery paths from the same field.
 type WithClosingIssues = {
-  closingIssuesReferences: { edges: Array<{ node: IssueRef }> }
+  closingIssuesReferences: { edges: Array<{ node: { number: number } }> }
 }
 
-// Deduplicate closing issues across all PRs (a single issue can be closed by
-// more than one PR across the range).
-export function collectIssues(prs: WithClosingIssues[]): IssueRef[] {
+// Deduplicate the closing issue numbers across all PRs (a single issue can be
+// closed by more than one PR across the range).
+export function collectIssues(prs: WithClosingIssues[]): number[] {
   const numbers = new Set<number>()
   for (const pr of prs) {
     for (const { node } of pr.closingIssuesReferences.edges) {
       numbers.add(node.number)
     }
   }
-  return [...numbers].map(number => ({ number }))
+  return Array.from(numbers).sort((a, b) => a - b)
 }
 
 // Stage 1 of discovery: everything the git log alone yields for one commit in
@@ -467,10 +432,10 @@ function parseCommits(records: CommitRecord[]): ParsedCommit[] {
       seen.set(prNumber, commit)
       parsed.push(commit)
     } else if (existing.type !== type || existing.breaking !== breaking) {
-      // A `(#N)` recurring with a divergent classification (rare under
+      // A `(#N)` recurring with a divergent type/breaking (rare under
       // squash-merge). Keep the first-seen (authoritative) entry, but warn.
       console.warn(
-        `commit-graph: PR #${prNumber} recurs with a conflicting classification; keeping the first-seen one.`
+        `commit-graph: PR #${prNumber} recurs with a conflicting type/breaking; keeping the first-seen one.`
       )
     }
   }
@@ -479,7 +444,8 @@ function parseCommits(records: CommitRecord[]): ParsedCommit[] {
 
 // Project a fetched PR into a PR-sourced change: `type`/`breaking` from the
 // squash commit (via `byNumber`), `description` from the PR title as prose (its
-// type prefix stripped for display, never classified).
+// type prefix stripped for display only). A non-conventional commit has no
+// `type` (`undefined` from the parser), encoded as `null` on the change.
 function toSquashedPRChange(
   pr: PR,
   byNumber: Map<number, ParsedCommit>
@@ -487,22 +453,22 @@ function toSquashedPRChange(
   const parsed = byNumber.get(pr.number)
   if (parsed === undefined) {
     // Fetched PRs are exactly the keys of `byNumber`, so a miss is an invariant
-    // violation, not a data condition — fail loud rather than silently
-    // classifying the change as untyped (which would drop its bump/category).
+    // violation, not a data condition — fail loud rather than silently treating
+    // the change as untyped (which would drop its bump/category).
     throw new Error(
-      `commit-graph: no squash-commit classification for PR #${pr.number}`
+      `commit-graph: no squash-commit type/breaking for PR #${pr.number}`
     )
   }
   return {
     source: 'squashedPR',
     prNumber: pr.number,
-    type: parsed.type,
+    type: parsed.type ?? null,
     breaking: parsed.breaking,
     description: parseSubject(pr.title).description,
     author: pr.author?.login ?? null,
-    closingIssues: pr.closingIssuesReferences.edges.map(edge => ({
-      number: edge.node.number
-    }))
+    closingIssues: pr.closingIssuesReferences.edges.map(
+      edge => edge.node.number
+    )
   }
 }
 
@@ -512,7 +478,7 @@ function toDirectCommitChange(commit: ParsedCommit): DirectCommitChange {
   return {
     source: 'directCommit',
     sha: commit.sha.slice(0, 8),
-    type: commit.type,
+    type: commit.type ?? null,
     breaking: commit.breaking,
     description: commit.description,
     author: commit.author
@@ -520,7 +486,7 @@ function toDirectCommitChange(commit: ParsedCommit): DirectCommitChange {
 }
 
 // The shared range → parsed-commits core both phases build on. Resolve the
-// channel-asymmetric range, read its commits (the classification authority), and
+// channel-asymmetric range, read its commits (the type/breaking authority), and
 // parse them into the uniform stage-1 form. The PR-linked entries' numbers are
 // the SSOT both phase-specific fetches key off.
 export function parseRange(args: {
@@ -534,7 +500,7 @@ export function parseRange(args: {
 }
 
 // Notes-path discovery: the shared core + `fetchChangeDetails`, projected into
-// the full change list — the PR-sourced changes (classification from the commit,
+// the full change list — the PR-sourced changes (type/breaking from the commit,
 // the rest hydrated from the PR) followed by the direct-commit changes — plus the
 // release contributors (from the PRs only; commit authors are not GitHub
 // handles). `fetchClosingIssues` is never touched.

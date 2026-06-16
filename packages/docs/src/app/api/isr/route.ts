@@ -5,7 +5,8 @@ const ACCEPTED_TAGS = [
   'github',
   'github-actions-status',
   'npm-stats',
-  'contributors'
+  'contributors',
+  'releases'
 ]
 
 export async function GET(req: NextRequest) {

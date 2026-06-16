@@ -6,7 +6,13 @@
       "ignoreDependencies": ["@commitlint/config-conventional"]
     },
     "packages/scripts": {
-      "entry": ["next-release-analyser.ts", "release-notes-automation.ts"],
+      "entry": [
+        "compute-version.ts",
+        "next-release-analyser.ts",
+        "release-finalize.ts",
+        "release-notes-automation.ts",
+        "verify-staged-release/verify.ts"
+      ],
       "project": ["**/*.ts"]
     },
     "packages/nuqs": {

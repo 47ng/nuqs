@@ -1,27 +1,12 @@
 import dayjs from 'dayjs'
+import {
+  type Category,
+  type Change,
+  groupChangesByCategory,
+  parseChangelogComment,
+  stripChangelogComment
+} from 'scripts/lib/changelog-dto'
 import { z } from 'zod'
-
-export const CATEGORY_ORDER = [
-  'features',
-  'bug-fixes',
-  'documentation',
-  'other-changes'
-] as const
-
-type CategoryId = (typeof CATEGORY_ORDER)[number]
-
-export const CATEGORY_LABELS: Record<CategoryId, string> = {
-  features: 'Features',
-  'bug-fixes': 'Bug fixes',
-  documentation: 'Documentation',
-  'other-changes': 'Other changes'
-}
-
-export type ReleaseNoteItem = {
-  number: number
-}
-
-export type ReleaseCategories = Record<CategoryId, ReleaseNoteItem[]>
 
 const GithubReleaseSchema = z.object({
   id: z.number(),
@@ -38,6 +23,12 @@ const GithubReleaseArray = z.array(GithubReleaseSchema)
 
 export type GithubRelease = z.infer<typeof GithubReleaseSchema>
 
+// A single releases-list call (the newest 100), filtered to GA. We deliberately
+// do NOT paginate: older GA releases beyond this page are reached via a "See
+// more on GitHub" link, not rendered — keeping the page bounded rather than
+// dumping the entire history. The call carries the `releases` cache tag (busted
+// by the finalize workflow) and makes zero per-PR/per-commit enrichment calls —
+// the DTO embedded in each release body is all the page reads.
 export async function fetchReleases(): Promise<GithubRelease[]> {
   const headers: HeadersInit = {
     Accept: 'application/vnd.github+json'
@@ -46,15 +37,13 @@ export async function fetchReleases(): Promise<GithubRelease[]> {
   if (token) {
     headers.Authorization = `bearer ${token}`
   }
-
   const response = await fetch(
-    'https://api.github.com/repos/47ng/nuqs/releases?per_page=50',
+    'https://api.github.com/repos/47ng/nuqs/releases?per_page=100',
     {
       headers,
       next: { tags: ['releases'] }
     }
   )
-
   if (!response.ok) {
     console.error(
       'Failed to fetch releases:',
@@ -63,53 +52,33 @@ export async function fetchReleases(): Promise<GithubRelease[]> {
     )
     return []
   }
-
   const data = GithubReleaseArray.parse(await response.json())
   return data.filter(release => !release.draft && !release.prerelease)
 }
 
-function classifyHeading(heading: string): CategoryId {
-  const h = heading.toLowerCase()
-  if (h.includes('feature')) return 'features'
-  if (h.includes('bug') || h.includes('fix')) return 'bug-fixes'
-  if (h.includes('doc')) return 'documentation'
-  return 'other-changes'
+// The render model for one release. `grouped` is null when the release has no
+// valid DTO (missing/malformed/unrecognized) — the page renders a degraded entry
+// (title + date + link) for it rather than dropping it or failing the build.
+export type ReleaseModel = {
+  release: GithubRelease
+  grouped: Record<Category, Change[]> | null
+  preamble: string | null
 }
 
-export function parseReleaseBody(body?: string | null): ReleaseCategories {
-  const categories: ReleaseCategories = {
-    features: [],
-    'bug-fixes': [],
-    documentation: [],
-    'other-changes': []
+export function buildReleaseModel(release: GithubRelease): ReleaseModel {
+  const parsed = parseChangelogComment(release.body)
+  if (parsed === null) {
+    console.warn(
+      'changelog: release %s has no valid changelog DTO — rendering a degraded entry.',
+      release.tag_name
+    )
+    return { release, grouped: null, preamble: null }
   }
-
-  if (!body) return categories
-
-  const lines = body.split(/\r?\n/)
-  let currentCategory: CategoryId = 'other-changes'
-
-  for (const rawLine of lines) {
-    const line = rawLine.trim()
-
-    const headingMatch = /^#{2,3}\s+(.+)$/.exec(line)
-    if (headingMatch) {
-      if (/thanks/i.test(headingMatch[1])) continue
-      currentCategory = classifyHeading(headingMatch[1])
-      continue
-    }
-
-    if (line.startsWith('- ') || line.startsWith('* ')) {
-      const prMatch = /#(\d{1,6})\b/.exec(line)
-      const prNumber = prMatch ? Number(prMatch[1]) : undefined
-
-      if (prNumber) {
-        categories[currentCategory].push({ number: prNumber })
-      }
-    }
+  return {
+    release,
+    grouped: groupChangesByCategory(parsed.dto.changes),
+    preamble: parsed.preamble
   }
-
-  return categories
 }
 
 export function formatDate(date?: string | null): string | null {
@@ -126,25 +95,28 @@ function bumpHeadings(body: string): string {
   return body.replace(/^(#{1,5})(\s)/gm, '#$1$2')
 }
 
+// The `.md`/llms changelog renders the human-readable GitHub notes verbatim
+// (minus the machine DTO comment, stripped so it doesn't leak into the text),
+// not the structured DTO model — that drives the interactive page instead.
 export async function getChangelogMarkdown(): Promise<string> {
   const releases = await fetchReleases()
-  const visible = releases.filter(release => {
-    const categories = parseReleaseBody(release.body)
-    return CATEGORY_ORDER.some(id => categories[id].length > 0)
-  })
-
-  const sections = visible.map(release => {
-    const title = release.name || release.tag_name
-    const date = formatDate(release.published_at)
-    const meta = [
-      date && `Published on ${date}`,
-      `[View on GitHub](${release.html_url})`
-    ]
-      .filter(Boolean)
-      .join(' • ')
-    const body = bumpHeadings((release.body ?? '').trim())
-    return `## ${title}\n\n${meta}\n\n${body}`
-  })
+  const sections = releases
+    .map(release => ({
+      release,
+      body: bumpHeadings(stripChangelogComment(release.body ?? '').trim())
+    }))
+    .filter(({ body }) => body.length > 0)
+    .map(({ release, body }) => {
+      const title = release.name || release.tag_name
+      const date = formatDate(release.published_at)
+      const meta = [
+        date && `Published on ${date}`,
+        `[View on GitHub](${release.html_url})`
+      ]
+        .filter(Boolean)
+        .join(' • ')
+      return `## ${title}\n\n${meta}\n\n${body}`
+    })
 
   return `# Changelog\n\nWhat's new in nuqs.\n\n${sections.join('\n\n---\n\n')}`
 }

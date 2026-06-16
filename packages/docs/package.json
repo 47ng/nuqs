@@ -59,6 +59,7 @@
     "react-dom": "catalog:react19",
     "recharts": "3.8.0",
     "remark-smartypants": "^3.0.2",
+    "scripts": "workspace:*",
     "server-only": "^0.0.1",
     "tailwind-merge": "^3.4.0",
     "tailwindcss": "^4.1.18",

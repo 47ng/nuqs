@@ -241,13 +241,13 @@ export async function commentAndLabel(args: {
 // are unique across issues and PRs in one repo, so the two lists never collide.
 function collectTargets(
   changes: Array<{ prNumber: number }>,
-  issues: Array<{ number: number }>
+  issues: number[]
 ): Target[] {
   return [
     ...changes.map(
       ({ prNumber }): Target => ({ number: prNumber, kind: 'PR' })
     ),
-    ...issues.map(({ number }): Target => ({ number, kind: 'issue' }))
+    ...issues.map((number): Target => ({ number, kind: 'issue' }))
   ]
 }
 
