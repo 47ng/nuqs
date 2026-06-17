@@ -1,5 +1,6 @@
 import { useLocation, useRouter, useRouterState } from '@tanstack/react-router'
-import { startTransition, useCallback, useMemo, useRef } from 'react'
+import { startTransition, useCallback, useEffect, useMemo, useRef } from 'react'
+import { resetQueues } from '../lib/queues/reset'
 import { renderQueryString } from '../lib/url-encoding'
 import { createAdapterProvider, type AdapterProvider } from './lib/context'
 import type { AdapterInterface, UpdateUrlFunction } from './lib/defs'
@@ -7,6 +8,10 @@ import type { AdapterInterface, UpdateUrlFunction } from './lib/defs'
 // Must stay serializable (string | string[]) to satisfy the type constraint
 // of `structuralSharing: true` on the search selector below — see #1363.
 type SearchRecord = Record<string, string | string[]>
+
+function onPopState() {
+  resetQueues()
+}
 
 function useNuqsTanstackRouterAdapter(watchKeys: string[]): AdapterInterface {
   const pathname = useLocation({ select: state => state.pathname })
@@ -32,7 +37,26 @@ function useNuqsTanstackRouterAdapter(watchKeys: string[]): AdapterInterface {
   const resolvedPathname = useRouterState({
     select: state => state.resolvedLocation?.pathname ?? state.location.pathname
   })
-  const { navigate } = useRouter()
+  const router = useRouter()
+  const { navigate } = router
+
+  useEffect(() => {
+    const unsubscribe = router.history.subscribe(({ action }) => {
+      if (
+        action.type === 'BACK' ||
+        action.type === 'FORWARD' ||
+        action.type === 'GO'
+      ) {
+        resetQueues()
+      }
+    })
+    window.addEventListener('popstate', onPopState)
+    return () => {
+      unsubscribe()
+      window.removeEventListener('popstate', onPopState)
+    }
+  }, [router.history])
+
   // Track which pathname this hook instance was mounted under to
   // keep its last stable search during cross-page transitions.
   const ownedPathnameRef = useRef(pathname)
