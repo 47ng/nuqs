@@ -168,7 +168,7 @@
     }
   },
   "devDependencies": {
-    "@remix-run/react": "^2.17.4",
+    "@remix-run/react": "^2.17.5",
     "@size-limit/preset-small-lib": "^12.0.0",
     "@types/node": "^24.10.10",
     "@types/react": "catalog:react19",
