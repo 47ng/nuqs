@@ -2,78 +2,30 @@
 
 import { createEnv } from '@t3-oss/env-core'
 import { z } from 'zod'
+import type { Change } from './lib/change.ts'
 import {
-  type Change,
-  discoverChanges,
-  type IssueRef,
-  makeGitHubGraphReader
-} from './lib/commit-graph.ts'
+  breakingChanges,
+  CATEGORIES,
+  groupChangesByCategory,
+  parseCodeSpans,
+  renderChangelogComment
+} from './lib/changelog-dto.ts'
+import { discoverChanges, makeGitHubGraphReader } from './lib/commit-graph.ts'
 
-export const CATEGORIES = [
-  'Features',
-  'Bug fixes',
-  'Documentation',
-  'Other changes'
-] as const
-export type Category = (typeof CATEGORIES)[number]
+// The category vocabulary and the change grouping/breaking cross-cut now live in
+// the IO-free codec (`lib/changelog-dto.ts`), the SSOT shared with the changelog
+// renderer. Re-exported here so existing importers (and the test suite) keep
+// their entry point.
+export {
+  breakingChanges,
+  CATEGORIES,
+  groupChangesByCategory
+} from './lib/changelog-dto.ts'
+export type { Category } from './lib/changelog-dto.ts'
 
-function categoryForType(type: string | undefined): Category {
-  switch (type) {
-    case 'feat':
-      return 'Features'
-    case 'fix':
-      return 'Bug fixes'
-    case 'doc':
-    case 'docs':
-      return 'Documentation'
-    default:
-      return 'Other changes'
-  }
-}
-
-// Order within a section: PR-sourced changes first (ascending PR number), then
-// direct-commit changes in their given order (discovery supplies them
-// oldest-first). Relies on a stable sort to preserve that commit order.
-function compareChanges(a: Change, b: Change): number {
-  if (a.source !== b.source) return a.source === 'squashedPR' ? -1 : 1
-  if (a.source === 'squashedPR' && b.source === 'squashedPR')
-    return a.prNumber - b.prNumber
-  return 0
-}
-
-// Group changes into their changelog categories. The category is derived from
-// the change's `type` (the commit's classification) — never a PR title, whose
-// prefix is irrelevant prose. The category is the bucket key, not a field on the
-// change, so the two can't drift.
-export function groupChangesByCategory(
-  changes: Change[]
-): Record<Category, Change[]> {
-  const categories: Record<Category, Change[]> = {
-    Features: [],
-    'Bug fixes': [],
-    Documentation: [],
-    'Other changes': []
-  }
-  for (const change of changes) {
-    categories[categoryForType(change.type)].push(change)
-  }
-  for (const category of CATEGORIES) {
-    categories[category].sort(compareChanges)
-  }
-  return categories
-}
-
-// The breaking-changes cross-cut: every change flagged `breaking`, in the same
-// PR-first / commit-oldest order. A filter over `breaking`, NOT a category — a
-// `feat!` stays in its type section and also appears here. Drives the top
-// "Breaking changes" section, the maintainer's editing surface for the guide.
-export function breakingChanges(changes: Change[]): Change[] {
-  return changes.filter(change => change.breaking).sort(compareChanges)
-}
-
-export function formatClosingIssues(issues: readonly IssueRef[]): string {
+export function formatClosingIssues(issues: readonly number[]): string {
   if (issues.length === 0) return ''
-  const issueNumbers = issues.map(i => `#${i.number}`).join(', ')
+  const issueNumbers = issues.map(number => `#${number}`).join(', ')
   return ` (closes ${issueNumbers})`
 }
 
@@ -110,8 +62,14 @@ export function formatChangeLine(
 }
 
 export function formatTitle(title: string): string {
-  // Convert backtick code blocks to <code> tags for better rendering in GitHub release notes
-  return title.replace(/`([^`]+)`/g, '<code>$1</code>')
+  // Convert backtick code spans to <code> tags for GitHub release notes, via the
+  // shared span-parser — so the GitHub notes and the changelog page render the
+  // (raw) description identically and cannot drift.
+  return parseCodeSpans(title)
+    .map(segment =>
+      segment.code ? `<code>${segment.value}</code>` : segment.value
+    )
+    .join('')
 }
 
 export function formatThanksSection(contributors: string[]): string | null {
@@ -182,12 +140,15 @@ async function main(): Promise<void> {
     isServer: true,
     runtimeEnv: process.env
   })
-  const { changes, contributors } = await discoverChanges({
+  const release = await discoverChanges({
     channel: env.CHANNEL,
     currentRef: 'HEAD',
     reader: makeGitHubGraphReader(env.GITHUB_TOKEN)
   })
-  console.log(renderReleaseNotes(changes, contributors))
+  // The human-readable notes, followed by the machine-readable DTO comment the
+  // changelog page reads back (hidden on GitHub + in subscriber emails).
+  const notes = renderReleaseNotes(release.changes, release.contributors)
+  console.log(`${notes}\n\n${renderChangelogComment(release)}`)
 }
 
 if (import.meta.main) {

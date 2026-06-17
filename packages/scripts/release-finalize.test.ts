@@ -426,8 +426,12 @@ describe('commentAndLabel', () => {
     ).resolves.toBeUndefined()
   })
 
-  it('skips a 404 REST write (target deleted) without failing the job', async () => {
-    const { writer } = makeFakeWriter({
+  it('fails loud when a label write fails after a successful comment (target proven writable, not deleted)', async () => {
+    // Edge case: the comment landed, so #1 is reachable and writable:
+    // a 404/403 on the follow-up label is a real fault (e.g. a missing label),
+    // not a deleted target. It must fail the job (→ red, re-run applies the label)
+    // rather than leave #1 silently commented-but-unlabelled on a green run.
+    const { writer, commentSpy, addLabelSpy } = makeFakeWriter({
       failOn: { 1: { op: 'addLabel', status: 404 } }
     })
     await expect(
@@ -437,7 +441,9 @@ describe('commentAndLabel', () => {
         info: gaInfo,
         targets: [{ number: 1, kind: 'PR' }]
       })
-    ).resolves.toBeUndefined()
+    ).rejects.toThrow(/re-run/)
+    expect(commentSpy).toHaveBeenCalledOnce()
+    expect(addLabelSpy).toHaveBeenCalledOnce()
   })
 
   it('skips a FORBIDDEN thread read on a single target without failing', async () => {

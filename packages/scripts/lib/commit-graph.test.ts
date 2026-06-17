@@ -1,9 +1,9 @@
+import { http, HttpResponse } from 'msw'
+import { setupServer } from 'msw/node'
 import { execFileSync } from 'node:child_process'
 import { mkdtempSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { http, HttpResponse } from 'msw'
-import { setupServer } from 'msw/node'
 import {
   afterAll,
   afterEach,
@@ -14,8 +14,8 @@ import {
   vi
 } from 'vitest'
 import { z } from 'zod'
+import type { Change } from './change'
 import {
-  type Change,
   collectContributors,
   collectIssues,
   type CommitRecord,
@@ -416,7 +416,7 @@ describe('collectIssues', () => {
         }
       })
     ]
-    expect(collectIssues(prs)).toEqual([{ number: 10 }, { number: 11 }])
+    expect(collectIssues(prs)).toEqual([10, 11])
   })
 
   it('deduplicates an issue closed by more than one PR', () => {
@@ -435,7 +435,7 @@ describe('collectIssues', () => {
         closingIssuesReferences: closes100
       })
     ]
-    expect(collectIssues(prs)).toEqual([{ number: 100 }])
+    expect(collectIssues(prs)).toEqual([100])
   })
 })
 
@@ -539,7 +539,7 @@ describe('discoverChanges', () => {
           breaking: false,
           description: 'first',
           author: null,
-          closingIssues: [{ number: 100 }]
+          closingIssues: [100]
         },
         {
           source: 'squashedPR',
@@ -558,11 +558,11 @@ describe('discoverChanges', () => {
     expect(reader.fetchClosingIssues).not.toHaveBeenCalled()
   })
 
-  it('keeps the first-seen classification and warns when a PR number recurs with a divergent type', async () => {
+  it('keeps the first-seen type/breaking and warns when a PR number recurs with a divergent type', async () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
     const reader: ReleaseGraphReader = {
       readTags: () => [],
-      // PR #1's squash commit classifies it `feat`; a later commit re-uses the
+      // PR #1's squash commit types it `feat`; a later commit re-uses the
       // (#1) suffix with a divergent `fix`. First-seen wins; the conflict warns.
       readCommits: () => records('feat: kept (#1)', 'fix: divergent (#1)'),
       fetchChangeDetails: vi.fn(async () => [
@@ -733,7 +733,7 @@ describe('discoverTargets', () => {
     ).resolves.toEqual({
       changes: [{ prNumber: 1 }, { prNumber: 2 }],
       // #100 is closed by both PRs but listed once.
-      issues: [{ number: 100 }, { number: 101 }]
+      issues: [100, 101]
     })
     // Finalize fetches the closing issues only; the change details are untouched.
     expect(reader.fetchClosingIssues).toHaveBeenCalledExactlyOnceWith([1, 2])
@@ -802,7 +802,9 @@ function issuesOf(changes: Change[]) {
         ? [
             {
               closingIssuesReferences: {
-                edges: change.closingIssues.map(node => ({ node }))
+                edges: change.closingIssues.map(number => ({
+                  node: { number }
+                }))
               }
             }
           ]
@@ -864,7 +866,7 @@ describe('discovery (history scenarios)', () => {
     )
     expect(finalize.issues).toEqual(issuesOf(draft.changes))
     expect(prNumbersOf(draft.changes)).toEqual([2, 3])
-    expect(finalize.issues).toEqual([{ number: 100 }])
+    expect(finalize.issues).toEqual([100])
     expect(draft.contributors).toEqual(['alice', 'bob'])
   })
 
@@ -985,7 +987,7 @@ describe('discovery (history scenarios)', () => {
       await discoverTargets({ channel: 'beta', currentRef: 'HEAD', reader })
     ).toEqual({
       changes: [{ prNumber: 2 }],
-      issues: [{ number: 50 }]
+      issues: [50]
     })
   })
 })

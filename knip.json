@@ -6,7 +6,14 @@
       "ignoreDependencies": ["@commitlint/config-conventional"]
     },
     "packages/scripts": {
-      "entry": ["next-release-analyser.ts", "release-notes-automation.ts"],
+      "entry": [
+        "compute-version.ts",
+        "next-release-analyser.ts",
+        "release-finalize.ts",
+        "release-notes-automation.ts",
+        "validate-changelog-dto.ts",
+        "verify-staged-release/verify.ts"
+      ],
       "project": ["**/*.ts"]
     },
     "packages/nuqs": {
@@ -40,7 +47,8 @@
         "src/components/audience.tsx",
         "src/components/code-block-highlighter.ts",
         "src/components/feature-support-matrix.tsx",
-        "src/components/frameworks.tsx"
+        "src/components/frameworks.tsx",
+        "src/schemas/changelog-dto.gen.ts"
       ],
       "project": ["content/**/*.{ts,tsx}", "src/**/*.{ts,tsx}"],
       "paths": {
@@ -53,6 +61,7 @@
         "src/components/kibo-ui/**",
         "src/components/release-contribution-graph.client.tsx",
         "src/components/release-contribution-graph.tsx",
+        "src/components/ui/pr-line.tsx",
         "src/components/vercel-oss-badge.tsx",
         "src/lib/typed-links.ts"
       ],

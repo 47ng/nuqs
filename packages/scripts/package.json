@@ -3,6 +3,9 @@
   "private": true,
   "version": "0.0.0-internal",
   "type": "module",
+  "exports": {
+    "./lib/changelog-dto": "./lib/changelog-dto.ts"
+  },
   "scripts": {
     "test": "pnpm run --stream '/^test:/'",
     "test:unit": "vitest run",

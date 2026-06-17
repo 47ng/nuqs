@@ -1,9 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import type {
-  Change,
-  DirectCommitChange,
-  SquashedPRChange
-} from './lib/commit-graph'
+import type { Change, DirectCommitChange, SquashedPRChange } from './lib/change'
 import {
   breakingChanges,
   formatChangeLine,
@@ -20,7 +16,7 @@ function createChange(
 ): SquashedPRChange {
   return {
     source: 'squashedPR',
-    type: undefined,
+    type: null,
     breaking: false,
     description: '',
     author: null,
@@ -35,7 +31,7 @@ function createDirectCommitChange(
 ): DirectCommitChange {
   return {
     source: 'directCommit',
-    type: undefined,
+    type: null,
     breaking: false,
     description: '',
     author: 'Author Name',
@@ -69,7 +65,7 @@ describe('groupChangesByCategory', () => {
       createChange({ prNumber: 3, type: 'doc', description: 'update docs' }),
       createChange({ prNumber: 4, type: 'docs', description: 'more docs' }),
       createChange({ prNumber: 5, type: 'chore', description: 'maintenance' }),
-      createChange({ prNumber: 6, type: undefined, description: 'no type' })
+      createChange({ prNumber: 6, type: null, description: 'no type' })
     ]
 
     const result = groupChangesByCategory(changes)
@@ -143,15 +139,14 @@ describe('groupChangesByCategory', () => {
       createChange({
         prNumber: 1,
         type: 'fix',
-        closingIssues: [{ number: 100 }, { number: 101 }]
+        closingIssues: [100, 101]
       })
     ]
 
     const result = groupChangesByCategory(changes)
     const change = result['Bug fixes'][0]!
     expect(change.source === 'squashedPR' ? change.closingIssues : []).toEqual([
-      { number: 100 },
-      { number: 101 }
+      100, 101
     ])
   })
 })
@@ -193,7 +188,7 @@ describe('renderReleaseNotes', () => {
         breaking: false,
         description: 'fix bug',
         author: 'bob',
-        closingIssues: [{ number: 9 }]
+        closingIssues: [9]
       })
     ]
     expect(renderReleaseNotes(changes, ['alice', 'bob'])).toBe(
@@ -300,7 +295,7 @@ describe('formatChangeLine', () => {
     type: 'feat',
     description: 'add `useQueryState`',
     author: 'alice',
-    closingIssues: [{ number: 5 }],
+    closingIssues: [5],
     breaking: true
   }
 
@@ -371,13 +366,11 @@ describe('formatClosingIssues', () => {
   })
 
   it('formats single issue', () => {
-    expect(formatClosingIssues([{ number: 123 }])).toBe(' (closes #123)')
+    expect(formatClosingIssues([123])).toBe(' (closes #123)')
   })
 
   it('formats multiple issues', () => {
-    expect(formatClosingIssues([{ number: 123 }, { number: 456 }])).toBe(
-      ' (closes #123, #456)'
-    )
+    expect(formatClosingIssues([123, 456])).toBe(' (closes #123, #456)')
   })
 })
 

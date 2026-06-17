@@ -191,6 +191,13 @@ export async function commentAndLabel(args: {
   const errors: unknown[] = []
   let unrecoverable = 0
   for (const { number, kind } of targets) {
+    // Hoisted out of the try: a non-empty `did` means we already wrote to this
+    // target this run, which proves it is reachable and writable — so a later
+    // failure (e.g. the label after a successful comment) is a real fault, not a
+    // deleted/forbidden target. Collect it (→ red run, re-run completes the
+    // missing side) rather than swallowing it as unrecoverable, which would
+    // leave the target silently commented-but-unlabelled on a green run.
+    const did: string[] = []
     try {
       const { labels, comments } = await writer.getThread(number)
       const needsComment = !hasReleaseComment(comments, marker)
@@ -199,7 +206,6 @@ export async function commentAndLabel(args: {
         console.log(`#${number}: already finalized, skipping`)
         continue
       }
-      const did: string[] = []
       if (needsComment) {
         await writer.comment(number, renderComment({ tag, kind }))
         did.push('commented')
@@ -210,7 +216,7 @@ export async function commentAndLabel(args: {
       }
       console.log(`#${number}: ${did.join(' + ')}`)
     } catch (error) {
-      if (isUnrecoverable(error)) {
+      if (did.length === 0 && isUnrecoverable(error)) {
         unrecoverable++
         console.warn(`#${number}: skipped (unrecoverable):`, error)
         continue
@@ -241,13 +247,13 @@ export async function commentAndLabel(args: {
 // are unique across issues and PRs in one repo, so the two lists never collide.
 function collectTargets(
   changes: Array<{ prNumber: number }>,
-  issues: Array<{ number: number }>
+  issues: number[]
 ): Target[] {
   return [
     ...changes.map(
       ({ prNumber }): Target => ({ number: prNumber, kind: 'PR' })
     ),
-    ...issues.map(({ number }): Target => ({ number, kind: 'issue' }))
+    ...issues.map((number): Target => ({ number, kind: 'issue' }))
   ]
 }
 

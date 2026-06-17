@@ -18,9 +18,10 @@
     "build": "pnpm run build:registry && pnpm run build:next",
     "build:next": "next build",
     "build:registry": "./src/registry/assemble.ts && shadcn build",
+    "gen:schema": "./src/schemas/changelog-dto.gen.ts",
     "start": "next start",
     "postinstall": "fumadocs-mdx",
-    "test": "fumadocs-mdx && next typegen && fumadocs-mdx && tsc"
+    "test": "fumadocs-mdx && next typegen && fumadocs-mdx && tsc && vitest run"
   },
   "dependencies": {
     "@databuddy/sdk": "^2.3.29",
@@ -59,6 +60,7 @@
     "react-dom": "catalog:react19",
     "recharts": "3.8.0",
     "remark-smartypants": "^3.0.2",
+    "scripts": "workspace:*",
     "server-only": "^0.0.1",
     "tailwind-merge": "^3.4.0",
     "tailwindcss": "^4.1.18",
@@ -78,7 +80,8 @@
     "shadcn": "^3.8.2",
     "shiki": "^3.22.0",
     "typescript": "catalog:typescript",
-    "unified": "^11.0.5"
+    "unified": "^11.0.5",
+    "vitest": "catalog:vitest"
   },
   "postcss": {
     "plugins": {
