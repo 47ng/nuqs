@@ -9,10 +9,6 @@ import type { AdapterInterface, UpdateUrlFunction } from './lib/defs'
 // of `structuralSharing: true` on the search selector below — see #1363.
 type SearchRecord = Record<string, string | string[]>
 
-function onPopState() {
-  resetQueues()
-}
-
 type HistorySubscriberArgs = {
   action: {
     type: 'PUSH' | 'REPLACE' | 'BACK' | 'FORWARD' | 'GO'
@@ -58,11 +54,7 @@ function useNuqsTanstackRouterAdapter(watchKeys: string[]): AdapterInterface {
         }
       }
     )
-    window.addEventListener('popstate', onPopState)
-    return () => {
-      unsubscribe()
-      window.removeEventListener('popstate', onPopState)
-    }
+    return unsubscribe
   }, [router.history])
 
   // Track which pathname this hook instance was mounted under to
