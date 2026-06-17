@@ -13,6 +13,10 @@ permissions:
 jobs:
   lint-pr-title:
     name: Lint PR Title
+    # Skip merged PRs and body-only edits (we lint titles, not bodies).
+    if: >-
+      ${{ !github.event.pull_request.merged &&
+          (github.event.action != 'edited' || github.event.changes.title.from) }}
     runs-on: ubuntu-24.04-arm
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
