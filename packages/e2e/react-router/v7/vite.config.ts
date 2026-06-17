@@ -6,7 +6,7 @@ export default defineConfig({
   plugins: [reactRouter(), tsconfigPaths()],
   build: {
     sourcemap: false, // Disable sourcemaps for e2e test apps
-    rollupOptions: {
+    rolldownOptions: {
       onwarn(warning, warn) {
         // Suppress sourcemap warnings from workspace dependencies
         if (warning.code === 'SOURCEMAP_ERROR') return

@@ -6,8 +6,19 @@ catalogs:
     playwright: ^1.58.1
     '@playwright/test': ^1.58.1
 
+  knip:
+    knip: ^6.14.2
+
+  vitest:
+    vitest: ^4.1.0
+    '@vitest/browser-playwright': ^4.1.0
+    '@vitest/coverage-v8': ^4.1.0
+
+  vite:
+    vite: ^8.0.0
+
   next:
-    next: ^16.1.6
+    next: 16.2.7
 
   react19:
     '@types/react': ^19.2.10
@@ -15,12 +26,15 @@ catalogs:
     react: ^19.2.4
     react-dom: ^19.2.4
 
-enablePrePostScripts: true
+  typescript:
+    typescript: ^5.9.2
 
-onlyBuiltDependencies:
-  - '@sentry/cli'
-  - '@swc/core'
-  - '@tailwindcss/oxide'
-  - playwright
-  - esbuild
-  - sharp
+enablePrePostScripts: false
+
+allowBuilds:
+  '@swc/core': true
+  '@tailwindcss/oxide': true
+  playwright: true
+  esbuild: true
+  sharp: true
+  msw: false

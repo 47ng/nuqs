@@ -1,0 +1,304 @@
+name: Draft Release
+
+# Phase 1 of the two-phase, human-gated release pipeline (see the
+# "Phasing out semantic-release" design doc). Dispatch-only on purpose:
+# the npm trusted-publisher authorization is pinned to this single,
+# rarely-changed file rather than the sprawling multi-trigger CI workflow.
+#
+# Flow: compute-version -> ci (the gate, re-runs the full matrix on the
+# exact dispatched SHA via workflow_call) -> stage (set version ephemerally,
+# build, `npm stage publish` via OIDC, then create a DRAFT GitHub release
+# with notes built from the commit graph, see lib/commit-graph.ts). Nothing
+# is installable or irreversible here: the
+# tarball sits in npm staging until a human approves it on npmjs.com with
+# 2FA, and the git tag is only created when the draft release is published.
+
+on:
+  workflow_dispatch:
+    inputs:
+      channel:
+        description: Release channel
+        type: choice
+        options:
+          - stable
+          - beta
+        default: stable
+
+# Queue double-dispatches instead of racing:
+# never cancel an in-flight stage+draft mid-way.
+concurrency:
+  group: release-draft
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  compute-version:
+    name: Compute version
+    runs-on: ubuntu-24.04-arm
+    outputs:
+      needsReleasing: ${{ steps.compute.outputs.needsReleasing }}
+      version: ${{ steps.compute.outputs.version }}
+      tag: ${{ steps.compute.outputs.tag }}
+      dist-tag: ${{ steps.compute.outputs.dist-tag }}
+    steps:
+      - name: Enforce dispatch from the next branch
+        # Releases are cut from `next` only. Failing here (before the `ci`
+        # job invokes ci-cd.yml) also keeps ci-cd.yml's legacy `publish` job
+        # — which keys off `github.ref_name` — from ever running as the gate.
+        env:
+          REF_NAME: ${{ github.ref_name }}
+        run: |
+          if [ "$REF_NAME" != "next" ]; then
+            echo "::error::Draft Release must be dispatched from the 'next' branch (got '$REF_NAME')."
+            exit 1
+          fi
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          # Need the full history + all tags to find the last GA tag and
+          # walk the conventional commits since it.
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093 # v6.0.8
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - name: Install scripts dependencies
+        run: pnpm install --ignore-scripts --frozen-lockfile --filter scripts
+      - name: Compute next version from conventional commits
+        id: compute
+        # Bump from conventional commits since the last GA tag. The logic
+        # lives in the tested packages/scripts/compute-version.ts module,
+        # which prints `key=value` lines on stdout (human trace on stderr);
+        # we route them to $GITHUB_OUTPUT here. Commit messages reach the
+        # script only through git's stdout (no shell), so a crafted message
+        # cannot inject commands.
+        run: ./compute-version.ts >> "$GITHUB_OUTPUT"
+        working-directory: packages/scripts
+        env:
+          CHANNEL: ${{ inputs.channel }}
+
+  ci:
+    name: CI gate
+    needs: compute-version
+    # Only gate a real release: skip when there's nothing to ship, so the
+    # flow stops cleanly.
+    if: ${{ needs.compute-version.outputs.needsReleasing == 'true' }}
+    permissions:
+      contents: read
+      actions: read # ci-cd.yml's docs build reads the workflow-run status when rendering the landing-page CI component.
+    # Re-run the full matrix on the exact dispatched commit, so the staged
+    # bytes are the bytes that passed CI. Secrets passed explicitly (no
+    # `secrets: inherit`) to keep the credential surface minimal.
+    uses: ./.github/workflows/ci-cd.yml
+    with:
+      # Release runs are announced once by Finalize (the 🚀/🧪 release card),
+      # so suppress ci-cd's aggregate "CI passed" ping to avoid a double Slack.
+      finalNotification: false
+    secrets:
+      TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+      TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
+
+  stage:
+    name: Stage to npm
+    runs-on: ubuntu-24.04-arm
+    needs: [compute-version, ci]
+    # Run only when there's a release to ship and CI passed. The implicit
+    # success() on `needs` halts the chain (stage + draft skip) if CI fails.
+    if: ${{ needs.compute-version.outputs.needsReleasing == 'true' }}
+    permissions:
+      contents: read # checkout only — drafting (contents: write) is its own job
+      id-token: write # OIDC trusted publishing for `npm stage publish`
+    outputs:
+      stage-id: ${{ steps.stage.outputs.stage-id }}
+      shasum: ${{ steps.stage.outputs.shasum }}
+      integrity: ${{ steps.stage.outputs.integrity }}
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093 # v6.0.8
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
+        with:
+          node-version-file: .node-version
+          registry-url: https://registry.npmjs.org
+          # Fresh install from the registry (same rationale as the old
+          # publish job): a poisoned local cache must not reach the tarball.
+          package-manager-cache: false
+      - name: Install staging-capable npm
+        # `npm stage` first shipped in npm 11.15.0; the npm bundled with the
+        # pinned Node is older. The exact version is pinned in the repo-root
+        # .npm-version — the single source of truth, also read by
+        # packages/scripts/verify-staged-release so the sandbox reproduces with
+        # the same npm. Pinned (not @latest) because this is the privileged
+        # publish path — bump deliberately.
+        run: |
+          set -euo pipefail
+          NPM_VERSION=$(tr -d '[:space:]' < .npm-version)
+          NPM_VERSION=${NPM_VERSION#v} # tolerate a leading v, like verify.ts
+          if ! printf '%s' "$NPM_VERSION" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "::error::.npm-version is not a plain x.y.z version: '$NPM_VERSION'"
+            exit 1
+          fi
+          # Surface the runner's built-in npm (bundled with the pinned Node)
+          # before overriding it, then confirm the pinned npm took effect.
+          echo "built-in npm: $(npm --version) ($(which npm))"
+          npm install --global "npm@$NPM_VERSION"
+          echo "pinned npm:   $(npm --version) ($(which npm))"
+      - name: Install dependencies
+        run: pnpm install --ignore-scripts --frozen-lockfile --filter nuqs...
+      - name: Verify provenance + registry signatures of dependencies
+        run: npm audit signatures
+      - name: Set the computed version (ephemeral, never committed)
+        run: npm pkg set version="$VERSION"
+        working-directory: packages/nuqs
+        env:
+          VERSION: ${{ needs.compute-version.outputs.version }}
+      - name: Build package
+        run: pnpm build --filter nuqs
+      - name: Stage tarball to npm (OIDC staged trusted publishing)
+        id: stage
+        working-directory: packages/nuqs
+        env:
+          DIST_TAG: ${{ needs.compute-version.outputs.dist-tag }}
+        # `npm stage publish` defers 2FA: it stages the tarball (with
+        # provenance, per publishConfig) without making it installable.
+        # Prerelease versions require an explicit --tag.
+        run: |
+          set -euo pipefail
+          OUTPUT=$(npm stage publish --tag "$DIST_TAG" --json)
+          echo "$OUTPUT"
+          # Isolate the JSON object before parsing: even with --json, a publish
+          # lifecycle hook can prepend diagnostics to stdout. Drop everything
+          # before the first line that opens the object, then pull out the
+          # staged package node (keyed by name) — the one carrying a stageId.
+          PKG=$(printf '%s' "$OUTPUT" | sed -n '/^{/,$p' | jq -c '[.. | objects | select(.stageId)][0] // empty')
+          if [ -z "$PKG" ]; then
+            echo "::error::Could not parse stage metadata from npm output"
+            exit 1
+          fi
+          STAGE_ID=$(printf '%s' "$PKG" | jq -r '.stageId')
+          SHASUM=$(printf '%s' "$PKG" | jq -r '.shasum')
+          INTEGRITY=$(printf '%s' "$PKG" | jq -r '.integrity')
+          # Reject anything carrying control chars before writing: a newline
+          # would let crafted npm output inject extra $GITHUB_OUTPUT lines.
+          for v in "$STAGE_ID" "$SHASUM" "$INTEGRITY"; do
+            if [ -z "$v" ] || printf '%s' "$v" | LC_ALL=C grep -q '[^[:print:]]'; then
+              echo "::error::Unexpected characters in npm stage metadata"
+              exit 1
+            fi
+          done
+          # stage-id gates the draft; shasum + integrity are surfaced in the
+          # job summary so a reviewer can match the staged tarball before 2FA.
+          {
+            echo "stage-id=$STAGE_ID"
+            echo "shasum=$SHASUM"
+            echo "integrity=$INTEGRITY"
+          } >> "$GITHUB_OUTPUT"
+
+  draft:
+    name: Draft GitHub release
+    runs-on: ubuntu-24.04-arm
+    needs: [compute-version, stage]
+    # No explicit `if`: the default success() on `needs` runs this only when
+    # `stage` succeeds — and skips it whenever `stage` doesn't (it failed, or was
+    # itself skipped because CI failed or there was nothing to ship).
+    # Split from `stage` so the npm OIDC token's lifetime is bounded to staging:
+    # this job holds only contents:write and never sees id-token.
+    permissions:
+      contents: write # create the draft GitHub release
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          # Full history + tags: the notes engine resolves the release range
+          # from the commit graph between tag checkpoints (see commit-graph.ts).
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093 # v6.0.8
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - name: Install scripts dependencies
+        run: pnpm install --ignore-scripts --frozen-lockfile --filter scripts
+      - name: Generate release notes
+        # Draft phase: the tag isn't created yet, so the engine walks from HEAD.
+        # CHANNEL selects the asymmetric range (incremental beta / cumulative GA)
+        # — the same engine finalize re-runs post-publish, so the notes list
+        # exactly the PRs/issues finalize will comment on.
+        run: ./release-notes-automation.ts > "$RUNNER_TEMP/notes.md"
+        working-directory: packages/scripts
+        env:
+          CHANNEL: ${{ inputs.channel }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Create draft GitHub release
+        id: create-release
+        # Draft + untagged: the git tag is created server-side only when the
+        # maintainer publishes this draft, which is what fires Finalize.
+        run: |
+          set -euo pipefail
+          PRERELEASE=()
+          if [ "$DIST_TAG" = "beta" ]; then PRERELEASE=(--prerelease); fi
+          # `gh release create` prints the new release's html_url on stdout.
+          # For a draft that's the untagged form (…/releases/tag/untagged-<hash>),
+          # which we can't construct by hand from $TAG — the tag only exists once
+          # the draft is published. Capture it so the summary links to the draft.
+          DRAFT_URL=$(gh release create "$TAG" \
+            --draft \
+            --title "$TAG" \
+            --target "$GITHUB_SHA" \
+            --notes-file "$RUNNER_TEMP/notes.md" \
+            "${PRERELEASE[@]}")
+          # Same untagged slug, but the Publish button lives on the edit page:
+          # /releases/tag/ -> /releases/edit/.
+          EDIT_URL=${DRAFT_URL/\/releases\/tag\//\/releases\/edit\/}
+          {
+            echo "draft-url=$DRAFT_URL"
+            echo "edit-url=$EDIT_URL"
+          } >> "$GITHUB_OUTPUT"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ needs.compute-version.outputs.tag }}
+          DIST_TAG: ${{ needs.compute-version.outputs.dist-tag }}
+      - name: Summary
+        run: |
+          {
+            echo "## Draft release staged"
+            echo ""
+            echo "| | |"
+            echo "|---|---|"
+            echo "| sha | \`$GITHUB_SHA\` |"
+            echo "| version | \`$VERSION\` |"
+            echo "| git tag | \`$TAG\` |"
+            echo "| npm dist-tag | \`$DIST_TAG\` |"
+            echo "| npm stage id | \`$STAGE_ID\` |"
+            echo "| shasum | \`$SHASUM\` |"
+            echo "| integrity | \`$INTEGRITY\` |"
+            echo ""
+            echo "## Next steps"
+            echo ""
+            echo "1. Run this command from the repo root to reproduce & verify the build:"
+            echo '```bash'
+            echo "packages/scripts/verify-staged-release/verify.ts \\"
+            echo "  --package nuqs \\"
+            echo "  --version '$VERSION' \\"
+            echo "  --sha '$GITHUB_SHA' \\"
+            echo "  --stage-id '$STAGE_ID' \\"
+            echo "  --shasum '$SHASUM' \\"
+            echo "  --integrity '$INTEGRITY'"
+            echo '```'
+            echo "2. Review the [draft release notes]($RELEASE_DRAFT_URL)"
+            echo "3. Approve the [staged package on npmjs.com](https://www.npmjs.com/settings/franky47/staged-packages/?page=0&perPage=10&filterPackage=nuqs) with 2FA"
+            echo "4. Publish the [draft release]($RELEASE_EDIT_URL) to finalize the release."
+          } >> "$GITHUB_STEP_SUMMARY"
+        env:
+          VERSION: ${{ needs.compute-version.outputs.version }}
+          TAG: ${{ needs.compute-version.outputs.tag }}
+          DIST_TAG: ${{ needs.compute-version.outputs.dist-tag }}
+          STAGE_ID: ${{ needs.stage.outputs.stage-id }}
+          SHASUM: ${{ needs.stage.outputs.shasum }}
+          INTEGRITY: ${{ needs.stage.outputs.integrity }}
+          RELEASE_DRAFT_URL: ${{ steps.create-release.outputs.draft-url }}
+          RELEASE_EDIT_URL: ${{ steps.create-release.outputs.edit-url }}

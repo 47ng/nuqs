@@ -136,7 +136,8 @@
     "test:browser": "vitest run --project browser --browser.headless",
     "test:types": "vitest run --project types",
     "test:size": "size-limit",
-    "prepack": "./scripts/prepack.sh"
+    "prepack": "./scripts/prepack.sh",
+    "knip": "knip"
   },
   "dependencies": {
     "@standard-schema/spec": "1.0.0"
@@ -173,20 +174,19 @@
     "@types/react": "catalog:react19",
     "@types/react-dom": "catalog:react19",
     "@vitejs/plugin-react": "^5.1.3",
-    "@vitest/browser-playwright": "^4.0.18",
-    "@vitest/coverage-v8": "^4.0.18",
+    "@vitest/browser-playwright": "catalog:vitest",
+    "@vitest/coverage-v8": "catalog:vitest",
     "arktype": "^2.1.29",
     "fast-check": "^4.5.3",
-    "next": "catalog:next",
+    "knip": "catalog:knip",
     "playwright": "catalog:e2e",
     "react": "catalog:react19",
-    "react-dom": "catalog:react19",
     "react-router-dom": "6.30.3",
     "size-limit": "^12.0.0",
     "tsdown": "^0.20.1",
-    "typescript": "^5.9.3",
+    "typescript": "catalog:typescript",
     "valibot": "^1.2.0",
-    "vitest": "^4.0.18",
+    "vitest": "catalog:vitest",
     "vitest-browser-react": "2.0.4",
     "vitest-package-exports": "^1.1.2",
     "zod": "^4.3.6"

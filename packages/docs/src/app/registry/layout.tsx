@@ -51,7 +51,7 @@ export default async function RegistryLayout({
               type: 'separator',
               name: 'Adapters'
             },
-            ...categories.Adapters.map(item => ({
+            ...categories.adapter.map(item => ({
               $id: `#${item.name}`,
               type: 'page' as const,
               name: item.title.replace(/adapter/gi, '').trim(),
@@ -76,7 +76,7 @@ export default async function RegistryLayout({
               type: 'separator',
               name: 'Utilities'
             },
-            ...categories.Utilities.map(item => ({
+            ...categories.utility.map(item => ({
               $id: `#${item.name}`,
               type: 'page' as const,
               name: item.title,
