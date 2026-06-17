@@ -20,6 +20,13 @@ catalogs:
   next:
     next: 16.2.7
 
+  react-router:
+    react-router: ^7.18.0
+    '@react-router/dev': ^7.18.0
+    '@react-router/express': ^7.18.0
+    '@react-router/node': ^7.18.0
+    '@react-router/serve': ^7.18.0
+
   react19:
     '@types/react': ^19.2.10
     '@types/react-dom': ^19.2.3
