@@ -13,9 +13,7 @@ const formatter = new Intl.ListFormat('en-US', { type: 'conjunction' })
 
 // Build the human-readable contributors summary purely from GitHub logins (no
 // API call). Lists everyone when the count is small, otherwise names the first
-// few and collapses the rest: "a, b, c and 4 other contributors". Returns null
-// for an empty list, the single "no footer" signal the component branches on.
-// Pure and exported so it can be unit-tested directly once docs has a runner.
+// few and collapses the rest as "a, b, c, and 4 other contributors".
 export function formatContributorsSummary(
   contributors: readonly string[]
 ): string | null {
@@ -48,7 +46,12 @@ export function ContributorsFooter({ contributors }: ContributorsFooterProps) {
     <footer className="not-prose mt-6 flex flex-wrap items-center gap-x-3 gap-y-2">
       <ul className="flex items-center pl-0">
         {shown.map((login, index) => (
-          <li key={login} className={cn('list-none', index > 0 && '-ml-2')}>
+          // Key by index too to handle hand-edited non-unique logins
+          // (not enforced by the DTO schema)
+          <li
+            key={`${login}-${index}`}
+            className={cn('list-none', index > 0 && '-ml-2')}
+          >
             <a
               href={`https://github.com/${login}`}
               target="_blank"

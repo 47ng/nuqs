@@ -42,6 +42,16 @@ const expectedDto: ChangelogDTO = {
   ...release
 }
 
+// Parse and assert the happy path, narrowing to the `ok` variant so a test can
+// reach `.dto`/`.preamble` without re-checking the discriminant each time.
+function parseOk(body: string) {
+  const result = parseChangelogComment(body)
+  if (result.status !== 'ok') {
+    throw new Error(`expected a valid DTO, got status "${result.status}"`)
+  }
+  return result
+}
+
 describe('parseCodeSpans', () => {
   it('returns no segments for an empty string', () => {
     expect(parseCodeSpans('')).toEqual([])
@@ -97,12 +107,13 @@ describe('renderChangelogComment / parseChangelogComment round-trip', () => {
     expect(comment.startsWith('<!--')).toBe(true)
     expect(comment.trimEnd().endsWith('-->')).toBe(true)
     const parsed = parseChangelogComment(comment)
-    expect(parsed).toEqual({ preamble: null, dto: expectedDto })
+    expect(parsed).toEqual({ status: 'ok', preamble: null, dto: expectedDto })
   })
 
   it('round-trips when the comment is embedded in a larger release body', () => {
     const body = `## Features\n\n- #1450 - return null\n\n${renderChangelogComment(release)}`
     expect(parseChangelogComment(body)).toEqual({
+      status: 'ok',
       preamble: null,
       dto: expectedDto
     })
@@ -111,7 +122,7 @@ describe('renderChangelogComment / parseChangelogComment round-trip', () => {
   it('emits an empty preamble stub with the guiding hint line', () => {
     const comment = renderChangelogComment(release)
     expect(comment).toContain('<changelog:preamble></changelog:preamble>')
-    expect(comment).toContain("docs' changelog page")
+    expect(comment).toContain('rendered on the changelog page')
   })
 })
 
@@ -133,8 +144,7 @@ describe('escaping', () => {
     const comment = renderChangelogComment(evil)
     // The only "-->" in the whole comment is the closing terminator (last 3 chars).
     expect(comment.indexOf('-->')).toBe(comment.length - 3)
-    const parsed = parseChangelogComment(comment)
-    expect(parsed?.dto.changes[0]).toMatchObject({
+    expect(parseOk(comment).dto.changes[0]).toMatchObject({
       description: 'guard against `-->` early termination'
     })
   })
@@ -153,8 +163,7 @@ describe('escaping', () => {
       ],
       contributors: []
     }
-    const parsed = parseChangelogComment(renderChangelogComment(evil))
-    expect(parsed?.dto.changes[0]).toMatchObject({
+    expect(parseOk(renderChangelogComment(evil)).dto.changes[0]).toMatchObject({
       description: 'parser must survive </changelog:dto> in prose'
     })
   })
@@ -175,42 +184,113 @@ describe('escaping', () => {
     }
     const comment = renderChangelogComment(withCode)
     expect(comment).not.toContain('<code>')
-    const parsed = parseChangelogComment(comment)
-    expect(parsed?.dto.changes[0]).toMatchObject({
+    expect(parseOk(comment).dto.changes[0]).toMatchObject({
       description: 'backticks `demo` stay raw'
     })
   })
 })
 
 describe('parseChangelogComment degrade signals', () => {
-  it('returns null for a null body', () => {
-    expect(parseChangelogComment(null)).toBeNull()
+  // `absent` (no DTO block — a pre-DTO/hand-written release) is degraded
+  // quietly; `invalid` (a present-but-broken block — tamper/drift) is degraded
+  // loudly. The two are distinct so a renderer/gate can tell them apart.
+  it('reports absent for a null body', () => {
+    expect(parseChangelogComment(null)).toEqual({ status: 'absent' })
   })
 
-  it('returns null when there is no changelog comment', () => {
-    expect(parseChangelogComment('## Features\n\n- #1 - a feature')).toBeNull()
+  it('reports absent when there is no changelog comment', () => {
+    expect(parseChangelogComment('## Features\n\n- #1 - a feature')).toEqual({
+      status: 'absent'
+    })
   })
 
-  it('returns null for malformed JSON inside the dto tags', () => {
+  it('reports invalid for malformed JSON inside the dto tags', () => {
     const body = '<!--\n<changelog:dto>\n{ not json ]\n</changelog:dto>\n-->'
-    expect(parseChangelogComment(body)).toBeNull()
+    expect(parseChangelogComment(body).status).toBe('invalid')
   })
 
-  it('returns null for schema-invalid JSON (missing required field)', () => {
+  it('reports invalid for schema-invalid JSON (missing required field)', () => {
     const body = `<!--\n<changelog:dto>\n${JSON.stringify({
       $schema: CHANGELOG_DTO_SCHEMA_URL,
       changes: [{ source: 'squashedPR', prNumber: 1 }]
     })}\n</changelog:dto>\n-->`
-    expect(parseChangelogComment(body)).toBeNull()
+    expect(parseChangelogComment(body).status).toBe('invalid')
   })
 
-  it('returns null for an unrecognized ($schema v2) URL', () => {
+  it('reports invalid for an unrecognized ($schema v2) URL', () => {
     const body = `<!--\n<changelog:dto>\n${JSON.stringify({
       $schema: 'https://nuqs.dev/schemas/changelog-dto.v2.json',
       changes: [],
       contributors: []
     })}\n</changelog:dto>\n-->`
-    expect(parseChangelogComment(body)).toBeNull()
+    expect(parseChangelogComment(body).status).toBe('invalid')
+  })
+
+  // Runtime must reject unknown keys, so the parse agrees with the published
+  // JSON Schema's `additionalProperties: false` rather than silently stripping.
+  it('reports invalid for a body carrying an unknown key', () => {
+    const body = `<!--\n<changelog:dto>\n${JSON.stringify({
+      ...expectedDto,
+      unexpected: 'extra'
+    })}\n</changelog:dto>\n-->`
+    expect(parseChangelogComment(body).status).toBe('invalid')
+  })
+})
+
+describe('parseChangelogComment v1 back-compat', () => {
+  // A hand-frozen, real-world-shaped v1 body (NOT generated from the current
+  // schema): if a future change adds a *required* field without bumping the
+  // `$schema` URL, this body stops parsing and this test goes red — forcing the
+  // field to be optional, or the version to bump, instead of silently degrading
+  // every already-published release to a bare title+link.
+  const FROZEN_V1_BODY = [
+    '## Features',
+    '',
+    '- #100 - add something',
+    '',
+    '<!--',
+    'Any Markdown between the preamble tags is rendered on the changelog page:',
+    '<changelog:preamble></changelog:preamble>',
+    '<changelog:dto>',
+    JSON.stringify(
+      {
+        $schema: 'https://nuqs.dev/schemas/changelog-dto.v1.json',
+        changes: [
+          {
+            source: 'squashedPR',
+            prNumber: 100,
+            type: 'feat',
+            breaking: false,
+            description: 'add something',
+            author: 'octocat',
+            closingIssues: [42]
+          },
+          {
+            source: 'directCommit',
+            sha: 'a1b2c3d4',
+            type: null,
+            breaking: false,
+            description: 'fix a typo',
+            author: 'Jane Doe'
+          }
+        ],
+        contributors: ['octocat']
+      },
+      null,
+      2
+    ),
+    '</changelog:dto>',
+    '-->'
+  ].join('\n')
+
+  it('still parses the frozen v1 body', () => {
+    const parsed = parseOk(FROZEN_V1_BODY)
+    expect(parsed.dto.changes).toHaveLength(2)
+    expect(parsed.dto.changes[0]).toMatchObject({
+      source: 'squashedPR',
+      prNumber: 100
+    })
+    expect(parsed.dto.contributors).toEqual(['octocat'])
   })
 })
 
@@ -224,7 +304,7 @@ describe('preamble extraction', () => {
       '</changelog:dto>',
       '-->'
     ].join('\n')
-    expect(parseChangelogComment(body)?.preamble).toBeNull()
+    expect(parseOk(body).preamble).toBeNull()
   })
 
   it('returns the trimmed markdown of a non-empty preamble', () => {
@@ -238,13 +318,13 @@ describe('preamble extraction', () => {
       '</changelog:dto>',
       '-->'
     ].join('\n')
-    expect(parseChangelogComment(body)?.preamble).toBe(
+    expect(parseOk(body).preamble).toBe(
       'See the [migration guide](/docs/migrations/v2.9).'
     )
   })
 
   // Slice 5: the maintainer authors a filled preamble (multi-line markdown with
-  // a code fence) in the draft; docs renders it above the change list. The raw
+  // a code fence) in the draft; the page renders it above the change list. The raw
   // markdown — newlines, blank lines and the ``` fence intact — must come back
   // verbatim (trimmed), since the page renders exactly this string.
   it('extracts a multi-line preamble with a code fence verbatim', () => {
@@ -265,7 +345,7 @@ describe('preamble extraction', () => {
       '</changelog:dto>',
       '-->'
     ].join('\n')
-    expect(parseChangelogComment(body)?.preamble).toBe(preamble)
+    expect(parseOk(body).preamble).toBe(preamble)
   })
 })
 

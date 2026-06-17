@@ -32,12 +32,15 @@
                 "type": "boolean"
               },
               "description": {
-                "type": "string"
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 500
               },
               "author": {
                 "anyOf": [
                   {
-                    "type": "string"
+                    "type": "string",
+                    "pattern": "^[a-zA-Z\\d](?:[a-zA-Z\\d]|-(?=[a-zA-Z\\d])){0,38}$"
                   },
                   {
                     "type": "null"
@@ -72,7 +75,8 @@
                 "const": "directCommit"
               },
               "sha": {
-                "type": "string"
+                "type": "string",
+                "pattern": "^[0-9a-f]{7,40}$"
               },
               "type": {
                 "anyOf": [
@@ -88,10 +92,13 @@
                 "type": "boolean"
               },
               "description": {
-                "type": "string"
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 500
               },
               "author": {
-                "type": "string"
+                "type": "string",
+                "minLength": 1
               }
             },
             "required": [
@@ -110,7 +117,8 @@
     "contributors": {
       "type": "array",
       "items": {
-        "type": "string"
+        "type": "string",
+        "pattern": "^[a-zA-Z\\d](?:[a-zA-Z\\d]|-(?=[a-zA-Z\\d])){0,38}$"
       }
     },
     "$schema": {

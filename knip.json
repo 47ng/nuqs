@@ -11,6 +11,7 @@
         "next-release-analyser.ts",
         "release-finalize.ts",
         "release-notes-automation.ts",
+        "validate-changelog-dto.ts",
         "verify-staged-release/verify.ts"
       ],
       "project": ["**/*.ts"]

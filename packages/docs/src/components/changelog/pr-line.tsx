@@ -1,8 +1,8 @@
 import { BreakingChangeMarker } from '@/src/components/changelog/breaking-change-marker'
+import { ChangeDescription } from '@/src/components/changelog/change-description'
 import { GitHubProfile } from '@/src/components/github-profile'
 import { cn, github } from '@/src/lib/utils'
 import type { ComponentProps } from 'react'
-import { parseCodeSpans } from 'scripts/lib/changelog-dto'
 
 export type PullRequestLineProps = Omit<ComponentProps<'li'>, 'children'> & {
   prNumber: number
@@ -40,15 +40,7 @@ export function PullRequestLine({
           {prNumber}
         </span>
         <span className="text-muted-foreground">·</span>
-        <span className="font-medium group-hover:underline">
-          {parseCodeSpans(description).map((segment, index) =>
-            segment.code ? (
-              <code key={index}>{segment.value}</code>
-            ) : (
-              <span key={index}>{segment.value}</span>
-            )
-          )}
-        </span>
+        <ChangeDescription description={description} />
       </a>
       {author && (
         <>

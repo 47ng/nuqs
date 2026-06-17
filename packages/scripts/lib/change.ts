@@ -9,31 +9,37 @@
 
 import { z } from 'zod'
 
-// A change sourced from a squashed pull request (the common case)
+const githubLoginSchema = z
+  .string()
+  .regex(/^[a-zA-Z\d](?:[a-zA-Z\d]|-(?=[a-zA-Z\d])){0,38}$/)
+
+// A change description (a PR title or a commit subject): non-empty and bounded.
+const descriptionSchema = z.string().min(1).max(500)
+
+const shaSchema = z.string().regex(/^[0-9a-f]{7,40}$/)
+
+// A change sourced from a squashed pull request (the common case):
 // identity is the PR number, `description` is the PR title as prose,
 // `author` is the GitHub login (or null for a deleted account), and it
 // carries the issue numbers it closes. Rendered as `#123 - …, by @login`.
-export const squashedPRChangeSchema = z.object({
+export const squashedPRChangeSchema = z.strictObject({
   source: z.literal('squashedPR'),
   prNumber: z.number().int().positive(),
   type: z.string().nullable(), // conventional-commit type, or null when none
   breaking: z.boolean(),
-  description: z.string(), // the PR title, not the commit message's description
-  author: z.string().nullable(), // GitHub login, or null for a deleted account
+  description: descriptionSchema, // the PR title
+  author: githubLoginSchema.nullable(), // null for a deleted account
   closingIssues: z.array(z.number().int().positive())
 })
 
-// A change sourced from a direct commit with no PR (rare: a hotfix, a revert) —
-// identity is the 8-char commit SHA, `description` is the commit subject as
-// prose, `author` is the git author name as prose (not a GitHub login).
-// Rendered as `abcd1234 - …, by Name`.
-export const directCommitChangeSchema = z.object({
+// A change sourced from a direct commit with no PR (rare: a hotfix, a revert)
+export const directCommitChangeSchema = z.strictObject({
   source: z.literal('directCommit'),
-  sha: z.string(),
+  sha: shaSchema,
   type: z.string().nullable(),
   breaking: z.boolean(),
-  description: z.string(), // the commit subject
-  author: z.string()
+  description: descriptionSchema, // the commit subject
+  author: z.string().min(1) // git author name (free prose, not a login)
 })
 
 // In both, `type` and `breaking` come from the commit message, never a PR title:
@@ -43,10 +49,10 @@ export const changeSchema = z.discriminatedUnion('source', [
   directCommitChangeSchema
 ])
 
-// A release's full change list plus the humans to credit (GitHub logins.
-export const releaseChangesSchema = z.object({
+// A release's full change list plus the humans to credit (GitHub logins).
+export const releaseChangesSchema = z.strictObject({
   changes: z.array(changeSchema),
-  contributors: z.array(z.string())
+  contributors: z.array(githubLoginSchema)
 })
 
 export type SquashedPRChange = z.infer<typeof squashedPRChangeSchema>

@@ -80,14 +80,16 @@ export default async function ChangelogPage() {
                         {title}
                       </H2>
                       <div className="not-prose text-fd-muted-foreground flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
-                        {date && <span>Published on {date}</span>}
                         {date && (
-                          <span
-                            aria-hidden
-                            className="text-fd-muted-foreground/60"
-                          >
-                            •
-                          </span>
+                          <>
+                            <span>Published on {date}</span>
+                            <span
+                              aria-hidden
+                              className="text-fd-muted-foreground/60"
+                            >
+                              •
+                            </span>
+                          </>
                         )}
                         <a
                           href={release.html_url}

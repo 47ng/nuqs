@@ -13,9 +13,9 @@ import {
 import { discoverChanges, makeGitHubGraphReader } from './lib/commit-graph.ts'
 
 // The category vocabulary and the change grouping/breaking cross-cut now live in
-// the IO-free codec (`lib/changelog-dto.ts`), the SSOT shared with the docs
-// changelog page. Re-exported here so existing importers (and the test suite)
-// keep their entry point.
+// the IO-free codec (`lib/changelog-dto.ts`), the SSOT shared with the changelog
+// renderer. Re-exported here so existing importers (and the test suite) keep
+// their entry point.
 export {
   breakingChanges,
   CATEGORIES,
@@ -63,8 +63,8 @@ export function formatChangeLine(
 
 export function formatTitle(title: string): string {
   // Convert backtick code spans to <code> tags for GitHub release notes, via the
-  // shared span-parser — so the GitHub notes and the docs page render the (raw)
-  // description identically and cannot drift.
+  // shared span-parser — so the GitHub notes and the changelog page render the
+  // (raw) description identically and cannot drift.
   return parseCodeSpans(title)
     .map(segment =>
       segment.code ? `<code>${segment.value}</code>` : segment.value
@@ -146,7 +146,7 @@ async function main(): Promise<void> {
     reader: makeGitHubGraphReader(env.GITHUB_TOKEN)
   })
   // The human-readable notes, followed by the machine-readable DTO comment the
-  // docs changelog page reads back (hidden on GitHub + in subscriber emails).
+  // changelog page reads back (hidden on GitHub + in subscriber emails).
   const notes = renderReleaseNotes(release.changes, release.contributors)
   console.log(`${notes}\n\n${renderChangelogComment(release)}`)
 }

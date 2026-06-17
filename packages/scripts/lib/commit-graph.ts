@@ -376,8 +376,8 @@ type WithClosingIssues = {
   closingIssuesReferences: { edges: Array<{ node: { number: number } }> }
 }
 
-// Deduplicate the closing issue numbers across all PRs (a single issue can be
-// closed by more than one PR across the range).
+// Deduplicate (and sort asc) the closing issue numbers across all PRs.
+// (a single issue can be closed by more than one PR across the range)
 export function collectIssues(prs: WithClosingIssues[]): number[] {
   const numbers = new Set<number>()
   for (const pr of prs) {
@@ -415,20 +415,20 @@ function parseCommits(records: CommitRecord[]): ParsedCommit[] {
     const firstLine = message.split('\n')[0] ?? ''
     const prNumber = extractPRNumber(firstLine)
     const { type, breaking, description } = parseCommit(message)
+    const commit: ParsedCommit = {
+      sha,
+      author,
+      prNumber,
+      type,
+      breaking,
+      description
+    }
     if (prNumber === null) {
-      parsed.push({ sha, author, prNumber, type, breaking, description })
+      parsed.push(commit)
       continue
     }
     const existing = seen.get(prNumber)
     if (existing === undefined) {
-      const commit: ParsedCommit = {
-        sha,
-        author,
-        prNumber,
-        type,
-        breaking,
-        description
-      }
       seen.set(prNumber, commit)
       parsed.push(commit)
     } else if (existing.type !== type || existing.breaking !== breaking) {

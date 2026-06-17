@@ -68,22 +68,28 @@ jobs:
 
       - name: Validate the edited release body's changelog DTO
         id: dto
-        # Gate the bust on the body actually carrying a valid DTO. The renderer
-        # reads ONLY the embedded comment and degrades a release whose DTO is
-        # absent/invalid to a bare title+link — so an edit that doesn't yield a
-        # valid DTO would at best change nothing on the page and at worst repaint
-        # a previously-good release into a degraded entry. Either way, don't bust.
-        # The gate runs the same codec the renderer uses, so it can't drift from
-        # what the page will actually do. Never fails the job: a non-valid body is
-        # an expected outcome (e.g. editing prose on a pre-DTO release), recorded
-        # as a warning, not a red run.
         run: |
           set -uo pipefail
           if ./validate-changelog-dto.ts; then
             echo "valid=true" >> "$GITHUB_OUTPUT"
           else
-            echo "valid=false" >> "$GITHUB_OUTPUT"
-            echo "::warning::Edited release body carries no valid changelog DTO; skipping ISR invalidation (the changelog page would render this release as a degraded title+link entry, or show no change)."
+            code=$?
+            if [ "$code" -eq 1 ]; then
+              echo "valid=false" >> "$GITHUB_OUTPUT"
+              echo "::warning::Edited release body carries no changelog DTO; skipping ISR invalidation."
+            fi
+            # Exit 2 means the DTO is invalid
+            if [ "$code" -eq 2 ]; then
+              echo "::error::Edited release body carries an INVALID changelog DTO; skipping ISR invalidation."
+              echo "valid=false" >> "$GITHUB_OUTPUT"
+              exit "$code"
+            fi
+            # Exit >=3 means the codec itself threw (a regression): fail the job loud
+            if [ "$code" -ge 3 ]; then
+              echo "::error::validate-changelog-dto crashed (exit $code) — likely a codec regression."
+              echo "valid=false" >> "$GITHUB_OUTPUT"
+              exit "$code"
+            fi
           fi
         working-directory: packages/scripts
         env:

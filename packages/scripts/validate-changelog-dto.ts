@@ -1,20 +1,30 @@
 #!/usr/bin/env node
 
-// Exit 0 iff the release body on $RELEASE_BODY carries a changelog DTO that
-// parses through the shared codec (a well-formed, schema-valid `<changelog:dto>`
-// comment); exit 1 otherwise. This is `parseChangelogComment` — the very parse a
-// renderer runs — exposed as a process gate, so a caller that renders *only* the
-// parsed DTO can tell, before doing expensive work, whether a body would render
-// at all (a body with no valid DTO degrades to a bare entry, or renders nothing
-// new). Running the same codec keeps this gate from drifting from the renderer.
-//
-// The body is read from the environment, never an argument, so a `-->`-laden or
-// otherwise hostile body is only ever data to a pure parser, never shell input.
+// Gate for the release-edited ISR bust: runs the shared codec against
+// $RELEASE_BODY (env, never an argument — a hostile body is only ever parser
+// data, never shell input) and signals the result through three exit codes so a
+// codec regression can't masquerade as an expected "no DTO":
+//   0 — a valid DTO (bust the cache)
+//   1 — expected: no DTO present (skip busting)
+//   2 - an invalid DTO: the caller should fail the job loud
+//   3 - the codec threw (import/regression): the caller should fail the job loud
 
-import { parseChangelogComment } from './lib/changelog-dto.ts'
-
-if (parseChangelogComment(process.env.RELEASE_BODY ?? null) === null) {
-  console.error('No valid changelog DTO found in the release body.')
+try {
+  const { parseChangelogComment } = await import('./lib/changelog-dto.ts')
+  const result = parseChangelogComment(process.env.RELEASE_BODY ?? null)
+  if (result.status === 'ok') {
+    console.log('Release body carries a valid changelog DTO.')
+    process.exit(0)
+  }
+  if (result.status === 'invalid') {
+    console.error(
+      `Release body carries an INVALID changelog DTO: ${result.reason}`
+    )
+    process.exit(2)
+  }
+  console.info('No changelog DTO found in the release body')
   process.exit(1)
+} catch (error) {
+  console.error('validate-changelog-dto crashed (codec regression?):', error)
+  process.exit(3)
 }
-console.log('Release body carries a valid changelog DTO.')

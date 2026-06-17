@@ -45,12 +45,13 @@ export async function fetchReleases(): Promise<GithubRelease[]> {
     }
   )
   if (!response.ok) {
-    console.error(
-      'Failed to fetch releases:',
-      response.status,
-      response.statusText
+    // Throw rather than return [] — caching an empty changelog hides the outage
+    // until the next bust. A throw fails the build loudly, and during ISR
+    // revalidation Next keeps serving the last good page (consistent with the
+    // malformed-body path beside it, which also throws).
+    throw new Error(
+      `Failed to fetch releases: ${response.status} ${response.statusText}`
     )
-    return []
   }
   const data = GithubReleaseArray.parse(await response.json())
   return data.filter(release => !release.draft && !release.prerelease)
@@ -69,11 +70,19 @@ export type ReleaseModel = {
 
 export function buildReleaseModel(release: GithubRelease): ReleaseModel {
   const parsed = parseChangelogComment(release.body)
-  if (parsed === null) {
-    console.warn(
-      'changelog: release %s has no valid changelog DTO — rendering a degraded entry.',
-      release.tag_name
-    )
+  if (parsed.status !== 'ok') {
+    if (parsed.status === 'invalid') {
+      console.error(
+        'changelog: release %s has an INVALID changelog DTO (%s) — rendering a degraded entry.',
+        release.tag_name,
+        parsed.reason
+      )
+    } else {
+      console.warn(
+        'changelog: release %s has no changelog DTO — rendering a degraded entry.',
+        release.tag_name
+      )
+    }
     return { release, grouped: null, preamble: null, contributors: [] }
   }
   return {
@@ -93,9 +102,21 @@ export function formatDate(date?: string | null): string | null {
 
 // GitHub release bodies use `## Features`, `## Bug fixes`, etc. as section
 // headings, which clash with our per-release `## v1.2.3` title. Bump every
-// ATX heading one level deeper so sections nest under the release title.
-function bumpHeadings(body: string): string {
-  return body.replace(/^(#{1,5})(\s)/gm, '#$1$2')
+// ATX heading one level deeper so sections nest under the release title — but
+// skip lines inside fenced code blocks, where a leading `#` is a comment/shell
+// prompt, not a heading.
+export function bumpHeadings(body: string): string {
+  let inFence = false
+  return body
+    .split('\n')
+    .map(line => {
+      if (/^\s*(```|~~~)/.test(line)) {
+        inFence = !inFence
+        return line
+      }
+      return inFence ? line : line.replace(/^(#{1,5})(\s)/, '#$1$2')
+    })
+    .join('\n')
 }
 
 // The `.md`/llms changelog renders the human-readable GitHub notes verbatim

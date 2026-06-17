@@ -1,9 +1,7 @@
 // Shared changelog codec — the single source of truth for the machine-readable
 // DTO embedded in each GitHub release body (inside an HTML comment) and parsed
 // back out of it. The release pipeline (`release-notes-automation.ts`) serializes
-// a `ReleaseChanges`; whatever renders the changelog parses it back. Both go
-// through the very same Zod schema, so serializer and parser cannot drift — the
-// bug class this replaces.
+// a `ReleaseChanges`; whatever renders the changelog parses it back.
 //
 // Pure and IO-free by contract: it touches only `zod` and the `change.ts` schema
 // SSOT, never the git/octokit IO in `commit-graph.ts`, so it can be imported from
@@ -60,7 +58,7 @@ export function changelogJsonSchema() {
 // --- Embedding: the HTML comment block --------------------------------------
 
 const HINT =
-  "Any Markdown between the preamble tags shows up in the docs' changelog page:"
+  'Any Markdown between the preamble tags is rendered on the changelog page:'
 const PREAMBLE_OPEN = '<changelog:preamble>'
 const PREAMBLE_CLOSE = '</changelog:preamble>'
 const DTO_OPEN = '<changelog:dto>'
@@ -80,7 +78,7 @@ function escapeForComment(json: string): string {
 // Serialize a release's changes into the one HTML comment block carried by the
 // release body: a guiding hint line, an (empty) preamble stub, and the DTO as
 // pretty-printed, `<`/`>`-escaped JSON. The hint sits outside the preamble tags,
-// so GitHub hides the whole comment and docs ignores the hint.
+// so GitHub hides the whole comment and the renderer ignores the hint.
 export function renderChangelogComment(release: ReleaseChanges): string {
   const json = escapeForComment(
     JSON.stringify(toChangelogDTO(release), null, 2)
@@ -112,27 +110,48 @@ function extractBetween(
   return body.slice(from, end)
 }
 
+// The outcome of parsing a release body, distinguishing the two cases the old
+// single `null` conflated:
+//   - `absent`  — no `<changelog:dto>` block at all (a legitimate pre-DTO or
+//     hand-written release): degrade quietly.
+//   - `invalid` — the block is present but its JSON is malformed or fails the
+//     schema (incl. an unrecognized `$schema`): the signature of a tampered body
+//     or a pipeline schema drift. Degrade too, but loudly, carrying the `reason`.
+export type ParsedChangelog =
+  | { status: 'ok'; preamble: string | null; dto: ChangelogDTO }
+  | { status: 'absent' }
+  | { status: 'invalid'; reason: string }
+
 // Extract + Zod-validate the DTO (and optional preamble) from a release body.
-// Returns null whenever the comment is absent, the JSON is malformed, or the
-// payload fails validation (incl. an unrecognized `$schema`) — the single
-// "degrade this release" signal the caller branches on. Never throws.
-export function parseChangelogComment(
-  body: string | null
-): { preamble: string | null; dto: ChangelogDTO } | null {
-  if (!body) return null
+// Never throws: every parse/validation failure is reported as `absent`/`invalid`
+// so a renderer can always degrade a single release rather than fail the build.
+export function parseChangelogComment(body: string | null): ParsedChangelog {
+  if (!body) return { status: 'absent' }
   const dtoText = extractBetween(body, DTO_OPEN, DTO_CLOSE)
-  if (dtoText === null) return null
+  if (dtoText === null) return { status: 'absent' }
   let json: unknown
   try {
     json = JSON.parse(dtoText)
-  } catch {
-    return null
+  } catch (error) {
+    return {
+      status: 'invalid',
+      reason: `malformed JSON: ${(error as Error).message}`
+    }
   }
   const result = changelogDtoSchema.safeParse(json)
-  if (!result.success) return null
+  if (!result.success) {
+    const reason = result.error.issues
+      .map(issue => `${issue.path.join('.') || '(root)'}: ${issue.message}`)
+      .join('; ')
+    return { status: 'invalid', reason }
+  }
   const rawPreamble = extractBetween(body, PREAMBLE_OPEN, PREAMBLE_CLOSE)
   const trimmed = rawPreamble?.trim() ?? ''
-  return { preamble: trimmed.length > 0 ? trimmed : null, dto: result.data }
+  return {
+    status: 'ok',
+    preamble: trimmed.length > 0 ? trimmed : null,
+    dto: result.data
+  }
 }
 
 // Remove the appended changelog comment from a release body — for surfaces that

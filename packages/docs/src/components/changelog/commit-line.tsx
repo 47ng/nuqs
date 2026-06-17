@@ -1,7 +1,7 @@
 import { BreakingChangeMarker } from '@/src/components/changelog/breaking-change-marker'
+import { ChangeDescription } from '@/src/components/changelog/change-description'
 import { cn, github } from '@/src/lib/utils'
 import type { ComponentProps } from 'react'
-import { parseCodeSpans } from 'scripts/lib/changelog-dto'
 
 export type CommitLineProps = Omit<ComponentProps<'li'>, 'children'> & {
   sha: string
@@ -40,15 +40,7 @@ export function CommitLine({
         <span className="text-muted-foreground" role="presentation">
           ·
         </span>
-        <span className="font-medium group-hover:underline">
-          {parseCodeSpans(description).map((segment, index) =>
-            segment.code ? (
-              <code key={index}>{segment.value}</code>
-            ) : (
-              <span key={index}>{segment.value}</span>
-            )
-          )}
-        </span>
+        <ChangeDescription description={description} />
       </a>
       <span className="text-muted-foreground" role="presentation">
         ·
