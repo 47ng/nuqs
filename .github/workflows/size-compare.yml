@@ -1,0 +1,144 @@
+name: Bundle Size
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+    paths:
+      - "packages/nuqs/src/**"
+      - "packages/nuqs/package.json"
+      - "packages/nuqs/tsdown.config.ts"
+
+concurrency:
+  group: bundle-size-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  measure-base:
+    name: Measure (base)
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          persist-credentials: false
+          ref: ${{ github.base_ref }}
+      - uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093 # v6.0.8
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - name: Install dependencies
+        run: pnpm install --ignore-scripts --frozen-lockfile --filter nuqs...
+      - name: Build package
+        run: pnpm build --filter nuqs
+      - name: Generate size report
+        # size-limit --json exits non-zero if a limit is exceeded,
+        # but we still want the JSON output for the diff table.
+        run: pnpm run build:size-json --filter nuqs || true
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: base-size
+          path: packages/nuqs/size.json
+          retention-days: 1
+
+  measure-pr:
+    name: Measure (PR)
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093 # v6.0.8
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - name: Install dependencies
+        run: pnpm install --ignore-scripts --frozen-lockfile --filter nuqs...
+      - name: Build package
+        run: pnpm build --filter nuqs
+      - name: Generate size report
+        run: pnpm run build:size-json --filter nuqs || true
+      - name: Save PR number
+        run: echo "${{ github.event.pull_request.number }}" > pr-number.txt
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: pr-size
+          path: |
+            packages/nuqs/size.json
+            pr-number.txt
+          retention-days: 1
+
+  compare:
+    name: Compare
+    needs: [measure-base, measure-pr]
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: base-size
+          path: artifacts/base
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: pr-size
+          path: artifacts/pr
+      - name: Generate comparison
+        run: |
+          node --input-type=module << 'EOF'
+          import { readFileSync, writeFileSync } from 'fs'
+          import { mkdirSync } from 'fs'
+
+          const base = JSON.parse(readFileSync('artifacts/base/size.json', 'utf8'))
+          const pr = JSON.parse(readFileSync('artifacts/pr/size.json', 'utf8'))
+          const prNumber = readFileSync('artifacts/pr/pr-number.txt', 'utf8').trim()
+
+          function formatBytes(bytes) {
+            if (bytes < 1024) return `${bytes} B`
+            return `${(bytes / 1024).toFixed(2)} kB`
+          }
+
+          function formatDiff(diff) {
+            if (Math.abs(diff) < 10) return '—'
+            const sign = diff > 0 ? '+' : ''
+            const arrow = diff > 0 ? '⬆️' : '⬇️'
+            return `${arrow} ${sign}${formatBytes(diff)}`
+          }
+
+          let anyChange = false
+          let rows = ''
+          for (const prEntry of pr) {
+            const baseEntry = base.find(b => b.name === prEntry.name)
+            if (!baseEntry) continue
+            const diff = prEntry.brotli - baseEntry.brotli
+            if (Math.abs(diff) >= 10) anyChange = true
+            const status = prEntry.passed ? '✅' : '❌'
+            rows += `| ${status} ${prEntry.name} | ${formatBytes(baseEntry.brotli)} | ${formatBytes(prEntry.brotli)} | ${formatDiff(diff)} |\n`
+          }
+
+          mkdirSync('artifacts/result', { recursive: true })
+          writeFileSync('artifacts/result/pr-number.txt', prNumber)
+
+          if (!anyChange) {
+            writeFileSync('artifacts/result/skip', '1')
+            console.log('No meaningful size change (< 10 B). Skipping comment.')
+          } else {
+            const comment = [
+              '## Bundle size',
+              '',
+              '| | Base | PR | Δ |',
+              '|---|---|---|---|',
+              rows.trimEnd(),
+              '',
+              '_Brotli-compressed. Limits are set in the `size-limit` config in `packages/nuqs/package.json`._',
+            ].join('\n')
+            writeFileSync('artifacts/result/comment.md', comment)
+            console.log(comment)
+          }
+          EOF
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: size-result
+          path: artifacts/result/
+          retention-days: 1

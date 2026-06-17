@@ -1,0 +1,66 @@
+name: Post Bundle Size Comment
+
+# Runs after Bundle Size completes. Because this workflow is triggered by
+# workflow_run (not pull_request), it has pull-requests: write permission
+# even for PRs opened from forks — allowing it to post the size delta comment.
+on:
+  workflow_run:
+    workflows: ["Bundle Size"]
+    types: [completed]
+
+permissions:
+  pull-requests: write
+
+jobs:
+  comment:
+    name: Post comment
+    if: github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: size-result
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ github.token }}
+          path: artifacts
+      - name: Post PR comment
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          if [ -f "artifacts/skip" ]; then
+            echo "No meaningful size change — skipping comment."
+            exit 0
+          fi
+
+          if [ ! -f "artifacts/comment.md" ] || [ ! -f "artifacts/pr-number.txt" ]; then
+            echo "Artifact files missing — nothing to post."
+            exit 0
+          fi
+
+          PR_NUMBER=$(cat artifacts/pr-number.txt)
+          MARKER="<!-- bundle-size-comment -->"
+
+          # Build full comment in a temp file to avoid shell quoting issues
+          printf '%s\n' "$MARKER" > /tmp/full-comment.md
+          cat artifacts/comment.md >> /tmp/full-comment.md
+
+          # Update existing comment if present, otherwise create a new one
+          EXISTING=$(gh api \
+            "repos/$GH_REPO/issues/$PR_NUMBER/comments" \
+            --jq ".[] | select(.body | startswith(\"$MARKER\")) | .id" \
+            2>/dev/null | head -1)
+
+          if [ -n "$EXISTING" ]; then
+            gh api \
+              --method PATCH \
+              "repos/$GH_REPO/issues/comments/$EXISTING" \
+              -F body=@/tmp/full-comment.md
+            echo "Updated comment $EXISTING on PR #$PR_NUMBER."
+          else
+            gh api \
+              --method POST \
+              "repos/$GH_REPO/issues/$PR_NUMBER/comments" \
+              -F body=@/tmp/full-comment.md
+            echo "Posted new comment on PR #$PR_NUMBER."
+          fi
