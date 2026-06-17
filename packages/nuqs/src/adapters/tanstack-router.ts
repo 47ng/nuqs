@@ -47,15 +47,17 @@ function useNuqsTanstackRouterAdapter(watchKeys: string[]): AdapterInterface {
   const { navigate } = router
 
   useEffect(() => {
-    const unsubscribe = router.history.subscribe(({ action }: HistorySubscriberArgs) => {
-      if (
-        action.type === 'BACK' ||
-        action.type === 'FORWARD' ||
-        action.type === 'GO'
-      ) {
-        resetQueues()
+    const unsubscribe = router.history.subscribe(
+      ({ action }: HistorySubscriberArgs) => {
+        if (
+          action.type === 'BACK' ||
+          action.type === 'FORWARD' ||
+          action.type === 'GO'
+        ) {
+          resetQueues()
+        }
       }
-    })
+    )
     window.addEventListener('popstate', onPopState)
     return () => {
       unsubscribe()
