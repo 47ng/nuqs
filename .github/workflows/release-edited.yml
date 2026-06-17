@@ -4,28 +4,18 @@ name: Refresh changelog on release edit
 # publish (so a freshly published release appears on the docs changelog); this
 # handles the *after*: a maintainer fixing a docs-only preamble or a broken DTO
 # in an already-published release body has no other way to refresh the page
-# short of waiting for the next release. It exists separately from finalize on
-# purpose — finalize stays `published`-only, because re-running its comment/label
-# loop on a content edit would re-notify every impacted issue/PR. This workflow
-# never touches issues/PRs: it only calls /api/isr.
-#
-# Sequenced after the slice-7 backfill (see the changelog-dto PRD): the backfill
-# PATCHes ~dozens of release bodies, and each would otherwise fire a bust here.
+# short of waiting for the next release.
 
 on:
   release:
     types: [edited]
 
 # Coalesce rapid successive edits to the same release: the bust is idempotent,
-# so cancelling an in-flight one to run the latest loses nothing. Keyed on the
-# stable numeric release id (not the tag), which never changes across edits.
+# so cancelling an in-flight one to run the latest loses nothing.
 concurrency:
   group: release-edited-${{ github.event.release.id }}
   cancel-in-progress: true
 
-# The only GitHub interaction is checkout reading the code; the ISR call goes to
-# the docs endpoint, not the API. So contents:read (checkout's minimum) is all
-# the workflow token needs — never write, never id-token.
 permissions:
   contents: read
 
@@ -33,35 +23,20 @@ jobs:
   refresh-changelog:
     name: Bust the releases ISR cache
     runs-on: ubuntu-24.04-arm
-    # Published GA releases only.
-    #   - draft: a draft edit can't affect the page (it reads only published
-    #     releases), and draft notes churn constantly while staging — pointless
-    #     to bust on each. `release.draft` is true while drafting, false once
-    #     published.
-    #   - beta: the changelog page filters to GA, so a beta edit can never change
-    #     it. Same GA-only gate finalize uses for its `releases` bust.
+    # Run on published GA releases only.
     if: ${{ !github.event.release.draft && !contains(github.event.release.tag_name, '-beta.') }}
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
-          # The DTO gate below runs the shared codec, which only exists on the
-          # default branch — NOT in the tree of the (possibly years-old, possibly
-          # backfilled) release being edited, which is what a `release` event
-          # checks out by default. Pin to the default branch so the gate always
-          # runs the current codec — the same one (modulo additive-only evolution)
-          # the docs build parses with. Shallow is fine: only the working tree is
-          # needed, no history.
+          # Checkout from `next`, not the release's branch
+          # (which might not contain the code we need to run).
           ref: ${{ github.event.repository.default_branch }}
           persist-credentials: false
       - uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093 # v6.0.8
       - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
         with:
           node-version-file: .node-version
-          # No package-manager cache: this job has the ISR token in scope (the
-          # bust step) and runs installed code, so it must not restore a
-          # potentially-poisoned store (same stance as the privileged release
-          # jobs). The install is tiny (scripts only) and lockfile-frozen.
           package-manager-cache: false
       - name: Install scripts dependencies
         run: pnpm install --ignore-scripts --frozen-lockfile --filter scripts
