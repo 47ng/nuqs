@@ -13,6 +13,12 @@ function onPopState() {
   resetQueues()
 }
 
+type HistorySubscriberArgs = {
+  action: {
+    type: 'PUSH' | 'REPLACE' | 'BACK' | 'FORWARD' | 'GO'
+  }
+}
+
 function useNuqsTanstackRouterAdapter(watchKeys: string[]): AdapterInterface {
   const pathname = useLocation({ select: state => state.pathname })
   // Use useRouterState instead of useLocation so that structuralSharing
@@ -41,7 +47,7 @@ function useNuqsTanstackRouterAdapter(watchKeys: string[]): AdapterInterface {
   const { navigate } = router
 
   useEffect(() => {
-    const unsubscribe = router.history.subscribe(({ action }) => {
+    const unsubscribe = router.history.subscribe(({ action }: HistorySubscriberArgs) => {
       if (
         action.type === 'BACK' ||
         action.type === 'FORWARD' ||
