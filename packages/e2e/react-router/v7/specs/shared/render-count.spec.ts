@@ -19,7 +19,11 @@ for (const hook of hooks) {
           },
           expected: {
             mount: 1,
-            update: 2 + (shallow === false ? 2 : 0)
+            // Since react-router 7.15.0, a deep update with no loader only
+            // costs one extra render (down from two) thanks to upstream route
+            // matching optimisations. With a loader, revalidation still adds a
+            // second render (see the loader cases below).
+            update: 2 + (shallow === false ? 1 : 0)
           }
         })
       }
