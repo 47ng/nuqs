@@ -21,8 +21,7 @@ export default defineConfig({
         { name: 'yarn', command: () => 'yarn add nuqs' },
         { name: 'bun', command: () => 'bun add nuqs' },
         { name: 'deno', command: () => 'deno add nuqs' },
-        { name: 'vlt', command: () => 'vlt add nuqs' },
-        { name: 'nub', command: () => 'nub add nuqs' }
+        { name: 'vlt', command: () => 'vlt install nuqs' }
       ]
     }
   }

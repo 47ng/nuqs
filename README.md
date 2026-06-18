@@ -46,11 +46,7 @@ deno add nuqs
 ```
 
 ```shell
-vlt add nuqs
-```
-
-```shell
-nub add nuqs
+vlt install nuqs
 ```
 
 ## Adapters
