@@ -10,8 +10,8 @@
     "test": "react-router typegen && tsc"
   },
   "dependencies": {
-    "@react-router/node": "catalog:react-router",
-    "@react-router/serve": "catalog:react-router",
+    "@react-router/node": "catalog:react-router7",
+    "@react-router/serve": "catalog:react-router7",
     "@tanstack/react-query": "^5.90.20",
     "@tanstack/react-query-devtools": "^5.91.3",
     "@trpc/client": "^11.9.0",
@@ -21,11 +21,11 @@
     "nuqs": "workspace:*",
     "react": "catalog:react19",
     "react-dom": "catalog:react19",
-    "react-router": "catalog:react-router"
+    "react-router": "catalog:react-router7"
   },
   "devDependencies": {
-    "@react-router/dev": "catalog:react-router",
-    "@react-router/express": "catalog:react-router",
+    "@react-router/dev": "catalog:react-router7",
+    "@react-router/express": "catalog:react-router7",
     "@types/node": "^24.10.10",
     "@types/react": "catalog:react19",
     "@types/react-dom": "catalog:react19",

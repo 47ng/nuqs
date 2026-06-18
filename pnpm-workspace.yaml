@@ -20,7 +20,7 @@ catalogs:
   next:
     next: 16.2.7
 
-  react-router:
+  react-router7:
     react-router: ^7.18.0
     '@react-router/dev': ^7.18.0
     '@react-router/express': ^7.18.0

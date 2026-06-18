@@ -20,7 +20,7 @@ catalogs:
     next:
       specifier: 16.2.7
       version: 16.2.7
-  react-router:
+  react-router7:
     '@react-router/dev':
       specifier: ^7.18.0
       version: 7.18.0
