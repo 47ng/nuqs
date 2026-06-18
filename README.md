@@ -26,6 +26,10 @@ Read the complete documentation at [nuqs.dev](https://nuqs.dev).
 ## Installation
 
 ```shell
+npm install nuqs
+```
+
+```shell
 pnpm add nuqs
 ```
 
@@ -34,7 +38,15 @@ yarn add nuqs
 ```
 
 ```shell
-npm install nuqs
+bun add nuqs
+```
+
+```shell
+deno add nuqs
+```
+
+```shell
+vlt install nuqs
 ```
 
 ## Adapters
