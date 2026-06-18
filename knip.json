@@ -3,7 +3,8 @@
   "ignoreExportsUsedInFile": true,
   "workspaces": {
     ".": {
-      "ignoreDependencies": ["@commitlint/config-conventional"]
+      "ignoreDependencies": ["@commitlint/config-conventional"],
+      "ignoreBinaries": ["packages/scripts/verify-release/verify.production.ts"]
     },
     "packages/scripts": {
       "entry": [
@@ -12,7 +13,8 @@
         "release-finalize.ts",
         "release-notes-automation.ts",
         "validate-changelog-dto.ts",
-        "verify-staged-release/verify.ts"
+        "verify-release/verify.staged.ts",
+        "verify-release/verify.production.ts"
       ],
       "project": ["**/*.ts"]
     },
