@@ -8,6 +8,7 @@ export const FRAMEWORKS = [
   'React SPA',
   'React Router (v6)',
   'React Router (v7)',
+  'React Router (v8)',
   'Remix',
   'TanStack Router',
   'Testing adapter'
@@ -24,7 +25,8 @@ export const FRAMEWORK_ICONS: Record<
   'Next.js (pages router)': NextJS,
   'React SPA': ReactSPA,
   'React Router (v6)': ReactRouter,
-  'React Router (v7)': ReactRouterV7,
+  'React Router (v7)': ReactRouter,
+  'React Router (v8)': ReactRouter,
   Remix: Remix,
   'TanStack Router': TanStackRouter,
   'Testing adapter': Vitest
@@ -161,30 +163,6 @@ export function ReactRouter({ className, ...props }: IconProps) {
       <path
         d="M83.7137 60.9998C78.2339 61.0304 73.7361 56.5901 73.7052 51.122C73.6747 45.632 78.1068 41.1258 83.5646 41.0949C89.0444 41.0643 93.5423 45.5046 93.5731 50.9727C93.6036 56.4583 89.1716 60.9689 83.7137 60.9998Z"
         className="fill-[#121212] dark:fill-white"
-      />
-    </svg>
-  )
-}
-
-export function ReactRouterV7({ className, ...props }: IconProps) {
-  return (
-    <svg
-      width="1em"
-      height="1em"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="100 0 72 72"
-      className={className}
-      {...props}
-      style={{ transform: 'scale(1.35)', ...props.style }}
-    >
-      <path
-        d="M131.275 20.963v-6.645h33.722V22.5c-14.946 12.02-15.149 20.667-15.223 35.744h-11.087c.227-15.835 3.452-24.876 13.139-35.33h-18.585a1.957 1.957 0 0 1-1.963-1.951h-.003Z"
-        fill="#F44250"
-      />
-      <path
-        d="M117.144 27.06h-9.85l12.595 31.186h13.349c.23-13.575 3.147-22.385 10.052-31.19h-10.573a2.1 2.1 0 0 0-1.683.838c-3.042 4.041-5.51 11.168-5.51 16.058l-5.89-15.755a1.756 1.756 0 0 0-1.647-1.138h-.843Z"
-        className="fill-black dark:fill-white"
       />
     </svg>
   )

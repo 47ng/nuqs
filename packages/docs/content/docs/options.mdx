@@ -94,7 +94,7 @@ One caveat is that the stock `useSearchParams{:ts}` hook from those frameworks d
 reflect shallow-updated search params, so we provide you with one that does:
 
 ```tsx
-import { useOptimisticSearchParams } from 'nuqs/adapters/remix' // or '…/react-router/v6' or '…/react-router/v7'
+import { useOptimisticSearchParams } from 'nuqs/adapters/remix' // or '…/react-router/v{6,7,8}'
 
 function Component() {
   // Note: this is read-only, but reactive to all URL changes

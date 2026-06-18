@@ -171,6 +171,29 @@ export default function App() {
 
 </details>
 
+<details><summary><span style="width:16px;height:16px;background:#fff;border-radius:2px;"><img width="16px" height="16px" src="https://reactrouter.com/_brand/React%20Router%20Brand%20Assets/React%20Router%20Logo/Light.svg" /></span> React Router v8
+</summary>
+
+> Supported React Router versions: `react-router@^8`
+
+```tsx
+// app/root.tsx
+import { NuqsAdapter } from 'nuqs/adapters/react-router/v8'
+import { Outlet } from 'react-router'
+
+// ...
+
+export default function App() {
+  return (
+    <NuqsAdapter>
+      <Outlet />
+    </NuqsAdapter>
+  )
+}
+```
+
+</details>
+
 <details><summary>🏝️ TanStack Router</summary>
 
 > Supported TanStack Router versions: `@tanstack/react-router@^1`

@@ -6,7 +6,6 @@ description: Using nuqs in your React framework of choice
 import {
   NextJS,
   ReactRouter,
-  ReactRouterV7,
   ReactSPA,
   Remix,
   TanStackRouter,
@@ -21,7 +20,8 @@ wrapping it with a `NuqsAdapter{:ts}` context provider:
 - <ReactSPA className='inline mr-1.5' role="presentation" /> [React SPA (eg: with Vite)](#react-spa)
 - <Remix className='inline mr-1.5' role="presentation" /> [Remix](#remix)
 - <ReactRouter className='inline mr-1.5' role="presentation" /> [React Router v6](#react-router-v6)
-- <ReactRouterV7 className='inline mr-1.5' role="presentation" /> [React Router v7](#react-router-v7)
+- <ReactRouter className='inline mr-1.5' role="presentation" /> [React Router v7](#react-router-v7)
+- <ReactRouter className='inline mr-1.5' role="presentation" /> [React Router v8](#react-router-v8)
 - <TanStackRouter className='inline mr-1.5 not-prose' role="presentation"/> [TanStack Router](#tanstack-router)
 
 ## <NextJS className='inline mr-1.5 -mt-1' role="presentation" /> Next.js [#nextjs]
@@ -104,7 +104,7 @@ Because there is no known server in this configuration, the
 See below for some options:
 </Callout>
 
-### Full page navigation on <br className='hidden [#nd-toc_&]:block'/>`shallow: false{:ts}` [#full-page-navigation-on-shallow-false]
+### Full page navigation on <br className='hidden in-[#nd-toc]:block'/>`shallow: false{:ts}` [#full-page-navigation-on-shallow-false]
 
 <FeatureSupportMatrix introducedInVersion='2.4.0' support={{
   supported: true,
@@ -145,6 +145,17 @@ export default function App() {
 }
 ```
 
+<Callout type="warn" title="Deprecation notice">
+
+  Remix v2 has reached [end of life](https://remix.run/blog/react-router-v8) and
+  no longer receives security updates. The `nuqs/adapters/remix` adapter will be
+  removed in nuqs@3.0.0.
+
+  Remix has converged into React Router. Migrate to [React Router v7](#react-router-v7)
+  or [v8](#react-router-v8) and use the appropriate adapter below.
+
+</Callout>
+
 ## <ReactRouter className='inline mr-1.5 -mt-1' role="presentation"/> React Router v6 [#react-router-v6]
 
 ```tsx title="src/main.tsx"
@@ -177,7 +188,32 @@ export function ReactRouter() {
 
 </Callout>
 
-## <ReactRouterV7 className='inline mr-1.5 -mt-1' role="presentation"/> React Router v7 [#react-router-v7]
+<Callout type="warn" title="Deprecation notice">
+  The generic import `nuqs/adapters/react-router` (pointing to v6)
+  is deprecated and will be removed in nuqs@3.0.0.
+
+  Please pin your imports to the specific version:
+
+  - `nuqs/adapters/react-router/v6`
+  - `nuqs/adapters/react-router/v7`
+  - `nuqs/adapters/react-router/v8`
+
+  The main difference is where the React Router hooks are imported from:
+  `react-router-dom` for v6, and `react-router` for v7 & v8.
+</Callout>
+
+<Callout type="warn" title="Deprecation notice">
+
+  React Router v6 has reached [end of life](https://remix.run/blog/react-router-v8)
+  and no longer receives security updates. The `nuqs/adapters/react-router/v6`
+  adapter will be removed in nuqs@3.0.0.
+
+  Upgrade to [React Router v7](#react-router-v7) or [v8](#react-router-v8) and use the
+  appropriate adapter below.
+
+</Callout>
+
+## <ReactRouter className='inline mr-1.5 -mt-1' role="presentation"/> React Router v7 [#react-router-v7]
 
 ```tsx title="app/root.tsx"
 // [!code word:NuqsAdapter]
@@ -195,15 +231,32 @@ export default function App() {
 }
 ```
 
-<Callout type="warn" title="Deprecation notice">
-  The generic import `nuqs/adapters/react-router` (pointing to v6)
-  is deprecated and will be removed in nuqs@3.0.0.
+## <ReactRouter className='inline mr-1.5 -mt-1' role="presentation"/> React Router v8 [#react-router-v8]
 
-  Please pin your imports to the specific version,
-  eg: `nuqs/adapters/react-router/v6` or `nuqs/adapters/react-router/v7`.
+```tsx title="app/root.tsx"
+// [!code word:NuqsAdapter]
+import { NuqsAdapter } from 'nuqs/adapters/react-router/v8'
+import { Outlet } from 'react-router'
 
-  The main difference is where the React Router hooks are imported from:
-  `react-router-dom` for v6, and `react-router` for v7.
+// ...
+
+export default function App() {
+  return (
+    <NuqsAdapter>
+      <Outlet />
+    </NuqsAdapter>
+  )
+}
+```
+
+<Callout title="Note: shared with v7">
+
+  React Router v7 and v8 expose the same `react-router` hooks, so this adapter
+  currently re-exports the [v7 adapter](#react-router-v7).
+
+  Pinning to `nuqs/adapters/react-router/v8` means a potential future divergence
+  of implementation won't require changing your import.
+
 </Callout>
 
 ## <TanStackRouter className='inline mr-1.5 -mt-1 not-prose' role="presentation"/> TanStack Router [#tanstack-router]

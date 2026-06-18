@@ -46,6 +46,7 @@
     "adapters/react-router.d.ts",
     "adapters/react-router/v6.d.ts",
     "adapters/react-router/v7.d.ts",
+    "adapters/react-router/v8.d.ts",
     "adapters/tanstack-router.d.ts",
     "adapters/custom.d.ts",
     "adapters/testing.d.ts"
@@ -111,6 +112,11 @@
       "import": "./dist/adapters/react-router/v7.js",
       "default": "./dist/adapters/react-router/v7.js"
     },
+    "./adapters/react-router/v8": {
+      "types": "./dist/adapters/react-router/v8.d.ts",
+      "import": "./dist/adapters/react-router/v8.js",
+      "default": "./dist/adapters/react-router/v8.js"
+    },
     "./adapters/tanstack-router": {
       "types": "./dist/adapters/tanstack-router.d.ts",
       "import": "./dist/adapters/tanstack-router.js",
@@ -147,7 +153,7 @@
     "@tanstack/react-router": "^1",
     "next": ">=14.2.0",
     "react": ">=18.2.0 || ^19.0.0-0",
-    "react-router": "^5 || ^6 || ^7",
+    "react-router": "^5 || ^6 || ^7 || ^8",
     "react-router-dom": "^5 || ^6 || ^7"
   },
   "peerDependenciesMeta": {
