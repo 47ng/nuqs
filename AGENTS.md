@@ -16,7 +16,7 @@ Refer to: [README.md](README.md) & [CONTRIBUTING.md](CONTRIBUTING.md) for author
 - **Documentation app** (Next.js + Fumadocs): `packages/docs`
   - MDX content: `packages/docs/content`
 - **End-to-end test benches:** `packages/e2e`
-  - Framework targets: Next.js app/pages, React SPA, Remix, TanStack Router, React Router v6/v7
+  - Framework targets: Next.js app/pages, React SPA, Remix, TanStack Router, React Router v6/v7/v8
 - **Examples:** `packages/examples/*`
 
 ### Core Concepts (nuqs)

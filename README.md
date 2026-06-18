@@ -151,7 +151,7 @@ export function ReactRouter() {
 <details><summary><span style="width:16px;height:16px;background:#fff;border-radius:2px;"><img width="16px" height="16px" src="https://reactrouter.com/_brand/React%20Router%20Brand%20Assets/React%20Router%20Logo/Light.svg" /></span> React Router v7
 </summary>
 
-> Supported React Router versions: `react-router@^7`
+> Supported React Router versions: `react-router@^7 || ^8`
 
 ```tsx
 // app/root.tsx

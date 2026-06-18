@@ -233,6 +233,10 @@ export default function App() {
   This adapter also works with React Router v8. The hooks it imports from
   `react-router` are unchanged in v8, so it runs as-is on nuqs@2.x.x.
 
+  You can pin your import to `nuqs/adapters/react-router/v8`, which currently
+  re-exports this v7 adapter. Pinning means a potential future divergence of
+  implementation between v7 and v8 won't require changing your import.
+
   This support is _unofficial_ for now. Dedicated v8 tests and official support
   will land in nuqs@3.0.0.
 

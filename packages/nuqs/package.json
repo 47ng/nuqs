@@ -46,6 +46,7 @@
     "adapters/react-router.d.ts",
     "adapters/react-router/v6.d.ts",
     "adapters/react-router/v7.d.ts",
+    "adapters/react-router/v8.d.ts",
     "adapters/tanstack-router.d.ts",
     "adapters/custom.d.ts",
     "adapters/testing.d.ts"
@@ -110,6 +111,11 @@
       "types": "./dist/adapters/react-router/v7.d.ts",
       "import": "./dist/adapters/react-router/v7.js",
       "default": "./dist/adapters/react-router/v7.js"
+    },
+    "./adapters/react-router/v8": {
+      "types": "./dist/adapters/react-router/v8.d.ts",
+      "import": "./dist/adapters/react-router/v8.js",
+      "default": "./dist/adapters/react-router/v8.js"
     },
     "./adapters/tanstack-router": {
       "types": "./dist/adapters/tanstack-router.d.ts",

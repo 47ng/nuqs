@@ -29,6 +29,7 @@
         "src/adapters/react-router.ts",
         "src/adapters/react-router/v6.ts",
         "src/adapters/react-router/v7.ts",
+        "src/adapters/react-router/v8.ts",
         "src/adapters/tanstack-router.ts",
         "src/adapters/custom.ts",
         "src/adapters/testing.ts"
