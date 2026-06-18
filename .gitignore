@@ -10,4 +10,4 @@ package-lock.json
 .turbo/
 .vercel
 *.tsbuildinfo
-./.worktrees
+.worktrees/
