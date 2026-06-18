@@ -22,8 +22,8 @@ import {
   discoverChanges,
   discoverTargets,
   discussionCandidates,
-  extractClosingReferences,
   extractPRNumber,
+  extractTargetReferences,
   fetchDiscussionNodes,
   fetchPRNodes,
   isBot,
@@ -210,12 +210,12 @@ describe('extractPRNumber', () => {
   })
 })
 
-describe('extractClosingReferences', () => {
-  it('extracts a single closing reference', () => {
-    expect(extractClosingReferences('Closes #123')).toEqual([123])
+describe('extractTargetReferences', () => {
+  it('extracts a single target reference', () => {
+    expect(extractTargetReferences('Closes #123')).toEqual([123])
   })
 
-  it('matches every closing keyword (close/fix/resolve, all tenses), case-insensitively', () => {
+  it('matches every keyword (close/fix/resolve/address, all tenses), case-insensitively', () => {
     const body = [
       'close #1',
       'Closes #2',
@@ -225,36 +225,43 @@ describe('extractClosingReferences', () => {
       'fixed #6',
       'resolve #7',
       'Resolves #8',
-      'RESOLVED #9'
+      'RESOLVED #9',
+      'address #10',
+      'Addresses #11',
+      'ADDRESSED #12'
     ].join('\n')
-    expect(extractClosingReferences(body)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9])
+    expect(extractTargetReferences(body)).toEqual([
+      1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12
+    ])
   })
 
   it('accepts an optional colon between the keyword and the number', () => {
-    expect(extractClosingReferences('Fixes: #42')).toEqual([42])
+    expect(extractTargetReferences('Fixes: #42')).toEqual([42])
   })
 
   it('deduplicates and sorts ascending', () => {
     expect(
-      extractClosingReferences('Closes #5\nFixes #2\nResolves #5')
+      extractTargetReferences('Closes #5\nFixes #2\nResolves #5')
     ).toEqual([2, 5])
   })
 
   it('ignores a cross-repo owner/repo#N reference (this repo only)', () => {
-    expect(extractClosingReferences('Closes octocat/other#9')).toEqual([])
+    expect(extractTargetReferences('Closes octocat/other#9')).toEqual([])
   })
 
-  it('ignores a bare #N with no closing keyword', () => {
-    expect(extractClosingReferences('See #9 and related to #10')).toEqual([])
+  it('ignores a bare #N with no target keyword', () => {
+    expect(extractTargetReferences('See #9 and related to #10')).toEqual([])
   })
 
   it('does not match a keyword embedded in a longer word', () => {
-    expect(extractClosingReferences('prefixes #9, foreclosed #10')).toEqual([])
+    expect(
+      extractTargetReferences('prefixes #9, foreclosed #10, readdressed #11')
+    ).toEqual([])
   })
 
   it('returns an empty array for a body with no references', () => {
     expect(
-      extractClosingReferences('Just a description, nothing linked.')
+      extractTargetReferences('Just a description, nothing linked.')
     ).toEqual([])
   })
 })
@@ -505,11 +512,18 @@ describe('discussionCandidates', () => {
     }
   })
 
-  it('returns a closing-keyword reference not already resolved as an issue', () => {
+  it('returns a target reference not already resolved as an issue', () => {
     // #100 is a closing issue (already handled); #200 is referenced by a closing
     // keyword but isn't a closing issue — a discussion candidate to probe.
     const prs = [pr(1, 'Closes #100\nFixes #200', [100])]
     expect(discussionCandidates(prs, [100])).toEqual([200])
+  })
+
+  it('surfaces a discussion referenced only by an Addresses keyword', () => {
+    // `Addresses` is not a GitHub closing keyword, so #400 never lands in
+    // `closingIssuesReferences` — the body parse is its only signal.
+    const prs = [pr(1, 'Addresses #400')]
+    expect(discussionCandidates(prs, [])).toEqual([400])
   })
 
   it('excludes a reference pointing at a PR in the release', () => {
@@ -523,7 +537,7 @@ describe('discussionCandidates', () => {
     expect(discussionCandidates(prs, [])).toEqual([300])
   })
 
-  it('returns nothing when no body carries an unresolved closing reference', () => {
+  it('returns nothing when no body carries an unresolved target reference', () => {
     const prs = [pr(1, 'Closes #100', [100]), pr(2, 'nothing linked here')]
     expect(discussionCandidates(prs, [100])).toEqual([])
   })
@@ -851,12 +865,12 @@ describe('discoverTargets', () => {
     // Finalize fetches the closing issues only; the change details are untouched.
     expect(reader.fetchClosingIssues).toHaveBeenCalledExactlyOnceWith([1, 2])
     expect(reader.fetchChangeDetails).not.toHaveBeenCalled()
-    // Empty PR bodies yield no closing-keyword references, so the discussion
+    // Empty PR bodies yield no target references, so the discussion
     // probe runs once over an empty candidate set.
     expect(reader.fetchDiscussions).toHaveBeenCalledExactlyOnceWith([])
   })
 
-  it("probes the PR bodies' unresolved closing references and adds the resolved discussions", async () => {
+  it("probes the PR bodies' unresolved target references and adds the resolved discussions", async () => {
     const reader: ReleaseGraphReader = {
       readTags: () => [],
       readCommits: () => records('feat: thing (#1)'),

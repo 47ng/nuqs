@@ -139,18 +139,20 @@ reaches them and how the comment is worded. A target is not a **change**: a chan
 is a changelog line; a target is a thread to notify — and a **direct commit** is a
 change that yields no target.
 
-### closing reference
+### target reference
 
-A closing keyword and a same-repo number in a pull request body — `Closes #N`,
-`Fixes #N`, `Resolves #N`, and their tenses. A closing reference to an issue is
-one of the PR's **closing issues** (which GitHub links on its own); a closing
-reference to a **discussion** is the sole record that the discussion belongs to
-the release.
+A keyword and a same-repo number in a pull request body that names a **target** —
+`Closes #N`, `Fixes #N`, `Resolves #N`, `Addresses #N`, and their tenses. The
+close/fix/resolve keywords are GitHub's own closing keywords (GitHub links the
+issue itself as one of the PR's **closing issues**); `Addresses` is not — GitHub
+never links it — but a release *announces* its targets rather than closing them,
+so we treat it the same. A target reference to a **discussion** is the sole record
+that the discussion belongs to the release.
 
 ### discussion
 
 A GitHub Discussion that a release pull request resolves — a **target** named by a
-**closing reference** in the PR body. Distinct from an **issue** in origin only: a
+**target reference** in the PR body. Distinct from an **issue** in origin only: a
 pull request can close an issue but not a discussion, so a discussion is never
 among a PR's linked closing issues and is known only from the body text. Once the
 release ships it is announced like an issue — a comment and the released

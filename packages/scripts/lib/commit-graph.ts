@@ -105,28 +105,24 @@ export function extractPRNumber(subject: string): number | null {
   return last ? Number(last[1]) : null
 }
 
-// --- Pure core: closing-keyword references --------------------------------
+// --- Pure core: target references -----------------------------------------
 
-// GitHub's closing keywords (case-insensitive), the ones that auto-link an
-// issue when written in a PR body: close/closes/closed, fix/fixes/fixed,
-// resolve/resolves/resolved.
+// The keywords that name a target in a PR body. close/fix/resolve are GitHub's
+// closing keywords (it auto-links the referenced issue); `address` is not, but a
+// release *announces* its targets rather than closing them — and a discussion is
+// only ever "addressed", never closed — so we accept it too.
 //   https://docs.github.com/en/issues/tracking-your-work-with-issues/linking-a-pull-request-to-an-issue
-const CLOSING_REFERENCE =
-  /\b(?:close[sd]?|fix(?:e[sd])?|resolve[sd]?)\b[:\s]+#(\d+)/gi
+const TARGET_REFERENCE =
+  /\b(?:close[sd]?|fix(?:e[sd])?|resolve[sd]?|address(?:es|ed)?)\b[:\s]+#(\d+)/gi
 
-// Every same-repo `KEYWORD #N` reference in a PR body, deduplicated and sorted
-// ascending. This re-derives, by hand, the parse GitHub already runs to populate
-// `closingIssuesReferences` — but that field resolves *issues only* (a PR cannot
-// auto-close a discussion, and discussions aren't in the linked-issues graph), so
-// a `Closes #N` pointing at a discussion is invisible there. Issues, PRs, and
-// discussions share one number sequence per repo, so the parsed numbers minus the
-// already-resolved closing issues are the discussion candidates to probe.
-//
-// Bare `#N` only: a cross-repo `owner/repo#N` has non-`#` text after the keyword,
-// so the `[:\s]+#` anchor skips it (we only comment on this repo's discussions).
-export function extractClosingReferences(body: string): number[] {
+// The PR body is the only place a discussion reference surfaces: GitHub's
+// `closingIssuesReferences` is issues-only (a PR cannot auto-close a discussion)
+// and never sees `Addresses` at all, so re-parsing the body by hand is the only
+// way to find a discussion a release resolved. Cross-repo `owner/repo#N`
+// references are skipped — we only comment on this repo's discussions.
+export function extractTargetReferences(body: string): number[] {
   const numbers = new Set<number>()
-  for (const [, n] of body.matchAll(CLOSING_REFERENCE)) {
+  for (const [, n] of body.matchAll(TARGET_REFERENCE)) {
     numbers.add(Number(n))
   }
   return Array.from(numbers).sort((a, b) => a - b)
@@ -192,13 +188,11 @@ export const prSchema = z.object({
 
 export type PR = z.infer<typeof prSchema>
 
-// What the finalize path fetches per pull request: its number, its closing issue
-// numbers, and its `body`. The title, author, and participant nodes the notes
-// path renders are omitted — finalize never reads them (and the participant nodes
-// are the bulk of the payload). The body is scanned for closing-keyword
-// references GitHub never resolved as issues — the discussion candidates (a PR
-// can't auto-close a discussion, so they never appear in
-// `closingIssuesReferences`).
+// A lean per-PR projection for finalize: it omits the title, author, and
+// participant nodes the notes path renders (the participant nodes are the bulk of
+// the payload) — finalize never reads them. The `body` rides along only to scan
+// for discussion references, which never appear in `closingIssuesReferences` (a PR
+// can't auto-close a discussion).
 export const prClosingIssuesSchema = z.object({
   number: z.number(),
   body: z.string(),
@@ -209,8 +203,8 @@ export const prClosingIssuesSchema = z.object({
 
 export type PRClosingIssues = z.infer<typeof prClosingIssuesSchema>
 
-// A discussion resolved by a PR's closing-keyword reference: its number (the
-// comment target) and its GraphQL node id. Finalize comments and labels through
+// A discussion resolved by a PR's target reference: its number (the comment
+// target) and its GraphQL node id. Finalize comments and labels through
 // the Discussion GraphQL mutations, which are keyed by node id, not number — so
 // discovery captures the id here, sparing finalize a second resolution.
 export const discussionSchema = z.object({
@@ -220,10 +214,9 @@ export const discussionSchema = z.object({
 
 export type Discussion = z.infer<typeof discussionSchema>
 
-// The finalize-path output: the comment targets, split into the release's PRs
-// (`changes`, by number), their deduplicated closing `issues` (issue numbers),
-// and the `discussions` resolved from the PR bodies' closing keywords (number +
-// node id). Finalize comments on all three.
+// The finalize-path output: the comment targets by kind — the release's PRs
+// (`changes`), their closing `issues`, and the `discussions` resolved from the PR
+// bodies' target references. Finalize comments on all three.
 export type ReleaseTargets = {
   changes: Array<{ prNumber: number }>
   issues: number[]
@@ -397,7 +390,7 @@ function fetchChangeDetails(
 
 // Finalize path: every PR with its closing issue numbers and its body — no title,
 // author, or participant nodes (the fields finalize never reads). The body is
-// parsed for closing-keyword references to surface discussion candidates.
+// parsed for target references to surface discussion candidates.
 function fetchClosingIssues(
   prNumbers: number[],
   githubToken: string
@@ -420,23 +413,14 @@ function fetchClosingIssues(
   })
 }
 
-// Finalize path: resolve which of the candidate numbers are discussions. Issues,
-// PRs, and discussions share one number sequence per repo, so a closing-keyword
-// reference that GitHub didn't resolve as a closing issue is probed here — those
-// that resolve to a Discussion are comment targets; the rest aren't.
+// Resolve which of the candidate numbers are actually discussions. A number that
+// isn't one (an issue, a PR, a deleted number) comes back as `NOT_FOUND` — the
+// expected "not a discussion" signal, dropped rather than treated as a failure.
 //
-// One batched aliased `discussion(number:)` query. A candidate that is an issue,
-// a PR, or a nonexistent/deleted number comes back as a per-alias `NOT_FOUND`
-// error with a null node — *expected*, and dropped. This is the mirror image of
-// `fetchPRNodes`, which fails on any error: here `NOT_FOUND` is the normal "this
-// number isn't a discussion" signal, not a lost target.
-//
-// Only `NOT_FOUND` is benign. Every other error — including `FORBIDDEN` — is
-// thrown. Within a repo whose discussions you can read at all there is no
-// per-discussion visibility ACL, so a `FORBIDDEN` here is not a per-candidate "skip
-// this one" signal but a token/repository scope failure that nulls *every* alias —
-// exactly the case where silently returning `[]` would drop the whole feature on a
-// green run. Failing loud keeps a lost discussion from passing for "none".
+// Every other error — `FORBIDDEN`, a rate limit, a timeout — is thrown, never
+// swallowed: there is no per-discussion visibility ACL, so a `FORBIDDEN` is a
+// token/scope failure that nulls *every* alias, not a per-candidate skip — and
+// silently returning `[]` would drop the whole feature on a green run.
 export async function fetchDiscussionNodes(
   numbers: number[],
   githubToken: string
@@ -479,9 +463,6 @@ export async function fetchDiscussionNodes(
     )
   }
   const { data, errors } = envelope.data
-  // `NOT_FOUND` means "this number isn't a discussion"; every other error —
-  // `FORBIDDEN` (a scope failure), a rate limit, a timeout — is a real fetch
-  // failure that must not masquerade as "no discussions".
   const fatal = (errors ?? []).filter(({ type }) => type !== 'NOT_FOUND')
   if (fatal.length > 0) {
     throw new Error(
@@ -513,13 +494,12 @@ export function collectIssues(prs: WithClosingIssues[]): number[] {
   return Array.from(numbers).sort((a, b) => a - b)
 }
 
-// The numbers to probe as discussions: every closing-keyword reference in the
-// release's PR bodies that GitHub did *not* already resolve as a closing issue,
-// and that isn't a PR in the release. A same-repo issue referenced by a closing
-// keyword is always in `closingIssuesReferences`, so subtracting those (plus the
-// PRs' own numbers, to drop a `Closes #otherPR`) leaves the discussions — and the
-// occasional dangling/cross-kind number, which the probe drops as NOT_FOUND.
-// Deduplicated and sorted asc, so the batched probe query is deterministic.
+// The candidate numbers to probe as discussions: a target reference is one only if
+// GitHub didn't already resolve it as a closing issue (those are handled directly)
+// and it isn't a PR in the release. Whatever remains is either a discussion or a
+// number that resolves to nothing — a dangling/cross-kind reference, or an issue
+// named only by `Addresses`, which GitHub never links — and the probe drops those
+// as NOT_FOUND.
 export function discussionCandidates(
   prs: PRClosingIssues[],
   issues: number[]
@@ -527,7 +507,7 @@ export function discussionCandidates(
   const excluded = new Set([...issues, ...prs.map(pr => pr.number)])
   const candidates = new Set<number>()
   for (const pr of prs) {
-    for (const reference of extractClosingReferences(pr.body)) {
+    for (const reference of extractTargetReferences(pr.body)) {
       if (!excluded.has(reference)) candidates.add(reference)
     }
   }
@@ -675,13 +655,11 @@ export async function discoverChanges(args: {
 }
 
 // Finalize-path discovery: the shared core + `fetchClosingIssues`, projected into
-// comment targets — the release's PRs (by number), their deduplicated closing
-// issues, and the discussions resolved from the PR bodies' closing keywords.
-// Direct-commit changes have no PR to read a body from, so they contribute no
-// targets. `fetchChangeDetails` is never touched. The PRs come from the fetched
-// (surviving) nodes, so a `(#N)` that resolves to nothing is dropped from the
-// targets exactly as it is from the notes; likewise a discussion candidate that
-// no longer resolves is dropped by the probe.
+// comment targets — the release's PRs, their closing issues, and the discussions
+// resolved from the PR bodies' target references. Direct-commit changes have no PR
+// to read a body from, so they contribute no targets. A `(#N)` that resolves to
+// nothing is dropped from the targets just as it is from the notes; likewise a
+// discussion candidate that no longer resolves is dropped by the probe.
 export async function discoverTargets(args: {
   channel: Channel
   currentRef: string

@@ -40,9 +40,9 @@ export function resolveChannelInfo(tag: string): ChannelInfo {
 // --- Pure core: comment rendering -----------------------------------------
 
 // A PR (from a commit subject), an issue (from closingIssuesReferences), or a
-// discussion (from a PR body's closing-keyword reference). Discussions never
-// appear in closingIssuesReferences — a PR can't auto-close one — so discovery
-// parses them out of the body separately (see `discussionCandidates`).
+// discussion (from a PR body's target reference). Discussions never appear in
+// closingIssuesReferences — a PR can't auto-close one — so discovery parses them
+// out of the body separately (see `discussionCandidates`).
 export type Kind = 'PR' | 'issue' | 'discussion'
 
 // The HTML-comment idempotency marker embedded in every finalize comment.
@@ -119,7 +119,7 @@ export function hasReleaseComment(
 
 // A single target to comment on and label. `kind` comes for free from discovery
 // (PRs from commit subjects, issues from closingIssuesReferences, discussions
-// from PR-body closing keywords). A discussion also carries its GraphQL node id:
+// from PR-body target references). A discussion also carries its GraphQL node id:
 // the Discussion mutations (comment, label) are keyed by node id, not number, and
 // the issue/PR REST verbs never need one — so the id rides only on the variant
 // that uses it.
