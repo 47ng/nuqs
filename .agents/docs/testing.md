@@ -85,7 +85,7 @@ Framework targets:
 - React SPA
 - Remix
 - TanStack Router
-- React Router v6/v7
+- React Router v6/v7/v8
 
 Coverage:
 
