@@ -121,6 +121,10 @@
       "entry": ["app/**/*.{ts,tsx}", "specs/**/*.ts"],
       "project": ["**/*.{ts,tsx}"]
     },
+    "packages/e2e/react-router/v8": {
+      "entry": ["app/**/*.{ts,tsx}", "specs/**/*.ts"],
+      "project": ["**/*.{ts,tsx}"]
+    },
     "packages/examples/next-app": {
       "entry": ["src/app/**/*.{ts,tsx}"],
       "project": ["src/**/*.{ts,tsx}"],
