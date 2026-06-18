@@ -1,8 +1,19 @@
 import { useLocation, useRouter, useRouterState } from '@tanstack/react-router'
-import { startTransition, useCallback, useMemo } from 'react'
+import { startTransition, useCallback, useEffect, useMemo, useRef } from 'react'
+import { resetQueues } from '../lib/queues/reset'
 import { renderQueryString } from '../lib/url-encoding'
 import { createAdapterProvider, type AdapterProvider } from './lib/context'
 import type { AdapterInterface, UpdateUrlFunction } from './lib/defs'
+
+// Must stay serializable (string | string[]) to satisfy the type constraint
+// of `structuralSharing: true` on the search selector below — see #1363.
+type SearchRecord = Record<string, string | string[]>
+
+type HistorySubscriberArgs = {
+  action: {
+    type: 'PUSH' | 'REPLACE' | 'BACK' | 'FORWARD' | 'GO'
+  }
+}
 
 function useNuqsTanstackRouterAdapter(watchKeys: string[]): AdapterInterface {
   const pathname = useLocation({ select: state => state.pathname })
@@ -16,10 +27,53 @@ function useNuqsTanstackRouterAdapter(watchKeys: string[]): AdapterInterface {
         Object.entries(state.location.search).filter(([key]) =>
           watchKeys.includes(key)
         )
-      ) as Record<string, string | string[]>,
+      ) as SearchRecord,
     structuralSharing: true
   })
-  const { navigate } = useRouter()
+  // `location` flips to the destination optimistically at the start of a
+  // navigation, while `resolvedLocation` stays on the committed route until
+  // the transition settles. During a cross-page transition (e.g. a delayed
+  // loader, or `defaultPendingMs: 0`), the outgoing page is still mounted but
+  // would otherwise read the destination's search params.
+  // See https://github.com/47ng/nuqs/issues/1433 (and #1293, #1156)
+  const resolvedPathname = useRouterState({
+    select: state => state.resolvedLocation?.pathname ?? state.location.pathname
+  })
+  const router = useRouter()
+  const { navigate } = router
+
+  useEffect(() => {
+    const unsubscribe = router.history.subscribe(
+      ({ action }: HistorySubscriberArgs) => {
+        if (
+          action.type === 'BACK' ||
+          action.type === 'FORWARD' ||
+          action.type === 'GO'
+        ) {
+          resetQueues()
+        }
+      }
+    )
+    return unsubscribe
+  }, [router.history])
+
+  // Track which pathname this hook instance was mounted under to
+  // keep its last stable search during cross-page transitions.
+  const ownedPathnameRef = useRef(pathname)
+  // Cache the last stable search for the owned pathname so we don't
+  // leak destination params while the source is still mounted.
+  const cachedSearchRef = useRef<SearchRecord>(search)
+
+  // Keep per-hook search stable during cross-page transitions
+  // to avoid leaking destination params before unmount.
+  const isPathStable = pathname === resolvedPathname
+  if (isPathStable) {
+    ownedPathnameRef.current = pathname
+    cachedSearchRef.current = search
+  }
+  const shouldUseCachedSearch =
+    !isPathStable && ownedPathnameRef.current !== pathname
+  const activeSearch = shouldUseCachedSearch ? cachedSearchRef.current : search
   const searchParams = useMemo(
     () =>
       // search is a Record<string, string | number | object | Array<string | number>>,
@@ -28,7 +82,7 @@ function useNuqsTanstackRouterAdapter(watchKeys: string[]): AdapterInterface {
       // to URLSearchParams, otherwise { foo: ['bar', 'baz'] }
       // ends up as { foo → 'bar,baz' } instead of { foo → 'bar', foo → 'baz' }
       new URLSearchParams(
-        Object.entries(search).flatMap(([key, value]) => {
+        Object.entries(activeSearch).flatMap(([key, value]) => {
           if (Array.isArray(value)) {
             return value.map(v => [key, v])
           } else if (typeof value === 'object' && value !== null) {
@@ -41,7 +95,7 @@ function useNuqsTanstackRouterAdapter(watchKeys: string[]): AdapterInterface {
           }
         })
       ),
-    [search, watchKeys.join(',')]
+    [activeSearch, watchKeys.join(',')]
   )
 
   const updateUrl: UpdateUrlFunction = useCallback(
