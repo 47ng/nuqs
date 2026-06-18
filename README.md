@@ -37,6 +37,10 @@ yarn add nuqs
 npm install nuqs
 ```
 
+```shell
+deno add nuqs
+```
+
 ## Adapters
 
 You will need to wrap your React component tree with an adapter for your framework. _(expand the appropriate section below)_
