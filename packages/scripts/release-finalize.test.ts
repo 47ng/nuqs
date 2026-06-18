@@ -66,7 +66,7 @@ pnpm add nuqs@1.2.3
 
   it('renders a GA comment for an issue (kind switches to "issue")', () => {
     expect(renderComment({ tag: 'v1.2.3', kind: 'issue' })).toBe(
-      `🚀 This issue is included in nuqs@1.2.3
+      `🚀 This issue is resolved in nuqs@1.2.3
 
 The release is available on:
 - 📦 [npm package (@latest)](https://npmx.dev/package/nuqs/v/1.2.3)
@@ -93,6 +93,8 @@ The release is available on:
 pnpm add nuqs@1.2.3-beta.4
 \`\`\`
 
+> Please try out beta & pre-releases, it's the best moment for your feedback to be heard. -- [TkDodo](https://youtu.be/l3PxErcKeAI?t=1725)
+
 <!-- release-finalize:nuqs@1.2.3-beta.4 -->
 `
     )
@@ -100,7 +102,7 @@ pnpm add nuqs@1.2.3-beta.4
 
   it('renders a beta comment for an issue', () => {
     expect(renderComment({ tag: 'v1.2.3-beta.4', kind: 'issue' })).toBe(
-      `🧪 This issue is included in nuqs@1.2.3-beta.4
+      `🧪 This issue is resolved in nuqs@1.2.3-beta.4
 
 The release is available on:
 - 📦 [npm package (@beta)](https://npmx.dev/package/nuqs/v/1.2.3-beta.4)
@@ -109,6 +111,8 @@ The release is available on:
 \`\`\`
 pnpm add nuqs@1.2.3-beta.4
 \`\`\`
+
+> Please try out beta & pre-releases, it's the best moment for your feedback to be heard. -- [TkDodo](https://youtu.be/l3PxErcKeAI?t=1725)
 
 <!-- release-finalize:nuqs@1.2.3-beta.4 -->
 `
@@ -270,7 +274,7 @@ describe('commentAndLabel', () => {
     expect(commentSpy).toHaveBeenCalledExactlyOnceWith(
       100,
       expect.stringMatching(
-        /🧪 This issue is included in nuqs@1\.2\.3-beta\.2\b/
+        /🧪 This issue is resolved in nuqs@1\.2\.3-beta\.2\b/
       )
     )
     expect(addLabelSpy).toHaveBeenCalledExactlyOnceWith(
