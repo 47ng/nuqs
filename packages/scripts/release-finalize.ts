@@ -10,7 +10,7 @@ import {
   makeGitHubGraphReader,
   resolveChannel
 } from './lib/commit-graph.ts'
-import { isValidSemver } from './lib/version.ts'
+import { isGA, isValidSemver } from './lib/version.ts'
 
 // --- Pure core: channel presentation --------------------------------------
 
@@ -56,7 +56,11 @@ export function renderComment(args: { tag: string; kind: Kind }): string {
   const { tag, kind } = args
   const { emoji, distTag } = resolveChannelInfo(tag)
   const version = tag.replace(/^v/, '')
-  return `${emoji} This ${kind} is included in nuqs@${version}
+  const outcome = kind === 'PR' ? 'PR is included' : 'issue is resolved'
+  const tryBeta = isGA(tag)
+    ? ''
+    : `> Please try out beta & pre-releases, it's the best moment for your feedback to be heard. -- [TkDodo](https://youtu.be/l3PxErcKeAI?t=1725)\n\n`
+  return `${emoji} This ${outcome} in nuqs@${version}
 
 The release is available on:
 - 📦 [npm package (@${distTag})](https://npmx.dev/package/nuqs/v/${version})
@@ -66,7 +70,7 @@ The release is available on:
 pnpm add nuqs@${version}
 \`\`\`
 
-${releaseMarker(tag)}
+${tryBeta}${releaseMarker(tag)}
 `
 }
 
