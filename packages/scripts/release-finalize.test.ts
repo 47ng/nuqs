@@ -6,8 +6,8 @@ import {
   releaseMarker,
   renderComment,
   resolveChannelInfo,
-  type IssueWriter,
   type Target,
+  type TargetWriter,
   type ThreadComment
 } from './release-finalize'
 
@@ -67,6 +67,23 @@ pnpm add nuqs@1.2.3
   it('renders a GA comment for an issue (kind switches to "issue")', () => {
     expect(renderComment({ tag: 'v1.2.3', kind: 'issue' })).toBe(
       `🚀 This issue is resolved in nuqs@1.2.3
+
+The release is available on:
+- 📦 [npm package (@latest)](https://npmx.dev/package/nuqs/v/1.2.3)
+- 📝 [Release notes](https://github.com/47ng/nuqs/releases/tag/v1.2.3)
+
+\`\`\`
+pnpm add nuqs@1.2.3
+\`\`\`
+
+<!-- release-finalize:nuqs@1.2.3 -->
+`
+    )
+  })
+
+  it('renders a GA comment for a discussion (kind switches to "discussion is addressed")', () => {
+    expect(renderComment({ tag: 'v1.2.3', kind: 'discussion' })).toBe(
+      `🚀 This discussion is addressed in nuqs@1.2.3
 
 The release is available on:
 - 📦 [npm package (@latest)](https://npmx.dev/package/nuqs/v/1.2.3)
@@ -152,10 +169,13 @@ describe('hasReleaseComment', () => {
 
 type Recorded = { op: 'getThread' | 'comment' | 'addLabel'; number: number }
 
-// A fake IssueWriter records every call and can be programmed to reject a
-// specific (issue, op) with an HTTP-ish status — letting the loop's failure
-// handling be exercised at the port boundary, with no octokit or network.
-// The thread read returns whatever labels/comments the target is seeded with.
+// A fake TargetWriter records every call and can be programmed to reject a
+// specific (number, op) with an HTTP-ish status — letting the loop's failure
+// handling be exercised at the port boundary, with no octokit or network. Each
+// verb takes the whole `Target`; the fake keys everything off its number, since
+// the loop's behaviour is identical across kinds (the real adapter is what
+// dispatches transport). The thread read returns whatever the target is seeded
+// with.
 function makeFakeWriter(
   opts: {
     existingLabels?: Record<number, string[]>
@@ -193,8 +213,8 @@ function makeFakeWriter(
       })
     }
   }
-  const writer: IssueWriter = {
-    async getThread(number) {
+  const writer: TargetWriter = {
+    async getThread({ number }) {
       calls.push({ op: 'getThread', number })
       maybeThrow(number, 'getThread')
       return {
@@ -202,12 +222,12 @@ function makeFakeWriter(
         comments: opts.existingComments?.[number] ?? []
       }
     },
-    async comment(number, body) {
+    async comment({ number }, body) {
       calls.push({ op: 'comment', number })
       commentSpy(number, body)
       maybeThrow(number, 'comment')
     },
-    async addLabel(number, label) {
+    async addLabel({ number }, label) {
       calls.push({ op: 'addLabel', number })
       addLabelSpy(number, label)
       maybeThrow(number, 'addLabel')
@@ -281,6 +301,29 @@ describe('commentAndLabel', () => {
       100,
       'released on @beta'
     )
+  })
+
+  it('comments and labels a discussion target with the discussion noun', async () => {
+    // A discussion rides the same loop as an issue/PR — only the comment noun and
+    // (in the real adapter) the transport differ. The node id is carried but never
+    // touched by the kind-agnostic loop.
+    const { writer, calls, commentSpy, addLabelSpy } = makeFakeWriter()
+    await commentAndLabel({
+      writer,
+      tag: 'v1.2.3',
+      info: gaInfo,
+      targets: [{ kind: 'discussion', number: 7, id: 'D_kwDO' }]
+    })
+    expect(calls).toEqual([
+      { op: 'getThread', number: 7 },
+      { op: 'comment', number: 7 },
+      { op: 'addLabel', number: 7 }
+    ])
+    expect(commentSpy).toHaveBeenCalledExactlyOnceWith(
+      7,
+      expect.stringMatching(/🚀 This discussion is addressed in nuqs@1\.2\.3\b/)
+    )
+    expect(addLabelSpy).toHaveBeenCalledExactlyOnceWith(7, 'released')
   })
 
   it('skips a target with both marker and label already present', async () => {

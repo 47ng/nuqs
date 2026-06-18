@@ -21,10 +21,14 @@ import {
   type CommitRecord,
   discoverChanges,
   discoverTargets,
+  discussionCandidates,
+  extractClosingReferences,
   extractPRNumber,
+  fetchDiscussionNodes,
   fetchPRNodes,
   isBot,
   type PR,
+  type PRClosingIssues,
   readCommits,
   type ReleaseGraphReader,
   resolveChannel,
@@ -203,6 +207,55 @@ describe('extractPRNumber', () => {
 
   it('is not shadowed by conventional-commit scope parens', () => {
     expect(extractPRNumber('fix(deps): bump turbo (#42)')).toBe(42)
+  })
+})
+
+describe('extractClosingReferences', () => {
+  it('extracts a single closing reference', () => {
+    expect(extractClosingReferences('Closes #123')).toEqual([123])
+  })
+
+  it('matches every closing keyword (close/fix/resolve, all tenses), case-insensitively', () => {
+    const body = [
+      'close #1',
+      'Closes #2',
+      'CLOSED #3',
+      'fix #4',
+      'Fixes #5',
+      'fixed #6',
+      'resolve #7',
+      'Resolves #8',
+      'RESOLVED #9'
+    ].join('\n')
+    expect(extractClosingReferences(body)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9])
+  })
+
+  it('accepts an optional colon between the keyword and the number', () => {
+    expect(extractClosingReferences('Fixes: #42')).toEqual([42])
+  })
+
+  it('deduplicates and sorts ascending', () => {
+    expect(
+      extractClosingReferences('Closes #5\nFixes #2\nResolves #5')
+    ).toEqual([2, 5])
+  })
+
+  it('ignores a cross-repo owner/repo#N reference (this repo only)', () => {
+    expect(extractClosingReferences('Closes octocat/other#9')).toEqual([])
+  })
+
+  it('ignores a bare #N with no closing keyword', () => {
+    expect(extractClosingReferences('See #9 and related to #10')).toEqual([])
+  })
+
+  it('does not match a keyword embedded in a longer word', () => {
+    expect(extractClosingReferences('prefixes #9, foreclosed #10')).toEqual([])
+  })
+
+  it('returns an empty array for a body with no references', () => {
+    expect(
+      extractClosingReferences('Just a description, nothing linked.')
+    ).toEqual([])
   })
 })
 
@@ -439,6 +492,43 @@ describe('collectIssues', () => {
   })
 })
 
+describe('discussionCandidates', () => {
+  const pr = (
+    number: number,
+    body: string,
+    closingIssues: number[] = []
+  ): PRClosingIssues => ({
+    number,
+    body,
+    closingIssuesReferences: {
+      edges: closingIssues.map(n => ({ node: { number: n } }))
+    }
+  })
+
+  it('returns a closing-keyword reference not already resolved as an issue', () => {
+    // #100 is a closing issue (already handled); #200 is referenced by a closing
+    // keyword but isn't a closing issue — a discussion candidate to probe.
+    const prs = [pr(1, 'Closes #100\nFixes #200', [100])]
+    expect(discussionCandidates(prs, [100])).toEqual([200])
+  })
+
+  it('excludes a reference pointing at a PR in the release', () => {
+    // `Closes #2` where #2 is another PR in the range is not a discussion.
+    const prs = [pr(1, 'Closes #2'), pr(2, '')]
+    expect(discussionCandidates(prs, [])).toEqual([])
+  })
+
+  it('deduplicates a discussion referenced by several PRs', () => {
+    const prs = [pr(1, 'Closes #300'), pr(2, 'Resolves #300')]
+    expect(discussionCandidates(prs, [])).toEqual([300])
+  })
+
+  it('returns nothing when no body carries an unresolved closing reference', () => {
+    const prs = [pr(1, 'Closes #100', [100]), pr(2, 'nothing linked here')]
+    expect(discussionCandidates(prs, [100])).toEqual([])
+  })
+})
+
 describe('discoverChanges', () => {
   it('returns nothing without fetching when the range is empty', async () => {
     const reader: ReleaseGraphReader = {
@@ -448,6 +538,9 @@ describe('discoverChanges', () => {
         throw new Error('fetchChangeDetails should not be called for no PRs')
       },
       fetchClosingIssues: () => {
+        throw new Error('discoverChanges must not take the finalize path')
+      },
+      fetchDiscussions: () => {
         throw new Error('discoverChanges must not take the finalize path')
       }
     }
@@ -473,6 +566,9 @@ describe('discoverChanges', () => {
         throw new Error('no PRs to fetch')
       },
       fetchClosingIssues: () => {
+        throw new Error('discoverChanges must not take the finalize path')
+      },
+      fetchDiscussions: () => {
         throw new Error('discoverChanges must not take the finalize path')
       }
     }
@@ -526,7 +622,8 @@ describe('discoverChanges', () => {
       readCommits: () =>
         records('feat: first (#1)', 'fix: second (#2)', 'docs: same PR (#1)'),
       fetchChangeDetails: vi.fn(async () => [pr1, pr2]),
-      fetchClosingIssues: vi.fn(async () => [])
+      fetchClosingIssues: vi.fn(async () => []),
+      fetchDiscussions: vi.fn(async () => [])
     }
     await expect(
       discoverChanges({ channel: 'beta', currentRef: 'HEAD', reader })
@@ -568,7 +665,8 @@ describe('discoverChanges', () => {
       fetchChangeDetails: vi.fn(async () => [
         createPR({ number: 1, title: 'feat: kept' })
       ]),
-      fetchClosingIssues: vi.fn(async () => [])
+      fetchClosingIssues: vi.fn(async () => []),
+      fetchDiscussions: vi.fn(async () => [])
     }
     try {
       const { changes } = await discoverChanges({
@@ -609,7 +707,8 @@ describe('discoverChanges', () => {
       fetchChangeDetails: async () => [
         createPR({ number: 7, title: 'feat: a PR' })
       ],
-      fetchClosingIssues: async () => []
+      fetchClosingIssues: async () => [],
+      fetchDiscussions: async () => []
     }
     const { changes } = await discoverChanges({
       channel: 'beta',
@@ -635,6 +734,9 @@ describe('discoverChanges', () => {
       ],
       fetchClosingIssues: async () => {
         throw new Error('notes path must not fetch closing issues')
+      },
+      fetchDiscussions: async () => {
+        throw new Error('notes path must not fetch discussions')
       }
     }
     await expect(
@@ -663,7 +765,8 @@ describe('discoverChanges', () => {
         createPR({ number: 1, title: 'feat!: breaking' }),
         createPR({ number: 2, title: 'feat: normal' })
       ],
-      fetchClosingIssues: async () => []
+      fetchClosingIssues: async () => [],
+      fetchDiscussions: async () => []
     }
     const { changes } = await discoverChanges({
       channel: 'beta',
@@ -679,7 +782,8 @@ describe('discoverChanges', () => {
       readTags: () => ['v1.2.3', 'v1.3.0-beta.1', 'v1.3.0'],
       readCommits: vi.fn(() => []),
       fetchChangeDetails: async () => [],
-      fetchClosingIssues: async () => []
+      fetchClosingIssues: async () => [],
+      fetchDiscussions: async () => []
     }
     // GA finalize: cumulative since the previous GA, skipping the beta.
     await discoverChanges({ channel: 'stable', currentRef: 'v1.3.0', reader })
@@ -702,11 +806,16 @@ describe('discoverTargets', () => {
         throw new Error(
           'fetchClosingIssues should not be called for an empty range'
         )
+      },
+      fetchDiscussions: () => {
+        throw new Error(
+          'fetchDiscussions should not be called for an empty range'
+        )
       }
     }
     await expect(
       discoverTargets({ channel: 'stable', currentRef: 'HEAD', reader })
-    ).resolves.toEqual({ changes: [], issues: [] })
+    ).resolves.toEqual({ changes: [], issues: [], discussions: [] })
   })
 
   it('projects each PR into a target and derives its closing issues, never fetching the change details', async () => {
@@ -718,26 +827,61 @@ describe('discoverTargets', () => {
       fetchClosingIssues: vi.fn(async () => [
         {
           number: 1,
+          body: '',
           closingIssuesReferences: {
             edges: [{ node: { number: 100 } }, { node: { number: 101 } }]
           }
         },
         {
           number: 2,
+          body: '',
           closingIssuesReferences: { edges: [{ node: { number: 100 } }] }
         }
-      ])
+      ]),
+      fetchDiscussions: vi.fn(async () => [])
     }
     await expect(
       discoverTargets({ channel: 'beta', currentRef: 'HEAD', reader })
     ).resolves.toEqual({
       changes: [{ prNumber: 1 }, { prNumber: 2 }],
       // #100 is closed by both PRs but listed once.
-      issues: [100, 101]
+      issues: [100, 101],
+      discussions: []
     })
     // Finalize fetches the closing issues only; the change details are untouched.
     expect(reader.fetchClosingIssues).toHaveBeenCalledExactlyOnceWith([1, 2])
     expect(reader.fetchChangeDetails).not.toHaveBeenCalled()
+    // Empty PR bodies yield no closing-keyword references, so the discussion
+    // probe runs once over an empty candidate set.
+    expect(reader.fetchDiscussions).toHaveBeenCalledExactlyOnceWith([])
+  })
+
+  it("probes the PR bodies' unresolved closing references and adds the resolved discussions", async () => {
+    const reader: ReleaseGraphReader = {
+      readTags: () => [],
+      readCommits: () => records('feat: thing (#1)'),
+      fetchChangeDetails: vi.fn(async () => []),
+      fetchClosingIssues: vi.fn(async () => [
+        {
+          number: 1,
+          body: 'Closes #100\nResolves #200',
+          closingIssuesReferences: { edges: [{ node: { number: 100 } }] }
+        }
+      ]),
+      // #200 isn't a closing issue, so it is probed; the reader resolves it to a
+      // discussion (number + node id).
+      fetchDiscussions: vi.fn(async () => [{ number: 200, id: 'D_kwDO' }])
+    }
+    await expect(
+      discoverTargets({ channel: 'beta', currentRef: 'HEAD', reader })
+    ).resolves.toEqual({
+      changes: [{ prNumber: 1 }],
+      issues: [100],
+      discussions: [{ number: 200, id: 'D_kwDO' }]
+    })
+    // Only the unresolved reference (#200) is probed: #100 is already a closing
+    // issue, #1 is the PR itself.
+    expect(reader.fetchDiscussions).toHaveBeenCalledExactlyOnceWith([200])
   })
 })
 
@@ -784,12 +928,17 @@ function makeHistoryReader(history: {
     fetchClosingIssues: async numbers =>
       select(numbers).map(pr => ({
         number: pr.number,
+        // PRs in the shared-set scenarios carry no body, so they surface no
+        // discussion candidates; discussions are finalize-only and exercised
+        // directly in the discoverTargets tests, not these shared-set scenarios.
+        body: '',
         closingIssuesReferences: {
           edges: pr.closingIssuesReferences.edges.map(({ node }) => ({
             node: { number: node.number }
           }))
         }
-      }))
+      })),
+    fetchDiscussions: async () => []
   }
 }
 
@@ -987,7 +1136,8 @@ describe('discovery (history scenarios)', () => {
       await discoverTargets({ channel: 'beta', currentRef: 'HEAD', reader })
     ).toEqual({
       changes: [{ prNumber: 2 }],
-      issues: [50]
+      issues: [50],
+      discussions: []
     })
   })
 })
@@ -1047,6 +1197,85 @@ describe('fetchPRNodes', () => {
   it('throws on an unexpected response shape', async () => {
     replyWith({ unexpected: true })
     await expect(fetchPRNodes(baseArgs)).rejects.toThrow(/unexpected GraphQL/)
+  })
+})
+
+// The discussion probe inverts fetchPRNodes' error policy: a per-alias NOT_FOUND
+// is the *expected* "not a discussion" signal (issues, PRs, and discussions share
+// one number sequence), so it is dropped. Only NOT_FOUND is benign — every other
+// error stays fatal so a silently-lost discussion can't pass for "none". Pinned
+// against msw.
+describe('fetchDiscussionNodes', () => {
+  const server = setupServer()
+  beforeAll(() => server.listen({ onUnhandledRequest: 'error' }))
+  afterEach(() => server.resetHandlers())
+  afterAll(() => server.close())
+
+  const replyWith = (body: Record<string, unknown>) =>
+    server.use(http.post(githubGraphql, () => HttpResponse.json(body)))
+
+  it('makes no request and resolves empty when there are no candidates', async () => {
+    let requested = false
+    server.use(
+      http.post(githubGraphql, () => {
+        requested = true
+        return HttpResponse.json({ data: { repository: {} } })
+      })
+    )
+    await expect(fetchDiscussionNodes([], 'token')).resolves.toEqual([])
+    expect(requested).toBe(false)
+  })
+
+  it('keeps resolved discussions and drops per-alias NOT_FOUND candidates', async () => {
+    // #100 is a discussion; #101 is an issue/PR/nonexistent number (NOT_FOUND),
+    // dropped without failing.
+    replyWith({
+      data: {
+        repository: {
+          d100: { number: 100, id: 'D_100' },
+          d101: null
+        }
+      },
+      errors: [
+        {
+          type: 'NOT_FOUND',
+          message: 'Could not resolve to a Discussion with the number of 101.'
+        }
+      ]
+    })
+    await expect(fetchDiscussionNodes([100, 101], 'token')).resolves.toEqual([
+      { number: 100, id: 'D_100' }
+    ])
+  })
+
+  it('throws on a FORBIDDEN error (a token/repo scope failure, not a per-discussion signal)', async () => {
+    // A repo whose discussions are readable at all has no per-discussion ACL, so a
+    // FORBIDDEN nulls every alias — returning [] here would silently drop the whole
+    // feature on a green run.
+    replyWith({
+      data: { repository: { d100: null } },
+      errors: [{ type: 'FORBIDDEN', message: 'forbidden' }]
+    })
+    await expect(fetchDiscussionNodes([100], 'token')).rejects.toThrow(
+      /forbidden/
+    )
+  })
+
+  it('throws on a non-NOT_FOUND error (e.g. a rate limit) rather than reporting no discussions', async () => {
+    replyWith({
+      data: { repository: { d100: null } },
+      errors: [{ type: 'RATE_LIMITED', message: 'RATE_LIMITED' }]
+    })
+    await expect(fetchDiscussionNodes([100], 'token')).rejects.toThrow(
+      /RATE_LIMITED/
+    )
+  })
+
+  it('throws on an unexpected response shape', async () => {
+    replyWith({ unexpected: true })
+    await expect(fetchDiscussionNodes([100], 'token')).rejects.toThrow(
+      /unexpected GraphQL/
+    )
   })
 })
 

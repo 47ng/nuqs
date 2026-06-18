@@ -105,6 +105,33 @@ export function extractPRNumber(subject: string): number | null {
   return last ? Number(last[1]) : null
 }
 
+// --- Pure core: closing-keyword references --------------------------------
+
+// GitHub's closing keywords (case-insensitive), the ones that auto-link an
+// issue when written in a PR body: close/closes/closed, fix/fixes/fixed,
+// resolve/resolves/resolved.
+//   https://docs.github.com/en/issues/tracking-your-work-with-issues/linking-a-pull-request-to-an-issue
+const CLOSING_REFERENCE =
+  /\b(?:close[sd]?|fix(?:e[sd])?|resolve[sd]?)\b[:\s]+#(\d+)/gi
+
+// Every same-repo `KEYWORD #N` reference in a PR body, deduplicated and sorted
+// ascending. This re-derives, by hand, the parse GitHub already runs to populate
+// `closingIssuesReferences` — but that field resolves *issues only* (a PR cannot
+// auto-close a discussion, and discussions aren't in the linked-issues graph), so
+// a `Closes #N` pointing at a discussion is invisible there. Issues, PRs, and
+// discussions share one number sequence per repo, so the parsed numbers minus the
+// already-resolved closing issues are the discussion candidates to probe.
+//
+// Bare `#N` only: a cross-repo `owner/repo#N` has non-`#` text after the keyword,
+// so the `[:\s]+#` anchor skips it (we only comment on this repo's discussions).
+export function extractClosingReferences(body: string): number[] {
+  const numbers = new Set<number>()
+  for (const [, n] of body.matchAll(CLOSING_REFERENCE)) {
+    numbers.add(Number(n))
+  }
+  return Array.from(numbers).sort((a, b) => a - b)
+}
+
 // --- Pure core: contributors ----------------------------------------------
 
 // Known bot accounts to exclude from the "Thanks" section.
@@ -165,12 +192,16 @@ export const prSchema = z.object({
 
 export type PR = z.infer<typeof prSchema>
 
-// What the finalize path fetches per pull request: its number and its closing
-// issue numbers, nothing else. The title, author, and participant nodes the
-// notes path renders are omitted — finalize never reads them (and the
-// participant nodes are the bulk of the payload).
+// What the finalize path fetches per pull request: its number, its closing issue
+// numbers, and its `body`. The title, author, and participant nodes the notes
+// path renders are omitted — finalize never reads them (and the participant nodes
+// are the bulk of the payload). The body is scanned for closing-keyword
+// references GitHub never resolved as issues — the discussion candidates (a PR
+// can't auto-close a discussion, so they never appear in
+// `closingIssuesReferences`).
 export const prClosingIssuesSchema = z.object({
   number: z.number(),
+  body: z.string(),
   closingIssuesReferences: z.object({
     edges: z.array(z.object({ node: z.object({ number: z.number() }) }))
   })
@@ -178,12 +209,25 @@ export const prClosingIssuesSchema = z.object({
 
 export type PRClosingIssues = z.infer<typeof prClosingIssuesSchema>
 
+// A discussion resolved by a PR's closing-keyword reference: its number (the
+// comment target) and its GraphQL node id. Finalize comments and labels through
+// the Discussion GraphQL mutations, which are keyed by node id, not number — so
+// discovery captures the id here, sparing finalize a second resolution.
+export const discussionSchema = z.object({
+  number: z.number(),
+  id: z.string()
+})
+
+export type Discussion = z.infer<typeof discussionSchema>
+
 // The finalize-path output: the comment targets, split into the release's PRs
-// (`changes`, by number) and their deduplicated closing `issues` (issue
-// numbers). Finalize comments on both.
+// (`changes`, by number), their deduplicated closing `issues` (issue numbers),
+// and the `discussions` resolved from the PR bodies' closing keywords (number +
+// node id). Finalize comments on all three.
 export type ReleaseTargets = {
   changes: Array<{ prNumber: number }>
   issues: number[]
+  discussions: Discussion[]
 }
 
 // --- Reader port -----------------------------------------------------------
@@ -201,13 +245,16 @@ export type CommitRecord = {
 // `makeGitHubGraphReader` (git + GitHub GraphQL); tests inject an in-memory
 // reader built from plain data. The two PR fetchers are segregated so each
 // phase fetches only the fields it renders: `fetchChangeDetails` pulls the full
-// pull-request fields for the notes, `fetchClosingIssues` only the closing
-// issue numbers finalize comments on.
+// pull-request fields for the notes, `fetchClosingIssues` only the closing issue
+// numbers (and bodies) finalize comments on, and `fetchDiscussions` resolves
+// which candidate numbers are discussions — finalize-only, like
+// `fetchClosingIssues`.
 export type ReleaseGraphReader = {
   readTags: () => string[]
   readCommits: (range: Range) => CommitRecord[]
   fetchChangeDetails: (numbers: number[]) => Promise<PR[]>
   fetchClosingIssues: (numbers: number[]) => Promise<PRClosingIssues[]>
+  fetchDiscussions: (numbers: number[]) => Promise<Discussion[]>
 }
 
 export function makeGitHubGraphReader(githubToken: string): ReleaseGraphReader {
@@ -215,7 +262,8 @@ export function makeGitHubGraphReader(githubToken: string): ReleaseGraphReader {
     readTags: readAllTags,
     readCommits,
     fetchChangeDetails: numbers => fetchChangeDetails(numbers, githubToken),
-    fetchClosingIssues: numbers => fetchClosingIssues(numbers, githubToken)
+    fetchClosingIssues: numbers => fetchClosingIssues(numbers, githubToken),
+    fetchDiscussions: numbers => fetchDiscussionNodes(numbers, githubToken)
   }
 }
 
@@ -347,8 +395,9 @@ function fetchChangeDetails(
   })
 }
 
-// Finalize path: every PR with only its closing issue numbers — no title,
-// author, or participant nodes (the fields finalize never reads).
+// Finalize path: every PR with its closing issue numbers and its body — no title,
+// author, or participant nodes (the fields finalize never reads). The body is
+// parsed for closing-keyword references to surface discussion candidates.
 function fetchClosingIssues(
   prNumbers: number[],
   githubToken: string
@@ -359,6 +408,7 @@ function fetchClosingIssues(
     fnLabel: 'fetchClosingIssues',
     selection: `
         number
+        body
         closingIssuesReferences(first: 10) {
           edges {
             node {
@@ -368,6 +418,81 @@ function fetchClosingIssues(
         }`,
     nodeSchema: prClosingIssuesSchema
   })
+}
+
+// Finalize path: resolve which of the candidate numbers are discussions. Issues,
+// PRs, and discussions share one number sequence per repo, so a closing-keyword
+// reference that GitHub didn't resolve as a closing issue is probed here — those
+// that resolve to a Discussion are comment targets; the rest aren't.
+//
+// One batched aliased `discussion(number:)` query. A candidate that is an issue,
+// a PR, or a nonexistent/deleted number comes back as a per-alias `NOT_FOUND`
+// error with a null node — *expected*, and dropped. This is the mirror image of
+// `fetchPRNodes`, which fails on any error: here `NOT_FOUND` is the normal "this
+// number isn't a discussion" signal, not a lost target.
+//
+// Only `NOT_FOUND` is benign. Every other error — including `FORBIDDEN` — is
+// thrown. Within a repo whose discussions you can read at all there is no
+// per-discussion visibility ACL, so a `FORBIDDEN` here is not a per-candidate "skip
+// this one" signal but a token/repository scope failure that nulls *every* alias —
+// exactly the case where silently returning `[]` would drop the whole feature on a
+// green run. Failing loud keeps a lost discussion from passing for "none".
+export async function fetchDiscussionNodes(
+  numbers: number[],
+  githubToken: string
+): Promise<Discussion[]> {
+  if (numbers.length === 0) return []
+  const aliases = numbers
+    .map(number => `d${number}: discussion(number: ${number}) { number id }`)
+    .join('\n')
+  const query = `query { repository(owner: "47ng", name: "nuqs") { ${aliases} } }`
+  const response = await fetch(
+    'https://api.github.com/graphql?fn=fetchDiscussions',
+    {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${githubToken}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ query })
+    }
+  )
+  if (!response.ok) {
+    throw new Error(
+      `fetchDiscussions: GitHub API error ${response.status} ${response.statusText} for [${numbers.join(', ')}]`
+    )
+  }
+  const envelopeSchema = z.object({
+    data: z
+      .object({
+        repository: z.record(z.string(), discussionSchema.nullable()).nullable()
+      })
+      .nullable(),
+    errors: z
+      .array(z.object({ type: z.string().optional(), message: z.string() }))
+      .optional()
+  })
+  const envelope = envelopeSchema.safeParse(await response.json())
+  if (!envelope.success) {
+    throw new Error(
+      `fetchDiscussions: unexpected GraphQL response shape for [${numbers.join(', ')}]: ${envelope.error.message}`
+    )
+  }
+  const { data, errors } = envelope.data
+  // `NOT_FOUND` means "this number isn't a discussion"; every other error —
+  // `FORBIDDEN` (a scope failure), a rate limit, a timeout — is a real fetch
+  // failure that must not masquerade as "no discussions".
+  const fatal = (errors ?? []).filter(({ type }) => type !== 'NOT_FOUND')
+  if (fatal.length > 0) {
+    throw new Error(
+      `fetchDiscussions: GraphQL errors for [${numbers.join(', ')}]: ${fatal
+        .map(error => error.message)
+        .join('; ')}`
+    )
+  }
+  return Object.values(data?.repository ?? {}).filter(
+    (node): node is Discussion => node !== null
+  )
 }
 
 // The closing-issues facet shared by `PR` and `PRClosingIssues`, so
@@ -386,6 +511,27 @@ export function collectIssues(prs: WithClosingIssues[]): number[] {
     }
   }
   return Array.from(numbers).sort((a, b) => a - b)
+}
+
+// The numbers to probe as discussions: every closing-keyword reference in the
+// release's PR bodies that GitHub did *not* already resolve as a closing issue,
+// and that isn't a PR in the release. A same-repo issue referenced by a closing
+// keyword is always in `closingIssuesReferences`, so subtracting those (plus the
+// PRs' own numbers, to drop a `Closes #otherPR`) leaves the discussions — and the
+// occasional dangling/cross-kind number, which the probe drops as NOT_FOUND.
+// Deduplicated and sorted asc, so the batched probe query is deterministic.
+export function discussionCandidates(
+  prs: PRClosingIssues[],
+  issues: number[]
+): number[] {
+  const excluded = new Set([...issues, ...prs.map(pr => pr.number)])
+  const candidates = new Set<number>()
+  for (const pr of prs) {
+    for (const reference of extractClosingReferences(pr.body)) {
+      if (!excluded.has(reference)) candidates.add(reference)
+    }
+  }
+  return Array.from(candidates).sort((a, b) => a - b)
 }
 
 // Stage 1 of discovery: everything the git log alone yields for one commit in
@@ -529,11 +675,13 @@ export async function discoverChanges(args: {
 }
 
 // Finalize-path discovery: the shared core + `fetchClosingIssues`, projected into
-// comment targets — the release's PRs (by number) and their deduplicated closing
-// issues. Direct-commit changes have no PR/issue to comment on, so they never
-// appear here. `fetchChangeDetails` is never touched. The PRs come from the
-// fetched (surviving) nodes, so a `(#N)` that resolves to nothing is dropped from
-// the targets exactly as it is from the notes.
+// comment targets — the release's PRs (by number), their deduplicated closing
+// issues, and the discussions resolved from the PR bodies' closing keywords.
+// Direct-commit changes have no PR to read a body from, so they contribute no
+// targets. `fetchChangeDetails` is never touched. The PRs come from the fetched
+// (surviving) nodes, so a `(#N)` that resolves to nothing is dropped from the
+// targets exactly as it is from the notes; likewise a discussion candidate that
+// no longer resolves is dropped by the probe.
 export async function discoverTargets(args: {
   channel: Channel
   currentRef: string
@@ -543,11 +691,16 @@ export async function discoverTargets(args: {
     commit.prNumber !== null ? [commit.prNumber] : []
   )
   if (prNumbers.length === 0) {
-    return { changes: [], issues: [] }
+    return { changes: [], issues: [], discussions: [] }
   }
   const prs = await args.reader.fetchClosingIssues(prNumbers)
+  const issues = collectIssues(prs)
+  const discussions = await args.reader.fetchDiscussions(
+    discussionCandidates(prs, issues)
+  )
   return {
     changes: prs.map(pr => ({ prNumber: pr.number })),
-    issues: collectIssues(prs)
+    issues,
+    discussions
   }
 }
