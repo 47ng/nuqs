@@ -62,6 +62,10 @@ const exports = `
     "NuqsAdapter": "function",
     "useOptimisticSearchParams": "function",
   },
+  "./adapters/react-router/v8": {
+    "NuqsAdapter": "function",
+    "useOptimisticSearchParams": "function",
+  },
   "./adapters/remix": {
     "NuqsAdapter": "function",
     "useOptimisticSearchParams": "function",
