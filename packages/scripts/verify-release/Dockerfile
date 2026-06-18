@@ -1,12 +1,13 @@
-# Canonical build/verify image for staged-release verification.
+# Canonical build/verify image for reproducible-release verification (staged
+# and published).
 #
-# Mirrors the GitHub Actions runner environment that produces the staged
+# Mirrors the GitHub Actions runner environment that produces the release
 # tarball (ubuntu-24.04-arm + actions/setup-node's official nodejs.org
-# binary), so a local `npm pack` reproduces the staged `.tgz` byte-for-byte.
+# binary), so a local `npm pack` reproduces the published `.tgz` byte-for-byte.
 #
-# Pins (verify.ts passes Node/npm/pnpm as --build-args from the canonical
-# sources CI uses; the ARG defaults below are only fallbacks for a standalone
-# `docker build` and may drift):
+# Pins (verify.lib.ts passes Node/npm/pnpm as --build-args read at the verified
+# ref; the ARG defaults below are only fallbacks for a standalone `docker build`
+# and may drift):
 #   - Ubuntu 24.04   : matches the runner OS (glibc/zlib provenance)
 #   - Node           : repo-root .node-version (the file actions/setup-node
 #                      reads in CI); its bundled zlib decides the gzip layer.
@@ -45,12 +46,12 @@ RUN set -eux; \
 
 # The analysis is baked into the image (NOT taken from the untrusted source
 # archive) so that, under the runtime read-only rootfs, a malicious build
-# cannot rewrite the verdict logic. Two stages, two scripts, both root-owned
-# and read-only; the host selects which one to run as the container command:
-#   run1.match-hash.sh   — reproduce + match digests (git archive on stdin)
+# cannot rewrite it. Two stages, two scripts, both root-owned and read-only;
+# the host selects which one to run as the container command:
+#   run1.reproduce.sh     — reproduce + emit the tarball (git archive on stdin)
 #   run2.diff-contents.sh — extract + diff the two tarballs (/in mount, ro)
-COPY run1.match-hash.sh run2.diff-contents.sh /usr/local/bin/
-RUN chmod 0555 /usr/local/bin/run1.match-hash.sh /usr/local/bin/run2.diff-contents.sh
+COPY run1.reproduce.sh run2.diff-contents.sh /usr/local/bin/
+RUN chmod 0555 /usr/local/bin/run1.reproduce.sh /usr/local/bin/run2.diff-contents.sh
 
 # Run reproductions as a non-root user (ubuntu:24.04 already ships a uid-1000
 # `ubuntu` user, so let useradd pick a free uid rather than collide).
@@ -58,5 +59,5 @@ RUN useradd --create-home verifier
 USER verifier
 WORKDIR /home/verifier
 
-# No ENTRYPOINT: the host passes the script name (run1.match-hash.sh /
+# No ENTRYPOINT: the host passes the script name (run1.reproduce.sh /
 # run2.diff-contents.sh) as the container command.

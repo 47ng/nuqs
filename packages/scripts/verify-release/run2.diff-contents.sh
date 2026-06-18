@@ -26,9 +26,9 @@ done
 
 # --- colour ----------------------------------------------------------------
 # Standard knobs: NO_COLOR wins, else FORCE_COLOR forces, else a stdout-TTY
-# check. The sandbox has no TTY of its own, so verify.ts sets FORCE_COLOR=1 when
-# ITS stdout is an interactive terminal. diff_opts carries --color=always only
-# when on, so `diff -u` highlights +/- lines too.
+# check. The sandbox has no TTY of its own, so verify.staged.ts sets
+# FORCE_COLOR=1 when ITS stdout is an interactive terminal. diff_opts carries
+# --color=always only when on, so `diff -u` highlights +/- lines too.
 use_color=0
 if [ -n "${NO_COLOR:-}" ]; then
   use_color=0

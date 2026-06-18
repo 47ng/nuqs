@@ -131,13 +131,13 @@ jobs:
         # `npm stage` first shipped in npm 11.15.0; the npm bundled with the
         # pinned Node is older. The exact version is pinned in the repo-root
         # .npm-version — the single source of truth, also read by
-        # packages/scripts/verify-staged-release so the sandbox reproduces with
+        # packages/scripts/verify-release so the sandbox reproduces with
         # the same npm. Pinned (not @latest) because this is the privileged
         # publish path — bump deliberately.
         run: |
           set -euo pipefail
           NPM_VERSION=$(tr -d '[:space:]' < .npm-version)
-          NPM_VERSION=${NPM_VERSION#v} # tolerate a leading v, like verify.ts
+          NPM_VERSION=${NPM_VERSION#v} # tolerate a leading v, like verify.lib.ts
           if ! printf '%s' "$NPM_VERSION" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'; then
             echo "::error::.npm-version is not a plain x.y.z version: '$NPM_VERSION'"
             exit 1
@@ -281,7 +281,7 @@ jobs:
             echo ""
             echo "1. Run this command from the repo root to reproduce & verify the build:"
             echo '```bash'
-            echo "packages/scripts/verify-staged-release/verify.ts \\"
+            echo "packages/scripts/verify-release/verify.staged.ts \\"
             echo "  --package nuqs \\"
             echo "  --version '$VERSION' \\"
             echo "  --sha '$GITHUB_SHA' \\"
