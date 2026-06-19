@@ -41,8 +41,13 @@ export const changelogDtoSchema = releaseChangesSchema.extend({
 export type ChangelogDTO = z.infer<typeof changelogDtoSchema>
 
 // Serialize a release into the DTO: its changes verbatim, tagged with `$schema`.
+// Validates through the Zod schema before emitting, so an invalid release throws
+// here instead of producing a DTO the consumer would silently degrade.
 export function toChangelogDTO(release: ReleaseChanges): ChangelogDTO {
-  return { $schema: CHANGELOG_DTO_SCHEMA_URL, ...release }
+  return changelogDtoSchema.parse({
+    $schema: CHANGELOG_DTO_SCHEMA_URL,
+    ...release
+  })
 }
 
 // The JSON Schema artifact (Draft 2020-12) derived from the Zod SSOT. Served
