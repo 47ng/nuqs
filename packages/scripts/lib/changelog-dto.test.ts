@@ -1,9 +1,11 @@
 import { describe, expect, it } from 'vitest'
+import { z } from 'zod'
 import {
   CHANGELOG_DTO_SCHEMA_URL,
   type Change,
   type ChangelogDTO,
   type ReleaseChanges,
+  changelogDtoSchema,
   groupChangesByCategory,
   parseChangelogComment,
   parseCodeSpans,
@@ -98,6 +100,63 @@ describe('parseCodeSpans', () => {
 describe('toChangelogDTO', () => {
   it('wraps a ReleaseChanges with the $schema tag (no per-change projection)', () => {
     expect(toChangelogDTO(release)).toEqual(expectedDto)
+  })
+
+  // The forward .parse() in toChangelogDTO only guarantees the emitted JSON is
+  // valid while every field is JSON-native. This smoke test exercises a real
+  // JSON.stringify -> JSON.parse -> re-validate, so a future non-serializable
+  // field (Date, bigint, Map, ...) that survives the in-memory parse but mutates
+  // across the wire turns this red.
+  it('survives a real JSON serialize/parse round-trip, still valid', () => {
+    const dto = toChangelogDTO(release)
+    const reparsed = changelogDtoSchema.parse(JSON.parse(JSON.stringify(dto)))
+    expect(reparsed).toEqual(dto)
+  })
+})
+
+describe('toChangelogDTO rejects an invalid release at serialization time', () => {
+  // Producer-side mirror of the parse-time degrade signals: a malformed
+  // ReleaseChanges (an upstream commit-graph bug) throws here, failing the
+  // release run loudly rather than emitting a DTO the consumer silently
+  // degrades. Inputs are cast past the static type to stand in for runtime data
+  // violating a constraint the compiler can't see.
+  // Select each variant by its discriminant, not by fixture position, so a
+  // future reordering of `release.changes` can't silently retarget a case.
+  const squashedPR = release.changes.find(c => c.source === 'squashedPR')!
+  const directCommit = release.changes.find(c => c.source === 'directCommit')!
+  const invalidReleases: Array<[string, unknown]> = [
+    [
+      'empty change description',
+      { ...release, changes: [{ ...squashedPR, description: '' }] }
+    ],
+    [
+      'author that is not a GitHub login',
+      { ...release, changes: [{ ...squashedPR, author: 'not a login' }] }
+    ],
+    [
+      'non-positive PR number',
+      { ...release, changes: [{ ...squashedPR, prNumber: 0 }] }
+    ],
+    [
+      'malformed commit sha',
+      { ...release, changes: [{ ...directCommit, sha: 'xyz' }] }
+    ],
+    [
+      'contributor that is not a GitHub login',
+      { ...release, contributors: ['has spaces'] }
+    ],
+    ['an unknown top-level key', { ...release, surprise: true }]
+  ]
+
+  it.each(invalidReleases)('throws a ZodError on %s', (_label, input) => {
+    expect(() => toChangelogDTO(input as ReleaseChanges)).toThrow(z.ZodError)
+  })
+
+  it('surfaces the same throw through renderChangelogComment (the emit path)', () => {
+    const invalid = { ...release, contributors: ['has spaces'] }
+    expect(() => renderChangelogComment(invalid as ReleaseChanges)).toThrow(
+      z.ZodError
+    )
   })
 })
 
