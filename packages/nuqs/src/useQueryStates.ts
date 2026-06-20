@@ -100,6 +100,9 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
   const adapter = useAdapter(Object.values(resolvedUrlKeys))
   const initialSearchParams = adapter.searchParams
   const queryRef = useRef<Record<string, Query | null>>({})
+  // Tracks the URL source (search params + queued queries) the internal state
+  // was last reconciled against during render. See the reconciliation block below.
+  const lastSyncKeyRef = useRef<string | null>(null)
   const defaultValues = useMemo(
     () =>
       Object.fromEntries(
@@ -128,11 +131,35 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
     initialSearchParams
   )
 
-  // Initialise the refs with the initial values
-  if (
+  // Identifies the current URL source (resolved search params + queued queries).
+  // Mirrors the dependencies of the URL sync effect below so that render-time
+  // reconciliation reacts to the same external changes, and never to internal
+  // (optimistic) updates which don't alter the URL source.
+  const searchParamsSyncKey =
+    Object.values(resolvedUrlKeys)
+      .map(key => `${key}=${initialSearchParams?.getAll(key)}`)
+      .join('&') +
+    '\0' +
+    JSON.stringify(queuedQueries)
+  // Reconcile the internal state with the URL during render, both when the set
+  // of keys changes (initialisation) and when the URL source changes.
+  //
+  // The effect below performs the same URL reconciliation, but effects are
+  // detached while a component is hidden under an `<Activity>` boundary, and
+  // are not re-run until *after* the first commit once it becomes visible
+  // again. Without a render-time reconciliation, that first render returns the
+  // stale value captured when the component went hidden, painting it for a
+  // frame before the effect catches up (see issue #1444).
+  //
+  // Gating on `searchParamsSyncKey` (rather than reconciling on every render)
+  // ensures we only adopt the URL value when the URL source actually changed,
+  // never reverting an optimistic update whose URL change hasn't propagated to
+  // the adapter's search params yet.
+  const keysChanged =
     Object.keys(queryRef.current).join('&') !==
     Object.values(resolvedUrlKeys).join('&')
-  ) {
+  if (keysChanged || lastSyncKeyRef.current !== searchParamsSyncKey) {
+    lastSyncKeyRef.current = searchParamsSyncKey
     const { state, hasChanged } = parseMap(
       keyMap,
       urlKeys,
@@ -142,7 +169,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
       stateRef.current
     )
     if (hasChanged) {
-      debug('[nuq+ %s `%s`] State changed: %O', hookId, stateKeys, {
+      debug('[nuq+ %s `%s`] State changed (render): %O', hookId, stateKeys, {
         state,
         initialSearchParams,
         queuedQueries,
@@ -152,19 +179,25 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
       stateRef.current = state
       setInternalState(state)
     }
-    queryRef.current = Object.fromEntries(
-      Object.entries(resolvedUrlKeys).map(([key, urlKey]) => {
-        const parser = keyMap[key]
-        return [
-          urlKey,
-          parser?.type === 'multi'
-            ? initialSearchParams?.getAll(urlKey)
-            : (initialSearchParams?.get(urlKey) ?? null)
-        ]
-      })
-    )
+    if (keysChanged) {
+      queryRef.current = Object.fromEntries(
+        Object.entries(resolvedUrlKeys).map(([key, urlKey]) => {
+          const parser = keyMap[key]
+          return [
+            urlKey,
+            parser?.type === 'multi'
+              ? initialSearchParams?.getAll(urlKey)
+              : (initialSearchParams?.get(urlKey) ?? null)
+          ]
+        })
+      )
+    }
   }
 
+  // Backstop for the render-time reconciliation above: it reconciles the same
+  // URL source changes from an effect, covering renders the reconciliation
+  // started but React discarded before commit (e.g. interrupted transitions).
+  // Depends on the same `searchParamsSyncKey` so the two can't drift apart.
   useEffect(() => {
     const { state, hasChanged } = parseMap(
       keyMap,
@@ -185,12 +218,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
       stateRef.current = state
       setInternalState(state)
     }
-  }, [
-    Object.values(resolvedUrlKeys)
-      .map(key => `${key}=${initialSearchParams?.getAll(key)}`)
-      .join('&'),
-    JSON.stringify(queuedQueries)
-  ])
+  }, [searchParamsSyncKey])
 
   // Sync all hooks together & with external URL changes
   useEffect(() => {
