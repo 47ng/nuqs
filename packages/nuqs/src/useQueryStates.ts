@@ -103,6 +103,14 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
   // Tracks the URL source (search params + queued queries) the internal state
   // was last reconciled against during render. See the reconciliation block below.
   const lastSyncKeyRef = useRef<string | null>(null)
+  // The pathname this hook last reconciled against from a committed render (set
+  // by the effect backstop below). The render-time reconcile is skipped when the
+  // live pathname no longer matches it: that means the component is rendering
+  // through a navigation transition for a different route (an outgoing or
+  // incoming page kept alive by the router, e.g. under cacheComponents), where
+  // adopting the in-flight URL would corrupt speculative renders (#1293). A
+  // genuine `<Activity>` reveal keeps the same pathname, so it still reconciles.
+  const committedPathnameRef = useRef<string | null>(null)
   const defaultValues = useMemo(
     () =>
       Object.fromEntries(
@@ -156,10 +164,24 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
   // the value captured while hidden (#1444). Gating on `searchParamsSyncKey`
   // means we only adopt the URL when its source actually changed, never
   // reverting an optimistic update not yet propagated to the adapter's params.
+  //
+  // The URL-change branch is further gated to renders happening on the pathname
+  // the hook last committed against: during a route transition the router can
+  // render an outgoing/incoming page against the other route's in-flight URL,
+  // and adopting it there produces cross-page renders React discards (#1293).
   const keysChanged =
     Object.keys(queryRef.current).join('&') !==
     Object.values(resolvedUrlKeys).join('&')
-  if (keysChanged || lastSyncKeyRef.current !== searchParamsSyncKey) {
+  // `committedPathnameRef` is only ever assigned from the effect below (client
+  // only), so a null value already covers SSR and the first client render, and
+  // short-circuits before `location` is touched on the server.
+  const onCommittedPathname =
+    committedPathnameRef.current === null ||
+    committedPathnameRef.current === location.pathname
+  if (
+    keysChanged ||
+    (onCommittedPathname && lastSyncKeyRef.current !== searchParamsSyncKey)
+  ) {
     lastSyncKeyRef.current = searchParamsSyncKey
     reconcile()
     if (keysChanged) {
@@ -180,7 +202,13 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
   // Backstop for the render-time reconciliation above: covers external changes
   // landing in renders React discards before commit (e.g. interrupted
   // transitions). Same `searchParamsSyncKey` dependency, so they can't drift.
-  useEffect(reconcile, [searchParamsSyncKey])
+  // Also records the pathname of this committed reconciliation, which gates the
+  // render-time branch above (effects don't run while detached, so this freezes
+  // at the pathname the hook was last attached on).
+  useEffect(() => {
+    committedPathnameRef.current = location.pathname
+    reconcile()
+  }, [searchParamsSyncKey])
 
   // Sync all hooks together & with external URL changes
   useEffect(() => {
