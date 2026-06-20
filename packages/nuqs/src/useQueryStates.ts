@@ -131,8 +131,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
   const searchParamsSyncKey =
     Object.values(resolvedUrlKeys)
       .map(key => `${key}=${initialSearchParams?.getAll(key)}`)
-      .join('&') +
-    JSON.stringify(queuedQueries)
+      .join('&') + JSON.stringify(queuedQueries)
   // Adopts the current URL value into the internal state when it has changed.
   // Used both during render (below) and from the effect backstop further down.
   const reconcile = () => {
