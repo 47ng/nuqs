@@ -23,7 +23,9 @@ import { debugMessages, sprintf } from './lib/debug-messages'
  */
 export function enableNuqsDebugging(): void {
   setDebugSink((code, args, isWarn) => {
-    const message = debugMessages[code]
+    // Annotated as possibly-undefined so the guard below survives a runtime code
+    // that isn't in the catalog (call sites are type-checked, but be defensive).
+    const message: string | undefined = debugMessages[code]
     if (message === undefined) {
       return
     }

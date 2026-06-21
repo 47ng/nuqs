@@ -1,6 +1,6 @@
 import { warn } from './debug'
 
-export function safeParse<I, R>(
+export function safeParse<I extends { toString(): string }, R>(
   parser: (arg: I) => R,
   value: I,
   key?: string
@@ -8,7 +8,13 @@ export function safeParse<I, R>(
   try {
     return parser(value)
   } catch (error) {
-    warn(key ? 25 : 24, value, error, key)
+    // Split per code so each call matches its message's arity exactly (a single
+    // `key ? 25 : 24` would widen the argument tuple to a union).
+    if (key) {
+      warn(25, value, error, key)
+    } else {
+      warn(24, value, error)
+    }
     return null
   }
 }

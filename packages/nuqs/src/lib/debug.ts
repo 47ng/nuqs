@@ -1,5 +1,10 @@
+// Type-only import: erased at build time (verbatimModuleSyntax), so the message
+// catalog's *types* constrain the call sites here while its *values* stay out of
+// the core bundle (they only ship via the opt-in `nuqs/debug` entry).
+import type { DebugArgs, DebugCode } from './debug-messages'
+
 export type DebugSink = (
-  code: number,
+  code: DebugCode,
   args: unknown[],
   isWarn?: boolean
 ) => void
@@ -18,11 +23,17 @@ export function setDebugSink(newSink: DebugSink | null): void {
   sink = newSink
 }
 
-export function debug(code: number, ...args: unknown[]): void {
+export function debug<Code extends DebugCode>(
+  code: Code,
+  ...args: DebugArgs<Code>
+): void {
   sink?.(code, args)
 }
 
-export function warn(code: number, ...args: unknown[]): void {
+export function warn<Code extends DebugCode>(
+  code: Code,
+  ...args: DebugArgs<Code>
+): void {
   sink?.(code, args, true)
 }
 
