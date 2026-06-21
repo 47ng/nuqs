@@ -84,6 +84,7 @@ const router = createBrowserRouter(
       <Route path="repro-1293/a"              lazy={load(import('./routes/repro-1293.a'))} />
       <Route path="repro-1293/b"              lazy={load(import('./routes/repro-1293.b'))} />
       <Route path="repro-1365"                lazy={load(import('./routes/repro-1365'))} />
+      <Route path="repro-1444"                lazy={load(import('./routes/repro-1444'))} />
     </Route>
   ))
 
