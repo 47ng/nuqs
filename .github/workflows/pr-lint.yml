@@ -5,36 +5,47 @@ on:
     types:
       - opened
       - edited
+      - synchronize
+
+permissions:
+  contents: read
 
 jobs:
   lint-pr-title:
     name: Lint PR Title
+    # Skip merged PRs and body-only edits (we lint titles, not bodies).
+    if: >-
+      ${{ !github.event.pull_request.merged &&
+          (github.event.action != 'edited' || github.event.changes.title.from) }}
     runs-on: ubuntu-24.04-arm
     steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8
-      - uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061
-      - uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093 # v6.0.8
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
         with:
           node-version-file: .node-version
           cache: pnpm
-      - name: Install dependencies
-        run: pnpm add -D @commitlint/load @commitlint/lint
-      - name: Lint PR title
+      - name: Install scripts dependencies
+        run: pnpm install --ignore-scripts --frozen-lockfile --filter scripts
+      - name: Get changed files
+        id: changed-files
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          # NUL-delimited from git, then NUL -> newline for $GITHUB_OUTPUT
+          # transport. Filenames containing whitespace survive the round trip.
+          delim="EOF_$(openssl rand -hex 16)"
+          {
+            printf 'files<<%s\n' "$delim"
+            git diff -z --name-only "$BASE_SHA...$HEAD_SHA" | tr '\0' '\n'
+            printf '%s\n' "$delim"
+          } >> "$GITHUB_OUTPUT"
+      - name: Validate PR title
         env:
           TITLE: ${{ github.event.pull_request.title }}
-        run: |
-          node -e "
-            import loadConfig from '@commitlint/load';
-            import lint from '@commitlint/lint';
-            import pkgJson from './package.json' with { type: 'json' };
-            const config = await loadConfig(pkgJson.commitlint);
-            const result = await lint(process.env.TITLE, config.rules, config.parserPreset ? { parserOpts: config.parserPreset.parserOpts } : {});
-            process.env.GITHUB_STEP_SUMMARY += \`## Linting Result\n- Valid: \${result.valid}\n\`;
-            if (result.valid === false) {
-              for (const { message } of result.errors) {
-                process.env.GITHUB_STEP_SUMMARY += \`- Error: \${message}\n\`;
-                console.error(message);
-              }
-              process.exit(1);
-            }
-          "
+          CHANGED_FILES: ${{ steps.changed-files.outputs.files }}
+        run: ./packages/scripts/validate-pr-title.ts

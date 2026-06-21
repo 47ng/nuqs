@@ -31,9 +31,9 @@ function Client({ id }: ClientProps) {
   return (
     <>
       <p>useQueryState {id}</p>
-      <pre id={`${id}-pre`}>{JSON.stringify({ a, b })}</pre>
+      <pre data-testid={`${id}-pre`}>{JSON.stringify({ a, b })}</pre>
       <button
-        id={`${id}-set`}
+        data-testid={`${id}-set`}
         onClick={() => {
           setA('1')
           setB('2')
@@ -42,7 +42,7 @@ function Client({ id }: ClientProps) {
         Set
       </button>
       <button
-        id={`${id}-clear`}
+        data-testid={`${id}-clear`}
         onClick={() => {
           setA(null)
           setB(null)
@@ -66,11 +66,14 @@ function Clients({ id }: ClientProps) {
   return (
     <>
       <p>useQueryStates {id}</p>
-      <pre id={`${id}-pre`}>{JSON.stringify(params)}</pre>
-      <button id={`${id}-set`} onClick={() => setParams({ a: '1', b: '2' })}>
+      <pre data-testid={`${id}-pre`}>{JSON.stringify(params)}</pre>
+      <button
+        data-testid={`${id}-set`}
+        onClick={() => setParams({ a: '1', b: '2' })}
+      >
         Set
       </button>
-      <button id={`${id}-clear`} onClick={() => setParams(null)}>
+      <button data-testid={`${id}-clear`} onClick={() => setParams(null)}>
         Clear
       </button>
       <hr />

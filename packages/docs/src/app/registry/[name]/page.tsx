@@ -2,12 +2,7 @@ import { useMDXComponents } from '@/mdx-components'
 import { rehypeCodeOptions } from '@/rehype-code.config'
 import { CodeBlock } from '@/src/components/code-block'
 import { H2 } from '@/src/components/typography'
-import {
-  getRegistryItemCategory,
-  readRegistry,
-  readRegistryItem,
-  readUsage
-} from '@/src/registry/read'
+import { readRegistry, readRegistryItem, readUsage } from '@/src/registry/read'
 import type {
   RegistryBuiltFile,
   RegistryBuiltItem
@@ -26,6 +21,7 @@ import {
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import remarkSmartypants from 'remark-smartypants'
+import { Author } from './author'
 
 export default async function Page({ params }: PageProps<'/registry/[name]'>) {
   const { name } = await params
@@ -33,8 +29,8 @@ export default async function Page({ params }: PageProps<'/registry/[name]'>) {
   if (error || !item) {
     notFound()
   }
-  const { title, description, files } = item
-  const category = getRegistryItemCategory(name)
+  const { title, description, files, author } = item
+  const isAdapter = item.categories?.includes('adapter')
   const usage = await readUsage(name)
   return (
     <DocsPage
@@ -57,6 +53,11 @@ export default async function Page({ params }: PageProps<'/registry/[name]'>) {
     >
       <DocsTitle>{title}</DocsTitle>
       {description && <DocsDescription>{description}</DocsDescription>}
+      {author && (
+        <section className="flex justify-end">
+          <Author author={author} />
+        </section>
+      )}
       <DocsBody>
         <H2 id="installation">Installation</H2>
         <Installation name={name} files={files} />
@@ -72,7 +73,7 @@ export default async function Page({ params }: PageProps<'/registry/[name]'>) {
             </Markdown>
           </>
         )}
-        {category === 'Adapters' && (
+        {isAdapter && (
           <>
             <br />
             <Callout type="warn">
@@ -111,7 +112,7 @@ export async function generateMetadata({
   return {
     title: item.title,
     description: item.description,
-    category: getRegistryItemCategory(name)
+    category: item.categories?.join(', ')
   } satisfies Metadata
 }
 

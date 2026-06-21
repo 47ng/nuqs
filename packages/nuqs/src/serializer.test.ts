@@ -83,6 +83,11 @@ describe('serializer', () => {
     const result = serialize('?str=bar&int=-1', null)
     expect(result).toBe('')
   })
+  it('keeps search params in the base when given undefined as value', () => {
+    const serialize = createSerializer(parsers)
+    const result = serialize('?str=foo', { str: undefined })
+    expect(result).toBe('?str=foo')
+  })
   it('keeps search params not managed by the serializer when fed null', () => {
     const serialize = createSerializer(parsers)
     const result = serialize('?str=foo&external=kept', null)

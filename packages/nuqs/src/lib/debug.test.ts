@@ -1,5 +1,35 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { sprintf } from './debug'
+
+describe('debug/server (DEBUG env)', () => {
+  it('enables when DEBUG includes nuqs', async () => {
+    vi.stubEnv('DEBUG', 'nuqs')
+    vi.resetModules()
+    const { debugEnabled } = await import('./debug')
+    expect(debugEnabled).toBe(true)
+  })
+
+  it('enables when DEBUG contains nuqs among others', async () => {
+    vi.stubEnv('DEBUG', '*,nuqs,other')
+    vi.resetModules()
+    const { debugEnabled } = await import('./debug')
+    expect(debugEnabled).toBe(true)
+  })
+
+  it('disables when DEBUG is unset', async () => {
+    vi.stubEnv('DEBUG', '')
+    vi.resetModules()
+    const { debugEnabled } = await import('./debug')
+    expect(debugEnabled).toBe(false)
+  })
+
+  it('disables when DEBUG does not include nuqs', async () => {
+    vi.stubEnv('DEBUG', 'other,*')
+    vi.resetModules()
+    const { debugEnabled } = await import('./debug')
+    expect(debugEnabled).toBe(false)
+  })
+})
 
 describe('debug/sprintf', () => {
   it('formats strings with %s', () => {

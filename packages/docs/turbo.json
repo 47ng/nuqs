@@ -1,0 +1,20 @@
+{
+  "$schema": "https://turbo.build/schema.v2.json",
+  "extends": ["//"],
+  "tasks": {
+    "build": {
+      "outputs": [".next/**", "!.next/cache/**"],
+      "dependsOn": ["^build", "nuqs#build:size-json"],
+      "env": [
+        "VERCEL_ENV",
+        "VERCEL_URL",
+        "VERCEL_PROJECT_PRODUCTION_URL",
+        "GITHUB_TOKEN",
+        "ISR_TOKEN"
+      ]
+    },
+    "test": {
+      "dependsOn": ["^build"]
+    }
+  }
+}

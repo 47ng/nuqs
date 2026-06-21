@@ -1,6 +1,6 @@
 import { readFile, writeFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
-import { defineConfig, type Options, type UserConfig } from 'tsdown'
+import { defineConfig, type UserConfig } from 'tsdown'
 
 const commonConfig = {
   clean: true,
@@ -15,9 +15,15 @@ const commonConfig = {
     'react-router',
     '@tanstack/react-router'
   ],
+  outExtensions() {
+    return {
+      js: '.js',
+      dts: '.d.ts'
+    }
+  },
   treeshake: true,
   tsconfig: 'tsconfig.build.json'
-} satisfies Options
+} satisfies UserConfig
 
 const entrypoints = {
   client: {
@@ -30,6 +36,7 @@ const entrypoints = {
     'adapters/react-router': 'src/adapters/react-router.ts',
     'adapters/react-router/v6': 'src/adapters/react-router/v6.ts',
     'adapters/react-router/v7': 'src/adapters/react-router/v7.ts',
+    'adapters/react-router/v8': 'src/adapters/react-router/v8.ts',
     'adapters/tanstack-router': 'src/adapters/tanstack-router.ts',
     'adapters/custom': 'src/adapters/custom.ts',
     'adapters/testing': 'src/adapters/testing.ts'
@@ -46,7 +53,8 @@ const config: UserConfig = defineConfig([
     ...commonConfig,
     entry: entrypoints.client,
     outputOptions: {
-      intro: ({ isEntry }) => (isEntry ? "'use client';\n" : '')
+      intro: ({ isEntry, fileName }) =>
+        isEntry && !fileName.endsWith('.d.ts') ? "'use client';\n" : ''
     },
     async onSuccess() {
       // Mark the un-versionned React Router adapter as deprecated
@@ -67,7 +75,8 @@ const config: UserConfig = defineConfig([
    *
    * Please pin your version of React Router in the import:
    * - \`nuqs/adapters/react-router/v6\`
-   * - \`nuqs/adapters/react-router/v7\`.
+   * - \`nuqs/adapters/react-router/v7\`
+   * - \`nuqs/adapters/react-router/v8\`.
    *
    * Note: this deprecated import (\`nuqs/adapters/react-router\`) is for React Router v6 only.
    */
@@ -77,7 +86,8 @@ const config: UserConfig = defineConfig([
    *
    * Please pin your version of React Router in the import:
    * - \`nuqs/adapters/react-router/v6\`
-   * - \`nuqs/adapters/react-router/v7\`.
+   * - \`nuqs/adapters/react-router/v7\`
+   * - \`nuqs/adapters/react-router/v8\`.
    *
    * Note: this deprecated import (\`nuqs/adapters/react-router\`) is for React Router v6 only.
    */

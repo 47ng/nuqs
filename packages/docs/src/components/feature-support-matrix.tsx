@@ -154,6 +154,13 @@ function dedupeFrameworks(frameworks: readonly Frameworks[]) {
   ) {
     frameworks = frameworks.filter(fw => fw !== 'Next.js (pages router)')
   }
+  // React Router v6/v7/v8 share one icon, so keep only the first version present
+  const reactRouter = FRAMEWORKS.filter(
+    fw => fw.startsWith('React Router') && frameworks.includes(fw)
+  )
+  if (reactRouter.length > 1) {
+    frameworks = frameworks.filter(fw => reactRouter.indexOf(fw) <= 0)
+  }
   return frameworks
 }
 

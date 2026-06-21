@@ -1,0 +1,147 @@
+{
+  "$schema": "https://unpkg.com/knip@6/schema.json",
+  "ignoreExportsUsedInFile": true,
+  "workspaces": {
+    ".": {
+      "ignoreDependencies": ["@commitlint/config-conventional"],
+      "ignoreBinaries": ["packages/scripts/verify-release/verify.production.ts"]
+    },
+    "packages/scripts": {
+      "entry": [
+        "compute-version.ts",
+        "next-release-analyser.ts",
+        "release-finalize.ts",
+        "release-notes-automation.ts",
+        "validate-changelog-dto.ts",
+        "verify-release/verify.staged.ts",
+        "verify-release/verify.production.ts"
+      ],
+      "project": ["**/*.ts"]
+    },
+    "packages/nuqs": {
+      "entry": [
+        "src/index.ts",
+        "src/index.server.ts",
+        "src/testing.ts",
+        "src/adapters/react.ts",
+        "src/adapters/next.ts",
+        "src/adapters/next/app.ts",
+        "src/adapters/next/pages.ts",
+        "src/adapters/remix.ts",
+        "src/adapters/react-router.ts",
+        "src/adapters/react-router/v6.ts",
+        "src/adapters/react-router/v7.ts",
+        "src/adapters/react-router/v8.ts",
+        "src/adapters/tanstack-router.ts",
+        "src/adapters/custom.ts",
+        "src/adapters/testing.ts"
+      ],
+      "project": ["src/**/*.ts"],
+      "ignoreDependencies": ["@vitejs/plugin-react"]
+    },
+    "packages/docs": {
+      "entry": [
+        "source.config.ts",
+        "rehype-code.config.ts",
+        "content/**/*.{ts,tsx,mdx}",
+        "src/app/**/page.tsx",
+        "src/app/**/layout.tsx",
+        "src/app/**/route.ts",
+        "src/components/audience.tsx",
+        "src/components/code-block-highlighter.ts",
+        "src/components/feature-support-matrix.tsx",
+        "src/components/frameworks.tsx",
+        "src/schemas/changelog-dto.gen.ts"
+      ],
+      "project": ["content/**/*.{ts,tsx}", "src/**/*.{ts,tsx}"],
+      "paths": {
+        "@/*": ["./*"]
+      },
+      "next": true,
+      "ignoreFiles": [
+        "src/components/code-block-highlighter.skeleton.ts",
+        "src/components/github-profile.tsx",
+        "src/components/kibo-ui/**",
+        "src/components/release-contribution-graph.client.tsx",
+        "src/components/release-contribution-graph.tsx",
+        "src/components/ui/pr-line.tsx",
+        "src/components/vercel-oss-badge.tsx",
+        "src/lib/typed-links.ts"
+      ],
+      "ignoreDependencies": [
+        "@headlessui/tailwindcss",
+        "@tailwindcss/container-queries",
+        "@types/mdx",
+        "date-fns",
+        "hast-util-to-jsx-runtime",
+        "tailwindcss-animate"
+      ]
+    },
+    "packages/e2e/shared": {
+      "entry": [
+        "playwright/*.ts",
+        "specs/**/*.{ts,tsx}",
+        "components/**/*.tsx",
+        "lib/options.ts"
+      ],
+      "project": ["**/*.{ts,tsx}"]
+    },
+    "packages/e2e/next": {
+      "entry": [
+        "src/app/**/*.{ts,tsx}",
+        "src/pages/**/*.{ts,tsx}",
+        "src/components/**/*.tsx",
+        "specs/**/*.ts"
+      ],
+      "project": ["**/*.{ts,tsx}"]
+    },
+    "packages/e2e/react": {
+      "entry": ["specs/**/*.ts"],
+      "project": ["**/*.{ts,tsx}"]
+    },
+    "packages/e2e/remix": {
+      "entry": ["app/**/*.{ts,tsx}", "specs/**/*.ts"],
+      "project": ["**/*.{ts,tsx}"]
+    },
+    "packages/e2e/tanstack-router": {
+      "entry": [
+        "src/routes/**/*.tsx",
+        "src/routeTree.gen.ts",
+        "specs/**/*.ts"
+      ],
+      "project": ["**/*.{ts,tsx}"]
+    },
+    "packages/e2e/react-router/v5": {
+      "entry": ["specs/**/*.ts"],
+      "project": ["**/*.{ts,tsx}"]
+    },
+    "packages/e2e/react-router/v6": {
+      "entry": ["src/routes/**/*.tsx", "specs/**/*.ts"],
+      "project": ["**/*.{ts,tsx}"]
+    },
+    "packages/e2e/react-router/v7": {
+      "entry": ["app/**/*.{ts,tsx}", "specs/**/*.ts"],
+      "project": ["**/*.{ts,tsx}"]
+    },
+    "packages/e2e/react-router/v8": {
+      "entry": ["app/**/*.{ts,tsx}", "specs/**/*.ts"],
+      "project": ["**/*.{ts,tsx}"]
+    },
+    "packages/examples/next-app": {
+      "entry": ["src/app/**/*.{ts,tsx}"],
+      "project": ["src/**/*.{ts,tsx}"],
+      "next": true,
+      "ignoreDependencies": ["tailwindcss"]
+    },
+    "packages/examples/trpc": {
+      "entry": ["app/**/*.{ts,tsx}"],
+      "project": ["**/*.{ts,tsx}"]
+    }
+  },
+  "ignoreIssues": {
+    "packages/docs/src/components/ui/**": ["exports", "types"]
+  },
+  "rules": {
+    "optionalPeerDependencies": "off"
+  }
+}

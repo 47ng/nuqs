@@ -1,10 +1,12 @@
-import * as Sentry from '@sentry/nextjs'
+import { Databuddy } from '@databuddy/sdk/react'
 import { RootProvider } from 'fumadocs-ui/provider/next'
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import Script from 'next/script'
 import { NuqsAdapter } from 'nuqs/adapters/next/app'
 import { type ReactNode } from 'react'
+import { TopBanner } from './banners'
+import { Favicon } from '../components/favicon'
 import { ResponsiveHelper } from '../components/responsive-helpers'
 import { cn } from '../lib/utils'
 import './globals.css'
@@ -40,14 +42,11 @@ export const metadata = {
         }
       ] as const
     }
-  },
-  other: {
-    ...Sentry.getTraceData()
   }
 } satisfies Metadata
 
 export default function Layout({ children }: { children: ReactNode }) {
-  const enableChiffreAnalytics = process.env.VERCEL_ENV === 'production'
+  const enableAnalytics = process.env.VERCEL_ENV === 'production'
   return (
     <html
       lang="en"
@@ -55,22 +54,26 @@ export default function Layout({ children }: { children: ReactNode }) {
       // https://github.com/shadcn-ui/ui/issues/5552#issuecomment-2435024526
       suppressHydrationWarning
     >
+      <Favicon />
       <body>
-        {/* Top-level banners go here */}
+        <TopBanner />
         <RootProvider>
           <NuqsAdapter>{children}</NuqsAdapter>
         </RootProvider>
-        {enableChiffreAnalytics && (
-          <Script
-            async
-            id="chiffre:analytics"
-            src="https://chiffre.io/analytics.js"
-            data-chiffre-project-id="odWoaH0aUUwm42Wf"
-            data-chiffre-public-key="pk.3EPMj_faODyzisb0UNmZnzhIkG9sbj7zR5em6lf7Olk"
-            referrerPolicy="origin"
-            crossOrigin="anonymous"
-            data-chiffre-ignore-paths="/stats"
-          />
+        {enableAnalytics && (
+          <>
+            <Databuddy clientId="QhPm9ppqtfj3m3t2LP5iK" enableBatching />
+            <Script
+              async
+              id="chiffre:analytics"
+              src="https://chiffre.io/analytics.js"
+              data-chiffre-project-id="odWoaH0aUUwm42Wf"
+              data-chiffre-public-key="pk.3EPMj_faODyzisb0UNmZnzhIkG9sbj7zR5em6lf7Olk"
+              referrerPolicy="origin"
+              crossOrigin="anonymous"
+              data-chiffre-ignore-paths="/stats"
+            />
+          </>
         )}
         <ResponsiveHelper />
       </body>

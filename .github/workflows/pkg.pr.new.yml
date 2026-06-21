@@ -3,7 +3,7 @@ on:
   pull_request:
     types: [opened, synchronize, labeled]
     paths:
-      - 'packages/nuqs/**'
+      - "packages/nuqs/**"
 
 concurrency:
   group: pkg-pr-new-${{ github.event.pull_request.number }}
@@ -17,22 +17,28 @@ jobs:
       contains(github.event.pull_request.labels.*.name, 'deploy:preview')
     runs-on: ubuntu-24.04-arm
     steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8
-      - uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061
-      - uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093 # v6.0.8
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
         with:
           node-version-file: .node-version
           cache: pnpm
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm install --ignore-scripts --frozen-lockfile --filter nuqs...
       - name: Build package
         run: pnpm build --filter nuqs
       - name: Set package version
+        env:
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
-          pnpm pkg set version=0.0.0-preview.${{ github.event.pull_request.head.sha }}
-          echo "::notice title=Install (PR)::pnpm add https://pkg.pr.new/nuqs@${{ github.event.pull_request.number }}"
-          echo "::notice title=Install (SHA)::pnpm add https://pkg.pr.new/nuqs@${{ github.event.pull_request.head.sha }}"
-          echo "::notice title=Version::0.0.0-preview.${{ github.event.pull_request.head.sha }}"
+          npm pkg set "version=0.0.0-preview.${HEAD_SHA}"
+          echo "::notice title=Install (PR)::pnpm add https://pkg.pr.new/nuqs@${PR_NUMBER}"
+          echo "::notice title=Install (SHA)::pnpm add https://pkg.pr.new/nuqs@${HEAD_SHA}"
+          echo "::notice title=Version::0.0.0-preview.${HEAD_SHA}"
         working-directory: packages/nuqs
       - name: Publish to pkg.pr.new
-        run: pnpx pkg-pr-new publish --compact './packages/nuqs' --no-template --packageManager=pnpm --pnpm
+        run: pnpx pkg-pr-new publish --compact './packages/nuqs' --no-template
+          --packageManager=pnpm --pnpm

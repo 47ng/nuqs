@@ -9,6 +9,9 @@ on:
         required: true
         type: string
 
+permissions:
+  contents: read # for actions/checkout
+
 env:
   FORCE_COLOR: 3 # Diplay chalk colors
   VERSION: ${{ inputs.version }}
@@ -30,14 +33,16 @@ jobs:
             }
             console.log(\`Version '\${version}' is valid SemVer\`);
           "
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8
-      - uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061
-      - uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093 # v6.0.8
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
         with:
           node-version-file: .node-version
           cache: pnpm
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm install --filter scripts...
       - name: Check for changes in app router
         run: ./next-release-analyser.ts --version "${{ env.VERSION }}"
         working-directory: packages/scripts

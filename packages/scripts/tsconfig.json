@@ -4,7 +4,7 @@
     // Type checking
     "strict": true,
     "noUncheckedIndexedAccess": true,
-    "alwaysStrict": false, // Don't emit "use strict" to avoid conflicts with "use client"
+    "types": ["node"],
     // Modules
     "module": "ESNext",
     "moduleResolution": "Bundler",
@@ -19,12 +19,12 @@
     "verbatimModuleSyntax": true,
     "moduleDetection": "force",
 
-    "downlevelIteration": true,
     // Interop
     "allowJs": true,
     "isolatedModules": true,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
+    "allowImportingTsExtensions": true,
     // Misc
     "skipLibCheck": true,
     "skipDefaultLibCheck": true,

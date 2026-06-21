@@ -23,16 +23,21 @@ export async function NPMStats() {
       <dl className="flex items-center gap-3 text-3xl font-bold lg:text-4xl">
         <Download className="size-7 lg:size-9" />
         <dt className="sr-only">combined</dt>
-        <dd title="All time, combined">{formatStatNumber(both.allTime)}</dd>
+        <dd title={`All time, combined: ${both.allTime}`}>
+          {formatStatNumber(both.allTime)}
+        </dd>
         <span className="font-light text-zinc-500" aria-hidden>
           |
         </span>
         <dt className="sr-only">nuqs</dt>
-        <dd className="text-red-500" title="All time, nuqs">
+        <dd className="text-red-500" title={`All time, nuqs: ${nuqs.allTime}`}>
           {formatStatNumber(nuqs.allTime)}
         </dd>
         <dt className="sr-only">next-usequerystate</dt>
-        <dd className="text-zinc-500/50" title="All time, next-usequerystate">
+        <dd
+          className="text-zinc-500/50"
+          title={`All time, next-usequerystate: ${nextUseQueryState.allTime}`}
+        >
           {formatStatNumber(nextUseQueryState.allTime)}
         </dd>
       </dl>
@@ -66,6 +71,7 @@ export async function NPMDownloads() {
             // to the first N days of the previous week.
             oldValue={getPartialPreviousWeekDownloads(nuqs.last30Days)}
             newValue={nuqs.last90Days.at(-1)?.downloads ?? 0}
+            estimated={nuqs.last90Days.at(-1)?.estimated}
           />
         }
         title={
@@ -205,12 +211,16 @@ type TrendBadgeProps = {
   oldValue: number
   newValue: number
   label: string
+  estimated?: boolean
 }
 
-function TrendBadge({ oldValue, newValue, label }: TrendBadgeProps) {
+function TrendBadge({ oldValue, newValue, label, estimated }: TrendBadgeProps) {
   const diff = newValue - oldValue
   const pct = oldValue === 0 ? 100 : (diff / oldValue) * 100
   const sign = diff === 0 ? '' : diff > 0 ? '+' : '-'
+  const title = estimated
+    ? `${sign}${Math.abs(diff)} ${label} (* includes estimated data)`
+    : `${sign}${Math.abs(diff)} ${label}`
   return (
     <Badge
       variant="outline"
@@ -220,7 +230,7 @@ function TrendBadge({ oldValue, newValue, label }: TrendBadgeProps) {
         diff < 0 && 'bg-red-500/10 text-red-500',
         diff === 0 && 'bg-zinc-500/10 text-zinc-500'
       )}
-      title={`${sign}${Math.abs(diff)} ${label}`}
+      title={title}
     >
       {diff > 0 && <TrendingUp size={12} />}
       {diff < 0 && <TrendingDown size={12} />}
@@ -228,7 +238,7 @@ function TrendBadge({ oldValue, newValue, label }: TrendBadgeProps) {
       {diff > 0 ? '+' : '-'}
       {formatStatNumber(Math.abs(diff)) || 'No change'}
       {oldValue !== 0 && (
-        <span className="font-normal">({pct.toFixed(1)}%)</span>
+        <span className="font-normal">({pct.toFixed(1)}%){estimated && '*'}</span>
       )}
     </Badge>
   )
