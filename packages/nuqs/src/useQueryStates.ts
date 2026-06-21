@@ -103,13 +103,13 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
   // Tracks the URL source (search params + queued queries) the internal state
   // was last reconciled against during render. See the reconciliation block below.
   const lastSyncKeyRef = useRef<string | null>(null)
-  // The pathname this hook last reconciled against from a committed render (set
-  // by the effect backstop below). The render-time reconcile is skipped when the
+  // The pathname this hook last reconciled against from a committed render
+  // (set by the effect backstop below). The render-time reconcile is skipped when the
   // live pathname no longer matches it: that means the component is rendering
   // through a navigation transition for a different route (an outgoing or
-  // incoming page kept alive by the router, e.g. under cacheComponents), where
-  // adopting the in-flight URL would corrupt speculative renders (#1293). A
-  // genuine `<Activity>` reveal keeps the same pathname, so it still reconciles.
+  // incoming page kept alive by the router, e.g. under cacheComponents),
+  // where adopting the in-flight URL would corrupt speculative renders (#1293).
+  // A genuine `<Activity>` reveal keeps the same pathname, so it still reconciles.
   const committedPathnameRef = useRef<string | null>(null)
   const defaultValues = useMemo(
     () =>
@@ -135,7 +135,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
   // Identifies the current URL source (resolved search params + queued queries).
   // Mirrors the dependencies of the URL sync effect below so that render-time
   // reconciliation reacts to the same external changes, and never to internal
-  // (optimistic) updates which don't alter the URL source.
+  // (optimistic) updates which don't immediately alter the URL source.
   const searchParamsSyncKey =
     Object.values(resolvedUrlKeys)
       .map(key => `${key}=${initialSearchParams?.getAll(key)}`)
@@ -160,7 +160,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
   // Reconcile during render, both on key-set changes (initialisation) and when
   // the URL source changes. The effect below does the same, but effects are
   // detached while a subtree is hidden under `<Activity>` and only re-run after
-  // the first commit on reveal — so without this, that first render would paint
+  // the first commit on reveal, so without this, that first render would paint
   // the value captured while hidden (#1444). Gating on `searchParamsSyncKey`
   // means we only adopt the URL when its source actually changed, never
   // reverting an optimistic update not yet propagated to the adapter's params.
@@ -172,9 +172,8 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
   const keysChanged =
     Object.keys(queryRef.current).join('&') !==
     Object.values(resolvedUrlKeys).join('&')
-  // `committedPathnameRef` is only ever assigned from the effect below (client
-  // only), so a null value already covers SSR and the first client render, and
-  // short-circuits before `location` is touched on the server.
+  // `committedPathnameRef` is only ever assigned from the client,
+  // so a null value covers both SSR and the first client render.
   const onCommittedPathname =
     committedPathnameRef.current === null ||
     committedPathnameRef.current === location.pathname
