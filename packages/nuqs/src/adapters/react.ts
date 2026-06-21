@@ -49,6 +49,8 @@ const NuqsReactAdapterContext = createContext({
 
 const emptySearchParams = new URLSearchParams()
 
+// Note: we could expose a getServerSnapshot() function to allow server-side rendering
+// to let consumers wire that to their backend router (eg: in Astro SSR, Fastify, Hono etc).
 function getServerSnapshot() {
   return emptySearchParams
 }
