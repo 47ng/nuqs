@@ -49,9 +49,10 @@ const NuqsReactAdapterContext = createContext({
 
 const emptySearchParams = new URLSearchParams()
 
-// The emitter (nuqs updates) and popstate (back/forward) are the only sources of
-// URL changes to react to. We don't carry the emitted value through: getSnapshot
-// re-reads location.search instead, so the snapshot is always the live URL.
+function getServerSnapshot() {
+  return emptySearchParams
+}
+
 function subscribe(onStoreChange: () => void) {
   emitter.on('update', onStoreChange)
   window.addEventListener('popstate', onStoreChange)
@@ -59,10 +60,6 @@ function subscribe(onStoreChange: () => void) {
     emitter.off('update', onStoreChange)
     window.removeEventListener('popstate', onStoreChange)
   }
-}
-
-function getServerSnapshot() {
-  return emptySearchParams
 }
 
 function useNuqsReactAdapter(watchKeys: string[]): AdapterInterface {
@@ -73,25 +70,25 @@ function useNuqsReactAdapter(watchKeys: string[]): AdapterInterface {
   // synced by an effect) keeps the value fresh even on the first render after an
   // <Activity> subtree is revealed: its effects — and thus the emitter
   // subscription — were detached while hidden and missed the URL update (#1444).
-  const cache = useRef<{ key: string; value: URLSearchParams } | null>(null)
+  const cache = useRef<{ key: string; search: URLSearchParams } | null>(null)
   const searchParams = useSyncExternalStore(
     subscribe,
     () => {
-      const value = filterSearchParams(
+      const filteredSearch = filterSearchParams(
         new URLSearchParams(location.search),
         watchKeys,
         false
       )
-      // Return a referentially-stable snapshot while the watched keys are
-      // unchanged: required by useSyncExternalStore (Object.is bail-out), and it
-      // preserves key isolation (a change to an unwatched key keeps the same ref,
+      // Return a referentially-stable snapshot while the watched keys are unchanged:
+      // required by useSyncExternalStore (Object.is bail-out),
+      // and it preserves key isolation (a change to an unwatched key keeps the same ref,
       // so this hook doesn't re-render).
-      const key = value.toString()
+      const key = filteredSearch.toString()
       if (cache.current?.key === key) {
-        return cache.current.value
+        return cache.current.search
       }
-      cache.current = { key, value }
-      return value
+      cache.current = { key, search: filteredSearch }
+      return filteredSearch
     },
     getServerSnapshot
   )
