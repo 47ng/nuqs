@@ -1,36 +1,34 @@
+export type DebugSink = (
+  code: number,
+  args: unknown[],
+  isWarn?: boolean
+) => void
+
+let sink: DebugSink | null = null
+
+/**
+ * Install (or remove, with `null`) the function that renders debug logs.
+ *
+ * The core bundle only carries this thin dispatcher and the numeric message
+ * codes passed to `debug`/`warn`. The format strings and formatting logic live
+ * in the `nuqs/debug` entry point, which calls this to opt logging into the
+ * bundle at runtime (gated by the `debug=nuqs`/`DEBUG=nuqs` flag).
+ */
+export function setDebugSink(newSink: DebugSink | null): void {
+  sink = newSink
+}
+
+export function debug(code: number, ...args: unknown[]): void {
+  sink?.(code, args)
+}
+
+export function warn(code: number, ...args: unknown[]): void {
+  sink?.(code, args, true)
+}
+
 export const debugEnabled: boolean = isDebugEnabled()
 
-export function debug(message: string, ...args: any[]): void {
-  if (!debugEnabled) {
-    return
-  }
-  const msg = sprintf(message, ...args)
-  performance.mark(msg)
-  try {
-    // Handle React Devtools not being able to console.log('%s', null)
-    console.log(message, ...args)
-  } catch {
-    console.log(msg)
-  }
-}
-
-export function warn(message: string, ...args: any[]): void {
-  if (!debugEnabled) {
-    return
-  }
-  console.warn(message, ...args)
-}
-
-export function sprintf(base: string, ...args: any[]): string {
-  return base.replace(/%[sfdO]/g, match => {
-    const arg = args.shift()
-    return match === '%O' && arg
-      ? JSON.stringify(arg).replace(/"([^"]+)":/g, '$1:')
-      : String(arg)
-  })
-}
-
-function isDebugEnabled(): boolean {
+export function isDebugEnabled(): boolean {
   // Issue: https://github.com/47ng/nuqs/issues/1336
   // Backend (Node/server): use DEBUG env var, never touch localStorage.
   // --localstorage-file triggers a warning.

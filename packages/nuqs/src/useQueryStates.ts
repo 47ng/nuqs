@@ -118,13 +118,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
   )
 
   const stateRef = useRef(internalState)
-  debug(
-    '[nuq+ %s `%s`] render - state: %O, iSP: %s',
-    hookId,
-    stateKeys,
-    internalState,
-    initialSearchParams
-  )
+  debug(26, hookId, stateKeys, internalState, initialSearchParams)
 
   // Initialise the refs with the initial values
   if (
@@ -140,7 +134,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
       stateRef.current
     )
     if (hasChanged) {
-      debug('[nuq+ %s `%s`] State changed: %O', hookId, stateKeys, {
+      debug(1, hookId, stateKeys, {
         state,
         initialSearchParams,
         queuedQueries,
@@ -173,7 +167,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
       stateRef.current
     )
     if (hasChanged) {
-      debug('[nuq+ %s `%s`] State changed: %O', hookId, stateKeys, {
+      debug(1, hookId, stateKeys, {
         state,
         initialSearchParams,
         queuedQueries,
@@ -206,7 +200,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
 
             if (Object.is(currentValue, nextValue)) {
               debug(
-                '[nuq+ %s `%s`] Cross-hook key sync %s: %O (default: %O). no change, skipping, resolved: %O',
+                2,
                 hookId,
                 stateKeys,
                 urlKey,
@@ -225,7 +219,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
             }
             queryRef.current[urlKey] = query
             debug(
-              '[nuq+ %s `%s`] Cross-hook key sync %s: %O (default: %O). updateInternalState, resolved: %O',
+              3,
               hookId,
               stateKeys,
               urlKey,
@@ -243,23 +237,13 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
 
     for (const stateKey of Object.keys(keyMap)) {
       const urlKey = resolvedUrlKeys[stateKey]!
-      debug(
-        '[nuq+ %s `%s`] Subscribing to sync for `%s`',
-        hookId,
-        urlKey,
-        stateKeys
-      )
+      debug(4, hookId, urlKey, stateKeys)
       emitter.on(urlKey, handlers[stateKey]!)
     }
     return () => {
       for (const stateKey of Object.keys(keyMap)) {
         const urlKey = resolvedUrlKeys[stateKey]!
-        debug(
-          '[nuq+ %s `%s`] Unsubscribing to sync for `%s`',
-          hookId,
-          urlKey,
-          stateKeys
-        )
+        debug(5, hookId, urlKey, stateKeys)
         emitter.off(urlKey, handlers[stateKey])
       }
     }
@@ -276,7 +260,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
               applyDefaultValues(stateRef.current, defaultValues)
             ) ?? nullMap)
           : (stateUpdater ?? nullMap)
-      debug('[nuq+ %s `%s`] setState: %O', hookId, stateKeys, newState)
+      debug(6, hookId, stateKeys, newState)
       let returnedPromise: Promise<URLSearchParams> | undefined = undefined
       let maxDebounceTime = 0
       let doFlush = false

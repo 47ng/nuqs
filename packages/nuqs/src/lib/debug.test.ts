@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { sprintf } from './debug'
+import { sprintf } from './debug-messages'
 
 describe('debug/server (DEBUG env)', () => {
   it('enables when DEBUG includes nuqs', async () => {

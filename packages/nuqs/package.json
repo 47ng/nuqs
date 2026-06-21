@@ -36,6 +36,7 @@
   },
   "files": [
     "dist/",
+    "debug.d.ts",
     "server.d.ts",
     "testing.d.ts",
     "adapters/react.d.ts",
@@ -52,7 +53,9 @@
     "adapters/testing.d.ts"
   ],
   "type": "module",
-  "sideEffects": false,
+  "sideEffects": [
+    "./dist/debug.js"
+  ],
   "module": "dist/index.js",
   "types": "dist/index.d.ts",
   "exports": {
@@ -61,6 +64,11 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
       "default": "./dist/index.js"
+    },
+    "./debug": {
+      "types": "./dist/debug.d.ts",
+      "import": "./dist/debug.js",
+      "default": "./dist/debug.js"
     },
     "./server": {
       "types": "./dist/server.d.ts",
@@ -201,7 +209,7 @@
     {
       "name": "Client",
       "path": "dist/index.js",
-      "limit": "6 kB"
+      "limit": "5.9 kB"
     },
     {
       "name": "Client (minimal tree-shaken)",
@@ -212,7 +220,7 @@
     {
       "name": "Server",
       "path": "dist/server.js",
-      "limit": "3.5 kB"
+      "limit": "3.8 kB"
     }
   ]
 }

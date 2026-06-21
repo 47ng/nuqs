@@ -14,22 +14,11 @@ export function applyChange(
             key => !compareQuery(oldValue.getAll(key), newValue.getAll(key))
           )
     if (!hasChanged) {
-      debug(
-        '[nuqs `%s`] no change, returning previous',
-        keys.join(','),
-        oldValue
-      )
+      debug(22, keys.join(','), oldValue)
       return oldValue
     }
     const filtered = filterSearchParams(newValue, keys, copy)
-    debug(
-      `[nuqs \`%s\`] subbed search params change
-  from %O
-  to   %O`,
-      keys.join(','),
-      oldValue,
-      filtered
-    )
+    debug(23, keys.join(','), oldValue, filtered)
     return filtered
   }
 }

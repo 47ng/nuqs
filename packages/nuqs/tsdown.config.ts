@@ -28,6 +28,7 @@ const commonConfig = {
 const entrypoints = {
   client: {
     index: 'src/index.ts',
+    debug: 'src/debug.ts',
     'adapters/react': 'src/adapters/react.ts',
     'adapters/next': 'src/adapters/next.ts',
     'adapters/next/app': 'src/adapters/next/app.ts',
@@ -53,8 +54,12 @@ const config: UserConfig = defineConfig([
     ...commonConfig,
     entry: entrypoints.client,
     outputOptions: {
+      // The `nuqs/debug` opt-in is isomorphic (it also reads `DEBUG` on the
+      // server), so it must not be marked as a client-only module.
       intro: ({ isEntry, fileName }) =>
-        isEntry && !fileName.endsWith('.d.ts') ? "'use client';\n" : ''
+        isEntry && !fileName.endsWith('.d.ts') && fileName !== 'debug.js'
+          ? "'use client';\n"
+          : ''
     },
     async onSuccess() {
       // Mark the un-versionned React Router adapter as deprecated
