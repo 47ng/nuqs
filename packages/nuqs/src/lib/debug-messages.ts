@@ -37,9 +37,7 @@ export const debugMessages = {
   to   %O`,
   // safe-parse
   24: '[nuqs] Error while parsing value `%s`: %O',
-  25: '[nuqs] Error while parsing value `%s`: %O (for key `%s`)',
-  // useQueryStates (render)
-  26: '[nuq+ %s `%s`] render - state: %O, iSP: %s'
+  25: '[nuqs] Error while parsing value `%s`: %O (for key `%s`)'
 } as const
 
 /**
