@@ -1,6 +1,6 @@
 # Invalid Options Combination.
 
-This warning did show up between versions `nuqs@>=2.6.0 && nuqs@<=2.7.2` if you combined `shallow: true` (the default) and `limitUrlUpdates: debounce` options.
+This warning did show up between versions `nuqs@>=2.6.0 && nuqs@<=2.9.0` if you combined `shallow: true` (the default) and `limitUrlUpdates: debounce` options.
 
 The initial argument was that:
 
