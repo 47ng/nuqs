@@ -14,4 +14,4 @@ While nuqs uses `history: replace` by default to avoid polluting your history **
 
 Debouncing gives you finer control over how this global history is populated, with the trade-off of a less reactive URL.
 
-Regardless, debounce only applies to URL updates, so the recommendation for client-side fetching still stands: you'll likely want to debounce the returned state in userland before feeding it to TanStack Query, SWC, tRPC or other tools.
+Regardless, debounce only applies to URL updates, so the recommendation for client-side fetching still stands: you'll likely want to debounce the returned state in userland before feeding it to TanStack Query, SWR, tRPC or other tools.
