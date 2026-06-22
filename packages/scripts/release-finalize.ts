@@ -174,7 +174,7 @@ function isGraphqlFieldError(error: unknown): error is GraphqlFieldError {
 // be explicit): a 403 here is NEVER a transient rate limit. The throttling plugin
 // absorbs rate limits before they reach this catch — secondary limits retry
 // indefinitely, primary limits retry with backoff until the quota resets (see the
-// `throttle` config in `makeOctokitWriter`). A rate-limited request is retried,
+// `throttle` config in `makeOctokitTargetWriter`). A rate-limited request is retried,
 // not rejected, so it never lands here. A 403 that does survive to here is a real
 // permissions/abuse refusal, equivalent to 404 for our purposes (this one target
 // cannot be written), so we skip it. A misconfiguration that 403s *every* target
