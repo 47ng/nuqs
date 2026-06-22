@@ -38,9 +38,9 @@ export class DebouncedPromiseQueue<ValueType, OutputType> {
         // assigned to a new Promise (and not dropped).
         const outputResolvers = this.resolvers
         try {
-          debug('[nuqs dq] Flushing debounce queue', value)
+          debug(13, value)
           const callbackPromise = this.callback(value)
-          debug('[nuqs dq] Reset debounce queue %O', this.queuedValue)
+          debug(14, this.queuedValue)
           this.queuedValue = undefined
           this.resolvers = withResolvers<OutputType>()
           callbackPromise
@@ -95,7 +95,7 @@ export class DebounceController {
     }
     const key = update.key
     if (!this.queues.has(key)) {
-      debug('[nuqs dqc] Creating debounce queue for `%s`', key)
+      debug(15, key)
       const queue = new DebouncedPromiseQueue<
         Omit<UpdateQueuePushArgs, 'timeMs'>,
         URLSearchParams
@@ -106,7 +106,7 @@ export class DebounceController {
           .finally(() => {
             const queuedValue = this.queues.get(update.key)?.queuedValue
             if (queuedValue === undefined) {
-              debug('[nuqs dqc] Cleaning up empty queue for `%s`', update.key)
+              debug(16, update.key)
               this.queues.delete(update.key)
             }
             this.queuedQuerySync.emit(update.key)
@@ -114,7 +114,7 @@ export class DebounceController {
       })
       this.queues.set(key, queue)
     }
-    debug('[nuqs dqc] Enqueueing debounce update %O', update)
+    debug(17, update)
     const promise = this.queues.get(key)!.push(update, timeMs)
     this.queuedQuerySync.emit(key)
     return promise
@@ -127,11 +127,7 @@ export class DebounceController {
     if (!queue) {
       return passThrough => passThrough
     }
-    debug(
-      '[nuqs dqc] Aborting debounce queue %s=%s',
-      key,
-      queue.queuedValue?.query
-    )
+    debug(18, key, queue.queuedValue?.query)
     this.queues.delete(key)
     queue.abort() // Don't run to completion
     this.queuedQuerySync.emit(key)
@@ -144,11 +140,7 @@ export class DebounceController {
 
   abortAll(): void {
     for (const [key, queue] of this.queues.entries()) {
-      debug(
-        '[nuqs dqc] Aborting debounce queue %s=%s',
-        key,
-        queue.queuedValue?.query
-      )
+      debug(18, key, queue.queuedValue?.query)
       queue.abort()
       // todo: Better abort handling
       queue.resolvers.resolve(new URLSearchParams()) // Don't leave the Promise pending

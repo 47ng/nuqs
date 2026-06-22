@@ -2,9 +2,9 @@ import {
   createContext,
   createElement,
   useContext,
-  useEffect,
   useMemo,
-  useState,
+  useRef,
+  useSyncExternalStore,
   type ReactElement,
   type ReactNode
 } from 'react'
@@ -13,7 +13,7 @@ import { createEmitter } from '../lib/emitter'
 import { renderQueryString } from '../lib/url-encoding'
 import { createAdapterProvider, type AdapterProps } from './lib/context'
 import type { AdapterInterface, AdapterOptions } from './lib/defs'
-import { applyChange, filterSearchParams } from './lib/key-isolation'
+import { filterSearchParams } from './lib/key-isolation'
 import {
   historyUpdateMarker,
   patchHistory,
@@ -26,7 +26,7 @@ function generateUpdateUrlFn(fullPageNavigationOnShallowFalseUpdates: boolean) {
   return function updateUrl(search: URLSearchParams, options: AdapterOptions) {
     const url = new URL(location.href)
     url.search = renderQueryString(search)
-    debug('[nuqs react] Updating url: %s', url)
+    debug(20, 'react', url)
     if (fullPageNavigationOnShallowFalseUpdates && options.shallow === false) {
       const method =
         options.history === 'push' ? location.assign : location.replace
@@ -47,38 +47,53 @@ const NuqsReactAdapterContext = createContext({
   fullPageNavigationOnShallowFalseUpdates: false
 })
 
+const emptySearchParams = new URLSearchParams()
+
+// Note: we could expose a getServerSnapshot() function to allow server-side rendering
+// to let consumers wire that to their backend router (eg: in Astro SSR, Fastify, Hono etc).
+function getServerSnapshot() {
+  return emptySearchParams
+}
+
+function subscribe(onStoreChange: () => void) {
+  emitter.on('update', onStoreChange)
+  window.addEventListener('popstate', onStoreChange)
+  return () => {
+    emitter.off('update', onStoreChange)
+    window.removeEventListener('popstate', onStoreChange)
+  }
+}
+
 function useNuqsReactAdapter(watchKeys: string[]): AdapterInterface {
   const { fullPageNavigationOnShallowFalseUpdates } = useContext(
     NuqsReactAdapterContext
   )
-  const [searchParams, setSearchParams] = useState(() => {
-    if (typeof location === 'undefined') {
-      return new URLSearchParams()
-    }
-    return filterSearchParams(
-      new URLSearchParams(location.search),
-      watchKeys,
-      false
-    )
-  })
-  useEffect(() => {
-    // Popstate event is only fired when the user navigates
-    // via the browser's back/forward buttons.
-    const onPopState = () => {
-      setSearchParams(
-        applyChange(new URLSearchParams(location.search), watchKeys, false)
+  // Reading location.search live in getSnapshot (rather than from React state
+  // synced by an effect) keeps the value fresh even on the first render after an
+  // <Activity> subtree is revealed: its effects — and thus the emitter
+  // subscription — were detached while hidden and missed the URL update (#1444).
+  const cache = useRef<{ key: string; search: URLSearchParams } | null>(null)
+  const searchParams = useSyncExternalStore(
+    subscribe,
+    () => {
+      const filteredSearch = filterSearchParams(
+        new URLSearchParams(location.search),
+        watchKeys,
+        false
       )
-    }
-    const onEmitterUpdate = (search: URLSearchParams) => {
-      setSearchParams(applyChange(search, watchKeys, true))
-    }
-    emitter.on('update', onEmitterUpdate)
-    window.addEventListener('popstate', onPopState)
-    return () => {
-      emitter.off('update', onEmitterUpdate)
-      window.removeEventListener('popstate', onPopState)
-    }
-  }, [watchKeys.join('&')])
+      // Return a referentially-stable snapshot while the watched keys are unchanged:
+      // required by useSyncExternalStore (Object.is bail-out),
+      // and it preserves key isolation (a change to an unwatched key keeps the same ref,
+      // so this hook doesn't re-render).
+      const key = filteredSearch.toString()
+      if (cache.current?.key === key) {
+        return cache.current.search
+      }
+      cache.current = { key, search: filteredSearch }
+      return filteredSearch
+    },
+    getServerSnapshot
+  )
   const updateUrl = useMemo(
     () => generateUpdateUrlFn(fullPageNavigationOnShallowFalseUpdates),
     [fullPageNavigationOnShallowFalseUpdates]

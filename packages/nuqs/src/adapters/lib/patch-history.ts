@@ -67,11 +67,7 @@ export function patchHistory(
     resetQueues()
   })
 
-  debug(
-    '[nuqs %s] Patching history (%s adapter)',
-    '0.0.0-inject-version-here',
-    adapter
-  )
+  debug(21, '0.0.0-inject-version-here', adapter)
   function sync(url: URL | string) {
     spinQueueResetMutex()
     try {
