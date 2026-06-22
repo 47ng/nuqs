@@ -77,10 +77,7 @@ const exports = `
     "NuqsTestingAdapter": "function",
     "withNuqsTestingAdapter": "function",
   },
-  "./debug": {
-    "disableNuqsDebugging": "function",
-    "enableNuqsDebugging": "function",
-  },
+  "./debug": {},
   "./server": {
     "createLoader": "function",
     "createMultiParser": "function",

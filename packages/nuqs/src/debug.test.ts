@@ -1,15 +1,29 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { disableNuqsDebugging, enableNuqsDebugging } from './debug'
-import { debug, setDebugSink, warn } from './lib/debug'
 import { debugMessages } from './lib/debug-messages'
+
+// `nuqs/debug` is a side-effect-only entry: importing it installs the logging
+// sink when the `DEBUG`/`localStorage.debug` flag is set. Load a fresh module
+// graph each time and grab `debug`/`warn` from the same `lib/debug` instance the
+// entry wired its sink onto. `flag` toggles the server-side `DEBUG=nuqs` gate the
+// entry reads on load.
+async function loadDebugEntry({ flag }: { flag: boolean }) {
+  vi.resetModules()
+  if (flag) {
+    vi.stubEnv('DEBUG', 'nuqs')
+  }
+  await import('./debug')
+  return import('./lib/debug')
+}
 
 describe('nuqs/debug opt-in', () => {
   afterEach(() => {
-    setDebugSink(null)
     vi.restoreAllMocks()
+    vi.unstubAllEnvs()
+    vi.resetModules()
   })
 
-  it('debug/warn are no-ops until logging is enabled', () => {
+  it('debug/warn stay silent when the flag is not set', async () => {
+    const { debug, warn } = await loadDebugEntry({ flag: false })
     const log = vi.spyOn(console, 'log').mockImplementation(() => {})
     const wrn = vi.spyOn(console, 'warn').mockImplementation(() => {})
     debug(1, 'id', 'key', {})
@@ -18,17 +32,17 @@ describe('nuqs/debug opt-in', () => {
     expect(wrn).not.toHaveBeenCalled()
   })
 
-  it('enableNuqsDebugging resolves codes through the message catalog', () => {
+  it('importing nuqs/debug with the flag set routes debug through the catalog', async () => {
+    const { debug } = await loadDebugEntry({ flag: true })
     const log = vi.spyOn(console, 'log').mockImplementation(() => {})
-    enableNuqsDebugging()
     const args = ['id', 'key', { a: 1 }] as const
     debug(6, ...args)
     expect(log).toHaveBeenCalledExactlyOnceWith(debugMessages[6], ...args)
   })
 
-  it('warn routes through console.warn with the catalog message', () => {
+  it('routes warn through console.warn with the catalog message', async () => {
+    const { warn } = await loadDebugEntry({ flag: true })
     const wrn = vi.spyOn(console, 'warn').mockImplementation(() => {})
-    enableNuqsDebugging()
     const cause = new Error('boom')
     warn(24, 'value', cause)
     expect(wrn).toHaveBeenCalledExactlyOnceWith(
@@ -38,20 +52,12 @@ describe('nuqs/debug opt-in', () => {
     )
   })
 
-  it('unknown codes are ignored', () => {
+  it('unknown codes are ignored', async () => {
+    const { debug } = await loadDebugEntry({ flag: true })
     const log = vi.spyOn(console, 'log').mockImplementation(() => {})
-    enableNuqsDebugging()
     // @ts-expect-error — 9999 is not a valid DebugCode; this asserts the catalog
     // rejects unknown codes at compile time, and that they no-op at runtime.
     debug(9999)
-    expect(log).not.toHaveBeenCalled()
-  })
-
-  it('disableNuqsDebugging restores the no-op behaviour', () => {
-    const log = vi.spyOn(console, 'log').mockImplementation(() => {})
-    enableNuqsDebugging()
-    disableNuqsDebugging()
-    debug(1, 'id', 'key', {})
     expect(log).not.toHaveBeenCalled()
   })
 })
