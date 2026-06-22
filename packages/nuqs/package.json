@@ -36,7 +36,6 @@
   },
   "files": [
     "dist/",
-    "debug.d.ts",
     "server.d.ts",
     "testing.d.ts",
     "adapters/react.d.ts",
