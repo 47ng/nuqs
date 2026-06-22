@@ -52,7 +52,9 @@
     "adapters/testing.d.ts"
   ],
   "type": "module",
-  "sideEffects": false,
+  "sideEffects": [
+    "./dist/debug.js"
+  ],
   "module": "dist/index.js",
   "types": "dist/index.d.ts",
   "exports": {
@@ -61,6 +63,11 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
       "default": "./dist/index.js"
+    },
+    "./debug": {
+      "types": "./dist/debug.d.ts",
+      "import": "./dist/debug.js",
+      "default": "./dist/debug.js"
     },
     "./server": {
       "types": "./dist/server.d.ts",
@@ -212,7 +219,7 @@
     {
       "name": "Server",
       "path": "dist/server.js",
-      "limit": "3.5 kB"
+      "limit": "3.8 kB"
     }
   ]
 }

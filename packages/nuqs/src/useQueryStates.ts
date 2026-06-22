@@ -7,7 +7,6 @@ import {
 import type { Nullable, Options, UrlKeys } from './defs'
 import { compareQuery } from './lib/compare'
 import { debug } from './lib/debug'
-import { error } from './lib/errors'
 import { debounceController } from './lib/queues/debounce'
 import { defaultRateLimit } from './lib/queues/rate-limiting'
 import {
@@ -152,7 +151,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
       stateRef.current
     )
     if (hasChanged) {
-      debug('[nuq+ %s `%s`] State changed: %O', hookId, stateKeys, state)
+      debug(1, hookId, stateKeys, state)
       stateRef.current = state
       setInternalState(state)
     }
@@ -225,7 +224,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
 
             if (Object.is(currentValue, nextValue)) {
               debug(
-                '[nuq+ %s `%s`] Cross-hook key sync %s: %O (default: %O). no change, skipping, resolved: %O',
+                2,
                 hookId,
                 stateKeys,
                 urlKey,
@@ -244,7 +243,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
             }
             queryRef.current[urlKey] = query
             debug(
-              '[nuq+ %s `%s`] Cross-hook key sync %s: %O (default: %O). updateInternalState, resolved: %O',
+              3,
               hookId,
               stateKeys,
               urlKey,
@@ -262,23 +261,13 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
 
     for (const stateKey of Object.keys(keyMap)) {
       const urlKey = resolvedUrlKeys[stateKey]!
-      debug(
-        '[nuq+ %s `%s`] Subscribing to sync for `%s`',
-        hookId,
-        urlKey,
-        stateKeys
-      )
+      debug(4, hookId, urlKey, stateKeys)
       emitter.on(urlKey, handlers[stateKey]!)
     }
     return () => {
       for (const stateKey of Object.keys(keyMap)) {
         const urlKey = resolvedUrlKeys[stateKey]!
-        debug(
-          '[nuq+ %s `%s`] Unsubscribing to sync for `%s`',
-          hookId,
-          urlKey,
-          stateKeys
-        )
+        debug(5, hookId, urlKey, stateKeys)
         emitter.off(urlKey, handlers[stateKey])
       }
     }
@@ -295,7 +284,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
               applyDefaultValues(stateRef.current, defaultValues)
             ) ?? nullMap)
           : (stateUpdater ?? nullMap)
-      debug('[nuq+ %s `%s`] setState: %O', hookId, stateKeys, newState)
+      debug(6, hookId, stateKeys, newState)
       let returnedPromise: Promise<URLSearchParams> | undefined = undefined
       let maxDebounceTime = 0
       let doFlush = false
@@ -341,9 +330,6 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
           limitUrlUpdates?.method === 'debounce' ||
           parser.limitUrlUpdates?.method === 'debounce'
         ) {
-          if (update.options.shallow === true) {
-            console.warn(error(422))
-          }
           const timeMs =
             callOptions?.limitUrlUpdates?.timeMs ??
             limitUrlUpdates?.timeMs ??

@@ -1,3 +1,5 @@
+import './debug'
+
 export { createSearchParamsCache } from './cache'
 export type {
   HistoryOptions,
