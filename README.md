@@ -1,19 +1,19 @@
 <div align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="./packages/res/wordmark.dark.svg">
-    <img alt="nuqs" src="./packages/res/wordmark.light.svg" height="64">
+    <img alt="nuqs" src="./packages/res/wordmark.light.svg" width="384">
   </picture>
 </div>
 
 <br>
 
 <p align="center">
-  <a href="https://npmx.dev/package/nuqs"><picture><source media="(prefers-color-scheme: dark)" srcset="https://shieldcn.dev/npm/v/nuqs.svg?color=red&mode=dark"><img alt="npm version" src="https://shieldcn.dev/npm/v/nuqs.svg?color=red&mode=light"></picture></a>
-  <a href="https://npmx.dev/package/nuqs"><picture><source media="(prefers-color-scheme: dark)" srcset="https://shieldcn.dev/npm/dm/nuqs.svg?variant=secondary&mode=dark"><img alt="npm downloads" src="https://shieldcn.dev/npm/dm/nuqs.svg?variant=secondary&mode=light"></picture></a>
-  <a href="https://github.com/47ng/nuqs/blob/next/LICENSE"><picture><source media="(prefers-color-scheme: dark)" srcset="https://shieldcn.dev/github/license/47ng/nuqs.svg?variant=secondary&mode=dark"><img alt="MIT License" src="https://shieldcn.dev/github/license/47ng/nuqs.svg?variant=secondary&mode=light"></picture></a>
-  <a href="https://github.com/47ng/nuqs/commits/next"><picture><source media="(prefers-color-scheme: dark)" srcset="https://shieldcn.dev/github/last-commit/47ng/nuqs.svg?variant=secondary&mode=dark"><img alt="Last commit" src="https://shieldcn.dev/github/last-commit/47ng/nuqs.svg?variant=secondary&mode=light"></picture></a>
-  <a href="https://github.com/sponsors/franky47"><picture><source media="(prefers-color-scheme: dark)" srcset="https://shieldcn.dev/badge/Sponsors-db61a2.svg?logo=githubsponsors&logoColor=white&mode=dark"><img alt="GitHub Sponsors" src="https://shieldcn.dev/badge/Sponsors-db61a2.svg?logo=githubsponsors&logoColor=white&mode=light"></picture></a>
-  <a href="https://github.com/47ng/nuqs/actions/workflows/ci-cd.yml"><picture><source media="(prefers-color-scheme: dark)" srcset="https://shieldcn.dev/github/ci/47ng/nuqs.svg?workflow=ci-cd.yml&branch=next&mode=dark"><img alt="CI/CD" src="https://shieldcn.dev/github/ci/47ng/nuqs.svg?workflow=ci-cd.yml&branch=next&mode=light"></picture></a>
+  <a href="https://npmx.dev/package/nuqs"><picture><source media="(prefers-color-scheme: dark)" srcset="https://shieldcn.dev/npm/v/nuqs.svg?color=red&mode=dark&size=xs"><img alt="npm version" src="https://shieldcn.dev/npm/v/nuqs.svg?color=red&mode=light&size=xs"></picture></a>
+  <a href="https://npmx.dev/package/nuqs"><picture><source media="(prefers-color-scheme: dark)" srcset="https://shieldcn.dev/npm/dw/nuqs.svg?variant=secondary&mode=dark&size=xs"><img alt="npm downloads" src="https://shieldcn.dev/npm/dw/nuqs.svg?variant=secondary&mode=light&size=xs"></picture></a>
+  <a href="https://github.com/47ng/nuqs/blob/next/LICENSE"><picture><source media="(prefers-color-scheme: dark)" srcset="https://shieldcn.dev/github/license/47ng/nuqs.svg?variant=secondary&mode=dark&size=xs"><img alt="MIT License" src="https://shieldcn.dev/github/license/47ng/nuqs.svg?variant=secondary&mode=light&size=xs"></picture></a>
+  <a href="https://github.com/47ng/nuqs/actions/workflows/ci-cd.yml"><picture><source media="(prefers-color-scheme: dark)" srcset="https://shieldcn.dev/github/ci/47ng/nuqs.svg?variant=secondary&workflow=ci-cd.yml&branch=next&mode=dark&size=xs"><img alt="CI/CD" src="https://shieldcn.dev/github/ci/47ng/nuqs.svg?variant=secondary&workflow=ci-cd.yml&branch=next&mode=light&size=xs"></picture></a>
+  <a href="https://github.com/47ng/nuqs/commits/next"><picture><source media="(prefers-color-scheme: dark)" srcset="https://shieldcn.dev/github/contributors/47ng/nuqs.svg?variant=secondary&mode=dark&size=xs"><img alt="Last commit" src="https://shieldcn.dev/github/contributors/47ng/nuqs.svg?variant=secondary&mode=light&size=xs"></picture></a>
+  <a href="https://github.com/sponsors/franky47"><picture><source media="(prefers-color-scheme: dark)" srcset="https://shieldcn.dev/badge/Sponsors-db61a2.svg?logo=githubsponsors&logoColor=white&mode=dark&size=xs"><img alt="GitHub Sponsors" src="https://shieldcn.dev/badge/Sponsors-db61a2.svg?logo=githubsponsors&logoColor=white&mode=light&size=xs"></picture></a>
 </p>
 
 Type-safe search params state manager for React frameworks. Like `useState`, but stored in the URL query string.
