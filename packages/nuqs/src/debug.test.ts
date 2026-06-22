@@ -32,7 +32,7 @@ describe('nuqs/debug opt-in', () => {
     expect(wrn).not.toHaveBeenCalled()
   })
 
-  it('importing nuqs/debug with the flag set routes debug through the catalog', async () => {
+  it('logs to the console when importing nuqs/debug with the flag set', async () => {
     const { debug } = await loadDebugEntry({ flag: true })
     const log = vi.spyOn(console, 'log').mockImplementation(() => {})
     const args = ['id', 'key', { a: 1 }] as const
@@ -52,7 +52,7 @@ describe('nuqs/debug opt-in', () => {
     )
   })
 
-  it('unknown codes are ignored', async () => {
+  it('ignores unknown codes', async () => {
     const { debug } = await loadDebugEntry({ flag: true })
     const log = vi.spyOn(console, 'log').mockImplementation(() => {})
     // @ts-expect-error — 9999 is not a valid DebugCode; this asserts the catalog
