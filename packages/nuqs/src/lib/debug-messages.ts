@@ -1,9 +1,11 @@
 // Debug log messages, keyed by the numeric code passed to `debug`/`warn`.
 //
-// Kept out of the main bundle on purpose: this catalog is only imported by the
-// `nuqs/debug` entry point (see `src/debug.ts`), so the format strings don't
-// ship to consumers unless they opt into logging. Call sites in the core pass
-// the code only — mirroring the `errors.ts` code-catalog pattern.
+// Kept out of the client main bundle on purpose: only the `nuqs/debug` entry
+// (`src/debug.ts`) and the server entry (`src/index.server.ts`) import these
+// values, so the format strings never reach the client `index.js` unless logging
+// is opted into via `import 'nuqs/debug'`. The server bundle pulls them in
+// eagerly (it has more headroom). Call sites in the core pass the code only —
+// mirroring the `errors.ts` code-catalog pattern.
 export const debugMessages = {
   // useQueryStates
   1: '[nuq+ %s `%s`] State changed: %O',
@@ -49,9 +51,9 @@ export const debugMessages = {
  */
 export type DebugCode = keyof typeof debugMessages
 
-// A value any `%s`/`%d`/`%f` placeholder can render. `sprintf` (and the browser
-// console) coerce with `String(arg)`, so anything with a `toString` — `URL`,
-// `URLSearchParams`, primitives… — is valid; `%O` accepts anything (`unknown`).
+// The type of a `%s` argument. `sprintf` (and the browser console) coerce with
+// `String(arg)`, so anything with a `toString` — `URL`, `URLSearchParams`,
+// primitives… — is valid. (`%d`/`%f` narrow to `number`; `%O` accepts `unknown`.)
 type Stringifiable = { toString(): string } | null | undefined
 type ArgType<Spec extends string> = Spec extends 'O'
   ? unknown

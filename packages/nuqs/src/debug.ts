@@ -5,9 +5,10 @@ import { debugMessages, sprintf } from './lib/debug-messages'
  * Opt nuqs debug logging into the (client) bundle.
  *
  * Logging is gated out of the client bundle by default to keep it lean.
- * Importing `nuqs/debug` (or calling this function) loads the log messages and
- * starts printing them in the browser, gated by the `debug=nuqs` key in
- * localStorage — set it and reload, as before.
+ * Importing `nuqs/debug` loads the log messages; the bare import respects the
+ * `debug=nuqs` key in localStorage — set it and reload, as before. Calling this
+ * function directly installs the logging sink unconditionally (bypassing the
+ * flag), to turn logging on programmatically.
  *
  * Server-side, logging is wired in automatically by `nuqs/server` and gated by
  * the `DEBUG=nuqs` environment variable (the server bundle has more size
