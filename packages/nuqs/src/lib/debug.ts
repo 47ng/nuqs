@@ -13,11 +13,6 @@ let sink: DebugSink | null = null
 
 /**
  * Install (or remove, with `null`) the function that renders debug logs.
- *
- * The core bundle only carries this thin dispatcher and the numeric message
- * codes passed to `debug`/`warn`. The format strings and formatting logic live
- * in the `nuqs/debug` entry point, which calls this to opt logging into the
- * bundle at runtime (gated by the `debug=nuqs`/`DEBUG=nuqs` flag).
  */
 export function setDebugSink(newSink: DebugSink | null): void {
   sink = newSink
