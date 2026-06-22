@@ -109,7 +109,9 @@ export function NavigationSpy() {
 
 export function useNuqsNextAppRouterAdapter(): AdapterInterface {
   const router = useRouter()
-  const searchParams = useSearchParams()
+  // `useSearchParams` from next/navigation returns `null` when called from a
+  // `pages/` route before the router is ready (hybrid app+pages apps).
+  const searchParams = useSearchParams() ?? new URLSearchParams()
   const [optimisticSearchParams, setOptimisticSearchParams] =
     useOptimistic<URLSearchParams>(searchParams)
   const updateUrl: UpdateUrlFunction = useCallback((search, options) => {
