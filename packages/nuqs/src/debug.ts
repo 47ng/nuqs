@@ -1,4 +1,4 @@
-import { isDebugEnabled, setDebugSink } from './lib/debug'
+import { isDebugFlagSet, setDebugSink } from './lib/debug'
 import { debugMessages, sprintf } from './lib/debug-messages'
 
 /**
@@ -54,6 +54,6 @@ export function disableNuqsDebugging(): void {
 
 // Respect the existing localStorage/DEBUG flag as soon as this entry loads, so
 // `import 'nuqs/debug'` is all that's needed to turn logging on.
-if (isDebugEnabled()) {
+if (isDebugFlagSet()) {
   enableNuqsDebugging()
 }

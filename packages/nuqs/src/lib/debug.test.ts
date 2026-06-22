@@ -1,33 +1,30 @@
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+import { isDebugFlagSet } from './debug'
 import { sprintf } from './debug-messages'
 
+afterEach(() => {
+  vi.unstubAllEnvs()
+})
+
 describe('debug/server (DEBUG env)', () => {
-  it('enables when DEBUG includes nuqs', async () => {
+  it('enables when DEBUG includes nuqs', () => {
     vi.stubEnv('DEBUG', 'nuqs')
-    vi.resetModules()
-    const { debugEnabled } = await import('./debug')
-    expect(debugEnabled).toBe(true)
+    expect(isDebugFlagSet()).toBe(true)
   })
 
-  it('enables when DEBUG contains nuqs among others', async () => {
+  it('enables when DEBUG contains nuqs among others', () => {
     vi.stubEnv('DEBUG', '*,nuqs,other')
-    vi.resetModules()
-    const { debugEnabled } = await import('./debug')
-    expect(debugEnabled).toBe(true)
+    expect(isDebugFlagSet()).toBe(true)
   })
 
-  it('disables when DEBUG is unset', async () => {
+  it('disables when DEBUG is unset', () => {
     vi.stubEnv('DEBUG', '')
-    vi.resetModules()
-    const { debugEnabled } = await import('./debug')
-    expect(debugEnabled).toBe(false)
+    expect(isDebugFlagSet()).toBe(false)
   })
 
-  it('disables when DEBUG does not include nuqs', async () => {
+  it('disables when DEBUG does not include nuqs', () => {
     vi.stubEnv('DEBUG', 'other,*')
-    vi.resetModules()
-    const { debugEnabled } = await import('./debug')
-    expect(debugEnabled).toBe(false)
+    expect(isDebugFlagSet()).toBe(false)
   })
 })
 

@@ -37,9 +37,7 @@ export function warn<Code extends DebugCode>(
   sink?.(code, args, true)
 }
 
-export const debugEnabled: boolean = isDebugEnabled()
-
-export function isDebugEnabled(): boolean {
+export function isDebugFlagSet(): boolean {
   // Issue: https://github.com/47ng/nuqs/issues/1336
   // Backend (Node/server): use DEBUG env var, never touch localStorage.
   // --localstorage-file triggers a warning.
