@@ -124,9 +124,10 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
   const queuedQueries = debounceController.useQueuedQueries(
     Object.values(resolvedUrlKeys)
   )
-  const [internalState, setInternalState] = useState<V>(
-    () => parseMap(keyMap, urlKeys, initialSearchParams, queuedQueries).state
-  )
+  const [internalState, setInternalState] = useState<V>(() => {
+    const source = initialSearchParams ?? new URLSearchParams()
+    return parseMap(keyMap, urlKeys, source, queuedQueries).state
+  })
 
   const stateRef = useRef(internalState)
 
@@ -136,7 +137,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
   // (optimistic) updates which don't immediately alter the URL source.
   const searchParamsSyncKey =
     Object.values(resolvedUrlKeys)
-      .map(key => `${key}=${initialSearchParams.getAll(key)}`)
+      .map(key => `${key}=${initialSearchParams?.getAll(key)}`)
       .join('&') + JSON.stringify(queuedQueries)
   // Adopts the current URL value into the internal state when it has changed.
   // Used both during render (below) and from the effect backstop further down.
@@ -188,8 +189,8 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
           return [
             urlKey,
             parser?.type === 'multi'
-              ? initialSearchParams.getAll(urlKey)
-              : (initialSearchParams.get(urlKey) ?? null)
+              ? initialSearchParams?.getAll(urlKey)
+              : (initialSearchParams?.get(urlKey) ?? null)
           ]
         })
       )
@@ -415,8 +416,8 @@ function parseMap<KeyMap extends UseQueryStatesKeysMap>(
     const query =
       queuedQuery === undefined
         ? ((parser.type === 'multi'
-            ? searchParams.getAll(urlKey)
-            : searchParams.get(urlKey)) ?? fallbackValue)
+            ? searchParams?.getAll(urlKey)
+            : searchParams?.get(urlKey)) ?? fallbackValue)
         : queuedQuery
     if (
       cachedQuery &&
