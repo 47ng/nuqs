@@ -26,7 +26,7 @@ function generateUpdateUrlFn(fullPageNavigationOnShallowFalseUpdates: boolean) {
   return function updateUrl(search: URLSearchParams, options: AdapterOptions) {
     const url = new URL(location.href)
     url.search = renderQueryString(search)
-    debug('[nuqs react] Updating url: %s', url)
+    debug(20, 'react', url)
     if (fullPageNavigationOnShallowFalseUpdates && options.shallow === false) {
       const method =
         options.history === 'push' ? location.assign : location.replace

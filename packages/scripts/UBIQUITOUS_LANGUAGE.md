@@ -128,6 +128,36 @@ interpreted from it.
 The release channel — `stable` or `beta`. Selects the asymmetric commit range
 (cumulative GA vs incremental beta) and the npm **dist-tag** (`latest` / `beta`).
 
+### target
+
+A pull request, issue, or discussion a published **release** announces itself on:
+the thread that receives the "shipped in vX.Y.Z" comment and the released
+**label**. Issues, PRs, and discussions draw from one shared number sequence per
+repository, so a number identifies exactly one target. A target is one of three
+**kinds** — **PR**, **issue**, or **discussion** — differing in how the release
+reaches them and how the comment is worded. A target is not a **change**: a change
+is a changelog line; a target is a thread to notify — and a **direct commit** is a
+change that yields no target.
+
+### target reference
+
+A keyword and a same-repo number in a pull request body that names a **target** —
+`Closes #N`, `Fixes #N`, `Resolves #N`, `Addresses #N`, and their tenses. The
+close/fix/resolve keywords are GitHub's own closing keywords (GitHub links the
+issue itself as one of the PR's **closing issues**); `Addresses` is not — GitHub
+never links it — but a release *announces* its targets rather than closing them,
+so we treat it the same. A target reference to a **discussion** is the sole record
+that the discussion belongs to the release.
+
+### discussion
+
+A GitHub Discussion that a release pull request resolves — a **target** named by a
+**target reference** in the PR body. Distinct from an **issue** in origin only: a
+pull request can close an issue but not a discussion, so a discussion is never
+among a PR's linked closing issues and is known only from the body text. Once the
+release ships it is announced like an issue — a comment and the released
+**label** — never closed or locked.
+
 ## Why this exists
 
 Historically **bump** read the commit type while **category** read the
