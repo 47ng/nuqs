@@ -1,7 +1,7 @@
 <div align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="./packages/res/wordmark.dark.svg">
-    <img alt="nuqs" src="./packages/res/wordmark.light.svg" width="384">
+    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/47ng/nuqs/next/packages/res/wordmark.dark.svg">
+    <img alt="nuqs" src="https://raw.githubusercontent.com/47ng/nuqs/next/packages/res/wordmark.light.svg" width="384">
   </picture>
 </div>
 
@@ -13,7 +13,7 @@
   <a href="https://github.com/47ng/nuqs/blob/next/LICENSE"><picture><source media="(prefers-color-scheme: dark)" srcset="https://shieldcn.dev/github/license/47ng/nuqs.svg?variant=secondary&mode=dark&size=xs"><img alt="MIT License" src="https://shieldcn.dev/github/license/47ng/nuqs.svg?variant=secondary&mode=light&size=xs"></picture></a>
   <a href="https://github.com/47ng/nuqs/actions/workflows/ci-cd.yml"><picture><source media="(prefers-color-scheme: dark)" srcset="https://shieldcn.dev/github/ci/47ng/nuqs.svg?variant=secondary&workflow=ci-cd.yml&branch=next&mode=dark&size=xs"><img alt="CI/CD" src="https://shieldcn.dev/github/ci/47ng/nuqs.svg?variant=secondary&workflow=ci-cd.yml&branch=next&mode=light&size=xs"></picture></a>
   <a href="https://github.com/47ng/nuqs/graphs/contributors"><picture><source media="(prefers-color-scheme: dark)" srcset="https://shieldcn.dev/github/contributors/47ng/nuqs.svg?variant=secondary&mode=dark&size=xs"><img alt="Last commit" src="https://shieldcn.dev/github/contributors/47ng/nuqs.svg?variant=secondary&mode=light&size=xs"></picture></a>
-  <a href="https://github.com/sponsors/franky47"><picture><source media="(prefers-color-scheme: dark)" srcset="https://shieldcn.dev/badge/Sponsors-db61a2.svg?logo=githubsponsors&logoColor=white&mode=dark&size=xs"><img alt="GitHub Sponsors" src="https://shieldcn.dev/badge/Sponsors-db61a2.svg?logo=githubsponsors&logoColor=white&mode=light&size=xs"></picture></a>
+  <a href="https://github.com/sponsors/franky47"><picture><source media="(prefers-color-scheme: dark)" srcset="https://shieldcn.dev/github/sponsors/franky47.svg?mode=dark&size=xs"><img alt="GitHub Sponsors" src="https://shieldcn.dev/github/sponsors/franky47.svg?mode=light&size=xs"></picture></a>
 </p>
 
 Type-safe search params state manager for React frameworks. Like `useState`, but stored in the URL query string.
