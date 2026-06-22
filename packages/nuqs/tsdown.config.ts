@@ -21,7 +21,14 @@ const commonConfig = {
       dts: '.d.ts'
     }
   },
-  treeshake: true,
+  treeshake: {
+    // `src/debug.ts` has a top-level side effect: it auto-enables logging when
+    // the `DEBUG`/`localStorage.debug` flag is set.
+    //  Returning `undefined` defers every other module to the package.json `sideEffects` allowlist.
+    moduleSideEffects(id) {
+      return id.replace(/\\/g, '/').endsWith('/src/debug.ts') || undefined
+    }
+  },
   tsconfig: 'tsconfig.build.json'
 } satisfies UserConfig
 

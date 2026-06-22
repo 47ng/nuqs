@@ -1,12 +1,4 @@
-import { enableNuqsDebugging } from './debug'
-import { isDebugFlagSet } from './lib/debug'
-
-// Server-side debug logging is enabled by the `DEBUG=nuqs` env var, as before.
-// The client gates logging behind `import 'nuqs/debug'` to keep its bundle lean;
-// the server bundle has more headroom, so we wire the log messages in eagerly.
-if (isDebugFlagSet()) {
-  enableNuqsDebugging()
-}
+import './debug'
 
 export { createSearchParamsCache } from './cache'
 export type {
