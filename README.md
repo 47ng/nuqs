@@ -142,7 +142,7 @@ export default function App() {
 
 </details>
 
-<details><summary><span style="width:16px;height:16px;background:#fff;border-radius:2px;"><img width="16px" height="16px" src="https://reactrouter.com/_brand/React%20Router%20Brand%20Assets/React%20Router%20Logo/Light.svg" /></span> React Router v6
+<details><summary><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/47ng/nuqs/next/packages/res/react-router.dark.svg"><img height="14px" src="https://raw.githubusercontent.com/47ng/nuqs/next/packages/res/react-router.light.svg" /></picture> React Router v6
 </summary>
 
 > Supported React Router versions: `react-router-dom@^6`
@@ -170,7 +170,7 @@ export function ReactRouter() {
 
 </details>
 
-<details><summary><span style="width:16px;height:16px;background:#fff;border-radius:2px;"><img width="16px" height="16px" src="https://reactrouter.com/_brand/React%20Router%20Brand%20Assets/React%20Router%20Logo/Light.svg" /></span> React Router v7
+<details><summary><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/47ng/nuqs/next/packages/res/react-router.dark.svg"><img height="14px" src="https://raw.githubusercontent.com/47ng/nuqs/next/packages/res/react-router.light.svg" /></picture> React Router v7
 </summary>
 
 > Supported React Router versions: `react-router@^7`
@@ -193,7 +193,7 @@ export default function App() {
 
 </details>
 
-<details><summary><span style="width:16px;height:16px;background:#fff;border-radius:2px;"><img width="16px" height="16px" src="https://reactrouter.com/_brand/React%20Router%20Brand%20Assets/React%20Router%20Logo/Light.svg" /></span> React Router v8
+<details><summary><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/47ng/nuqs/next/packages/res/react-router.dark.svg"><img height="14px" src="https://raw.githubusercontent.com/47ng/nuqs/next/packages/res/react-router.light.svg" /></picture> React Router v8
 </summary>
 
 > Supported React Router versions: `react-router@^8`
