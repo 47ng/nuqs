@@ -51,15 +51,6 @@ describe('nuqs/debug opt-in', () => {
       cause
     )
   })
-
-  it('ignores unknown codes', async () => {
-    const { debug } = await loadDebugEntry({ flag: true })
-    const log = vi.spyOn(console, 'log').mockImplementation(() => {})
-    // @ts-expect-error — 9999 is not a valid DebugCode; this asserts the catalog
-    // rejects unknown codes at compile time, and that they no-op at runtime.
-    debug(9999)
-    expect(log).not.toHaveBeenCalled()
-  })
 })
 
 describe('debug message catalog', () => {

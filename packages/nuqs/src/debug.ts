@@ -13,16 +13,13 @@ import { debugMessages, sprintf } from './lib/debug-messages'
 // @example
 // ```ts
 // import 'nuqs/debug'         // once, anywhere in your app
-// localStorage.debug = 'nuqs' // then, in the browser console, and reload
+// // Enable logs at runtime:
+// localStorage.debug = 'nuqs' // on the client
+// process.env.DEBUG  = 'nuqs' // on the server
 // ```
 function installDebugSink(): void {
   setDebugSink((code, args, isWarn) => {
-    // Annotated as possibly-undefined so the guard below survives a runtime code
-    // that isn't in the catalog (call sites are type-checked, but be defensive).
-    const message: string | undefined = debugMessages[code]
-    if (message === undefined) {
-      return
-    }
+    const message = debugMessages[code]
     if (isWarn) {
       console.warn(message, ...args)
       return
