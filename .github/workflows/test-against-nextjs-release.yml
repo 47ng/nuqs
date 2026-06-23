@@ -9,6 +9,9 @@ on:
         required: true
         type: string
 
+permissions:
+  contents: read
+
 env:
   FORCE_COLOR: 3 # Diplay chalk colors
   VERSION: ${{ inputs.version }}
@@ -17,6 +20,8 @@ jobs:
   test_against_nextjs_release:
     name: CI (next@${{ inputs.version }}${{ (matrix.base-path || matrix.cache-components || matrix.react-compiler) && ' ' || ''}}${{ matrix.base-path && '⚾' || ''}}${{ matrix.react-compiler && '⚛️' || ''}}${{ matrix.cache-components && '💾' || ''}})
     runs-on: ubuntu-24.04-arm
+    permissions:
+      contents: read
     strategy:
       fail-fast: false
       matrix:
@@ -37,36 +42,40 @@ jobs:
             console.log(\`Version '\${version}' is valid SemVer\`);
           "
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
-      - uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061
-      - uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093 # v6.0.8
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
         with:
           node-version-file: .node-version
           cache: pnpm
       - name: Install dependencies
         run: pnpm install
       - name: Install Next.js version ${{ env.VERSION }}
-        run: pnpm add --filter e2e-next --filter nuqs "next@${{ env.VERSION }}"
+        run: pnpm add --filter e2e-next --filter nuqs --config.minimumReleaseAgeExclude=next "next@${{ env.VERSION }}"
       - name: Run cacheComponents codemod
         if: ${{ matrix.cache-components }}
         run: pnpm run cacheComponents:codemod
         working-directory: packages/e2e/next
       - name: Run integration tests
+        # TURBO_TOKEN/TURBO_TEAM are intentionally omitted: this job installs
+        # and executes an arbitrary, caller-supplied Next.js version, so a
+        # compromised release must not be able to exfiltrate or poison the
+        # shared Turborepo remote cache.
         run: pnpm run test --filter e2e-next
         env:
           BASE_PATH: ${{ matrix.base-path && matrix.base-path || '/' }}
           REACT_COMPILER: ${{ matrix.react-compiler }}
           CACHE_COMPONENTS: ${{ matrix.cache-components }}
-          TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
-          TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
           E2E_NO_CACHE_ON_RERUN: ${{ github.run_attempt }}
       - name: Save Playwright report
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         if: failure()
         with:
           path: packages/e2e/next/.playwright/*
           name: playwright-next-${{ env.VERSION }}${{ matrix.base-path && '-basePath' || ''}}${{ matrix.react-compiler && '-react-compiler' || ''}}${{ matrix.cache-components && '-cache-components' || ''}}
           include-hidden-files: true
-      - uses: 47ng/actions-slack-notify@main
+      - uses: 47ng/actions-slack-notify@df42545060c07ca99a040d0a520ab8457ce3c222
         name: Notify on Slack
         if: failure()
         with:
@@ -75,10 +84,51 @@ jobs:
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
+  docs:
+    name: Docs (next@${{ inputs.version }})
+    if: ${{ startsWith(inputs.version, '16.') }}
+    runs-on: ubuntu-24.04-arm
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093 # v6.0.8
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile --filter docs...
+      - name: Install Next.js version ${{ env.VERSION }}
+        run: pnpm add --filter docs --filter nuqs "next@${{ env.VERSION }}"
+      # TURBO_TOKEN/TURBO_TEAM are intentionally omitted below: these steps
+      # execute an arbitrary, caller-supplied Next.js version, so a compromised
+      # release must not be able to exfiltrate or poison the shared Turborepo
+      # remote cache.
+      - name: Type-check docs
+        run: pnpm run test --filter docs
+      - name: Build docs
+        run: pnpm run build --filter docs
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - uses: 47ng/actions-slack-notify@df42545060c07ca99a040d0a520ab8457ce3c222
+        name: Notify on Slack
+        if: failure()
+        with:
+          status: ${{ job.status }}
+          jobName: docs (next@${{ env.VERSION }})
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
   invalidate-isr-cache:
     name: Invalidate ISR cache
     runs-on: ubuntu-24.04-arm
-    needs: test_against_nextjs_release
+    needs:
+      - test_against_nextjs_release
+      - docs
     if: ${{ always() }}
     steps:
       - name: Invalidate ISR cache for GitHub Actions status on landing page
@@ -89,8 +139,10 @@ jobs:
     runs-on: ubuntu-24.04-arm
     needs:
       - test_against_nextjs_release
+      - docs
+    if: ${{ needs.test_against_nextjs_release.result == 'success' && (needs.docs.result == 'success' || needs.docs.result == 'skipped') }}
     steps:
-      - uses: 47ng/actions-slack-notify@main
+      - uses: 47ng/actions-slack-notify@df42545060c07ca99a040d0a520ab8457ce3c222
         with:
           status: ${{ job.status }}
           jobName: "${{ env.VERSION }}"

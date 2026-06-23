@@ -7,103 +7,45 @@ on:
       - edited
       - synchronize
 
+permissions:
+  contents: read
+
 jobs:
   lint-pr-title:
     name: Lint PR Title
+    # Skip merged PRs and body-only edits (we lint titles, not bodies).
+    if: >-
+      ${{ !github.event.pull_request.merged &&
+          (github.event.action != 'edited' || github.event.changes.title.from) }}
     runs-on: ubuntu-24.04-arm
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
           fetch-depth: 0
-      - uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061
-      - uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238
+          persist-credentials: false
+      - uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093 # v6.0.8
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
         with:
           node-version-file: .node-version
           cache: pnpm
-      - name: Install dependencies
-        run: pnpm add -D @commitlint/load @commitlint/lint @commitlint/parse
-      - name: Lint PR title
-        env:
-          TITLE: ${{ github.event.pull_request.title }}
-        run: |
-          node -e "
-            import loadConfig from '@commitlint/load';
-            import lint from '@commitlint/lint';
-            import pkgJson from './package.json' with { type: 'json' };
-            const config = await loadConfig(pkgJson.commitlint);
-            const result = await lint(process.env.TITLE, config.rules, config.parserPreset ? { parserOpts: config.parserPreset.parserOpts } : {});
-            process.env.GITHUB_STEP_SUMMARY += \`## Linting Result\n- Valid: \${result.valid}\n\`;
-            if (result.valid === false) {
-              for (const { message } of result.errors) {
-                process.env.GITHUB_STEP_SUMMARY += \`- Error: \${message}\n\`;
-                console.error(message);
-              }
-              process.exit(1);
-            }
-          "
+      - name: Install scripts dependencies
+        run: pnpm install --ignore-scripts --frozen-lockfile --filter scripts
       - name: Get changed files
         id: changed-files
-        run: echo "files=$(git diff --name-only ${{ github.event.pull_request.base.sha }}...${{ github.event.pull_request.head.sha }} | tr '\n' ' ')" >> "$GITHUB_OUTPUT"
-      - name: Check version-bumping commits target core package
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          # NUL-delimited from git, then NUL -> newline for $GITHUB_OUTPUT
+          # transport. Filenames containing whitespace survive the round trip.
+          delim="EOF_$(openssl rand -hex 16)"
+          {
+            printf 'files<<%s\n' "$delim"
+            git diff -z --name-only "$BASE_SHA...$HEAD_SHA" | tr '\0' '\n'
+            printf '%s\n' "$delim"
+          } >> "$GITHUB_OUTPUT"
+      - name: Validate PR title
         env:
           TITLE: ${{ github.event.pull_request.title }}
           CHANGED_FILES: ${{ steps.changed-files.outputs.files }}
-        run: |
-          node -e "
-            import parse from '@commitlint/parse';
-            import { appendFile } from 'node:fs/promises';
-
-            // Commit types that trigger version bumps (semantic-release defaults)
-            const VERSION_BUMPING_TYPES = ['feat', 'fix', 'perf', 'revert'];
-            // Non-bumping types for reference in error messages
-            const NON_BUMPING_TYPES = ['build', 'chore', 'ci', 'clean', 'doc', 'ref', 'style', 'test'];
-
-            const parsed = await parse(process.env.TITLE);
-            const commitType = parsed.type;
-
-            if (!VERSION_BUMPING_TYPES.includes(commitType)) {
-              console.log(\`Commit type '\${commitType}' does not trigger a version bump. Skipping core package check.\`);
-              process.exit(0);
-            }
-
-            console.log(\`Commit type '\${commitType}' triggers a version bump. Checking for changes in packages/nuqs...\`);
-
-            const changedFiles = process.env.CHANGED_FILES.trim().split(' ').filter(Boolean);
-            const hasCoreChanges = changedFiles.some(file => file.startsWith('packages/nuqs/'));
-
-            if (!hasCoreChanges) {
-              const summary = \`## ❌ Version Bump Check Failed
-
-            Your PR title uses the commit type **\\\`\${commitType}\\\`** which triggers a version bump, but no changes were found in the core package (\\\`packages/nuqs\\\`).
-
-            ### What to do:
-
-            If this PR does not include changes to the core \\\`nuqs\\\` package, please use a non-bumping commit type instead:
-
-            | Type | Use for |
-            |------|---------|
-            | \\\`doc\\\` | Documentation updates |
-            | \\\`chore\\\` | Maintenance, CI/CD, dependencies |
-            | \\\`test\\\` | Test additions or modifications |
-            | \\\`ci\\\` | CI configuration changes |
-            | \\\`build\\\` | Build system changes |
-            | \\\`style\\\` | Code style/formatting |
-            | \\\`ref\\\` | Refactoring (non-core) |
-
-            ### Version-bumping types (require core package changes):
-            - \\\`feat\\\` → minor version bump
-            - \\\`fix\\\` → patch version bump
-            - \\\`perf\\\` → patch version bump
-            - \\\`revert\\\` → depends on reverted commit
-            \`;
-
-              await appendFile(process.env.GITHUB_STEP_SUMMARY, summary);
-              console.error(\`Error: PR title uses version-bumping type '\${commitType}' but contains no changes in packages/nuqs\`);
-              console.error(\`Changed files: \${changedFiles.join(', ')}\`);
-              console.error(\`\nPlease use a non-bumping commit type: \${NON_BUMPING_TYPES.join(', ')}\`);
-              process.exit(1);
-            }
-
-            console.log('✓ Version-bumping commit type is valid: core package has changes.');
-            await appendFile(process.env.GITHUB_STEP_SUMMARY, \`## ✅ Version Bump Check Passed\n\nCommit type \\\`\${commitType}\\\` is valid because the PR includes changes to \\\`packages/nuqs\\\`.\n\`);
-          "
+        run: ./packages/scripts/validate-pr-title.ts

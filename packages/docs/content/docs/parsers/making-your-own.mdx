@@ -7,6 +7,7 @@ import {
   CustomParserDemo,
   CustomMultiParserDemo
 } from '@/content/docs/parsers/demos'
+import { HumanContent, LLMContent } from '@/src/components/audience'
 
 You may wish to customise the rendered query string for your data type.
 For this, `nuqs` exposes the `createParser{:ts}` function to make your own parsers.
@@ -34,9 +35,11 @@ const parseAsStarRating = createParser({
 })
 ```
 
+<HumanContent>
 <Suspense>
   <CustomParserDemo/>
 </Suspense>
+</HumanContent>
 
 ## Equality function
 
@@ -78,7 +81,13 @@ key in the URL, and give you a string value to parse when it's available.
 
 import { Querystring } from '@/src/components/querystring'
 
+<HumanContent>
 <Querystring path="/" value="?tag=type-safe&tag=url-state&tag=react" />
+</HumanContent>
+
+<LLMContent>
+Example URL: `/?tag=type-safe&tag=url-state&tag=react`
+</LLMContent>
 
 This means:
 
@@ -87,9 +96,11 @@ This means:
 
 You can then compose & reduce this array to form **complex data types**:
 
+<HumanContent>
 <Suspense>
   <CustomMultiParserDemo />
 </Suspense>
+</HumanContent>
 
 ```tsx
 /**

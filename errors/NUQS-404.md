@@ -20,6 +20,7 @@ using a suitable adapter:
 - [Remix](https://nuqs.dev/docs/adapters#remix)
 - [React Router v6](https://nuqs.dev/docs/adapters#react-router-v6)
 - [React Router v7](https://nuqs.dev/docs/adapters#react-router-v7)
+- [React Router v8](https://nuqs.dev/docs/adapters#react-router-v8)
 - [TanStack Router](https://nuqs.dev/docs/adapters#tanstack-router)
 
 ### Test adapter

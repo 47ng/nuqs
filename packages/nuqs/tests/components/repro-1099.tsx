@@ -28,17 +28,22 @@ export function NullDetector({
   return <pre {...props}>{hasBeenNullAtSomePoint ? 'fail' : 'pass'}</pre>
 }
 
-export function useFakeLoadingState(trigger: unknown): boolean {
+export function useFakeLoadingState(trigger: unknown): {
+  isLoading: boolean
+  stopLoading: () => void
+} {
   const [isLoading, setIsLoading] = useState(false)
+  // Enter the loading state in an effect reacting to the trigger change, in the
+  // same render pass as the search params update. This is the load-bearing
+  // sequence that reproduces #1099 and must not change.
   useEffect(() => {
     if (!trigger) {
       return
     }
     setIsLoading(true)
-    const timeout = setTimeout(() => {
-      setIsLoading(false)
-    }, 100)
-    return () => clearTimeout(timeout)
   }, [trigger])
-  return isLoading
+  // Exiting the loading state is driven explicitly by the test (via a button)
+  // rather than a timer, so the transient `isLoading: true` state
+  // can be asserted without racing a wall clock.
+  return { isLoading, stopLoading: () => setIsLoading(false) }
 }

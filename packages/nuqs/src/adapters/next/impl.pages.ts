@@ -74,7 +74,7 @@ export function useNuqsNextPagesRouterAdapter(): AdapterInterface {
       getAsPathPathname(nextRouter.asPath) +
       renderQueryString(search) +
       location.hash
-    debug('[nuqs next/pages] Updating url: %s', asPath)
+    debug(20, 'next/pages', asPath)
     const method =
       options.history === 'push' ? nextRouter.push : nextRouter.replace
     isNuqsUpdateMutex = true

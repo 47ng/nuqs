@@ -8,7 +8,6 @@ import {
   type ReactNode
 } from 'react'
 import type { Options } from '../../defs'
-import { debugEnabled } from '../../lib/debug'
 import { error } from '../../lib/errors'
 import type { AdapterInterface, UseAdapterHook } from './defs'
 
@@ -36,7 +35,8 @@ declare global {
   }
 }
 
-if (debugEnabled && typeof window !== 'undefined') {
+// Detect multiple adapter contexts (e.g. duplicate nuqs copies in a monorepo).
+if (typeof window !== 'undefined') {
   if (window.__NuqsAdapterContext && window.__NuqsAdapterContext !== context) {
     console.error(error(303))
   }

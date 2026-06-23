@@ -1,36 +1,45 @@
-export const debugEnabled: boolean = isDebugEnabled()
+// Type-only import: erased at build time (verbatimModuleSyntax), so the message
+// catalog's *types* constrain the call sites here while its *values* stay out of
+// the core bundle (they only ship via the opt-in `nuqs/debug` entry).
+import type { DebugArgs, DebugCode } from './debug-messages'
 
-export function debug(message: string, ...args: any[]): void {
-  if (!debugEnabled) {
-    return
-  }
-  const msg = sprintf(message, ...args)
-  performance.mark(msg)
-  try {
-    // Handle React Devtools not being able to console.log('%s', null)
-    console.log(message, ...args)
-  } catch {
-    console.log(msg)
-  }
+export type DebugSink = (
+  code: DebugCode,
+  args: unknown[],
+  isWarn?: boolean
+) => void
+
+let sink: DebugSink | null = null
+
+/**
+ * Install (or remove, with `null`) the function that renders debug logs.
+ */
+export function setDebugSink(newSink: DebugSink | null): void {
+  sink = newSink
 }
 
-export function warn(message: string, ...args: any[]): void {
-  if (!debugEnabled) {
-    return
+export function debug<Code extends DebugCode>(
+  code: Code,
+  ...args: DebugArgs<Code>
+): void {
+  sink?.(code, args)
+}
+
+export function warn<Code extends DebugCode>(
+  code: Code,
+  ...args: DebugArgs<Code>
+): void {
+  sink?.(code, args, true)
+}
+
+export function isDebugFlagSet(): boolean {
+  // Issue: https://github.com/47ng/nuqs/issues/1336
+  // Backend (Node/server): use DEBUG env var, never touch localStorage.
+  // --localstorage-file triggers a warning.
+  if (typeof window === 'undefined') {
+    return (process.env.DEBUG || '').includes('nuqs')
   }
-  console.warn(message, ...args)
-}
 
-export function sprintf(base: string, ...args: any[]): string {
-  return base.replace(/%[sfdO]/g, match => {
-    const arg = args.shift()
-    return match === '%O' && arg
-      ? JSON.stringify(arg).replace(/"([^"]+)":/g, '$1:')
-      : String(arg)
-  })
-}
-
-function isDebugEnabled(): boolean {
   // Check if localStorage is available.
   // It may be unavailable in some environments,
   // like Safari in private browsing mode.

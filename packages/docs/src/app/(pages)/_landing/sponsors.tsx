@@ -8,7 +8,7 @@ const sponsorSchema = z.object({
   name: z.string().nullish(),
   handle: z.string(),
   url: z.string().url(),
-  img: z.string().url(),
+  img: z.string(),
   title: z.custom<ReactNode>().optional()
 })
 type Sponsors = z.infer<typeof sponsorSchema>[]
@@ -19,6 +19,36 @@ const SPONSORS: Sponsors = [
     name: 'Vercel',
     url: 'https://vercel.com/',
     img: 'https://avatars.githubusercontent.com/u/14985020?s=200&v=4'
+  },
+  {
+    handle: 'getsentry',
+    name: 'Sentry',
+    url: 'https://sentry.io/?utm_source=nuqs&utm_medium=sponsor&utm_campaign=nuqs',
+    img: '/sponsors/sentry.svg'
+  },
+  {
+    handle: 'syntaxfm',
+    name: 'Syntax.fm',
+    url: 'https://syntax.fm/?utm_source=nuqs&utm_medium=sponsor&utm_campaign=nuqs',
+    img: 'https://avatars.githubusercontent.com/u/130389858?s=200&v=4'
+  },
+  {
+    handle: '1771-Technologies',
+    name: '1771 Technologies',
+    url: 'https://1771technologies.com/?utm_source=nuqs&utm_medium=sponsor&utm_campaign=nuqs',
+    img: 'https://avatars.githubusercontent.com/u/148620833?s=200&v=4'
+  },
+  {
+    handle: 'upstash',
+    name: 'Upstash',
+    url: 'https://upstash.com/?utm_source=nuqs&utm_medium=sponsor&utm_campaign=nuqs',
+    img: '/sponsors/upstash.svg'
+  },
+  {
+    handle: 'coderabbitai',
+    name: 'CodeRabbit',
+    url: 'https://www.coderabbit.ai/?dub_id=4fJt7M9XtciYhwpj',
+    img: '/sponsors/coderabbit.svg'
   },
   {
     handle: 'unkey.com',
@@ -43,6 +73,12 @@ const SPONSORS: Sponsors = [
     name: 'code.store',
     url: 'https://code.store',
     img: 'https://avatars.githubusercontent.com/u/57156815?s=200&v=4'
+  },
+  {
+    handle: 'TradingGoose',
+    name: 'TradingGoose',
+    url: 'https://www.tradinggoose.ai/?utm_source=nuqs&utm_medium=sponsor&utm_campaign=nuqs',
+    img: 'https://avatars.githubusercontent.com/u/226357056?s=200&v=4'
   },
   {
     handle: 'pqoqubbw',
@@ -120,7 +156,7 @@ const SPONSORS: Sponsors = [
     title: (
       <>
         Founder of{' '}
-        <a href="https://usenotra.com" className="hover:underline">
+        <a href="https://www.usenotra.com" className="hover:underline">
           Notra
         </a>
       </>
@@ -145,28 +181,16 @@ const SPONSORS: Sponsors = [
     img: 'https://avatars.githubusercontent.com/u/5913254?s=200&v=4'
   },
   {
-    handle: 'ruchernchong',
-    name: 'Ru Chern Chong',
-    url: 'https://github.com/ruchernchong',
-    img: 'https://avatars.githubusercontent.com/u/10343662?s=200&v=4'
+    handle: 'haydenbleasel',
+    name: 'Hayden Bleasel',
+    url: 'https://www.haydenbleasel.com/',
+    img: 'https://avatars.githubusercontent.com/u/4142719?s=200&v=4'
   },
   {
     handle: 'DavidHDev',
     name: 'David Haz',
     url: 'https://github.com/DavidHDev',
     img: 'https://avatars.githubusercontent.com/u/48634587?s=200&v=4'
-  },
-  {
-    handle: 'basedanarki',
-    name: 'anarki',
-    url: 'https://github.com/basedanarki',
-    img: 'https://avatars.githubusercontent.com/u/161698650?s=200&v=4'
-  },
-  {
-    handle: 'haydenbleasel',
-    name: 'Hayden Bleasel',
-    url: 'https://www.haydenbleasel.com/',
-    img: 'https://avatars.githubusercontent.com/u/4142719?s=200&v=4'
   }
 ]
 
@@ -255,7 +279,7 @@ export function SponsorsSection() {
           <span className="mb-px text-3xl font-semibold">shadcn/studio</span>
         </a>
       </div>
-      <ul className="container flex flex-wrap justify-center gap-x-4 gap-y-12 md:gap-x-6 lg:gap-x-8">
+      <ul className="container flex flex-wrap justify-center gap-x-4 gap-y-8 md:gap-x-6 lg:gap-x-0">
         {SPONSORS.map(sponsor => (
           <li
             key={sponsor.handle}
@@ -300,6 +324,7 @@ export function SponsorsSection() {
 
 // --
 
+/** @public - used in MDX blog posts via path alias (not traceable by knip) */
 export function InlineSponsorsList({
   className,
   ...props
@@ -367,17 +392,20 @@ export function AsideSponsors() {
       </a>
       <ul className="space-y-2">
         <li>
-          <NextJSWeeklyAsideSponsor />
+          <AsideSponsorNextJSWeekly />
         </li>
         <li>
-          <ShadcnStudioAsideSponsor />
+          <AsideSponsorShadcnStudio />
+        </li>
+        <li>
+          <AsideSponsor1771Technologies />
         </li>
       </ul>
     </aside>
   )
 }
 
-export function NextJSWeeklyAsideSponsor() {
+export function AsideSponsorNextJSWeekly() {
   return (
     <a
       href="https://nextjsweekly.com?utm_source=nuqs&utm_medium=sponsor&utm_campaign=nuqs"
@@ -411,7 +439,35 @@ export function NextJSWeeklyAsideSponsor() {
   )
 }
 
-export function ShadcnStudioAsideSponsor() {
+export function AsideSponsor1771Technologies() {
+  return (
+    <a
+      href="https://1771technologies.com/?utm_source=nuqs&utm_medium=banner&utm_campaign=nuqs"
+      target="_blank"
+      rel="noopener noreferrer"
+      className="group"
+    >
+      <section className="text-muted-foreground space-y-4 rounded-md border border-dashed px-4 py-6 transition-colors group-hover:text-current group-active:text-current">
+        <header className="mx-auto flex items-center justify-center gap-2">
+          <img
+            src="https://avatars.githubusercontent.com/u/148620833?s=200&v=4"
+            alt="1771 Technologies"
+            className="size-8 rounded-full opacity-50 grayscale transition-all group-hover:opacity-100 group-hover:grayscale-0 group-active:opacity-100 group-active:grayscale-0"
+            width={32}
+            height={32}
+          />
+          <span className="font-semibold">1771 Technologies</span>
+        </header>
+        <p className="text-muted-foreground text-center text-xs">
+          Ship faster with LyteNyte Grid. The fastest React data grid ever built
+          on the modern web.
+        </p>
+      </section>
+    </a>
+  )
+}
+
+export function AsideSponsorShadcnStudio() {
   return (
     <a
       href="https://shadcnstudio.com/?utm_source=nuqs&utm_medium=banner&utm_campaign=github"

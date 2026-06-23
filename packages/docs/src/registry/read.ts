@@ -1,4 +1,5 @@
 import {
+  type ItemCategory,
   type Registry,
   registryBuiltItemSchema,
   registrySchema,
@@ -39,32 +40,24 @@ export async function readUsage(name: string) {
   }
 }
 
-export const registryItemCategories = [
-  'Adapters',
-  'Parsers',
-  'Utilities'
-] as const
-export type RegistryItemCategory = (typeof registryItemCategories)[number]
-
-export function getRegistryItemCategory(name: string): RegistryItemCategory {
-  if (name.startsWith('adapter-')) {
-    return 'Adapters'
-  } else if (name.startsWith('parseAs')) {
-    return 'Parsers'
-  } else {
-    return 'Utilities'
-  }
-}
-
 export function categorizeRegistryItems(registry: Registry) {
-  const categories: Record<RegistryItemCategory, RegistrySourceItem[]> = {
-    Adapters: [],
-    Parsers: [],
-    Utilities: []
+  const categories: Record<ItemCategory, RegistrySourceItem[]> = {
+    adapter: [],
+    parser: [],
+    utility: []
   }
   for (const item of registry.items) {
-    const category = getRegistryItemCategory(item.name)
-    categories[category].push(item)
+    if (!item.categories || item.categories.length === 0) {
+      categories.utility.push(item)
+      continue
+    }
+    if (item.categories.includes('adapter')) {
+      categories.adapter.push(item)
+    } else if (item.categories.includes('parser')) {
+      categories.parser.push(item)
+    } else {
+      categories.utility.push(item)
+    }
   }
   return categories
 }
