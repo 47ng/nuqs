@@ -150,7 +150,9 @@ export function createReactRouterBasedAdapter({
             false // No need for a copy here
           )
     })
-    const pendingPopstateSearch = getPendingPopstateSearch(mountedPathnameRef.current)
+    const pendingPopstateSearch = getPendingPopstateSearch(
+      mountedPathnameRef.current
+    )
     const pendingPopstateRef = useRef(pendingPopstateSearch)
 
     if (pendingPopstateSearch !== null) {
