@@ -1,0 +1,99 @@
+name: Refresh changelog on release edit
+
+# Companion to release-finalize.yml. Finalize busts the `releases` ISR tag on
+# publish (so a freshly published release appears on the docs changelog); this
+# handles the *after*: a maintainer fixing a docs-only preamble or a broken DTO
+# in an already-published release body has no other way to refresh the page
+# short of waiting for the next release.
+
+on:
+  release:
+    types: [edited]
+
+# Coalesce rapid successive edits to the same release: the bust is idempotent,
+# so cancelling an in-flight one to run the latest loses nothing.
+concurrency:
+  group: release-edited-${{ github.event.release.id }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  refresh-changelog:
+    name: Bust the releases ISR cache
+    runs-on: ubuntu-24.04-arm
+    # Run on published GA releases only.
+    if: ${{ !github.event.release.draft && !contains(github.event.release.tag_name, '-beta.') }}
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          # Checkout from `next`, not the release's branch
+          # (which might not contain the code we need to run).
+          ref: ${{ github.event.repository.default_branch }}
+          persist-credentials: false
+      - uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093 # v6.0.8
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
+        with:
+          node-version-file: .node-version
+          package-manager-cache: false
+      - name: Install scripts dependencies
+        run: pnpm install --ignore-scripts --frozen-lockfile --filter scripts
+
+      - name: Validate the edited release body's changelog DTO
+        id: dto
+        run: |
+          set -uo pipefail
+          if ./validate-changelog-dto.ts; then
+            echo "valid=true" >> "$GITHUB_OUTPUT"
+          else
+            code=$?
+            if [ "$code" -eq 1 ]; then
+              echo "valid=false" >> "$GITHUB_OUTPUT"
+              echo "::warning::Edited release body carries no changelog DTO; skipping ISR invalidation."
+            fi
+            # Exit 2 means the DTO is invalid
+            if [ "$code" -eq 2 ]; then
+              echo "::error::Edited release body carries an INVALID changelog DTO; skipping ISR invalidation."
+              echo "valid=false" >> "$GITHUB_OUTPUT"
+              exit "$code"
+            fi
+            # Exit >=3 means the codec itself threw (a regression): fail the job loud
+            if [ "$code" -ge 3 ]; then
+              echo "::error::validate-changelog-dto crashed (exit $code) — likely a codec regression."
+              echo "valid=false" >> "$GITHUB_OUTPUT"
+              exit "$code"
+            fi
+          fi
+        working-directory: packages/scripts
+        env:
+          # Untrusted free-form text: passed via env (never interpolated into a
+          # shell) and read by the script from $RELEASE_BODY as pure parser input.
+          RELEASE_BODY: ${{ github.event.release.body }}
+
+      - name: Invalidate releases ISR cache in the docs
+        # Only when the body parses to a renderable DTO (see the gate above).
+        if: ${{ steps.dto.outputs.valid == 'true' }}
+        # Mirrors finalize's `releases` bust, but best-effort (unlike finalize,
+        # which is fatal). The changelog page reads each release's embedded DTO
+        # at ISR time, so busting this tag re-renders an edited body. A failed
+        # bust only warns; it never fails the job. Two reasons:
+        #   1. Low stakes: this is a convenience for hand-edits to already-
+        #      published bodies. The page self-heals on the next release/build,
+        #      and a red run on every edit — which the maintainer isn't watching
+        #      for — would be pure noise.
+        #   2. Deploy ordering: the `releases` tag is allowlisted in /api/isr by
+        #      the same change that adds this workflow. Until that ships to docs
+        #      prod, the endpoint 400s on `tag=releases`, so an early edit would
+        #      otherwise go red during the deploy gap. Idempotent regardless.
+        run: |
+          set -euo pipefail
+          if ! curl -fsS "https://nuqs.dev/api/isr?tag=releases&token=$ISR_TOKEN"; then
+            echo "::warning::Could not bust the 'releases' ISR cache. The changelog page will refresh on the next release or build."
+          fi
+        env:
+          # Passed via env and read as $ISR_TOKEN at runtime, so the literal
+          # secret never appears in the workflow YAML text (same stance as
+          # release-finalize.yml).
+          ISR_TOKEN: ${{ secrets.ISR_TOKEN }}

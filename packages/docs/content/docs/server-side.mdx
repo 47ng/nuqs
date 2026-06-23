@@ -3,6 +3,8 @@ title: Server-Side usage
 description: Type-safe search params on the server
 ---
 
+import { HumanContent, LLMContent } from '@/src/components/audience'
+
 ## Loaders
 
 <FeatureSupportMatrix introducedInVersion='2.3.0' />
@@ -28,6 +30,7 @@ export const loadSearchParams = createLoader(coordinatesSearchParams)
 Here, `loadSearchParams{:ts}` is a function that parses search params and returns
 state variables to be consumed server-side (the same state type that [`useQueryStates{:ts}`](/docs/batching) returns).
 
+<HumanContent>
 <Tabs items={["Next.js (app router)", "Next.js (pages router)", "API routes", "Remix / React Router", "React / client-side"]}>
 
 ```tsx tab="Next.js (app router)" title="app/page.tsx"
@@ -104,6 +107,92 @@ export default function handler(
 ```
 
 </Tabs>
+</HumanContent>
+
+<LLMContent>
+### Next.js (app router)
+
+```tsx title="app/page.tsx"
+// [!code word:loadSearchParams]
+import { loadSearchParams } from './search-params'
+import type { SearchParams } from 'nuqs/server'
+
+type PageProps = {
+  searchParams: Promise<SearchParams>
+}
+
+export default async function Page({ searchParams }: PageProps) {
+  const { latitude, longitude } = await loadSearchParams(searchParams)
+  return <Map
+    lat={latitude}
+    lng={longitude}
+  />
+
+  // Pro tip: you don't *have* to await the result.
+  // Pass the Promise object to children components wrapped in <Suspense>
+  // to benefit from PPR / dynamicIO and serve a static outer shell
+  // immediately, while streaming in the dynamic parts that depend on
+  // the search params when they become available.
+}
+```
+
+### Next.js (pages router)
+
+```ts title="pages/index.tsx"
+// [!code word:loadSearchParams]
+import type { GetServerSidePropsContext } from 'next'
+
+export async function getServerSideProps({ query }: GetServerSidePropsContext) {
+  const { latitude, longitude } = loadSearchParams(query)
+  // Do some server-side calculations with the coordinates
+  return {
+    props: { ... }
+  }
+}
+```
+
+### Remix / React Router
+
+```tsx title="app/routes/_index.tsx"
+// [!code word:loadSearchParams]
+export function loader({ request }: LoaderFunctionArgs) {
+  const { latitude, longitude } = loadSearchParams(request) // request.url works too
+  // Do some server-side calculations with the coordinates
+  return ...
+}
+```
+
+### React / client-side
+
+```tsx
+// Note: you can also use this client-side (or anywhere, really),
+// for a one-off parsing of non-reactive search params:
+
+loadSearchParams('https://example.com?latitude=42&longitude=12')
+loadSearchParams(location.search)
+loadSearchParams(new URL(...))
+loadSearchParams(new URLSearchParams(...))
+```
+
+### API routes
+
+```tsx
+// App router, eg: app/api/location/route.ts
+export async function GET(request: Request) {
+  const { latitude, longitude } = loadSearchParams(request)
+  // ...
+}
+
+// Pages router, eg: pages/api/location.ts
+import type { NextApiRequest, NextApiResponse } from 'next'
+export default function handler(
+  request: NextApiRequest,
+  response: NextApiResponse
+) {
+  const { latitude, longitude } = loadSearchParams(request.query)
+}
+```
+</LLMContent>
 
 <Callout type="warn" title="Note">
   Loaders **don't validate** your data. If you expect positive integers

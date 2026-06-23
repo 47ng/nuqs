@@ -85,7 +85,7 @@ export function createReactRouterBasedAdapter({
         })
         const url = new URL(location.href)
         url.search = renderQueryString(search)
-        debug(`[nuqs ${adapter}] Updating url: %s`, url)
+        debug(20, adapter, url)
         // First, update the URL locally without triggering a network request,
         // this allows keeping a reactive URL if the network is slow.
         const updateMethod =

@@ -9,6 +9,41 @@ on:
   pull_request:
     types: [opened, reopened, synchronize]
   workflow_dispatch:
+  # Invoked as the release gate by release-draft.yml: re-runs the full
+  # matrix on the exact commit being staged, so the published bytes are
+  # the bytes that passed CI. The caller passes only TURBO_* (no
+  # `secrets: inherit`) to keep the credential surface minimal; the other
+  # secrets are declared so this workflow type-checks under all triggers,
+  # and resolve to empty (their steps no-op) when called.
+  workflow_call:
+    inputs:
+      finalNotification:
+        description: >-
+          Post the aggregate "CI passed" Slack ping when the whole matrix
+          succeeds. Defaults true (normal push/PR/dispatch); release-draft's
+          gate passes false so a release run isn't pinged twice (Finalize
+          posts the release card).
+        type: boolean
+        default: true
+        required: false
+        # Callers MUST pass a literal boolean (`finalNotification: false`), never
+        # an expression (`finalNotification: ${{ … }}`). A reusable-workflow input
+        # produced by an expression is delivered as a string regardless of the
+        # declared `type`, and the ci-notify gate (`toJSON(...) != 'false'`) skips
+        # only on the boolean token "false" — a string "false" stringifies to the
+        # quoted `"false"`, which is unequal, so the ping would no longer suppress.
+    secrets:
+      TURBO_TOKEN:
+        required: false
+      TURBO_TEAM:
+        required: false
+      SLACK_WEBHOOK_URL:
+        required: false
+      ISR_TOKEN:
+        required: false
+
+permissions:
+  contents: read
 
 env:
   FORCE_COLOR: 3 # Diplay chalk colors
@@ -19,12 +54,14 @@ jobs:
     runs-on: ubuntu-24.04-arm
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
-      - uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061
-      - uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093 # v6.0.8
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
         with:
           node-version-file: .node-version
           cache: pnpm
-      - name: Install dependencies
+      - name: Install root workspace dependencies
         run: pnpm install --ignore-scripts --frozen-lockfile --workspace-root
       - name: Check monorepo with Sherif
         run: pnpm run lint:sherif
@@ -42,6 +79,28 @@ jobs:
           else
             echo "No formatting issues found"
           fi
+      - name: Install all dependencies for Knip
+        run: pnpm install --ignore-scripts --frozen-lockfile
+      - name: Run Knip (nuqs package)
+        run: pnpm run lint:knip --workspace packages/nuqs
+      - name: Run Knip (e2e packages)
+        run: |
+          pnpm run --filter "e2e-*" typegen
+          pnpm run lint:knip --workspace packages/e2e/next
+          pnpm run lint:knip --workspace packages/e2e/react
+          pnpm run lint:knip --workspace packages/e2e/react-router/v5
+          pnpm run lint:knip --workspace packages/e2e/react-router/v6
+          pnpm run lint:knip --workspace packages/e2e/react-router/v7
+          pnpm run lint:knip --workspace packages/e2e/react-router/v8
+          pnpm run lint:knip --workspace packages/e2e/remix
+          pnpm run lint:knip --workspace packages/e2e/tanstack-router
+      - name: Run Knip (docs)
+        run: pnpm run lint:knip --workspace packages/docs
+      - name: Run Knip (examples)
+        run: |
+          pnpm run --filter "examples-trpc" typegen
+          pnpm run lint:knip --workspace packages/examples/next-app
+          pnpm run lint:knip --workspace packages/examples/trpc
 
   publint:
     name: Package Linting
@@ -49,8 +108,10 @@ jobs:
     needs: [ci-core]
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
-      - uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061
-      - uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093 # v6.0.8
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
         with:
           node-version-file: .node-version
           cache: pnpm
@@ -60,7 +121,7 @@ jobs:
         run: pnpm build --filter nuqs
       - name: Run publint on package.json
         run: pnpm publint packages/nuqs
-      - uses: 47ng/actions-slack-notify@main
+      - uses: 47ng/actions-slack-notify@df42545060c07ca99a040d0a520ab8457ce3c222
         name: Notify on Slack
         if: failure()
         with:
@@ -74,8 +135,10 @@ jobs:
     runs-on: ubuntu-24.04-arm
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
-      - uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061
-      - uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093 # v6.0.8
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
         with:
           node-version-file: .node-version
           cache: pnpm
@@ -89,8 +152,10 @@ jobs:
     runs-on: ubuntu-24.04-arm
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
-      - uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061
-      - uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093 # v6.0.8
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
         with:
           node-version-file: .node-version
           cache: pnpm
@@ -112,11 +177,13 @@ jobs:
     needs: [ci-core]
     permissions:
       contents: read
-      actions: read
+      actions: read # the docs build reads the workflow-run status when rendering the landing-page CI component.
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
-      - uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061
-      - uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093 # v6.0.8
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
         with:
           node-version-file: .node-version
           cache: pnpm
@@ -133,7 +200,7 @@ jobs:
           TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
           TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - uses: 47ng/actions-slack-notify@main
+      - uses: 47ng/actions-slack-notify@df42545060c07ca99a040d0a520ab8457ce3c222
         name: Notify on Slack
         if: failure()
         with:
@@ -187,8 +254,10 @@ jobs:
             react-compiler: true
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
-      - uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061
-      - uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093 # v6.0.8
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
         with:
           node-version-file: .node-version
           cache: pnpm
@@ -211,13 +280,13 @@ jobs:
           TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
           E2E_NO_CACHE_ON_RERUN: ${{ github.run_attempt }}
       - name: Save Playwright report
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         if: failure()
         with:
           path: packages/e2e/next/.playwright/*
           name: playwright-next-${{ matrix.next-version }}${{ matrix.base-path && '-basePath' || ''}}${{ matrix.react-compiler && '-react-compiler' || ''}}${{ matrix.cache-components && '-cache-components' || ''}}
           include-hidden-files: true
-      - uses: 47ng/actions-slack-notify@main
+      - uses: 47ng/actions-slack-notify@df42545060c07ca99a040d0a520ab8457ce3c222
         name: Notify on Slack
         if: failure()
         with:
@@ -236,8 +305,10 @@ jobs:
         full-page-nav-on-shallow-false: [false, true]
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
-      - uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061
-      - uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093 # v6.0.8
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
         with:
           node-version-file: .node-version
           cache: pnpm
@@ -251,13 +322,13 @@ jobs:
           E2E_NO_CACHE_ON_RERUN: ${{ github.run_attempt }}
           FULL_PAGE_NAV_ON_SHALLOW_FALSE: ${{ matrix.full-page-nav-on-shallow-false }}
       - name: Save Playwright report
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         if: failure()
         with:
           path: packages/e2e/react/.playwright/*
           name: playwright-react-fpn-${{ matrix.full-page-nav-on-shallow-false }}
           include-hidden-files: true
-      - uses: 47ng/actions-slack-notify@main
+      - uses: 47ng/actions-slack-notify@df42545060c07ca99a040d0a520ab8457ce3c222
         name: Notify on Slack
         if: failure()
         with:
@@ -276,10 +347,13 @@ jobs:
         react-router-version:
           - "v6"
           - "v7"
+          - "v8"
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
-      - uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061
-      - uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093 # v6.0.8
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
         with:
           node-version-file: .node-version
           cache: pnpm
@@ -292,13 +366,13 @@ jobs:
           TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
           E2E_NO_CACHE_ON_RERUN: ${{ github.run_attempt }}
       - name: Save Playwright report
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         if: failure()
         with:
           path: packages/e2e/react-router/${{ matrix.react-router-version }}/.playwright/*
           name: playwright-react-router-${{ matrix.react-router-version }}
           include-hidden-files: true
-      - uses: 47ng/actions-slack-notify@main
+      - uses: 47ng/actions-slack-notify@df42545060c07ca99a040d0a520ab8457ce3c222
         name: Notify on Slack
         if: failure()
         with:
@@ -313,8 +387,10 @@ jobs:
     needs: [ci-core]
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
-      - uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061
-      - uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093 # v6.0.8
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
         with:
           node-version-file: .node-version
           cache: pnpm
@@ -327,13 +403,13 @@ jobs:
           TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
           E2E_NO_CACHE_ON_RERUN: ${{ github.run_attempt }}
       - name: Save Playwright report
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         if: failure()
         with:
           path: packages/e2e/remix/.playwright/*
           name: playwright-remix
           include-hidden-files: true
-      - uses: 47ng/actions-slack-notify@main
+      - uses: 47ng/actions-slack-notify@df42545060c07ca99a040d0a520ab8457ce3c222
         name: Notify on Slack
         if: failure()
         with:
@@ -348,8 +424,10 @@ jobs:
     needs: [ci-core]
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
-      - uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061
-      - uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093 # v6.0.8
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
         with:
           node-version-file: .node-version
           cache: pnpm
@@ -362,13 +440,13 @@ jobs:
           TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
           E2E_NO_CACHE_ON_RERUN: ${{ github.run_attempt }}
       - name: Save Playwright report
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         if: failure()
         with:
           path: packages/e2e/tanstack-router/.playwright/*
           name: playwright-tanstack-router
           include-hidden-files: true
-      - uses: 47ng/actions-slack-notify@main
+      - uses: 47ng/actions-slack-notify@df42545060c07ca99a040d0a520ab8457ce3c222
         name: Notify on Slack
         if: failure()
         with:
@@ -391,90 +469,21 @@ jobs:
       - e2e-react-router
       - e2e-remix
       - e2e-tanstack-router
+    # Suppress the success ping only when a caller explicitly passes
+    # finalNotification: false. toJSON is load-bearing: a bare comparison hits
+    # GitHub's mismatched-type coercion (booleans and unset → numbers, the
+    # string 'false' → NaN), so both naive forms are wrong — `!= false` skips
+    # normal runs (an unset input coerces equal to false) and `!= 'false'` keeps
+    # the ping on the gate (boolean false ≠ NaN). toJSON stringifies first,
+    # rendering only a real boolean false as the token "false"; every other
+    # state (true, or unset on push/PR/dispatch) compares unequal and runs. No
+    # status function here, so the implicit needs-success gate still applies →
+    # this stays a success-only ping.
+    if: ${{ toJSON(inputs.finalNotification) != 'false' }}
     steps:
-      - uses: 47ng/actions-slack-notify@main
+      - uses: 47ng/actions-slack-notify@df42545060c07ca99a040d0a520ab8457ce3c222
         with:
           status: ${{ job.status }}
           jobName: Continuous Integration
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-
-  cd:
-    name: Deployment
-    runs-on: ubuntu-24.04-arm
-    permissions:
-      contents: write # to be able to publish a GitHub release
-      issues: write # to be able to comment on released issues
-      pull-requests: write # to be able to comment on released pull requests
-      id-token: write # to enable use of OIDC for NPM provenance / trusted publishing
-    needs:
-      - docs
-      - lint
-      - publint
-      - ci-scripts
-      - ci-core
-      - e2e-next
-      - e2e-react
-      - e2e-react-router
-      - e2e-remix
-      - e2e-tanstack-router
-    if: ${{ github.ref_name == 'master' || github.ref_name == 'beta' }}
-    steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
-      - uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061
-      - uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238
-        with:
-          node-version-file: .node-version
-          # No pnpm cache restore in CD: a poisoned cache could inject
-          # compromised packages into the published build. Fresh install
-          # from the registry ensures integrity (same rationale as
-          # skipping external Turbo cache below).
-      - name: Update npm # Ensure npm 11.5.1 or later is installed for OIDC trusted publishing
-        run: npm install -g npm@latest
-      - name: Install dependencies
-        run: pnpm install --ignore-scripts --frozen-lockfile --filter nuqs...
-      - name: Verify the integrity of provenance attestations and registry signatures for installed dependencies
-        run: npm audit signatures
-      - name: Build package
-        run: pnpm build --filter nuqs
-      - name: Semantic Release
-        run: ../../node_modules/.bin/semantic-release
-        working-directory: packages/nuqs
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Read package version
-        id: package-version
-        run: |
-          VERSION=$(jq -r '.version' package.json)
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
-          echo "Released version: $VERSION"
-        working-directory: packages/nuqs
-      - name: Invalidate contributors ISR cache in the docs
-        if: ${{ github.event_name == 'push' && github.ref_name == 'master' }}
-        run: |
-          curl -s "https://nuqs.dev/api/isr?tag=contributors&token=${{ secrets.ISR_TOKEN }}"
-      - name: Install dependencies
-        if: ${{ github.event_name == 'push' && steps.package-version.outputs.version != '0.0.0-semantically-released' }}
-        run: pnpm install --ignore-scripts --frozen-lockfile --filter scripts
-      - name: Generate release notes
-        id: release-notes
-        if: ${{ github.event_name == 'push' && steps.package-version.outputs.version != '0.0.0-semantically-released' }}
-        run: |
-          NOTES=$(./release-notes-automation.ts)
-          echo "$NOTES" >> $GITHUB_STEP_SUMMARY
-          {
-            echo 'notes<<EOF'
-            echo "$NOTES"
-            echo 'EOF'
-          } >> $GITHUB_OUTPUT
-        working-directory: packages/scripts
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Update GitHub release notes
-        if: ${{ github.event_name == 'push' && steps.package-version.outputs.version != '0.0.0-semantically-released' }}
-        run: |
-          echo "${{ steps.release-notes.outputs.notes }}" | \
-           gh release edit "v${{ steps.package-version.outputs.version }}" \
-            --notes-file -
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

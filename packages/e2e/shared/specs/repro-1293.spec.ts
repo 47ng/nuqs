@@ -81,6 +81,12 @@ export const testRepro1293 = defineTest('repro-1293', ({ path }) => {
 
     // Increment on page B
     logSpy.logs.length = 0 // Clear logs
+    // Wait for Page B to actually mount before interacting with it: under a
+    // delayed loader (or pending navigation) the URL flips to the destination
+    // optimistically while the outgoing Page A is still mounted, and both
+    // pages share an identical "Increment" button. Page B uniquely renders a
+    // "Go back" button, so its visibility marks B as mounted and A as gone.
+    await expect(page.getByRole('button', { name: 'Go back' })).toBeVisible()
     await page.getByRole('button', { name: 'Increment' }).click()
     await expect(page).toHaveURL(
       url =>

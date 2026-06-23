@@ -1,10 +1,20 @@
-# nuqs
+<div align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/47ng/nuqs/next/packages/res/wordmark.dark.svg">
+    <img alt="nuqs" src="https://raw.githubusercontent.com/47ng/nuqs/next/packages/res/wordmark.light.svg" width="384">
+  </picture>
+</div>
 
-[![NPM](https://img.shields.io/npm/v/nuqs?color=red)](https://www.npmjs.com/package/nuqs)
-[![MIT License](https://img.shields.io/github/license/47ng/nuqs.svg?color=blue)](https://github.com/47ng/nuqs/blob/next/LICENSE)
-[![GitHub Sponsors](https://img.shields.io/github/sponsors/franky47?color=%23db61a2&label=Sponsors)](https://github.com/sponsors/franky47)
-[![CI/CD](https://github.com/47ng/nuqs/actions/workflows/ci-cd.yml/badge.svg?branch=next)](https://github.com/47ng/nuqs/actions/workflows/ci-cd.yml)
-[![Depfu](https://badges.depfu.com/badges/acad53fa2b09b1e435a19d6d18f29af4/count.svg)](https://depfu.com/github/47ng/nuqs?project_id=22104)
+<br>
+
+<p align="center">
+  <a href="https://npmx.dev/package/nuqs"><picture><source media="(prefers-color-scheme: dark)" srcset="https://shieldcn.dev/npm/v/nuqs.svg?color=red&mode=dark&size=xs"><img alt="npm version" src="https://shieldcn.dev/npm/v/nuqs.svg?color=red&mode=light&size=xs"></picture></a>
+  <a href="https://npmx.dev/package/nuqs"><picture><source media="(prefers-color-scheme: dark)" srcset="https://shieldcn.dev/npm/dw/nuqs.svg?variant=secondary&mode=dark&size=xs"><img alt="npm downloads" src="https://shieldcn.dev/npm/dw/nuqs.svg?variant=secondary&mode=light&size=xs"></picture></a>
+  <a href="https://github.com/47ng/nuqs/blob/next/LICENSE"><picture><source media="(prefers-color-scheme: dark)" srcset="https://shieldcn.dev/github/license/47ng/nuqs.svg?variant=secondary&mode=dark&size=xs"><img alt="MIT License" src="https://shieldcn.dev/github/license/47ng/nuqs.svg?variant=secondary&mode=light&size=xs"></picture></a>
+  <a href="https://github.com/47ng/nuqs/actions/workflows/ci-cd.yml"><picture><source media="(prefers-color-scheme: dark)" srcset="https://shieldcn.dev/github/ci/47ng/nuqs.svg?variant=secondary&workflow=ci-cd.yml&branch=next&mode=dark&size=xs"><img alt="CI/CD" src="https://shieldcn.dev/github/ci/47ng/nuqs.svg?variant=secondary&workflow=ci-cd.yml&branch=next&mode=light&size=xs"></picture></a>
+  <a href="https://github.com/47ng/nuqs/graphs/contributors"><picture><source media="(prefers-color-scheme: dark)" srcset="https://shieldcn.dev/github/contributors/47ng/nuqs.svg?variant=secondary&mode=dark&size=xs"><img alt="Last commit" src="https://shieldcn.dev/github/contributors/47ng/nuqs.svg?variant=secondary&mode=light&size=xs"></picture></a>
+  <a href="https://github.com/sponsors/franky47"><picture><source media="(prefers-color-scheme: dark)" srcset="https://shieldcn.dev/github/sponsors/franky47.svg?mode=dark&size=xs"><img alt="GitHub Sponsors" src="https://shieldcn.dev/github/sponsors/franky47.svg?mode=light&size=xs"></picture></a>
+</p>
 
 Type-safe search params state manager for React frameworks. Like `useState`, but stored in the URL query string.
 
@@ -26,6 +36,10 @@ Read the complete documentation at [nuqs.dev](https://nuqs.dev).
 ## Installation
 
 ```shell
+npm install nuqs
+```
+
+```shell
 pnpm add nuqs
 ```
 
@@ -34,7 +48,15 @@ yarn add nuqs
 ```
 
 ```shell
-npm install nuqs
+bun add nuqs
+```
+
+```shell
+deno add nuqs
+```
+
+```shell
+vlt install nuqs
 ```
 
 ## Adapters
@@ -120,7 +142,7 @@ export default function App() {
 
 </details>
 
-<details><summary><span style="width:16px;height:16px;background:#fff;border-radius:2px;"><img width="16px" height="16px" src="https://reactrouter.com/_brand/React%20Router%20Brand%20Assets/React%20Router%20Logo/Light.svg" /></span> React Router v6
+<details><summary><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/47ng/nuqs/next/packages/res/react-router.dark.svg"><img height="14px" src="https://raw.githubusercontent.com/47ng/nuqs/next/packages/res/react-router.light.svg" /></picture> React Router v6
 </summary>
 
 > Supported React Router versions: `react-router-dom@^6`
@@ -148,7 +170,7 @@ export function ReactRouter() {
 
 </details>
 
-<details><summary><span style="width:16px;height:16px;background:#fff;border-radius:2px;"><img width="16px" height="16px" src="https://reactrouter.com/_brand/React%20Router%20Brand%20Assets/React%20Router%20Logo/Light.svg" /></span> React Router v7
+<details><summary><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/47ng/nuqs/next/packages/res/react-router.dark.svg"><img height="14px" src="https://raw.githubusercontent.com/47ng/nuqs/next/packages/res/react-router.light.svg" /></picture> React Router v7
 </summary>
 
 > Supported React Router versions: `react-router@^7`
@@ -156,6 +178,29 @@ export function ReactRouter() {
 ```tsx
 // app/root.tsx
 import { NuqsAdapter } from 'nuqs/adapters/react-router/v7'
+import { Outlet } from 'react-router'
+
+// ...
+
+export default function App() {
+  return (
+    <NuqsAdapter>
+      <Outlet />
+    </NuqsAdapter>
+  )
+}
+```
+
+</details>
+
+<details><summary><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/47ng/nuqs/next/packages/res/react-router.dark.svg"><img height="14px" src="https://raw.githubusercontent.com/47ng/nuqs/next/packages/res/react-router.light.svg" /></picture> React Router v8
+</summary>
+
+> Supported React Router versions: `react-router@^8`
+
+```tsx
+// app/root.tsx
+import { NuqsAdapter } from 'nuqs/adapters/react-router/v8'
 import { Outlet } from 'react-router'
 
 // ...

@@ -11,6 +11,7 @@ export default [
     route('/form/useQueryState',                        './routes/form.useQueryState.tsx'),
     route('/form/useQueryStates',                       './routes/form.useQueryStates.tsx'),
     route('/hash-preservation',                         './routes/hash-preservation.tsx'),
+    route('/history-sync',                              './routes/history-sync.tsx'),
     route('/json',                                      './routes/json.tsx'),
     route('/life-and-death',                            './routes/life-and-death.tsx'),
     route('/linking/useQueryState',                     './routes/linking.useQueryState.tsx'),
@@ -66,5 +67,6 @@ export default [
     route('/repro-1358/a',              './routes/repro-1358.a.tsx'),
     route('/repro-1358/b',              './routes/repro-1358.b.tsx'),
     route('/repro-1365',                './routes/repro-1365.tsx'),
+    route('/repro-1444',                './routes/repro-1444.tsx'),
   ])
 ] satisfies RouteConfig

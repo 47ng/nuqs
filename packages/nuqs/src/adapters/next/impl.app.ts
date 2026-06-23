@@ -109,7 +109,11 @@ export function NavigationSpy() {
 
 export function useNuqsNextAppRouterAdapter(): AdapterInterface {
   const router = useRouter()
-  const searchParams = useSearchParams()
+  // `useSearchParams` is typed `ReadonlyURLSearchParams | null` for consumer
+  // apps that have a `pages/` directory (Next injects that compat overload
+  // through next-env.d.ts). Only truly null when rendered outside a
+  // SearchParamsContext provider: tests/mocks, or `app/global-error` (pre-15.2).
+  const searchParams = useSearchParams() ?? new URLSearchParams()
   const [optimisticSearchParams, setOptimisticSearchParams] =
     useOptimistic<URLSearchParams>(searchParams)
   const updateUrl: UpdateUrlFunction = useCallback((search, options) => {
@@ -118,7 +122,7 @@ export function useNuqsNextAppRouterAdapter(): AdapterInterface {
         setOptimisticSearchParams(search)
       }
       const url = renderURL(search)
-      debug('[nuqs next/app] Updating url: %s', url)
+      debug(20, 'next/app', url)
       // First, update the URL locally without triggering a network request,
       // this allows keeping a reactive URL if the network is slow.
       const updateMethod =

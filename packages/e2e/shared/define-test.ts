@@ -9,6 +9,7 @@ export type TestConfig = {
     | 'react-spa'
     | 'react-router-v6'
     | 'react-router-v7'
+    | 'react-router-v8'
     | 'remix'
     | 'tanstack-router'
   description?: string
@@ -20,6 +21,7 @@ const routerDisplay: Record<NonNullable<TestConfig['router']>, string> = {
   'react-spa': 'React SPA',
   'react-router-v6': 'React Router v6',
   'react-router-v7': 'React Router v7',
+  'react-router-v8': 'React Router v8',
   remix: 'Remix',
   'tanstack-router': 'TanStack Router'
 }

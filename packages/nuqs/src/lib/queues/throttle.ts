@@ -41,24 +41,15 @@ export class ThrottledQueue {
   controller: AbortController | null = null
   lastFlushedAt = 0
   resetQueueOnNextPush = false
-  /**
-   * When true, pushes are silently dropped. Used by the TanStack Router
-   * adapter during cross-route navigation to prevent the outgoing route's
-   * setState-during-render from repopulating the queue with stale values.
-   */
-  frozen = false
   push(
     { key, query, options }: UpdateQueuePushArgs,
     timeMs: number = defaultRateLimit.timeMs
   ): void {
-    if (this.frozen) {
-      return
-    }
     if (this.resetQueueOnNextPush) {
       this.reset()
       this.resetQueueOnNextPush = false
     }
-    debug('[nuqs gtq] Enqueueing %s=%s %O', key, query, options)
+    debug(7, key, query, options)
     // Enqueue update
     this.updateMap.set(key, query)
     if (options.history === 'push') {
@@ -99,7 +90,7 @@ export class ThrottledQueue {
   ): Promise<URLSearchParams> {
     this.controller ??= new AbortController()
     if (!Number.isFinite(this.timeMs)) {
-      debug('[nuqs gtq] Skipping flush due to throttleMs=Infinity')
+      debug(8)
       return Promise.resolve(getSearchParamsSnapshot())
     }
     if (this.resolvers) {
@@ -134,12 +125,7 @@ export class ThrottledQueue {
       const timeMs = this.timeMs
       const flushInMs =
         rateLimitFactor * Math.max(0, timeMs - timeSinceLastFlush)
-      debug(
-        `[nuqs gtq] Scheduling flush in %f ms. Throttled at %f ms (x%f)`,
-        flushInMs,
-        timeMs,
-        rateLimitFactor
-      )
+      debug(9, flushInMs, timeMs, rateLimitFactor)
       if (flushInMs === 0) {
         // Since we're already in the "next tick" from queued updates,
         // no need to do setTimeout(0) here.
@@ -163,10 +149,7 @@ export class ThrottledQueue {
 
   reset(): string[] {
     const queuedKeys = Array.from(this.updateMap.keys())
-    debug(
-      '[nuqs gtq] Resetting queue %s',
-      JSON.stringify(Object.fromEntries(this.updateMap))
-    )
+    debug(10, JSON.stringify(Object.fromEntries(this.updateMap)))
     this.updateMap.clear()
     this.transitions.clear()
     this.options = {
@@ -184,11 +167,7 @@ export class ThrottledQueue {
   ): [URLSearchParams, null | unknown] {
     const { updateUrl, getSearchParamsSnapshot } = adapter
     let search = getSearchParamsSnapshot()
-    debug(
-      `[nuqs gtq] Applying %d pending update(s) on top of %s`,
-      this.updateMap.size,
-      search.toString()
-    )
+    debug(11, this.updateMap.size, search.toString())
     if (this.updateMap.size === 0) {
       return [search, null]
     }
@@ -204,11 +183,12 @@ export class ThrottledQueue {
     if (items.length === 0) {
       return [search, null]
     }
+    debug(12, items, options)
     for (const [key, value] of items) {
       if (value === null) {
         search.delete(key)
       } else {
-        search = write(value, key, search)
+        search = write(search, key, value)
       }
     }
     if (processUrlSearchParams) {

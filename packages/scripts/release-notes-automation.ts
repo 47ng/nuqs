@@ -1,254 +1,75 @@
 #!/usr/bin/env node
 
+import { createEnv } from '@t3-oss/env-core'
 import { z } from 'zod'
+import type { Change } from './lib/change.ts'
+import {
+  breakingChanges,
+  CATEGORIES,
+  groupChangesByCategory,
+  parseCodeSpans,
+  renderChangelogComment
+} from './lib/changelog-dto.ts'
+import { discoverChanges, makeGitHubGraphReader } from './lib/commit-graph.ts'
 
-// Schema for the GraphQL response
-const participantsSchema = z.object({
-  nodes: z.array(z.object({ login: z.string() }))
-})
+// The category vocabulary and the change grouping/breaking cross-cut now live in
+// the IO-free codec (`lib/changelog-dto.ts`), the SSOT shared with the changelog
+// renderer. Re-exported here so existing importers (and the test suite) keep
+// their entry point.
+export {
+  breakingChanges,
+  CATEGORIES,
+  groupChangesByCategory
+} from './lib/changelog-dto.ts'
+export type { Category } from './lib/changelog-dto.ts'
 
-const issueReferenceSchema = z.object({
-  number: z.number(),
-  participants: participantsSchema
-})
-
-export const prSchema = z.object({
-  number: z.number(),
-  title: z.string(),
-  author: z
-    .object({
-      login: z.string()
-    })
-    .nullable(),
-  participants: participantsSchema,
-  closingIssuesReferences: z.object({
-    edges: z.array(
-      z.object({
-        node: issueReferenceSchema
-      })
-    )
-  })
-})
-
-const responseSchema = z.object({
-  data: z.object({
-    repository: z.object({
-      milestone: z
-        .object({
-          pullRequests: z.object({
-            nodes: z.array(prSchema)
-          })
-        })
-        .nullable()
-    })
-  })
-})
-
-export type PR = z.infer<typeof prSchema>
-
-export const CATEGORIES = [
-  'Features',
-  'Bug fixes',
-  'Documentation',
-  'Other changes'
-] as const
-export type Category = (typeof CATEGORIES)[number]
-
-async function fetchMilestonePRs(): Promise<PR[]> {
-  const token = process.env.GITHUB_TOKEN
-  if (!token) {
-    throw new Error('GITHUB_TOKEN environment variable is required')
-  }
-
-  // GraphQL query to fetch PRs with milestone ID 2 and their closing issues
-  const query = `
-    query {
-      repository(owner: "47ng", name: "nuqs") {
-        milestone(number: 2) {
-          pullRequests(first: 100) {
-            nodes {
-              number
-              title
-              author {
-                login
-              }
-              participants(first: 20) {
-                nodes {
-                  login
-                }
-              }
-              closingIssuesReferences(first: 10) {
-                edges {
-                  node {
-                    number
-                    participants(first: 20) {
-                      nodes {
-                        login
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  `.replace(/\s+/g, ' ')
-
-  const response = await fetch(
-    'https://api.github.com/graphql?fn=fetchMilestonesPRs',
-    {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ query })
-    }
-  )
-
-  if (!response.ok) {
-    throw new Error(
-      `GitHub API error: ${response.status} ${response.statusText}`
-    )
-  }
-
-  const json = await response.json()
-  const parsed = responseSchema.parse(json)
-
-  if (!parsed.data.repository.milestone) {
-    throw new Error('Milestone not found')
-  }
-
-  return parsed.data.repository.milestone.pullRequests.nodes
-}
-
-export function splitCategoryTitle(title: string): [Category, string] {
-  // Regex to match conventional commit prefix with optional scope
-  // Matches: feat:, feat(scope):, fix:, docs:, doc:, etc.
-  const conventionalCommitRegex = /^(\w+)(?:\([^)]+\))?:\s*(.+)$/
-  const match = title.match(conventionalCommitRegex)
-
-  let category: Category
-  let cleanTitle: string
-
-  if (match) {
-    const [, type = '', titleWithoutPrefix = ''] = match
-    cleanTitle = titleWithoutPrefix.trim()
-
-    const typeLower = type.toLowerCase()
-
-    if (typeLower === 'feat') {
-      category = 'Features'
-    } else if (typeLower === 'fix') {
-      category = 'Bug fixes'
-    } else if (typeLower === 'doc' || typeLower === 'docs') {
-      category = 'Documentation'
-    } else {
-      category = 'Other changes'
-    }
-  } else {
-    // No conventional commit prefix found
-    category = 'Other changes'
-    cleanTitle = title
-  }
-  return [category, cleanTitle] as const
-}
-
-export type CategorizedPR = {
-  category: Category
-  number: number
-  title: string
-  author: string | null
-  closingIssues: Array<{ number: number }>
-}
-
-export function groupPRsByCategory(
-  prs: PR[]
-): Record<Category, CategorizedPR[]> {
-  const categories: Record<Category, CategorizedPR[]> = {
-    Features: [],
-    'Bug fixes': [],
-    Documentation: [],
-    'Other changes': []
-  }
-
-  for (const pr of prs) {
-    const [category, cleanTitle] = splitCategoryTitle(pr.title)
-    const closingIssues = pr.closingIssuesReferences.edges.map(edge => ({
-      number: edge.node.number
-    }))
-    categories[category].push({
-      category,
-      number: pr.number,
-      title: cleanTitle,
-      author: pr.author?.login ?? null,
-      closingIssues
-    })
-  }
-
-  for (const category of CATEGORIES) {
-    categories[category].sort((a, b) => a.number - b.number)
-  }
-
-  return categories
-}
-
-// Known bot accounts to exclude
-const botAccounts = new Set([
-  'copilot',
-  'dependabot',
-  'github-actions',
-  'pkg-pr-new',
-  'renovate',
-  'vercel'
-])
-
-function isBot(login: string) {
-  return login.endsWith('[bot]') || botAccounts.has(login.toLowerCase())
-}
-
-export function collectContributors(prs: PR[]): string[] {
-  const contributors = new Set<string>()
-
-  for (const pr of prs) {
-    // Add all PR discussion participants (includes the PR author)
-    for (const { login } of pr.participants.nodes) {
-      if (!isBot(login)) {
-        contributors.add(login)
-      }
-    }
-
-    // Add participants of closing issues
-    for (const { node } of pr.closingIssuesReferences.edges) {
-      for (const { login } of node.participants.nodes) {
-        if (!isBot(login)) {
-          contributors.add(login)
-        }
-      }
-    }
-  }
-
-  // Remove myself from the list
-  contributors.delete('franky47')
-
-  return Array.from(contributors).sort((a, b) =>
-    a.toLowerCase().localeCompare(b.toLowerCase())
-  )
-}
-
-export function formatClosingIssues(
-  issues: CategorizedPR['closingIssues']
-): string {
+export function formatClosingIssues(issues: readonly number[]): string {
   if (issues.length === 0) return ''
-  const issueNumbers = issues.map(i => `#${i.number}`).join(', ')
+  const issueNumbers = issues.map(number => `#${number}`).join(', ')
   return ` (closes ${issueNumbers})`
 }
 
+// A PR's author is a GitHub login, rendered `@handle`; a direct commit's is a
+// git author name, rendered as-is. Either may be absent (a deleted GitHub
+// account resolves to null), in which case the attribution is omitted.
+function formatAuthor(change: Change): string {
+  if (!change.author) return ''
+  const handle =
+    change.source === 'squashedPR' ? `@${change.author}` : change.author
+  return `, by ${handle}`
+}
+
+// Render one changelog bullet. A PR-sourced change renders as
+// `#123 - …, by @login (closes #N)`; a direct-commit change as
+// `abcd1234 - …, by Author Name` (no `@`, no closing issues). With
+// `decorateBreaking`, a breaking change gets a trailing ⚠️ marker — used in the
+// type sections so a `feat!` is flagged inline; the top "Breaking changes"
+// section renders undecorated (the whole section is already breaking).
+export function formatChangeLine(
+  change: Change,
+  options: { decorateBreaking?: boolean } = {}
+): string {
+  const ref =
+    change.source === 'squashedPR' ? `#${change.prNumber}` : change.sha
+  const author = formatAuthor(change)
+  const closes =
+    change.source === 'squashedPR'
+      ? formatClosingIssues(change.closingIssues)
+      : ''
+  const marker =
+    options.decorateBreaking && change.breaking ? ' - ⚠️ breaking change' : ''
+  return `- ${ref} - ${formatTitle(change.description)}${author}${closes}${marker}`
+}
+
 export function formatTitle(title: string): string {
-  // Convert backtick code blocks to <code> tags for better rendering in GitHub release notes
-  return title.replace(/`([^`]+)`/g, '<code>$1</code>')
+  // Convert backtick code spans to <code> tags for GitHub release notes, via the
+  // shared span-parser — so the GitHub notes and the changelog page render the
+  // (raw) description identically and cannot drift.
+  return parseCodeSpans(title)
+    .map(segment =>
+      segment.code ? `<code>${segment.value}</code>` : segment.value
+    )
+    .join('')
 }
 
 export function formatThanksSection(contributors: string[]): string | null {
@@ -262,53 +83,77 @@ export function formatThanksSection(contributors: string[]): string | null {
   return `Huge thanks to ${allContributors} for helping!`
 }
 
-// Main execution
-async function main() {
-  try {
-    const prs = await fetchMilestonePRs()
+// Assemble the full release-notes markdown: the breaking-changes cross-cut
+// first (its own section + a migration-guide placeholder for the maintainer to
+// fill in), then the type sections (with breaking lines flagged ⚠️), then the
+// Thanks section. Empty sections are dropped. Pure: `main` only prints the result.
+export function renderReleaseNotes(
+  changes: Change[],
+  contributors: string[]
+): string {
+  const blocks: string[] = []
 
-    // Group by category
-    const categories = groupPRsByCategory(prs)
-
-    // Display results
-    for (const category of CATEGORIES) {
-      const prsInCategory = categories[category]
-
-      if (prsInCategory.length === 0) {
-        continue // Skip empty categories
-      }
-
-      console.log(`## ${category}\n`)
-
-      for (const pr of prsInCategory) {
-        const author = pr.author ? `, by @${pr.author}` : ''
-        const closingIssues = formatClosingIssues(pr.closingIssues)
-        console.log(
-          `- #${pr.number} - ${formatTitle(pr.title)}${author}${closingIssues}`
-        )
-      }
-
-      console.log() // Empty line between categories
-    }
-
-    // Collect and display contributors
-    const contributors = collectContributors(prs)
-    const thanksSection = formatThanksSection(contributors)
-    if (thanksSection) {
-      console.log('## Thanks\n')
-      console.log(`${thanksSection}\n`)
-    }
-  } catch (error) {
-    console.error('Error:', error)
-    process.exit(1)
+  const breaking = breakingChanges(changes)
+  if (breaking.length > 0) {
+    const lines = breaking.map(change => formatChangeLine(change))
+    blocks.push(
+      [
+        '## Breaking changes',
+        '',
+        ...lines,
+        '',
+        '### Migration guide',
+        '',
+        '<!-- todo: Add migration steps for breaking changes -->'
+      ].join('\n')
+    )
   }
+
+  const categories = groupChangesByCategory(changes)
+  for (const category of CATEGORIES) {
+    const changesInCategory = categories[category]
+    if (changesInCategory.length === 0) continue
+    const lines = changesInCategory.map(change =>
+      formatChangeLine(change, { decorateBreaking: true })
+    )
+    blocks.push([`## ${category}`, '', ...lines].join('\n'))
+  }
+
+  const thanksSection = formatThanksSection(contributors)
+  if (thanksSection) {
+    blocks.push(['## Thanks', '', thanksSection].join('\n'))
+  }
+
+  return blocks.join('\n\n')
 }
 
-// Only run main when executed directly (not when imported)
-const isMainModule =
-  import.meta.url === `file://${process.argv[1]}` ||
-  process.argv[1]?.endsWith('release-notes-automation.ts')
+async function main(): Promise<void> {
+  // Draft phase: the tag does not exist yet, so the range is resolved from
+  // HEAD. The channel selects the asymmetric range (incremental beta vs
+  // cumulative GA) — the same engine finalize runs post-publish, so the
+  // drafted notes list exactly the PRs/issues finalize will comment on.
+  const env = createEnv({
+    server: {
+      CHANNEL: z.enum(['stable', 'beta']),
+      GITHUB_TOKEN: z.string().min(1)
+    },
+    isServer: true,
+    runtimeEnv: process.env
+  })
+  const release = await discoverChanges({
+    channel: env.CHANNEL,
+    currentRef: 'HEAD',
+    reader: makeGitHubGraphReader(env.GITHUB_TOKEN)
+  })
+  // The human-readable notes, followed by the machine-readable DTO comment the
+  // changelog page reads back (hidden on GitHub + in subscriber emails).
+  const notes = renderReleaseNotes(release.changes, release.contributors)
+  console.log(`${notes}\n\n${renderChangelogComment(release)}`)
+}
 
-if (isMainModule) {
-  main()
+if (import.meta.main) {
+  main().catch(error => {
+    console.error('Error:', error)
+    process.exit(1)
+  })
 }

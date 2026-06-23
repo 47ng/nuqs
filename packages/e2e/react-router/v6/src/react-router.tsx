@@ -28,6 +28,7 @@ const router = createBrowserRouter(
       <Route path="form/useQueryState"                        lazy={load(import('./routes/form.useQueryState'))} />
       <Route path="form/useQueryStates"                       lazy={load(import('./routes/form.useQueryStates'))} />
       <Route path="hash-preservation"                         lazy={load(import('./routes/hash-preservation'))} />
+      <Route path="history-sync"                              lazy={load(import('./routes/history-sync'))} />
       <Route path="json"                                      lazy={load(import('./routes/json'))} />
       <Route path="life-and-death"                            lazy={load(import('./routes/life-and-death'))} />
       <Route path="linking/useQueryState"                     lazy={load(import('./routes/linking.useQueryState'))} />
@@ -85,6 +86,7 @@ const router = createBrowserRouter(
       <Route path="repro-1358/a"              lazy={load(import('./routes/repro-1358.a'))} />
       <Route path="repro-1358/b"              lazy={load(import('./routes/repro-1358.b'))} />
       <Route path="repro-1365"                lazy={load(import('./routes/repro-1365'))} />
+      <Route path="repro-1444"                lazy={load(import('./routes/repro-1444'))} />
     </Route>
   ))
 

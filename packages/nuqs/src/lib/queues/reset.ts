@@ -18,7 +18,7 @@ export function spinQueueResetMutex(onReset: () => void = resetQueues): void {
 }
 
 export function resetQueues(): void {
-  debug('[nuqs] Aborting queues')
+  debug(19)
   const keys = [
     ...debounceController.queues.keys(),
     ...globalThrottleQueue.updateMap.keys()

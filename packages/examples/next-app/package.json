@@ -20,6 +20,6 @@
     "@types/react": "catalog:react19",
     "@types/react-dom": "catalog:react19",
     "tailwindcss": "^4.1.18",
-    "typescript": "^5.9.3"
+    "typescript": "catalog:typescript"
   }
 }
