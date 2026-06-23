@@ -31,9 +31,9 @@ export const testRepro1273 = defineTest('repro-1273', ({ path }) => {
     )
     await assertLogCount(
       logSpy,
-      'test: 1',
+      'commit: 1',
       0,
-      'Expected no logs from target page after navigating back'
+      'Expected no committed logs from target page after navigating back'
     )
 
     // Navigate to <path>/other?test=2
@@ -47,15 +47,15 @@ export const testRepro1273 = defineTest('repro-1273', ({ path }) => {
     )
     await assertLogCount(
       logSpy,
-      'test: 0',
+      'commit: 0',
       0,
-      'Expected no logs from target page after navigating back'
+      'Expected no committed default value on the revisited page'
     )
     await assertLogCount(
       logSpy,
-      'test: 1',
+      'commit: 1',
       0,
-      'Expected no logs from target page after navigating back'
+      'Expected no committed stale value on the revisited page'
     )
     await expect(page.getByRole('code')).toHaveText('test: 2') // Test eventual consistency
   })
@@ -86,9 +86,9 @@ export const testRepro1273 = defineTest('repro-1273', ({ path }) => {
     )
     await assertLogCount(
       logSpy,
-      'test: 1',
+      'commit: 1',
       0,
-      'Expected no logs from target page after navigating back'
+      'Expected no committed logs from target page after navigating back'
     )
 
     // Navigate to <path>/other?test=2
@@ -102,15 +102,15 @@ export const testRepro1273 = defineTest('repro-1273', ({ path }) => {
     )
     await assertLogCount(
       logSpy,
-      'test: 0',
+      'commit: 0',
       0,
-      'Expected no logs from target page after navigating back'
+      'Expected no committed default value on the revisited page'
     )
     await assertLogCount(
       logSpy,
-      'test: 1',
+      'commit: 1',
       0,
-      'Expected no logs from target page after navigating back'
+      'Expected no committed stale value on the revisited page'
     )
     await expect(page.getByRole('code')).toHaveText('test: 2') // Test eventual consistency
   })

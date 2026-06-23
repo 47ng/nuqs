@@ -1,6 +1,7 @@
 'use client'
 
 import { createSerializer, parseAsInteger, useQueryStates } from 'nuqs'
+import { useEffect } from 'react'
 import { useLink } from '../components/link'
 import { useRouter } from '../components/router'
 
@@ -42,8 +43,16 @@ export function Repro1273StartPage({ otherPagePath }: Repro1273StartPageProps) {
   )
 }
 
+// Logs its committed value on every commit, so the test asserts on what the
+// app actually consumes (the value read in effects / used for data fetching),
+// ignoring render attempts React discards before paint. During a cacheComponents
+// navigation back to this page, the cached subtree is briefly re-rendered
+// against the outgoing route's params, but that render is never committed —
+// logging in an effect (rather than in render) ignores it. Mirrors repro-1444.
 export function Repro1273OtherPage() {
   const [{ test }] = useQueryStates(searchParams)
-  console.log(`test: ${test}`)
+  useEffect(() => {
+    console.log(`commit: ${test}`)
+  })
   return <code>test: {test}</code>
 }
