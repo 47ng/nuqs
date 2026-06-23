@@ -11,10 +11,12 @@ import {
   TanStackRouter,
   Vitest,
 } from '@/src/components/frameworks'
+import { HumanContent, LLMContent } from '@/src/components/audience'
 
 Since version 2, you can now use nuqs in the following React frameworks, by
 wrapping it with a `NuqsAdapter{:ts}` context provider:
 
+<HumanContent>
 - <NextJS className='inline mr-1.5' role="presentation"/> [Next.js (app router)](#nextjs-app-router)
 - <NextJS className='inline mr-1.5' role="presentation"/> [Next.js (pages router)](#nextjs-pages-router)
 - <ReactSPA className='inline mr-1.5' role="presentation" /> [React SPA (eg: with Vite)](#react-spa)
@@ -23,8 +25,20 @@ wrapping it with a `NuqsAdapter{:ts}` context provider:
 - <ReactRouter className='inline mr-1.5' role="presentation" /> [React Router v7](#react-router-v7)
 - <ReactRouter className='inline mr-1.5' role="presentation" /> [React Router v8](#react-router-v8)
 - <TanStackRouter className='inline mr-1.5 not-prose' role="presentation"/> [TanStack Router](#tanstack-router)
+</HumanContent>
 
-## <NextJS className='inline mr-1.5 -mt-1' role="presentation" /> Next.js [#nextjs]
+<LLMContent>
+- [Next.js (app router)](#nextjs-app-router)
+- [Next.js (pages router)](#nextjs-pages-router)
+- [React SPA (eg: with Vite)](#react-spa)
+- [Remix](#remix)
+- [React Router v6](#react-router-v6)
+- [React Router v7](#react-router-v7)
+- [React Router v8](#react-router-v8)
+- [TanStack Router](#tanstack-router)
+</LLMContent>
+
+## <HumanContent><NextJS className='inline mr-2 -mt-1' role="presentation" /></HumanContent>Next.js [#nextjs]
 
 ### App router [#nextjs-app-router]
 
@@ -78,11 +92,13 @@ of a slightly larger bundle size (~100B).
 import { NuqsAdapter } from 'nuqs/adapters/next'
 ```
 
+<HumanContent>
 <br/>
+</HumanContent>
 
 The main reason for adapters is to open up nuqs to other React frameworks:
 
-## <ReactSPA className='inline mr-1.5 -mt-1' role="presentation"/> React SPA [#react-spa]
+## <HumanContent><ReactSPA className='inline mr-2 -mt-1' role="presentation"/></HumanContent>React SPA [#react-spa]
 
 Example, with Vite:
 
@@ -104,7 +120,7 @@ Because there is no known server in this configuration, the
 See below for some options:
 </Callout>
 
-### Full page navigation on <br className='hidden in-[#nd-toc]:block'/>`shallow: false{:ts}` [#full-page-navigation-on-shallow-false]
+### Full page navigation on <HumanContent><br className='hidden in-[#nd-toc]:block'/></HumanContent>`shallow: false{:ts}` [#full-page-navigation-on-shallow-false]
 
 <FeatureSupportMatrix introducedInVersion='2.4.0' support={{
   supported: true,
@@ -128,7 +144,7 @@ createRoot(document.getElementById('root')!).render(
 This may be useful for servers not written in JavaScript, like Django (Python),
 Rails (Ruby), Laravel (PHP), Phoenix (Elixir) etc...
 
-## <Remix className='inline mr-1.5 -mt-1' role="presentation"/> Remix [#remix]
+## <HumanContent><Remix className='inline mr-2 -mt-1' role="presentation"/></HumanContent>Remix [#remix]
 
 ```tsx title="app/root.tsx"
 // [!code word:NuqsAdapter]
@@ -156,7 +172,7 @@ export default function App() {
 
 </Callout>
 
-## <ReactRouter className='inline mr-1.5 -mt-1' role="presentation"/> React Router v6 [#react-router-v6]
+## <HumanContent><ReactRouter className='inline mr-2 -mt-1' role="presentation"/></HumanContent>React Router v6 [#react-router-v6]
 
 ```tsx title="src/main.tsx"
 // [!code word:NuqsAdapter]
@@ -213,7 +229,7 @@ export function ReactRouter() {
 
 </Callout>
 
-## <ReactRouter className='inline mr-1.5 -mt-1' role="presentation"/> React Router v7 [#react-router-v7]
+## <HumanContent><ReactRouter className='inline mr-2 -mt-1' role="presentation"/></HumanContent>React Router v7 [#react-router-v7]
 
 ```tsx title="app/root.tsx"
 // [!code word:NuqsAdapter]
@@ -231,7 +247,7 @@ export default function App() {
 }
 ```
 
-## <ReactRouter className='inline mr-1.5 -mt-1' role="presentation"/> React Router v8 [#react-router-v8]
+## <HumanContent><ReactRouter className='inline mr-2 -mt-1' role="presentation"/></HumanContent>React Router v8 [#react-router-v8]
 
 ```tsx title="app/root.tsx"
 // [!code word:NuqsAdapter]
@@ -259,7 +275,7 @@ export default function App() {
 
 </Callout>
 
-## <TanStackRouter className='inline mr-1.5 -mt-1 not-prose' role="presentation"/> TanStack Router [#tanstack-router]
+## <HumanContent><TanStackRouter className='inline mr-2 -mt-1 not-prose' role="presentation"/></HumanContent>TanStack Router [#tanstack-router]
 
 ```tsx title="src/routes/__root.tsx"
 // [!code word:NuqsAdapter]
@@ -347,7 +363,7 @@ reasons.
 
 </Callout>
 
-## <Vitest className='inline mr-1.5 -mt-1' role="presentation"/> Testing
+## <HumanContent><Vitest className='inline mr-2 -mt-1' role="presentation"/></HumanContent>Testing
 
 <Callout>
   Documentation for the `NuqsTestingAdapter{:ts}` is on the [testing page](/docs/testing).

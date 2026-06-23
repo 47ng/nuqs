@@ -3,6 +3,8 @@ title: Options
 description: Configuring nuqs
 ---
 
+import { HumanContent, LLMContent } from '@/src/components/audience'
+
 By default, `nuqs` will update search params:
 1. On the client only (not sending requests to the server),
 2. by replacing the current history entry,
@@ -340,8 +342,9 @@ However, sometimes you might want to keep the search parameter in the URL,
 because **default values _can_ change**, and the meaning of the URL along with it.
 
 <Callout title="Example of defaults changing">
-  In `nuqs@1.x.x`, `clearOnDefault{:ts}` was `false{:ts}` by default.<br/>
-  in `nuqs@2.0.0`, `clearOnDefault{:ts}` is now `true{:ts}` by default, in response
+  In `nuqs@1.x.x`, `clearOnDefault{:ts}` was `false{:ts}` by default.
+  <HumanContent><br/></HumanContent>
+  In `nuqs@2.0.0`, `clearOnDefault{:ts}` is now `true{:ts}` by default, in response
   to [user feedback](https://x.com/fortysevenfx/status/1841610237540696261).
 </Callout>
 
@@ -432,11 +435,17 @@ Sort the search parameters alphabetically:
 import { Suspense } from 'react'
 import { AlphabeticalSortDemo, DemoSkeleton } from './options.client'
 
+<HumanContent>
 _Try toggling **c**, then **b**, then **a**, and note how the URL remains ordered:_
 
 <Suspense fallback={<DemoSkeleton/>}>
   <AlphabeticalSortDemo />
 </Suspense>
+</HumanContent>
+
+<LLMContent>
+Interactive demo omitted. `processUrlSearchParams` can sort the merged `URLSearchParams` before the adapter writes them to the URL.
+</LLMContent>
 
 #### Timestamp
 
@@ -456,6 +465,12 @@ Add a timestamp to the search parameters:
 
 import { TimestampDemo } from './options.client'
 
+<HumanContent>
 <Suspense fallback={<DemoSkeleton/>}>
   <TimestampDemo />
 </Suspense>
+</HumanContent>
+
+<LLMContent>
+Interactive demo omitted. `processUrlSearchParams` can also add derived values such as a timestamp before the URL update is committed.
+</LLMContent>
