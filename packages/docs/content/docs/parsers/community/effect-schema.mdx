@@ -55,15 +55,17 @@ const parser = createSchemaParser(schema).withDefault(new User({ name: 'John Vim
 const [user, setUser] = useQueryState('user', parser)
 ```
 
-## Interactive Demo
-
 import { Suspense } from 'react'
 import { EffectSchemaDemo } from './effect-schema-demo'
 
 <HumanContent>
+
+## Interactive Demo
+
 <Suspense>
   <EffectSchemaDemo />
 </Suspense>
+
 </HumanContent>
 
 <LLMContent>
