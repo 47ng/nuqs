@@ -41,9 +41,7 @@ describe('NuqsDevtools panel', () => {
     render(<NuqsDevtools />)
     await userEvent.fill(page.getByPlaceholder(/Filter/), 'Skipping')
     await expect.element(page.getByText(/Skipping flush/)).toBeVisible()
-    await expect
-      .element(page.getByText(/Updating url/))
-      .not.toBeInTheDocument()
+    await expect.element(page.getByText(/Updating url/)).not.toBeInTheDocument()
   })
 
   it('clears the log', async () => {

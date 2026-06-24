@@ -128,11 +128,7 @@ export function NuqsDevtools(): ReactElement {
         'Follow'
       ),
       h('button', { style: styles.button, onClick: onClear }, 'Clear'),
-      h(
-        'span',
-        { style: styles.count },
-        `${filtered.length}/${events.length}`
-      )
+      h('span', { style: styles.count }, `${filtered.length}/${events.length}`)
     ),
     h(
       'div',
@@ -162,9 +158,7 @@ function LogRow({ event }: { event: NuqsLogEvent }): ReactElement {
         },
         event.category
       ),
-      event.level === 'warn'
-        ? h('span', { style: styles.warn }, 'warn')
-        : null,
+      event.level === 'warn' ? h('span', { style: styles.warn }, 'warn') : null,
       h('span', { style: styles.message }, event.message)
     ),
     h(
