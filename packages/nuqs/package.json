@@ -53,7 +53,8 @@
   ],
   "type": "module",
   "sideEffects": [
-    "./dist/debug.js"
+    "./dist/debug.js",
+    "./dist/devtools.js"
   ],
   "module": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -68,6 +69,11 @@
       "types": "./dist/debug.d.ts",
       "import": "./dist/debug.js",
       "default": "./dist/debug.js"
+    },
+    "./devtools": {
+      "types": "./dist/devtools.d.ts",
+      "import": "./dist/devtools.js",
+      "default": "./dist/devtools.js"
     },
     "./server": {
       "types": "./dist/server.d.ts",
@@ -157,6 +163,7 @@
   },
   "peerDependencies": {
     "@remix-run/react": ">=2",
+    "@tanstack/devtools-event-client": ">=0.4",
     "@tanstack/react-router": "^1",
     "next": ">=14.2.0",
     "react": ">=18.2.0 || ^19.0.0-0",
@@ -165,6 +172,9 @@
   },
   "peerDependenciesMeta": {
     "@remix-run/react": {
+      "optional": true
+    },
+    "@tanstack/devtools-event-client": {
       "optional": true
     },
     "@tanstack/react-router": {
@@ -183,6 +193,7 @@
   "devDependencies": {
     "@remix-run/react": "^2.17.5",
     "@size-limit/preset-small-lib": "^12.0.0",
+    "@tanstack/devtools-event-client": "0.4.4",
     "@types/node": "^24.10.10",
     "@types/react": "catalog:react19",
     "@types/react-dom": "catalog:react19",

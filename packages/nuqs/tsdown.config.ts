@@ -13,7 +13,8 @@ const commonConfig = {
     '@remix-run/react',
     'react-router-dom',
     'react-router',
-    '@tanstack/react-router'
+    '@tanstack/react-router',
+    '@tanstack/devtools-event-client'
   ],
   outExtensions() {
     return {
@@ -22,11 +23,17 @@ const commonConfig = {
     }
   },
   treeshake: {
-    // `src/debug.ts` has a top-level side effect: it auto-enables logging when
-    // the `DEBUG`/`localStorage.debug` flag is set.
-    //  Returning `undefined` defers every other module to the package.json `sideEffects` allowlist.
+    // `src/debug.ts` and `src/devtools.ts` have top-level side effects: they
+    // auto-install their sink when the `DEBUG`/`localStorage.debug` flag is set
+    // (and, for devtools, in development).
+    // Returning `undefined` defers every other module to the package.json `sideEffects` allowlist.
     moduleSideEffects(id) {
-      return id.replace(/\\/g, '/').endsWith('/src/debug.ts') || undefined
+      const path = id.replace(/\\/g, '/')
+      return (
+        path.endsWith('/src/debug.ts') ||
+        path.endsWith('/src/devtools.ts') ||
+        undefined
+      )
     }
   },
   tsconfig: 'tsconfig.build.json'
@@ -36,6 +43,7 @@ const entrypoints = {
   client: {
     index: 'src/index.ts',
     debug: 'src/debug.ts',
+    devtools: 'src/devtools.ts',
     'adapters/react': 'src/adapters/react.ts',
     'adapters/next': 'src/adapters/next.ts',
     'adapters/next/app': 'src/adapters/next/app.ts',

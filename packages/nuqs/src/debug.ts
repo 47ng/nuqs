@@ -1,4 +1,4 @@
-import { isDebugFlagSet, setDebugSink } from './lib/debug'
+import { addDebugSink, isDebugFlagSet } from './lib/debug'
 import { debugMessages, sprintf } from './lib/debug-messages'
 
 // Side-effect-only entry point (`nuqs/debug`): importing it opts client-side
@@ -18,7 +18,7 @@ import { debugMessages, sprintf } from './lib/debug-messages'
 // process.env.DEBUG  = 'nuqs' // on the server
 // ```
 function installDebugSink(): void {
-  setDebugSink((code, args, isWarn) => {
+  addDebugSink((code, args, isWarn) => {
     const message = debugMessages[code]
     if (isWarn) {
       console.warn(message, ...args)
