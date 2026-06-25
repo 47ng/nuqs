@@ -82,20 +82,9 @@ jobs:
         env:
           CHANNEL: ${{ inputs.channel }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          set -euo pipefail
-          ./release-notes-automation.ts > "$RUNNER_TEMP/notes.md"
-          # Multiline job output. The notes are built from untrusted text, so a
-          # fixed `EOF` could be closed early by crafted note content to inject
-          # extra outputs — use an unguessable delimiter.
-          # The leading \n keeps the closing delimiter on its own
-          # line even when notes.md has no trailing newline.
-          DELIM="NOTES_EOF_$(openssl rand -hex 16)"
-          {
-            printf 'notes<<%s\n' "$DELIM"
-            cat "$RUNNER_TEMP/notes.md"
-            printf '\n%s\n' "$DELIM"
-          } >> "$GITHUB_OUTPUT"
+        # The script appends the `notes` multiline output to $GITHUB_OUTPUT
+        # itself; the envelope construction lives in the tested TypeScript.
+        run: ./release-notes-automation.ts
 
   ci:
     name: CI gate
