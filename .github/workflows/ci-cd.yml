@@ -251,6 +251,8 @@ jobs:
             react-compiler: true
           - next-version: "latest"
             cache-components: true
+          - next-version: "latest"
+            cache-components: true
             react-compiler: true
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
