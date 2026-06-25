@@ -212,14 +212,18 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
 
   // Backstop for the render-time reconciliation above: covers external changes
   // landing in renders React discards before commit (e.g. interrupted
-  // transitions). Same `searchParamsSyncKey` dependency, so they can't drift.
-  // Also records the pathname of this committed reconciliation, which gates the
-  // render-time branch above (effects don't run while detached, so this freezes
-  // at the pathname the hook was last attached on).
+  // transitions). Shares the `searchParamsSyncKey` dependency, so they can't
+  // drift. Also records the pathname of this committed reconciliation, which
+  // gates the render-time branch above (effects don't run while detached, so
+  // this freezes at the pathname the hook was last attached on).
+  // `adapter.pathname` is a dependency too: a same-search cross-route navigation
+  // leaves `searchParamsSyncKey` unchanged, so without it the recorded pathname
+  // would stay frozen on the previous route and wrongly gate off the next
+  // render-time reconcile there (a stale frame until the next URL change, #1273).
   useEffect(() => {
     committedPathnameRef.current = adapter.pathname ?? location.pathname
     reconcile()
-  }, [searchParamsSyncKey])
+  }, [searchParamsSyncKey, adapter.pathname])
 
   // Sync all hooks together & with external URL changes
   useEffect(() => {
