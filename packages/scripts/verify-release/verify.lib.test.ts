@@ -90,7 +90,11 @@ describe('verifyReproducibility', () => {
         reproduce: async () => ({ ...REPRO, integrity: 'sha512-ACTUAL' })
       })
     )
-    expect(outcome).toMatchObject({ kind: 'mismatch' })
+    expect(outcome).toEqual({
+      kind: 'mismatch',
+      reproduced: { ...REPRO, integrity: 'sha512-ACTUAL' },
+      expected: { integrity: 'sha512-EXPECTED', shasum: REPRO.shasum }
+    })
   })
 
   it('short-circuits on a toolchain mismatch without reproducing', async () => {
@@ -247,6 +251,16 @@ describe('fetchRegistryMeta', () => {
 
   it('rejects a payload whose shasum is not a 40-char sha1', async () => {
     const bad = { ...validBody, dist: { ...validBody.dist, shasum: 'nope' } }
+    await expect(
+      fetchRegistryMeta('nuqs', '2.8.9', okFetch(bad))
+    ).rejects.toThrow()
+  })
+
+  it('rejects a payload whose integrity is not a sha512 integrity', async () => {
+    const bad = {
+      ...validBody,
+      dist: { ...validBody.dist, integrity: 'sha1-deadbeef' }
+    }
     await expect(
       fetchRegistryMeta('nuqs', '2.8.9', okFetch(bad))
     ).rejects.toThrow()

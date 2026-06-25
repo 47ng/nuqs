@@ -42,10 +42,14 @@ export function normalizeTag(input: string): TagVersion {
   return { tag: `v${version}`, version }
 }
 
-/** A reproduced tarball, as hashed on the host from the sandbox's output. */
-export type Reproduction = {
+/** A tarball's digest pair: npm SRI integrity (sha512) + legacy sha1 shasum. */
+export type Digests = {
   integrity: string // npm integrity: `sha512-` + base64(sha512(.tgz))
   shasum: string // sha1 hex of the .tgz
+}
+
+/** A reproduced tarball, as hashed on the host from the sandbox's output. */
+export type Reproduction = Digests & {
   localTgz: string // host path to the reproduced tarball (staged diff needs it)
 }
 
@@ -55,10 +59,7 @@ export type ReproduceInput = {
   version: string
 }
 
-export type VerifyInput = ReproduceInput & {
-  integrity: string
-  shasum: string
-}
+export type VerifyInput = ReproduceInput & Digests
 
 // The I/O surface the engine consumes. Production wires `makeDockerVerifier`
 // (docker + git + fs); tests inject an in-memory fake, controlling the returned
@@ -180,7 +181,7 @@ export function checkGitHead(
 /** The host-computed reproduction set against the expected (published) digests. */
 export type DigestComparison = {
   reproduced: Reproduction
-  expected: { integrity: string; shasum: string }
+  expected: Digests
 }
 
 export type Outcome =
@@ -212,11 +213,11 @@ export async function verifyReproducibility(
     pkg: input.pkg,
     version: input.version
   })
-  // integrity (sha512) is the cryptographic anchor and must match. shasum
-  // (legacy sha1) is required too, as corroboration: a sha1 that agrees while
-  // the sha512 diverges is the signature of a collision attempt, which the
-  // integrity gate rejects. Both derive from the same bytes, so an honest
-  // reproduction agrees on both.
+  // integrity (sha512) is the cryptographic anchor and must match: sha1 is
+  // collision-broken, so it can't be the gate. A crafted tarball with a
+  // matching sha1 but divergent content still fails here, because its sha512
+  // differs. shasum is kept only as a cheap corroborating cross-check; both
+  // digests derive from the same bytes, so an honest reproduction agrees on both.
   const intOk = reproduced.integrity === input.integrity
   const shaOk = reproduced.shasum === input.shasum
   const expected = { integrity: input.integrity, shasum: input.shasum }

@@ -183,6 +183,17 @@ jobs:
               exit 1
             fi
           done
+          # Validate digest shapes at capture: a missing field (jq prints the
+          # literal "null") or garbage fails here, not just downstream in the
+          # verifier. integrity is now the primary gate, so reject a non-sha512.
+          case "$INTEGRITY" in
+            sha512-?*) ;;
+            *) echo "::error::stage integrity is not a sha512 integrity"; exit 1 ;;
+          esac
+          if ! printf '%s' "$SHASUM" | LC_ALL=C grep -Eq '^[0-9a-f]{40}$'; then
+            echo "::error::stage shasum is not a 40-char sha1"
+            exit 1
+          fi
           # stage-id gates the draft; integrity + shasum are surfaced in the
           # job summary so a reviewer can match the staged tarball before 2FA.
           {
