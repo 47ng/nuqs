@@ -130,20 +130,23 @@ export function renderReleaseNotes(
 }
 
 // Wrap a value in the heredoc envelope GitHub Actions uses for multiline job
-// outputs: `name<<DELIM`, the value, then `DELIM` alone on the last line. The
-// caller passes an unguessable delimiter because the notes are untrusted text —
+// outputs: `name<<DELIM`, the value, then `DELIM` alone on the last line.
+// The caller passes an unguessable delimiter because the notes are untrusted:
 // a predictable one could be closed early by a crafted note line to inject
 // extra outputs. The collision check turns the (astronomically unlikely) case
-// of the value containing the delimiter into a loud failure rather than a
-// silent injection. Emitting this from here keeps the `<<` operator out of the
-// workflow's shell, where GitHub's blob highlighter mis-reads it as a heredoc.
+// of the value containing the delimiter into a loud failure instead of a
+// silent injection. Building the envelope here rather than in the workflow's
+// `run:` shell also keeps the `<<` token out of YAML-embedded shell, where
+// GitHub's highlighter parses it as a heredoc and mangles the file's rendering.
 export function formatMultilineOutput(
   name: string,
   value: string,
   delimiter: string
 ): string {
   if (value.includes(delimiter)) {
-    throw new Error('Refusing to emit output: value contains the delimiter')
+    throw new Error(
+      `Refusing to emit "${name}" output: value contains the delimiter`
+    )
   }
   return `${name}<<${delimiter}\n${value}\n${delimiter}\n`
 }
@@ -157,7 +160,9 @@ async function main(): Promise<void> {
     server: {
       CHANNEL: z.enum(['stable', 'beta']),
       GITHUB_TOKEN: z.string().min(1),
-      GITHUB_OUTPUT: z.string().optional()
+      // Optional so the script also runs locally; min(1) makes an empty value
+      // (set but blank) fail loudly rather than silently print to stdout.
+      GITHUB_OUTPUT: z.string().min(1).optional()
     },
     isServer: true,
     runtimeEnv: process.env

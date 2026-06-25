@@ -83,8 +83,7 @@ jobs:
           CHANNEL: ${{ inputs.channel }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         # The script appends the `notes` multiline output to $GITHUB_OUTPUT
-        # itself (heredoc envelope + unguessable delimiter live in the tested
-        # TypeScript, not in shell).
+        # itself; the envelope construction lives in the tested TypeScript.
         run: ./release-notes-automation.ts
 
   ci:
