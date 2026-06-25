@@ -77,7 +77,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
   const processUrlSearchParams = useAdapterProcessUrlSearchParams()
 
   const {
-    history = 'replace',
+    history = defaultOptions?.history ?? 'replace',
     scroll = defaultOptions?.scroll ?? false,
     shallow = defaultOptions?.shallow ?? true,
     throttleMs = defaultRateLimit.timeMs,

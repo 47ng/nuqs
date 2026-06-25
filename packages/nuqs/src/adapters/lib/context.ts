@@ -13,7 +13,10 @@ import type { AdapterInterface, UseAdapterHook } from './defs'
 
 export type AdapterProps = {
   defaultOptions?: Partial<
-    Pick<Options, 'shallow' | 'clearOnDefault' | 'scroll' | 'limitUrlUpdates'>
+    Pick<
+      Options,
+      'history' | 'shallow' | 'clearOnDefault' | 'scroll' | 'limitUrlUpdates'
+    >
   >
   processUrlSearchParams?: (search: URLSearchParams) => URLSearchParams
 }
