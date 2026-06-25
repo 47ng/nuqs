@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 
+import { randomBytes } from 'node:crypto'
+import { appendFileSync } from 'node:fs'
 import { createEnv } from '@t3-oss/env-core'
 import { z } from 'zod'
 import type { Change } from './lib/change.ts'
@@ -127,6 +129,25 @@ export function renderReleaseNotes(
   return blocks.join('\n\n')
 }
 
+// Wrap a value in the heredoc envelope GitHub Actions uses for multiline job
+// outputs: `name<<DELIM`, the value, then `DELIM` alone on the last line. The
+// caller passes an unguessable delimiter because the notes are untrusted text —
+// a predictable one could be closed early by a crafted note line to inject
+// extra outputs. The collision check turns the (astronomically unlikely) case
+// of the value containing the delimiter into a loud failure rather than a
+// silent injection. Emitting this from here keeps the `<<` operator out of the
+// workflow's shell, where GitHub's blob highlighter mis-reads it as a heredoc.
+export function formatMultilineOutput(
+  name: string,
+  value: string,
+  delimiter: string
+): string {
+  if (value.includes(delimiter)) {
+    throw new Error('Refusing to emit output: value contains the delimiter')
+  }
+  return `${name}<<${delimiter}\n${value}\n${delimiter}\n`
+}
+
 async function main(): Promise<void> {
   // Draft phase: the tag does not exist yet, so the range is resolved from
   // HEAD. The channel selects the asymmetric range (incremental beta vs
@@ -135,7 +156,8 @@ async function main(): Promise<void> {
   const env = createEnv({
     server: {
       CHANNEL: z.enum(['stable', 'beta']),
-      GITHUB_TOKEN: z.string().min(1)
+      GITHUB_TOKEN: z.string().min(1),
+      GITHUB_OUTPUT: z.string().optional()
     },
     isServer: true,
     runtimeEnv: process.env
@@ -148,7 +170,18 @@ async function main(): Promise<void> {
   // The human-readable notes, followed by the machine-readable DTO comment the
   // changelog page reads back (hidden on GitHub + in subscriber emails).
   const notes = renderReleaseNotes(release.changes, release.contributors)
-  console.log(`${notes}\n\n${renderChangelogComment(release)}`)
+  const body = `${notes}\n\n${renderChangelogComment(release)}`
+  // In CI, hand the notes to the draft job as a multiline output; locally,
+  // print them for inspection.
+  if (env.GITHUB_OUTPUT) {
+    const delimiter = `NOTES_EOF_${randomBytes(16).toString('hex')}`
+    appendFileSync(
+      env.GITHUB_OUTPUT,
+      formatMultilineOutput('notes', body, delimiter)
+    )
+  } else {
+    console.log(body)
+  }
 }
 
 if (import.meta.main) {
