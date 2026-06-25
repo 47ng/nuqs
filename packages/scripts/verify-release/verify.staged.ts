@@ -3,8 +3,8 @@
 // Staged-release verification — host launcher.
 //
 // Usage:
-//   verify.staged.ts --package <name> --version <v> --shasum <s> \
-//             [--sha <sha>] [--stage-id <id>] [--integrity <i>]
+//   verify.staged.ts --package <name> --version <v> --integrity <i> \
+//             --shasum <s> [--sha <sha>] [--stage-id <id>]
 //   (copy the single ready-to-run command from the Draft Release job summary)
 //
 // Flow:
@@ -36,8 +36,8 @@ import {
 const HELP = `Staged-release verification — host launcher.
 
 Usage:
-  verify.staged.ts --package <name> --version <v> --shasum <s> \\
-            [--sha <sha>] [--stage-id <id>] [--integrity <i>]
+  verify.staged.ts --package <name> --version <v> --integrity <i> \\
+            --shasum <s> [--sha <sha>] [--stage-id <id>]
 
 Pass the run-summary fields as flags — copy the single command the Draft
 Release job summary prints. Reproduces the package in a hardened sandbox and
@@ -48,6 +48,8 @@ automatic.
 Required arguments:
   --package <name>      The package name (e.g. nuqs).
   --version <v>         The version string (e.g. 1.2.3).
+  --integrity <i>       The staged tarball's sha512 integrity (sha512-…).
+                        The primary gate; shasum corroborates it.
   --shasum <s>          The staged tarball's SHA1 (40 hex chars).
 
 Optional:
@@ -58,9 +60,6 @@ Optional:
   --stage-id <id>       The staged release ID (UUID).
                         Only needed if the reproduction fails and you want to
                         download the staged tarball for diffing.
-
-  --integrity <i>       The staged tarball's integrity (e.g. sha512-…).
-                        Gates the sha512 check and the mismatch diff download.
 `
 
 const SCRIPT_DIR = import.meta.dirname
@@ -98,8 +97,8 @@ const { values } = (() => {
         version: { type: 'string' },
         sha: { type: 'string' },
         'stage-id': { type: 'string' },
-        shasum: { type: 'string' },
-        integrity: { type: 'string' }
+        integrity: { type: 'string' },
+        shasum: { type: 'string' }
       },
       allowPositionals: false
     })
@@ -113,9 +112,10 @@ if (values.help) {
   process.exit(0)
 }
 
-// Validate + normalise the flags. shasum is a tarball sha1 (40 hex); sha is the
-// git commit (40 hex today, 64 if the repo ever moves to SHA-256). stage-id and
-// integrity are only needed for the mismatch-escalation path.
+// Validate + normalise the flags. integrity is the staged tarball's sha512
+// (the primary gate); shasum is its sha1 (40 hex, corroboration); sha is the
+// git commit (40 hex today, 64 if the repo ever moves to SHA-256). stage-id is
+// only needed for the mismatch-escalation path.
 const releaseFieldsSchema = z.object({
   package: z
     .string({ error: 'missing required --package' })
@@ -130,26 +130,25 @@ const releaseFieldsSchema = z.object({
       '--sha must be a 40- or 64-char hex commit SHA'
     )
     .optional(),
+  integrity: z
+    .string({ error: 'missing required --integrity' })
+    .regex(
+      /^sha512-[A-Za-z0-9+/]+={0,2}$/,
+      "--integrity must look like 'sha512-…'"
+    ),
   shasum: z
     .string({ error: 'missing required --shasum' })
     .regex(/^[0-9a-f]{40}$/, '--shasum must be a 40-char hex sha1'),
-  stageId: z.string().min(1, '--stage-id must not be empty').default(''),
-  integrity: z
-    .string()
-    .regex(
-      /^sha\d+-[A-Za-z0-9+/]+={0,2}$/,
-      "--integrity must look like 'sha512-…'"
-    )
-    .default('')
+  stageId: z.string().min(1, '--stage-id must not be empty').default('')
 })
 
 const parsed = releaseFieldsSchema.safeParse({
   package: values.package,
   version: values.version,
   sha: values.sha,
+  integrity: values.integrity,
   shasum: values.shasum,
-  stageId: values['stage-id'],
-  integrity: values.integrity
+  stageId: values['stage-id']
 })
 if (!parsed.success) {
   die(2, ...parsed.error.issues.map(i => i.message), '', HELP)
@@ -159,8 +158,8 @@ const {
   version: VERSION,
   sha: SHA,
   stageId: STAGE_ID,
-  shasum: SHASUM,
-  integrity: INTEGRITY
+  integrity: INTEGRITY,
+  shasum: SHASUM
 } = parsed.data
 
 const REPO_ROOT = capture('git', ['rev-parse', '--show-toplevel']).trim()
@@ -199,8 +198,8 @@ const outcome = await verifyReproducibility(
     ref: REF,
     pkg: PACKAGE,
     version: VERSION,
-    shasum: SHASUM,
-    integrity: INTEGRITY || undefined
+    integrity: INTEGRITY,
+    shasum: SHASUM
   },
   verifier
 ).catch((e: Error) =>
@@ -210,10 +209,10 @@ const outcome = await verifyReproducibility(
 if (outcome.kind === 'match') {
   // Echo the reproduced vs staged digests so the match is visually checkable.
   err('')
+  err(`    reproduced integrity : ${outcome.reproduced.integrity}`)
+  err(`    staged     integrity : ${INTEGRITY}`)
   err(`    reproduced shasum    : ${outcome.reproduced.shasum}`)
   err(`    staged     shasum    : ${SHASUM}`)
-  err(`    reproduced integrity : ${outcome.reproduced.integrity}`)
-  err(`    staged     integrity : ${INTEGRITY || '<not provided>'}`)
   err(
     styleText('green', '==> PASS — reproduced .tgz matches the staged digests.')
   )
@@ -233,6 +232,8 @@ if (outcome.kind === 'toolchain-mismatch') {
 const localSha = outcome.reproduced.shasum
 err('')
 err(styleText('red', '==> Hash mismatch — reproduced .tgz != staged digests.'))
+err(`    reproduced integrity : ${outcome.reproduced.integrity}`)
+err(`    staged     integrity : ${INTEGRITY}`)
 err(`    reproduced shasum    : ${localSha}`)
 err(`    staged     shasum    : ${SHASUM}`)
 
@@ -263,9 +264,9 @@ const downloadJson = (() => {
 
 const downloadSchema = z.record(
   z.string(),
-  z.object({ shasum: z.string(), integrity: z.string() })
+  z.object({ integrity: z.string(), shasum: z.string() })
 )
-let stagedMeta: { shasum: string; integrity: string } | undefined
+let stagedMeta: { integrity: string; shasum: string } | undefined
 try {
   const meta = downloadSchema.parse(JSON.parse(downloadJson))
   stagedMeta = meta[PACKAGE] ?? Object.values(meta)[0]
