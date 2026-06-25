@@ -143,10 +143,9 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
     Object.values(resolvedUrlKeys)
       .map(key => `${key}=${initialSearchParams.getAll(key)}`)
       .join('&') + JSON.stringify(queuedQueries)
-  // Adopts the current URL value into the internal state when it has changed,
-  // returning the adopted state (or null when unchanged). Used both during
-  // render (below) and from the effect backstop further down.
-  const reconcile = (): V | null => {
+  // Adopts the current URL value into the internal state when it has changed.
+  // Used both during render (below) and from the effect backstop further down.
+  const reconcile = () => {
     const { state, hasChanged } = parseMap(
       keyMap,
       urlKeys,
@@ -155,13 +154,11 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
       queryRef.current,
       stateRef.current
     )
-    if (!hasChanged) {
-      return null
+    if (hasChanged) {
+      debug(1, hookId, stateKeys, state)
+      stateRef.current = state
+      setInternalState(state)
     }
-    debug(1, hookId, stateKeys, state)
-    stateRef.current = state
-    setInternalState(state)
-    return state
   }
   // Reconcile during render, both on key-set changes (initialisation) and when
   // the URL source changes. The effect below does the same, but effects are
@@ -183,18 +180,12 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
   const onCommittedPathname =
     committedPathnameRef.current === null ||
     committedPathnameRef.current === (adapter.pathname ?? location.pathname)
-  // The state this render will output. A render-time reconcile only schedules
-  // its result via setInternalState (visible next render), so we also adopt it
-  // here directly: otherwise this render paints the pre-reconcile value for a
-  // frame — the stale value caught when a subtree is revealed mid-transition
-  // (cacheComponents / `<Activity>`, #1273).
-  let renderedState = internalState
   if (
     keysChanged ||
     (onCommittedPathname && lastSyncKeyRef.current !== searchParamsSyncKey)
   ) {
     lastSyncKeyRef.current = searchParamsSyncKey
-    renderedState = reconcile() ?? internalState
+    reconcile()
     if (keysChanged) {
       queryRef.current = Object.fromEntries(
         Object.entries(resolvedUrlKeys).map(([key, urlKey]) => {
@@ -406,8 +397,8 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
   )
 
   const outputState = useMemo(
-    () => applyDefaultValues(renderedState, defaultValues),
-    [renderedState, defaultValues]
+    () => applyDefaultValues(internalState, defaultValues),
+    [internalState, defaultValues]
   )
   return [outputState, update]
 }
