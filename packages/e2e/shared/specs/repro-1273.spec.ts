@@ -45,6 +45,13 @@ export const testRepro1273 = defineTest('repro-1273', ({ path }) => {
         url.pathname.endsWith(`${path}/other`) &&
         url.searchParams.get('test') === '2'
     )
+    // Wait for the corrected value to commit before asserting the negatives.
+    // Console messages are delivered to the spy asynchronously, so asserting
+    // `commit: 0/1 === 0` first can pass before any commit log arrives, letting
+    // a stale commit slip through.
+    await expect
+      .poll(() => logSpy.logs.filter(log => log === 'commit: 2').length)
+      .toBeGreaterThan(0)
     await assertLogCount(
       logSpy,
       'commit: 0',
@@ -100,6 +107,13 @@ export const testRepro1273 = defineTest('repro-1273', ({ path }) => {
         url.pathname.endsWith(`${path}/other`) &&
         url.searchParams.get('test') === '2'
     )
+    // Wait for the corrected value to commit before asserting the negatives.
+    // Console messages are delivered to the spy asynchronously, so asserting
+    // `commit: 0/1 === 0` first can pass before any commit log arrives, letting
+    // a stale commit slip through.
+    await expect
+      .poll(() => logSpy.logs.filter(log => log === 'commit: 2').length)
+      .toBeGreaterThan(0)
     await assertLogCount(
       logSpy,
       'commit: 0',
