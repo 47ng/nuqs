@@ -14,7 +14,7 @@
 // Flow:
 //   1. Fetch the tag and resolve it to a commit.
 //   2. Read the published metadata straight from registry.npmjs.org
-//      (shasum, integrity, gitHead) — unauthenticated.
+//      (integrity, shasum, gitHead) — unauthenticated.
 //   3. Cross-check the registry's gitHead against the tag's commit.
 //   4. Reproduce from the tag's source and match the host-computed digests.
 //
@@ -135,8 +135,8 @@ err(`==> Reading published metadata for ${PACKAGE}@${VERSION}`)
 const meta = await fetchRegistryMeta(PACKAGE, VERSION).catch((e: Error) =>
   die(2, styleText('red', `==> ${e.message}`))
 )
-err(`    shasum    : ${meta.dist.shasum}`)
 err(`    integrity : ${meta.dist.integrity}`)
+err(`    shasum    : ${meta.dist.shasum}`)
 err(`    gitHead   : ${meta.gitHead ?? '<not recorded>'}`)
 err(`    tag commit: ${tagCommit}`)
 
@@ -182,8 +182,8 @@ const outcome = await verifyReproducibility(
     ref: TAG,
     pkg: PACKAGE,
     version: VERSION,
-    shasum: meta.dist.shasum,
-    integrity: meta.dist.integrity
+    integrity: meta.dist.integrity,
+    shasum: meta.dist.shasum
   },
   verifier
 ).catch((e: Error) =>

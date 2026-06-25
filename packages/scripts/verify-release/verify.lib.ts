@@ -44,8 +44,8 @@ export function normalizeTag(input: string): TagVersion {
 
 /** A reproduced tarball, as hashed on the host from the sandbox's output. */
 export type Reproduction = {
-  shasum: string // sha1 hex of the .tgz
   integrity: string // npm integrity: `sha512-` + base64(sha512(.tgz))
+  shasum: string // sha1 hex of the .tgz
   localTgz: string // host path to the reproduced tarball (staged diff needs it)
 }
 
@@ -56,8 +56,8 @@ export type ReproduceInput = {
 }
 
 export type VerifyInput = ReproduceInput & {
+  integrity: string
   shasum: string
-  integrity?: string
 }
 
 // The I/O surface the engine consumes. Production wires `makeDockerVerifier`
@@ -122,10 +122,10 @@ export const registryMetaSchema = z.object({
     .regex(/^[0-9a-f]{40}$/)
     .optional(),
   dist: z.object({
-    shasum: z.string().regex(/^[0-9a-f]{40}$/, 'dist.shasum must be a sha1'),
     integrity: z
       .string()
       .regex(/^sha512-/, 'dist.integrity must be a sha512 integrity'),
+    shasum: z.string().regex(/^[0-9a-f]{40}$/, 'dist.shasum must be a sha1'),
     tarball: z.string()
   })
 })
@@ -180,7 +180,7 @@ export function checkGitHead(
 /** The host-computed reproduction set against the expected (published) digests. */
 export type DigestComparison = {
   reproduced: Reproduction
-  expected: { shasum: string; integrity?: string }
+  expected: { integrity: string; shasum: string }
 }
 
 export type Outcome =
@@ -212,11 +212,15 @@ export async function verifyReproducibility(
     pkg: input.pkg,
     version: input.version
   })
+  // integrity (sha512) is the cryptographic anchor and must match. shasum
+  // (legacy sha1) is required too, as corroboration: a sha1 that agrees while
+  // the sha512 diverges is the signature of a collision attempt, which the
+  // integrity gate rejects. Both derive from the same bytes, so an honest
+  // reproduction agrees on both.
+  const intOk = reproduced.integrity === input.integrity
   const shaOk = reproduced.shasum === input.shasum
-  const intOk =
-    input.integrity === undefined || reproduced.integrity === input.integrity
-  const expected = { shasum: input.shasum, integrity: input.integrity }
-  return shaOk && intOk
+  const expected = { integrity: input.integrity, shasum: input.shasum }
+  return intOk && shaOk
     ? { kind: 'match', reproduced, expected }
     : { kind: 'mismatch', reproduced, expected }
 }
@@ -237,10 +241,10 @@ export type Verdict = {
  *  so the match (or divergence) is visually checkable, like run1 used to print. */
 function digestLines(c: DigestComparison): string[] {
   return [
-    `  reproduced shasum    : ${c.reproduced.shasum}`,
-    `  published  shasum    : ${c.expected.shasum}`,
     `  reproduced integrity : ${c.reproduced.integrity}`,
-    `  published  integrity : ${c.expected.integrity ?? '<not provided>'}`
+    `  published  integrity : ${c.expected.integrity}`,
+    `  reproduced shasum    : ${c.reproduced.shasum}`,
+    `  published  shasum    : ${c.expected.shasum}`
   ]
 }
 
@@ -483,8 +487,8 @@ export function makeDockerVerifier(config: DockerVerifierConfig): Verifier {
       const localTgz = join(config.outDir, 'local.tgz')
       const bytes = readFileSync(localTgz)
       return {
-        shasum: createHash('sha1').update(bytes).digest('hex'),
         integrity: `sha512-${createHash('sha512').update(bytes).digest('base64')}`,
+        shasum: createHash('sha1').update(bytes).digest('hex'),
         localTgz
       }
     }

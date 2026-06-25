@@ -121,8 +121,8 @@ jobs:
       id-token: write # OIDC trusted publishing for `npm stage publish`
     outputs:
       stage-id: ${{ steps.stage.outputs.stage-id }}
-      shasum: ${{ steps.stage.outputs.shasum }}
       integrity: ${{ steps.stage.outputs.integrity }}
+      shasum: ${{ steps.stage.outputs.shasum }}
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
@@ -184,22 +184,22 @@ jobs:
             exit 1
           fi
           STAGE_ID=$(printf '%s' "$PKG" | jq -r '.stageId')
-          SHASUM=$(printf '%s' "$PKG" | jq -r '.shasum')
           INTEGRITY=$(printf '%s' "$PKG" | jq -r '.integrity')
+          SHASUM=$(printf '%s' "$PKG" | jq -r '.shasum')
           # Reject anything carrying control chars before writing: a newline
           # would let crafted npm output inject extra $GITHUB_OUTPUT lines.
-          for v in "$STAGE_ID" "$SHASUM" "$INTEGRITY"; do
+          for v in "$STAGE_ID" "$INTEGRITY" "$SHASUM"; do
             if [ -z "$v" ] || printf '%s' "$v" | LC_ALL=C grep -q '[^[:print:]]'; then
               echo "::error::Unexpected characters in npm stage metadata"
               exit 1
             fi
           done
-          # stage-id gates the draft; shasum + integrity are surfaced in the
+          # stage-id gates the draft; integrity + shasum are surfaced in the
           # job summary so a reviewer can match the staged tarball before 2FA.
           {
             echo "stage-id=$STAGE_ID"
-            echo "shasum=$SHASUM"
             echo "integrity=$INTEGRITY"
+            echo "shasum=$SHASUM"
           } >> "$GITHUB_OUTPUT"
 
   create-draft:
@@ -255,8 +255,8 @@ jobs:
             echo "| git tag | \`$TAG\` |"
             echo "| npm dist-tag | \`$DIST_TAG\` |"
             echo "| npm stage id | \`$STAGE_ID\` |"
-            echo "| shasum | \`$SHASUM\` |"
             echo "| integrity | \`$INTEGRITY\` |"
+            echo "| shasum | \`$SHASUM\` |"
             echo ""
             echo "## Next steps"
             echo ""
@@ -265,10 +265,10 @@ jobs:
             echo "packages/scripts/verify-release/verify.staged.ts \\"
             echo "  --package nuqs \\"
             echo "  --version '$VERSION' \\"
-            echo "  --sha '$GITHUB_SHA' \\"
-            echo "  --stage-id '$STAGE_ID' \\"
+            echo "  --integrity '$INTEGRITY' \\"
             echo "  --shasum '$SHASUM' \\"
-            echo "  --integrity '$INTEGRITY'"
+            echo "  --sha '$GITHUB_SHA' \\"
+            echo "  --stage-id '$STAGE_ID'"
             echo '```'
             echo "2. Review the [draft release notes]($RELEASE_DRAFT_URL)"
             echo "3. Approve the [staged package on npmjs.com](https://www.npmjs.com/settings/franky47/staged-packages/?page=0&perPage=10&filterPackage=nuqs) with 2FA"
@@ -279,7 +279,7 @@ jobs:
           TAG: ${{ needs.compute-version.outputs.tag }}
           DIST_TAG: ${{ needs.compute-version.outputs.dist-tag }}
           STAGE_ID: ${{ needs.stage.outputs.stage-id }}
-          SHASUM: ${{ needs.stage.outputs.shasum }}
           INTEGRITY: ${{ needs.stage.outputs.integrity }}
+          SHASUM: ${{ needs.stage.outputs.shasum }}
           RELEASE_DRAFT_URL: ${{ steps.create-release.outputs.draft-url }}
           RELEASE_EDIT_URL: ${{ steps.create-release.outputs.edit-url }}
