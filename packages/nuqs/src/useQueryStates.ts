@@ -103,12 +103,17 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
   // was last reconciled against during render. See the reconciliation block below.
   const lastSyncKeyRef = useRef<string | null>(null)
   // The pathname this hook last reconciled against from a committed render
-  // (set by the effect backstop below). The render-time reconcile is skipped when the
-  // live pathname no longer matches it: that means the component is rendering
-  // through a navigation transition for a different route (an outgoing or
-  // incoming page kept alive by the router, e.g. under cacheComponents),
+  // (set by the effect backstop below). The render-time reconcile is skipped when
+  // the current pathname no longer matches it: that means the component is
+  // rendering through a navigation transition for a different route (an outgoing
+  // or incoming page kept alive by the router, e.g. under cacheComponents),
   // where adopting the in-flight URL would corrupt speculative renders (#1293).
-  // A genuine `<Activity>` reveal keeps the same pathname, so it still reconciles.
+  // Both sides of the comparison use the adapter's pathname when provided
+  // (`usePathname()` in Next.js), which tracks the destination route from the
+  // start of a transition; the live `location.pathname` lags until the browser
+  // URL commits, which would misjudge a same-route reveal as a cross-route
+  // render and skip the reconcile (#1273). A genuine `<Activity>` reveal keeps
+  // the same pathname, so it still reconciles.
   const committedPathnameRef = useRef<string | null>(null)
   const defaultValues = useMemo(
     () =>
@@ -174,7 +179,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
   // so a null value covers both SSR and the first client render.
   const onCommittedPathname =
     committedPathnameRef.current === null ||
-    committedPathnameRef.current === location.pathname
+    committedPathnameRef.current === (adapter.pathname ?? location.pathname)
   if (
     keysChanged ||
     (onCommittedPathname && lastSyncKeyRef.current !== searchParamsSyncKey)
@@ -198,14 +203,18 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
 
   // Backstop for the render-time reconciliation above: covers external changes
   // landing in renders React discards before commit (e.g. interrupted
-  // transitions). Same `searchParamsSyncKey` dependency, so they can't drift.
-  // Also records the pathname of this committed reconciliation, which gates the
-  // render-time branch above (effects don't run while detached, so this freezes
-  // at the pathname the hook was last attached on).
+  // transitions). Shares the `searchParamsSyncKey` dependency, so they can't
+  // drift. Also records the pathname of this committed reconciliation, which
+  // gates the render-time branch above (effects don't run while detached, so
+  // this freezes at the pathname the hook was last attached on).
+  // `adapter.pathname` is a dependency too: a same-search cross-route navigation
+  // leaves `searchParamsSyncKey` unchanged, so without it the recorded pathname
+  // would stay frozen on the previous route and wrongly gate off the next
+  // render-time reconcile there (a stale frame until the next URL change, #1273).
   useEffect(() => {
-    committedPathnameRef.current = location.pathname
+    committedPathnameRef.current = adapter.pathname ?? location.pathname
     reconcile()
-  }, [searchParamsSyncKey])
+  }, [searchParamsSyncKey, adapter.pathname])
 
   // Sync all hooks together & with external URL changes
   useEffect(() => {
