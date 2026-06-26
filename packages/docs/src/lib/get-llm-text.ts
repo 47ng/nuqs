@@ -3,6 +3,8 @@ import {
   parseFeatureSupportMatrixProps,
   renderFeatureSupportMatrixText
 } from '@/src/components/feature-support-matrix'
+import { getPublishedVersion, isPublished } from './published-version'
+import { stripUnreleased } from './strip-unreleased'
 import { github } from './utils'
 
 export const llmFooter = `---
@@ -64,7 +66,10 @@ function stripAuthoringImports(markdown: string) {
   return output.join('\n')
 }
 
-function stripFeatureSupportMatrix(markdown: string) {
+function stripFeatureSupportMatrix(
+  markdown: string,
+  isVisible: (version: string) => boolean
+) {
   const lines = markdown.split('\n')
   const output: string[] = []
   const matrixLines: string[] = []
@@ -74,6 +79,9 @@ function stripFeatureSupportMatrix(markdown: string) {
   function matrixReplacement(block: string) {
     const props = parseFeatureSupportMatrixProps(block)
     if (!props) {
+      return ''
+    }
+    if (!isVisible(props.introducedInVersion)) {
       return ''
     }
     return renderFeatureSupportMatrixText(props)
@@ -124,9 +132,14 @@ function stripFeatureSupportMatrix(markdown: string) {
 
 export async function getLLMText(page: Page) {
   const processed = await page.data.getText('processed')
+  const published = await getPublishedVersion()
+  const isVisible = (version: string) => isPublished(version, published)
 
   // Collapse 3+ consecutive newlines to 2 (removes extra blank lines from removed content)
-  const normalized = stripFeatureSupportMatrix(stripAuthoringImports(processed))
+  const normalized = stripFeatureSupportMatrix(
+    stripUnreleased(stripAuthoringImports(processed), isVisible),
+    isVisible
+  )
     .replace(/\n{3,}/g, '\n\n')
     // Strip Fumadocs inline code syntax highlighting hints (e.g. `code{:ts}` -> `code`)
     .replace(/`([^`]+)\{:\w+\}`/g, '`$1`')

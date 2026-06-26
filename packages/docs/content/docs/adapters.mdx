@@ -23,7 +23,7 @@ wrapping it with a `NuqsAdapter{:ts}` context provider:
 - <Remix className='inline mr-1.5' role="presentation" /> [Remix](#remix)
 - <ReactRouter className='inline mr-1.5' role="presentation" /> [React Router v6](#react-router-v6)
 - <ReactRouter className='inline mr-1.5' role="presentation" /> [React Router v7](#react-router-v7)
-- <ReactRouter className='inline mr-1.5' role="presentation" /> [React Router v8](#react-router-v8)
+- <SinceVersion v="2.9.0" disclaimer="inline"><ReactRouter className='inline mr-1.5' role="presentation" /> [React Router v8](#react-router-v8)</SinceVersion>
 - <TanStackRouter className='inline mr-1.5 not-prose' role="presentation"/> [TanStack Router](#tanstack-router)
 </HumanContent>
 
@@ -34,7 +34,9 @@ wrapping it with a `NuqsAdapter{:ts}` context provider:
 - [Remix](#remix)
 - [React Router v6](#react-router-v6)
 - [React Router v7](#react-router-v7)
+<SinceVersion v="2.9.0">
 - [React Router v8](#react-router-v8)
+</SinceVersion>
 - [TanStack Router](#tanstack-router)
 </LLMContent>
 
@@ -247,6 +249,8 @@ export default function App() {
 }
 ```
 
+<SinceVersion v="2.9.0">
+
 ## <HumanContent><ReactRouter className='inline mr-2 -mt-1' role="presentation"/></HumanContent>React Router v8 [#react-router-v8]
 
 ```tsx title="app/root.tsx"
@@ -274,6 +278,8 @@ export default function App() {
   of implementation won't require changing your import.
 
 </Callout>
+
+</SinceVersion>
 
 ## <HumanContent><TanStackRouter className='inline mr-2 -mt-1 not-prose' role="presentation"/></HumanContent>TanStack Router [#tanstack-router]
 

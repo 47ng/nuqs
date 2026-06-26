@@ -13,6 +13,24 @@
     margin-left: -5.5px;
     margin-right: 5.5px;
   }
+
+  /*
+    Inline "visible from" cue for unreleased content shown on preview/local
+    (see <SinceVersion disclaimer="inline">). Rendered as a ::after pseudo-element
+    so it never fragments the host markdown list the way a block wrapper would.
+  */
+  .nuqs-since-version::after {
+    content: ' (visible from nuqs@' attr(data-since) ')';
+    @apply text-zinc-500 dark:text-zinc-400;
+    font-size: 0.85em;
+  }
+
+  /* Collapse a list item whose only content is a hidden inline gate (production),
+     so it leaves no stray bullet. The gate's marker is targeted via :has() because
+     the emptied <li> retains whitespace/comment nodes and so is not :empty. */
+  .prose li:has(> .nuqs-gated-empty) {
+    display: none;
+  }
 }
 
 /* Center-align copy button in code blocks with single line */
