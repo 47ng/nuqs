@@ -1,0 +1,24 @@
+# Repository Git hooks — config-based, requires Git 2.54+ (`git help hook`).
+#
+# Wired into each clone's .git/config by the `prepare` script in package.json
+# (runs on `pnpm install`):
+#
+#     git config --local include.path ../.gitconfig
+#
+# Inspect with e.g. `git hook list pre-commit`.
+#
+# Git appends the event's standard args to `command`:
+#   commit-msg passes the message-file path (consumed here by `--edit`);
+#   pre-commit takes none, pre-push passes <remote> <url> (ignored by node --run).
+[hook "prettier"]
+	event = pre-commit
+	command = node --run lint:prettier
+[hook "sherif"]
+	event = pre-commit
+	command = node --run lint:sherif
+[hook "commitlint"]
+	event = commit-msg
+	command = pnpm exec commitlint --edit
+[hook "lint"]
+	event = pre-push
+	command = node --run lint

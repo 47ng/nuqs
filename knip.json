@@ -3,7 +3,7 @@
   "ignoreExportsUsedInFile": true,
   "workspaces": {
     ".": {
-      "ignoreDependencies": ["@commitlint/config-conventional"],
+      "ignoreDependencies": ["@commitlint/config-conventional", "commitlint"],
       "ignoreBinaries": ["packages/scripts/verify-release/verify.production.ts"]
     },
     "packages/scripts": {
