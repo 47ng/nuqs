@@ -3,8 +3,6 @@ name: CI/CD
 on:
   push:
     branches:
-      - master
-      - beta
       - next
   pull_request:
     types: [opened, reopened, synchronize]
