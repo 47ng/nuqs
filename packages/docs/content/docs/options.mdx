@@ -404,6 +404,16 @@ adapter prop:
 </NuqsAdapter>
 ```
 
+<Callout title="Don't break the Back button" type="warn">
+Setting `history: 'push'{:ts}` globally will add a new entry to the navigation
+history for **every** search param update across your whole app, which is likely
+to pollute the Back/Forward history and degrade that experience.
+
+Prefer opting into `history: 'push'{:ts}` on a per-hook or per-call basis, only
+where the search params contribute to a navigation-like experience (eg: tabs,
+modals).
+</Callout>
+
 ### Processing `URLSearchParams`
 
 <FeatureSupportMatrix introducedInVersion='2.6.0' />
