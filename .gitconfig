@@ -1,9 +1,8 @@
 # Repository Git hooks — config-based, requires Git 2.54+ (`git help hook`).
 #
-# Wired into each clone's .git/config by the `prepare` script in package.json
-# (runs on `pnpm install`):
+# Opt-in per clone — run once to wire this file into .git/config (not on install):
 #
-#     git config --local include.path ../.gitconfig
+#     node --run setup:hooks
 #
 # Inspect with e.g. `git hook list pre-commit`.
 #
