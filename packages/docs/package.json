@@ -75,6 +75,7 @@
     "@types/react": "catalog:react19",
     "@types/react-dom": "catalog:react19",
     "hast-util-to-jsx-runtime": "^2.3.6",
+    "msw": "catalog:msw",
     "postcss": "^8.5.6",
     "prettier-plugin-tailwindcss": "^0.7.2",
     "shadcn": "^3.8.2",

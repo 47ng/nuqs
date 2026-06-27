@@ -1,4 +1,6 @@
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { http, HttpResponse } from 'msw'
+import { setupServer } from 'msw/node'
+import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest'
 import {
   getPublishedVersion,
   isPublished,
@@ -56,42 +58,32 @@ describe('isPublished', () => {
 })
 
 describe('getPublishedVersion', () => {
-  afterEach(() => {
-    vi.unstubAllGlobals()
-  })
+  const registry = 'https://registry.npmjs.org/nuqs'
+  const server = setupServer()
+  beforeAll(() => server.listen({ onUnhandledRequest: 'error' }))
+  afterEach(() => server.resetHandlers())
+  afterAll(() => server.close())
 
   it('returns the latest dist-tag from the npm registry', async () => {
-    vi.stubGlobal(
-      'fetch',
-      vi.fn().mockResolvedValue({
-        ok: true,
-        json: async () => ({ 'dist-tags': { latest: '2.8.9' } })
-      })
+    server.use(
+      http.get(registry, () =>
+        HttpResponse.json({ 'dist-tags': { latest: '2.8.9' } })
+      )
     )
     await expect(getPublishedVersion()).resolves.toBe('2.8.9')
   })
 
   it('throws on a non-ok registry response (fail loud)', async () => {
-    vi.stubGlobal(
-      'fetch',
-      vi.fn().mockResolvedValue({
-        ok: false,
-        status: 503,
-        statusText: 'Service Unavailable',
-        json: async () => ({})
-      })
+    server.use(
+      http.get(registry, () =>
+        HttpResponse.json({}, { status: 503, statusText: 'Service Unavailable' })
+      )
     )
     await expect(getPublishedVersion()).rejects.toThrow(/npm/i)
   })
 
   it('throws when the response is missing dist-tags.latest (fail loud)', async () => {
-    vi.stubGlobal(
-      'fetch',
-      vi.fn().mockResolvedValue({
-        ok: true,
-        json: async () => ({ 'dist-tags': {} })
-      })
-    )
+    server.use(http.get(registry, () => HttpResponse.json({ 'dist-tags': {} })))
     await expect(getPublishedVersion()).rejects.toThrow(/dist-tags\.latest/)
   })
 })
