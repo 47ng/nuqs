@@ -11,7 +11,7 @@ export default function BasicCounterDemoPage() {
   )
   return (
     <>
-      <nav className="my-8 flex flex-wrap items-center gap-4">
+      <nav className="mb-4 flex flex-wrap items-center gap-4">
         <Button onClick={() => setCounter(x => x - 1)}>
           <Minus />
         </Button>

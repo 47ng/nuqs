@@ -1,4 +1,4 @@
-import { Description, H1 } from '@/src/components/typography'
+import { DocsBody, DocsDescription, DocsTitle } from 'fumadocs-ui/page'
 import { Suspense } from 'react'
 import { SourceOnGitHub } from '../_components/source-on-github'
 import { getMetadata } from '../demos'
@@ -9,14 +9,14 @@ export const metadata = getMetadata('basic-counter')
 export default function BasicCounterDemoPage() {
   return (
     <>
-      <H1 className="mb-4 text-3xl font-bold text-foreground sm:text-4xl">
-        {metadata.title}
-      </H1>
-      <Description>{metadata.description}</Description>
-      <Suspense>
-        <Client />
-      </Suspense>
-      <SourceOnGitHub path="basic-counter/client.tsx" />
+      <DocsTitle>{metadata.title}</DocsTitle>
+      <DocsDescription>{metadata.description}</DocsDescription>
+      <DocsBody>
+        <Suspense>
+          <Client />
+        </Suspense>
+        <SourceOnGitHub path="basic-counter/client.tsx" />
+      </DocsBody>
     </>
   )
 }
