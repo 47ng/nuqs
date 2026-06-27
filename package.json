@@ -17,16 +17,17 @@
     "build": "turbo run build",
     "test": "turbo run test --log-order=stream",
     "verify": "packages/scripts/verify-release/verify.production.ts",
-    "prepare": "husky",
-    "lint": "pnpm run -w --parallel --stream '/^lint:/'",
+    "// setup:hooks": "Opt-in per clone (not on install). include.path resolves relative to .git/config, so ../ is the repo root (the tracked .gitconfig hooks file); --replace-all is idempotent and leaves any other includes untouched",
+    "setup:hooks": "git config --local --replace-all include.path ../.gitconfig '^\\.\\./\\.gitconfig$'",
+    "typegen": "pnpm run --filter \"e2e-*\" typegen && pnpm run --filter \"examples-trpc\" typegen",
+    "lint": "pnpm run typegen && pnpm run -w --parallel --stream '/^lint:/'",
     "lint:knip": "knip",
-    "lint:prettier": "prettier --check ./packages/nuqs/src/**/*.ts",
+    "lint:prettier": "prettier --check ./packages/nuqs",
     "lint:sherif": "sherif"
   },
   "devDependencies": {
     "@commitlint/config-conventional": "^20.4.1",
     "commitlint": "^20.4.1",
-    "husky": "^9.1.7",
     "knip": "catalog:knip",
     "prettier": "3.6.2",
     "publint": "^0.3.17",
@@ -42,12 +43,6 @@
     "tabWidth": 2,
     "trailingComma": "none",
     "useTabs": false
-  },
-  "husky": {
-    "hooks": {
-      "commit-msg": "commitlint -E HUSKY_GIT_PARAMS",
-      "pre-push": "pnpm run lint"
-    }
   },
   "commitlint": {
     "extends": [

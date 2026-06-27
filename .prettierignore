@@ -1,0 +1,6 @@
+# Build artifacts (kept out of formatting checks, mirrors CI which lints
+# sources before any build step runs).
+**/.tsup/
+**/dist/
+**/.next/
+**/.turbo/

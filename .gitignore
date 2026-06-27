@@ -1,5 +1,6 @@
 node_modules/
 dist/
+.tsup/
 coverage/
 .env
 yarn-error.log
