@@ -51,6 +51,7 @@
         "src/components/audience.tsx",
         "src/components/code-block-highlighter.ts",
         "src/components/feature-support-matrix.tsx",
+        "src/components/since-version.tsx",
         "src/components/frameworks.tsx",
         "src/schemas/changelog-dto.gen.ts"
       ],
