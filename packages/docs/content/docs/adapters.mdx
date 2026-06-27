@@ -214,10 +214,10 @@ export function ReactRouter() {
 
   - `nuqs/adapters/react-router/v6`
   - `nuqs/adapters/react-router/v7`
-  - `nuqs/adapters/react-router/v8`
+  - <SinceVersion v="2.9.0" disclaimer='inline'>`nuqs/adapters/react-router/v8`</SinceVersion>
 
   The main difference is where the React Router hooks are imported from:
-  `react-router-dom` for v6, and `react-router` for v7 & v8.
+  `react-router-dom` for v6, and `react-router` for v7<SinceVersion v="2.9.0" disclaimer='inline'> & v8</SinceVersion>.
 </Callout>
 
 <Callout type="warn" title="Deprecation notice">
@@ -226,7 +226,7 @@ export function ReactRouter() {
   and no longer receives security updates. The `nuqs/adapters/react-router/v6`
   adapter will be removed in nuqs@3.0.0.
 
-  Upgrade to [React Router v7](#react-router-v7) or [v8](#react-router-v8) and use the
+  Upgrade to [React Router v7](#react-router-v7)<SinceVersion v="2.9.0" disclaimer="inline"> or [v8](#react-router-v8)</SinceVersion> and use the
   appropriate adapter below.
 
 </Callout>

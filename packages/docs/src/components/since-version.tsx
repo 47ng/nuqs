@@ -54,7 +54,10 @@ export async function SinceVersion({
   // ::after pseudo-element (see tweaks.css) so it never fragments a host list.
   if (disclaimer === 'inline') {
     return (
-      <span className="nuqs-since-version" data-since={v}>
+      <span
+        className="nuqs-since-version underline decoration-amber-500 decoration-dashed decoration-1 underline-offset-2"
+        data-since={v}
+      >
         {children}
       </span>
     )
