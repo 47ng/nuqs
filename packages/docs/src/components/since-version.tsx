@@ -61,9 +61,9 @@ export async function SinceVersion({
   }
 
   return (
-    <fieldset className="my-4 rounded-xl border border-dashed border-zinc-400/60 px-4 pb-1 dark:border-zinc-600">
-      <legend className="not-prose px-2 text-sm text-zinc-500 dark:text-zinc-400">
-        Visible from <code className="text-xs">nuqs@{v}</code>
+    <fieldset className="my-4 rounded-xl border border-dashed border-amber-400/60 px-4 pb-1 dark:border-amber-600">
+      <legend className="not-prose px-2 text-sm text-amber-500">
+        🏗️ Visible from <code className="text-xs">nuqs@{v}</code> 🏗️
       </legend>
       {children}
     </fieldset>
