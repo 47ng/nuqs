@@ -9,7 +9,9 @@ name: Finalize Release
 # before any checkout) -> discover the impacted issues/PRs from the commit
 # graph between tag checkpoints (the shared engine, identical to the draft
 # notes) -> comment + label every one of them, channel-aware and re-run-safe
-# (the channel label is the idempotency filter).
+# (the channel label is the idempotency filter) -> on a GA release, redeploy
+# nuqs.dev and bust the contributors/releases ISR caches so the published docs
+# reflect the new version.
 
 on:
   release:
@@ -94,14 +96,47 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Redeploy the docs site on Vercel
+        # GA-only, gated on the comment loop succeeding: publishing a stable
+        # release triggers a fresh production build of nuqs.dev from the tip of
+        # `next`, shipping the just-released docs source and re-resolving the
+        # published GA version the version gate compares against (frozen per
+        # build — see the version-gated docs design), which is what reveals the
+        # newly-released content. The contributors + releases pages are refreshed
+        # separately by the ISR busts below: their cached GitHub fetches live in
+        # Vercel's Data Cache, which persists across deployments and is not
+        # updated by a build, so the redeploy alone won't refresh them.
+        # Betas never redeploy: they don't move `latest`, so the gate wouldn't
+        # open anyway. `success()` skips it on a failed comment loop; a green
+        # re-run is what finally fires it. A 2xx confirms the build was queued,
+        # not that it shipped — a failed Vercel build is surfaced by Vercel's own
+        # notifications, not here; this step fails only if the trigger fails.
+        if: ${{ success() && !contains(github.event.release.tag_name, '-beta.') }}
+        run: |
+          set -euo pipefail
+          : "${VERCEL_DEPLOYMENT_WEBHOOK:?secret is empty or unset; cannot trigger the docs redeploy}"
+          curl -fsS -X POST -o /dev/null "$VERCEL_DEPLOYMENT_WEBHOOK"
+          echo "Triggered a production redeploy of nuqs.dev from the tip of next."
+        env:
+          # The deploy-hook URL embeds a secret token, so the whole URL is stored
+          # as a secret and read at runtime — never inlined into the YAML text.
+          VERCEL_DEPLOYMENT_WEBHOOK: ${{ secrets.VERCEL_DEPLOYMENT_WEBHOOK }}
+
       - name: Invalidate contributors ISR cache in the docs
-        # GA-only, and gated on the comment loop succeeding: the public
-        # contributors page repaints once — when a stable release actually
-        # ships, not on betas, and not while a red finalize is mid-convergence.
-        # `success()` is what skips it on a failed comment loop; a re-run that
-        # completes the stragglers green is what finally fires it. Not
-        # best-effort: a failed bust fails the job (so the maintainer re-runs
-        # rather than leaving the page silently stale) — the curl is idempotent.
+        # Refresh the runtime fetch data the redeploy can't reach: the
+        # contributors page caches its GitHub fetch under the `contributors` tag
+        # in Vercel's Data Cache, which persists across deployments and is not
+        # updated at build time — only revalidateTag refreshes it. Ordering
+        # against the redeploy above is not load-bearing: the bust marks the tag
+        # stale in the cross-deployment cache, so the next request to whichever
+        # deployment is live regenerates the page fresh.
+        #
+        # GA-only and gated on the comment loop succeeding: the page repaints
+        # when a stable release actually ships, not on betas, and not while a red
+        # finalize is mid-convergence. `success()` skips it on a failed comment
+        # loop; a green re-run is what finally fires it. Not best-effort: a failed
+        # bust fails the job (so the maintainer re-runs rather than leaving the
+        # page silently stale) — the curl is idempotent.
         if: ${{ success() && !contains(github.event.release.tag_name, '-beta.') }}
         run: curl -fsS "https://nuqs.dev/api/isr?tag=contributors&token=$ISR_TOKEN"
         env:
@@ -110,6 +145,9 @@ jobs:
           ISR_TOKEN: ${{ secrets.ISR_TOKEN }}
 
       - name: Invalidate releases ISR cache in the docs
+        # Same mechanism for the changelog's `releases` fetch, but best-effort:
+        # the changelog also refreshes on the next release or build, so a missed
+        # bust degrades to a warning rather than failing the finalize.
         if: ${{ success() && !contains(github.event.release.tag_name, '-beta.') }}
         run: |
           set -euo pipefail
@@ -122,9 +160,10 @@ jobs:
       - name: Notify on Slack
         # Last, and always: on success a 🚀/🧪 release card (packageName +
         # version + channel → the action derives the npm + release-notes links);
-        # on a red run (a failed comment loop, or a failed ISR bust above) the
-        # standard step-breakdown notice instead. So a shipped release and a
-        # finalize failure are both visible without watching the Actions tab.
+        # on a red run (a failed comment loop, a failed docs redeploy, or a
+        # failed contributors ISR bust above) the standard step-breakdown notice
+        # instead. So a shipped release and a finalize failure are both visible
+        # without watching the Actions tab.
         if: always()
         uses: 47ng/actions-slack-notify@df42545060c07ca99a040d0a520ab8457ce3c222
         with:
