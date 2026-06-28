@@ -106,14 +106,17 @@ export function gatedHeadingIds(
   return ids
 }
 
+/**
+ * Resolves a heading line to its ToC id. Gated headings carry an explicit
+ * `[#id]` (matching the anchor fumadocs emits); the slug is a best-effort
+ * fallback for plain-text headings without one.
+ */
 function headingId(headingText: string): string {
   return headingText.match(EXPLICIT_ID)?.[1] ?? slugify(headingText)
 }
 
 function slugify(text: string): string {
   return text
-    .replace(/<[^>]*>/g, '') // drop inline JSX/HTML
-    .replace(/\[#[^\]]+\]/g, '') // drop any explicit-id syntax
     .trim()
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')

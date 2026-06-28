@@ -114,10 +114,10 @@ describe('gatedHeadingIds', () => {
     expect(gatedHeadingIds(input, hideAll)).toEqual(new Set(['some-new-option']))
   })
 
-  it('ignores inline JSX when slugifying a heading title', () => {
+  it('uses the explicit id for a heading that carries inline JSX', () => {
     const input = [
       '<SinceVersion v="2.9.0">',
-      "## <Icon className='mr-2' />React Router v8",
+      "## <Icon className='mr-2' />React Router v8 [#react-router-v8]",
       '</SinceVersion>'
     ].join('\n')
     expect(gatedHeadingIds(input, hideAll)).toEqual(new Set(['react-router-v8']))
