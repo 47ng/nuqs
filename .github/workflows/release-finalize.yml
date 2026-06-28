@@ -138,22 +138,26 @@ jobs:
         # bust fails the job (so the maintainer re-runs rather than leaving the
         # page silently stale) — the curl is idempotent.
         if: ${{ success() && !contains(github.event.release.tag_name, '-beta.') }}
-        run: curl -fsS "https://nuqs.dev/api/isr?tag=contributors&token=$ISR_TOKEN"
+        run: |
+          set -euo pipefail
+          : "${ISR_TOKEN:?secret is empty or unset; cannot bust the contributors ISR cache}"
+          curl -fsS "https://nuqs.dev/api/isr?tag=contributors&token=$ISR_TOKEN"
         env:
           # Passed via env and read as $ISR_TOKEN at runtime, so the literal
           # secret never appears in the workflow YAML text (same stance as TAG).
           ISR_TOKEN: ${{ secrets.ISR_TOKEN }}
 
       - name: Invalidate releases ISR cache in the docs
-        # Same mechanism for the changelog's `releases` fetch, but best-effort:
-        # the changelog also refreshes on the next release or build, so a missed
-        # bust degrades to a warning rather than failing the finalize.
+        # Same mechanism, same fail-hard stance as the contributors bust above:
+        # the changelog's `releases` fetch is a tag-only Data Cache entry with no
+        # build or TTL fallback, so only revalidateTag refreshes it. A missed bust
+        # would leave the public changelog stale until the next release's bust, so
+        # fail the job and let the maintainer re-run — the curl is idempotent.
         if: ${{ success() && !contains(github.event.release.tag_name, '-beta.') }}
         run: |
           set -euo pipefail
-          if ! curl -fsS "https://nuqs.dev/api/isr?tag=releases&token=$ISR_TOKEN"; then
-            echo "::warning::Could not bust the 'releases' ISR cache. The changelog page will refresh on the next release or build."
-          fi
+          : "${ISR_TOKEN:?secret is empty or unset; cannot bust the releases ISR cache}"
+          curl -fsS "https://nuqs.dev/api/isr?tag=releases&token=$ISR_TOKEN"
         env:
           ISR_TOKEN: ${{ secrets.ISR_TOKEN }}
 
@@ -161,9 +165,9 @@ jobs:
         # Last, and always: on success a 🚀/🧪 release card (packageName +
         # version + channel → the action derives the npm + release-notes links);
         # on a red run (a failed comment loop, a failed docs redeploy, or a
-        # failed contributors ISR bust above) the standard step-breakdown notice
-        # instead. So a shipped release and a finalize failure are both visible
-        # without watching the Actions tab.
+        # failed ISR cache bust above) the standard step-breakdown notice instead.
+        # So a shipped release and a finalize failure are both visible without
+        # watching the Actions tab.
         if: always()
         uses: 47ng/actions-slack-notify@df42545060c07ca99a040d0a520ab8457ce3c222
         with:
