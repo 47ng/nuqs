@@ -3,14 +3,20 @@ const NPM_REGISTRY_URL = 'https://registry.npmjs.org/nuqs'
 /**
  * The latest GA version of nuqs published on npm.
  *
- * Resolved once at build (`force-cache`, no time-based revalidation) and frozen
- * into the statically generated output, so the docs reveal newly-released
- * content only on the next deployment. Throws on a registry failure to fail the
- * build loudly — leaving the current deployment up — rather than ship a docs
- * site gated against a wrong version.
+ * Cached indefinitely (`force-cache`, no TTL) under the `npm-version` tag in the
+ * Data Cache, which persists across deployments. The version gate compares
+ * against this value, so a release reveals its newly-published (already-deployed
+ * but gated) content by busting the `npm-version` tag from release-finalize.yml
+ * — not by waiting for a redeploy. Throws on a registry failure rather than
+ * serve docs gated against a wrong version: at build it fails loudly (leaving
+ * the current deployment up); during on-demand regeneration after a bust, Next
+ * keeps serving the last good page.
  */
 export async function getPublishedVersion(): Promise<string> {
-  const response = await fetch(NPM_REGISTRY_URL, { cache: 'force-cache' })
+  const response = await fetch(NPM_REGISTRY_URL, {
+    cache: 'force-cache',
+    next: { tags: ['npm-version'] }
+  })
   if (!response.ok) {
     throw new Error(
       `Failed to resolve the latest nuqs version from npm (${response.status} ${response.statusText})`
