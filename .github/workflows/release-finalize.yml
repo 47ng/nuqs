@@ -119,7 +119,7 @@ jobs:
         run: |
           set -euo pipefail
           : "${ISR_TOKEN:?secret is empty or unset; cannot bust the docs ISR caches}"
-          curl -fsS "https://nuqs.dev/api/isr?tag=npm-version&tag=contributors&tag=releases&token=$ISR_TOKEN"
+          curl -fsSL "https://nuqs.dev/api/isr?tag=npm-version&tag=contributors&tag=releases&token=$ISR_TOKEN"
         env:
           # Passed via env and read as $ISR_TOKEN at runtime, so the literal
           # secret never appears in the workflow YAML text (same stance as TAG).
