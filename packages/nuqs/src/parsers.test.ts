@@ -302,6 +302,11 @@ describe('parsers', () => {
     expect(() =>
       isParserBijective(parser, 'not-an-array', ['a', 'b'])
     ).toThrow()
+    // Items that already contain the encoded separator must round-trip
+    // rather than being decoded and split apart.
+    expect(testSerializeThenParse(parser, ['a%2Cb', 'c'])).toBe(true)
+    expect(testSerializeThenParse(parser, ['50%', '100%'])).toBe(true)
+    expect(parser.serialize(['a%2Cb', 'c'])).toBe('a%252Cb,c')
   })
 
   describe('parseAsNativeArrayOf', () => {

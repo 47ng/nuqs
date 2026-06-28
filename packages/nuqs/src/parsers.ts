@@ -482,7 +482,7 @@ export function parseAsArrayOf<ItemType>(
         .map((item, index) =>
           safeParse(
             itemParser.parse,
-            item.replaceAll(encodedSeparator, separator),
+            item.replaceAll(encodedSeparator, separator).replaceAll('%25', '%'),
             `[${index}]`
           )
         )
@@ -494,7 +494,12 @@ export function parseAsArrayOf<ItemType>(
           const str = itemParser.serialize
             ? itemParser.serialize(value)
             : String(value)
-          return str.replaceAll(separator, encodedSeparator)
+          // Escape percent signs first, otherwise an item that already
+          // contains the encoded separator (eg. a literal "%2C") gets decoded
+          // and split when parsed back. See #329.
+          return str
+            .replaceAll('%', '%25')
+            .replaceAll(separator, encodedSeparator)
         })
         .join(separator),
     eq(a, b) {
