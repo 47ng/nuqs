@@ -64,9 +64,9 @@ This had been a great DX: in order to cut a release of nuqs, all I had to do was
 - push it
 - This would also deploy the docs to nuqs.dev, so that the docs cover the latest GA.
 
-{/* todo: add commits component showcasing advancing master to next */}
+import { AdvanceMasterToNext } from './publishing-for-supply-chain-security.components'
 
-<div className="h-64 bg-zinc-500/10 rounded-md"/>
+<AdvanceMasterToNext />
 
 This setup had a few issues though:
 1. It would couple master for two things: publishing the package vs deploying the docs in production. In some cases, I had fixes that weren't ready for prime time (going through beta rounds) interleaved with docs updates (sponsors, styling, dependencies like the [RSC vuln](https://react.dev/blog/2025/12/03/critical-security-vulnerability-in-react-server-components) patching). I got by with cherry picking and force-pushing master to sync it back, but it was hacky.
