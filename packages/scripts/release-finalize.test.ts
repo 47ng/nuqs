@@ -159,6 +159,13 @@ describe('hasReleaseComment', () => {
     expect(hasReleaseComment(comments, marker)).toBe(true)
   })
 
+  it('matches the bot login case-insensitively', () => {
+    const comments: ThreadComment[] = [
+      { author: 'GitHub-Actions', body: `done\n${marker}\n` }
+    ]
+    expect(hasReleaseComment(comments, marker)).toBe(true)
+  })
+
   it('returns false when no comment carries the marker', () => {
     const comments: ThreadComment[] = [
       { author: githubActionsBot, body: 'unrelated chatter' }

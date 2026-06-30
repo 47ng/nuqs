@@ -107,7 +107,7 @@ export type ThreadComment = { author: string; body: string }
 const RELEASE_BOT_LOGIN = 'github-actions'
 
 export function isReleaseBot(login: string): boolean {
-  return login.replace(/\[bot\]$/, '') === RELEASE_BOT_LOGIN
+  return login.replace(/\[bot\]$/, '').toLowerCase() === RELEASE_BOT_LOGIN
 }
 
 // Comment gate: this bot has already posted this release's marker comment.
