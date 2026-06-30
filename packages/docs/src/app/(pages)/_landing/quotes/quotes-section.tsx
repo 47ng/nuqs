@@ -180,16 +180,8 @@ export function QuotesSection() {
           avatar: { service: 'x', handle: 'orcdev' }
           // 'https://pbs.twimg.com/profile_images/1756766826736893952/6Gvg6jha_400x400.jpg'
         }}
-        text={
-          <>
-            <p>Keep it up guys! You're doing a great job!</p>
-            <p>
-              I'm using nuqs on real projects in production already, it's
-              amazing how easy it is to control URL params.
-            </p>
-          </>
-        }
-        url="https://x.com/orcdev/status/1849368178717290945"
+        text="my favorite open source project 💚"
+        url="https://x.com/orcdev/status/2071953439752425816"
       />
       <Quote
         author={{
