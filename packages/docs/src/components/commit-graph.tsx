@@ -610,6 +610,7 @@ function CommitGraph({
                     {row.commit.refs?.map(ref => (
                       <span
                         key={ref}
+                        data-ref={ref}
                         className="inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 text-[10px] leading-none font-semibold"
                         style={{
                           borderColor: `${resolveRefColor(row.rail, ref)}40`,
@@ -622,6 +623,7 @@ function CommitGraph({
                     ))}
                     {row.commit.tag && (
                       <span
+                        data-tag={row.commit.tag}
                         className="inline-flex items-center rounded-md px-1.5 py-0.5 text-[10px] leading-none font-semibold"
                         style={{
                           backgroundColor: `${resolveTagColor(row.rail, row.commit.tag)}20`,

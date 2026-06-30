@@ -2,6 +2,7 @@
 
 import { CommitGraph, type Commit } from '@/src/components/commit-graph'
 import { ArrowDown } from 'lucide-react'
+import { useEffect, useRef, useState, type RefObject } from 'react'
 
 const author = { name: 'François Best' }
 
@@ -61,6 +62,117 @@ const after = withRefs({
   f1a2b3c: { tag: 'v2.8.0' }
 })
 
+type ArrowGeometry = { d: string; w: number; h: number }
+type ArrowPadding = {
+  top?: number // head: + lower (below master), − higher (into master)
+  right?: number // head: + right, − left
+  bottom?: number // tail: + lower, − higher
+  left?: number // tail: + right (into row), − left (toward the tag)
+}
+
+// Curved red arrow tracing `master` jumping from the old release tag (v2.8.0)
+// up to the fast-forwarded tip — positions measured from the rendered badges so
+// it stays aligned across breakpoints and font loads.
+function ReleaseArrow({
+  containerRef,
+  padding,
+  curvature = 40
+}: {
+  containerRef: RefObject<HTMLDivElement | null>
+  padding?: ArrowPadding
+  curvature?: number
+}) {
+  const [arrow, setArrow] = useState<ArrowGeometry | null>(null)
+  const { top = 0, right = 0, bottom = 0, left = 0 } = padding ?? {}
+  useEffect(() => {
+    const container = containerRef.current
+    if (!container) return
+    const compute = () => {
+      const from = container.querySelector('[data-tag="v2.8.0"]')
+      const to = container.querySelector('[data-ref="master"]')
+      if (!(from instanceof HTMLElement) || !(to instanceof HTMLElement)) {
+        setArrow(null)
+        return
+      }
+      const c = container.getBoundingClientRect()
+      const f = from.getBoundingClientRect()
+      const t = to.getBoundingClientRect()
+      const sx = f.right - c.left + left
+      const sy = f.top + f.height / 2 - c.top + bottom
+      const tx = t.left + t.width / 2 - c.left + right
+      const ty = t.bottom - c.top + top
+      const cx = Math.max(sx, tx) + curvature
+      const cy = (sy + ty) / 2
+      setArrow({
+        d: `M${sx},${sy} Q${cx},${cy} ${tx},${ty}`,
+        w: c.width,
+        h: c.height
+      })
+    }
+    compute()
+    const observer = new ResizeObserver(compute)
+    observer.observe(container)
+    void document.fonts?.ready.then(compute)
+    return () => observer.disconnect()
+  }, [containerRef, top, right, bottom, left, curvature])
+
+  if (!arrow) return null
+  return (
+    <svg
+      aria-hidden
+      width={arrow.w}
+      height={arrow.h}
+      viewBox={`0 0 ${arrow.w} ${arrow.h}`}
+      className="pointer-events-none absolute inset-0 z-10 overflow-visible"
+    >
+      <defs>
+        <marker
+          id="release-arrowhead"
+          markerWidth="7"
+          markerHeight="7"
+          refX="5"
+          refY="3"
+          orient="auto"
+        >
+          <path
+            d="M1,1 L5,3 L1,5"
+            fill="none"
+            stroke="#ef4444"
+            strokeWidth="1"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </marker>
+      </defs>
+      <path
+        d={arrow.d}
+        fill="none"
+        stroke="#ef4444"
+        strokeWidth={2.5}
+        strokeLinecap="round"
+        markerEnd="url(#release-arrowhead)"
+      />
+    </svg>
+  )
+}
+
+function FastForwardGraph() {
+  const ref = useRef<HTMLDivElement>(null)
+  return (
+    <div ref={ref} className="relative">
+      <CommitGraph commits={after} refColor={refColor} tagColor={tagColor} />
+      <ReleaseArrow
+        containerRef={ref}
+        curvature={15}
+        padding={{
+          top: 5,
+          left: 20
+        }}
+      />
+    </div>
+  )
+}
+
 export function AdvanceMasterToNext() {
   return (
     <figure className="not-prose my-8 flex flex-col items-stretch gap-3">
@@ -78,7 +190,7 @@ export function AdvanceMasterToNext() {
         <figcaption className="text-muted-foreground text-sm">
           fast-forwarded, then tagged by <code>semantic-release</code>
         </figcaption>
-        <CommitGraph commits={after} refColor={refColor} tagColor={tagColor} />
+        <FastForwardGraph />
       </div>
     </figure>
   )
