@@ -3,6 +3,7 @@
 import { CommitGraph, type Commit } from '@/src/components/commit-graph'
 import { ArrowDown } from 'lucide-react'
 import {
+  Fragment,
   useEffect,
   useRef,
   useState,
@@ -468,6 +469,160 @@ export function StagingArea() {
         </div>
 
         <DiagramConnectors containerRef={ref} connectors={stagedConnectors} />
+      </div>
+    </figure>
+  )
+}
+
+// Release-pipeline diagrams ---------------------------------------------------
+
+// Badge colours flag the elevated permission each phase needs, so the
+// id-token/contents split the article describes is visible at a glance.
+const permission = {
+  idToken: '#22c55e', // green-500 — OIDC trusted publishing
+  contents: '#f59e0b', // amber-500 — write the draft release
+  scopes: '#8b5cf6' // violet-500 — finalize's comment/label reach
+}
+
+type Trait = { label: string; color: string }
+
+type PipelineStep = {
+  id: string
+  detail: string
+  trait?: Trait
+}
+
+function PermissionBadge({ label, color }: Trait) {
+  return (
+    <code
+      className="shrink-0 rounded-md border px-2 py-0.5 font-mono text-[11px] font-medium"
+      style={{
+        color,
+        borderColor: `${color}40`,
+        backgroundColor: `${color}14`
+      }}
+    >
+      {label}
+    </code>
+  )
+}
+
+function WorkflowNode({ step, mono }: { step: PipelineStep; mono?: boolean }) {
+  return (
+    <div className="border-border/70 bg-muted/30 flex items-center justify-between gap-4 rounded-lg border px-4 py-2.5">
+      <div className="flex min-w-0 flex-col gap-0.5">
+        <span
+          className={`text-foreground text-sm font-medium ${mono ? 'font-mono' : ''}`}
+        >
+          {step.id}
+        </span>
+        <span className="text-muted-foreground/70 text-xs">{step.detail}</span>
+      </div>
+      {step.trait && <PermissionBadge {...step.trait} />}
+    </div>
+  )
+}
+
+function FlowArrow() {
+  return (
+    <ArrowDown
+      aria-hidden
+      className="text-muted-foreground/50 mx-auto my-1.5 size-4 shrink-0"
+    />
+  )
+}
+
+function Pipeline({ steps, mono }: { steps: PipelineStep[]; mono?: boolean }) {
+  return (
+    <div className="flex flex-col">
+      {steps.map((step, i) => (
+        <Fragment key={step.id}>
+          {i > 0 && <FlowArrow />}
+          <WorkflowNode step={step} mono={mono} />
+        </Fragment>
+      ))}
+    </div>
+  )
+}
+
+function TriggerChip({ children }: { children: ReactNode }) {
+  return (
+    <code className="border-border/70 bg-muted/40 text-muted-foreground self-center rounded-full border px-3 py-1 font-mono text-xs">
+      {children}
+    </code>
+  )
+}
+
+// One job per box, in `needs` order — the chain is fully sequential.
+const draftJobs: PipelineStep[] = [
+  { id: 'compute-version', detail: 'walk the commit tree → next semver' },
+  {
+    id: 'generate-notes',
+    detail: 'render the changelog from the commit graph'
+  },
+  { id: 'ci', detail: 'full test suite (reusable ci-cd.yml)' },
+  {
+    id: 'stage',
+    detail: 'npm stage publish, with provenance',
+    trait: { label: 'id-token: write', color: permission.idToken }
+  },
+  {
+    id: 'create-draft',
+    detail: 'open the draft GitHub release',
+    trait: { label: 'contents: write', color: permission.contents }
+  }
+]
+
+// A single least-privilege job; these are its meaningful steps.
+const finalizeSteps: PipelineStep[] = [
+  {
+    id: 'Verify live on npm',
+    detail: 'registry curl — bails if the 2FA approval was skipped'
+  },
+  {
+    id: 'Comment + label issues & PRs',
+    detail: 'derived from the commit graph, idempotent on re-runs'
+  },
+  {
+    id: 'Bust docs ISR caches',
+    detail: 'contributors + changelog, stable releases only'
+  },
+  {
+    id: 'Notify on Slack',
+    detail: 'always — release card or failure notice'
+  }
+]
+
+export function ReleaseDraftJobs() {
+  return (
+    <figure className="not-prose border-border/60 bg-card my-8 rounded-xl border p-6 shadow-sm">
+      <div className="mx-auto flex max-w-md flex-col">
+        <TriggerChip>workflow_dispatch</TriggerChip>
+        <FlowArrow />
+        <Pipeline steps={draftJobs} mono />
+      </div>
+    </figure>
+  )
+}
+
+export function ReleaseFinalizeJobs() {
+  return (
+    <figure className="not-prose border-border/60 bg-card my-8 rounded-xl border p-6 shadow-sm">
+      <div className="mx-auto flex max-w-md flex-col">
+        <TriggerChip>release: published</TriggerChip>
+        <FlowArrow />
+        <div className="border-muted-foreground/40 rounded-2xl border-2 border-dashed p-4">
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <code className="text-foreground font-mono text-sm font-semibold">
+              finalize
+            </code>
+            <PermissionBadge
+              label="issues / PRs / discussions: write"
+              color={permission.scopes}
+            />
+          </div>
+          <Pipeline steps={finalizeSteps} />
+        </div>
       </div>
     </figure>
   )

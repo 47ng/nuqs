@@ -38,6 +38,8 @@ This is great: in the scenario above, an attacker would get their malicious pack
 
 import {
   AdvanceMasterToNext,
+  ReleaseDraftJobs,
+  ReleaseFinalizeJobs,
   StagingArea
 } from './publishing-for-supply-chain-security.components'
 
@@ -86,9 +88,7 @@ A **<span className="text-amber-400">draft</span>** phase, triggered manually (v
 - npm stage publish the package with provenance (OIDC trusted publishing)
 - open a draft GitHub release with the release notes already formatted
 
-{/* todo: add diagram of the relationship of the jobs & steps in GitHub actions */}
-
-<div className="h-64 bg-zinc-500/10 rounded-md"/>
+<ReleaseDraftJobs />
 
 Then, the control flow would be handed over to the maintainer for 2FA. This is where **<span className="text-green-500">validation</span>** would occur. Before hitting "publish", we need to know if a staged tarball is legit. We'll come back to how this is done in a minute.
 
@@ -98,9 +98,7 @@ Assuming we're good to go to **<span className='text-purple-500'>finalize</span>
 1. approving the npm staged package to land on the registry, with 2FA
 2. publishing the GitHub release
 
-{/* todo: add diagram of the relationship of the jobs & steps in GitHub actions */}
-
-<div className="h-64 bg-zinc-500/10 rounded-md"/>
+<ReleaseFinalizeJobs />
 
 That second step is what gives us the Git tag that serves as a reference for computing versions. It's also the trigger for commenting on issues & PRs, which uses the same Git tree walking code as the initial version computing + changelog generation.
 
@@ -149,7 +147,7 @@ Our release notes generator also got a little makeover. Since it's no longer cur
 - A dedicated "Breaking changes" section (we'll try that in nuqs@3.0.0), with prose to add migration guidelines.
 - Direct commits (sometimes I push directly to next for some small README fixes etc, but I might enable branch protection to require a PR)
 - Linking to related/closed issues & discussions
-- Thanking contributors (humans only, sorry bots)
+- Thanking contributors (humans only, sorry bots 🚫🤖)
 
 For almost three years, I had been collecting those release notes and updating a GitHub issue comments with it to obtain a changelog. It was tedious, and time to automate that too.
 
