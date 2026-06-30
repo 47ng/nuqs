@@ -11,8 +11,13 @@ import {
   type ThreadComment
 } from './release-finalize'
 
-// The login finalize comments author as (the CI GITHUB_TOKEN identity).
-const githubActionsBot = 'github-actions[bot]'
+// The login finalize comments author as: the GitHub Actions app (the CI
+// GITHUB_TOKEN identity). Finalize reads threads over GraphQL, which returns the
+// bare `github-actions` — the value that actually reaches the guard at runtime, so
+// it's the one the fixtures use. (REST spells the same actor `github-actions[bot]`;
+// the guard accepts both — see githubActionsBotRest.)
+const githubActionsBot = 'github-actions'
+const githubActionsBotRest = 'github-actions[bot]'
 
 describe('releaseMarker', () => {
   it('keys the marker by release version (GA tag, no leading v)', () => {
@@ -143,6 +148,13 @@ describe('hasReleaseComment', () => {
   it("returns true when the bot has posted a comment bearing this release's marker", () => {
     const comments: ThreadComment[] = [
       { author: githubActionsBot, body: `done\n${marker}\n` }
+    ]
+    expect(hasReleaseComment(comments, marker)).toBe(true)
+  })
+
+  it('also accepts the REST [bot] form of the bot login (dual-convention guard)', () => {
+    const comments: ThreadComment[] = [
+      { author: githubActionsBotRest, body: `done\n${marker}\n` }
     ]
     expect(hasReleaseComment(comments, marker)).toBe(true)
   })

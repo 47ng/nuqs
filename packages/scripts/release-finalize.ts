@@ -90,12 +90,25 @@ ${tryBeta}${releaseMarker(tag)}
 // check needs — no ids, timestamps, or reactions.
 export type ThreadComment = { author: string; body: string }
 
-// Comments are posted by the release CI job under GITHUB_TOKEN, authoring as
-// `github-actions[bot]`. The marker check requires this author: the sentinel is
-// plain text visible in the page source, so a human — or an AI agent that echoes
-// it back in a comment — could otherwise suppress a real release notification by
-// posting the marker themselves.
-export const RELEASE_BOT_LOGIN = 'github-actions[bot]'
+// The release CI job posts comments under GITHUB_TOKEN, whose actor is the GitHub
+// Actions app. That one actor's login is spelled two ways depending on the API:
+// GraphQL returns the bare `github-actions`, REST returns `github-actions[bot]`.
+// Finalize reads threads over GraphQL, so the bare form is what actually reaches
+// this guard at runtime — but `isReleaseBot` tolerates both, mirroring `isBot` in
+// commit-graph.ts, which already encodes this same dual-convention quirk (and was
+// the reason this guard's earlier `=== 'github-actions[bot]'` silently never
+// matched, re-commenting on every re-run).
+//
+// The marker check requires this author: the sentinel is plain text visible in the
+// page source, so a human — or an AI agent that echoes it back in a comment — could
+// otherwise suppress a real release notification by posting the marker themselves.
+// The `github-actions` login namespace is GitHub-controlled (a user cannot claim
+// it), so matching the login is a sufficient anti-spoof guard.
+const RELEASE_BOT_LOGIN = 'github-actions'
+
+export function isReleaseBot(login: string): boolean {
+  return login.replace(/\[bot\]$/, '') === RELEASE_BOT_LOGIN
+}
 
 // Comment gate: this bot has already posted this release's marker comment.
 // The marker lives in the comment body, so posting the comment and persisting the
@@ -111,7 +124,7 @@ export function hasReleaseComment(
   marker: string
 ): boolean {
   return comments.some(
-    ({ author, body }) => author === RELEASE_BOT_LOGIN && body.includes(marker)
+    ({ author, body }) => isReleaseBot(author) && body.includes(marker)
   )
 }
 
