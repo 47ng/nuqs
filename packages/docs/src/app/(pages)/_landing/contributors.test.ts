@@ -5,15 +5,20 @@ import { fetchContributors } from './contributors.tsx'
 
 const endpoint = 'https://api.github.com/repos/47ng/nuqs/contributors'
 
-function contributor(overrides: Record<string, unknown> = {}) {
-  return {
-    login: 'octocat',
-    html_url: 'https://github.com/octocat',
-    avatar_url: 'https://avatars.githubusercontent.com/u/1?v=4',
-    type: 'User',
-    contributions: 10,
-    ...overrides
-  }
+const contributorDefaults = {
+  login: 'octocat',
+  html_url: 'https://github.com/octocat',
+  avatar_url: 'https://avatars.githubusercontent.com/u/1?v=4',
+  type: 'User',
+  contributions: 10
+}
+
+// Keys constrained to the fixture shape: a typo'd override (e.g. `contribution`)
+// is a compile error, not a silently-dropped value that false-greens the test.
+function contributor(
+  overrides: Partial<Record<keyof typeof contributorDefaults, unknown>> = {}
+) {
+  return { ...contributorDefaults, ...overrides }
 }
 
 describe('fetchContributors', () => {
@@ -79,8 +84,9 @@ describe('fetchContributors', () => {
 
   it('throws when the response fails schema validation', async () => {
     server.use(
-      http.get(endpoint, () =>
-        HttpResponse.json([{ login: 'octocat' }]) // missing required fields
+      http.get(
+        endpoint,
+        () => HttpResponse.json([{ login: 'octocat' }]) // missing required fields
       )
     )
     await expect(fetchContributors()).rejects.toThrow()

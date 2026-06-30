@@ -5,17 +5,22 @@ import { fetchDependents } from './dependents.tsx'
 
 const endpoint = 'https://dependents.47ng.com'
 
-function dependent(overrides: Record<string, unknown> = {}) {
-  return {
-    stars: 1200,
-    owner: 'acme',
-    name: 'webapp',
-    pkg: 'nuqs',
-    avatarURL: 'https://avatars.githubusercontent.com/u/1?v=4',
-    version: '2.0.0',
-    createdAt: '2024-01-01T00:00:00Z',
-    ...overrides
-  }
+const dependentDefaults = {
+  stars: 1200,
+  owner: 'acme',
+  name: 'webapp',
+  pkg: 'nuqs',
+  avatarURL: 'https://avatars.githubusercontent.com/u/1?v=4',
+  version: '2.0.0',
+  createdAt: '2024-01-01T00:00:00Z'
+}
+
+// Keys constrained to the fixture shape so a typo'd override is a compile error.
+// Values stay `unknown` so the schema-rejection tests can still pass wrong types.
+function dependent(
+  overrides: Partial<Record<keyof typeof dependentDefaults, unknown>> = {}
+) {
+  return { ...dependentDefaults, ...overrides }
 }
 
 describe('fetchDependents', () => {
@@ -29,7 +34,12 @@ describe('fetchDependents', () => {
       http.get(endpoint, () =>
         HttpResponse.json([
           dependent({ owner: 'a', name: 'one' }),
-          dependent({ owner: 'b', name: 'two', version: null, pkg: 'next-usequerystate' })
+          dependent({
+            owner: 'b',
+            name: 'two',
+            version: null,
+            pkg: 'next-usequerystate'
+          })
         ])
       )
     )
@@ -41,9 +51,7 @@ describe('fetchDependents', () => {
 
   it('rejects a payload with missing fields', async () => {
     server.use(
-      http.get(endpoint, () =>
-        HttpResponse.json([{ owner: 'a', name: 'one' }])
-      )
+      http.get(endpoint, () => HttpResponse.json([{ owner: 'a', name: 'one' }]))
     )
     await expect(fetchDependents()).rejects.toThrow()
   })

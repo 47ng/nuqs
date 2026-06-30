@@ -12,8 +12,9 @@ export default defineConfig({
   test: {
     // Scope to source tests only. Vitest's defaults don't exclude `.next/`, and
     // the registry generates `.ts` items — restricting the glob keeps the runner
-    // off build output and codegen. `.tsx` is included for the RSC fetch boundary
-    // tests (e.g. pr-line) that render their output to assert on it.
+    // off build output and codegen. `.tsx` is included so component tests can be
+    // co-named with their `.tsx` source (e.g. pr-line, an async RSC rendered to
+    // static markup).
     include: ['src/**/*.test.{ts,tsx}']
   }
 })

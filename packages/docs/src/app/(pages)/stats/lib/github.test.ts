@@ -96,6 +96,25 @@ describe('getStarHistory', () => {
     })
   })
 
+  it('includes the oldest in-window day and excludes the day before it', async () => {
+    // Window is [today .. today-11] = [06-15 .. 06-04]; 06-04 is bins[11], 06-03 is out.
+    server.use(
+      http.post(endpoint, () =>
+        HttpResponse.json(
+          page([
+            edge('boundary', '2024-06-04T10:00:00Z'),
+            edge('excluded', '2024-06-03T23:00:00Z')
+          ])
+        )
+      )
+    )
+    const history = await getStarHistory()
+    expect(history.bins[11].date).toBe('2024-06-04')
+    expect(history.bins[11].stargarzers.map(s => s.login)).toEqual(['boundary'])
+    const allLogins = history.bins.flatMap(b => b.stargarzers.map(s => s.login))
+    expect(allLogins).not.toContain('excluded')
+  })
+
   it('follows the cursor across pages until the window is exhausted', async () => {
     server.use(
       http.post(endpoint, async ({ request }) => {

@@ -1,8 +1,10 @@
 import { z } from 'zod'
 
-// Structurally mirrors the kibo-ui `Activity` shape consumed by the graph
-// client. Declared locally so this (test-covered) data module stays free of the
-// client-only component subtree.
+// Structurally mirrors the kibo-ui `Activity` consumed by the graph client.
+// Kept local so this data module has no import edge into the `'use client'`
+// component subtree (which also keeps it, and its test, out of that subtree in
+// the module graph). A compile-time guard in `release-contribution-graph.tsx`
+// pins this shape to the kibo-ui one so the two cannot drift.
 type Activity = {
   date: string
   count: number

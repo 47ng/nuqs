@@ -8,19 +8,23 @@ function endpoint(number: number | string) {
   return `https://api.github.com/repos/47ng/nuqs/pulls/${number}`
 }
 
-function pull(overrides: Record<string, unknown> = {}) {
-  return {
-    title: 'feat: add a feature',
-    state: 'open',
-    draft: false,
-    merged: false,
-    html_url: 'https://github.com/47ng/nuqs/pull/1',
-    user: {
-      login: 'octocat',
-      avatar_url: 'https://avatars.githubusercontent.com/u/1?v=4'
-    },
-    ...overrides
+const pullDefaults = {
+  title: 'feat: add a feature',
+  state: 'open',
+  draft: false,
+  merged: false,
+  html_url: 'https://github.com/47ng/nuqs/pull/1',
+  user: {
+    login: 'octocat',
+    avatar_url: 'https://avatars.githubusercontent.com/u/1?v=4'
   }
+}
+
+// Keys constrained to the fixture shape so a typo'd override is a compile error.
+function pull(
+  overrides: Partial<Record<keyof typeof pullDefaults, unknown>> = {}
+) {
+  return { ...pullDefaults, ...overrides }
 }
 
 async function render(number: number | string) {
@@ -47,7 +51,13 @@ describe('PullRequestLine', () => {
 
   it('renders the author login and a link to their profile', async () => {
     server.use(
-      http.get(endpoint(1), () => HttpResponse.json(pull({ user: { login: 'franky47', avatar_url: 'https://example.com/a.png' } })))
+      http.get(endpoint(1), () =>
+        HttpResponse.json(
+          pull({
+            user: { login: 'franky47', avatar_url: 'https://example.com/a.png' }
+          })
+        )
+      )
     )
     const html = await render(1)
     expect(html).toContain('franky47')
@@ -87,7 +97,9 @@ describe('PullRequestLine', () => {
   it('classifies a closed (unmerged) PR', async () => {
     server.use(
       http.get(endpoint(1), () =>
-        HttpResponse.json(pull({ merged: false, draft: false, state: 'closed' }))
+        HttpResponse.json(
+          pull({ merged: false, draft: false, state: 'closed' })
+        )
       )
     )
     const html = await render(1)
@@ -109,7 +121,13 @@ describe('PullRequestLine', () => {
   it('throws when an ok response fails schema validation', async () => {
     server.use(
       http.get(endpoint(1), () =>
-        HttpResponse.json({ title: 'no user field', state: 'open', draft: false, merged: false, html_url: 'https://github.com/47ng/nuqs/pull/1' })
+        HttpResponse.json({
+          title: 'no user field',
+          state: 'open',
+          draft: false,
+          merged: false,
+          html_url: 'https://github.com/47ng/nuqs/pull/1'
+        })
       )
     )
     await expect(PullRequestLine({ number: 1 })).rejects.toThrow()

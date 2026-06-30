@@ -36,6 +36,21 @@ describe('processReleases', () => {
     expect(releasesByDate['2024-03-15']).toEqual(['v2.0.0', 'v2.0.1'])
   })
 
+  it('marks a day with both a stable and a beta release as stable (level 2)', () => {
+    const { activities, releasesByDate } = processReleases(
+      [
+        { tag_name: 'v2.0.0', published_at: '2024-05-01T10:00:00Z' },
+        { tag_name: 'v2.1.0-beta.1', published_at: '2024-05-01T12:00:00Z' }
+      ],
+      2024
+    )
+    expect(activities.find(a => a.date === '2024-05-01')).toMatchObject({
+      count: 1,
+      level: 2
+    })
+    expect(releasesByDate['2024-05-01']).toEqual(['v2.0.0', 'v2.1.0-beta.1'])
+  })
+
   it('marks beta-only release days at level 1', () => {
     const { activities, releasesByDate } = processReleases(releases, 2024)
     const betaDay = activities.find(a => a.date === '2024-04-01')
@@ -67,9 +82,7 @@ describe('fetchGitHubReleases', () => {
 
   it('returns the releases from a single short page', async () => {
     server.use(
-      http.get(endpoint, () =>
-        HttpResponse.json([release(1), release(2)])
-      )
+      http.get(endpoint, () => HttpResponse.json([release(1), release(2)]))
     )
     const releases = await fetchGitHubReleases()
     expect(releases.map(r => r.tag_name)).toEqual(['v1', 'v2'])
@@ -101,9 +114,7 @@ describe('fetchGitHubReleases', () => {
   })
 
   it('throws on a non-ok response', async () => {
-    server.use(
-      http.get(endpoint, () => HttpResponse.json({}, { status: 500 }))
-    )
+    server.use(http.get(endpoint, () => HttpResponse.json({}, { status: 500 })))
     await expect(fetchGitHubReleases()).rejects.toThrow(/GitHub API error: 500/)
   })
 

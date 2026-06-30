@@ -1,9 +1,21 @@
+import { type Activity } from '@/src/components/kibo-ui/contribution-graph'
 import { Suspense } from 'react'
 import {
   fetchGitHubReleases,
   processReleases
 } from './release-contribution-graph.lib'
 import { ReleaseContributionGraphClient } from './release-contribution-graph.client'
+
+// Compile-time guard: the lib's local `Activity` must stay shape-equivalent to
+// the kibo-ui one it ultimately feeds, regardless of how the JSX wiring evolves.
+// Resolves to `never` (failing assignment below) if either side drifts.
+type LibActivity = ReturnType<typeof processReleases>['activities'][number]
+type ShapeEqual<A, B> = [A] extends [B]
+  ? [B] extends [A]
+    ? true
+    : never
+  : never
+const _activityInSync: ShapeEqual<LibActivity, Activity> = true
 
 function ReleaseContributionGraphSkeleton() {
   return (

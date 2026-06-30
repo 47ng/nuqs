@@ -38,7 +38,10 @@ beforeEach(() => {
   vi.useFakeTimers({ toFake: ['Date'] })
   vi.setSystemTime(new Date('2024-06-15T12:00:00Z'))
 })
-afterEach(() => vi.useRealTimers())
+afterEach(() => {
+  vi.useRealTimers()
+  vi.restoreAllMocks()
+})
 
 describe('interpolateZeroDays', () => {
   function datum(downloads: number, i: number): Datum {
@@ -50,6 +53,20 @@ describe('interpolateZeroDays', () => {
     const data = [100, 100, 100, 100, 100, 100, 100, 120, 0, 140].map(datum)
     const result = interpolateZeroDays(data)
     expect(result[8]).toMatchObject({ downloads: 130, estimated: true })
+  })
+
+  it('uses the backward trend alone when the forward week is unavailable', () => {
+    // i=9 (last): forward null (no D+1), backward=(idx8-idx1)/idx1=0.3, base=idx2=100
+    const data = [100, 100, 100, 100, 100, 100, 100, 100, 130, 0].map(datum)
+    const result = interpolateZeroDays(data)
+    expect(result[9]).toMatchObject({ downloads: 130, estimated: true })
+  })
+
+  it('uses the forward trend alone when the backward week is unavailable', () => {
+    // i=7: backward null (i-8<0), forward=(idx8-idx1)/idx1=0.4, base=idx0=100
+    const data = [100, 100, 100, 100, 100, 100, 100, 0, 140].map(datum)
+    const result = interpolateZeroDays(data)
+    expect(result[7]).toMatchObject({ downloads: 140, estimated: true })
   })
 
   it('falls back to the D-7 baseline when no trend is available', () => {
@@ -105,11 +122,11 @@ describe('getLastNDays', () => {
     expect(data).toEqual([{ date: '2024-06-01', downloads: 20 }])
   })
 
-  it('returns an empty array on a malformed response', async () => {
-    server.use(
-      http.get(rangeEndpoint, () => HttpResponse.json({ nope: true }))
-    )
+  it('returns an empty array and logs on a malformed response', async () => {
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+    server.use(http.get(rangeEndpoint, () => HttpResponse.json({ nope: true })))
     await expect(getLastNDays('nuqs', 30)).resolves.toEqual([])
+    expect(errorSpy).toHaveBeenCalled()
   })
 })
 
@@ -121,7 +138,9 @@ describe('getPackageCreationDate', () => {
       )
     )
     const date = await getPackageCreationDate('nuqs')
-    expect(date.format('YYYY-MM-DD')).toBe('2020-06-01')
+    // npm.ts does not extend dayjs/utc, so .format() renders in local time —
+    // assert on the instant to stay timezone-independent across CI/contributors.
+    expect(date.valueOf()).toBe(new Date('2020-06-01T00:00:00Z').valueOf())
   })
 
   it('clamps a pre-epoch creation date to the npm stats epoch', async () => {
@@ -134,10 +153,12 @@ describe('getPackageCreationDate', () => {
     expect(date.format('YYYY-MM-DD')).toBe('2015-01-10')
   })
 
-  it('falls back to the npm stats epoch on a malformed response', async () => {
+  it('falls back to the npm stats epoch and logs on a malformed response', async () => {
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
     server.use(http.get(registryEndpoint, () => HttpResponse.json({})))
     const date = await getPackageCreationDate('nuqs')
     expect(date.format('YYYY-MM-DD')).toBe('2015-01-10')
+    expect(errorSpy).toHaveBeenCalled()
   })
 })
 
@@ -155,14 +176,24 @@ describe('getAllTime', () => {
     await expect(getAllTime('nuqs')).resolves.toBe(36)
   })
 
-  it('stops and returns the partial sum if a window request fails', async () => {
+  it('keeps the accumulated partial sum when a later window request fails', async () => {
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+    let rangeCalls = 0
     server.use(
       http.get(registryEndpoint, () =>
-        HttpResponse.json({ time: { created: '2023-01-01T00:00:00Z' } })
+        HttpResponse.json({ time: { created: '2020-01-01T00:00:00Z' } })
       ),
-      http.get(rangeEndpoint, () => HttpResponse.json({ broken: true }))
+      http.get(rangeEndpoint, () => {
+        rangeCalls++
+        // First two 18-month windows succeed (12 each); the third is broken.
+        return rangeCalls <= 2
+          ? HttpResponse.json({ downloads: [{ downloads: 12, day: 'x' }] })
+          : HttpResponse.json({ broken: true })
+      })
     )
-    await expect(getAllTime('nuqs')).resolves.toBe(0)
+    // Break must preserve the 24 already accumulated, not reset to 0.
+    await expect(getAllTime('nuqs')).resolves.toBe(24)
+    expect(errorSpy).toHaveBeenCalled()
   })
 })
 
@@ -184,7 +215,9 @@ describe('fetchNpmPackage', () => {
     expect(stats.last30Days).toHaveLength(14)
     // last90Days is grouped by ISO week, so fewer entries keyed as 'YYWww.
     expect(stats.last90Days.length).toBeLessThan(14)
-    expect(stats.last90Days.every(d => /^'\d{2}W\d{2}$/.test(d.date))).toBe(true)
+    expect(stats.last90Days.every(d => /^'\d{2}W\d{2}$/.test(d.date))).toBe(
+      true
+    )
   })
 })
 
