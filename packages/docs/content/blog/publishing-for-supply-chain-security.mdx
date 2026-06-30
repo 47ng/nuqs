@@ -36,9 +36,12 @@ Instead of publishing a package directly to the live NPM registry, staged publis
 
 This is great: in the scenario above, an attacker would get their malicious package stuck in the staging area, I'd be notified about it, and I could review it before taking action.
 
-<div className="h-64 bg-zinc-500/10 rounded-md"/>
+import {
+  AdvanceMasterToNext,
+  StagingArea
+} from './publishing-for-supply-chain-security.components'
 
-{/* todo: add a diagram from Excalidraw */}
+<StagingArea />
 
 I first ran some experiments to understand how it behaves. The TL;DR is:
 - A package can be staged for an indefinite amount of time (there are no timeouts that evicts it)
@@ -63,8 +66,6 @@ This had been a great DX: in order to cut a release of nuqs, all I had to do was
 - fast-forward merge `master` to wherever `next` (our default/development branch) was
 - push it
 - This would also deploy the docs to nuqs.dev, so that the docs cover the latest GA.
-
-import { AdvanceMasterToNext } from './publishing-for-supply-chain-security.components'
 
 <AdvanceMasterToNext />
 
