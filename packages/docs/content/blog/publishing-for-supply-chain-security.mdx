@@ -94,7 +94,7 @@ I initially thought we could do this quickly by pausing/blocking the release wor
 
 So the new publishing plan was split in three phases:
 
-A **<Phase kind="draft">draft</Phase>** phase, triggered manually (via workflow_dispatch), where we would:
+A **<Phase kind="draft">draft</Phase>** phase, triggered manually (via `workflow_dispatch`), where we would:
 - Run the usual semantic-release style of walking the commit tree to compute the new version and apply it to the package
 - npm stage publish the package with provenance (OIDC trusted publishing)
 - open a draft GitHub release with the release notes already formatted
@@ -109,9 +109,9 @@ Assuming we're good to go to **<Phase kind="finalize">finalize</Phase>** the rel
 1. approving the npm staged package to land on the registry, with 2FA
 2. publishing the GitHub release
 
-<ReleaseFinalizeJobs />
+That second step is what gives us the Git tag that serves as a reference for computing versions. It's also the trigger for commenting on issues & PRs, which uses the same Git tree walking code as the initial version computing + changelog generation:
 
-That second step is what gives us the Git tag that serves as a reference for computing versions. It's also the trigger for commenting on issues & PRs, which uses the same Git tree walking code as the initial version computing + changelog generation.
+<ReleaseFinalizeJobs />
 
 Before that, I used to curate PRs and issues to be included in the changelog via milestone automation ("🪵 Backlog" <Arrow/> "🚀 Shipping next"), which leveraged `pull_request_target` to work on external contributor PRs from forks. That system is gone, everything is now derived from the Git tree alone.
 
