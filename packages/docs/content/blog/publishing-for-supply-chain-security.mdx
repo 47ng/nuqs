@@ -86,7 +86,7 @@ This had been a great DX: in order to cut a release of nuqs, all I had to do was
 
 This setup had a few issues though:
 1. It would couple master for two things: publishing the package vs deploying the docs in production. In some cases, I had fixes that weren't ready for prime time (going through beta rounds) interleaved with docs updates (sponsors, styling, dependencies like the [RSC vulnerability](https://react.dev/blog/2025/12/03/critical-security-vulnerability-in-react-server-components) patching). I got by with cherry picking and force-pushing master to sync it back, but it was hacky.
-2. npm now needed to handle a two-phase publishing process, with a pause while we'd review staged packages.
+2. semantic-release would have needed to handle a two-phase publishing process, with a pause while we'd review staged packages.
 
 I initially thought we could do this quickly by pausing/blocking the release workflow while the package was staged, but since they have no timeout (I had a package staged for an entire month now), it doesn't play well with the billed minutes of GitHub Actions (yes, they are free for OSS, but burning compute for idle waiting doesn't sit right by me).
 
@@ -230,7 +230,7 @@ Any Markdown between the preamble tags is rendered on the changelog page:
 
 That DTO can then be read and rendered in the docs using a single GitHub API query to list releases. We used to have an N+1 query problem where each PR line would query its own state; now it's much leaner. Check out the resulting [Changelog page](/changelog).
 
-Finally, controlling the notification posted on issues & PRs allowed removing a few other friction points:
+Finally, controlling the notification posted on issues & PRs allowed me to remove a few other friction points:
 - The npm link now points to [npmx.dev](https://npmx.dev) (a much better frontend for the registry)
 - We can now comment on related discussions, not just PRs & issues
 - We have different wording for beta vs GA, issue vs PR vs discussion
