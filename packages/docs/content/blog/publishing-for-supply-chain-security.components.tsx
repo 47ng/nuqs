@@ -360,30 +360,31 @@ export function StagingArea() {
 
 // Release-pipeline diagrams ---------------------------------------------------
 
-// Badge colours flag the elevated permission each phase needs, so the
-// id-token/contents split the article describes is visible at a glance.
-const permission = {
-  idToken: '#22c55e', // green-500 — OIDC trusted publishing
-  contents: '#f59e0b', // amber-500 — write the draft release
-  scopes: '#8b5cf6' // violet-500 — finalize's comment/label reach
-}
+// One hue for every elevated permission, outside the phase palette,
+// so badges read as a single category rather than echoing a phase.
+const permissionColor = '#f43f5e' // rose-500
 
-type Trait = { label: string; color: string }
-
-type PipelineStep = {
+// Visual language mirrors the yml structure: phase-tinted frame = workflow,
+// solid card = job (the permission boundary), divided rows = steps.
+type Job = {
   id: string
-  detail: string
-  trait?: Trait
+  detail: ReactNode
+  permissions?: string[]
 }
 
-function PermissionBadge({ label, color }: Trait) {
+type Step = {
+  name: string
+  detail: string
+}
+
+function PermissionBadge({ label }: { label: string }) {
   return (
     <code
       className="shrink-0 rounded-full border px-2 font-mono text-xs leading-loose font-medium"
       style={{
-        color,
-        borderColor: `${color}40`,
-        backgroundColor: `${color}14`
+        color: permissionColor,
+        borderColor: `${permissionColor}40`,
+        backgroundColor: `${permissionColor}14`
       }}
     >
       {label}
@@ -391,18 +392,44 @@ function PermissionBadge({ label, color }: Trait) {
   )
 }
 
-function WorkflowNode({ step, mono }: { step: PipelineStep; mono?: boolean }) {
+function JobNode({ job, children }: { job: Job; children?: ReactNode }) {
+  const permissions = job.permissions ?? []
   return (
-    <div className="border-border/70 bg-muted/30 flex items-center justify-between gap-4 rounded-lg border px-4 py-2.5">
-      <div className="flex min-w-0 flex-col gap-0.5">
-        <span
-          className={`text-foreground text-sm font-medium ${mono ? 'font-mono' : ''}`}
-        >
-          {step.id}
-        </span>
-        <span className="text-muted-foreground/70 text-xs">{step.detail}</span>
+    <div className="border-border/70 bg-muted/30 rounded-lg border px-4 py-2.5">
+      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+        <div className="flex min-w-0 flex-col gap-0.5">
+          <span className="text-foreground font-mono text-sm font-medium">
+            {job.id}
+          </span>
+          <span className="text-muted-foreground/70 text-xs">{job.detail}</span>
+        </div>
+        {permissions.length === 1 && <PermissionBadge label={permissions[0]} />}
       </div>
-      {step.trait && <PermissionBadge {...step.trait} />}
+      {permissions.length > 1 && (
+        <div className="mt-2 flex flex-wrap items-center gap-1.5">
+          {permissions.map(scope => (
+            <PermissionBadge key={scope} label={scope} />
+          ))}
+        </div>
+      )}
+      {children}
+    </div>
+  )
+}
+
+function StepList({ steps }: { steps: Step[] }) {
+  return (
+    <div className="divide-border/60 mt-2 -mb-2 divide-y">
+      {steps.map(step => (
+        <div key={step.name} className="flex flex-col gap-0.5 py-2.5">
+          <span className="text-foreground text-sm font-medium">
+            {step.name}
+          </span>
+          <span className="text-muted-foreground/70 text-xs">
+            {step.detail}
+          </span>
+        </div>
+      ))}
     </div>
   )
 }
@@ -416,15 +443,41 @@ function FlowArrow() {
   )
 }
 
-function Pipeline({ steps, mono }: { steps: PipelineStep[]; mono?: boolean }) {
+function JobPipeline({ jobs }: { jobs: Job[] }) {
   return (
     <div className="flex flex-col">
-      {steps.map((step, i) => (
-        <Fragment key={step.id}>
+      {jobs.map((job, i) => (
+        <Fragment key={job.id}>
           {i > 0 && <FlowArrow />}
-          <WorkflowNode step={step} mono={mono} />
+          <JobNode job={job} />
         </Fragment>
       ))}
+    </div>
+  )
+}
+
+function WorkflowGroup({
+  name,
+  phase,
+  children
+}: {
+  name: string
+  phase: Phase
+  children: ReactNode
+}) {
+  return (
+    <div
+      className={cn(
+        `border-muted-foreground/40 rounded-2xl border p-4`,
+        phaseBorder[phase]
+      )}
+    >
+      <code
+        className={`mb-3 block font-mono text-sm font-semibold ${phaseText[phase]}`}
+      >
+        {name}
+      </code>
+      {children}
     </div>
   )
 }
@@ -438,8 +491,15 @@ function TriggerChip({ children }: { children: ReactNode }) {
 }
 
 // One job per box, in `needs` order — the chain is fully sequential.
-const draftJobs: PipelineStep[] = [
-  { id: 'compute-version', detail: 'walk the commit tree → next semver' },
+const draftJobs: Job[] = [
+  {
+    id: 'compute-version',
+    detail: (
+      <>
+        walk the commit tree <Arrow /> next semver
+      </>
+    )
+  },
   {
     id: 'generate-notes',
     detail: 'render the changelog from the commit graph'
@@ -448,31 +508,37 @@ const draftJobs: PipelineStep[] = [
   {
     id: 'stage',
     detail: 'npm stage publish, with provenance',
-    trait: { label: 'id-token: write', color: permission.idToken }
+    permissions: ['id-token: write']
   },
   {
     id: 'create-draft',
     detail: 'open the draft GitHub release',
-    trait: { label: 'contents: write', color: permission.contents }
+    permissions: ['contents: write']
   }
 ]
 
-// A single least-privilege job; these are its meaningful steps.
-const finalizeSteps: PipelineStep[] = [
+// The workflow's single least-privilege job, and its meaningful steps.
+const finalizeJob: Job = {
+  id: 'finalize',
+  detail: 'notify on completion',
+  permissions: ['issues: write', 'pull-requests: write', 'discussions: write']
+}
+
+const finalizeSteps: Step[] = [
   {
-    id: 'Verify live on npm',
+    name: 'Verify live on npm',
     detail: 'registry curl — bails if the 2FA approval was skipped'
   },
   {
-    id: 'Comment + label issues & PRs',
+    name: 'Comment + label issues & PRs',
     detail: 'derived from the commit graph, idempotent on re-runs'
   },
   {
-    id: 'Bust docs ISR caches',
+    name: 'Bust docs ISR caches',
     detail: 'contributors + changelog, stable releases only'
   },
   {
-    id: 'Notify on Slack',
+    name: 'Notify on Slack',
     detail: 'always — release card or failure notice'
   }
 ]
@@ -483,7 +549,9 @@ export function ReleaseDraftJobs() {
       <div className="mx-auto flex max-w-md flex-col">
         <TriggerChip>workflow_dispatch</TriggerChip>
         <FlowArrow />
-        <Pipeline steps={draftJobs} mono />
+        <WorkflowGroup name="release-draft.yml" phase="draft">
+          <JobPipeline jobs={draftJobs} />
+        </WorkflowGroup>
       </div>
     </figure>
   )
@@ -495,18 +563,11 @@ export function ReleaseFinalizeJobs() {
       <div className="mx-auto flex max-w-md flex-col">
         <TriggerChip>release: published</TriggerChip>
         <FlowArrow />
-        <div className="border-muted-foreground/40 rounded-2xl border border-dashed p-4">
-          <div className="mb-3 flex items-center justify-between gap-3">
-            <code className="text-foreground font-mono text-sm font-semibold">
-              finalize
-            </code>
-            <PermissionBadge
-              label="issues / PRs / discussions: write"
-              color={permission.scopes}
-            />
-          </div>
-          <Pipeline steps={finalizeSteps} />
-        </div>
+        <WorkflowGroup name="release-finalize.yml" phase="finalize">
+          <JobNode job={finalizeJob}>
+            <StepList steps={finalizeSteps} />
+          </JobNode>
+        </WorkflowGroup>
       </div>
     </figure>
   )
