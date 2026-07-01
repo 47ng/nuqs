@@ -350,8 +350,6 @@ export function StagingArea() {
           >
             Inspect tarball
           </code>
-          {/* <div /> */}
-          {/* <div /> */}
         </div>
       </MeasuredDiagram>
     </figure>
@@ -697,7 +695,7 @@ export function PublishingOverview() {
         <OverviewArrow />
         <PhaseCard
           kind="finalize"
-          summary="Publishing the draft creates the git tag on GitHub, then add comments & labels to the shipped issues and PRs."
+          summary="Publishing the draft creates the Git tag on GitHub, then comments & labels land on the shipped issues and PRs."
           footer="release: published"
         />
       </div>

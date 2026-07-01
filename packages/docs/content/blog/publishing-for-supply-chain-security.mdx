@@ -10,13 +10,13 @@ Whether AI is to blame is a good question for another time, but the vector is of
 
 For a TL;DR on how to defend yourself as a consumer of packages, see [below](#defending-yourself). This article is about how we secured the **publishing side** of nuqs to avoid becoming a vector of supply-chain attacks ourselves. As I write this, nuqs has 100M downloads all-time, over 3M weekly.
 
-Our publishing process is "going from a given point in Git to a live, version-bumped npm package on the registry, and the matching GitHub release for the changelog":
+Our publishing process takes a given point in Git and turns it into a live, version-bumped npm package on the registry, plus the matching GitHub release for the changelog:
 
 <PublishingProcess />
 
 ## The TanStack attack
 
-I had been wanting to refactor our release process for a while, but the first trigger to action was the [TanStack attack](https://tanstack.com/blog/npm-supply-chain-compromise-postmortem), where attackers poisoned the GitHub cache of GitHub Actions to piggyback the publishing of their malware on a legitimate publishing run.
+I had been wanting to refactor our release process for a while, but the first call to action was the [TanStack attack](https://tanstack.com/blog/npm-supply-chain-compromise-postmortem), where attackers poisoned the GitHub Actions cache to piggyback their malware on a legitimate publishing run.
 
 While nuqs didn't have the immediate [_"pwn request"_](https://securitylab.github.com/resources/github-actions-preventing-pwn-requests/) (`pull_request_target` + checkout) pattern in its workflows, the attack was scary enough that I immediately [paused accepting PRs](https://github.com/47ng/nuqs/discussions/1401) from external contributors. This was a temporary measure while I assessed the security of our workflows.
 
@@ -79,8 +79,7 @@ Our publishing workflow was based on [semantic-release](https://github.com/seman
 
 This had been a great DX: in order to cut a release of nuqs, all I had to do was:
 - fast-forward merge <Branch name="master" /> to wherever <Branch name="next" /> (our default/development branch) was
-- push it
-- This would also deploy the docs to nuqs.dev, so that the docs cover the latest GA.
+- push it, which would also deploy the docs to nuqs.dev, so that the docs cover the latest GA:
 
 <AdvanceMasterToNext />
 
@@ -95,21 +94,21 @@ I initially thought we could do this quickly by pausing/blocking the release wor
 So the new publishing plan was split into three phases:
 
 A **<Phase kind="draft">draft</Phase>** phase, triggered manually (via `workflow_dispatch`), where we would:
-- Run the usual semantic-release style of walking the commit tree to compute the new version and apply it to the package
-- npm stage publish the package with provenance (OIDC trusted publishing)
-- open a draft GitHub release with the release notes already formatted
+1. walk the commit tree like semantic-release does, to compute the new version and apply it to the package
+2. npm stage publish the package with provenance (OIDC trusted publishing)
+3. open a draft GitHub release with the release notes already formatted
 
 <ReleaseDraftJobs />
 
 Then, the control flow would be handed over to the maintainer for 2FA. This is where **<Phase kind="validate">validation</Phase>** would occur. Before hitting "publish", we need to know if a staged tarball is legit. We'll come back to how this is done in a minute.
 
-Note that at this stage, if we decided to abort, nothing is immutable yet: no Git tag, the GitHub release is in draft mode and can be discarded, the staged npm package can be rejected. So another part of this design was to **allow steps to fail** (I love the [*"let it crash"*](https://ferd.ca/the-zen-of-erlang.html) philosophy of Elixir/Erlang) without nefarious consequences. That solves another issue I had with semantic-release: that process was not idempotent.
+Note that at this stage, if we decided to abort, nothing is immutable yet: no Git tag, the GitHub release is in draft mode and can be discarded, the staged npm package can be rejected. So another part of this design was to **allow steps to fail** without permanent consequences (I love the [*"let it crash"*](https://ferd.ca/the-zen-of-erlang.html) philosophy of Elixir/Erlang). That solves another issue I had with semantic-release: that process was not idempotent.
 
-Assuming we're good to go to **<Phase kind="finalize">finalize</Phase>** the release, the next two steps are manual again:
+Once we're good to **<Phase kind="finalize">finalize</Phase>** the release, the next two steps are manual again:
 1. approving the staged npm package to land on the registry, with 2FA
 2. publishing the GitHub release
 
-That second step is what gives us the Git tag that serves as a reference for computing versions. It's also the trigger for commenting on issues & PRs, which uses the same Git tree walking code as the initial version computing + changelog generation:
+That second step is what gives us the Git tag that serves as a reference for computing versions. It's also the trigger for commenting on issues & PRs, which uses the same Git tree walking code as the initial version computation + changelog generation:
 
 <ReleaseFinalizeJobs />
 
@@ -127,12 +126,12 @@ When you publish a package on npm (whether staged or directly), the API gives yo
 - `shasum`, a legacy SHA-1 of the tarball bytes
 - `integrity`, a SHA-512 hash of the same tarball bytes, which is written into lockfiles.
 
-That integrity property is gold, as it gives us a target to match when reproducing the tarball locally. If they match, it means my machine produced the same code that will land on the registry (no GitHub Actions-side tampering). If they don't match, we can look a little closer at the file diffs (but downloading the staged tarball requires an auth'd npm CLI, which I don't usually leave around).
-So we have a way to, completely offline, reproduce the `npm pack` behaviour (in a Docker image that uses the same base as GitHub Actions, for the tar internals to be the same) and detect tampering. Nice!
+That integrity property is gold, as it gives us a target to match when reproducing the tarball locally. If the hashes match, it means my machine produced the same code that will land on the registry (no GitHub Actions-side tampering). If they don't match, we can look a little closer at the file diffs (but downloading the staged tarball requires an auth'd npm CLI, and I don't usually leave credentials lying around).
+So we have a way to, completely offline, reproduce the `npm pack` behaviour (in a Docker image that uses the same base as GitHub Actions, so the tar internals match) and detect tampering. Nice!
 
 We can go one step further and offer the same verification for any release on npm: query the registry API to get the `integrity` field from the packument (package metadata), and run the check against that. We even have the Git SHA-1 burned into the provenance metadata to verify that the Git tags match (we have [immutable releases](https://docs.github.com/en/code-security/concepts/supply-chain-security/immutable-releases) enabled, but this provides an external means of verification).
 
-You can run this yourself, in the nuqs repo:
+You can run this yourself in the nuqs repo:
 ```shell
 $ pnpm verify v2.9.0
 
@@ -160,19 +159,19 @@ $ pnpm verify v2.9.0
 
 Now that this 3-step flow is in place, let's have a look at a few other things that were improved. Most of those were found by [`zizmor`](https://docs.zizmor.sh/) and [`actionlint`](https://github.com/rhysd/actionlint), which now review every change to our GitHub workflows:
 - SHA-1 pinning for all action dependencies (`- uses: org/repo@<sha1>{:yml}`). Once this was done I flipped the "Require SHA-1 pinning" setting for the repo. [`pinact`](https://github.com/suzuki-shunsuke/pinact) was very useful for this.
-- [template expansion](https://docs.github.com/en/actions/concepts/security/script-injections) like `${{ github.head_ref }}{:yml}`: anything attacker-controlled is expanded before the shell scripts run. Use the env to expand as a string instead.
+- Avoiding [template expansion](https://docs.github.com/en/actions/concepts/security/script-injections) of attacker-controlled input like `${{ github.head_ref }}{:yml}`, which gets expanded before the shell scripts run. Use the env to pass it as a string instead.
 - **Permissions** scoping:
   - Don't define wide permissions at the top of the workflow file, specify each job's permissions independently.
   - Make sure your token is read-only by default in the GitHub Actions settings of your repo.
   - Break down a job into multiple ones. This was the case for our npm stage <Arrow/> release draft sequence: the `id-token: write{:yml}` used for OIDC trusted publishing needs to be short-lived, and creating a GitHub release doesn't need it, so those two jobs are separate.
-- Not restoring cache on sensitive steps to avoid cache poisoning attacks.
+- Not restoring caches on sensitive steps, to avoid cache-poisoning attacks.
 - Setting `persist-credentials: false{:yml}` on `actions/checkout{:yml}`, to avoid leaving the `GITHUB_TOKEN` in the `.git/config` file.
 
-The TanStack team added a great [follow-up post](https://tanstack.com/blog/incident-followup) to their post-mortem detailing how they hardened their CI, which I also recommend.
+The TanStack team added a great [follow-up post](https://tanstack.com/blog/incident-followup) to their post-mortem, detailing how they hardened their CI. I recommend reading it too.
 
 ## Going further
 
-Our release notes generator also got a little makeover. Since it's no longer curated and depends on the commits between two tags, it also handles:
+Our release notes generator also got a little makeover. Since it's no longer curated and depends on the commits between two tags, it now handles:
 - A dedicated "Breaking changes" section (we'll try that in `nuqs@3.0.0`), with prose to add migration guidelines
 - Direct commits (sometimes I push directly to <Branch name="next" /> for some small README fixes etc., but I might enable branch protection to always require a PR)
 - Linking to related/closed issues & discussions
@@ -244,7 +243,7 @@ Here are a few things I did as a package consumer to harden my dev environment:
 - Use pnpm 11, which has [better built-in security defaults](https://pnpm.io/supply-chain-security)
 	- All postinstall scripts are disabled and require [explicit opt-in](https://pnpm.io/settings#onlybuiltdependencies)
 	- [minimumReleaseAge](https://pnpm.io/settings#minimumreleaseage) set to 24h, leaving time for registry scanners like [Snyk](https://snyk.io) or [Socket.dev](https://socket.dev) to do their work
-- Use the [Socket Firewall](https://docs.socket.dev/docs/socket-firewall-free) (free) to block installation of (verified) malicious packages
+- Use the free [Socket Firewall](https://docs.socket.dev/docs/socket-firewall-free) to block installation of known malicious packages
 
 I'm not entirely satisfied with those steps, they each have a flaw:
 - What if a postinstall-allowed package gets pwned?
