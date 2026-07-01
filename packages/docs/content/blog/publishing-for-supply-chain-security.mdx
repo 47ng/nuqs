@@ -127,7 +127,17 @@ When you publish a package on npm (whether staged or directly), the API gives yo
 - `integrity`, a SHA-512 hash of the same tarball bytes, which is written into lockfiles.
 
 That integrity property is gold, as it gives us a target to match when reproducing the tarball locally. If the hashes match, it means my machine produced the same code that will land on the registry (no GitHub Actions-side tampering). If they don't match, we can look a little closer at the file diffs (but downloading the staged tarball requires an auth'd npm CLI, and I don't usually leave credentials lying around).
-So we have a way to, completely offline, reproduce the `npm pack` behaviour (in a Docker image that uses the same base as GitHub Actions, so the tar internals match) and detect tampering. Nice!
+
+So we have a way to, completely offline, reproduce the `npm pack` behaviour (in a Docker image that uses the same base as GitHub Actions, so the tar internals match) and detect tampering:
+
+```bash
+packages/scripts/verify-release/verify.staged.ts \
+  --package nuqs \
+  --version '2.9.0' \
+  --integrity 'sha512-1ckQBhVHaQYjLZ3kWhhH40A32lPJ7TNTQMa2T+SUvl5azyVt7swCQfUXt9xOXJV3YidWq8VHIHcMzVAJ0knRsw==' \
+  --shasum '398efd8c07a46ef1e819c1bf93df176510fd7b5b' \
+  --sha '29990b5ffca4b5041202ca46799cd43542d4fcb8'
+```
 
 We can go one step further and offer the same verification for any release on npm: query the registry API to get the `integrity` field from the packument (package metadata), and run the check against that. We even have the Git SHA-1 burned into the provenance metadata to verify that the Git tags match (we have [immutable releases](https://docs.github.com/en/code-security/concepts/supply-chain-security/immutable-releases) enabled, but this provides an external means of verification).
 
@@ -166,6 +176,7 @@ Now that this 3-step flow is in place, let's have a look at a few other things t
   - Break down a job into multiple ones. This was the case for our npm stage <Arrow/> release draft sequence: the `id-token: write{:yml}` used for OIDC trusted publishing needs to be short-lived, and creating a GitHub release doesn't need it, so those two jobs are separate.
 - Not restoring caches on sensitive steps, to avoid cache-poisoning attacks.
 - Setting `persist-credentials: false{:yml}` on `actions/checkout{:yml}`, to avoid leaving the `GITHUB_TOKEN` in the `.git/config` file.
+- Dropped the now-unused <Branch name="master" /> & `beta` branches.
 
 The TanStack team added a great [follow-up post](https://tanstack.com/blog/incident-followup) to their post-mortem, detailing how they hardened their CI. I recommend reading it too.
 

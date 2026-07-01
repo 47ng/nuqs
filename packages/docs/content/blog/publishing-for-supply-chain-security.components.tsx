@@ -688,7 +688,7 @@ export function PublishingOverview() {
         <PhaseCard
           gate
           kind="validate"
-          summary="Reproduce the build, match the integrity hash, then approve the staged package with 2FA — or reject it."
+          summary="Somehow check the package is legit, then approve the staged package."
           footer="maintainer + 2FA"
           className="border-dashed"
         />
