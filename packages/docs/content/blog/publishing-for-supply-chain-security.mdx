@@ -6,13 +6,13 @@ date: 2026-06-25
 ---
 
 2026 has been a wild ride for supply-chain security. Every week, a new attack.
-Whether AI is to blame is a good question for another time, but the vector is often the same: targeting high-profile NPM packages to deliver malware.
+Whether AI is to blame is a good question for another time, but the vector is often the same: targeting high-profile npm packages to deliver malware.
 
 For a TL;DR on how to defend yourself as a consumer of packages, see [below](#defending-yourself). This article is about how we secured the **publishing side** of nuqs to avoid becoming a vector of supply chain attacks ourselves.
 
-## The TanStack Attack
+## The TanStack attack
 
-I had my eye on refactoring the publishing process (going from a given point in Git to a live, version-bumped NPM package on the registry, and the matching GitHub release for the changelog) for a while now, but the first trigger to action was the [TanStack attack](https://tanstack.com/blog/npm-supply-chain-compromise-postmortem), where attackers poisoned the GitHub cache of GitHub actions to piggyback the publishing of their malware on a legitimate publishing run.
+I had my eye on refactoring the publishing process (going from a given point in Git to a live, version-bumped npm package on the registry, and the matching GitHub release for the changelog) for a while now, but the first trigger to action was the [TanStack attack](https://tanstack.com/blog/npm-supply-chain-compromise-postmortem), where attackers poisoned the GitHub cache of GitHub Actions to piggyback the publishing of their malware on a legitimate publishing run.
 
 While nuqs didn't have the immediate [_"pwn request"_](https://securitylab.github.com/resources/github-actions-preventing-pwn-requests/) (`pull_request_target` + checkout) pattern in its workflows, the attack was scary enough that I immediately [paused accepting PRs](https://github.com/47ng/nuqs/discussions/1401) from external contributors. This was a temporary measure while I would assess the security of our workflows.
 
@@ -20,7 +20,7 @@ The scan came back mostly clean (I built a [skill](https://github.com/franky47/d
 
 ## What if GitHub cannot be trusted?
 
-So if GitHub (or rather, GitHub Actions) could not be trusted, we needed to move the defences **around** it, rather than anything we can do **inside** it. The thing I wanted for the longest time was proper **2FA for publishing** on NPM. If a malicious actor got their hands on a publishing token, they would be stuck at the 2FA step, which (if done properly) would also act as a notification system:
+So if GitHub (or rather, GitHub Actions) could not be trusted, we needed to move the defences **around** it, rather than anything we can do **inside** it. The thing I wanted for the longest time was proper **2FA for publishing** on npm. If a malicious actor got their hands on a publishing token, they would be stuck at the 2FA step, which (if done properly) would also act as a notification system:
 
 > "hey, I didn't press publish, what's that 2FA request? Block."
 
@@ -28,7 +28,7 @@ That fortunately came out a few days later in the form of [npm staged publishing
 
 ## npm staged publishing
 
-Instead of publishing a package directly to the live NPM registry, staged publishing gives your this "staging area", where a package can land and wait. With this, you get:
+Instead of publishing a package directly to the live npm registry, staged publishing gives you this "staging area", where a package can land and wait. With this, you get:
 - Provenance ([trusted publishing signatures](https://docs.npmjs.com/trusted-publishers/))
 - An email notification that a package was staged
 - A way to download the staged tarball for inspection
@@ -48,7 +48,7 @@ import {
 <StagingArea />
 
 I first ran some experiments to understand how it behaves. The TL;DR is:
-- A package can be staged for an indefinite amount of time (there are no timeouts that evicts it)
+- A package can be staged for an indefinite amount of time (there are no timeouts that evict it)
 - You may download the tarball for inspection, but it requires an authenticated npm CLI (that's annoying for registry scanners)
 - You can't stage the same package@version combination twice (409 Conflict)
 - You can't stage a package@version that's already live on the registry (409 Conflict)
@@ -63,7 +63,7 @@ Our publishing workflow was based on [semantic-release](https://github.com/seman
 - Bumping the version number based on [conventional commits](https://www.conventionalcommits.org/) (fix: → patch, feat:  → minor, anything!: → major)
 - Creating Git tags
 - Creating a GitHub release (we had a custom release notes generator that would update the release body after publishing to thank contributors)
-- Publishing to NPM
+- Publishing to npm
 - Commenting on PRs & related issues that the release was available
 
 This had been a great DX: in order to cut a release of nuqs, all I had to do was:
@@ -77,7 +77,7 @@ This setup had a few issues though:
 1. It would couple master for two things: publishing the package vs deploying the docs in production. In some cases, I had fixes that weren't ready for prime time (going through beta rounds) interleaved with docs updates (sponsors, styling, dependencies like the [RSC vuln](https://react.dev/blog/2025/12/03/critical-security-vulnerability-in-react-server-components) patching). I got by with cherry picking and force-pushing master to sync it back, but it was hacky.
 2. npm now needed to handle a two-phase publishing process, with a pause while we'd review staged packages.
 
-I initially thought we could do this quickly by pausing/blocking the release workflow while the package was staged, but since they have no timeout (I had a package staged for an entire month now), it doesn't play well with the billed minutes of GitHub actions (yes, they are free for OSS, but burning compute for idle waiting doesn't sit right by me).
+I initially thought we could do this quickly by pausing/blocking the release workflow while the package was staged, but since they have no timeout (I had a package staged for an entire month now), it doesn't play well with the billed minutes of GitHub Actions (yes, they are free for OSS, but burning compute for idle waiting doesn't sit right by me).
 
 ## <Phase kind="draft">draft</Phase> → <Phase kind="validate">validate</Phase> → <Phase kind="finalize">finalize</Phase>
 
@@ -94,7 +94,7 @@ Then, the control flow would be handed over to the maintainer for 2FA. This is w
 
 Note that at this stage, if we decided to abort, nothing is immutable yet: no Git tag, the GitHub release is in draft mode and can be discarded, the staged  npm package can be rejected. So another part of this design was to **allow steps to fail** (I love the [*"let it crash"*](https://ferd.ca/the-zen-of-erlang.html) philosophy of Elixir/Erlang) without nefarious consequences. That solves another issue I had with semantic-release: that process was not idempotent.
 
-Assuming we're good to go to **<Phase kind="finalize">finalize</Phase>** the release, the next two steps, are manual again:
+Assuming we're good to go to **<Phase kind="finalize">finalize</Phase>** the release, the next two steps are manual again:
 1. approving the npm staged package to land on the registry, with 2FA
 2. publishing the GitHub release
 
@@ -113,13 +113,13 @@ But we need to talk about <Phase kind="validate">validation</Phase>. Because the
 ## Reproducible builds
 
 When you publish a package on npm (whether staged or directly), the API gives you back two things:
-- `shasum`, a legacy SHA1 of the tarball bytes
-- `integrity`, a SHA-512 hash of the same tarball bytes. That's what written into lockfiles.
+- `shasum`, a legacy SHA-1 of the tarball bytes
+- `integrity`, a SHA-512 hash of the same tarball bytes, which is written into lockfiles.
 
 That integrity property is gold, as it gives us a target to match when reproducing the tarball locally. If they match, it means my machine produced the same code that will land on the registry (no GitHub Actions-side tampering). If they don't match, we can look a little closer at the file diffs (but downloading the staged tarball requires an auth'd npm CLI, which I don't usually leave around).
 So we have a way to, completely offline, reproduce the `npm pack` behaviour (in a Docker image that uses the same base as GitHub Actions, for the tar internals to be the same) and detect tampering. Nice!
 
-We can go one step further and offer the same verification for any release on NPM: query the registry API to get the `integrity` field from the packument (package metadata), and run the check against that. We even have the Git SHA-1 burned into the Provenance metadata for verification that the Git tags are matching (we have [immutable releases](https://docs.github.com/en/code-security/concepts/supply-chain-security/immutable-releases) enabled, but this provides an external means of verification).
+We can go one step further and offer the same verification for any release on npm: query the registry API to get the `integrity` field from the packument (package metadata), and run the check against that. We even have the Git SHA-1 burned into the Provenance metadata for verification that the Git tags are matching (we have [immutable releases](https://docs.github.com/en/code-security/concepts/supply-chain-security/immutable-releases) enabled, but this provides an external means of verification).
 
 You can run this yourself, in the nuqs repo:
 ```shell
@@ -130,11 +130,11 @@ $ pnpm verify v2.9.0
 
 Now that this 3-step flow is in place, let's have a look at a few other things that were improved. Most of those were found by [`zizmor`](https://docs.zizmor.sh/) and [`actionlint`](https://github.com/rhysd/actionlint), which review all changes in GitHub workflows from now on:
 - SHA-1 pinning for all action dependencies (`- uses: org/repo@<sha1>`). Once this was done I flipped the "Require SHA-1 pinning" setting for the repo. [`pinact`](https://github.com/suzuki-shunsuke/pinact) was very useful for this.
-- `${{ github.pull_request.title }}` [template expansion](https://docs.github.com/en/actions/concepts/security/script-injections): anything attacker-controlled is expanded before the shell scripts (or whatever it expands into) runs. Use the env to expand as a string instead.
+- `${{ github.pull_request.title }}` [template expansion](https://docs.github.com/en/actions/concepts/security/script-injections): anything attacker-controlled is expanded before the shell scripts run. Use the env to expand as a string instead.
 - permissions scoping: don't define wide permissions at the top of the workflow file, specify each job's permissions independently. Make sure your token is read-only by default in the GitHub Actions settings of your repo.
-  → Sometimes, that step involves breaking down a job into multiple ones. This was the case for our npm stage → release draft  sequence: the id-token: write used for OIDC trusted publishing needs to be short lived, and creating a github release doesn't need it, so those two jobs are separate.
+  → Sometimes, that step involves breaking down a job into multiple ones. This was the case for our npm stage → release draft  sequence: the id-token: write used for OIDC trusted publishing needs to be short-lived, and creating a GitHub release doesn't need it, so those two jobs are separate.
 - Not restoring cache on sensitive steps to avoid cache poisoning attacks
-- Setting persist-credentials: false on actions/checkout, to avoid leaving the GITHUB_TOKEN into the .git/config file.
+- Setting `persist-credentials: false{:yml}` on `actions/checkout`, to avoid leaving the `GITHUB_TOKEN` in the `.git/config` file.
 
 TanStack's hardening:
 https://tanstack.com/blog/incident-followup
@@ -147,7 +147,7 @@ Our release notes generator also got a little makeover. Since it's no longer cur
 - Linking to related/closed issues & discussions
 - Thanking contributors (humans only, sorry bots 🚫🤖)
 
-For almost three years, I had been collecting those release notes and updating a GitHub issue comments with it to obtain a changelog. It was tedious, and time to automate that too.
+For almost three years, I had been collecting those release notes and updating a comment in a GitHub issue with it to obtain a changelog. It was tedious, and time to automate that too.
 
 So the release notes generator also emits an HTML comment containing a machine-readable JSON DTO of the PRs, commits & contributors it rendered to markdown above.
 
@@ -196,7 +196,7 @@ Any Markdown between the preamble tags is rendered on the changelog page:
 -->
 ```
 
-That DTO can then be read and rendered in the docs using a single GitHub API query to list releases. We used to have an N+1 query problem where each PR line would query its own state, now it's much leaner. Check out the resulting [Changelog page](/changelog).
+That DTO can then be read and rendered in the docs using a single GitHub API query to list releases. We used to have an N+1 query problem where each PR line would query its own state; now it's much leaner. Check out the resulting [Changelog page](/changelog).
 
 Finally, having control of the notification that's posted on issues & PRs allowed removing a few other friction points:
 - The npm link now points to [npmx.dev](https://npmx.dev) (a much better frontend for the registry)
