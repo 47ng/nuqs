@@ -10,9 +10,13 @@ Whether AI is to blame is a good question for another time, but the vector is of
 
 For a TL;DR on how to defend yourself as a consumer of packages, see [below](#defending-yourself). This article is about how we secured the **publishing side** of nuqs to avoid becoming a vector of supply chain attacks ourselves.
 
+Our publishing process is "going from a given point in Git to a live, version-bumped npm package on the registry, and the matching GitHub release for the changelog":
+
+<PublishingProcess />
+
 ## The TanStack attack
 
-I had my eye on refactoring the publishing process (going from a given point in Git to a live, version-bumped npm package on the registry, and the matching GitHub release for the changelog) for a while now, but the first trigger to action was the [TanStack attack](https://tanstack.com/blog/npm-supply-chain-compromise-postmortem), where attackers poisoned the GitHub cache of GitHub Actions to piggyback the publishing of their malware on a legitimate publishing run.
+ I had my eye on refactoring it a while now, but the first trigger to action was the [TanStack attack](https://tanstack.com/blog/npm-supply-chain-compromise-postmortem), where attackers poisoned the GitHub cache of GitHub Actions to piggyback the publishing of their malware on a legitimate publishing run.
 
 While nuqs didn't have the immediate [_"pwn request"_](https://securitylab.github.com/resources/github-actions-preventing-pwn-requests/) (`pull_request_target` + checkout) pattern in its workflows, the attack was scary enough that I immediately [paused accepting PRs](https://github.com/47ng/nuqs/discussions/1401) from external contributors. This was a temporary measure while I would assess the security of our workflows.
 
@@ -40,6 +44,7 @@ import {
   AdvanceMasterToNext,
   Phase,
   PublishingOverview,
+  PublishingProcess,
   ReleaseDraftJobs,
   ReleaseFinalizeJobs,
   StagingArea
@@ -222,4 +227,7 @@ I'm not entirely satisfied with those steps, they each have a flaw:
 
 Some of the things I'd like to do next:
 - Getting a Yubikey for more secure 2FA TOTP secret storage (if someone would like to [sponsor](https://github.com/sponsors/franky47) it, I'd be eternally grateful 💖)
+- Try [Drydock](https://jovidecroock.com/blog/drydock-release-defenses/) by [Jovi](https://bsky.app/profile/jovidecroock.com) to further analyse a mismatching local build in the verification step.
 - Try [Automic Vault](https://www.automicvault.com/) (by Max Howell, the creator of Homebrew), an OS-wide linter & watcher that detects issues that could get your system compromised.
+
+Stay safe out there. 🫶

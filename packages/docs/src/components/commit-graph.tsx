@@ -377,6 +377,75 @@ function RailsSVG({
   )
 }
 
+// Reusable pieces of the graph's visual vocabulary — a branch/tag badge and a
+// commit dot. Shared by the popover and the row here, and exported so a single
+// commit reference can be composed outside the full graph.
+
+function RefBadge({
+  color,
+  className,
+  children,
+  ...props
+}: { color: string } & React.ComponentProps<'span'>) {
+  return (
+    <span
+      {...props}
+      className={cn(
+        'inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 text-[10px] leading-none font-semibold',
+        className
+      )}
+      style={{
+        borderColor: `${color}40`,
+        backgroundColor: `${color}10`,
+        color
+      }}
+    >
+      {children}
+    </span>
+  )
+}
+
+function TagBadge({
+  color,
+  className,
+  children,
+  ...props
+}: { color: string } & React.ComponentProps<'span'>) {
+  return (
+    <span
+      {...props}
+      className={cn(
+        'inline-flex items-center rounded-md px-1.5 py-0.5 text-[10px] leading-none font-semibold',
+        className
+      )}
+      style={{ backgroundColor: `${color}20`, color }}
+    >
+      {children}
+    </span>
+  )
+}
+
+function CommitDot({ color, size = 16 }: { color: string; size?: number }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox={`0 0 ${size} ${size}`}
+      className="shrink-0"
+      aria-hidden="true"
+    >
+      <circle
+        cx={size / 2}
+        cy={size / 2}
+        r={5}
+        fill={color}
+        stroke="var(--color-background)"
+        strokeWidth={2}
+      />
+    </svg>
+  )
+}
+
 // Commit popover
 
 function CommitDetail({
@@ -440,28 +509,14 @@ function CommitDetail({
             {(commit.refs || commit.tag) && (
               <div className="flex flex-wrap gap-1">
                 {commit.refs?.map(ref => (
-                  <span
-                    key={ref}
-                    className="inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 text-[10px] font-medium"
-                    style={{
-                      borderColor: `${refBadgeColor(ref)}40`,
-                      backgroundColor: `${refBadgeColor(ref)}10`,
-                      color: refBadgeColor(ref)
-                    }}
-                  >
+                  <RefBadge key={ref} color={refBadgeColor(ref)}>
                     {ref}
-                  </span>
+                  </RefBadge>
                 ))}
                 {commit.tag && (
-                  <span
-                    className="inline-flex items-center rounded-md px-1.5 py-0.5 text-[10px] font-medium"
-                    style={{
-                      backgroundColor: `${tagBadgeColor(commit.tag)}20`,
-                      color: tagBadgeColor(commit.tag)
-                    }}
-                  >
+                  <TagBadge color={tagBadgeColor(commit.tag)}>
                     {commit.tag}
-                  </span>
+                  </TagBadge>
                 )}
               </div>
             )}
@@ -608,30 +663,21 @@ function CommitGraph({
                 {(row.commit.refs?.length || row.commit.tag) && (
                   <div className="flex shrink-0 items-center gap-1">
                     {row.commit.refs?.map(ref => (
-                      <span
+                      <RefBadge
                         key={ref}
                         data-ref={ref}
-                        className="inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 text-[10px] leading-none font-semibold"
-                        style={{
-                          borderColor: `${resolveRefColor(row.rail, ref)}40`,
-                          backgroundColor: `${resolveRefColor(row.rail, ref)}10`,
-                          color: resolveRefColor(row.rail, ref)
-                        }}
+                        color={resolveRefColor(row.rail, ref)}
                       >
                         {ref}
-                      </span>
+                      </RefBadge>
                     ))}
                     {row.commit.tag && (
-                      <span
+                      <TagBadge
                         data-tag={row.commit.tag}
-                        className="inline-flex items-center rounded-md px-1.5 py-0.5 text-[10px] leading-none font-semibold"
-                        style={{
-                          backgroundColor: `${resolveTagColor(row.rail, row.commit.tag)}20`,
-                          color: resolveTagColor(row.rail, row.commit.tag)
-                        }}
+                        color={resolveTagColor(row.rail, row.commit.tag)}
                       >
                         {row.commit.tag}
-                      </span>
+                      </TagBadge>
                     )}
                   </div>
                 )}
@@ -677,4 +723,11 @@ function CommitGraph({
   )
 }
 
-export { CommitGraph, type Commit, type CommitAuthor, type CommitGraphProps }
+export {
+  CommitDot,
+  CommitGraph,
+  RefBadge,
+  type Commit,
+  type CommitAuthor,
+  type CommitGraphProps
+}

@@ -1,5 +1,11 @@
-import { CommitGraph, type Commit } from '@/src/components/commit-graph'
+import {
+  CommitDot,
+  CommitGraph,
+  RefBadge,
+  type Commit
+} from '@/src/components/commit-graph'
 import { cn } from '@/src/lib/utils'
+import { SiGithub, SiNpm } from '@icons-pack/react-simple-icons'
 import { ArrowDown, ArrowRight } from 'lucide-react'
 import { Fragment, type ComponentProps, type ReactNode } from 'react'
 import {
@@ -15,6 +21,95 @@ import {
 // the server-rendered markup). The commit graph is itself a client component,
 // but the server renders it directly now that its colours are data, not
 // functions.
+
+// Publishing, defined ---------------------------------------------------------
+
+// One point in Git fans out to the two published artifacts.
+const processConnectors: Connector[] = [
+  {
+    from: 'source',
+    fromSide: 'right',
+    to: 'npm',
+    toSide: 'left',
+    color: '#a1a1aa' // zinc-400
+  },
+  {
+    from: 'source',
+    fromSide: 'right',
+    to: 'release',
+    toSide: 'left',
+    color: '#a1a1aa'
+  }
+]
+
+function ProcessNode({
+  logo,
+  anchor,
+  title,
+  detail
+}: {
+  logo: ReactNode
+  anchor: string
+  title: string
+  detail: string
+}) {
+  return (
+    <div
+      data-anchor={anchor}
+      className="border-border/70 bg-muted/30 flex w-52 shrink-0 items-center gap-3 rounded-xl border px-4 py-3"
+    >
+      {logo}
+      <div className="flex min-w-0 flex-col gap-0.5">
+        <span className="text-foreground text-sm font-medium">{title}</span>
+        <code className="text-muted-foreground/80 font-mono text-xs">
+          {detail}
+        </code>
+      </div>
+    </div>
+  )
+}
+
+export function PublishingProcess() {
+  return (
+    <figure className="not-prose border-border/60 bg-card my-8 overflow-x-auto rounded-xl border shadow-sm">
+      <MeasuredDiagram
+        connectors={processConnectors}
+        className="relative flex min-w-128 items-center justify-between gap-12 px-8 py-8"
+      >
+        {/* A point in Git, composed from the commit-graph's own vocabulary.
+            #3b82f6 is the colour `next` takes there (rail 0, unmapped). */}
+        <div
+          data-anchor="source"
+          className="border-border/70 bg-muted/30 inline-flex shrink-0 items-center gap-2 rounded-xl border px-4 py-3"
+        >
+          <CommitDot color="#3b82f6" />
+          <RefBadge color="#3b82f6">next</RefBadge>
+          <code className="text-muted-foreground/80 font-mono text-xs">
+            29990b5f
+          </code>
+        </div>
+        <div className="flex flex-col gap-6">
+          <ProcessNode
+            logo={
+              <span className="relative inline-flex shrink-0 before:absolute before:inset-[15%] before:bg-white before:content-['']">
+                <SiNpm className="relative fill-[#cb0200]" />
+              </span>
+            }
+            anchor="npm"
+            title="npm registry"
+            detail="nuqs@2.9.0"
+          />
+          <ProcessNode
+            logo={<SiGithub />}
+            anchor="release"
+            title="GitHub release"
+            detail="v2.9.0 + changelog"
+          />
+        </div>
+      </MeasuredDiagram>
+    </figure>
+  )
+}
 
 // Commit-graph figure ---------------------------------------------------------
 
