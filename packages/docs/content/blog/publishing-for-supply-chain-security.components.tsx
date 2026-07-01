@@ -264,7 +264,7 @@ function StagedAction({
   return (
     <span
       data-anchor={anchor}
-      className="rounded-xl border-2 px-5 py-1.5 text-center text-sm font-semibold"
+      className="rounded-lg border px-5 py-1.5 text-center text-sm font-semibold"
       style={{ color, borderColor: color, backgroundColor: `${color}14` }}
     >
       {children}
@@ -277,7 +277,7 @@ export function StagingArea() {
     <figure className="not-prose border-border/60 bg-card my-8 overflow-x-auto rounded-xl border shadow-sm">
       <MeasuredDiagram
         connectors={stagedConnectors}
-        className="relative min-w-[44rem] px-8 pt-14 pb-10"
+        className="relative min-w-176 px-8 pt-16 pb-6"
       >
         <figcaption className="text-foreground absolute inset-x-0 top-5 text-center text-base font-medium">
           Staging Area
@@ -293,7 +293,7 @@ export function StagingArea() {
 
           <div
             data-anchor="box"
-            className="border-muted-foreground/40 rounded-2xl border-2 border-dashed px-6 py-5"
+            className="border-muted-foreground/40 rounded-2xl border border-dashed p-5"
           >
             <div className="flex items-center justify-between gap-6">
               <div className="flex min-w-0 flex-col gap-2">
@@ -334,15 +334,15 @@ export function StagingArea() {
           </div>
         </div>
 
-        <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] gap-x-10 pt-10">
-          <div />
+        <div className="flex items-center justify-center pt-10">
           <code
             data-anchor="inspect"
             className="text-muted-foreground ml-6 w-fit font-mono text-xs"
           >
             Inspect tarball
           </code>
-          <div />
+          {/* <div /> */}
+          {/* <div /> */}
         </div>
       </MeasuredDiagram>
     </figure>
@@ -583,7 +583,7 @@ function OverviewArrow() {
 export function PublishingOverview() {
   return (
     <figure className="not-prose border-border/60 bg-card my-8 overflow-x-auto rounded-xl border p-6 shadow-sm">
-      <div className="flex min-w-[42rem] items-stretch justify-center gap-3">
+      <div className="flex min-w-168 items-stretch justify-center gap-3">
         <PhaseCard
           kind="draft"
           summary="Compute the version, stage to npm with provenance, open a draft GitHub release."

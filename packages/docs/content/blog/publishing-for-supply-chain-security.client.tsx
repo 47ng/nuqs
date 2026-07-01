@@ -270,7 +270,7 @@ function DiagramConnectors({
           d={p.d}
           fill="none"
           stroke={p.color}
-          strokeWidth={2}
+          strokeWidth={1.5}
           strokeLinecap="round"
           markerEnd={`url(#${markerId(p.color)})`}
         />
