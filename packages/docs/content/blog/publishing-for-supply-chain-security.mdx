@@ -16,7 +16,7 @@ Our publishing process is "going from a given point in Git to a live, version-bu
 
 ## The TanStack attack
 
- I had my eye on refactoring it a while now, but the first trigger to action was the [TanStack attack](https://tanstack.com/blog/npm-supply-chain-compromise-postmortem), where attackers poisoned the GitHub cache of GitHub Actions to piggyback the publishing of their malware on a legitimate publishing run.
+ I wanted to refactor our release process a while now, but the first trigger to action was the [TanStack attack](https://tanstack.com/blog/npm-supply-chain-compromise-postmortem), where attackers poisoned the GitHub cache of GitHub Actions to piggyback the publishing of their malware on a legitimate publishing run.
 
 While nuqs didn't have the immediate [_"pwn request"_](https://securitylab.github.com/resources/github-actions-preventing-pwn-requests/) (`pull_request_target` + checkout) pattern in its workflows, the attack was scary enough that I immediately [paused accepting PRs](https://github.com/47ng/nuqs/discussions/1401) from external contributors. This was a temporary measure while I would assess the security of our workflows.
 
@@ -72,7 +72,7 @@ Our publishing workflow was based on [semantic-release](https://github.com/seman
 - Commenting on PRs & related issues that the release was available
 
 This had been a great DX: in order to cut a release of nuqs, all I had to do was:
-- fast-forward merge `master` to wherever `next` (our default/development branch) was
+- fast-forward merge <span>`master`</span> to wherever `next` (our default/development branch) was
 - push it
 - This would also deploy the docs to nuqs.dev, so that the docs cover the latest GA.
 

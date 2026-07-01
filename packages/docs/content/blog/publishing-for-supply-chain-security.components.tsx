@@ -4,6 +4,7 @@ import {
   RefBadge,
   type Commit
 } from '@/src/components/commit-graph'
+import { ContainerQueryHelper } from '@/src/components/responsive-helpers'
 import { cn } from '@/src/lib/utils'
 import { SiGithub, SiNpm } from '@icons-pack/react-simple-icons'
 import { ArrowDown, ArrowRight } from 'lucide-react'
@@ -71,22 +72,31 @@ function ProcessNode({
 
 export function PublishingProcess() {
   return (
-    <figure className="not-prose border-border/60 bg-card my-8 overflow-x-auto rounded-xl border shadow-sm">
+    <figure className="not-prose border-border/60 bg-card @container my-8 overflow-x-auto rounded-xl border shadow-sm">
       <MeasuredDiagram
         connectors={processConnectors}
         className="relative flex min-w-128 items-center justify-between gap-12 px-8 py-8"
       >
-        {/* A point in Git, composed from the commit-graph's own vocabulary.
+        {/* A point in Git, composed from the commit-graph's own vocabulary. It
+            grows with the available width via container queries (@container on
+            the figure): hash only when narrow, then the commit message, then
+            the author — the same columns a commit-graph row reveals.
             #3b82f6 is the colour `next` takes there (rail 0, unmapped). */}
         <div
           data-anchor="source"
-          className="border-border/70 bg-muted/30 inline-flex shrink-0 items-center gap-2 rounded-xl border px-4 py-3"
+          className="border-border/70 bg-muted/30 inline-flex shrink-0 items-center gap-2.5 rounded-xl border px-4 py-3"
         >
           <CommitDot color="#3b82f6" />
           <RefBadge color="#3b82f6">next</RefBadge>
           <code className="text-muted-foreground/80 font-mono text-xs">
             29990b5f
           </code>
+          <span className="text-foreground/80 hidden text-sm @2xl:inline">
+            chore: release nuqs 2.9.0
+          </span>
+          <span className="text-muted-foreground hidden text-xs @3xl:inline">
+            François Best
+          </span>
         </div>
         <div className="flex flex-col gap-6">
           <ProcessNode
@@ -106,6 +116,7 @@ export function PublishingProcess() {
             detail="v2.9.0 + changelog"
           />
         </div>
+        <ContainerQueryHelper />
       </MeasuredDiagram>
     </figure>
   )
