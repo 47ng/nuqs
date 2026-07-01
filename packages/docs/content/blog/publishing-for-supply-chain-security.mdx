@@ -8,7 +8,7 @@ date: 2026-06-25
 2026 has been a wild ride for supply-chain security. Every week, a new attack.
 Whether AI is to blame is a good question for another time, but the vector is often the same: targeting high-profile npm packages to deliver malware.
 
-For a TL;DR on how to defend yourself as a consumer of packages, see [below](#defending-yourself). This article is about how we secured the **publishing side** of nuqs to avoid becoming a vector of supply chain attacks ourselves.
+For a TL;DR on how to defend yourself as a consumer of packages, see [below](#defending-yourself). This article is about how we secured the **publishing side** of nuqs to avoid becoming a vector of supply chain attacks ourselves. As I write this, nuqs has 100M downloads all-time, over 3M weekly.
 
 Our publishing process is "going from a given point in Git to a live, version-bumped npm package on the registry, and the matching GitHub release for the changelog":
 
@@ -16,7 +16,7 @@ Our publishing process is "going from a given point in Git to a live, version-bu
 
 ## The TanStack attack
 
- I wanted to refactor our release process a while now, but the first trigger to action was the [TanStack attack](https://tanstack.com/blog/npm-supply-chain-compromise-postmortem), where attackers poisoned the GitHub cache of GitHub Actions to piggyback the publishing of their malware on a legitimate publishing run.
+ I wanted to refactor our release process for a while now, but the first trigger to action was the [TanStack attack](https://tanstack.com/blog/npm-supply-chain-compromise-postmortem), where attackers poisoned the GitHub cache of GitHub Actions to piggyback the publishing of their malware on a legitimate publishing run.
 
 While nuqs didn't have the immediate [_"pwn request"_](https://securitylab.github.com/resources/github-actions-preventing-pwn-requests/) (`pull_request_target` + checkout) pattern in its workflows, the attack was scary enough that I immediately [paused accepting PRs](https://github.com/47ng/nuqs/discussions/1401) from external contributors. This was a temporary measure while I would assess the security of our workflows.
 
@@ -57,9 +57,9 @@ import {
 I first ran some experiments to understand how it behaves. The TL;DR is:
 - A package can be staged for an indefinite amount of time (there are no timeouts that evict it)
 - You may download the tarball for inspection, but it requires an authenticated npm CLI (that's annoying for registry scanners)
-- You can't stage the same package@version combination twice (409 Conflict)
-- You can't stage a package@version that's already live on the registry (409 Conflict)
-- You can stage, reject, then stage the same package@version again. Handy for abort + retry.
+- You can't stage the same `package@version` combination twice (409 Conflict)
+- You can't stage a `package@version` that's already live on the registry (409 Conflict)
+- You can stage, reject, then stage the same `package@version` again. Handy for abort + retry.
 - Both accept and reject need 2FA
 
 So when staged publishing became available, I flipped the switch in nuqs: it would only ever be able to be published through that staging area. At that time the latest release was back in February, a few months prior, but I had plans to ship some bug fixes and new features. Those would have to wait, security is more important.
