@@ -20,34 +20,36 @@ Our publishing process is "going from a given point in Git to a live, version-bu
 
 While nuqs didn't have the immediate [_"pwn request"_](https://securitylab.github.com/resources/github-actions-preventing-pwn-requests/) (`pull_request_target` + checkout) pattern in its workflows, the attack was scary enough that I immediately [paused accepting PRs](https://github.com/47ng/nuqs/discussions/1401) from external contributors. This was a temporary measure while I would assess the security of our workflows.
 
-The scan came back mostly clean (I built a [skill](https://github.com/franky47/dotfiles/tree/main/dot-claude/skills/audit-github-actions) which I also used to help a few OSS maintainer friends find issues in their workflows), but I wanted to go further. The threat model for the defences I wanted to put in place was: _"imagine GitHub itself is compromised"_. After all, they just had their repositories stolen and leaked and possibly sold to... god knows who.
+The security scan came back clean (I built a [skill](https://github.com/franky47/dotfiles/tree/main/dot-claude/skills/audit-github-actions) which I also used to help a few OSS maintainer friends find issues in their workflows), but I wanted to go further. The threat model for the defences I wanted to put in place was: _"imagine GitHub itself is compromised"_. After all, they just had their repositories stolen and leaked and possibly sold to... god knows who.
 
 ## What if GitHub cannot be trusted?
 
 So if GitHub (or rather, GitHub Actions) could not be trusted, we needed to move the defences **around** it, rather than anything we can do **inside** it. The thing I wanted for the longest time was proper **2FA for publishing** on npm. If a malicious actor got their hands on a publishing token, they would be stuck at the 2FA step, which (if done properly) would also act as a notification system:
 
-> "hey, I didn't press publish, what's that 2FA request? Block."
+> hey, I didn't press publish, what's that 2FA request? Insta-block. 🚫
 
 That fortunately came out a few days later in the form of [npm staged publishing](https://github.com/npm/cli/pull/9201) ([docs](https://docs.npmjs.com/staged-publishing/)).
 
 ## npm staged publishing
 
 Instead of publishing a package directly to the live npm registry, staged publishing gives you this "staging area", where a package can land and wait. With this, you get:
-- Provenance ([trusted publishing signatures](https://docs.npmjs.com/trusted-publishers/))
+- Provenance ([trusted publishing signatures](https://docs.npmjs.com/trusted-publishers/)) just like before
 - An email notification that a package was staged
 - A way to download the staged tarball for inspection
-- A 2FA-gated way to reject (drop) or accept (publish onto the registry) the package@version combo.
+- A 2FA-gated way to <span className='text-red-600 dark:text-red-400'>reject</span> (drop) or <span className='text-green-600 dark:text-green-400'>approve</span> (publish onto the registry) the `package@version` combo.
 
-This is great: in the scenario above, an attacker would get their malicious package stuck in the staging area, I'd be notified about it, and I could review it before taking action.
+This is great: in the scenario above, an attacker would get their malicious package stuck in the staging area, I'd be notified about it via email, and I could review it before taking action:
 
 import {
   AdvanceMasterToNext,
+  Arrow,
+  Branch,
   Phase,
   PublishingOverview,
   PublishingProcess,
   ReleaseDraftJobs,
   ReleaseFinalizeJobs,
-  StagingArea
+  StagingArea,
 } from './publishing-for-supply-chain-security.components'
 
 <StagingArea />
@@ -65,26 +67,30 @@ So when staged publishing became available, I flipped the switch in nuqs: it wou
 ## Splitting the atomic release
 
 Our publishing workflow was based on [semantic-release](https://github.com/semantic-release/semantic-release), which dealt with:
-- Bumping the version number based on [conventional commits](https://www.conventionalcommits.org/) (fix: → patch, feat:  → minor, anything!: → major)
+- Bumping the version number based on [conventional commits](https://www.conventionalcommits.org/):
+  - `doc:`, `test:`, `ci:`, `chore:` etc <Arrow/> no-op (no bump contribution)
+  - `fix:` <Arrow/> patch bump (`x.x.+1`)
+  - `feat:` <Arrow/> minor bump (`x.+1.0`)
+  - `any!:` <Arrow/> major bump (`+1.0.0`, note the `!`)
 - Creating Git tags
 - Creating a GitHub release (we had a custom release notes generator that would update the release body after publishing to thank contributors)
 - Publishing to npm
 - Commenting on PRs & related issues that the release was available
 
 This had been a great DX: in order to cut a release of nuqs, all I had to do was:
-- fast-forward merge <span>`master`</span> to wherever `next` (our default/development branch) was
+- fast-forward merge <Branch name="master" /> to wherever <Branch name="next" /> (our default/development branch) was
 - push it
 - This would also deploy the docs to nuqs.dev, so that the docs cover the latest GA.
 
 <AdvanceMasterToNext />
 
 This setup had a few issues though:
-1. It would couple master for two things: publishing the package vs deploying the docs in production. In some cases, I had fixes that weren't ready for prime time (going through beta rounds) interleaved with docs updates (sponsors, styling, dependencies like the [RSC vuln](https://react.dev/blog/2025/12/03/critical-security-vulnerability-in-react-server-components) patching). I got by with cherry picking and force-pushing master to sync it back, but it was hacky.
+1. It would couple master for two things: publishing the package vs deploying the docs in production. In some cases, I had fixes that weren't ready for prime time (going through beta rounds) interleaved with docs updates (sponsors, styling, dependencies like the [RSC vulnerability](https://react.dev/blog/2025/12/03/critical-security-vulnerability-in-react-server-components) patching). I got by with cherry picking and force-pushing master to sync it back, but it was hacky.
 2. npm now needed to handle a two-phase publishing process, with a pause while we'd review staged packages.
 
 I initially thought we could do this quickly by pausing/blocking the release workflow while the package was staged, but since they have no timeout (I had a package staged for an entire month now), it doesn't play well with the billed minutes of GitHub Actions (yes, they are free for OSS, but burning compute for idle waiting doesn't sit right by me).
 
-## <Phase kind="draft">draft</Phase> → <Phase kind="validate">validate</Phase> → <Phase kind="finalize">finalize</Phase>
+## <Phase kind="draft">draft</Phase> <Arrow/> <Phase kind="validate">validate</Phase> <Arrow/> <Phase kind="finalize">finalize</Phase> [#draft-validate-finalize]
 
 So the new publishing plan was split in three phases:
 
@@ -107,7 +113,7 @@ Assuming we're good to go to **<Phase kind="finalize">finalize</Phase>** the rel
 
 That second step is what gives us the Git tag that serves as a reference for computing versions. It's also the trigger for commenting on issues & PRs, which uses the same Git tree walking code as the initial version computing + changelog generation.
 
-Before that, I used to curate PRs and issues to be included in the changelog via milestone automation ("🪵 Backlog" → "🚀 Shipping next"), which leveraged `pull_request_target` to work on external contributor PRs from forks. That system is gone, everything is now derived from the Git tree alone.
+Before that, I used to curate PRs and issues to be included in the changelog via milestone automation ("🪵 Backlog" <Arrow/> "🚀 Shipping next"), which leveraged `pull_request_target` to work on external contributor PRs from forks. That system is gone, everything is now derived from the Git tree alone.
 
 So the complete flow looks like this:
 
@@ -115,7 +121,7 @@ So the complete flow looks like this:
 
 But we need to talk about <Phase kind="validate">validation</Phase>. Because there's something really cool that came out of that: we have reproducible builds! (we already had them before, but now they are provable).
 
-## Reproducible builds
+## Validation: reproducible builds
 
 When you publish a package on npm (whether staged or directly), the API gives you back two things:
 - `shasum`, a legacy SHA-1 of the tarball bytes
@@ -129,26 +135,47 @@ We can go one step further and offer the same verification for any release on np
 You can run this yourself, in the nuqs repo:
 ```shell
 $ pnpm verify v2.9.0
+
+==> Fetching tag v2.9.0
+==> Reading published metadata for nuqs@2.9.0
+    integrity : sha512-1ckQBhVHaQYjLZ3kWhhH40A32lPJ7TNTQMa2T+SUvl5azyVt7swCQfUXt9xOXJV3YidWq8VHIHcMzVAJ0knRsw==
+    shasum    : 398efd8c07a46ef1e819c1bf93df176510fd7b5b
+    gitHead   : 29990b5ffca4b5041202ca46799cd43542d4fcb8
+    tag commit: 29990b5ffca4b5041202ca46799cd43542d4fcb8
+==> Building canonical image (node 24.11.0, npm 11.16.0, pnpm 11.0.9)
+==> Reproducing nuqs@2.9.0 from v2.9.0
+==================================================================
+ package         : nuqs@2.9.0
+ reproduced .tgz : nuqs-2.9.0.tgz
+==================================================================
+  reproduced integrity : sha512-1ckQBhVHaQYjLZ3kWhhH40A32lPJ7TNTQMa2T+SUvl5azyVt7swCQfUXt9xOXJV3YidWq8VHIHcMzVAJ0knRsw==
+  published  integrity : sha512-1ckQBhVHaQYjLZ3kWhhH40A32lPJ7TNTQMa2T+SUvl5azyVt7swCQfUXt9xOXJV3YidWq8VHIHcMzVAJ0knRsw==
+  reproduced shasum    : 398efd8c07a46ef1e819c1bf93df176510fd7b5b
+  published  shasum    : 398efd8c07a46ef1e819c1bf93df176510fd7b5b
+
+==> PASS — nuqs@2.9.0 reproduces from v2.9.0
 ```
 
 ## Hardening GitHub Actions workflows
 
 Now that this 3-step flow is in place, let's have a look at a few other things that were improved. Most of those were found by [`zizmor`](https://docs.zizmor.sh/) and [`actionlint`](https://github.com/rhysd/actionlint), which review all changes in GitHub workflows from now on:
-- SHA-1 pinning for all action dependencies (`- uses: org/repo@<sha1>`). Once this was done I flipped the "Require SHA-1 pinning" setting for the repo. [`pinact`](https://github.com/suzuki-shunsuke/pinact) was very useful for this.
-- `${{ github.pull_request.title }}` [template expansion](https://docs.github.com/en/actions/concepts/security/script-injections): anything attacker-controlled is expanded before the shell scripts run. Use the env to expand as a string instead.
-- permissions scoping: don't define wide permissions at the top of the workflow file, specify each job's permissions independently. Make sure your token is read-only by default in the GitHub Actions settings of your repo.
-  → Sometimes, that step involves breaking down a job into multiple ones. This was the case for our npm stage → release draft  sequence: the id-token: write used for OIDC trusted publishing needs to be short-lived, and creating a GitHub release doesn't need it, so those two jobs are separate.
-- Not restoring cache on sensitive steps to avoid cache poisoning attacks
-- Setting `persist-credentials: false{:yml}` on `actions/checkout`, to avoid leaving the `GITHUB_TOKEN` in the `.git/config` file.
+- SHA-1 pinning for all action dependencies (`- uses: org/repo@<sha1>{:yml}`). Once this was done I flipped the "Require SHA-1 pinning" setting for the repo. [`pinact`](https://github.com/suzuki-shunsuke/pinact) was very useful for this.
+- [template expansion](https://docs.github.com/en/actions/concepts/security/script-injections) like `${{ github.pull_request.title }}{:yml}`: anything attacker-controlled is expanded before the shell scripts run. Use the env to expand as a string instead.
+- **Permissions** scoping:
+  - Don't define wide permissions at the top of the workflow file, specify each job's permissions independently.
+  - Make sure your token is read-only by default in the GitHub Actions settings of your repo.
+  - Break down a job into multiple ones. This was the case for our npm stage <Arrow/> release draft  sequence: the `id-token: write{:yml}` used for OIDC trusted publishing needs to be short-lived, and creating a GitHub release doesn't need it, so those two jobs are separate.
+- Not restoring cache on sensitive steps to avoid cache poisoning attacks.
+- Setting `persist-credentials: false{:yml}` on `actions/checkout{:yml}`, to avoid leaving the `GITHUB_TOKEN` in the `.git/config` file.
 
-TanStack's hardening:
-https://tanstack.com/blog/incident-followup
+The TanStack team added a great [follow-up post](https://tanstack.com/blog/incident-followup) to their post-mortem detailing how they harned their CI, which I also recommend.
+
 
 ## Going further
 
 Our release notes generator also got a little makeover. Since it's no longer curated and depends on the commits between two tags, it also handles:
-- A dedicated "Breaking changes" section (we'll try that in nuqs@3.0.0), with prose to add migration guidelines.
-- Direct commits (sometimes I push directly to next for some small README fixes etc, but I might enable branch protection to require a PR)
+- A dedicated "Breaking changes" section (we'll try that in `nuqs@3.0.0`), with prose to add migration guidelines
+- Direct commits (sometimes I push directly to next for some small README fixes etc, but I might enable branch protection to always require a PR)
 - Linking to related/closed issues & discussions
 - Thanking contributors (humans only, sorry bots 🚫🤖)
 
@@ -203,7 +230,7 @@ Any Markdown between the preamble tags is rendered on the changelog page:
 
 That DTO can then be read and rendered in the docs using a single GitHub API query to list releases. We used to have an N+1 query problem where each PR line would query its own state; now it's much leaner. Check out the resulting [Changelog page](/changelog).
 
-Finally, having control of the notification that's posted on issues & PRs allowed removing a few other friction points:
+Finally, controlling the notification posted on issues & PRs allowed removing a few other friction points:
 - The npm link now points to [npmx.dev](https://npmx.dev) (a much better frontend for the registry)
 - We can now comment on related discussions, not just PRs & issues
 - We have different wording for beta vs GA, issue vs PR vs discussion

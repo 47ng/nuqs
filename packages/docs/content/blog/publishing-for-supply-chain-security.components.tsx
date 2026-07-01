@@ -8,12 +8,21 @@ import { ContainerQueryHelper } from '@/src/components/responsive-helpers'
 import { cn } from '@/src/lib/utils'
 import { SiGithub, SiNpm } from '@icons-pack/react-simple-icons'
 import { ArrowDown, ArrowRight } from 'lucide-react'
-import { Fragment, type ComponentProps, type ReactNode } from 'react'
+import {
+  Fragment,
+  type ComponentProps,
+  type CSSProperties,
+  type ReactNode
+} from 'react'
 import {
   FastForwardGraph,
   MeasuredDiagram,
   type Connector
 } from './publishing-for-supply-chain-security.client'
+
+export const Arrow = () => (
+  <ArrowRight className="-mt-px inline size-[1em]" aria-label="→" />
+)
 
 // The agnostic (server-rendered) layer: static diagram markup plus the plain
 // data the diagrams need, shipping no client JS. The interactive parts — the
@@ -370,7 +379,7 @@ type PipelineStep = {
 function PermissionBadge({ label, color }: Trait) {
   return (
     <code
-      className="shrink-0 rounded-md border px-2 py-0.5 font-mono text-[11px] font-medium"
+      className="shrink-0 rounded-full border px-2 font-mono text-xs leading-loose font-medium"
       style={{
         color,
         borderColor: `${color}40`,
@@ -486,7 +495,7 @@ export function ReleaseFinalizeJobs() {
       <div className="mx-auto flex max-w-md flex-col">
         <TriggerChip>release: published</TriggerChip>
         <FlowArrow />
-        <div className="border-muted-foreground/40 rounded-2xl border-2 border-dashed p-4">
+        <div className="border-muted-foreground/40 rounded-2xl border border-dashed p-4">
           <div className="mb-3 flex items-center justify-between gap-3">
             <code className="text-foreground font-mono text-sm font-semibold">
               finalize
@@ -534,6 +543,33 @@ export function Phase({
   return <span className={phaseText[kind]}>{children}</span>
 }
 
+// Branch names coloured to match the commit graph: `master` the release branch
+// (green), `next` the trunk (rail-0 blue). Stays a prose <code> — we just
+// override the three CSS variables fumadocs' inline-code rule reads, so it keeps
+// the code shape (radius, padding) but takes the branch hue, border included,
+// with the same 10%/40% tints as the graph's ref badges.
+const branchColor = {
+  master: '#22c55e', // green-500
+  next: '#3b82f6' // blue-500 (rail 0)
+}
+
+export function Branch({ name }: { name: keyof typeof branchColor }) {
+  const color = branchColor[name]
+  return (
+    <code
+      style={
+        {
+          '--tw-prose-code': color,
+          '--color-fd-muted': `${color}10`,
+          '--color-fd-border': `${color}40`
+        } as CSSProperties
+      }
+    >
+      {name}
+    </code>
+  )
+}
+
 function PhaseCard({
   kind,
   summary,
@@ -558,13 +594,13 @@ function PhaseCard({
           {kind}
         </span>
         {gate && (
-          <span className="flex size-5 shrink-0 items-center justify-center rounded-full border border-green-500/60 text-[11px] font-bold text-green-600 dark:text-green-400">
+          <span className="flex size-5 shrink-0 items-center justify-center rounded-full border border-green-500/60 text-xs font-bold text-green-600 dark:text-green-400">
             ?
           </span>
         )}
       </div>
       <p className="text-muted-foreground text-xs leading-relaxed">{summary}</p>
-      <code className="text-muted-foreground/70 mt-auto font-mono text-[11px]">
+      <code className="text-muted-foreground/70 mt-auto font-mono text-xs">
         {footer}
       </code>
     </div>
@@ -600,7 +636,7 @@ export function PublishingOverview() {
         <OverviewArrow />
         <PhaseCard
           kind="finalize"
-          summary="Publishing the draft cuts the git tag and ships it live, then comments & labels the shipped issues and PRs."
+          summary="Publishing the draft creates the git tag on GitHub, then add comments & labels to the shipped issues and PRs."
           footer="release: published"
         />
       </div>
