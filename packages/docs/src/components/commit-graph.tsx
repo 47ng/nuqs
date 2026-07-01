@@ -55,12 +55,12 @@ interface CommitGraphProps
   truncateHash?: number
   /** Pixel width per rail column. @default 24 */
   railWidth?: number
-  /** Override the rail/dot color for a rail index (6-digit hex). @default built-in palette */
-  railColor?: (rail: number) => string
-  /** Color a branch/ref badge by name (6-digit hex). Falls back to the rail color. */
-  refColor?: (ref: string) => string | undefined
-  /** Color a tag badge by name (6-digit hex). Falls back to the rail color. */
-  tagColor?: (tag: string) => string | undefined
+  /** Rail index → rail/dot color (6-digit hex). Unlisted rails fall back to the built-in palette. */
+  railColors?: Record<number, string>
+  /** Branch/ref name → badge color (6-digit hex). Unlisted refs fall back to the rail color. */
+  refColors?: Record<string, string>
+  /** Tag name → badge color (6-digit hex). Unlisted tags fall back to the rail color. */
+  tagColors?: Record<string, string>
 }
 
 const RAIL_COLORS = [
@@ -517,17 +517,17 @@ function CommitGraph({
   commits,
   truncateHash = 7,
   railWidth = 24,
-  railColor,
-  refColor,
-  tagColor,
+  railColors,
+  refColors,
+  tagColors,
   className,
   ...props
 }: CommitGraphProps) {
-  const resolveColor = railColor ?? color
+  const resolveColor = (rail: number) => railColors?.[rail] ?? color(rail)
   const resolveRefColor = (rail: number, ref: string) =>
-    refColor?.(ref) ?? resolveColor(rail)
+    refColors?.[ref] ?? resolveColor(rail)
   const resolveTagColor = (rail: number, tag: string) =>
-    tagColor?.(tag) ?? resolveColor(rail)
+    tagColors?.[tag] ?? resolveColor(rail)
 
   // Simple mode: if no commit has parents, infer a linear topology
   const hasTopology = commits.some(c => c.parents && c.parents.length > 0)

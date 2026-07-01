@@ -1,18 +1,79 @@
+import { CommitGraph, type Commit } from '@/src/components/commit-graph'
 import { cn } from '@/src/lib/utils'
 import { ArrowDown, ArrowRight } from 'lucide-react'
 import { Fragment, type ComponentProps, type ReactNode } from 'react'
 import {
-  BeforeCommitGraph,
   FastForwardGraph,
   MeasuredDiagram,
   type Connector
 } from './publishing-for-supply-chain-security.client'
 
-// The agnostic (server-rendered) layer: static diagram markup that ships no
-// client JS. The interactive parts — the DOM-measured arrows and the commit
-// graph — live in the sibling `.client.tsx` and are slotted in via composition
-// (`FastForwardGraph`/`BeforeCommitGraph` as leaves, `MeasuredDiagram` as a
-// donut that wraps the server-rendered diagram markup).
+// The agnostic (server-rendered) layer: static diagram markup plus the plain
+// data the diagrams need, shipping no client JS. The interactive parts — the
+// DOM-measured arrows — live in the sibling `.client.tsx` and are slotted in via
+// composition (`FastForwardGraph` as a leaf, `MeasuredDiagram` as a donut around
+// the server-rendered markup). The commit graph is itself a client component,
+// but the server renders it directly now that its colours are data, not
+// functions.
+
+// Commit-graph figure ---------------------------------------------------------
+
+const author = { name: 'François Best' }
+
+const history: Commit[] = [
+  {
+    hash: 'a1b2c3d',
+    message: 'feat: global defaults for all parsers',
+    author,
+    date: '2026-06-24T16:20:00Z',
+    parents: ['e4f5a6b']
+  },
+  {
+    hash: 'e4f5a6b',
+    message: 'fix: clear empty arrays from the URL',
+    author,
+    date: '2026-06-23T11:05:00Z',
+    parents: ['7c8d9e0']
+  },
+  {
+    hash: '7c8d9e0',
+    message: 'chore: bump dependencies',
+    author,
+    date: '2026-06-20T09:40:00Z',
+    parents: ['f1a2b3c']
+  },
+  {
+    hash: 'f1a2b3c',
+    message: 'doc: refresh the migration guide',
+    author,
+    date: '2026-02-14T18:00:00Z',
+    parents: []
+  }
+]
+
+function withRefs(refsByHash: Record<string, Pick<Commit, 'refs' | 'tag'>>) {
+  return history.map(commit => ({ ...commit, ...refsByHash[commit.hash] }))
+}
+
+// `master` is pinned at the last release, several commits behind `next`.
+const before = withRefs({
+  a1b2c3d: { refs: ['next'] },
+  f1a2b3c: { refs: ['master'], tag: 'v2.8.0' }
+})
+
+// Fast-forwarding `master` up to `next` cuts the new release.
+const after = withRefs({
+  a1b2c3d: { refs: ['next', 'master'], tag: 'v2.9.0' },
+  f1a2b3c: { tag: 'v2.8.0' }
+})
+
+// `master` is the release branch (green); the release tags are amber. Everything
+// else (e.g. `next`) falls through to the graph's default rail colour.
+const commitRefColors = { master: '#22c55e' } // green-500
+const commitTagColors = {
+  'v2.8.0': '#f59e0b', // amber-500
+  'v2.9.0': '#f59e0b'
+}
 
 export function AdvanceMasterToNext() {
   return (
@@ -21,7 +82,11 @@ export function AdvanceMasterToNext() {
         <figcaption className="text-muted-foreground text-sm">
           <code>master</code> trails <code>next</code>
         </figcaption>
-        <BeforeCommitGraph />
+        <CommitGraph
+          commits={before}
+          refColors={commitRefColors}
+          tagColors={commitTagColors}
+        />
       </div>
       <ArrowDown
         aria-label="fast-forward then tag a release"
@@ -31,7 +96,11 @@ export function AdvanceMasterToNext() {
         <figcaption className="text-muted-foreground text-sm">
           fast-forwarded, then tagged by <code>semantic-release</code>
         </figcaption>
-        <FastForwardGraph />
+        <FastForwardGraph
+          commits={after}
+          refColors={commitRefColors}
+          tagColors={commitTagColors}
+        />
       </div>
     </figure>
   )

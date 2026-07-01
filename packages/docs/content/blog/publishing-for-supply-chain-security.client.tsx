@@ -1,10 +1,10 @@
 'use client'
 
 // The interactive holes for the article's diagrams: everything that needs a
-// browser (DOM measurement via refs + ResizeObserver) or has to hand a function
-// prop to the client-only CommitGraph. The agnostic shells live in the sibling
-// `.components.tsx` and slot server-rendered markup into these via children
-// (donut pattern), so only these leaves ship to the browser.
+// browser (DOM measurement via refs + ResizeObserver). The agnostic shells live
+// in the sibling `.components.tsx` and slot server-rendered markup and colour
+// data into these via props/children (donut pattern), so only these leaves ship
+// to the browser.
 
 import { CommitGraph, type Commit } from '@/src/components/commit-graph'
 import {
@@ -16,64 +16,6 @@ import {
 } from 'react'
 
 // --- Commit-graph figure -----------------------------------------------------
-
-const author = { name: 'François Best' }
-
-// next is the neutral trunk, master the release branch, tags mark releases.
-const colors = {
-  master: '#22c55e', // green-500
-  tag: '#f59e0b' // amber-500
-}
-
-const refColor = (ref: string) => (ref === 'master' ? colors.master : undefined)
-const tagColor = () => colors.tag
-
-const history: Commit[] = [
-  {
-    hash: 'a1b2c3d',
-    message: 'feat: global defaults for all parsers',
-    author,
-    date: '2026-06-24T16:20:00Z',
-    parents: ['e4f5a6b']
-  },
-  {
-    hash: 'e4f5a6b',
-    message: 'fix: clear empty arrays from the URL',
-    author,
-    date: '2026-06-23T11:05:00Z',
-    parents: ['7c8d9e0']
-  },
-  {
-    hash: '7c8d9e0',
-    message: 'chore: bump dependencies',
-    author,
-    date: '2026-06-20T09:40:00Z',
-    parents: ['f1a2b3c']
-  },
-  {
-    hash: 'f1a2b3c',
-    message: 'doc: refresh the migration guide',
-    author,
-    date: '2026-02-14T18:00:00Z',
-    parents: []
-  }
-]
-
-function withRefs(refsByHash: Record<string, Pick<Commit, 'refs' | 'tag'>>) {
-  return history.map(commit => ({ ...commit, ...refsByHash[commit.hash] }))
-}
-
-// `master` is pinned at the last release, several commits behind `next`.
-const before = withRefs({
-  a1b2c3d: { refs: ['next'] },
-  f1a2b3c: { refs: ['master'], tag: 'v2.8.0' }
-})
-
-// Fast-forwarding `master` up to `next` cuts the new release.
-const after = withRefs({
-  a1b2c3d: { refs: ['next', 'master'], tag: 'v2.9.0' },
-  f1a2b3c: { tag: 'v2.8.0' }
-})
 
 type ArrowGeometry = { d: string; w: number; h: number }
 type ArrowPadding = {
@@ -169,19 +111,26 @@ function ReleaseArrow({
   )
 }
 
-// `master` several commits behind `next`, before the fast-forward.
-export function BeforeCommitGraph() {
-  return (
-    <CommitGraph commits={before} refColor={refColor} tagColor={tagColor} />
-  )
-}
-
-// `master` fast-forwarded onto `next`, with the release arrow overlaid.
-export function FastForwardGraph() {
+// `master` fast-forwarded onto `next`, with the measured release arrow overlaid.
+// The commits and colour maps arrive as data from the agnostic layer, so the
+// only reason this stays client-side is the DOM-measured arrow.
+export function FastForwardGraph({
+  commits,
+  refColors,
+  tagColors
+}: {
+  commits: Commit[]
+  refColors?: Record<string, string>
+  tagColors?: Record<string, string>
+}) {
   const ref = useRef<HTMLDivElement>(null)
   return (
     <div ref={ref} className="relative">
-      <CommitGraph commits={after} refColor={refColor} tagColor={tagColor} />
+      <CommitGraph
+        commits={commits}
+        refColors={refColors}
+        tagColors={tagColors}
+      />
       <ReleaseArrow
         containerRef={ref}
         curvature={15}
