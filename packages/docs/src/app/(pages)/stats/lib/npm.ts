@@ -44,7 +44,7 @@ const rangeResponseSchema = z.object({
   )
 })
 
-async function getLastNDays(pkg: string, n: number): Promise<Datum[]> {
+export async function getLastNDays(pkg: string, n: number): Promise<Datum[]> {
   const start = dayjs().subtract(n, 'day').format('YYYY-MM-DD')
   const end = dayjs().subtract(1, 'day').endOf('day').format('YYYY-MM-DD')
   const url = `https://api.npmjs.org/downloads/range/${start}:${end}/${pkg}`
@@ -71,7 +71,7 @@ async function getLastNDays(pkg: string, n: number): Promise<Datum[]> {
  * Interpolate zero-download days using weekly rhythm-aware estimation.
  * Processes left-to-right so earlier interpolated values can feed later ones.
  */
-function interpolateZeroDays(data: Datum[]): Datum[] {
+export function interpolateZeroDays(data: Datum[]): Datum[] {
   for (let i = 0; i < data.length; i++) {
     if (data[i].downloads !== 0) continue
 
@@ -133,7 +133,9 @@ const packageResponseSchema = z.object({
   })
 })
 
-async function getPackageCreationDate(pkg: string): Promise<dayjs.Dayjs> {
+export async function getPackageCreationDate(
+  pkg: string
+): Promise<dayjs.Dayjs> {
   const npmStatsEpoch = dayjs('2015-01-10')
   const url = `https://registry.npmjs.org/${pkg}`
   try {
@@ -149,7 +151,7 @@ async function getPackageCreationDate(pkg: string): Promise<dayjs.Dayjs> {
   }
 }
 
-async function getAllTime(pkg: string): Promise<number> {
+export async function getAllTime(pkg: string): Promise<number> {
   let downloads: number = 0
   let start = dayjs(await getPackageCreationDate(pkg))
   let end = start.add(18, 'month')
