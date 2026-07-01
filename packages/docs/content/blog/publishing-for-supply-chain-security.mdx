@@ -38,6 +38,8 @@ This is great: in the scenario above, an attacker would get their malicious pack
 
 import {
   AdvanceMasterToNext,
+  Phase,
+  PublishingOverview,
   ReleaseDraftJobs,
   ReleaseFinalizeJobs,
   StagingArea
@@ -77,24 +79,22 @@ This setup had a few issues though:
 
 I initially thought we could do this quickly by pausing/blocking the release workflow while the package was staged, but since they have no timeout (I had a package staged for an entire month now), it doesn't play well with the billed minutes of GitHub actions (yes, they are free for OSS, but burning compute for idle waiting doesn't sit right by me).
 
-## <span className="text-amber-400">draft</span> → <span className="text-green-500">validate</span> → <span className='text-purple-500'>finalize</span>
-
-{/* todo: colour-code the steps: yellow for draft, green for validate, purple for finalize, following the GitHub palette for in-progress, success, merged */}
+## <Phase kind="draft">draft</Phase> → <Phase kind="validate">validate</Phase> → <Phase kind="finalize">finalize</Phase>
 
 So the new publishing plan was split in three phases:
 
-A **<span className="text-amber-400">draft</span>** phase, triggered manually (via workflow_dispatch), where we would:
+A **<Phase kind="draft">draft</Phase>** phase, triggered manually (via workflow_dispatch), where we would:
 - Run the usual semantic-release style of walking the commit tree to compute the new version and apply it to the package
 - npm stage publish the package with provenance (OIDC trusted publishing)
 - open a draft GitHub release with the release notes already formatted
 
 <ReleaseDraftJobs />
 
-Then, the control flow would be handed over to the maintainer for 2FA. This is where **<span className="text-green-500">validation</span>** would occur. Before hitting "publish", we need to know if a staged tarball is legit. We'll come back to how this is done in a minute.
+Then, the control flow would be handed over to the maintainer for 2FA. This is where **<Phase kind="validate">validation</Phase>** would occur. Before hitting "publish", we need to know if a staged tarball is legit. We'll come back to how this is done in a minute.
 
 Note that at this stage, if we decided to abort, nothing is immutable yet: no Git tag, the GitHub release is in draft mode and can be discarded, the staged  npm package can be rejected. So another part of this design was to **allow steps to fail** (I love the [*"let it crash"*](https://ferd.ca/the-zen-of-erlang.html) philosophy of Elixir/Erlang) without nefarious consequences. That solves another issue I had with semantic-release: that process was not idempotent.
 
-Assuming we're good to go to **<span className='text-purple-500'>finalize</span>** the release, the next two steps, are manual again:
+Assuming we're good to go to **<Phase kind="finalize">finalize</Phase>** the release, the next two steps, are manual again:
 1. approving the npm staged package to land on the registry, with 2FA
 2. publishing the GitHub release
 
@@ -106,11 +106,9 @@ Before that, I used to curate PRs and issues to be included in the changelog via
 
 So the complete flow looks like this:
 
-{/* todo: add high-level overview diagram of the complete publishing process, with a ? step for validation */}
+<PublishingOverview />
 
-<div className="h-64 bg-zinc-500/10 rounded-md"/>
-
-But we need to talk about <span className="text-green-500">validation</span>. Because there's something really cool that came out of that: we have reproducible builds! (we already had them before, but now they are provable).
+But we need to talk about <Phase kind="validate">validation</Phase>. Because there's something really cool that came out of that: we have reproducible builds! (we already had them before, but now they are provable).
 
 ## Reproducible builds
 
@@ -154,7 +152,48 @@ For almost three years, I had been collecting those release notes and updating a
 So the release notes generator also emits an HTML comment containing a machine-readable JSON DTO of the PRs, commits & contributors it rendered to markdown above.
 
 ```md
-// todo: add abbreviated example of a release body + DTO
+## Features
+
+- #1234 - global defaults for all parsers, by @franky47 (closes #1200)
+
+## Bug fixes
+
+- #1240 - clear empty arrays from the URL, by @contributor
+
+## Thanks
+
+Huge thanks to @franky47 and @contributor for helping!
+
+<!--
+Any Markdown between the preamble tags is rendered on the changelog page:
+<changelog:preamble></changelog:preamble>
+<changelog:dto>
+{
+  "$schema": "https://nuqs.dev/schemas/changelog-dto.v1.json",
+  "changes": [
+    {
+      "source": "squashedPR",
+      "prNumber": 1234,
+      "type": "feat",
+      "breaking": false,
+      "description": "global defaults for all parsers",
+      "author": "franky47",
+      "closingIssues": [1200]
+    },
+    {
+      "source": "squashedPR",
+      "prNumber": 1240,
+      "type": "fix",
+      "breaking": false,
+      "description": "clear empty arrays from the URL",
+      "author": "contributor",
+      "closingIssues": []
+    }
+  ],
+  "contributors": ["franky47", "contributor"]
+}
+</changelog:dto>
+-->
 ```
 
 That DTO can then be read and rendered in the docs using a single GitHub API query to list releases. We used to have an N+1 query problem where each PR line would query its own state, now it's much leaner. Check out the resulting [Changelog page](/changelog).

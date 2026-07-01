@@ -1,8 +1,10 @@
 'use client'
 
 import { CommitGraph, type Commit } from '@/src/components/commit-graph'
-import { ArrowDown } from 'lucide-react'
+import { cn } from '@/src/lib/utils'
+import { ArrowDown, ArrowRight } from 'lucide-react'
 import {
+  ComponentProps,
   Fragment,
   useEffect,
   useRef,
@@ -623,6 +625,111 @@ export function ReleaseFinalizeJobs() {
           </div>
           <Pipeline steps={finalizeSteps} />
         </div>
+      </div>
+    </figure>
+  )
+}
+
+// Phase keywords + overview ---------------------------------------------------
+
+// GitHub's status palette mapped to the three phases — in-progress (amber),
+// success (green), merged (violet) — darker on light, lighter on dark.
+const phaseText = {
+  draft: 'text-amber-600 dark:text-amber-400',
+  validate: 'text-green-600 dark:text-green-400',
+  finalize: 'text-violet-600 dark:text-violet-400'
+}
+
+const phaseBorder = {
+  draft: 'border-amber-500/40',
+  validate: 'border-green-500/40',
+  finalize: 'border-violet-500/40'
+}
+
+type Phase = keyof typeof phaseText
+
+// Inline keyword colouring, reused for every draft/validate/finalize mention in
+// the prose. Colour only — weight inherits, so it reads right in both a heading
+// and a sentence.
+export function Phase({
+  kind,
+  children
+}: {
+  kind: Phase
+  children: ReactNode
+}) {
+  return <span className={phaseText[kind]}>{children}</span>
+}
+
+function PhaseCard({
+  kind,
+  summary,
+  footer,
+  gate,
+  className
+}: ComponentProps<'div'> & {
+  kind: Phase
+  summary: string
+  footer: string
+  gate?: boolean
+}) {
+  return (
+    <div
+      className={cn(
+        `bg-muted/30 flex w-48 shrink-0 flex-col gap-2 rounded-xl border p-4 ${phaseBorder[kind]}`,
+        className
+      )}
+    >
+      <div className="flex items-center justify-between gap-2">
+        <span className={`text-sm font-semibold ${phaseText[kind]}`}>
+          {kind}
+        </span>
+        {gate && (
+          <span className="flex size-5 shrink-0 items-center justify-center rounded-full border border-green-500/60 text-[11px] font-bold text-green-600 dark:text-green-400">
+            ?
+          </span>
+        )}
+      </div>
+      <p className="text-muted-foreground text-xs leading-relaxed">{summary}</p>
+      <code className="text-muted-foreground/70 mt-auto font-mono text-[11px]">
+        {footer}
+      </code>
+    </div>
+  )
+}
+
+function OverviewArrow() {
+  return (
+    <ArrowRight
+      aria-hidden
+      className="text-muted-foreground/50 size-5 shrink-0 self-center"
+    />
+  )
+}
+
+export function PublishingOverview() {
+  return (
+    <figure className="not-prose border-border/60 bg-card my-8 overflow-x-auto rounded-xl border p-6 shadow-sm">
+      <div className="flex min-w-[42rem] items-stretch justify-center gap-3">
+        <PhaseCard
+          kind="draft"
+          summary="Compute the version, stage to npm with provenance, open a draft GitHub release."
+          footer="workflow_dispatch"
+        />
+        <OverviewArrow />
+        <PhaseCard
+          gate
+          kind="validate"
+          summary="Reproduce the build, match the integrity hash, then approve the staged package with 2FA — or reject it."
+          footer="maintainer + 2FA"
+          className="border-dashed"
+        />
+        <OverviewArrow />
+        <PhaseCard
+          kind="finalize"
+          summary="Publishing the draft cuts the git tag and ships it live, then comments & labels the shipped issues and PRs."
+          footer="release: published"
+        />
       </div>
     </figure>
   )
