@@ -10,8 +10,12 @@
     "cssVariables": true,
     "prefix": ""
   },
+  "iconLibrary": "lucide",
   "aliases": {
     "components": "@/src/components",
     "utils": "@/src/lib/utils"
+  },
+  "registries": {
+    "@jalco": "https://ui.justinlevine.me/r/{name}.json"
   }
 }
