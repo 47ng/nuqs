@@ -8,7 +8,8 @@ type GlobalRegistry = {
  * Store a module-level singleton on globalThis, keyed by library version,
  * so that duplicate copies of the library loaded side by side (e.g. in
  * monorepos, see issue #798) share the same instance instead of each
- * creating their own.
+ * creating their own. Copies of different versions deliberately keep
+ * separate instances, as internal state shapes may differ across versions.
  */
 export function globalSingleton<T>(scope: string, create: () => T): T {
   const key = Symbol.for(`nuqs.${version}.${scope}`)

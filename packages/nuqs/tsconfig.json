@@ -11,8 +11,8 @@
     "moduleResolution": "Bundler",
     "resolveJsonModule": true,
     "paths": {
-      // Virtual second copy of the library for the duplicate-copies tests,
-      // see the duplicateLibraryCopy plugin in vitest.config.ts
+      // Type resolution for the virtual second copy of the library served
+      // by the duplicateLibraryCopy plugin in vitest.config.ts
       "nuqs-copy-b": ["./src/index.ts"]
     },
     // Language & Environment

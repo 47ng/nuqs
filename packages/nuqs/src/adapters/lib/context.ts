@@ -32,13 +32,13 @@ export const context: Context<AdapterContext> = globalWeakSingleton(
   'adapter-context',
   createContext,
   () => {
-    const context = createContext<AdapterContext>({
+    const ctx = createContext<AdapterContext>({
       useAdapter() {
         throw new Error(error(404))
       }
     })
-    context.displayName = 'NuqsAdapterContext'
-    return context
+    ctx.displayName = 'NuqsAdapterContext'
+    return ctx
   }
 )
 
@@ -48,7 +48,9 @@ declare global {
   }
 }
 
-// Detect multiple adapter contexts (e.g. duplicate nuqs copies in a monorepo).
+// Detect adapter contexts that cannot be shared across duplicate copies:
+// nuqs version mismatch, or multiple React instances. Same-version copies
+// on one React share a single context via globalWeakSingleton above.
 if (typeof window !== 'undefined') {
   if (window.__NuqsAdapterContext && window.__NuqsAdapterContext !== context) {
     console.error(error(303))
