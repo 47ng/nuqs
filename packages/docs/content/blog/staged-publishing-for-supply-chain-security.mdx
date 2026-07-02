@@ -264,13 +264,13 @@ If you made it all the way down here, thanks!
 Here are a few things I did as a package consumer to harden my dev environment:
 - Use pnpm 11, which has [better built-in security defaults](https://pnpm.io/supply-chain-security)
 	- All postinstall scripts are disabled and require [explicit opt-in](https://pnpm.io/settings#onlybuiltdependencies)
-	- [minimumReleaseAge](https://pnpm.io/settings#minimumreleaseage) set to 24h, leaving time for registry scanners like [Snyk](https://snyk.io) or [Socket.dev](https://socket.dev) to do their work
+	- [`minimumReleaseAge`](https://pnpm.io/settings#minimumreleaseage) set to 24h, leaving time for registry scanners like [Snyk](https://snyk.io) or [Socket.dev](https://socket.dev) to do their work
 - Use the free [Socket Firewall](https://docs.socket.dev/docs/socket-firewall-free) to block installation of known malicious packages
 
 I'm not entirely satisfied with those steps, they each have a flaw:
 - What if a postinstall-allowed package gets pwned?
-- minimumReleaseAge also applies to critical security vulnerability fixes (e.g. [Next.js RSC](https://react.dev/blog/2025/12/03/critical-security-vulnerability-in-react-server-components))
 - What if the malicious package is a [slopsquat](https://en.wikipedia.org/wiki/Slopsquatting) that flew under the radar of scanners, and passed through the firewall?
+- `minimumReleaseAge` also delays critical security vulnerability fixes (e.g. [Next.js RSC](https://react.dev/blog/2025/12/03/critical-security-vulnerability-in-react-server-components))
 
 Some of the things I'd like to do next:
 - Get a YubiKey for more secure 2FA TOTP secret storage (if someone would like to [sponsor](https://github.com/sponsors/franky47) it, I'd be eternally grateful 💖)
