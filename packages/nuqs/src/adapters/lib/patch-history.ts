@@ -3,6 +3,7 @@ import type { Emitter } from '../../lib/emitter'
 import { error } from '../../lib/errors'
 import { resetQueues, spinQueueResetMutex } from '../../lib/queues/reset'
 import { getSearchParams } from '../../lib/search-params'
+import { version } from '../../lib/version'
 
 export type SearchParamsSyncEmitterEvents = { update: URLSearchParams }
 
@@ -21,16 +22,8 @@ export function shouldPatchHistory(adapter: string): boolean {
   if (typeof history === 'undefined') {
     return false
   }
-  if (
-    history.nuqs?.version &&
-    history.nuqs.version !== '0.0.0-inject-version-here'
-  ) {
-    console.error(
-      error(409),
-      history.nuqs.version,
-      `0.0.0-inject-version-here`,
-      adapter
-    )
+  if (history.nuqs?.version && history.nuqs.version !== version) {
+    console.error(error(409), history.nuqs.version, version, adapter)
     return false
   }
   if (history.nuqs?.adapters?.includes(adapter)) {
@@ -41,8 +34,7 @@ export function shouldPatchHistory(adapter: string): boolean {
 
 export function markHistoryAsPatched(adapter: string): void {
   history.nuqs = history.nuqs ?? {
-    // This will be replaced by the prepack script
-    version: '0.0.0-inject-version-here',
+    version,
     adapters: []
   }
   history.nuqs.adapters.push(adapter)
@@ -67,7 +59,7 @@ export function patchHistory(
     resetQueues()
   })
 
-  debug(21, '0.0.0-inject-version-here', adapter)
+  debug(21, version, adapter)
   function sync(url: URL | string) {
     spinQueueResetMutex()
     try {
