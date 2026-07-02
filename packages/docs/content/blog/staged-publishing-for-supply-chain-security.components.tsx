@@ -5,6 +5,17 @@ import {
   type Commit
 } from '@/src/components/commit-graph'
 import { ContainerQueryHelper } from '@/src/components/responsive-helpers'
+import {
+  Timeline as TimelineRoot,
+  TimelineConnector,
+  TimelineContent,
+  TimelineDescription,
+  TimelineDot,
+  TimelineHeader,
+  TimelineItem,
+  TimelineTime,
+  TimelineTitle
+} from '@/src/components/ui/timeline'
 import { cn } from '@/src/lib/utils'
 import { SiGithub, SiNpm } from '@icons-pack/react-simple-icons'
 import { ArrowDown, ArrowRight } from 'lucide-react'
@@ -626,6 +637,48 @@ export function Branch({ name }: { name: keyof typeof branchColor }) {
     >
       {name}
     </code>
+  )
+}
+
+// Timeline of events ----------------------------------------------------------
+
+const timelineDate = new Intl.DateTimeFormat('en-US', {
+  month: 'long',
+  day: 'numeric',
+  timeZone: 'UTC'
+})
+
+export function Timeline({ children }: { children: ReactNode }) {
+  return <TimelineRoot className="my-8">{children}</TimelineRoot>
+}
+
+export function TimelineEvent({
+  date,
+  title,
+  children
+}: {
+  date: string
+  title: ReactNode
+  children?: ReactNode
+}) {
+  return (
+    <TimelineItem>
+      <TimelineDot />
+      <TimelineConnector className="bg-muted-foreground/40" />
+      <TimelineContent className="flex flex-col gap-1">
+        <TimelineHeader>
+          <TimelineTime dateTime={date}>
+            {timelineDate.format(new Date(date))}
+          </TimelineTime>
+          <TimelineTitle>{title}</TimelineTitle>
+        </TimelineHeader>
+        {children && (
+          <TimelineDescription className="[&_p]:my-0">
+            {children}
+          </TimelineDescription>
+        )}
+      </TimelineContent>
+    </TimelineItem>
   )
 }
 
