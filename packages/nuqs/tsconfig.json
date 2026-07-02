@@ -10,6 +10,11 @@
     "module": "ESNext",
     "moduleResolution": "Bundler",
     "resolveJsonModule": true,
+    "paths": {
+      // Virtual second copy of the library for the duplicate-copies tests,
+      // see the duplicateLibraryCopy plugin in vitest.config.ts
+      "nuqs-copy-b": ["./src/index.ts"]
+    },
     // Language & Environment
     "target": "ESNext",
     "lib": ["DOM", "DOM.Iterable", "ESNext"],

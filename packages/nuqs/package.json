@@ -199,6 +199,7 @@
     "tsdown": "^0.20.1",
     "typescript": "catalog:typescript",
     "valibot": "^1.2.0",
+    "vite": "catalog:vite",
     "vitest": "catalog:vitest",
     "vitest-browser-react": "2.0.4",
     "vitest-package-exports": "^1.1.2",

@@ -9,6 +9,7 @@ import {
 } from 'react'
 import type { Options } from '../../defs'
 import { error } from '../../lib/errors'
+import { globalWeakSingleton } from '../../lib/global-singleton'
 import type { AdapterInterface, UseAdapterHook } from './defs'
 
 export type AdapterProps = {
@@ -25,12 +26,21 @@ export type AdapterContext = AdapterProps & {
   useAdapter: UseAdapterHook
 }
 
-export const context: Context<AdapterContext> = createContext<AdapterContext>({
-  useAdapter() {
-    throw new Error(error(404))
+// Keyed by createContext identity: copies sharing one React instance share
+// the context, while distinct React instances keep isolated contexts.
+export const context: Context<AdapterContext> = globalWeakSingleton(
+  'adapter-context',
+  createContext,
+  () => {
+    const context = createContext<AdapterContext>({
+      useAdapter() {
+        throw new Error(error(404))
+      }
+    })
+    context.displayName = 'NuqsAdapterContext'
+    return context
   }
-})
-context.displayName = 'NuqsAdapterContext'
+)
 
 declare global {
   interface Window {

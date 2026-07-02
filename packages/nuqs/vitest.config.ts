@@ -1,7 +1,59 @@
 import { playwright } from '@vitest/browser-playwright'
+import { readFile } from 'node:fs/promises'
+import { resolve } from 'node:path'
+import { normalizePath, type Plugin } from 'vite'
 import { defineConfig, type ViteUserConfig } from 'vitest/config'
 
+const srcDir = normalizePath(resolve(import.meta.dirname, 'src'))
+const copyPrefix = '/@nuqs-copy-b'
+
+/**
+ * Serves a second, independent copy of the library source graph under the
+ * virtual `nuqs-copy-b` specifier, while sharing bare imports (react, etc.).
+ * This simulates a monorepo loading two physical copies of nuqs (issue #798)
+ * for the duplicate-copies tests.
+ */
+function duplicateLibraryCopy(): Plugin {
+  return {
+    name: 'nuqs:duplicate-library-copy',
+    enforce: 'pre',
+    async resolveId(source, importer, options) {
+      if (source === 'nuqs-copy-b') {
+        // The dependency scanner has no load hook for virtual modules,
+        // keep it from aborting the pre-bundling scan (see optimizeDeps).
+        if ('scan' in options && options.scan) {
+          return { id: source, external: true }
+        }
+        return copyPrefix + srcDir + '/index.ts'
+      }
+      if (source.startsWith(copyPrefix)) {
+        return source
+      }
+      if (importer?.startsWith(copyPrefix)) {
+        const resolved = await this.resolve(
+          source,
+          importer.slice(copyPrefix.length),
+          { skipSelf: true }
+        )
+        if (resolved?.id.startsWith(srcDir)) {
+          return copyPrefix + resolved.id
+        }
+        return resolved?.id
+      }
+    },
+    load(id) {
+      if (id.startsWith(copyPrefix)) {
+        return readFile(id.slice(copyPrefix.length), 'utf8')
+      }
+    }
+  }
+}
+
 const config: ViteUserConfig = defineConfig({
+  plugins: [duplicateLibraryCopy()],
+  optimizeDeps: {
+    exclude: ['nuqs-copy-b']
+  },
   define: {
     /**
      * We need to polyfill process.env because it is not meant to exist by default in a browser.
