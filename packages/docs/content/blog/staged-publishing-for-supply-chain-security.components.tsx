@@ -18,7 +18,7 @@ import {
   FastForwardGraph,
   MeasuredDiagram,
   type Connector
-} from './publishing-for-supply-chain-security.client'
+} from './staged-publishing-for-supply-chain-security.client'
 
 export const Arrow = () => (
   <ArrowRight className="-mt-px inline size-[1em]" aria-label="→" />
