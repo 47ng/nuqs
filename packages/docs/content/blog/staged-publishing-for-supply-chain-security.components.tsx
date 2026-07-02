@@ -6,13 +6,13 @@ import {
 } from '@/src/components/commit-graph'
 import { ContainerQueryHelper } from '@/src/components/responsive-helpers'
 import {
-  Timeline as TimelineRoot,
   TimelineConnector,
   TimelineContent,
   TimelineDescription,
   TimelineDot,
   TimelineHeader,
   TimelineItem,
+  Timeline as TimelineRoot,
   TimelineTime,
   TimelineTitle
 } from '@/src/components/ui/timeline'

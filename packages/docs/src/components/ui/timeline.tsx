@@ -35,7 +35,8 @@ export function TimelineDot({ className, ...props }: ComponentProps<'div'>) {
     <div
       data-slot="timeline-dot"
       className={cn(
-        'border-muted-foreground bg-background z-10 size-3.5 shrink-0 rounded-full border-2',
+        'border-muted-foreground bg-background z-10 size-3 shrink-0 rounded-full border-2',
+        'translate-y-0.5',
         className
       )}
       {...props}
@@ -52,7 +53,8 @@ export function TimelineConnector({
       aria-hidden
       data-slot="timeline-connector"
       className={cn(
-        'bg-border absolute top-3 bottom-0 left-1.5 w-0.5 group-last/timeline-item:hidden',
+        'bg-border absolute top-3 bottom-0 left-1.25 w-0.5 group-last/timeline-item:hidden',
+        'translate-y-0.5',
         className
       )}
       {...props}
