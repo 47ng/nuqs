@@ -37,7 +37,7 @@ Instead of publishing a package directly to the live npm registry, staged publis
 - Provenance ([trusted publishing signatures](https://docs.npmjs.com/trusted-publishers/)) just like before
 - An email notification that a package was staged
 - A way to download the staged tarball for inspection
-- A 2FA-gated way to <span className='text-red-600 dark:text-red-400'>reject</span> (drop) or <span className='text-green-600 dark:text-green-400'>approve</span> (publish onto the registry) the `package@version` combo.
+- A 2FA-gated way to **<span className='text-red-600 dark:text-red-400'>reject</span>** (drop) or **<span className='text-green-600 dark:text-green-400'>approve</span>** (publish onto the registry) the `package@version` combo.
 
 This is great: in the scenario above, an attacker would get their malicious package stuck in the staging area, I'd be notified about it via email, and I could review it before taking action:
 
@@ -72,15 +72,15 @@ So when staged publishing became available, I flipped the switch in nuqs: it wou
 
 Our publishing workflow was based on [semantic-release](https://github.com/semantic-release/semantic-release), which dealt with:
 
-- Bumping the version number based on [conventional commits](https://www.conventionalcommits.org/):
-  - `doc:`, `test:`, `ci:`, `chore:` etc. <Arrow/> no-op (no bump contribution)
-  - `fix:` <Arrow/> patch bump (`x.x.+1`)
-  - `feat:` <Arrow/> minor bump (`x.+1.0`)
-  - `any!:` <Arrow/> major bump (`+1.0.0`, note the `!`)
-- Creating Git tags
-- Creating a GitHub release (we had a custom release notes generator that would update the release body after publishing to thank contributors)
-- Publishing to npm
-- Commenting on PRs & related issues that the release was available
+1. Bumping the version number based on [conventional commits](https://www.conventionalcommits.org/):
+    - `doc:`, `test:`, `ci:`, `chore:` etc. <Arrow/> no-op (no bump contribution)
+    - `fix:` <Arrow/> patch bump (`x.x.+1`)
+    - `feat:` <Arrow/> minor bump (`x.+1.0`)
+    - `any!:` <Arrow/> major bump (`+1.0.0`, note the `!`)
+2. Creating a Git tag
+3. Creating a GitHub release (we had a custom release notes generator that would update the release body after publishing to thank contributors)
+4. Publishing to npm
+5. Commenting on PRs & related issues that the release was available
 
 This had been a great DX: in order to cut a release of nuqs, all I had to do was:
 
@@ -110,7 +110,7 @@ A **<Phase kind="draft">draft</Phase>** phase, triggered manually (via `workflow
 
 Then, the control flow would be handed over to the maintainer for 2FA. This is where **<Phase kind="validate">validation</Phase>** would occur. Before hitting "publish", we need to know if a staged tarball is legit. We'll come back to how this is done in a minute.
 
-Note that at this stage, if we decided to abort, nothing is immutable yet: no Git tag, the GitHub release is in draft mode and can be discarded, the staged npm package can be rejected. So another part of this design was to **allow steps to fail** without permanent consequences (I love the [_"let it crash"_](https://ferd.ca/the-zen-of-erlang.html) philosophy of Elixir/Erlang). That solves another issue I had with semantic-release: that process was not idempotent.
+Note that at this stage, if we decided to abort, **nothing is immutable** yet: no Git tag, the GitHub release is in draft mode and can be discarded, the staged npm package can be rejected. So another part of this design was to **allow steps to fail** without permanent consequences (I love the [_"let it crash"_](https://ferd.ca/the-zen-of-erlang.html) philosophy of Elixir/Erlang). That solves another issue I had with semantic-release: that process was not idempotent.
 
 Once we're good to **<Phase kind="finalize">finalize</Phase>** the release, the next two steps are manual again:
 
