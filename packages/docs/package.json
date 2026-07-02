@@ -43,6 +43,8 @@
     "@radix-ui/react-tooltip": "^1.2.8",
     "@tailwindcss/container-queries": "^0.1.1",
     "@tailwindcss/postcss": "^4.1.18",
+    "@tanstack/devtools-event-client": "0.4.4",
+    "@tanstack/react-devtools": "^0.10.7",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",

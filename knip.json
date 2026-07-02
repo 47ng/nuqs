@@ -23,6 +23,7 @@
         "src/index.ts",
         "src/index.server.ts",
         "src/debug.ts",
+        "src/devtools.ts",
         "src/testing.ts",
         "src/adapters/react.ts",
         "src/adapters/next.ts",

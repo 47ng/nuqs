@@ -1,9 +1,49 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { isDebugFlagSet } from './debug'
+import { addDebugSink, debug, isDebugFlagSet, warn } from './debug'
 import { sprintf } from './debug-messages'
 
 afterEach(() => {
   vi.unstubAllEnvs()
+})
+
+describe('debug/sink registry', () => {
+  it('does nothing and leaves args untouched when no sink is registered', () => {
+    const arg = { a: 1 }
+    expect(() => debug(6, 'id', 'key', arg)).not.toThrow()
+    expect(arg).toEqual({ a: 1 })
+  })
+
+  it('forwards code, args and warn flag to a registered sink', () => {
+    const sink = vi.fn()
+    const remove = addDebugSink(sink)
+    const cause = new Error('boom')
+    debug(6, 'id', 'key', { a: 1 })
+    warn(24, 'value', cause)
+    expect(sink).toHaveBeenNthCalledWith(1, 6, ['id', 'key', { a: 1 }])
+    expect(sink).toHaveBeenNthCalledWith(2, 24, ['value', cause], true)
+    remove()
+  })
+
+  it('fans out to every registered sink', () => {
+    const a = vi.fn()
+    const b = vi.fn()
+    const removeA = addDebugSink(a)
+    const removeB = addDebugSink(b)
+    debug(8)
+    expect(a).toHaveBeenCalledOnce()
+    expect(b).toHaveBeenCalledOnce()
+    removeA()
+    removeB()
+  })
+
+  it('stops calling a sink after its remover runs', () => {
+    const sink = vi.fn()
+    const remove = addDebugSink(sink)
+    debug(8)
+    remove()
+    debug(8)
+    expect(sink).toHaveBeenCalledOnce()
+  })
 })
 
 describe('debug/server (DEBUG env)', () => {
