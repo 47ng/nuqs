@@ -81,6 +81,12 @@ const SPONSORS: Sponsors = [
     img: 'https://avatars.githubusercontent.com/u/226357056?s=200&v=4'
   },
   {
+    handle: 'loops-so',
+    name: 'Loops',
+    url: 'https://loops.so/?utm_source=nuqs&utm_medium=sponsor&utm_campaign=nuqs',
+    img: 'https://avatars.githubusercontent.com/u/93287080?s=200&v=4'
+  },
+  {
     handle: 'pqoqubbw',
     name: 'dmytro',
     url: 'https://pqoqubbw.dev/',

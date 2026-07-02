@@ -923,6 +923,56 @@ describe('useQueryStates: adapter defaults', () => {
     expect(onUrlUpdate).toHaveBeenCalledOnce()
     expect(onUrlUpdate.mock.calls[0]![0].queryString).toBe('?test=pass')
   })
+  it('should use adapter default value for `history` when provided', async () => {
+    const onUrlUpdate = vi.fn<OnUrlUpdateFunction>()
+    const useTestHook = () => useQueryStates({ test: parseAsString })
+    const { result, act } = await renderHook(useTestHook, {
+      wrapper: withNuqsTestingAdapter({
+        defaultOptions: {
+          history: 'push'
+        },
+        onUrlUpdate
+      })
+    })
+    await act(() => result.current[1]({ test: 'update' }))
+    expect(onUrlUpdate).toHaveBeenCalledOnce()
+    expect(onUrlUpdate.mock.calls[0]![0].options.history).toBe('push')
+  })
+  it('should let a call-level `history` override the adapter default', async () => {
+    const onUrlUpdate = vi.fn<OnUrlUpdateFunction>()
+    const useTestHook = () => useQueryStates({ test: parseAsString })
+    const { result, act } = await renderHook(useTestHook, {
+      wrapper: withNuqsTestingAdapter({
+        defaultOptions: {
+          history: 'push'
+        },
+        onUrlUpdate
+      })
+    })
+    await act(() =>
+      result.current[1]({ test: 'update' }, { history: 'replace' })
+    )
+    expect(onUrlUpdate).toHaveBeenCalledOnce()
+    expect(onUrlUpdate.mock.calls[0]![0].options.history).toBe('replace')
+  })
+  it('should let a parser-level `history` override the adapter default', async () => {
+    const onUrlUpdate = vi.fn<OnUrlUpdateFunction>()
+    const useTestHook = () =>
+      useQueryStates({
+        test: parseAsString.withOptions({ history: 'replace' })
+      })
+    const { result, act } = await renderHook(useTestHook, {
+      wrapper: withNuqsTestingAdapter({
+        defaultOptions: {
+          history: 'push'
+        },
+        onUrlUpdate
+      })
+    })
+    await act(() => result.current[1]({ test: 'update' }))
+    expect(onUrlUpdate).toHaveBeenCalledOnce()
+    expect(onUrlUpdate.mock.calls[0]![0].options.history).toBe('replace')
+  })
 })
 
 describe('useQueryStates: process url search params', () => {

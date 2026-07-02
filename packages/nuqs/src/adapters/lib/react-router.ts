@@ -133,6 +133,22 @@ export function createReactRouterBasedAdapter({
       }
       emitter.on('update', onEmitterUpdate)
       window.addEventListener('popstate', onPopState)
+      // Catch up with the URL as it stands now that we're subscribed. A hook
+      // mounting during a navigation transition subscribes after the emitter
+      // has fired (e.g. a sibling route's shallow update), so its state would
+      // otherwise stay stale — and an outgoing route could then re-run a
+      // render-phase update and leak its value onto the route we navigated to
+      // (#1358). Only commit when it actually moved, to avoid a no-op re-render.
+      const caughtUp = applyChange(
+        new URLSearchParams(location.search),
+        watchKeys,
+        false
+      )(searchParams)
+      // Compare by value: with no watched keys `applyChange` always returns a
+      // fresh instance, so a reference check would re-render on every mount.
+      if (caughtUp.toString() !== searchParams.toString()) {
+        setSearchParams(caughtUp)
+      }
       return () => {
         emitter.off('update', onEmitterUpdate)
         window.removeEventListener('popstate', onPopState)

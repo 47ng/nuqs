@@ -8,5 +8,5 @@ export function cn(...inputs: ClassValue[]) {
 export const github = {
   owner: "47ng",
   repo: "nuqs",
-  branch: "master",
+  branch: "next",
 }

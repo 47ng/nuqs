@@ -8,6 +8,20 @@ First off, thanks for your help! 🙏
 2. Install dependencies with `pnpm install`
 3. Start the development environment with `pnpm dev`
 
+## Git hooks (optional)
+
+This repo ships [Git config-based hooks](.gitconfig) (requires Git 2.54+) that
+run the same lint checks as CI locally — Prettier and Sherif on `git commit`,
+Commitlint on the message, and the full lint suite on `git push`. They catch CI
+failures before you open a PR.
+
+They are **opt-in** and not installed automatically. To enable them in your
+clone, run once:
+
+```sh
+node --run setup:hooks
+```
+
 ## Project structure
 
 This monorepo contains:

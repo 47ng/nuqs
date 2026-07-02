@@ -109,6 +109,13 @@ export function NavigationSpy() {
 
 export function useNuqsNextAppRouterAdapter(): AdapterInterface {
   const router = useRouter()
+  // Exposed so the hooks' render-time reconcile can gate on the route the
+  // current searchParams belong to. Unlike `location.pathname`, `usePathname()`
+  // reflects the destination route as soon as a navigation transition starts
+  // (the browser URL only commits later), which keeps the gate accurate while a
+  // subtree renders mid-transition — e.g. revealed from the cacheComponents
+  // cache (#1273).
+  const pathname = usePathname()
   // `useSearchParams` is typed `ReadonlyURLSearchParams | null` for consumer
   // apps that have a `pages/` directory (Next injects that compat overload
   // through next-env.d.ts). Only truly null when rendered outside a
@@ -153,6 +160,7 @@ export function useNuqsNextAppRouterAdapter(): AdapterInterface {
   }, [])
   return {
     searchParams: optimisticSearchParams,
+    pathname,
     updateUrl,
     rateLimitFactor: NUM_HISTORY_CALLS_PER_UPDATE,
     autoResetQueueOnUpdate: false

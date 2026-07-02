@@ -450,6 +450,34 @@ describe('useQueryState: adapter defaults', () => {
     expect(onUrlUpdate).toHaveBeenCalledOnce()
     expect(onUrlUpdate.mock.calls[0]![0].queryString).toBe('?test=pass')
   })
+  it('should use adapter default value for `history` when provided', async () => {
+    const onUrlUpdate = vi.fn<OnUrlUpdateFunction>()
+    const { result, act } = await renderHook(() => useQueryState('test'), {
+      wrapper: withNuqsTestingAdapter({
+        defaultOptions: {
+          history: 'push'
+        },
+        onUrlUpdate
+      })
+    })
+    await act(() => result.current[1]('update'))
+    expect(onUrlUpdate).toHaveBeenCalledOnce()
+    expect(onUrlUpdate.mock.calls[0]![0].options.history).toBe('push')
+  })
+  it('should let a call-level `history` override the adapter default', async () => {
+    const onUrlUpdate = vi.fn<OnUrlUpdateFunction>()
+    const { result, act } = await renderHook(() => useQueryState('test'), {
+      wrapper: withNuqsTestingAdapter({
+        defaultOptions: {
+          history: 'push'
+        },
+        onUrlUpdate
+      })
+    })
+    await act(() => result.current[1]('update', { history: 'replace' }))
+    expect(onUrlUpdate).toHaveBeenCalledOnce()
+    expect(onUrlUpdate.mock.calls[0]![0].options.history).toBe('replace')
+  })
 })
 
 describe('useQueryState: edge cases & repros', () => {
