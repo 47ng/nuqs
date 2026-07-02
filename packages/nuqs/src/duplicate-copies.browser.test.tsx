@@ -106,6 +106,40 @@ describe('duplicate library copies', () => {
     expect(event.searchParams.get('q')).toBe('fast')
   })
 
+  it('shows optimistic state from the other copy before the URL commits', async () => {
+    const onUrlUpdate = vi.fn<adapterA.OnUrlUpdateFunction>()
+    function DemoA() {
+      const [q] = nuqsA.useQueryState('q')
+      return <span data-testid="a">{q}</span>
+    }
+    function DemoB() {
+      const [, setQ] = nuqsB.useQueryState('q')
+      return (
+        <button
+          data-testid="b"
+          onClick={() =>
+            setQ('optimistic', { limitUrlUpdates: nuqsB.throttle(500) })
+          }
+        />
+      )
+    }
+    render(
+      <>
+        <DemoA />
+        <DemoB />
+      </>,
+      {
+        wrapper: adapterA.withNuqsTestingAdapter({
+          onUrlUpdate,
+          rateLimitFactor: 1
+        })
+      }
+    )
+    await page.getByTestId('b').click()
+    await expect.element(page.getByTestId('a')).toHaveTextContent('optimistic')
+    expect(onUrlUpdate).not.toHaveBeenCalled()
+  })
+
   it('shows pending debounced state from the other copy', async () => {
     const onUrlUpdate = vi.fn<adapterA.OnUrlUpdateFunction>()
     function DemoA() {

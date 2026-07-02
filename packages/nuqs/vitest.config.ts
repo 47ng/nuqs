@@ -1,10 +1,10 @@
 import { playwright } from '@vitest/browser-playwright'
 import { readFile } from 'node:fs/promises'
-import { resolve } from 'node:path'
 import { normalizePath, type Plugin } from 'vite'
 import { defineConfig, type ViteUserConfig } from 'vitest/config'
 
-const srcDir = normalizePath(resolve(import.meta.dirname, 'src'))
+const pkgDir = normalizePath(import.meta.dirname)
+const srcDir = pkgDir + '/src'
 const copyPrefix = '/@nuqs-copy-b'
 
 /**
@@ -37,6 +37,18 @@ function duplicateLibraryCopy(): Plugin {
         )
         if (resolved?.id.startsWith(srcDir)) {
           return copyPrefix + resolved.id
+        }
+        if (
+          resolved &&
+          !resolved.external &&
+          resolved.id.startsWith(pkgDir) &&
+          !resolved.id.includes('/node_modules/')
+        ) {
+          // A src-internal module escaping the prefix would be shared by
+          // module identity, silently defeating the duplicate-copies tests.
+          this.error(
+            `duplicateLibraryCopy leak: ${source} (from ${importer}) resolved outside the copy graph: ${resolved.id}`
+          )
         }
         return resolved?.id
       }
