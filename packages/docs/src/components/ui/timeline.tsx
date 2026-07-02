@@ -35,7 +35,7 @@ export function TimelineDot({ className, ...props }: ComponentProps<'div'>) {
     <div
       data-slot="timeline-dot"
       className={cn(
-        'border-primary bg-background z-10 size-3.5 shrink-0 rounded-full border-2',
+        'border-muted-foreground bg-background z-10 size-3.5 shrink-0 rounded-full border-2',
         className
       )}
       {...props}
@@ -110,7 +110,11 @@ export function TimelineDescription({
   return (
     <div
       data-slot="timeline-description"
-      className={cn('text-muted-foreground text-sm', className)}
+      className={cn(
+        'text-muted-foreground text-sm',
+        '[&_a:hover]:text-foreground [&_a]:text-current [&_a]:underline [&_a]:decoration-current [&_a]:decoration-1 [&_a]:transition-all',
+        className
+      )}
       {...props}
     />
   )

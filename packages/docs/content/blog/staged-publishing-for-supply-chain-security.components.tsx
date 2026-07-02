@@ -664,7 +664,7 @@ export function TimelineEvent({
   return (
     <TimelineItem>
       <TimelineDot />
-      <TimelineConnector className="bg-muted-foreground/40" />
+      <TimelineConnector />
       <TimelineContent className="flex flex-col gap-1">
         <TimelineHeader>
           <TimelineTime dateTime={date}>
