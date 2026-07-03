@@ -193,9 +193,7 @@ export class ThrottledQueue {
       search = processUrlSearchParams(search)
     }
     try {
-      compose(transitions, () => {
-        updateUrl(search, options)
-      })
+      compose(transitions, () => updateUrl(search, options))
       return [search, null]
     } catch (err) {
       // This may fail due to rate-limiting of history methods,

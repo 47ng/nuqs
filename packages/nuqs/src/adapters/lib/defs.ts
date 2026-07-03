@@ -5,7 +5,7 @@ export type AdapterOptions = Pick<Options, 'history' | 'scroll' | 'shallow'>
 export type UpdateUrlFunction = (
   search: URLSearchParams,
   options: Required<AdapterOptions>
-) => void
+) => void | Promise<void>
 
 export type UseAdapterHook = (watchKeys: string[]) => AdapterInterface
 
