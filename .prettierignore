@@ -4,3 +4,6 @@
 **/dist/
 **/.next/
 **/.turbo/
+
+# Generated API snapshots, raw dist text (see packages/nuqs/src/api.test.ts)
+packages/nuqs/tests/snapshots/

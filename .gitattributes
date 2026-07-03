@@ -1,0 +1,3 @@
+# API snapshots are compared byte-for-byte by vitest's toMatchFileSnapshot,
+# so they must not be CRLF-converted on Windows checkouts.
+packages/nuqs/tests/snapshots/** text eol=lf
