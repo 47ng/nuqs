@@ -22,8 +22,9 @@ type NavigateOptions = {
   preventScrollReset?: boolean
   state?: unknown
 }
-// In React Router v7+, navigate returns a Promise that resolves when the
-// navigation completes (loaders included). Earlier versions return void.
+// In React Router v7+ data routers, navigate may return a Promise that
+// resolves when the navigation completes (loaders included). Declarative
+// routers (eg: BrowserRouter) and earlier versions return void.
 type NavigateFn = (
   url: NavigateUrl,
   options: NavigateOptions

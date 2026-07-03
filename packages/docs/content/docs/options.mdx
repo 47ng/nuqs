@@ -330,8 +330,9 @@ function ClientComponent({ data }) {
   In React Router v7 and above, `isLoading{:ts}` stays true until route loaders
   have settled (this requires React 19, where transitions can await promises).
 
-  React Router v6 and Remix don't expose navigation completion, so `isLoading{:ts}`
-  only covers the URL update there: use [`useNavigation{:ts}`](https://reactrouter.com/6.30.1/hooks/use-navigation)
+  In React Router v6 and Remix, `navigate(){:ts}` doesn't report navigation
+  completion, so `isLoading{:ts}` only covers the URL update there: use
+  [`useNavigation{:ts}`](https://reactrouter.com/6.30.1/hooks/use-navigation)
   to track loader states instead.
 </Callout>
 
