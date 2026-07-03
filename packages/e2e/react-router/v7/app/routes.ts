@@ -62,6 +62,7 @@ export default [
     route('/repro-982',                 './routes/repro-982.tsx'),
     route('/repro-1099/useQueryState',  './routes/repro-1099.useQueryState.tsx'),
     route('/repro-1099/useQueryStates', './routes/repro-1099.useQueryStates.tsx'),
+    route('/repro-1184',                './routes/repro-1184.tsx'),
     route('/repro-1293/a',              './routes/repro-1293.a.tsx'),
     route('/repro-1293/b',              './routes/repro-1293.b.tsx'),
     route('/repro-1358/a',              './routes/repro-1358.a.tsx'),
