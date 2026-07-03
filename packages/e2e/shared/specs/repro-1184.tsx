@@ -15,8 +15,8 @@ export function Repro1184({ serverCounter }: Props) {
     startTransition
   })
   // Logging from an effect (not the render body) only captures committed
-  // renders, so the test observes the isPending flag as painted, ignoring
-  // render attempts React discards before paint.
+  // renders, so the test observes the isPending flag as committed, ignoring
+  // render attempts React discards.
   useEffect(() => {
     console.log(
       `repro-1184 loading:${isLoading} client:${counter} server:${serverCounter}`

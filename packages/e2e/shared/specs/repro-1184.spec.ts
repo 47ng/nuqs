@@ -15,6 +15,7 @@ export const testRepro1184 = defineTest('repro-1184', ({ path }) => {
     await page.getByRole('button', { name: 'Increment' }).click()
     await expect(page.locator('#client-counter')).toHaveText('1')
     await expect(page.locator('#server-counter')).toHaveText('1')
+    await expect(page.locator('#loading')).toHaveText('idle')
 
     const commits = logSpy.logs.filter(log => log.startsWith('repro-1184'))
     const firstPending = commits.findIndex(log => log.includes('loading:true'))
@@ -29,5 +30,17 @@ export const testRepro1184 = defineTest('repro-1184', ({ path }) => {
       pendingDroppedEarly,
       'the transition should stay pending until the loader returns fresh data'
     ).toEqual([])
+  })
+
+  it('settles the transition when a second update interrupts the navigation', async ({
+    page
+  }) => {
+    await navigateTo(page, path)
+    const increment = page.getByRole('button', { name: 'Increment' })
+    await increment.click()
+    await increment.click()
+    await expect(page.locator('#client-counter')).toHaveText('2')
+    await expect(page.locator('#server-counter')).toHaveText('2')
+    await expect(page.locator('#loading')).toHaveText('idle')
   })
 })
