@@ -4,11 +4,16 @@ import { fileURLToPath, pathToFileURL } from 'node:url'
 import { extractDts, extractRuntime, resolvePackageEntriesSync } from 'tsnapi'
 import { describe, expect, it } from 'vitest'
 
-// Snapshots the public API of each package.json entry point,
+// Snapshots the public API of each package.json entry point (issue #1059),
 // as extracted from the built output in dist:
 // runtime exports, type declarations, and importability.
-// Update the snapshots when updating the API with `pnpm test:unit -u`
+// Update the snapshots when changing the API
+// with `pnpm build && pnpm test:unit -u`
 // (and adjust the documentation accordingly).
+// Limitation: types referenced in signatures but not exported
+// (eg: LimitUrlUpdates) appear by name only, without their declaration,
+// so changes to their shape don't surface here;
+// behavioral coverage for those lives in tests/*.test-d.ts.
 
 const packageRoot = fileURLToPath(new URL('..', import.meta.url))
 const distRoot = join(packageRoot, 'dist')
@@ -50,7 +55,8 @@ async function loadChunkSources() {
 // 2. Specifiers are resolved to dist-root-relative form (the exact map keys)
 //    to bypass tsnapi's match-by-basename fallback,
 //    which is ambiguous when dist files share a basename (eg: testing.js).
-// This shim could be upstreamed as a tsnapi option (see issue #1059).
+// This shim could be upstreamed to tsnapi as a chunk-sources option:
+// https://github.com/antfu/tsnapi
 function canonicalizeSpecifiers(
   code: string,
   entryDir: string,
@@ -70,6 +76,39 @@ function distSource(map: Map<string, string>, key: string) {
     throw new Error(`No dist source found for ${key}`)
   }
   return source
+}
+
+// Direct map hits are load-bearing (see canonicalizeSpecifiers):
+// a miss would engage tsnapi's ambiguous basename fallback,
+// or signal that the canonicalization regex no longer matches the dist output.
+function assertSpecifiersResolve(
+  code: string,
+  map: Map<string, string>,
+  entryName: string
+) {
+  for (const [, specifier = ''] of code.matchAll(/from "(\.[^"]+)"/g)) {
+    if (!map.has(specifier)) {
+      throw new Error(
+        `Unresolved import specifier in ${entryName}: ${specifier}`
+      )
+    }
+  }
+}
+
+// Guards against tsnapi degradations that would otherwise stay green:
+// a re-export it cannot resolve renders as a bare `export { name }`
+// instead of erroring (resolved declarations carry their full text,
+// and passthrough re-exports keep their `from` clause),
+// and a failed extraction renders as an empty snapshot,
+// indistinguishable from a side-effect-only module (only ./debug is one).
+function assertExtracted(snapshot: string, entryName: string) {
+  const collapsed = snapshot.match(/^export (?:type )?\{[^}]*\}$/m)
+  if (collapsed) {
+    throw new Error(`Unresolved re-export in ${entryName}: ${collapsed[0]}`)
+  }
+  if (snapshot.trim() === '' && entryName !== './debug') {
+    throw new Error(`Empty API snapshot for ${entryName}`)
+  }
 }
 
 function stemOf(entryName: string) {
@@ -92,9 +131,11 @@ describe('public API', () => {
           posix.dirname(path),
           '.js'
         )
+        assertSpecifiersResolve(code, chunkSources.runtime, entry.name)
         const snapshot = await extractRuntime(path, code, {
           chunkSources: chunkSources.runtime
         })
+        assertExtracted(snapshot, entry.name)
         await expect(normalize(snapshot)).toMatchFileSnapshot(
           join(snapshotRoot, `${stem}.snapshot.js`)
         )
@@ -114,15 +155,36 @@ describe('public API', () => {
           posix.dirname(path),
           '.d.mts'
         )
+        assertSpecifiersResolve(code, chunkSources.dts, entry.name)
         const snapshot = await extractDts(path, code, {
           chunkSources: chunkSources.dts
         })
+        assertExtracted(snapshot, entry.name)
         await expect(normalize(snapshot)).toMatchFileSnapshot(
           join(snapshotRoot, `${stem}.snapshot.d.ts`)
         )
       })
     }
   }
+
+  it('covers every package.json export', async () => {
+    const pkg = JSON.parse(
+      await readFile(join(packageRoot, 'package.json'), 'utf-8')
+    )
+    const expected = Object.keys(pkg.exports)
+      .filter(name => name !== './package.json')
+      .sort()
+    // The whole suite is generated from tsnapi's entry enumeration:
+    // this pins it to the exports map, so an entry it fails to resolve
+    // (unusual condition shape, tsnapi regression) cannot ship untracked.
+    expect(entries.map(entry => entry.name).sort()).toEqual(expected)
+    for (const entry of entries) {
+      // All entries currently resolve both files; if a types-only or
+      // runtime-only entry ever appears, make the exception explicit here.
+      expect(entry.runtime, `${entry.name} runtime`).not.toBeNull()
+      expect(entry.dts, `${entry.name} types`).not.toBeNull()
+    }
+  })
 
   it('has no orphaned snapshots', async () => {
     const expected = entries

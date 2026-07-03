@@ -5,5 +5,6 @@
 **/.next/
 **/.turbo/
 
-# Generated API snapshots, raw dist text (see packages/nuqs/src/api.test.ts)
+# Generated API snapshot skeletons (see packages/nuqs/src/api.test.ts);
+# their duplicate `_` parameters aren't parseable by prettier.
 packages/nuqs/tests/snapshots/
