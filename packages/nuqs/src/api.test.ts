@@ -1,7 +1,8 @@
 import { readdir, readFile } from 'node:fs/promises'
 import { join, posix, relative, sep } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
-import { afterAll, describe, expect, it } from 'vitest'
+import { extractDts, extractRuntime, resolvePackageEntriesSync } from 'tsnapi'
+import { describe, expect, it } from 'vitest'
 
 // Snapshots the public API of each package.json entry point (issue #1059),
 // as extracted from the built output in dist:
@@ -14,68 +15,21 @@ import { afterAll, describe, expect, it } from 'vitest'
 // so changes to their shape don't surface here;
 // behavioral coverage for those lives in tests/*.test-d.ts.
 
-// -- Timing instrumentation --
-
-type Timing = { total: number; count: number; max: number }
-const timings = new Map<string, Timing>()
-
-function record(label: string, ms: number) {
-  const timing = timings.get(label) ?? { total: 0, count: 0, max: 0 }
-  timing.total += ms
-  timing.count += 1
-  timing.max = Math.max(timing.max, ms)
-  timings.set(label, timing)
-}
-
-async function timed<T>(label: string, fn: () => T | Promise<T>): Promise<T> {
-  const start = performance.now()
-  try {
-    return await fn()
-  } finally {
-    record(label, performance.now() - start)
-  }
-}
-
-afterAll(() => {
-  const ms = (value: number) => value.toFixed(1).padStart(7)
-  const rows = [...timings.entries()].sort((a, b) => b[1].total - a[1].total)
-  const lines = rows.map(
-    ([label, { total, count, max }]) =>
-      `${ms(total)} ms  ${String(count).padStart(3)}×  ${ms(max)} ms  ${label}`
-  )
-  process.stdout.write(
-    `\napi.test.ts step timings (total | calls | max):\n${lines.join('\n')}\n\n`
-  )
-})
-
-// -- Module initialization (runs at collection time) --
-
-const { extractDts, extractRuntime, resolvePackageEntriesSync } = await timed(
-  'import tsnapi (incl. oxc-parser binding)',
-  () => import('tsnapi')
-)
-
 const packageRoot = fileURLToPath(new URL('..', import.meta.url))
 const distRoot = join(packageRoot, 'dist')
 const snapshotRoot = join(packageRoot, 'tests', 'snapshots')
-const entries = await timed('resolvePackageEntriesSync', () =>
-  resolvePackageEntriesSync(packageRoot)
-)
-const chunkSources = await timed('loadChunkSources', loadChunkSources)
+const entries = resolvePackageEntriesSync(packageRoot)
+const chunkSources = await loadChunkSources()
 
 async function loadChunkSources() {
-  const files = (await timed('  readdir dist', () =>
-    readdir(distRoot, { recursive: true })
-  ))
+  const files = (await readdir(distRoot, { recursive: true }))
     .map(file => file.split(sep).join('/'))
     .filter(path => path.endsWith('.d.ts') || path.endsWith('.js'))
     .sort()
-  const sources = await timed('  readFile dist sources', () =>
-    Promise.all(
-      files.map(
-        async path =>
-          [path, await readFile(join(distRoot, path), 'utf-8')] as const
-      )
+  const sources = await Promise.all(
+    files.map(
+      async path =>
+        [path, await readFile(join(distRoot, path), 'utf-8')] as const
     )
   )
   const runtime = new Map<string, string>()
@@ -172,56 +126,42 @@ describe('public API', () => {
       const runtimeFile = entry.runtime
       const path = relative(distRoot, runtimeFile).split(sep).join('/')
       it(`${entry.name} (runtime)`, async () => {
-        const code = await timed('canonicalize + assert (runtime)', () => {
-          const code = canonicalizeSpecifiers(
-            distSource(chunkSources.runtime, `./${path}`),
-            posix.dirname(path),
-            '.js'
-          )
-          assertSpecifiersResolve(code, chunkSources.runtime, entry.name)
-          return code
-        })
-        const snapshot = await timed('extractRuntime', () =>
-          extractRuntime(path, code, {
-            chunkSources: chunkSources.runtime
-          })
+        const code = canonicalizeSpecifiers(
+          distSource(chunkSources.runtime, `./${path}`),
+          posix.dirname(path),
+          '.js'
         )
+        assertSpecifiersResolve(code, chunkSources.runtime, entry.name)
+        const snapshot = await extractRuntime(path, code, {
+          chunkSources: chunkSources.runtime
+        })
         assertExtracted(snapshot, entry.name)
-        await timed('toMatchFileSnapshot (runtime)', () =>
-          expect(normalize(snapshot)).toMatchFileSnapshot(
-            join(snapshotRoot, `${stem}.snapshot.js`)
-          )
+        await expect(normalize(snapshot)).toMatchFileSnapshot(
+          join(snapshotRoot, `${stem}.snapshot.js`)
         )
       })
       it(`${entry.name} (import)`, async () => {
-        await timed('import dist entry', () =>
-          expect(import(pathToFileURL(runtimeFile).href)).resolves.toBeDefined()
-        )
+        await expect(
+          import(pathToFileURL(runtimeFile).href)
+        ).resolves.toBeDefined()
       })
     }
     if (entry.dts) {
       const path = relative(distRoot, entry.dts).split(sep).join('/')
       it(`${entry.name} (types)`, async () => {
-        const code = await timed('canonicalize + assert (types)', () => {
-          const key = `./${path.replace(/\.d\.ts$/, '.d.mts')}`
-          const code = canonicalizeSpecifiers(
-            distSource(chunkSources.dts, key),
-            posix.dirname(path),
-            '.d.mts'
-          )
-          assertSpecifiersResolve(code, chunkSources.dts, entry.name)
-          return code
-        })
-        const snapshot = await timed('extractDts', () =>
-          extractDts(path, code, {
-            chunkSources: chunkSources.dts
-          })
+        const key = `./${path.replace(/\.d\.ts$/, '.d.mts')}`
+        const code = canonicalizeSpecifiers(
+          distSource(chunkSources.dts, key),
+          posix.dirname(path),
+          '.d.mts'
         )
+        assertSpecifiersResolve(code, chunkSources.dts, entry.name)
+        const snapshot = await extractDts(path, code, {
+          chunkSources: chunkSources.dts
+        })
         assertExtracted(snapshot, entry.name)
-        await timed('toMatchFileSnapshot (types)', () =>
-          expect(normalize(snapshot)).toMatchFileSnapshot(
-            join(snapshotRoot, `${stem}.snapshot.d.ts`)
-          )
+        await expect(normalize(snapshot)).toMatchFileSnapshot(
+          join(snapshotRoot, `${stem}.snapshot.d.ts`)
         )
       })
     }
