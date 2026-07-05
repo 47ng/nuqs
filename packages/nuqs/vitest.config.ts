@@ -24,11 +24,6 @@ const config: ViteUserConfig = defineConfig({
     env: {
       IS_REACT_ACT_ENVIRONMENT: 'true'
     },
-    server: {
-      deps: {
-        inline: ['vitest-package-exports']
-      }
-    },
     projects: [
       {
         extends: true,
