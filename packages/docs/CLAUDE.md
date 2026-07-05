@@ -9,7 +9,7 @@ local. See [#1454](https://github.com/47ng/nuqs/pull/1454) for the mechanism.
 ## Gating unreleased content
 
 Wrap the new content in `<SinceVersion v="x.y.z">`, where `x.y.z` is the nuqs
-version the feature ships in:
+version the feature ships in (ask the user which one to use):
 
 ```mdx
 <SinceVersion v="2.10.0">
