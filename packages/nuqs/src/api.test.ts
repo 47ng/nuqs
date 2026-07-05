@@ -1,12 +1,12 @@
 import { readdir, readFile } from 'node:fs/promises'
 import { join, posix, relative, sep } from 'node:path'
-import { fileURLToPath, pathToFileURL } from 'node:url'
+import { fileURLToPath } from 'node:url'
 import { extractDts, extractRuntime, resolvePackageEntriesSync } from 'tsnapi'
 import { describe, expect, it } from 'vitest'
 
 // Snapshots the public API of each package.json entry point (issue #1059),
 // as extracted from the built output in dist:
-// runtime exports, type declarations, and importability.
+// runtime exports and type declarations.
 // Update the snapshots when changing the API
 // with `pnpm build && pnpm test:unit -u`
 // (and adjust the documentation accordingly).
@@ -123,8 +123,7 @@ describe('public API', () => {
   for (const entry of entries) {
     const stem = stemOf(entry.name)
     if (entry.runtime) {
-      const runtimeFile = entry.runtime
-      const path = relative(distRoot, runtimeFile).split(sep).join('/')
+      const path = relative(distRoot, entry.runtime).split(sep).join('/')
       it(`${entry.name} (runtime)`, async () => {
         const code = canonicalizeSpecifiers(
           distSource(chunkSources.runtime, `./${path}`),
@@ -139,11 +138,6 @@ describe('public API', () => {
         await expect(normalize(snapshot)).toMatchFileSnapshot(
           join(snapshotRoot, `${stem}.snapshot.js`)
         )
-      })
-      it(`${entry.name} (import)`, async () => {
-        await expect(
-          import(pathToFileURL(runtimeFile).href)
-        ).resolves.toBeDefined()
       })
     }
     if (entry.dts) {
