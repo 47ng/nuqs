@@ -28,6 +28,9 @@ export type AdapterContext = AdapterProps & {
 
 // Keyed by createContext identity: copies sharing one React instance share
 // the context, while distinct React instances keep isolated contexts.
+// Revisit in nuqs@3 (react@^19 only): the React 18/19 Provider shape hazard
+// goes away, but distinct React instances on one page would then share one
+// context object (concurrent renders interleave its _currentValue).
 export const context: Context<AdapterContext> = globalWeakSingleton(
   'adapter-context',
   createContext,
