@@ -154,7 +154,7 @@ function extractSearchParams(input: LoaderInput): URLSearchParams {
       return searchParams
     }
     if (typeof input === 'string') {
-      if (URL.hasOwnProperty('canParse') && URL.canParse(input)) {
+      if (URL.canParse(input)) {
         return new URL(input).searchParams
       }
       return new URLSearchParams(input)
