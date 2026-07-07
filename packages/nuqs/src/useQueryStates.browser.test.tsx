@@ -332,6 +332,23 @@ describe('useQueryStates: dynamic defaults', () => {
   })
 })
 
+describe('useQueryStates: shared parse cache', () => {
+  it('shares parsed values between hooks bound to the same key and parser', async () => {
+    const objParser = parseAsJson<{ v: number }>(x => x as { v: number })
+    const { result } = await renderHook(
+      () => ({
+        a: useQueryStates({ obj: objParser }),
+        b: useQueryStates({ obj: objParser })
+      }),
+      {
+        wrapper: withNuqsTestingAdapter({ searchParams: '?obj={"v":1}' })
+      }
+    )
+    expect(result.current.a[0].obj).toEqual({ v: 1 })
+    expect(result.current.b[0].obj).toBe(result.current.a[0].obj)
+  })
+})
+
 describe('useQueryStates: optimistic adoption', () => {
   it('keeps the exact value identity for the writer (non-identity parse round-trip)', async () => {
     const objParser = parseAsJson<{ v: number }>(x => x as { v: number })

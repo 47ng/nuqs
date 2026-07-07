@@ -7,6 +7,7 @@ import {
 import type { Nullable, Options, UrlKeys } from './defs'
 import { compareQuery } from './lib/compare'
 import { debug } from './lib/debug'
+import { parseWithCache } from './lib/parse-cache'
 import { debounceController } from './lib/queues/debounce'
 import { defaultRateLimit } from './lib/queues/rate-limiting'
 import {
@@ -14,7 +15,6 @@ import {
   type UpdateQueuePushArgs
 } from './lib/queues/throttle'
 import { useSyncExternalStores } from './lib/queues/useSyncExternalStores'
-import { safeParse } from './lib/safe-parse'
 import { isAbsentFromUrl, type Query } from './lib/search-params'
 import { type GenericParser } from './parsers'
 
@@ -449,7 +449,7 @@ function parseMap<KeyMap extends UseQueryStatesKeysMap>(
     const value = isAbsentFromUrl(query)
       ? null
       : // we have properly narrowed `query` here, but TS doesn't keep track of that
-        safeParse(parser.parse, query as string & Array<string>, urlKey)
+        parseWithCache(urlKey, parser.parse, query as string & Array<string>)
 
     out[stateKey as keyof KeyMap] = value ?? null
     if (cachedQuery) {

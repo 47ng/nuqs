@@ -7,6 +7,7 @@ import {
   type ReactElement,
   type ReactNode
 } from 'react'
+import { clearParseCache } from '../lib/parse-cache'
 import { resetQueues } from '../lib/queues/reset'
 import { renderQueryString } from './custom'
 import { context, type AdapterProps } from './lib/context'
@@ -95,6 +96,7 @@ export function NuqsTestingAdapter({
   const locationSearchRef = useRef(renderedInitialSearchParams)
   if (resetUrlUpdateQueueOnMount) {
     resetQueues()
+    clearParseCache()
   }
   const [searchParams, setSearchParams] = useState(
     () => new URLSearchParams(locationSearchRef.current)
