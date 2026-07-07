@@ -20,6 +20,7 @@ import { debounce, throttle } from './lib/queues/rate-limiting'
 import {
   parseAsArrayOf,
   parseAsInteger,
+  parseAsIsoDateTime,
   parseAsJson,
   parseAsNativeArrayOf,
   parseAsString
@@ -254,6 +255,80 @@ describe('useQueryStates: referential equality', () => {
     expect(state.arr[0]).toBe(defaults.arr[0])
     expect(state.multi).toBe(defaults.multi)
     expect(state.multi[0]).toBe(defaults.multi[0])
+  })
+})
+
+describe('useQueryStates: dynamic defaults', () => {
+  it('reacts to changes in object default values (#1193)', async () => {
+    const useTestHook = ({ min } = { min: 0 }) =>
+      useQueryStates({
+        range: parseAsJson<{ min: number }>(
+          x => x as { min: number }
+        ).withDefault({ min })
+      })
+    const { result, rerender } = await renderHook(useTestHook, {
+      wrapper: withNuqsTestingAdapter()
+    })
+    expect(result.current[0].range).toEqual({ min: 0 })
+    rerender({ min: 5 })
+    expect(result.current[0].range).toEqual({ min: 5 })
+  })
+  it('reacts to changes in Date default values (#1193)', async () => {
+    const useTestHook = ({ time } = { time: 0 }) =>
+      useQueryStates({
+        date: parseAsIsoDateTime.withDefault(new Date(time))
+      })
+    const { result, rerender } = await renderHook(useTestHook, {
+      wrapper: withNuqsTestingAdapter()
+    })
+    expect(result.current[0].date.getTime()).toBe(0)
+    rerender({ time: 86_400_000 })
+    expect(result.current[0].date.getTime()).toBe(86_400_000)
+  })
+  it('keeps the setter identity and reads fresh defaults after a defaults change', async () => {
+    const onUrlUpdate = vi.fn<OnUrlUpdateFunction>()
+    const useTestHook = ({ def } = { def: 0 }) =>
+      useQueryStates({ count: parseAsInteger.withDefault(def) })
+    const { result, rerender, act } = await renderHook(useTestHook, {
+      wrapper: withNuqsTestingAdapter({ onUrlUpdate })
+    })
+    const [, initialSetter] = result.current
+    rerender({ def: 5 })
+    expect(result.current[1]).toBe(initialSetter)
+    // The functional updater sees the new default while the key
+    // is absent from the URL
+    let observedDefault: number | undefined
+    await act(() =>
+      result.current[1](old => {
+        observedDefault = old.count
+        return null
+      })
+    )
+    expect(observedDefault).toBe(5)
+    // clearOnDefault compares against the new default
+    await act(() => result.current[1]({ count: 5 }))
+    expect(onUrlUpdate.mock.calls.at(-1)![0].queryString).toBe('')
+    // The previous default is a regular value now
+    await act(() => result.current[1]({ count: 0 }))
+    expect(onUrlUpdate.mock.calls.at(-1)![0].queryString).toBe('?count=0')
+  })
+  it('keeps a stable state identity when equal defaults are recreated across renders', async () => {
+    // A new default object is created on every render,
+    // but is structurally equal (via the parser's `eq`).
+    const useTestHook = () =>
+      useQueryStates({
+        obj: parseAsJson<{ a: number }>(x => x as { a: number }).withDefault({
+          a: 1
+        })
+      })
+    const { result, rerender } = await renderHook(useTestHook, {
+      wrapper: withNuqsTestingAdapter()
+    })
+    const [{ obj: initialObj }, initialSetter] = result.current
+    rerender()
+    const [{ obj }, setter] = result.current
+    expect(obj).toBe(initialObj)
+    expect(setter).toBe(initialSetter)
   })
 })
 

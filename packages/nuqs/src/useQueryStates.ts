@@ -125,17 +125,24 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
   // render and skip the reconcile (#1273). A genuine `<Activity>` reveal keeps
   // the same pathname, so it still reconciles.
   const committedPathnameRef = useRef<string | null>(null)
-  const defaultValues = useMemo(
-    () =>
-      Object.fromEntries(
-        Object.keys(keyMap).map(key => [key, keyMap[key]!.defaultValue ?? null])
-      ) as Values<KeyMap>,
-    [
-      Object.values(keyMap)
-        .map(({ defaultValue }) => defaultValue)
-        .join(',')
-    ]
-  )
+  // Compared by value (with the parser's `eq` when provided) to keep a stable
+  // identity across renders while reacting to actual changes: object & Date
+  // defaults are both referentially stable and dynamic (#1193, #762).
+  const defaultValuesRef = useRef<Values<KeyMap> | null>(null)
+  const nextDefaultValues = Object.fromEntries(
+    Object.keys(keyMap).map(key => [key, keyMap[key]!.defaultValue ?? null])
+  ) as Values<KeyMap>
+  const defaultValues =
+    defaultValuesRef.current !== null &&
+    compareDefaultValues(defaultValuesRef.current, nextDefaultValues, keyMap)
+      ? defaultValuesRef.current
+      : nextDefaultValues
+  defaultValuesRef.current = defaultValues
+  // The setter reads parsers through this ref so it always sees the current
+  // defaultValue/serialize/eq, while keeping a stable identity when reactive
+  // defaults change (none of its dependencies track parser contents).
+  const keyMapRef = useRef(keyMap)
+  keyMapRef.current = keyMap
 
   const isMultiUrlKey = useMemo(
     () =>
@@ -255,7 +262,9 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
       const newState: Partial<Nullable<KeyMap>> =
         typeof stateUpdater === 'function'
           ? (stateUpdater(
-              applyDefaultValues(stateRef.current, defaultValues)
+              // Read through the ref (not the render-scoped value) to keep
+              // the setter identity stable when reactive defaults change.
+              applyDefaultValues(stateRef.current, defaultValuesRef.current!)
             ) ?? nullMap)
           : (stateUpdater ?? nullMap)
       debug(6, hookId, stateKeys, newState)
@@ -266,7 +275,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
         (p: Promise<URLSearchParams>) => Promise<URLSearchParams>
       > = []
       for (let [stateKey, value] of Object.entries(newState)) {
-        const parser = keyMap[stateKey]
+        const parser = keyMapRef.current[stateKey]
         const urlKey = resolvedUrlKeys[stateKey]!
         if (!parser || value === undefined) {
           continue
@@ -398,8 +407,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
       adapter.updateUrl,
       adapter.getSearchParamsSnapshot,
       adapter.rateLimitFactor,
-      processUrlSearchParams,
-      defaultValues
+      processUrlSearchParams
     ]
   )
 
@@ -469,4 +477,29 @@ function applyDefaultValues<KeyMap extends UseQueryStatesKeysMap>(
   return Object.fromEntries(
     Object.keys(state).map(key => [key, state[key] ?? defaults[key] ?? null])
   ) as Values<KeyMap>
+}
+
+function compareDefaultValues<KeyMap extends UseQueryStatesKeysMap>(
+  previous: Values<KeyMap>,
+  next: Values<KeyMap>,
+  keyMap: KeyMap
+): boolean {
+  const keys = Object.keys(next)
+  if (Object.keys(previous).length !== keys.length) {
+    return false
+  }
+  return keys.every(key => {
+    if (!Object.hasOwn(previous, key)) {
+      return false
+    }
+    const a = previous[key]
+    const b = next[key]
+    if (Object.is(a, b)) {
+      return true
+    }
+    if (a === null || b === null) {
+      return false
+    }
+    return keyMap[key]?.eq?.(a, b) ?? false
+  })
 }
