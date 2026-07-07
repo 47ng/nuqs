@@ -23,7 +23,7 @@ export function shouldPatchHistory(adapter: string): boolean {
       error(409),
       history.nuqs.version,
       `0.0.0-inject-version-here`,
-      adapter
+      `the ${adapter} adapter`
     )
     return false
   }

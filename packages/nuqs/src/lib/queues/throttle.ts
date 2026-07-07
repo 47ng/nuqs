@@ -23,14 +23,15 @@ declare global {
 // This will be replaced by the prepack script
 const version = '0.0.0-inject-version-here'
 
-// `version` and `adapters` are claimed by the history patch
-// (adapters/lib/patch-history.ts), keeping mount-order precedence
-// for the version-skew detection there.
+// `version` is claimed by the history patch (adapters/lib/patch-history.ts),
+// keeping mount-order precedence for the version-skew detection there.
+// `adapters` is seeded here: older nuqs copies sharing the slot assume it
+// exists whenever the slot does, and would crash on `adapters.push`.
 function getHistorySlot(): NonNullable<History['nuqs']> | null {
   if (typeof history === 'undefined') {
     return null
   }
-  return (history.nuqs ??= {})
+  return (history.nuqs ??= { adapters: [] })
 }
 
 // Duplicated copies of this module (bundler or version duplication) would
