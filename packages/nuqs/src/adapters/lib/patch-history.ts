@@ -8,14 +8,8 @@ export type SearchParamsSyncEmitterEvents = { update: URLSearchParams }
 
 export const historyUpdateMarker = '__nuqs__'
 
-declare global {
-  interface History {
-    nuqs?: {
-      version: string
-      adapters: string[]
-    }
-  }
-}
+// Note: the `history.nuqs` slot type is declared in lib/queues/throttle.ts,
+// which shares it for cross-copy rate-limit accounting.
 
 export function shouldPatchHistory(adapter: string): boolean {
   if (typeof history === 'undefined') {
@@ -40,12 +34,13 @@ export function shouldPatchHistory(adapter: string): boolean {
 }
 
 export function markHistoryAsPatched(adapter: string): void {
-  history.nuqs = history.nuqs ?? {
-    // This will be replaced by the prepack script
-    version: '0.0.0-inject-version-here',
-    adapters: []
-  }
-  history.nuqs.adapters.push(adapter)
+  // The slot may pre-exist (created by the update queue for rate-limit
+  // accounting), so claim `version` and `adapters` individually.
+  const slot = (history.nuqs ??= {})
+  // This will be replaced by the prepack script
+  slot.version ??= '0.0.0-inject-version-here'
+  slot.adapters ??= []
+  slot.adapters.push(adapter)
 }
 
 export function patchHistory(

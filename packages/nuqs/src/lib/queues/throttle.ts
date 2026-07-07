@@ -9,6 +9,49 @@ import { timeout } from '../timeout'
 import { withResolvers, type Resolvers } from '../with-resolvers'
 import { defaultRateLimit } from './rate-limiting'
 
+declare global {
+  interface History {
+    nuqs?: {
+      version?: string
+      adapters?: string[]
+      lastFlushedAt?: number
+      queues?: number
+    }
+  }
+}
+
+// This will be replaced by the prepack script
+const version = '0.0.0-inject-version-here'
+
+// `version` and `adapters` are claimed by the history patch
+// (adapters/lib/patch-history.ts), keeping mount-order precedence
+// for the version-skew detection there.
+function getHistorySlot(): NonNullable<History['nuqs']> | null {
+  if (typeof history === 'undefined') {
+    return null
+  }
+  return (history.nuqs ??= {})
+}
+
+// Duplicated copies of this module (bundler or version duplication) would
+// each run their own queue against the browser's single History API budget.
+{
+  const slot = getHistorySlot()
+  if (slot) {
+    slot.queues = (slot.queues ?? 0) + 1
+    if (slot.queues > 1) {
+      // `version` is claimed by the first adapter to patch history, which may
+      // not have happened yet at module-evaluation time.
+      console.error(
+        error(409),
+        slot.version ?? 'unknown',
+        version,
+        'update queue'
+      )
+    }
+  }
+}
+
 type UpdateMap = Map<string, Query | null>
 type TransitionSet = Set<React.TransitionStartFunction>
 export type UpdateQueueAdapterContext = Pick<
@@ -44,8 +87,23 @@ export class ThrottledQueue {
   transitions: TransitionSet = new Set()
   resolvers: Resolvers<URLSearchParams> | null = null
   controller: AbortController | null = null
-  lastFlushedAt = 0
   resetQueueOnNextPush = false
+  // Fallback when the History API is not available (SSR)
+  localLastFlushedAt = 0
+
+  // There is only one rate-limit budget per page, shared by every queue
+  // instance and every copy of this module: account for it on `history`.
+  get lastFlushedAt(): number {
+    return getHistorySlot()?.lastFlushedAt ?? this.localLastFlushedAt
+  }
+  set lastFlushedAt(value: number) {
+    const slot = getHistorySlot()
+    if (slot) {
+      slot.lastFlushedAt = value
+    } else {
+      this.localLastFlushedAt = value
+    }
+  }
 
   push(
     { key, query, options }: UpdateQueuePushArgs,
