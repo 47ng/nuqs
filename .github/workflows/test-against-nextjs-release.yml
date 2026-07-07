@@ -50,9 +50,9 @@ jobs:
           node-version-file: .node-version
           cache: pnpm
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm install --frozen-lockfile
       - name: Install Next.js version ${{ env.VERSION }}
-        run: pnpm add --filter e2e-next --filter nuqs --config.minimumReleaseAgeExclude=next "next@${{ env.VERSION }}"
+        run: pnpm add --filter e2e-next --filter nuqs --config.minimumReleaseAgeExclude=next "next@$VERSION"
       - name: Run cacheComponents codemod
         if: ${{ matrix.cache-components }}
         run: pnpm run cacheComponents:codemod
@@ -103,7 +103,7 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile --filter docs...
       - name: Install Next.js version ${{ env.VERSION }}
-        run: pnpm add --filter docs --filter nuqs "next@${{ env.VERSION }}"
+        run: pnpm add --filter docs --filter nuqs "next@$VERSION"
       # TURBO_TOKEN/TURBO_TEAM are intentionally omitted below: these steps
       # execute an arbitrary, caller-supplied Next.js version, so a compromised
       # release must not be able to exfiltrate or poison the shared Turborepo
@@ -132,7 +132,15 @@ jobs:
     if: ${{ always() }}
     steps:
       - name: Invalidate ISR cache for GitHub Actions status on landing page
-        run: curl -s "https://nuqs.dev/api/isr?tag=github-actions-status&token=${{ secrets.ISR_TOKEN }}"
+        run: |
+          set -euo pipefail
+          : "${ISR_TOKEN:?secret is empty or unset; cannot bust the ISR cache}"
+          curl -fsSL "https://nuqs.dev/api/isr?tag=github-actions-status&token=$ISR_TOKEN"
+        env:
+          # Passed via env and read as $ISR_TOKEN at runtime, so the literal
+          # secret never appears in the workflow YAML text (same stance as
+          # release-finalize.yml).
+          ISR_TOKEN: ${{ secrets.ISR_TOKEN }}
 
   notify:
     name: Notify on Slack
