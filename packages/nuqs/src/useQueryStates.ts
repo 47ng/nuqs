@@ -333,16 +333,13 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
               startTransition
           }
         }
-        if (
-          callOptions?.limitUrlUpdates?.method === 'debounce' ||
-          limitUrlUpdates?.method === 'debounce' ||
-          parser.limitUrlUpdates?.method === 'debounce'
-        ) {
+        const resolvedLimitUrlUpdates =
+          callOptions.limitUrlUpdates ??
+          parser.limitUrlUpdates ??
+          limitUrlUpdates
+        if (resolvedLimitUrlUpdates?.method === 'debounce') {
           const timeMs =
-            callOptions?.limitUrlUpdates?.timeMs ??
-            limitUrlUpdates?.timeMs ??
-            parser.limitUrlUpdates?.timeMs ??
-            defaultRateLimit.timeMs
+            resolvedLimitUrlUpdates.timeMs ?? defaultRateLimit.timeMs
           const debouncedPromise = debounceController.push(
             update,
             timeMs,
@@ -357,9 +354,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
           }
         } else {
           const timeMs =
-            callOptions?.limitUrlUpdates?.timeMs ??
-            parser?.limitUrlUpdates?.timeMs ??
-            limitUrlUpdates?.timeMs ??
+            resolvedLimitUrlUpdates?.timeMs ??
             callOptions.throttleMs ??
             parser.throttleMs ??
             throttleMs
