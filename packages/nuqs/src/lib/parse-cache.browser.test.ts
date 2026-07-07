@@ -51,4 +51,21 @@ describe('parseWithCache', () => {
     expect(parse).toHaveBeenCalledOnce()
     consoleWarnSpy.mockRestore()
   })
+  it('evicts the oldest entry when the cache is full', () => {
+    const parse = vi.fn((query: string) => query)
+    parseWithCache('evict-0', parse, asQuery('first'))
+    for (let i = 1; i < 1000; i++) {
+      parseWithCache(`evict-${i}`, parse, asQuery('x'))
+    }
+    expect(parse).toHaveBeenCalledTimes(1000)
+    // The cache is full: a new key evicts the oldest entry (evict-0)…
+    parseWithCache('evict-1000', parse, asQuery('x'))
+    parseWithCache('evict-0', parse, asQuery('first'))
+    expect(parse).toHaveBeenCalledTimes(1002)
+    // …but refreshing an existing key does not evict anything:
+    // the oldest remaining entry (evict-2) must still be cached.
+    parseWithCache('evict-500', parse, asQuery('refreshed'))
+    parseWithCache('evict-2', parse, asQuery('x'))
+    expect(parse).toHaveBeenCalledTimes(1003)
+  })
 })
