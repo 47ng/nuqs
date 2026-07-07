@@ -12,25 +12,46 @@ pnpm test
 
 This takes **5-10 minutes** and includes:
 
-- Build (tsup)
+- Build (tsdown)
 - Unit tests
 - Type-level tests
 - End-to-end tests
 
 Do not time out the full suite.
 
+### Fast Inner Loop
+
+For quick iteration, run these directly against `packages/nuqs` instead of the
+full suite:
+
+```bash
+pnpm --filter nuqs test:unit    # vitest, Node-only, seconds
+pnpm --filter nuqs test:types   # type-level tests
+pnpm --filter nuqs test:browser # needs `playwright install chromium`
+pnpm --filter nuqs test:size    # bundle size budget
+```
+
+Run `pnpm --filter nuqs build` once first: `api.test.ts`, type-level tests
+and the size budget read `dist/`.
+
+Reserve the full `pnpm test` for pre-push validation.
+
 ## Test Categories
 
 ### Unit Tests
 
-**Where:** `packages/nuqs/tests/*.test.ts`
+**Where:** `packages/nuqs/src/**/*.test.ts(x)` (colocated with the source; `tests/` holds type-level tests and their fixtures)
 
-Test hooks with `NuqsTestingAdapter`:
+**Browser tests:** `packages/nuqs/src/**/*.browser.test.ts(x)` — use `vitest-browser-react` and `withNuqsTestingAdapter` (see `src/useQueryStates.browser.test.tsx`):
 
 ```ts
-import { NuqsTestingAdapter } from 'nuqs/adapters/testing'
-import { renderHook, act } from '@testing-library/react'
+import { describe, expect, it, vi } from 'vitest'
+import { renderHook } from 'vitest-browser-react'
+import { withNuqsTestingAdapter, type OnUrlUpdateFunction } from './adapters/testing'
 ```
+
+Outside the package, import the adapter from the public entry point
+`nuqs/adapters/testing` instead of the relative path.
 
 Coverage:
 
@@ -46,7 +67,7 @@ Coverage:
 Add type tests when updating type definitions:
 
 ```ts
-import { expectType, expectAssignable } from 'tsd'
+import { assertType, describe, expectTypeOf, it } from 'vitest'
 ```
 
 Coverage:
@@ -145,17 +166,17 @@ describe('parseAsCustomType', () => {
 ### Testing Hook Behavior
 
 ```ts
-it('updates state and URL together', () => {
-  const { result } = renderHook(() => useQueryState('key', parseAsInteger), {
-    wrapper: NuqsTestingAdapter
+it('updates state and URL together', async () => {
+  const onUrlUpdate = vi.fn<OnUrlUpdateFunction>()
+  const useTestHook = () => useQueryState('key', parseAsInteger)
+  const { result, act } = await renderHook(useTestHook, {
+    wrapper: withNuqsTestingAdapter({ onUrlUpdate })
   })
 
-  act(() => {
-    result.current[1](42)
-  })
+  await act(() => result.current[1](42))
 
   expect(result.current[0]).toBe(42)
-  // Verify URL updated via NuqsTestingAdapter
+  expect(onUrlUpdate).toHaveBeenCalledOnce()
 })
 ```
 
@@ -183,10 +204,13 @@ afterEach(() => {
 })
 ```
 
-Debug output:
+Debug output (see `packages/nuqs/src/lib/debug-messages.ts` for the full catalog):
 
-- `[nuqs]` — Single-key operations
-- `[nuq+]` — Multi-key operations
+- `[nuq+ …]` — hook-level (useQueryStates) messages
+- `[nuqs gtq]` — global throttle queue
+- `[nuqs dq]` / `[nuqs dqc]` — debounce queue / controller
+- `[nuqs <adapter>]` — adapter URL updates (e.g. `[nuqs react]`)
+- `[nuqs]` — everything else (queue reset, safe-parse, key isolation)
 
 ## CI/CD Integration
 

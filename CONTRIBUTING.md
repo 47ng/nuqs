@@ -27,13 +27,13 @@ node --run setup:hooks
 This monorepo contains:
 
 - The source code for the `nuqs` NPM package, in [`packages/nuqs`](./packages/nuqs).
-- A Next.js app under [`packages/docs`](./packages/docs) that serves the documentation and as a playground deployed at <https://nuqs.dev>
+- A Next.js app under [`packages/docs`](./packages/docs) that serves the documentation and as a playground deployed at <https://nuqs.dev>. Copy [`packages/docs/.env.example`](./packages/docs/.env.example) to `.env.local` for the env vars local docs dev needs.
 - Test benches for [end-to-end tests](./packages/e2e) for each supported framework, driven by Playwright
 - Examples of integration with other tools.
 
-When running `next dev`, this will:
+When running `pnpm dev`, this will:
 
-- Build the library and watch for changes using [`tsup`](https://tsup.egoist.dev/)
+- Build the library and watch for changes using [`tsdown`](https://tsdown.dev)
 - Start the docs app, which will be available at <http://localhost:3000>.
 - Start the end-to-end test benches:
   - http://localhost:3001 - [Next.js](./packages/e2e/next)
@@ -58,6 +58,11 @@ run the end-to-end tests against the test bench apps (which uses the built libra
 When proposing changes or fixing a bug, adding tests (unit or in the
 appropriate e2e test environment) can help tremendously to validate and
 understand the changes.
+
+For a fast inner loop, run `pnpm --filter nuqs test:unit` (seconds, Node-only)
+or `pnpm --filter nuqs test:types` instead of the full suite — both need the
+library built first (`pnpm --filter nuqs build`). Reserve `pnpm test` for
+pre-push validation.
 
 ## Opening issues
 
