@@ -41,10 +41,11 @@ type TestingAdapterProps = Pick<AdapterInterface, 'autoResetQueueOnUpdate'> & {
   rateLimitFactor?: number
 
   /**
-   * Internal: Whether to reset the url update queue on mount.
+   * Internal: Whether to reset the url update queue and the shared
+   * parse cache on mount.
    *
-   * Since the update queue is a shared global, each test clears
-   * it on mount to avoid interference between tests.
+   * Since both are shared globals, each test clears them
+   * on mount to avoid interference between tests.
    *
    * @default true
    */

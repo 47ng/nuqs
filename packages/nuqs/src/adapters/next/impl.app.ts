@@ -33,8 +33,8 @@ function onPopState() {
 function onHistoryStateUpdate() {
   // Doing this after the end of the current render work because of the error:
   // "useInsertionEffect cannot schedule updates"
-  // (resetting the queue causes the useSyncExternalStore of queued queries
-  // to be marked for rendering)
+  // (resetting the queue notifies the pending-updates overlay subscription
+  // in useQueryStates, marking its subscribers for rendering)
   // The useInsertionEffect in question is the one in the Next.js app router core
   //  dealing with history API calls.
   spinQueueResetMutex(() => {

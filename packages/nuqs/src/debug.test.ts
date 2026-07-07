@@ -83,7 +83,7 @@ describe('debug message catalog', () => {
         to   %O",
         "24": "[nuqs] Error while parsing value \`%s\`: %O",
         "25": "[nuqs] Error while parsing value \`%s\`: %O (for key \`%s\`)",
-        "3": "[nuq+ %s \`%s\`] Optimistic adoption of %s: %O (default: %O). updateInternalState, resolved: %O",
+        "3": "[nuq+ %s \`%s\`] Optimistic adoption of %s: %O (default: %O). Updating internal state, resolved: %O",
         "6": "[nuq+ %s \`%s\`] setState: %O",
         "7": "[nuqs gtq] Enqueueing %s=%s %O",
         "8": "[nuqs gtq] Skipping flush due to throttleMs=Infinity",

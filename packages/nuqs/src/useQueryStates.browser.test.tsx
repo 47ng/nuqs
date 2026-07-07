@@ -312,6 +312,27 @@ describe('useQueryStates: dynamic defaults', () => {
     await act(() => result.current[1]({ count: 0 }))
     expect(onUrlUpdate.mock.calls.at(-1)![0].queryString).toBe('?count=0')
   })
+  it('churns the state identity for object defaults without eq (accepted trade-off)', async () => {
+    // Custom parsers without an `eq` fall back to referential comparison:
+    // an inline object default is a new identity every render, so
+    // defaultValues (and thus the output state) are rebuilt. Pinned so a
+    // future optimization does not silently flip the documented #1193
+    // behavior for eq-less parsers.
+    const useTestHook = () =>
+      useQueryStates({
+        obj: {
+          parse: (query: string) => ({ raw: query }),
+          defaultValue: { raw: 'default' }
+        }
+      })
+    const { result, rerender } = await renderHook(useTestHook, {
+      wrapper: withNuqsTestingAdapter()
+    })
+    const first = result.current[0]
+    rerender()
+    expect(result.current[0]).not.toBe(first)
+    expect(result.current[0].obj).toEqual({ raw: 'default' })
+  })
   it('keeps a stable state identity when equal defaults are recreated across renders', async () => {
     // A new default object is created on every render,
     // but is structurally equal (via the parser's `eq`).

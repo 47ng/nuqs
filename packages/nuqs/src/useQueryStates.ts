@@ -173,10 +173,11 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
     [initialSearchParams, isMultiUrlKey]
   )
   // Referentially stable while the raw values of the watched keys are
-  // unchanged, so identity comparison detects external URL source changes,
-  // and never internal (optimistic) updates: those write the overlay first,
-  // so by the time the notification triggers a render, the merged raw value
-  // already matches what the setter adopted locally.
+  // unchanged, so identity comparison detects any URL source change,
+  // committed or overlay. Internal (optimistic) updates also change this
+  // identity, but the resulting reconcile is a no-op: the setter records the
+  // query in queryRef before the notification renders, so parseMap
+  // cache-hits and nothing is reverted.
   const rawValues = useSyncExternalStores(
     urlKeyList,
     subscribeToOverlay,
@@ -292,10 +293,11 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
         }
         const query =
           value === null ? null : (parser.serialize ?? String)(value)
-        // Optimistic local adoption: the writer keeps the exact value identity
-        // it was given (===). Other hooks watching this key re-render via the
-        // overlay notification (from the queue pushes below) and re-parse the
-        // raw query with their own parser.
+        // Optimistic local adoption: the writer keeps the exact value
+        // identity it was given (===), unless clearOnDefault rewrote it to
+        // the parser's defaultValue above. Other hooks watching this key
+        // re-render via the overlay notification (from the queue pushes
+        // below) and re-parse the raw query with their own parser.
         const nextValue = value ?? parser.defaultValue ?? null
         setInternalState(currentState => {
           const currentValue =

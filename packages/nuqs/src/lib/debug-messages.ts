@@ -10,7 +10,7 @@ export const debugMessages = {
   // useQueryStates
   1: '[nuq+ %s `%s`] State changed: %O',
   2: '[nuq+ %s `%s`] Optimistic adoption of %s: %O (default: %O). no change, skipping, resolved: %O',
-  3: '[nuq+ %s `%s`] Optimistic adoption of %s: %O (default: %O). updateInternalState, resolved: %O',
+  3: '[nuq+ %s `%s`] Optimistic adoption of %s: %O (default: %O). Updating internal state, resolved: %O',
   6: '[nuq+ %s `%s`] setState: %O',
   // Throttle queue (gtq)
   7: '[nuqs gtq] Enqueueing %s=%s %O',
