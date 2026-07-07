@@ -23,7 +23,7 @@ import {
 
 // See: https://github.com/47ng/nuqs/issues/603#issuecomment-2317057128
 // and https://github.com/47ng/nuqs/discussions/960#discussioncomment-12699171
-const NUM_HISTORY_CALLS_PER_UPDATE = 3
+export const NUM_HISTORY_CALLS_PER_UPDATE = 3
 
 function onPopState() {
   setQueueResetMutex(0)
@@ -172,7 +172,7 @@ export function useNuqsNextAppRouterAdapter(): AdapterInterface {
   }
 }
 
-function renderURL(search: URLSearchParams) {
+export function renderURL(search: URLSearchParams): string {
   const { origin, pathname, hash } = location
   return origin + pathname + renderQueryString(search) + hash
 }
