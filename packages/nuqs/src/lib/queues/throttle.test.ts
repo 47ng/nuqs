@@ -226,6 +226,29 @@ describe('throttle: overlay sync notifications', () => {
     expect(queue.updateMap.size).toBe(0)
     expect(spy).not.toHaveBeenCalled()
   })
+  it('notifies the failed keys when the URL update throws', async () => {
+    const consoleErrorSpy = vi
+      .spyOn(console, 'error')
+      .mockImplementation(() => {})
+    const queue = new ThrottledQueue()
+    queue.push({ key: 'a', query: 'a', options: {} })
+    const spy = vi.fn()
+    queue.sync.on('a', spy)
+    const promise = queue.flush({
+      getSearchParamsSnapshot() {
+        return new URLSearchParams()
+      },
+      updateUrl: vi.fn().mockImplementation(() => {
+        throw new Error('rate limited')
+      })
+    })
+    vi.runAllTimers()
+    await expect(promise).rejects.toEqual(new URLSearchParams('?a=a'))
+    // The overlay was cleared but the URL never changed: subscribers must
+    // be notified to converge back to the committed search params.
+    expect(spy).toHaveBeenCalledOnce()
+    expect(consoleErrorSpy).toHaveBeenCalledOnce()
+  })
   it('does not notify previously-flushed keys when resetting on the next push', async () => {
     const queue = new ThrottledQueue()
     const mockAdapter: UpdateQueueAdapterContext = {

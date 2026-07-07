@@ -132,7 +132,7 @@ export class ThrottledQueue {
     if (options.startTransition) {
       this.transitions.add(options.startTransition)
     }
-    // Keep the maximum finite throttle value (or set if previous was Infinity)
+    // Keep the maximum throttle value (Infinity wins and defers the flush)
     if (!Number.isFinite(this.timeMs) || timeMs > this.timeMs) {
       this.timeMs = timeMs
     }
@@ -222,7 +222,9 @@ export class ThrottledQueue {
   // - clearing already-flushed entries (flush & deferred reset-on-push),
   //   where the committed search params carry the flushed values.
   // Every other overlay mutation must notify, otherwise a stale overlay
-  // value would keep shadowing a newer committed one.
+  // value would keep shadowing a newer committed one. The testing adapter's
+  // mount-time resetQueues() also runs during render with notifications:
+  // safe only because its subscribers don't exist yet at that point.
   reset({ notify = true }: { notify?: boolean } = {}): string[] {
     const queuedKeys = Array.from(this.updateMap.keys())
     debug(10, JSON.stringify(Object.fromEntries(this.updateMap)))
@@ -262,7 +264,7 @@ export class ThrottledQueue {
     // carry the flushed values, so the merged raw value is unchanged.
     // Notifying would revert optimistic state on adapters whose committed
     // view lags the URL update (next/pages) or never reflects it
-    // (memory-less testing adapter).
+    // (memory-less testing adapter). The error path below compensates.
     if (adapter.autoResetQueueOnUpdate) {
       this.reset({ notify: false })
     }
@@ -286,6 +288,12 @@ export class ThrottledQueue {
       // This may fail due to rate-limiting of history methods,
       // for example Safari only allows 100 updates in a 30s window.
       console.error(error(429), items.map(([key]) => key).join(), err)
+      // The overlay was already cleared above but the URL never changed:
+      // notify so every hook converges back to the committed search params,
+      // instead of keeping optimistic values that will never land.
+      for (const [key] of items) {
+        this.sync.emit(key)
+      }
       return [search, err]
     }
   }
