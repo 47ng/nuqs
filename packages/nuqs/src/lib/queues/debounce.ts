@@ -1,5 +1,4 @@
 import { debug } from '../debug'
-import { createEmitter, type Emitter } from '../emitter'
 import type { Query } from '../search-params'
 import { timeout } from '../timeout'
 import { withResolvers, type Resolvers } from '../with-resolvers'
@@ -10,7 +9,6 @@ import {
   type UpdateQueueAdapterContext,
   type UpdateQueuePushArgs
 } from './throttle'
-import { useSyncExternalStores } from './useSyncExternalStores'
 
 export class DebouncedPromiseQueue<ValueType, OutputType> {
   callback: (value: ValueType) => Promise<OutputType>
@@ -68,18 +66,9 @@ type DebouncedUpdateQueue = DebouncedPromiseQueue<
 export class DebounceController {
   throttleQueue: ThrottledQueue
   queues: Map<string, DebouncedUpdateQueue> = new Map()
-  queuedQuerySync: Emitter<Record<string, undefined>> = createEmitter()
 
   constructor(throttleQueue: ThrottledQueue = new ThrottledQueue()) {
     this.throttleQueue = throttleQueue
-  }
-
-  useQueuedQueries(keys: string[]): Record<string, Query | null | undefined> {
-    return useSyncExternalStores(
-      keys,
-      (key, callback) => this.queuedQuerySync.on(key, callback),
-      (key: string) => this.getQueuedQuery(key)
-    )
   }
 
   push(
@@ -109,14 +98,14 @@ export class DebounceController {
               debug(16, update.key)
               this.queues.delete(update.key)
             }
-            this.queuedQuerySync.emit(update.key)
+            this.throttleQueue.sync.emit(update.key)
           })
       })
       this.queues.set(key, queue)
     }
     debug(17, update)
     const promise = this.queues.get(key)!.push(update, timeMs)
-    this.queuedQuerySync.emit(key)
+    this.throttleQueue.sync.emit(key)
     return promise
   }
 
@@ -130,7 +119,7 @@ export class DebounceController {
     debug(18, key, queue.queuedValue?.query)
     this.queues.delete(key)
     queue.abort() // Don't run to completion
-    this.queuedQuerySync.emit(key)
+    this.throttleQueue.sync.emit(key)
     return promise => {
       promise.then(queue.resolvers.resolve, queue.resolvers.reject)
       // Don't chain: keep reference equality
@@ -144,7 +133,7 @@ export class DebounceController {
       queue.abort()
       // todo: Better abort handling
       queue.resolvers.resolve(new URLSearchParams()) // Don't leave the Promise pending
-      this.queuedQuerySync.emit(key)
+      this.throttleQueue.sync.emit(key)
     }
     this.queues.clear()
   }

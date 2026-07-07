@@ -94,10 +94,15 @@ export function NavigationSpy() {
   // stale values via getQueuedQuery. This is safe because:
   // - In StrictMode the second render sees prevPathname === pathname (no-op)
   // - globalThrottleQueue.reset() is idempotent
-  // - No React state updates are triggered (no useSyncExternalStore emissions)
+  // - No React state updates are triggered: `notify: false` skips the
+  //   useSyncExternalStore emissions, which would schedule updates on other
+  //   components mid-render. Hooks under this adapter pick up the cleared
+  //   overlay on their own render (they all re-render on navigation in
+  //   next/app via useSearchParams). Hooks under a nested non-Next adapter
+  //   keep their optimistic state until their next render, as before.
   if (prevPathname.current !== pathname) {
     prevPathname.current = pathname
-    globalThrottleQueue.reset()
+    globalThrottleQueue.reset({ notify: false })
   }
   useEffect(() => {
     patchHistory()

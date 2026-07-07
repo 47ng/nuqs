@@ -257,6 +257,54 @@ describe('useQueryStates: referential equality', () => {
   })
 })
 
+describe('useQueryStates: optimistic adoption', () => {
+  it('keeps the exact value identity for the writer (non-identity parse round-trip)', async () => {
+    const objParser = parseAsJson<{ v: number }>(x => x as { v: number })
+    const { result, act } = await renderHook(
+      () => useQueryStates({ obj: objParser }),
+      { wrapper: withNuqsTestingAdapter() }
+    )
+    const written = { v: 42 }
+    await act(() => result.current[1]({ obj: written }))
+    expect(result.current[0].obj).toBe(written)
+  })
+  it("re-parses the raw query with each hook's own parser (no typed-value adoption)", async () => {
+    const { result, act } = await renderHook(
+      () => ({
+        str: useQueryStates({ id: parseAsString }),
+        num: useQueryStates({ id: parseAsInteger })
+      }),
+      { wrapper: withNuqsTestingAdapter() }
+    )
+    await act(() => result.current.str[1]({ id: '42' }))
+    expect(result.current.str[0].id).toBe('42')
+    expect(result.current.num[0].id).toBe(42)
+  })
+})
+
+describe('useQueryStates: debounce(Infinity)', () => {
+  it('syncs the value to other hooks on the key and defers the URL update', async () => {
+    const onUrlUpdate = vi.fn<OnUrlUpdateFunction>()
+    const { result, act } = await renderHook(
+      () => ({
+        a: useQueryStates({ test: parseAsString }),
+        b: useQueryStates({ test: parseAsString })
+      }),
+      { wrapper: withNuqsTestingAdapter({ onUrlUpdate }) }
+    )
+    await act(async () => {
+      result.current.a[1](
+        { test: 'deferred' },
+        { limitUrlUpdates: debounce(Infinity) }
+      )
+      await waitForNextTick()
+    })
+    expect(result.current.a[0].test).toBe('deferred')
+    expect(result.current.b[0].test).toBe('deferred')
+    expect(onUrlUpdate).not.toHaveBeenCalled()
+  })
+})
+
 describe('useQueryStates: rendering & bail-out', () => {
   it('should bail out of rendering the same component when setting to the same value', async () => {
     let renderCount = 0

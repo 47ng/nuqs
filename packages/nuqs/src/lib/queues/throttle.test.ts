@@ -172,6 +172,82 @@ describe('throttle: Abort & reset logic', () => {
   })
 })
 
+describe('throttle: overlay sync notifications', () => {
+  beforeEach(() => {
+    vi.useFakeTimers()
+  })
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+  it('notifies subscribers when pushing an update', () => {
+    const queue = new ThrottledQueue()
+    const spy = vi.fn()
+    queue.sync.on('key', spy)
+    queue.push({ key: 'key', query: 'value', options: {} })
+    expect(spy).toHaveBeenCalledOnce()
+  })
+  it('notifies subscribers of each cleared key when resetting', () => {
+    const queue = new ThrottledQueue()
+    const spyA = vi.fn()
+    const spyB = vi.fn()
+    queue.push({ key: 'a', query: 'a', options: {} })
+    queue.push({ key: 'b', query: 'b', options: {} })
+    queue.sync.on('a', spyA)
+    queue.sync.on('b', spyB)
+    queue.reset()
+    expect(spyA).toHaveBeenCalledOnce()
+    expect(spyB).toHaveBeenCalledOnce()
+  })
+  it('does not notify when resetting with notify: false', () => {
+    const queue = new ThrottledQueue()
+    const spy = vi.fn()
+    queue.push({ key: 'a', query: 'a', options: {} })
+    queue.sync.on('a', spy)
+    queue.reset({ notify: false })
+    expect(spy).not.toHaveBeenCalled()
+  })
+  it('notifies subscribers of cleared keys when aborting', () => {
+    const queue = new ThrottledQueue()
+    const spy = vi.fn()
+    queue.push({ key: 'a', query: 'a', options: {} })
+    queue.sync.on('a', spy)
+    queue.abort()
+    expect(spy).toHaveBeenCalledOnce()
+  })
+  it('does not notify when clearing the queue after a flush', async () => {
+    const queue = new ThrottledQueue()
+    const mockAdapter = createMockAdapter()
+    queue.push({ key: 'a', query: 'a', options: {} })
+    const spy = vi.fn()
+    queue.sync.on('a', spy)
+    const promise = queue.flush(mockAdapter)
+    vi.runAllTimers()
+    await promise
+    expect(queue.updateMap.size).toBe(0)
+    expect(spy).not.toHaveBeenCalled()
+  })
+  it('does not notify previously-flushed keys when resetting on the next push', async () => {
+    const queue = new ThrottledQueue()
+    const mockAdapter: UpdateQueueAdapterContext = {
+      ...createMockAdapter(),
+      autoResetQueueOnUpdate: false
+    }
+    queue.push({ key: 'a', query: 'a', options: {} })
+    const promise = queue.flush(mockAdapter)
+    vi.runAllTimers()
+    await promise
+    // 'a' survived the flush (committed view may lag behind)
+    expect(queue.updateMap.size).toBe(1)
+    const spyA = vi.fn()
+    const spyB = vi.fn()
+    queue.sync.on('a', spyA)
+    queue.sync.on('b', spyB)
+    queue.push({ key: 'b', query: 'b', options: {} })
+    expect(spyA).not.toHaveBeenCalled()
+    expect(spyB).toHaveBeenCalledOnce()
+  })
+})
+
 describe('throttle: flush', () => {
   beforeEach(() => {
     vi.useFakeTimers()

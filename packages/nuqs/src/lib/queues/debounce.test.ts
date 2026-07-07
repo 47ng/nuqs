@@ -103,6 +103,71 @@ describe('debounce: DebouncedPromiseQueue', () => {
   })
 })
 
+describe('debounce: overlay sync notifications', () => {
+  it('notifies via the throttle queue sync emitter when pushing', () => {
+    vi.useFakeTimers()
+    const fakeAdapter: UpdateQueueAdapterContext = {
+      updateUrl: vi.fn<UpdateUrlFunction>(),
+      getSearchParamsSnapshot() {
+        return new URLSearchParams()
+      }
+    }
+    const throttleQueue = new ThrottledQueue()
+    const controller = new DebounceController(throttleQueue)
+    const spy = vi.fn()
+    throttleQueue.sync.on('key', spy)
+    controller.push(
+      { key: 'key', query: 'value', options: {} },
+      100,
+      fakeAdapter
+    )
+    expect(spy).toHaveBeenCalledOnce()
+    vi.restoreAllMocks()
+  })
+  it('notifies when aborting a key', () => {
+    vi.useFakeTimers()
+    const fakeAdapter: UpdateQueueAdapterContext = {
+      updateUrl: vi.fn<UpdateUrlFunction>(),
+      getSearchParamsSnapshot() {
+        return new URLSearchParams()
+      }
+    }
+    const throttleQueue = new ThrottledQueue()
+    const controller = new DebounceController(throttleQueue)
+    controller.push(
+      { key: 'key', query: 'value', options: {} },
+      100,
+      fakeAdapter
+    )
+    const spy = vi.fn()
+    throttleQueue.sync.on('key', spy)
+    controller.abort('key')
+    expect(spy).toHaveBeenCalledOnce()
+    vi.restoreAllMocks()
+  })
+  it('notifies when aborting all pending queues', () => {
+    vi.useFakeTimers()
+    const fakeAdapter: UpdateQueueAdapterContext = {
+      updateUrl: vi.fn<UpdateUrlFunction>(),
+      getSearchParamsSnapshot() {
+        return new URLSearchParams()
+      }
+    }
+    const throttleQueue = new ThrottledQueue()
+    const controller = new DebounceController(throttleQueue)
+    controller.push({ key: 'a', query: 'a', options: {} }, 100, fakeAdapter)
+    controller.push({ key: 'b', query: 'b', options: {} }, 100, fakeAdapter)
+    const spyA = vi.fn()
+    const spyB = vi.fn()
+    throttleQueue.sync.on('a', spyA)
+    throttleQueue.sync.on('b', spyB)
+    controller.abortAll()
+    expect(spyA).toHaveBeenCalledOnce()
+    expect(spyB).toHaveBeenCalledOnce()
+    vi.restoreAllMocks()
+  })
+})
+
 describe('debounce: DebounceController', () => {
   it('schedules an update and calls the adapter with it', async () => {
     vi.useFakeTimers()
