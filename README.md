@@ -888,21 +888,17 @@ Here's an example using Testing Library and Vitest:
 ```tsx
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { NuqsTestingAdapter, type UrlUpdateEvent } from 'nuqs/adapters/testing'
+import { withNuqsTestingAdapter, type OnUrlUpdateFunction } from 'nuqs/adapters/testing'
 import { describe, expect, it, vi } from 'vitest'
 import { CounterButton } from './counter-button'
 
 it('should increment the count when clicked', async () => {
   const user = userEvent.setup()
-  const onUrlUpdate = vi.fn<[UrlUpdateEvent]>()
+  const onUrlUpdate = vi.fn<OnUrlUpdateFunction>()
   render(<CounterButton />, {
     // Setup the test by passing initial search params / querystring,
     // and give it a function to call on URL updates
-    wrapper: ({ children }) => (
-      <NuqsTestingAdapter searchParams="?count=42" onUrlUpdate={onUrlUpdate}>
-        {children}
-      </NuqsTestingAdapter>
-    )
+    wrapper: withNuqsTestingAdapter({ searchParams: '?count=42', onUrlUpdate })
   })
   // Initial state assertions: there's a clickable button displaying the count
   const button = screen.getByRole('button')
@@ -912,9 +908,10 @@ it('should increment the count when clicked', async () => {
   // Assert changes in the state and in the (mocked) URL
   expect(button).toHaveTextContent('count is 43')
   expect(onUrlUpdate).toHaveBeenCalledOnce()
-  expect(onUrlUpdate.mock.calls[0][0].queryString).toBe('?count=43')
-  expect(onUrlUpdate.mock.calls[0][0].searchParams.get('count')).toBe('43')
-  expect(onUrlUpdate.mock.calls[0][0].options.history).toBe('push')
+  const event = onUrlUpdate.mock.calls[0]![0]!
+  expect(event.queryString).toBe('?count=43')
+  expect(event.searchParams.get('count')).toBe('43')
+  expect(event.options.history).toBe('push')
 })
 ```
 
@@ -922,8 +919,15 @@ See [#259](https://github.com/47ng/nuqs/issues/259) for more testing-related dis
 
 ## Debugging
 
-You can enable debug logs in the browser by setting the `debug` item in localStorage
-to `nuqs`, and reload the page.
+You can enable debug logs in the browser by importing the `nuqs/debug`
+entry point once anywhere in your app (it keeps the log messages out of your
+bundle otherwise), then setting the `debug` item in localStorage to `nuqs`,
+and reload the page.
+
+```ts
+// Once, anywhere in your app:
+import 'nuqs/debug'
+```
 
 ```js
 // In your devtools:
@@ -933,8 +937,10 @@ localStorage.setItem('debug', 'nuqs')
 > Note: unlike the `debug` package, this will not work with wildcards, but
 > you can combine it: `localStorage.setItem('debug', '*,nuqs')`
 
-Log lines will be prefixed with `[nuqs]` for `useQueryState` and `[nuq+]` for
-`useQueryStates`, along with other internal debug logs.
+Log lines are prefixed with `[nuq+ …]` for hook-level messages, and
+`[nuqs <subsystem>]` for internal subsystems (throttle & debounce queues,
+adapters), along with other internal debug logs — see
+`packages/nuqs/src/lib/debug-messages.ts` for the full catalog.
 
 User timings markers are also recorded, for advanced performance analysis using
 your browser's devtools.
