@@ -16,15 +16,27 @@ import {
   DocsPage,
   DocsTitle
 } from 'fumadocs-ui/page'
-import { ExternalLink } from 'lucide-react'
+import { ExternalLink, RssIcon } from 'lucide-react'
 import type { Metadata } from 'next'
 import { Fragment } from 'react'
 import { CATEGORIES } from 'scripts/lib/changelog-dto'
 import { H2 } from '../../../components/typography'
 import { buildReleaseModel, fetchReleases, formatDate } from './_lib'
 
+const RELEASES_FEED_URL = `https://github.com/${github.owner}/${github.repo}/releases.atom`
+
 export const metadata: Metadata = {
-  title: 'Changelog'
+  title: 'Changelog',
+  alternates: {
+    types: {
+      'application/atom+xml': [
+        {
+          url: RELEASES_FEED_URL,
+          title: 'nuqs releases feed'
+        }
+      ]
+    }
+  }
 }
 
 export const revalidate = false
@@ -35,6 +47,23 @@ const SOURCE_URL = `https://github.com/${github.owner}/${github.repo}/blob/${git
 // Slugify a category label into a stable anchor id (e.g. "Bug fixes" → "bug-fixes").
 function categorySlug(category: string): string {
   return category.toLowerCase().replace(/\s+/g, '-')
+}
+
+function ReleasesFeedLink() {
+  return (
+    <a
+      href={RELEASES_FEED_URL}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="text-muted-foreground flex items-baseline gap-1 text-sm hover:underline"
+    >
+      <RssIcon
+        className="size-4 self-center text-orange-600 dark:text-orange-400"
+        role="presentation"
+      />
+      RSS
+    </a>
+  )
 }
 
 export default async function ChangelogPage() {
@@ -53,7 +82,10 @@ export default async function ChangelogPage() {
         footer: <AsideSponsors />
       }}
     >
-      <DocsTitle>Changelog</DocsTitle>
+      <nav className="flex items-baseline justify-between">
+        <DocsTitle>Changelog</DocsTitle>
+        <ReleasesFeedLink />
+      </nav>
       <DocsDescription>What's new in nuqs.</DocsDescription>
       <div className="mb-2 flex flex-row flex-wrap items-center gap-2 border-b pb-6">
         <CopyAsMarkdownButton markdownUrl={MARKDOWN_URL} />
