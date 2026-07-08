@@ -249,4 +249,37 @@ describe('serializer', () => {
       expect(result).toBe('?a=1&foo=bar&z=1')
     })
   })
+  describe('hash preservation', () => {
+    it('keeps the hash with a string base and existing search', () => {
+      const serialize = createSerializer(parsers)
+      const result = serialize('/path?a=1#section', {})
+      expect(result).toBe('/path?a=1#section')
+    })
+    it('keeps the hash with a string base when adding a value', () => {
+      const serialize = createSerializer(parsers)
+      const result = serialize('/path#section', { str: 'foo' })
+      expect(result).toBe('/path?str=foo#section')
+    })
+    it('keeps the hash with a URL base', () => {
+      const serialize = createSerializer(parsers)
+      const url = new URL('https://example.com/path#section')
+      const result = serialize(url, { str: 'foo' })
+      expect(result).toBe('https://example.com/path?str=foo#section')
+    })
+    it('keeps a hash containing a ? character intact', () => {
+      const serialize = createSerializer(parsers)
+      const result = serialize('/p#frag?x', {})
+      expect(result).toBe('/p#frag?x')
+    })
+    it('keeps the hash when clearing all params with a global null', () => {
+      const serialize = createSerializer(parsers)
+      const result = serialize('/path?str=foo#section', null)
+      expect(result).toBe('/path#section')
+    })
+    it('leaves paths without a hash unchanged', () => {
+      const serialize = createSerializer(parsers)
+      const result = serialize('/path', {})
+      expect(result).toBe('/path')
+    })
+  })
 })

@@ -5,7 +5,6 @@
     // Type checking
     "strict": true,
     "noUncheckedIndexedAccess": true,
-    "alwaysStrict": false, // Don't emit "use strict" to avoid conflicts with "use client"
     // Modules
     "module": "ESNext",
     "moduleResolution": "Bundler",
@@ -21,8 +20,6 @@
     "verbatimModuleSyntax": true,
     "isolatedDeclarations": true,
     "moduleDetection": "force",
-
-    "downlevelIteration": true,
     // Interop
     "isolatedModules": true,
     "esModuleInterop": true,
