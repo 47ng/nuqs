@@ -6,7 +6,7 @@ First off, thanks for your help! 🙏
 
 1. Fork and clone the repository
 2. Install dependencies with `pnpm install`
-3. Start the development environment with `pnpm dev`
+3. Start the development environment with `pnpm dev --filter <package-name>...`
 
 ## Git hooks (optional)
 
@@ -48,6 +48,10 @@ When running `pnpm dev`, this will:
   - http://localhost:4000 - [tRPC](./packages/examples/trpc)
   - http://localhost:4001 - [Next.js - App router](./packages/examples/next-app)
 
+Since this will start a lot of processes, you may want to run `pnpm dev --filter <package-name>...`
+to only start the packages you are working on (eg: `pnpm dev --filter docs...`).
+The triple dots `...` will also start any dependencies of the package you specify.
+
 ## Testing
 
 You can run the complete integration test suite with `pnpm test` from the root of the repository.
@@ -59,10 +63,11 @@ When proposing changes or fixing a bug, adding tests (unit or in the
 appropriate e2e test environment) can help tremendously to validate and
 understand the changes.
 
-For a fast inner loop, run `pnpm --filter nuqs test:unit` (seconds, Node-only)
-or `pnpm --filter nuqs test:types` instead of the full suite — both need the
-library built first (`pnpm --filter nuqs build`). Reserve `pnpm test` for
-pre-push validation.
+For a fast inner loop, run:
+
+- `pnpm --filter nuqs build`
+- `pnpm --filter nuqs test:unit`
+- `pnpm --filter nuqs test:types`
 
 ## Opening issues
 
@@ -79,10 +84,10 @@ Make sure your changes:
 2. Pass linting checks: `pnpm lint`
 3. Have relevant documentation additions / updates (in the `packages/docs/content` and the README.md file).
 
-This repository uses [`semantic-release`](https://semantic-release.gitbook.io/semantic-release/)
-to automatically publish new versions of the package to NPM.
-To do this, the Git history follows the
-[Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) format.
+This repository uses [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/)
+for commit messages. Any bumping keywords (fix, feat, perf, etc) should be reserved to changes
+in the `nuqs` package itself (enforced in CI).
+For example, fixes in the docs are named `doc: fix <whatever>`.
 
 Pull requests should target the `next` branch.
 
