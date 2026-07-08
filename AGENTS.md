@@ -38,6 +38,7 @@ Refer to: [README.md](README.md) & [CONTRIBUTING.md](CONTRIBUTING.md) for author
 - **Package manager:** `pnpm`
 - **Build:** `pnpm build`
 - **Test suite:** `pnpm test` (5-10 minutes; includes build + unit + typing + e2e)
+- **Fast checks:** `pnpm --filter nuqs test:unit` (seconds, Node-only) / `pnpm --filter nuqs test:types` for quick iteration (both need `pnpm --filter nuqs build` first)
 - **Development:** `pnpm dev --filter <package-name>...` (triple dots start dependencies' dev script too)
 
 ---
@@ -82,7 +83,7 @@ In server or Node environments (e.g. when using `nuqs/server`), set the `DEBUG` 
 DEBUG=nuqs pnpm dev
 ```
 
-Log lines are prefixed with `[nuq+]`
+Hook-level logs are prefixed with `[nuq+ …]`; internal subsystems use `[nuqs <subsystem>]` (see `packages/nuqs/src/lib/debug-messages.ts` for the catalog).
 
 Encourage debug logs in issue reports and include them in reproduction scripts.
 
