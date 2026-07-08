@@ -19,7 +19,7 @@ This takes **5-10 minutes** and includes:
 
 Do not time out the full suite.
 
-### Fast Inner Loop
+### Fast Agentic Loop
 
 For quick iteration, run these directly against `packages/nuqs` instead of the
 full suite:
@@ -34,8 +34,6 @@ pnpm --filter nuqs test:size    # bundle size budget
 Run `pnpm --filter nuqs build` once first: `api.test.ts`, type-level tests
 and the size budget read `dist/`.
 
-Reserve the full `pnpm test` for pre-push validation.
-
 ## Test Categories
 
 ### Unit Tests
@@ -47,7 +45,10 @@ Reserve the full `pnpm test` for pre-push validation.
 ```ts
 import { describe, expect, it, vi } from 'vitest'
 import { renderHook } from 'vitest-browser-react'
-import { withNuqsTestingAdapter, type OnUrlUpdateFunction } from './adapters/testing'
+import {
+  withNuqsTestingAdapter,
+  type OnUrlUpdateFunction
+} from './adapters/testing'
 ```
 
 Outside the package, import the adapter from the public entry point
