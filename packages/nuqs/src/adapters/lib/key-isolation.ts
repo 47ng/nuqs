@@ -32,7 +32,7 @@ export function filterSearchParams(
     return search
   }
   const filtered = copy ? new URLSearchParams(search) : search
-  for (const key of search.keys()) {
+  for (const key of Array.from(search.keys())) {
     if (!keys.includes(key)) {
       filtered.delete(key)
     }
