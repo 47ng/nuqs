@@ -3,7 +3,6 @@
   "compilerOptions": {
     // Type checking
     "strict": true,
-    "alwaysStrict": false, // Don't emit "use strict" to avoid conflicts with "use client"
     // Modules
     "module": "ESNext",
     "moduleResolution": "node",
@@ -14,7 +13,6 @@
     // Emit
     "noEmit": true,
     "declaration": false,
-    "downlevelIteration": true,
     "jsx": "preserve",
     // Interop
     "allowJs": true,
