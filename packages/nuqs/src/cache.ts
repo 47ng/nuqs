@@ -1,5 +1,6 @@
 import * as React from 'react'
 import type { SearchParams, UrlKeys } from './defs'
+import { compareQuery } from './lib/compare'
 import { error } from './lib/errors'
 import { createLoader, type LoaderFunctionOptions } from './loader'
 import type { inferParserType, ParserMap } from './parsers'
@@ -144,7 +145,7 @@ export function compareSearchParams(a: SearchParams, b: SearchParams): boolean {
     return false
   }
   for (const key in a) {
-    if (a[key] !== b[key]) {
+    if (!compareQuery(a[key] ?? null, b[key] ?? null)) {
       return false
     }
   }
