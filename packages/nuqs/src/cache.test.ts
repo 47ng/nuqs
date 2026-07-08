@@ -193,6 +193,11 @@ describe('cache', () => {
         compareSearchParams({ q: 'x', empty: undefined }, { q: 'x' })
       ).toBe(false)
     })
+    it('rejects an absent key vs a key with an undefined value', () => {
+      expect(
+        compareSearchParams({ q: 'x' }, { q: 'x', empty: undefined })
+      ).toBe(false)
+    })
     it('accepts both values being undefined', () => {
       expect(compareSearchParams({ q: undefined }, { q: undefined })).toBe(true)
     })
