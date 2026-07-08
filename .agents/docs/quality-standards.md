@@ -179,10 +179,13 @@ Enable debug logs when investigating:
 localStorage.setItem('debug', 'nuqs')
 ```
 
-Use prefixes:
+Use prefixes (see `packages/nuqs/src/lib/debug-messages.ts` for the full catalog):
 
-- `[nuqs]` — Single-key hook operations
-- `[nuq+]` — Multi-key hook operations
+- `[nuq+ …]` — hook-level (useQueryStates) messages
+- `[nuqs gtq]` — global throttle queue
+- `[nuqs dq]` / `[nuqs dqc]` — debounce queue / controller
+- `[nuqs <adapter>]` — adapter URL updates (e.g. `[nuqs react]`)
+- `[nuqs]` — everything else (queue reset, safe-parse, key isolation)
 
 Capture debug output for:
 
