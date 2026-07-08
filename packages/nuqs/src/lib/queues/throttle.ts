@@ -289,9 +289,13 @@ export class ThrottledQueue {
       // This may fail due to rate-limiting of history methods,
       // for example Safari only allows 100 updates in a 30s window.
       console.error(error(429), items.map(([key]) => key).join(), err)
-      // The overlay was already cleared above but the URL never changed:
-      // notify so every hook converges back to the committed search params,
-      // instead of keeping optimistic values that will never land.
+      // The URL never changed: clear the failed overlay values if the adapter
+      // deferred the normal reset, then notify so every hook converges back to
+      // the committed search params instead of keeping optimistic values that
+      // will never land.
+      if (!adapter.autoResetQueueOnUpdate) {
+        this.reset({ notify: false })
+      }
       for (const [key] of items) {
         this.sync.emit(key)
       }
