@@ -2,6 +2,7 @@ import { useRouter } from 'next/compat/router.js'
 import type { NextRouter } from 'next/router'
 import { useCallback, useEffect, useMemo } from 'react'
 import { debug } from '../../lib/debug'
+import { globalSingleton } from '../../lib/global-singleton'
 import { resetQueues } from '../../lib/queues/reset'
 import { renderQueryString } from '../../lib/url-encoding'
 import type { AdapterInterface, UpdateUrlFunction } from '../lib/defs'
@@ -22,10 +23,12 @@ export function isPagesRouter(): boolean {
   return typeof window.next?.router?.state?.asPath === 'string'
 }
 
-let isNuqsUpdateMutex: boolean = false
+const updateState = globalSingleton('next-pages-router-update', () => ({
+  isNuqsUpdate: false
+}))
 
 function onNavigation() {
-  if (isNuqsUpdateMutex) {
+  if (updateState.isNuqsUpdate) {
     return
   }
   resetQueues()
@@ -77,7 +80,7 @@ export function useNuqsNextPagesRouterAdapter(): AdapterInterface {
     debug(20, 'next/pages', asPath)
     const method =
       options.history === 'push' ? nextRouter.push : nextRouter.replace
-    isNuqsUpdateMutex = true
+    updateState.isNuqsUpdate = true
     method
       .call(
         nextRouter,
@@ -104,7 +107,7 @@ export function useNuqsNextPagesRouterAdapter(): AdapterInterface {
         }
       )
       .finally(() => {
-        isNuqsUpdateMutex = false
+        updateState.isNuqsUpdate = false
       })
   }, [])
 

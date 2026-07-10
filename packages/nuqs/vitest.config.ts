@@ -66,7 +66,8 @@ function duplicateLibraryCopy(): Plugin {
 const config: ViteUserConfig = defineConfig({
   plugins: [duplicateLibraryCopy()],
   optimizeDeps: {
-    exclude: [copySpecifier]
+    exclude: [copySpecifier],
+    include: ['next/compat/router.js']
   },
   define: {
     /**

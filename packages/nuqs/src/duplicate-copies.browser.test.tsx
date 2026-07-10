@@ -2,11 +2,60 @@ import React from 'react'
 import { describe, expect, it, vi } from 'vitest'
 import { page } from 'vitest/browser'
 import { render } from 'vitest-browser-react'
+import * as nextPagesAdapterA from './adapters/next/pages'
 import * as reactAdapterA from './adapters/react'
 import * as adapterA from './adapters/testing'
 import * as nuqsA from './index'
 import * as nuqsB from 'nuqs-copy-b'
+import * as nextPagesAdapterB from 'nuqs-copy-b/adapters/next/pages'
 import * as reactAdapterB from 'nuqs-copy-b/adapters/react'
+
+const pagesRouterHarness = vi.hoisted(() => {
+  type Listener = () => void
+  const listeners = new Map<string, Set<Listener>>()
+  function emit(event: string) {
+    for (const listener of listeners.get(event) ?? []) {
+      listener()
+    }
+  }
+  const router = {
+    asPath: '/',
+    pathname: '/',
+    query: {},
+    state: { asPath: '/' },
+    events: {
+      on(event: string, listener: Listener) {
+        const eventListeners = listeners.get(event) ?? new Set()
+        eventListeners.add(listener)
+        listeners.set(event, eventListeners)
+      },
+      off(event: string, listener: Listener) {
+        listeners.get(event)?.delete(listener)
+      }
+    },
+    push() {
+      emit('routeChangeStart')
+      emit('beforeHistoryChange')
+      return Promise.resolve(true)
+    },
+    replace() {
+      emit('routeChangeStart')
+      emit('beforeHistoryChange')
+      return Promise.resolve(true)
+    }
+  }
+  return {
+    router,
+    reset() {
+      listeners.clear()
+    }
+  }
+})
+
+vi.mock('next/compat/router.js', () => {
+  const useRouter = () => pagesRouterHarness.router
+  return { default: { useRouter }, useRouter }
+})
 
 // nuqsB is a second, independent instance of the library source graph
 // (see the duplicateLibraryCopy plugin in vitest.config.ts), simulating
@@ -103,6 +152,46 @@ describe('duplicate library copies', () => {
     await page.getByTestId('b').click()
     await expect.element(page.getByTestId('b')).toHaveTextContent('world')
     await expect.element(page.getByTestId('a')).toHaveTextContent('world')
+  })
+
+  it("does not abort another copy's Pages Router update", async () => {
+    const originalNext = window.next
+    window.next = { router: pagesRouterHarness.router as never }
+    let updatePromise: Promise<URLSearchParams> | undefined
+    function DemoA() {
+      const [, setQ] = nuqsA.useQueryState('q')
+      return (
+        <button
+          data-testid="pages-a"
+          onClick={() => {
+            updatePromise = setQ('from-a')
+          }}
+        />
+      )
+    }
+    function DemoB() {
+      nuqsB.useQueryState('other')
+      return null
+    }
+    try {
+      render(
+        <>
+          <nextPagesAdapterA.NuqsAdapter>
+            <DemoA />
+          </nextPagesAdapterA.NuqsAdapter>
+          <nextPagesAdapterB.NuqsAdapter>
+            <DemoB />
+          </nextPagesAdapterB.NuqsAdapter>
+        </>
+      )
+      await page.getByTestId('pages-a').click()
+      await vi.waitFor(() => expect(updatePromise).toBeDefined())
+      const search = await updatePromise!
+      expect(search.get('q')).toBe('from-a')
+    } finally {
+      window.next = originalNext
+      pagesRouterHarness.reset()
+    }
   })
 
   it('batches updates from both copies into a single URL update', async () => {
