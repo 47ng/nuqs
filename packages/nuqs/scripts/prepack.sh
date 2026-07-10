@@ -14,7 +14,7 @@ VERSION=$(jq -r '.version' < package.json)
 # The placeholder feeds the globalThis singleton keys shared across
 # duplicate copies: failing to inject the version would make different
 # published versions collide on the same keys.
-if ! find dist -name "*.js" -exec grep -q "0.0.0-inject-version-here" {} + ; then
+if ! grep -rq "0.0.0-inject-version-here" dist --include="*.js"; then
   echo "Error: version placeholder not found in dist output" >&2
   exit 1
 fi
