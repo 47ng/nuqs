@@ -12,7 +12,8 @@
     "paths": {
       // Type resolution for the virtual second copy of the library served
       // by the duplicateLibraryCopy plugin in vitest.config.ts
-      "nuqs-copy-b": ["./src/index.ts"]
+      "nuqs-copy-b": ["./src/index.ts"],
+      "nuqs-copy-b/*": ["./src/*"]
     },
     // Language & Environment
     "target": "ESNext",

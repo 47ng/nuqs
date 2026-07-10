@@ -2,9 +2,11 @@ import React from 'react'
 import { describe, expect, it, vi } from 'vitest'
 import { page } from 'vitest/browser'
 import { render } from 'vitest-browser-react'
+import * as reactAdapterA from './adapters/react'
 import * as adapterA from './adapters/testing'
 import * as nuqsA from './index'
 import * as nuqsB from 'nuqs-copy-b'
+import * as reactAdapterB from 'nuqs-copy-b/adapters/react'
 
 // nuqsB is a second, independent instance of the library source graph
 // (see the duplicateLibraryCopy plugin in vitest.config.ts), simulating
@@ -25,6 +27,55 @@ describe('duplicate library copies', () => {
       wrapper: adapterA.withNuqsTestingAdapter({ searchParams: '?q=hello' })
     })
     await expect.element(page.getByTestId('q')).toHaveTextContent('hello')
+  })
+
+  it('syncs external history updates with adapters from both copies', async () => {
+    const originalUrl = location.href
+    const originalPushState = history.pushState
+    const originalReplaceState = history.replaceState
+    originalReplaceState.call(history, null, '', '?q=hello')
+    reactAdapterA.enableHistorySync()
+    reactAdapterB.enableHistorySync()
+    function DemoA() {
+      const [q] = nuqsA.useQueryState('q')
+      return <span data-testid="history-a">{q}</span>
+    }
+    function DemoB() {
+      const [q] = nuqsB.useQueryState('q')
+      return <span data-testid="history-b">{q}</span>
+    }
+    try {
+      render(
+        <>
+          <reactAdapterA.NuqsAdapter>
+            <DemoA />
+          </reactAdapterA.NuqsAdapter>
+          <reactAdapterB.NuqsAdapter>
+            <DemoB />
+          </reactAdapterB.NuqsAdapter>
+        </>
+      )
+      await expect
+        .element(page.getByTestId('history-a'))
+        .toHaveTextContent('hello')
+      await expect
+        .element(page.getByTestId('history-b'))
+        .toHaveTextContent('hello')
+
+      history.pushState(null, '', '?q=external')
+
+      await expect
+        .element(page.getByTestId('history-a'))
+        .toHaveTextContent('external')
+      await expect
+        .element(page.getByTestId('history-b'))
+        .toHaveTextContent('external')
+    } finally {
+      history.pushState = originalPushState
+      history.replaceState = originalReplaceState
+      delete history.nuqs
+      originalReplaceState.call(history, null, '', originalUrl)
+    }
   })
 
   it('syncs state updates across copies', async () => {

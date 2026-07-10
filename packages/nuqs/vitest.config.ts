@@ -6,6 +6,7 @@ import { defineConfig, type ViteUserConfig } from 'vitest/config'
 const pkgDir = normalizePath(import.meta.dirname)
 const srcDir = pkgDir + '/src'
 const copyPrefix = '/@nuqs-copy-b'
+const copySpecifier = 'nuqs-copy-b'
 
 /**
  * Serves a second, independent copy of the library source graph under the
@@ -18,13 +19,14 @@ function duplicateLibraryCopy(): Plugin {
     name: 'nuqs:duplicate-library-copy',
     enforce: 'pre',
     async resolveId(source, importer, options) {
-      if (source === 'nuqs-copy-b') {
+      if (source === copySpecifier || source.startsWith(copySpecifier + '/')) {
         // The dependency scanner has no load hook for virtual modules,
         // keep it from aborting the pre-bundling scan (see optimizeDeps).
         if ('scan' in options && options.scan) {
           return { id: source, external: true }
         }
-        return copyPrefix + srcDir + '/index.ts'
+        const subpath = source.slice(copySpecifier.length)
+        return copyPrefix + srcDir + (subpath || '/index') + '.ts'
       }
       if (source.startsWith(copyPrefix)) {
         return source
@@ -64,7 +66,7 @@ function duplicateLibraryCopy(): Plugin {
 const config: ViteUserConfig = defineConfig({
   plugins: [duplicateLibraryCopy()],
   optimizeDeps: {
-    exclude: ['nuqs-copy-b']
+    exclude: [copySpecifier]
   },
   define: {
     /**

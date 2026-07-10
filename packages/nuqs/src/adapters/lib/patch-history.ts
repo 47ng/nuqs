@@ -1,11 +1,20 @@
 import { debug } from '../../lib/debug'
-import type { Emitter } from '../../lib/emitter'
+import { createEmitter, type Emitter } from '../../lib/emitter'
 import { error } from '../../lib/errors'
+import { globalSingleton } from '../../lib/global-singleton'
 import { resetQueues, spinQueueResetMutex } from '../../lib/queues/reset'
 import { getSearchParams } from '../../lib/search-params'
 import { version } from '../../lib/version'
 
 export type SearchParamsSyncEmitterEvents = { update: URLSearchParams }
+
+export function getHistorySyncEmitter(
+  adapter: string
+): Emitter<SearchParamsSyncEmitterEvents> {
+  return globalSingleton(`history-emitter.${adapter}`, () =>
+    createEmitter<SearchParamsSyncEmitterEvents>()
+  )
+}
 
 export const historyUpdateMarker = '__nuqs__'
 
