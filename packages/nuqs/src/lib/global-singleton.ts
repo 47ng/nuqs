@@ -4,6 +4,8 @@ type GlobalRegistry = {
   [key: symbol]: unknown
 }
 
+const fallbackRegistry: GlobalRegistry = {}
+
 /**
  * Store a module-level singleton on globalThis, keyed by library version,
  * so that duplicate copies of the library loaded side by side (e.g. in
@@ -14,7 +16,11 @@ type GlobalRegistry = {
 export function globalSingleton<T>(scope: string, create: () => T): T {
   const key = Symbol.for(`nuqs.${version}.${scope}`)
   const registry = globalThis as GlobalRegistry
-  return (registry[key] ??= create()) as T
+  if (registry[key] != null) {
+    return registry[key] as T
+  }
+  const target = Object.isExtensible(registry) ? registry : fallbackRegistry
+  return (target[key] ??= create()) as T
 }
 
 /**
