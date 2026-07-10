@@ -1,0 +1,3 @@
+# vitest normalizes CRLF when comparing file snapshots, but an update run
+# on a CRLF checkout would rewrite them as LF and churn the working tree.
+packages/nuqs/tests/snapshots/** text eol=lf

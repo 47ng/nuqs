@@ -25,6 +25,7 @@
     "@types/semver": "^7.7.1",
     "msw": "catalog:msw",
     "typescript": "catalog:typescript",
+    "typescript-7": "catalog:typescript",
     "vitest": "catalog:vitest"
   }
 }
