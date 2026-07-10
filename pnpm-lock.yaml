@@ -923,6 +923,9 @@ importers:
       valibot:
         specifier: ^1.2.0
         version: 1.2.0(@typescript/typescript6@6.0.2)
+      vite:
+        specifier: catalog:vite
+        version: 8.0.16(@types/node@24.10.10)(esbuild@0.27.2)(jiti@2.7.0)(tsx@4.20.4)(yaml@2.9.0)
       vitest:
         specifier: catalog:vitest
         version: 4.1.8(@types/node@24.10.10)(@vitest/browser-playwright@4.1.8)(@vitest/coverage-v8@4.1.8)(msw@2.14.6(@types/node@24.10.10)(@typescript/typescript6@6.0.2))(vite@8.0.16(@types/node@24.10.10)(esbuild@0.27.2)(jiti@2.7.0)(tsx@4.20.4)(yaml@2.9.0))

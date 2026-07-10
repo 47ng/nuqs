@@ -32,15 +32,10 @@ setup/assertion testing facilities.
 
 ### Monorepo setups
 
-This error can also occur in monorepo setups where components using nuqs hooks
-are in different packages resolving to different `nuqs` versions,
-leading to different context references being used.
+Components using nuqs can live in workspace or shared packages. Make sure they
+are rendered below the application's `NuqsAdapter` and that all packages use the
+same version of `nuqs`.
 
-If you [enable debugging](https://nuqs.dev/docs/debugging), you might see a
-[`NUQS-303 - Multiple adapter contexts detected`](./NUQS-303.md) error, confirming
-this hypothesis.
-
-Make sure that all packages resolve to the same version
-of `nuqs` to prevent this issue from arising. See issue
-[#798](https://github.com/47ng/nuqs/issues/798) for more details and
-possible solutions.
+Multiple copies of the same version are supported by the fix in
+[#1469](https://github.com/47ng/nuqs/pull/1469). If every package already uses
+the same version, upgrade to a release that includes it.
