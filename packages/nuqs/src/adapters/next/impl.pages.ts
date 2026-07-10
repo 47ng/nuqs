@@ -81,34 +81,39 @@ export function useNuqsNextPagesRouterAdapter(): AdapterInterface {
     const method =
       options.history === 'push' ? nextRouter.push : nextRouter.replace
     updateState.isNuqsUpdate = true
-    method
-      .call(
-        nextRouter,
-        // This is what makes the URL work (mapping dynamic segments placeholders
-        // in pathname to their values in query, plus search params in query too).
-        {
-          pathname: nextRouter.pathname,
-          query: {
-            // Note: we put search params first so that one that conflicts
-            // with dynamic params will be overwritten.
-            ...urlSearchParamsToObject(search),
-            ...urlParams
+    try {
+      method
+        .call(
+          nextRouter,
+          // This is what makes the URL work (mapping dynamic segments placeholders
+          // in pathname to their values in query, plus search params in query too).
+          {
+            pathname: nextRouter.pathname,
+            query: {
+              // Note: we put search params first so that one that conflicts
+              // with dynamic params will be overwritten.
+              ...urlSearchParamsToObject(search),
+              ...urlParams
+            }
+            // For some reason we don't need to pass the hash here,
+            // it's preserved when passed as part of the asPath.
+          },
+          // This is what makes the URL pretty (resolved dynamic segments
+          // and nuqs-formatted search params).
+          asPath,
+          // And these are the options that are passed to the router.
+          {
+            scroll: options.scroll,
+            shallow: options.shallow
           }
-          // For some reason we don't need to pass the hash here,
-          // it's preserved when passed as part of the asPath.
-        },
-        // This is what makes the URL pretty (resolved dynamic segments
-        // and nuqs-formatted search params).
-        asPath,
-        // And these are the options that are passed to the router.
-        {
-          scroll: options.scroll,
-          shallow: options.shallow
-        }
-      )
-      .finally(() => {
-        updateState.isNuqsUpdate = false
-      })
+        )
+        .finally(() => {
+          updateState.isNuqsUpdate = false
+        })
+    } catch (error) {
+      updateState.isNuqsUpdate = false
+      throw error
+    }
   }, [])
 
   return {

@@ -13,10 +13,21 @@ import * as reactAdapterB from 'nuqs-copy-b/adapters/react'
 const pagesRouterHarness = vi.hoisted(() => {
   type Listener = () => void
   const listeners = new Map<string, Set<Listener>>()
+  let nextUpdateError: Error | null = null
   function emit(event: string) {
     for (const listener of listeners.get(event) ?? []) {
       listener()
     }
+  }
+  function update() {
+    if (nextUpdateError !== null) {
+      const error = nextUpdateError
+      nextUpdateError = null
+      throw error
+    }
+    emit('routeChangeStart')
+    emit('beforeHistoryChange')
+    return Promise.resolve(true)
   }
   const router = {
     asPath: '/',
@@ -33,21 +44,21 @@ const pagesRouterHarness = vi.hoisted(() => {
         listeners.get(event)?.delete(listener)
       }
     },
-    push() {
-      emit('routeChangeStart')
-      emit('beforeHistoryChange')
-      return Promise.resolve(true)
-    },
-    replace() {
-      emit('routeChangeStart')
-      emit('beforeHistoryChange')
-      return Promise.resolve(true)
-    }
+    push: update,
+    replace: update
   }
   return {
     router,
+    failNextUpdate(error: Error) {
+      nextUpdateError = error
+    },
+    navigate() {
+      emit('routeChangeStart')
+      emit('beforeHistoryChange')
+    },
     reset() {
       listeners.clear()
+      nextUpdateError = null
     }
   }
 })
@@ -191,6 +202,70 @@ describe('duplicate library copies', () => {
     } finally {
       window.next = originalNext
       pagesRouterHarness.reset()
+    }
+  })
+
+  it('recovers Pages Router queues across copies after a synchronous navigation failure', async () => {
+    const originalNext = window.next
+    const consoleErrorSpy = vi
+      .spyOn(console, 'error')
+      .mockImplementation(() => {})
+    window.next = { router: pagesRouterHarness.router as never }
+    let failedUpdate: Promise<URLSearchParams> | undefined
+    let recoveredUpdate: Promise<URLSearchParams> | undefined
+    function DemoA() {
+      const [, setQ] = nuqsA.useQueryState('q')
+      return (
+        <button
+          data-testid="pages-fail"
+          onClick={() => {
+            failedUpdate = setQ('stale')
+            void failedUpdate.catch(() => {})
+          }}
+        />
+      )
+    }
+    function DemoB() {
+      const [, setOther] = nuqsB.useQueryState('other')
+      return (
+        <button
+          data-testid="pages-recover"
+          onClick={() => {
+            recoveredUpdate = setOther('fresh')
+          }}
+        />
+      )
+    }
+    try {
+      render(
+        <>
+          <nextPagesAdapterA.NuqsAdapter>
+            <DemoA />
+          </nextPagesAdapterA.NuqsAdapter>
+          <nextPagesAdapterB.NuqsAdapter>
+            <DemoB />
+          </nextPagesAdapterB.NuqsAdapter>
+        </>
+      )
+      pagesRouterHarness.failNextUpdate(new Error('router update failed'))
+
+      await page.getByTestId('pages-fail').click()
+      await vi.waitFor(() => expect(failedUpdate).toBeDefined())
+      await expect(failedUpdate).rejects.toBeInstanceOf(URLSearchParams)
+
+      pagesRouterHarness.navigate()
+      await page.getByTestId('pages-recover').click()
+      await vi.waitFor(() => expect(recoveredUpdate).toBeDefined())
+
+      const recoveredSearch = await recoveredUpdate!
+      expect({
+        q: recoveredSearch.get('q'),
+        other: recoveredSearch.get('other')
+      }).toEqual({ q: null, other: 'fresh' })
+    } finally {
+      window.next = originalNext
+      pagesRouterHarness.reset()
+      consoleErrorSpy.mockRestore()
     }
   })
 
