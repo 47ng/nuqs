@@ -876,6 +876,119 @@ describe('useQueryStates: update sequencing', () => {
   })
 })
 
+describe('limitUrlUpdates precedence', () => {
+  it('call-level throttle overrides global debounce', async () => {
+    const onUrlUpdate = vi.fn<OnUrlUpdateFunction>()
+    const { result, act } = await renderHook(
+      () =>
+        useQueryStates(
+          { test: parseAsString },
+          { limitUrlUpdates: debounce(300) }
+        ),
+      {
+        wrapper: withNuqsTestingAdapter({
+          onUrlUpdate
+        })
+      }
+    )
+    let p: Promise<URLSearchParams> | undefined = undefined
+    await act(async () => {
+      p = result.current[1]({ test: 'pass' }, { limitUrlUpdates: throttle(50) })
+      await waitForNextTick()
+    })
+    // A real throttle flushes on the next tick.
+    // A debounce would still be waiting out its timer.
+    expect(onUrlUpdate).toHaveBeenCalledOnce()
+    expect(onUrlUpdate.mock.calls[0]![0].queryString).toEqual('?test=pass')
+    await expect(p).resolves.toEqual(new URLSearchParams('?test=pass'))
+  })
+
+  it('parser-level throttle overrides global debounce', async () => {
+    const onUrlUpdate = vi.fn<OnUrlUpdateFunction>()
+    const { result, act } = await renderHook(
+      () =>
+        useQueryStates(
+          {
+            test: parseAsString.withOptions({
+              limitUrlUpdates: throttle(50)
+            })
+          },
+          { limitUrlUpdates: debounce(300) }
+        ),
+      {
+        wrapper: withNuqsTestingAdapter({
+          onUrlUpdate
+        })
+      }
+    )
+    let p: Promise<URLSearchParams> | undefined = undefined
+    await act(async () => {
+      p = result.current[1]({ test: 'pass' })
+      await waitForNextTick()
+    })
+    expect(onUrlUpdate).toHaveBeenCalledOnce()
+    expect(onUrlUpdate.mock.calls[0]![0].queryString).toEqual('?test=pass')
+    await expect(p).resolves.toEqual(new URLSearchParams('?test=pass'))
+  })
+
+  it('parser-level debounce timeMs overrides global debounce timeMs', async () => {
+    const onUrlUpdate = vi.fn<OnUrlUpdateFunction>()
+    const { result, act } = await renderHook(
+      () =>
+        useQueryStates(
+          {
+            test: parseAsString.withOptions({
+              limitUrlUpdates: debounce(50)
+            })
+          },
+          { limitUrlUpdates: debounce(500) }
+        ),
+      {
+        wrapper: withNuqsTestingAdapter({
+          onUrlUpdate
+        })
+      }
+    )
+    let p: Promise<URLSearchParams> | undefined = undefined
+    await act(async () => {
+      p = result.current[1]({ test: 'pass' })
+      // Past the parser's 50ms debounce.
+      // Short of the global 500ms one.
+      await new Promise(resolve => setTimeout(resolve, 150))
+    })
+    expect(onUrlUpdate).toHaveBeenCalledOnce()
+    expect(onUrlUpdate.mock.calls[0]![0].queryString).toEqual('?test=pass')
+    await expect(p).resolves.toEqual(new URLSearchParams('?test=pass'))
+  })
+
+  it('parser-level debounce alone still debounces (no global set)', async () => {
+    const onUrlUpdate = vi.fn<OnUrlUpdateFunction>()
+    const { result, act } = await renderHook(
+      () =>
+        useQueryStates({
+          test: parseAsString.withOptions({
+            limitUrlUpdates: debounce(100)
+          })
+        }),
+      {
+        wrapper: withNuqsTestingAdapter({
+          onUrlUpdate
+        })
+      }
+    )
+    let p: Promise<URLSearchParams> | undefined = undefined
+    await act(async () => {
+      p = result.current[1]({ test: 'pass' })
+      await waitForNextTick()
+    })
+    // Still pending: the debounce timer hasn't elapsed yet.
+    expect(onUrlUpdate).not.toHaveBeenCalled()
+    await expect(p).resolves.toEqual(new URLSearchParams('?test=pass'))
+    expect(onUrlUpdate).toHaveBeenCalledOnce()
+    expect(onUrlUpdate.mock.calls[0]![0].queryString).toEqual('?test=pass')
+  })
+})
+
 describe('useQueryStates: adapter defaults', () => {
   it('should use adapter default value for `shallow` when provided', async () => {
     const onUrlUpdate = vi.fn<OnUrlUpdateFunction>()
