@@ -7,7 +7,7 @@ import {
 import type { Nullable, Options, UrlKeys } from './defs'
 import { compareQuery } from './lib/compare'
 import { debug } from './lib/debug'
-import { debounceController } from './lib/queues/debounce'
+import { debounceController, useQueuedQueries } from './lib/queues/debounce'
 import { defaultRateLimit } from './lib/queues/rate-limiting'
 import {
   globalThrottleQueue,
@@ -126,9 +126,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
         .join(',')
     ]
   )
-  const queuedQueries = debounceController.useQueuedQueries(
-    Object.values(resolvedUrlKeys)
-  )
+  const queuedQueries = useQueuedQueries(Object.values(resolvedUrlKeys))
   const [internalState, setInternalState] = useState<V>(
     () => parseMap(keyMap, urlKeys, initialSearchParams, queuedQueries).state
   )
@@ -333,16 +331,13 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
               startTransition
           }
         }
-        if (
-          callOptions?.limitUrlUpdates?.method === 'debounce' ||
-          limitUrlUpdates?.method === 'debounce' ||
-          parser.limitUrlUpdates?.method === 'debounce'
-        ) {
+        const resolvedLimitUrlUpdates =
+          callOptions.limitUrlUpdates ??
+          parser.limitUrlUpdates ??
+          limitUrlUpdates
+        if (resolvedLimitUrlUpdates?.method === 'debounce') {
           const timeMs =
-            callOptions?.limitUrlUpdates?.timeMs ??
-            limitUrlUpdates?.timeMs ??
-            parser.limitUrlUpdates?.timeMs ??
-            defaultRateLimit.timeMs
+            resolvedLimitUrlUpdates.timeMs ?? defaultRateLimit.timeMs
           const debouncedPromise = debounceController.push(
             update,
             timeMs,
@@ -357,9 +352,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
           }
         } else {
           const timeMs =
-            callOptions?.limitUrlUpdates?.timeMs ??
-            parser?.limitUrlUpdates?.timeMs ??
-            limitUrlUpdates?.timeMs ??
+            resolvedLimitUrlUpdates?.timeMs ??
             callOptions.throttleMs ??
             parser.throttleMs ??
             throttleMs

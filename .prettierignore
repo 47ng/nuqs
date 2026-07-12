@@ -4,3 +4,7 @@
 **/dist/
 **/.next/
 **/.turbo/
+
+# Generated API snapshot skeletons (see packages/nuqs/src/api.test.ts);
+# their duplicate `_` parameters aren't parseable by prettier.
+packages/nuqs/tests/snapshots/

@@ -1,15 +1,14 @@
 import { startTransition, useCallback, useEffect, useState } from 'react'
 import { debug } from '../../lib/debug'
-import { createEmitter } from '../../lib/emitter'
 import { setQueueResetMutex } from '../../lib/queues/reset'
 import { renderQueryString } from '../../lib/url-encoding'
 import { createAdapterProvider, type AdapterProvider } from './context'
 import type { AdapterInterface, AdapterOptions } from './defs'
 import { applyChange, filterSearchParams } from './key-isolation'
 import {
-  patchHistory as applyHistoryPatch,
+  getHistorySyncEmitter,
   historyUpdateMarker,
-  type SearchParamsSyncEmitterEvents
+  patchHistory as applyHistoryPatch
 } from './patch-history'
 
 // Abstract away the types for the useNavigate hook from react-router-based frameworks
@@ -48,7 +47,7 @@ export function createReactRouterBasedAdapter({
   NuqsAdapter: AdapterProvider
   useOptimisticSearchParams: () => URLSearchParams
 } {
-  const emitter = createEmitter<SearchParamsSyncEmitterEvents>()
+  const emitter = getHistorySyncEmitter(adapter)
   function useNuqsReactRouterBasedAdapter(
     watchKeys: string[]
   ): AdapterInterface {

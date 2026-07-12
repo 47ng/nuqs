@@ -67,9 +67,9 @@ export function createSerializer<
     arg1BaseOrValues: BaseType | Values,
     arg2values: Values | null = {}
   ) {
-    let [base, search] = isBase<BaseType>(arg1BaseOrValues)
+    let [base, search, hash] = isBase<BaseType>(arg1BaseOrValues)
       ? splitBase(arg1BaseOrValues)
-      : ['', new URLSearchParams()]
+      : ['', new URLSearchParams(), '']
     const values = isBase(arg1BaseOrValues) ? arg2values : arg1BaseOrValues
     if (values === null) {
       for (const key in parsers) {
@@ -79,7 +79,7 @@ export function createSerializer<
       if (processUrlSearchParams) {
         search = processUrlSearchParams(search)
       }
-      return (base + renderQueryString(search)) as Return
+      return (base + renderQueryString(search) + hash) as Return
     }
     for (const key in parsers) {
       const parser = parsers[key]
@@ -106,7 +106,7 @@ export function createSerializer<
     if (processUrlSearchParams) {
       search = processUrlSearchParams(search)
     }
-    return base + renderQueryString(search)
+    return base + renderQueryString(search) + hash
   }
   return serialize
 }
@@ -121,14 +121,17 @@ function isBase<BaseType>(base: any): base is BaseType {
 
 function splitBase<BaseType extends Base>(base: BaseType) {
   if (typeof base === 'string') {
-    const [path = '', ...search] = base.split('?')
-    return [path, new URLSearchParams(search.join('?'))] as const
+    const [pathAndSearch = '', ...hashParts] = base.split('#')
+    const hash = hashParts.length ? '#' + hashParts.join('#') : ''
+    const [path = '', ...search] = pathAndSearch.split('?')
+    return [path, new URLSearchParams(search.join('?')), hash] as const
   } else if (base instanceof URLSearchParams) {
-    return ['', new URLSearchParams(base)] as const // Operate on a copy of URLSearchParams, as derived classes may restrict its allowed methods
+    return ['', new URLSearchParams(base), ''] as const // Operate on a copy of URLSearchParams, as derived classes may restrict its allowed methods
   } else {
     return [
       base.origin + base.pathname,
-      new URLSearchParams(base.searchParams)
+      new URLSearchParams(base.searchParams),
+      base.hash
     ] as const
   }
 }

@@ -2,16 +2,14 @@
 
 ## Probable cause
 
-This error occurs in [debug mode](https://nuqs.dev/docs/debugging) in
-certain monorepo setups where references of the adapter context aren't the same
-in different packages, and cause a [`NUQS-404 - nuqs requires an adapter to work with your framework`](./NUQS-404.md) error.
-
-## Root cause
-
-As described in the [React docs](https://react.dev/reference/react/useContext#my-component-doesnt-see-the-value-from-my-provider), this can happen with Context providers (which
-is what adapters are) being re-created in different modules and causing different
-references being used for a provider and consumers.
+Parts of your application are using different versions of `nuqs` or React, so
+they cannot use the same adapter.
 
 ## Possible solutions
 
-See issue [#798](https://github.com/47ng/nuqs/issues/798) for more details.
+Make sure all packages use the same version of `nuqs`. If your application has
+multiple React roots, wrap each one with the appropriate `NuqsAdapter`.
+
+Multiple copies of the same `nuqs` version are supported by the fix in
+[#1469](https://github.com/47ng/nuqs/pull/1469). If needed, upgrade to a release
+that includes it.

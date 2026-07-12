@@ -44,7 +44,13 @@ catalogs:
     react-dom: ^19.2.7
 
   typescript:
-    typescript: ^5.9.2
+    # JS API provider for tooling that imports `typescript` (tsdown, vitest,
+    # knip, next). TS 7 drops the JS API until 7.1, so tooling stays on the
+    # 6.0 bridge, which exposes its binary as `tsc6` to avoid clashing with 7.
+    typescript: 'npm:@typescript/typescript6@^6.0.2'
+    # Native Go compiler shipped as TypeScript 7. Exposes `tsc`, so the CLI
+    # type-check scripts pick it up with no change.
+    typescript-7: 'npm:typescript@^7.0.2'
 
 enablePrePostScripts: false
 

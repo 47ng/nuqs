@@ -3,6 +3,7 @@ import type { Options } from '../../defs'
 import { compose } from '../compose'
 import { debug } from '../debug'
 import { error } from '../errors'
+import { globalSingleton } from '../global-singleton'
 import { write, type Query } from '../search-params'
 import { timeout } from '../timeout'
 import { withResolvers, type Resolvers } from '../with-resolvers'
@@ -204,4 +205,7 @@ export class ThrottledQueue {
   }
 }
 
-export const globalThrottleQueue: ThrottledQueue = new ThrottledQueue()
+export const globalThrottleQueue: ThrottledQueue = globalSingleton(
+  'throttle-queue',
+  () => new ThrottledQueue()
+)
