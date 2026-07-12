@@ -7,7 +7,7 @@ import {
 import type { Nullable, Options, UrlKeys } from './defs'
 import { compareQuery } from './lib/compare'
 import { debug } from './lib/debug'
-import { debounceController } from './lib/queues/debounce'
+import { debounceController, useQueuedQueries } from './lib/queues/debounce'
 import { defaultRateLimit } from './lib/queues/rate-limiting'
 import {
   globalThrottleQueue,
@@ -126,9 +126,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
         .join(',')
     ]
   )
-  const queuedQueries = debounceController.useQueuedQueries(
-    Object.values(resolvedUrlKeys)
-  )
+  const queuedQueries = useQueuedQueries(Object.values(resolvedUrlKeys))
   const [internalState, setInternalState] = useState<V>(
     () => parseMap(keyMap, urlKeys, initialSearchParams, queuedQueries).state
   )

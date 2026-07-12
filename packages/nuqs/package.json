@@ -201,6 +201,7 @@
     "typescript": "catalog:typescript",
     "typescript-7": "catalog:typescript",
     "valibot": "^1.2.0",
+    "vite": "catalog:vite",
     "vitest": "catalog:vitest",
     "vitest-browser-react": "2.0.4",
     "zod": "^4.3.6"
