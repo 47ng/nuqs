@@ -11,7 +11,7 @@ export type unstable_AdapterInterface = {
   autoResetQueueOnUpdate?: boolean;
 };
 export type unstable_AdapterOptions = Pick<Options, "history" | "scroll" | "shallow">;
-export type unstable_UpdateUrlFunction = (_: URLSearchParams, _: Required<AdapterOptions>) => void;
+export type unstable_UpdateUrlFunction = (_: URLSearchParams, _: Required<AdapterOptions>) => void | Promise<void>;
 export type unstable_UseAdapterHook = (_: string[]) => AdapterInterface;
 // #endregion
 

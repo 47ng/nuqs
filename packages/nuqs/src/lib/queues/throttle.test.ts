@@ -96,6 +96,23 @@ describe('throttle: ThrottleQueue option combination logic', () => {
     expect(startTransitionB).toHaveBeenCalledOnce()
     expect(startTransitionA).toHaveBeenCalledBefore(startTransitionB)
   })
+  it('passes the updateUrl result to the transition, so a Promise makes it an async action', async () => {
+    const navigationSettled = Promise.resolve()
+    const mockAdapter = createMockAdapter()
+    vi.mocked(mockAdapter.updateUrl).mockReturnValue(navigationSettled)
+    const onTransitionReturn = vi.fn()
+    const startTransition = vi
+      .fn()
+      .mockImplementation((callback: () => void | Promise<void>) =>
+        onTransitionReturn(callback())
+      )
+    const queue = new ThrottledQueue()
+    queue.push({ key: 'a', query: null, options: { startTransition } })
+    await queue.flush(mockAdapter)
+    expect(onTransitionReturn).toHaveBeenCalledExactlyOnceWith(
+      navigationSettled
+    )
+  })
   it('keeps the maximum value for timeMs', () => {
     const queue = new ThrottledQueue()
     queue.push({ key: 'a', query: null, options: {} }, 100)
