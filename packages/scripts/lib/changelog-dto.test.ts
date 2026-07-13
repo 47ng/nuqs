@@ -626,4 +626,23 @@ describe('releaseImpacts', () => {
   it('returns nothing when no change carries an impact label', () => {
     expect(releaseImpacts([])).toEqual([])
   })
+
+  // The re-filter at this boundary is load-bearing: labelSchema only bounds
+  // the string, so a hand-edited release body can carry a triage label that
+  // parses as valid — it must still be kept off the rendered surfaces.
+  it('drops a non-impact label smuggled into a hand-edited DTO', () => {
+    const changes: Change[] = [
+      {
+        source: 'squashedPR',
+        prNumber: 1,
+        type: 'fix',
+        breaking: false,
+        description: 'a fix',
+        author: null,
+        closingIssues: [],
+        labels: ['bug', 'adapters/react', 'deploy:preview']
+      }
+    ]
+    expect(releaseImpacts(changes)).toEqual(['adapters/react'])
+  })
 })
