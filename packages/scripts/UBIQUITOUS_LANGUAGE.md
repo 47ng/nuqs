@@ -127,7 +127,8 @@ interpreted from it.
 
 A GitHub label on a squashed PR naming a functional area the change touches —
 one of the `feature/*`, `parsers/*`, or `adapters/*` prefixes. Captured at
-draft time (filtered from the PR's full label set) and stored per **change** in
+draft time (by `discoverChanges`, filtered from the PR's full label set) and
+stored per **change** in
 the DTO; the release-level **impacts** list is derived at render by aggregating
 the changes' labels, like **category**. Triage labels (`bug`,
 `deploy:preview`, …) are workflow noise, never impact. Rendered as display

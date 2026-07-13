@@ -3,18 +3,17 @@
   The per-theme colors are precomputed in label-colors.ts (which owns the
   contrast guarantee) and carried on each badge as custom properties; this
   file only switches between the two sets.
-
-  Deliberately unlayered: wrapping these rules in `@layer components` makes
-  Tailwind v4 drop them from the build entirely.
 */
-.github-label {
-  color: var(--label-fg-light);
-  background: var(--label-bg-light);
-  border: 1px solid var(--label-border-light);
-}
+@layer components {
+  .github-label {
+    color: var(--label-fg-light);
+    background: var(--label-bg-light);
+    border: 1px solid var(--label-border-light);
+  }
 
-.dark .github-label {
-  color: var(--label-fg-dark);
-  background: var(--label-bg-dark);
-  border-color: var(--label-border-dark);
+  .dark .github-label {
+    color: var(--label-fg-dark);
+    background: var(--label-bg-dark);
+    border-color: var(--label-border-dark);
+  }
 }

@@ -223,8 +223,9 @@ function compareImpactLabels(a: string, b: string): number {
 }
 
 // Keep only a PR's impact labels, deduplicated and in display order
-// (prefix rank, then alphabetical). Runs at discovery, so the DTO stores the
-// filtered set verbatim; display naming stays a render concern.
+// (prefix rank, then alphabetical). Runs at discovery — so the DTO stores the
+// filtered set verbatim — and again at render (see `releaseImpacts`); display
+// naming stays a render concern.
 export function impactLabels(labels: readonly string[]): string[] {
   return [...new Set(labels.filter(label => impactRank(label) !== -1))].sort(
     compareImpactLabels

@@ -7,10 +7,11 @@
 // here (opaque colors, no runtime alpha blending) so the guarantee holds
 // regardless of what the badge is rendered on.
 
-// The GitHub label colors of the impact labels, as configured on the repo.
-// Presentation-only (the notes markdown can't carry color), so the map lives
-// here rather than in the shared codec; an unmapped label falls back to the
-// neutral gray of `adapters/community`.
+// The GitHub label colors of the impact labels — a snapshot of the repo's
+// label configuration (refresh against `gh label list --repo 47ng/nuqs` if
+// colors change there). Presentation-only (the notes markdown can't carry
+// color), so the map lives here rather than in the shared codec; an unmapped
+// label falls back to the neutral gray of `adapters/community`.
 export const LABEL_COLORS: Record<string, string> = {
   'feature/useQueryState': '#c6f6d5',
   'feature/useQueryStates': '#c6f6d5',
@@ -28,7 +29,7 @@ export const LABEL_COLORS: Record<string, string> = {
   'adapters/testing': '#fcc72b',
   'adapters/community': '#888888'
 }
-export const FALLBACK_COLOR = '#888888'
+export const FALLBACK_COLOR = LABEL_COLORS['adapters/community']!
 
 // WCAG 2.x AAA for normal text. The badges are 12px, so the relaxed
 // large-text threshold (4.5:1) does not apply.
