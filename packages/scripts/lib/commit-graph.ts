@@ -28,6 +28,7 @@ import type {
   ReleaseChanges,
   SquashedPRChange
 } from './change.ts'
+import { impactLabels } from './changelog-dto.ts'
 import {
   parseCommit,
   parseSubject,
@@ -180,6 +181,7 @@ export const prSchema = z.object({
   number: z.number(),
   title: z.string(),
   author: z.object({ login: z.string() }).nullable(),
+  labels: z.object({ nodes: z.array(z.object({ name: z.string() })) }),
   participants: participantsSchema,
   closingIssuesReferences: z.object({
     edges: z.array(z.object({ node: issueReferenceSchema }))
@@ -360,9 +362,9 @@ export async function fetchPRNodes<T extends { number: number }>(args: {
   return resolved
 }
 
-// Notes path: every PR with its title, author, closing issues, and participants
-// (the participant nodes dominate the payload, but the Thanks section needs
-// them).
+// Notes path: every PR with its title, author, labels, closing issues, and
+// participants (the participant nodes dominate the payload, but the Thanks
+// section needs them).
 function fetchChangeDetails(
   prNumbers: number[],
   githubToken: string
@@ -375,6 +377,7 @@ function fetchChangeDetails(
         number
         title
         author { login }
+        labels(first: 20) { nodes { name } }
         participants(first: 20) { nodes { login } }
         closingIssuesReferences(first: 10) {
           edges {
@@ -594,7 +597,8 @@ function toSquashedPRChange(
     author: pr.author?.login ?? null,
     closingIssues: pr.closingIssuesReferences.edges.map(
       edge => edge.node.number
-    )
+    ),
+    labels: impactLabels(pr.labels.nodes.map(node => node.name))
   }
 }
 

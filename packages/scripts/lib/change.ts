@@ -18,10 +18,16 @@ const descriptionSchema = z.string().min(1).max(500)
 
 const shaSchema = z.string().regex(/^[0-9a-f]{7,40}$/)
 
+// A GitHub label name: non-empty, bounded (GitHub caps labels at 50 chars).
+const labelSchema = z.string().min(1).max(50)
+
 // A change sourced from a squashed pull request (the common case):
 // identity is the PR number, `description` is the PR title as prose,
 // `author` is the GitHub login (or null for a deleted account), and it
 // carries the issue numbers it closes. Rendered as `#123 - …, by @login`.
+// `labels` are the PR's impact labels (`feature/*`, `parsers/*`, `adapters/*`),
+// filtered at discovery — defaulted so DTOs published before the field
+// existed still parse (v1 back-compat).
 export const squashedPRChangeSchema = z.strictObject({
   source: z.literal('squashedPR'),
   prNumber: z.number().int().positive(),
@@ -29,7 +35,8 @@ export const squashedPRChangeSchema = z.strictObject({
   breaking: z.boolean(),
   description: descriptionSchema, // the PR title
   author: githubLoginSchema.nullable(), // null for a deleted account
-  closingIssues: z.array(z.number().int().positive())
+  closingIssues: z.array(z.number().int().positive()),
+  labels: z.array(labelSchema).default([])
 })
 
 // A change sourced from a direct commit with no PR (rare: a hotfix, a revert)

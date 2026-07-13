@@ -57,7 +57,10 @@ export function toChangelogDTO(release: ReleaseChanges): ChangelogDTO {
 // writes the committed artifact) and the drift test (which guards it) share one
 // source and cannot disagree about what the artifact should contain.
 export function changelogJsonSchema() {
-  return z.toJSONSchema(changelogDtoSchema)
+  // The artifact validates DTO *documents* (the parse-side input), so a field
+  // with a default — `labels`, absent from pre-labels releases — must be
+  // optional, not required as it is in the parsed output type.
+  return z.toJSONSchema(changelogDtoSchema, { io: 'input' })
 }
 
 // --- Embedding: the HTML comment block --------------------------------------
@@ -201,6 +204,70 @@ export function parseCodeSpans(text: string): DescriptionSegment[] {
     segments.push({ code: false, value: text.slice(lastIndex) })
   }
   return segments
+}
+
+// --- Impact labels -----------------------------------------------------------
+
+// The GitHub label prefixes marking a functional area a change impacts. Only
+// these survive into the DTO — triage labels (`bug`, `deploy:preview`, …) are
+// workflow noise, not impact. The array order is the display order: features
+// first, then parsers, then adapters.
+const IMPACT_LABEL_PREFIXES = ['feature/', 'parsers/', 'adapters/'] as const
+
+function impactRank(label: string): number {
+  return IMPACT_LABEL_PREFIXES.findIndex(prefix => label.startsWith(prefix))
+}
+
+function compareImpactLabels(a: string, b: string): number {
+  return impactRank(a) - impactRank(b) || a.localeCompare(b)
+}
+
+// Keep only a PR's impact labels, deduplicated and in display order
+// (prefix rank, then alphabetical). Runs at discovery, so the DTO stores the
+// filtered set verbatim; display naming stays a render concern.
+export function impactLabels(labels: readonly string[]): string[] {
+  return [...new Set(labels.filter(label => impactRank(label) !== -1))].sort(
+    compareImpactLabels
+  )
+}
+
+// Human-readable display names for the known impact labels. An unmapped label
+// (a new area labelled before this map learns about it) falls back to its raw
+// name, so the vocabulary can grow on GitHub without a code change here.
+const IMPACT_LABEL_DISPLAY_NAMES: Record<string, string> = {
+  'feature/useQueryState': 'useQueryState',
+  'feature/useQueryStates': 'useQueryStates',
+  'feature/serializer': 'Serializer',
+  'feature/cache': 'Server cache',
+  'feature/time-safety': 'Time safety (throttle & debounce)',
+  'parsers/built-in': 'Built-in parsers',
+  'parsers/community': 'Community parsers',
+  'adapters/next/app': 'Next.js (app router)',
+  'adapters/next/pages': 'Next.js (pages router)',
+  'adapters/react': 'React SPA',
+  'adapters/react-router': 'React Router',
+  'adapters/remix': 'Remix',
+  'adapters/tanstack-router': 'TanStack Router',
+  'adapters/testing': 'Testing adapter',
+  'adapters/community': 'Community adapters'
+}
+
+export function formatImpactLabel(label: string): string {
+  return IMPACT_LABEL_DISPLAY_NAMES[label] ?? label
+}
+
+// The release-level aggregate: every distinct impact label across the
+// release's changes, in display order. Derived at render (like `category`),
+// never stored — the DTO keeps labels per change. Re-running the taxonomy
+// filter here is load-bearing, not redundant: `labelSchema` only bounds the
+// string, so a hand-edited release body could carry a non-impact label that
+// must still be kept off the rendered surfaces.
+export function releaseImpacts(changes: readonly Change[]): string[] {
+  return impactLabels(
+    changes.flatMap(change =>
+      change.source === 'squashedPR' ? change.labels : []
+    )
+  )
 }
 
 // --- Shared category derivation + grouping ----------------------------------

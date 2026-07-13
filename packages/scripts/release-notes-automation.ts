@@ -8,8 +8,10 @@ import type { Change } from './lib/change.ts'
 import {
   breakingChanges,
   CATEGORIES,
+  formatImpactLabel,
   groupChangesByCategory,
   parseCodeSpans,
+  releaseImpacts,
   renderChangelogComment
 } from './lib/changelog-dto.ts'
 import { discoverChanges, makeGitHubGraphReader } from './lib/commit-graph.ts'
@@ -85,15 +87,22 @@ export function formatThanksSection(contributors: string[]): string | null {
   return `Huge thanks to ${allContributors} for helping!`
 }
 
-// Assemble the full release-notes markdown: the breaking-changes cross-cut
-// first (its own section + a migration-guide placeholder for the maintainer to
-// fill in), then the type sections (with breaking lines flagged ⚠️), then the
-// Thanks section. Empty sections are dropped. Pure: `main` only prints the result.
+// Assemble the full release-notes markdown: the impacts line first (the
+// release-level aggregate of the changes' impact labels, as display names),
+// then the breaking-changes cross-cut (its own section + a migration-guide
+// placeholder for the maintainer to fill in), then the type sections (with
+// breaking lines flagged ⚠️), then the Thanks section. Empty sections are
+// dropped. Pure: `main` only prints the result.
 export function renderReleaseNotes(
   changes: Change[],
   contributors: string[]
 ): string {
   const blocks: string[] = []
+
+  const impacts = releaseImpacts(changes)
+  if (impacts.length > 0) {
+    blocks.push(`**Impacts:** ${impacts.map(formatImpactLabel).join(', ')}`)
+  }
 
   const breaking = breakingChanges(changes)
   if (breaking.length > 0) {

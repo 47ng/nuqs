@@ -123,6 +123,17 @@ reworded to reshape the changelog wording **without** amending the commit —
 intended and supported. Nothing — not type, not category, not bump — is ever
 interpreted from it.
 
+### impact label
+
+A GitHub label on a squashed PR naming a functional area the change touches —
+one of the `feature/*`, `parsers/*`, or `adapters/*` prefixes. Captured at
+draft time (filtered from the PR's full label set) and stored per **change** in
+the DTO; the release-level **impacts** list is derived at render by aggregating
+the changes' labels, like **category**. Triage labels (`bug`,
+`deploy:preview`, …) are workflow noise, never impact. Rendered as display
+names ("React Router", "useQueryStates"), with the raw label name as fallback
+so new labels need no code change to appear.
+
 ### channel
 
 The release channel — `stable` or `beta`. Selects the asymmetric commit range
@@ -145,7 +156,7 @@ A keyword and a same-repo number in a pull request body that names a **target** 
 `Closes #N`, `Fixes #N`, `Resolves #N`, `Addresses #N`, and their tenses. The
 close/fix/resolve keywords are GitHub's own closing keywords (GitHub links the
 issue itself as one of the PR's **closing issues**); `Addresses` is not — GitHub
-never links it — but a release *announces* its targets rather than closing them,
+never links it — but a release _announces_ its targets rather than closing them,
 so we treat it the same. A target reference to a **discussion** is the sole record
 that the discussion belongs to the release.
 

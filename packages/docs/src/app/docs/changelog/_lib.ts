@@ -4,6 +4,7 @@ import {
   type Change,
   groupChangesByCategory,
   parseChangelogComment,
+  releaseImpacts,
   stripChangelogComment
 } from 'scripts/lib/changelog-dto'
 import { z } from 'zod'
@@ -60,12 +61,13 @@ export async function fetchReleases(): Promise<GithubRelease[]> {
 // The render model for one release. `grouped` is null when the release has no
 // valid DTO (missing/malformed/unrecognized) — the page renders a degraded entry
 // (title + date + link) for it rather than dropping it or failing the build.
-// `contributors` is empty in that degraded case (no footer).
+// `contributors` and `impacts` are empty in that degraded case.
 export type ReleaseModel = {
   release: GithubRelease
   grouped: Record<Category, Change[]> | null
   preamble: string | null
   contributors: string[]
+  impacts: string[]
 }
 
 export function buildReleaseModel(release: GithubRelease): ReleaseModel {
@@ -83,13 +85,20 @@ export function buildReleaseModel(release: GithubRelease): ReleaseModel {
         release.tag_name
       )
     }
-    return { release, grouped: null, preamble: null, contributors: [] }
+    return {
+      release,
+      grouped: null,
+      preamble: null,
+      contributors: [],
+      impacts: []
+    }
   }
   return {
     release,
     grouped: groupChangesByCategory(parsed.dto.changes),
     preamble: parsed.preamble,
-    contributors: parsed.dto.contributors
+    contributors: parsed.dto.contributors,
+    impacts: releaseImpacts(parsed.dto.changes)
   }
 }
 

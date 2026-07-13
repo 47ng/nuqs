@@ -8,6 +8,7 @@ import { CommitLine } from '@/src/components/changelog/commit-line'
 import { ContributorsFooter } from '@/src/components/changelog/contributors-footer'
 import { PullRequestLine } from '@/src/components/changelog/pr-line'
 import { Preamble } from '@/src/components/changelog/preamble'
+import { ReleaseImpacts } from '@/src/components/changelog/release-impacts'
 import { github } from '@/src/lib/utils'
 import { Heading } from 'fumadocs-ui/components/heading'
 import {
@@ -99,7 +100,10 @@ export default async function ChangelogPage() {
         ) : (
           <div className="space-y-10 pb-12 sm:space-y-16">
             {models.map(
-              ({ release, grouped, contributors, preamble }, index) => {
+              (
+                { release, grouped, contributors, preamble, impacts },
+                index
+              ) => {
                 const date = formatDate(release.published_at)
                 const tag = release.tag_name
                 const title = release.name || tag
@@ -132,6 +136,8 @@ export default async function ChangelogPage() {
                           View on GitHub
                         </a>
                       </div>
+
+                      <ReleaseImpacts labels={impacts} />
 
                       {preamble && (
                         <div className="mt-6">

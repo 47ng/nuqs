@@ -240,9 +240,9 @@ describe('extractTargetReferences', () => {
   })
 
   it('deduplicates and sorts ascending', () => {
-    expect(
-      extractTargetReferences('Closes #5\nFixes #2\nResolves #5')
-    ).toEqual([2, 5])
+    expect(extractTargetReferences('Closes #5\nFixes #2\nResolves #5')).toEqual(
+      [2, 5]
+    )
   })
 
   it('ignores a cross-repo owner/repo#N reference (this repo only)', () => {
@@ -285,6 +285,7 @@ function createPR(
 ): PR {
   return {
     author: null,
+    labels: { nodes: [] },
     participants: { nodes: [] },
     closingIssuesReferences: { edges: [] },
     ...overrides
@@ -617,6 +618,8 @@ describe('discoverChanges', () => {
     const pr1 = createPR({
       number: 1,
       title: 'feat: first',
+      // The triage label is dropped; only the impact label reaches the change.
+      labels: { nodes: [{ name: 'bug' }, { name: 'adapters/react' }] },
       participants: { nodes: [{ login: 'alice' }] },
       closingIssuesReferences: {
         edges: [
@@ -650,7 +653,8 @@ describe('discoverChanges', () => {
           breaking: false,
           description: 'first',
           author: null,
-          closingIssues: [100]
+          closingIssues: [100],
+          labels: ['adapters/react']
         },
         {
           source: 'squashedPR',
@@ -659,7 +663,8 @@ describe('discoverChanges', () => {
           breaking: false,
           description: 'second',
           author: null,
-          closingIssues: []
+          closingIssues: [],
+          labels: []
         }
       ],
       contributors: ['alice', 'bob']
@@ -696,7 +701,8 @@ describe('discoverChanges', () => {
           breaking: false,
           description: 'kept',
           author: null,
-          closingIssues: []
+          closingIssues: [],
+          labels: []
         }
       ])
       expect(warn).toHaveBeenCalledExactlyOnceWith(
@@ -764,7 +770,8 @@ describe('discoverChanges', () => {
           breaking: false,
           description: 'flaky thing',
           author: null,
-          closingIssues: []
+          closingIssues: [],
+          labels: []
         }
       ],
       contributors: []

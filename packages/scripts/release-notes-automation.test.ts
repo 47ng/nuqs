@@ -22,6 +22,7 @@ function createChange(
     description: '',
     author: null,
     closingIssues: [],
+    labels: [],
     ...overrides
   }
 }
@@ -255,6 +256,43 @@ describe('renderReleaseNotes', () => {
     expect(output).not.toContain('Migration guide')
     expect(output).toBe(['## Features', '', '- #1 - a feature'].join('\n'))
   })
+
+  it('leads with the aggregated impacts line as display names, deduplicated', () => {
+    const changes: Change[] = [
+      createChange({
+        prNumber: 1,
+        type: 'feat',
+        description: 'a feature',
+        labels: ['adapters/react-router', 'feature/useQueryStates']
+      }),
+      createChange({
+        prNumber: 2,
+        type: 'fix',
+        description: 'a fix',
+        labels: ['feature/useQueryStates', 'parsers/built-in']
+      })
+    ]
+    expect(renderReleaseNotes(changes, [])).toBe(
+      [
+        '**Impacts:** useQueryStates, Built-in parsers, React Router',
+        '',
+        '## Features',
+        '',
+        '- #1 - a feature',
+        '',
+        '## Bug fixes',
+        '',
+        '- #2 - a fix'
+      ].join('\n')
+    )
+  })
+
+  it('omits the impacts line when no change carries an impact label', () => {
+    const changes: Change[] = [
+      createChange({ prNumber: 1, type: 'feat', description: 'a feature' })
+    ]
+    expect(renderReleaseNotes(changes, [])).not.toContain('Impacts')
+  })
 })
 
 describe('formatTitle', () => {
@@ -297,6 +335,7 @@ describe('formatChangeLine', () => {
     description: 'add `useQueryState`',
     author: 'alice',
     closingIssues: [5],
+    labels: [],
     breaking: true
   }
 

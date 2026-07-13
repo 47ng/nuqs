@@ -6,9 +6,12 @@ import {
   type ChangelogDTO,
   type ReleaseChanges,
   changelogDtoSchema,
+  formatImpactLabel,
   groupChangesByCategory,
+  impactLabels,
   parseChangelogComment,
   parseCodeSpans,
+  releaseImpacts,
   renderChangelogComment,
   stripChangelogComment,
   toChangelogDTO
@@ -25,7 +28,8 @@ const release: ReleaseChanges = {
       breaking: true,
       description: 'return null on invalid parser input',
       author: 'franky47',
-      closingIssues: [1442, 1443]
+      closingIssues: [1442, 1443],
+      labels: ['parsers/built-in', 'adapters/react']
     },
     {
       source: 'directCommit',
@@ -347,7 +351,9 @@ describe('parseChangelogComment v1 back-compat', () => {
     expect(parsed.dto.changes).toHaveLength(2)
     expect(parsed.dto.changes[0]).toMatchObject({
       source: 'squashedPR',
-      prNumber: 100
+      prNumber: 100,
+      // `labels` postdates the frozen body; absence defaults to no impacts.
+      labels: []
     })
     expect(parsed.dto.contributors).toEqual(['octocat'])
   })
@@ -418,7 +424,8 @@ describe('groupChangesByCategory', () => {
         breaking: false,
         description: 'a fix',
         author: null,
-        closingIssues: []
+        closingIssues: [],
+        labels: []
       },
       {
         source: 'squashedPR',
@@ -427,7 +434,8 @@ describe('groupChangesByCategory', () => {
         breaking: false,
         description: 'a feature',
         author: null,
-        closingIssues: []
+        closingIssues: [],
+        labels: []
       },
       {
         source: 'directCommit',
@@ -466,7 +474,8 @@ describe('groupChangesByCategory', () => {
         breaking: false,
         description: 'pr nine',
         author: null,
-        closingIssues: []
+        closingIssues: [],
+        labels: []
       },
       {
         source: 'directCommit',
@@ -483,7 +492,8 @@ describe('groupChangesByCategory', () => {
         breaking: false,
         description: 'pr three',
         author: null,
-        closingIssues: []
+        closingIssues: [],
+        labels: []
       }
     ]
     expect(
@@ -532,5 +542,88 @@ describe('stripChangelogComment', () => {
       '\r\n'
     )
     expect(stripChangelogComment(body)).toBe(notes.replace(/\n/g, '\r\n'))
+  })
+})
+
+describe('impactLabels', () => {
+  it('drops labels outside the impact taxonomy', () => {
+    expect(
+      impactLabels(['bug', 'deploy:preview', 'adapters/remix', 'released'])
+    ).toEqual(['adapters/remix'])
+  })
+
+  it('deduplicates and orders by prefix (features, parsers, adapters) then name', () => {
+    expect(
+      impactLabels([
+        'adapters/react',
+        'feature/useQueryStates',
+        'adapters/next/app',
+        'parsers/built-in',
+        'feature/useQueryStates'
+      ])
+    ).toEqual([
+      'feature/useQueryStates',
+      'parsers/built-in',
+      'adapters/next/app',
+      'adapters/react'
+    ])
+  })
+})
+
+describe('formatImpactLabel', () => {
+  it('maps known impact labels to display names', () => {
+    expect(formatImpactLabel('adapters/next/app')).toBe('Next.js (app router)')
+    expect(formatImpactLabel('feature/useQueryState')).toBe('useQueryState')
+    expect(formatImpactLabel('parsers/community')).toBe('Community parsers')
+  })
+
+  it('falls back to the raw name for an unmapped label', () => {
+    expect(formatImpactLabel('adapters/solid-router')).toBe(
+      'adapters/solid-router'
+    )
+  })
+})
+
+describe('releaseImpacts', () => {
+  it('aggregates distinct impact labels across changes, in display order', () => {
+    const changes: Change[] = [
+      {
+        source: 'squashedPR',
+        prNumber: 1,
+        type: 'feat',
+        breaking: false,
+        description: 'a feature',
+        author: null,
+        closingIssues: [],
+        labels: ['adapters/react-router', 'feature/useQueryStates']
+      },
+      {
+        source: 'squashedPR',
+        prNumber: 2,
+        type: 'fix',
+        breaking: false,
+        description: 'a fix',
+        author: null,
+        closingIssues: [],
+        labels: ['feature/useQueryStates', 'parsers/built-in']
+      },
+      {
+        source: 'directCommit',
+        sha: 'abcd1234',
+        type: null,
+        breaking: false,
+        description: 'no labels on a direct commit',
+        author: 'Someone'
+      }
+    ]
+    expect(releaseImpacts(changes)).toEqual([
+      'feature/useQueryStates',
+      'parsers/built-in',
+      'adapters/react-router'
+    ])
+  })
+
+  it('returns nothing when no change carries an impact label', () => {
+    expect(releaseImpacts([])).toEqual([])
   })
 })
