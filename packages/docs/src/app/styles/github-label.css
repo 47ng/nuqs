@@ -1,0 +1,45 @@
+/*
+  GitHub's own label coloring formula (Primer), driven by the --label-r/g/b
+  and --label-h/s/l custom properties set inline per badge:
+  light theme paints a solid chip and flips the text black/white on a
+  perceived-lightness threshold; dark theme uses a translucent fill and
+  lightens the label color into readable text.
+  https://github.blog/engineering/user-experience/coloring-with-limited-hues-lessons-from-github-issue-labels/
+
+  Deliberately unlayered: wrapping these rules in `@layer components` makes
+  Tailwind v4 drop them from the build entirely.
+*/
+.github-label {
+  --perceived-lightness: calc(
+    (
+        var(--label-r) * 0.2126 + var(--label-g) * 0.7152 + var(--label-b) *
+          0.0722
+      ) /
+      255
+  );
+  --lightness-switch: max(
+    0,
+    min(calc(1 / (var(--lightness-threshold) - var(--perceived-lightness))), 1)
+  );
+  --lightness-threshold: 0.453;
+  color: hsl(0deg 0% calc(var(--lightness-switch) * 100%));
+  background: rgb(var(--label-r) var(--label-g) var(--label-b));
+  border: 1px solid transparent;
+}
+
+.dark .github-label {
+  --lightness-threshold: 0.6;
+  --lighten-by: calc(
+    (var(--lightness-threshold) - var(--perceived-lightness)) * 100 *
+      var(--lightness-switch)
+  );
+  color: hsl(
+    var(--label-h) calc(var(--label-s) * 1%)
+      calc((var(--label-l) + var(--lighten-by)) * 1%)
+  );
+  background: rgb(var(--label-r) var(--label-g) var(--label-b) / 0.18);
+  border-color: hsl(
+    var(--label-h) calc(var(--label-s) * 1%)
+      calc((var(--label-l) + var(--lighten-by)) * 1%) / 0.3
+  );
+}
