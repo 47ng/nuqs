@@ -41,6 +41,15 @@ describe('labelTheme WCAG guarantees', () => {
     }
   })
 
+  // Monochrome brands (Next.js/Vercel) must not gray out: their chip fill
+  // is exactly the page background, in both themes.
+  it.each(THEMES)('leaves monochrome chips untinted in %s', theme => {
+    const pageBg = theme === 'light' ? '#ffffff' : '#09090b'
+    for (const color of ['#000000', '#ffffff']) {
+      expect(labelTheme(color, theme).bg).toBe(pageBg)
+    }
+  })
+
   // The border is what keeps a chip visible when the label color sits near
   // the page background (#ffffff on light, #000000 on dark).
   it.each(THEMES)('keeps every chip border visible in %s', theme => {

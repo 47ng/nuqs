@@ -149,16 +149,23 @@ export type LabelTheme = {
   border: string
 }
 
+// Monochrome brands (Next.js/Vercel are strictly black & white) read as
+// off-brand when the blend grays their chip out, so they take no tint: the
+// chip fill is the page background itself and the border carries the edge.
+const MONOCHROME_LABELS = new Set(['#000000', '#ffffff'])
+
 // The AAA-compliant chip colors for one GitHub label color in one theme:
-// an 18% tint of the label over the page background, text pushed along the
-// label's hue until it clears 7:1 against that tint, and a 40% tint as the
-// border, pushed until it is visible against the page background.
+// an 18% tint of the label over the page background (none for monochrome
+// labels), text pushed along the label's hue until it clears 7:1 against
+// that tint, and a 40% tint as the border, pushed until it is visible
+// against the page background.
 export function labelTheme(hex: string, theme: 'light' | 'dark'): LabelTheme {
   const label = hexToRgb(hex)
   const pageBg = PAGE_BG[theme]
   const pageBgHex = rgbToHex([...PAGE_BG[theme]] as RGB)
   const direction = theme === 'light' ? 'darken' : 'lighten'
-  const bg = rgbToHex(blend(label, pageBg, 0.18))
+  const tint = MONOCHROME_LABELS.has(hex) ? 0 : 0.18
+  const bg = rgbToHex(blend(label, pageBg, tint))
   const border = ensureContrast(
     blend(label, pageBg, 0.4),
     pageBgHex,
