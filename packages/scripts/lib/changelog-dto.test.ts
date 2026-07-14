@@ -4,7 +4,6 @@ import {
   CHANGELOG_DTO_SCHEMA_URL,
   type Change,
   type ChangelogDTO,
-  KNOWN_IMPACT_LABELS,
   type ReleaseChanges,
   changelogDtoSchema,
   changelogJsonSchema,
@@ -582,15 +581,6 @@ describe('formatImpactLabel', () => {
   it('falls back to the raw name for an unmapped label', () => {
     expect(formatImpactLabel('adapters/solid-router')).toBe(
       'adapters/solid-router'
-    )
-  })
-
-  // A typo'd key in the display-name map would never match a real label, and
-  // the docs color-registry parity test would faithfully replicate the typo —
-  // check the vocabulary against the taxonomy filter itself.
-  it('keys the display-name map by valid impact labels only', () => {
-    expect(impactLabels(KNOWN_IMPACT_LABELS)).toHaveLength(
-      KNOWN_IMPACT_LABELS.length
     )
   })
 })

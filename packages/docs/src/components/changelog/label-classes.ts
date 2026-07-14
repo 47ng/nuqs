@@ -1,3 +1,5 @@
+import type { KnownImpactLabel } from 'scripts/lib/changelog-dto'
+
 // Tailwind classes for each impact label badge, hue-matched to the GitHub
 // label colors of the 47ng/nuqs repo (refresh against `gh label list` if
 // those change). Contrast is a review/test concern, not a runtime one: stick
@@ -22,7 +24,7 @@ const amber =
 const gray =
   'border-zinc-600/50 bg-zinc-50 text-zinc-900 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-200'
 
-export const LABEL_CLASSES: Record<string, string> = {
+export const LABEL_CLASSES: Record<KnownImpactLabel, string> = {
   'feature/useQueryState': green,
   'feature/useQueryStates': green,
   'feature/serializer': green,

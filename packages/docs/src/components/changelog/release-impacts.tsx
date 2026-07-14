@@ -1,6 +1,9 @@
 import { Badge } from '@/src/components/ui/badge'
 import { cn } from '@/src/lib/utils'
-import { formatImpactLabel } from 'scripts/lib/changelog-dto'
+import {
+  formatImpactLabel,
+  isKnownImpactLabel
+} from 'scripts/lib/changelog-dto'
 import { FALLBACK_CLASSES, LABEL_CLASSES } from './label-classes'
 
 export type ReleaseImpactsProps = {
@@ -16,7 +19,9 @@ export function ReleaseImpacts({ labels }: ReleaseImpactsProps) {
     <div className="not-prose mt-3 flex flex-wrap items-center gap-x-2 gap-y-1.5">
       <span className="text-fd-muted-foreground text-sm">Impacts</span>
       {labels.map(label => {
-        const classes = LABEL_CLASSES[label]
+        const classes = isKnownImpactLabel(label)
+          ? LABEL_CLASSES[label]
+          : undefined
         if (classes === undefined) {
           // Server component: lands in build logs, consistent with
           // buildReleaseModel's degrade-loudly convention.

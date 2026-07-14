@@ -214,6 +214,8 @@ export function parseCodeSpans(text: string): DescriptionSegment[] {
 // first, then parsers, then adapters.
 const IMPACT_LABEL_PREFIXES = ['feature/', 'parsers/', 'adapters/'] as const
 
+type ImpactLabelPrefix = (typeof IMPACT_LABEL_PREFIXES)[number]
+
 function impactRank(label: string): number {
   return IMPACT_LABEL_PREFIXES.findIndex(prefix => label.startsWith(prefix))
 }
@@ -235,7 +237,10 @@ export function impactLabels(labels: readonly string[]): string[] {
 // Human-readable display names for the known impact labels. An unmapped label
 // (a new area labelled before this map learns about it) falls back to its raw
 // name, so the vocabulary can grow on GitHub without a code change here.
-const IMPACT_LABEL_DISPLAY_NAMES: Record<string, string> = {
+// The `satisfies` bound rejects keys outside the impact taxonomy at compile
+// time; `KnownImpactLabel` is the source of truth for registries keyed by
+// the same labels (e.g. the docs badge colors).
+const IMPACT_LABEL_DISPLAY_NAMES = {
   'feature/useQueryState': 'useQueryState',
   'feature/useQueryStates': 'useQueryStates',
   'feature/serializer': 'Serializer',
@@ -251,18 +256,17 @@ const IMPACT_LABEL_DISPLAY_NAMES: Record<string, string> = {
   'adapters/tanstack-router': 'TanStack Router',
   'adapters/testing': 'Testing adapter',
   'adapters/community': 'Community adapters'
+} as const satisfies Record<`${ImpactLabelPrefix}${string}`, string>
+
+export type KnownImpactLabel = keyof typeof IMPACT_LABEL_DISPLAY_NAMES
+
+export function isKnownImpactLabel(label: string): label is KnownImpactLabel {
+  return Object.hasOwn(IMPACT_LABEL_DISPLAY_NAMES, label)
 }
 
 export function formatImpactLabel(label: string): string {
-  return IMPACT_LABEL_DISPLAY_NAMES[label] ?? label
+  return isKnownImpactLabel(label) ? IMPACT_LABEL_DISPLAY_NAMES[label] : label
 }
-
-// The labels the display-name map knows about — exported so presentation-side
-// registries keyed by the same labels (e.g. the docs badge colors) can assert
-// key parity in tests instead of drifting silently.
-export const KNOWN_IMPACT_LABELS: readonly string[] = Object.keys(
-  IMPACT_LABEL_DISPLAY_NAMES
-)
 
 // The release-level aggregate: every distinct impact label across the
 // release's changes, in display order. Derived at render (like `category`),
