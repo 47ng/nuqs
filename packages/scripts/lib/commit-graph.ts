@@ -377,7 +377,8 @@ function fetchChangeDetails(
         number
         title
         author { login }
-        labels(first: 20) { nodes { name } }
+        # 100 is GitHub's per-issue label cap: truncation is impossible
+        labels(first: 100) { nodes { name } }
         participants(first: 20) { nodes { login } }
         closingIssuesReferences(first: 10) {
           edges {

@@ -1,11 +1,13 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { z } from 'zod'
 import {
   CHANGELOG_DTO_SCHEMA_URL,
   type Change,
   type ChangelogDTO,
+  KNOWN_IMPACT_LABELS,
   type ReleaseChanges,
   changelogDtoSchema,
+  changelogJsonSchema,
   formatImpactLabel,
   groupChangesByCategory,
   impactLabels,
@@ -582,6 +584,15 @@ describe('formatImpactLabel', () => {
       'adapters/solid-router'
     )
   })
+
+  // A typo'd key in the display-name map would never match a real label, and
+  // the docs color-registry parity test would faithfully replicate the typo —
+  // check the vocabulary against the taxonomy filter itself.
+  it('keys the display-name map by valid impact labels only', () => {
+    expect(impactLabels(KNOWN_IMPACT_LABELS)).toHaveLength(
+      KNOWN_IMPACT_LABELS.length
+    )
+  })
 })
 
 describe('releaseImpacts', () => {
@@ -629,20 +640,82 @@ describe('releaseImpacts', () => {
 
   // The re-filter at this boundary is load-bearing: labelSchema only bounds
   // the string, so a hand-edited release body can carry a triage label that
-  // parses as valid — it must still be kept off the rendered surfaces.
-  it('drops a non-impact label smuggled into a hand-edited DTO', () => {
-    const changes: Change[] = [
-      {
-        source: 'squashedPR',
-        prNumber: 1,
-        type: 'fix',
-        breaking: false,
-        description: 'a fix',
-        author: null,
-        closingIssues: [],
-        labels: ['bug', 'adapters/react', 'deploy:preview']
-      }
-    ]
-    expect(releaseImpacts(changes)).toEqual(['adapters/react'])
+  // parses as valid — it must still be kept off the rendered surfaces, and
+  // loudly: discovery pre-filters, so a reject here is always an anomaly.
+  it('drops a non-impact label smuggled into a hand-edited DTO, warning', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    try {
+      const changes: Change[] = [
+        {
+          source: 'squashedPR',
+          prNumber: 1,
+          type: 'fix',
+          breaking: false,
+          description: 'a fix',
+          author: null,
+          closingIssues: [],
+          labels: ['bug', 'adapters/react', 'deploy:preview']
+        }
+      ]
+      expect(releaseImpacts(changes)).toEqual(['adapters/react'])
+      expect(warn).toHaveBeenCalledWith(
+        expect.stringContaining('non-impact labels'),
+        'bug, deploy:preview'
+      )
+    } finally {
+      warn.mockRestore()
+    }
+  })
+
+  it('stays silent when every label is an impact label', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    try {
+      const changes: Change[] = [
+        {
+          source: 'squashedPR',
+          prNumber: 1,
+          type: 'fix',
+          breaking: false,
+          description: 'a fix',
+          author: null,
+          closingIssues: [],
+          labels: ['adapters/react']
+        }
+      ]
+      expect(releaseImpacts(changes)).toEqual(['adapters/react'])
+      expect(warn).not.toHaveBeenCalled()
+    } finally {
+      warn.mockRestore()
+    }
+  })
+})
+
+describe('changelogJsonSchema', () => {
+  // The docs drift test only pins generated === committed; if `io: 'input'`
+  // were dropped, regenerating the artifact would "fix" that test while
+  // making `labels` required, invalidating every pre-labels release body
+  // against the published schema. Pin the intent, not just the bytes.
+  it('keeps labels optional for pre-labels release bodies', () => {
+    const artifactShape = z.object({
+      properties: z.object({
+        changes: z.object({
+          items: z.object({
+            oneOf: z.array(
+              z.object({
+                properties: z.object({
+                  source: z.object({ const: z.string() })
+                }),
+                required: z.array(z.string())
+              })
+            )
+          })
+        })
+      })
+    })
+    const schema = artifactShape.parse(changelogJsonSchema())
+    const squashedPR = schema.properties.changes.items.oneOf.find(
+      variant => variant.properties.source.const === 'squashedPR'
+    )
+    expect(squashedPR?.required).not.toContain('labels')
   })
 })

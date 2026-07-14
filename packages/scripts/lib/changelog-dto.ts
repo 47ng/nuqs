@@ -271,11 +271,19 @@ export const KNOWN_IMPACT_LABELS: readonly string[] = Object.keys(
 // string, so a hand-edited release body could carry a non-impact label that
 // must still be kept off the rendered surfaces.
 export function releaseImpacts(changes: readonly Change[]): string[] {
-  return impactLabels(
-    changes.flatMap(change =>
-      change.source === 'squashedPR' ? change.labels : []
-    )
+  const labels = changes.flatMap(change =>
+    change.source === 'squashedPR' ? change.labels : []
   )
+  const rejected = labels.filter(label => impactRank(label) === -1)
+  if (rejected.length > 0) {
+    // Discovery pre-filters, so a reject here is always an anomaly (hand-edit
+    // or taxonomy drift) — dropping it silently would hide the tampering.
+    console.warn(
+      'changelog: dropping non-impact labels from a release body: %s',
+      rejected.join(', ')
+    )
+  }
+  return impactLabels(labels)
 }
 
 // --- Shared category derivation + grouping ----------------------------------
