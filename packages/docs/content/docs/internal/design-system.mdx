@@ -5,6 +5,8 @@ exposeTo: [user]
 ---
 
 import { H1, H2, Description } from '@/src/components/typography'
+import { ReleaseImpacts } from '@/src/components/changelog/release-impacts'
+import { impactLabels, KNOWN_IMPACT_LABELS } from 'scripts/lib/changelog-dto'
 
 <Description>Who needs Storybook anyway? (using the `<Description>` component)</Description>
 
@@ -73,4 +75,11 @@ export const yep = "we got'em too."
 <FeatureSupportMatrix introducedInVersion='2.5.0' deprecatedInVersion='2.6.0' support={{ supported: true, frameworks: ['React Router (v6)', 'React Router (v7)', 'Remix']}}/>
 <FeatureSupportMatrix introducedInVersion='2.5.0' deprecatedInVersion='2.6.0' support={{ supported: true, frameworks: ['Next.js (app router)']}}/>
 <FeatureSupportMatrix introducedInVersion='2.5.0' deprecatedInVersion='2.6.0' support={{ supported: false, frameworks: ['Next.js (app router)']}}/>
+
+## Changelog impact labels
+
+All known impact labels, in changelog display order (features, then parsers,
+then adapters), colored like their GitHub labels with AAA-contrast text:
+
+<ReleaseImpacts labels={impactLabels(KNOWN_IMPACT_LABELS)} />
 
