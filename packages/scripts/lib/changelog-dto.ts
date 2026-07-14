@@ -268,6 +268,12 @@ export function formatImpactLabel(label: string): string {
   return isKnownImpactLabel(label) ? IMPACT_LABEL_DISPLAY_NAMES[label] : label
 }
 
+// The full vocabulary as values, for surfaces that enumerate it
+// (e.g. the docs design-system badge gallery).
+export const KNOWN_IMPACT_LABELS = Object.keys(
+  IMPACT_LABEL_DISPLAY_NAMES
+) as readonly KnownImpactLabel[]
+
 // The release-level aggregate: every distinct impact label across the
 // release's changes, in display order. Derived at render (like `category`),
 // never stored — the DTO keeps labels per change. Re-running the taxonomy
