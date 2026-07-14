@@ -1,21 +1,7 @@
-import type { CSSProperties } from 'react'
+import { Badge } from '@/src/components/ui/badge'
+import { cn } from '@/src/lib/utils'
 import { formatImpactLabel } from 'scripts/lib/changelog-dto'
-import { FALLBACK_COLOR, LABEL_COLORS, labelTheme } from './label-colors'
-
-// Both themes' AAA-compliant colors ride on the element as custom properties;
-// github-label.css applies the right set per theme.
-function labelColorVars(hex: string): CSSProperties {
-  const light = labelTheme(hex, 'light')
-  const dark = labelTheme(hex, 'dark')
-  return {
-    '--label-bg-light': light.bg,
-    '--label-fg-light': light.fg,
-    '--label-border-light': light.border,
-    '--label-bg-dark': dark.bg,
-    '--label-fg-dark': dark.fg,
-    '--label-border-dark': dark.border
-  } as CSSProperties
-}
+import { FALLBACK_CLASSES, LABEL_CLASSES } from './label-classes'
 
 export type ReleaseImpactsProps = {
   labels: readonly string[]
@@ -30,23 +16,23 @@ export function ReleaseImpacts({ labels }: ReleaseImpactsProps) {
     <div className="not-prose mt-3 flex flex-wrap items-center gap-x-2 gap-y-1.5">
       <span className="text-fd-muted-foreground text-sm">Impacts</span>
       {labels.map(label => {
-        const color = LABEL_COLORS[label]
-        if (color === undefined) {
+        const classes = LABEL_CLASSES[label]
+        if (classes === undefined) {
           // Server component: lands in build logs, consistent with
           // buildReleaseModel's degrade-loudly convention.
           console.warn(
-            'changelog: unmapped impact label %s — rendering raw name on a gray chip.',
+            'changelog: unmapped impact label %s — rendering raw name on a gray badge.',
             label
           )
         }
         return (
-          <span
+          <Badge
             key={label}
-            className="github-label inline-flex items-center rounded-full px-2.5 text-xs leading-[22px] font-medium whitespace-nowrap"
-            style={labelColorVars(color ?? FALLBACK_COLOR)}
+            variant="outline"
+            className={cn('whitespace-nowrap', classes ?? FALLBACK_CLASSES)}
           >
             {formatImpactLabel(label)}
-          </span>
+          </Badge>
         )
       })}
     </div>
