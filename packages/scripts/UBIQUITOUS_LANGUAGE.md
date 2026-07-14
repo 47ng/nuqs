@@ -126,14 +126,14 @@ interpreted from it.
 ### impact label
 
 A GitHub label on a squashed PR naming a functional area the change touches —
-one of the `feature/*`, `parsers/*`, or `adapters/*` prefixes. Captured at
-draft time (by `discoverChanges`, filtered from the PR's full label set) and
-stored per **change** in
-the DTO; the release-level **impacts** list is derived at render by aggregating
-the changes' labels, like **category**. Triage labels (`bug`,
-`deploy:preview`, …) are workflow noise, never impact. Rendered as display
-names ("React Router", "useQueryStates"), with the raw label name as fallback
-so new labels need no code change to appear.
+one of the closed vocabulary in `KNOWN_IMPACT_LABELS`, whose array order is
+the display order. Captured at draft time (by `discoverChanges`, filtered from
+the PR's full label set) and stored per **change** in the DTO; the
+release-level **impacts** list is derived at render by aggregating the
+changes' labels, like **category**. Triage labels (`bug`, `deploy:preview`, …)
+are workflow noise, never impact. Rendered as display names ("React Router",
+"useQueryStates"); a new label on GitHub renders nowhere until added to the
+vocabulary, which forces a display name and badge class at compile time.
 
 ### channel
 

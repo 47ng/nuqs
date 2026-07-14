@@ -6,7 +6,7 @@ exposeTo: [user]
 
 import { H1, H2, Description } from '@/src/components/typography'
 import { ReleaseImpacts } from '@/src/components/changelog/release-impacts'
-import { impactLabels, KNOWN_IMPACT_LABELS } from 'scripts/lib/changelog-dto'
+import { KNOWN_IMPACT_LABELS } from 'scripts/lib/changelog-dto'
 
 <Description>Who needs Storybook anyway? (using the `<Description>` component)</Description>
 
@@ -81,5 +81,5 @@ export const yep = "we got'em too."
 All known impact labels, in changelog display order (features, then parsers,
 then adapters), hue-matched to their GitHub labels:
 
-<ReleaseImpacts labels={impactLabels(KNOWN_IMPACT_LABELS)} />
+<ReleaseImpacts labels={KNOWN_IMPACT_LABELS} />
 

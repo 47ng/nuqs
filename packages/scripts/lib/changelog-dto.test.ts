@@ -547,13 +547,19 @@ describe('stripChangelogComment', () => {
 })
 
 describe('impactLabels', () => {
-  it('drops labels outside the impact taxonomy', () => {
+  it('drops labels outside the known vocabulary', () => {
     expect(
-      impactLabels(['bug', 'deploy:preview', 'adapters/remix', 'released'])
+      impactLabels([
+        'bug',
+        'deploy:preview',
+        'adapters/remix',
+        'adapters/solid-router',
+        'released'
+      ])
     ).toEqual(['adapters/remix'])
   })
 
-  it('deduplicates and orders by prefix (features, parsers, adapters) then name', () => {
+  it('deduplicates and orders by vocabulary order (features, parsers, adapters)', () => {
     expect(
       impactLabels([
         'adapters/react',
@@ -576,12 +582,6 @@ describe('formatImpactLabel', () => {
     expect(formatImpactLabel('adapters/next/app')).toBe('Next.js (app router)')
     expect(formatImpactLabel('feature/useQueryState')).toBe('useQueryState')
     expect(formatImpactLabel('parsers/community')).toBe('Community parsers')
-  })
-
-  it('falls back to the raw name for an unmapped label', () => {
-    expect(formatImpactLabel('adapters/solid-router')).toBe(
-      'adapters/solid-router'
-    )
   })
 })
 
@@ -632,7 +632,7 @@ describe('releaseImpacts', () => {
   // the string, so a hand-edited release body can carry a triage label that
   // parses as valid — it must still be kept off the rendered surfaces, and
   // loudly: discovery pre-filters, so a reject here is always an anomaly.
-  it('drops a non-impact label smuggled into a hand-edited DTO, warning', () => {
+  it('drops an unknown label smuggled into a hand-edited DTO, warning', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
     try {
       const changes: Change[] = [
@@ -649,7 +649,7 @@ describe('releaseImpacts', () => {
       ]
       expect(releaseImpacts(changes)).toEqual(['adapters/react'])
       expect(warn).toHaveBeenCalledWith(
-        expect.stringContaining('non-impact labels'),
+        expect.stringContaining('unknown labels'),
         'bug, deploy:preview'
       )
     } finally {

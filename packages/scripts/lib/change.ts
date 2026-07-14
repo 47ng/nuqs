@@ -25,9 +25,9 @@ const labelSchema = z.string().min(1).max(50)
 // identity is the PR number, `description` is the PR title as prose,
 // `author` is the GitHub login (or null for a deleted account), and it
 // carries the issue numbers it closes. Rendered as `#123 - …, by @login`.
-// `labels` are the PR's impact labels (`feature/*`, `parsers/*`, `adapters/*`),
-// filtered at discovery — defaulted so DTOs published before the field
-// existed still parse (v1 back-compat).
+// `labels` are the PR's impact labels (see `KNOWN_IMPACT_LABELS`), filtered
+// at discovery — defaulted so DTOs published before the field existed still
+// parse (v1 back-compat).
 export const squashedPRChangeSchema = z.strictObject({
   source: z.literal('squashedPR'),
   prNumber: z.number().int().positive(),

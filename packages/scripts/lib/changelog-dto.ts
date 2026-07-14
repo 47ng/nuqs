@@ -208,39 +208,51 @@ export function parseCodeSpans(text: string): DescriptionSegment[] {
 
 // --- Impact labels -----------------------------------------------------------
 
-// The GitHub label prefixes marking a functional area a change impacts. Only
-// these survive into the DTO — triage labels (`bug`, `deploy:preview`, …) are
-// workflow noise, not impact. The array order is the display order: features
-// first, then parsers, then adapters.
-const IMPACT_LABEL_PREFIXES = ['feature/', 'parsers/', 'adapters/'] as const
+// The impact label vocabulary: GitHub labels marking a functional area a
+// change impacts. Single source of truth — array order is the display order
+// (features, then parsers, then adapters), membership is the taxonomy filter,
+// and the derived union keys the display names below and the docs badge
+// colors, so adding an entry here forces both to follow at compile time.
+// Triage labels (`bug`, `deploy:preview`, …) are workflow noise, never
+// impact. A new label on GitHub renders nowhere until added here.
+export const KNOWN_IMPACT_LABELS = [
+  'feature/useQueryState',
+  'feature/useQueryStates',
+  'feature/serializer',
+  'feature/cache',
+  'feature/time-safety',
+  'parsers/built-in',
+  'parsers/community',
+  'adapters/next/app',
+  'adapters/next/pages',
+  'adapters/react',
+  'adapters/react-router',
+  'adapters/remix',
+  'adapters/tanstack-router',
+  'adapters/testing',
+  'adapters/community'
+] as const
 
-type ImpactLabelPrefix = (typeof IMPACT_LABEL_PREFIXES)[number]
+export type KnownImpactLabel = (typeof KNOWN_IMPACT_LABELS)[number]
 
-function impactRank(label: string): number {
-  return IMPACT_LABEL_PREFIXES.findIndex(prefix => label.startsWith(prefix))
+export function isKnownImpactLabel(label: string): label is KnownImpactLabel {
+  return (KNOWN_IMPACT_LABELS as readonly string[]).includes(label)
 }
 
-function compareImpactLabels(a: string, b: string): number {
-  return impactRank(a) - impactRank(b) || a.localeCompare(b)
+function compareImpactLabels(a: KnownImpactLabel, b: KnownImpactLabel) {
+  return KNOWN_IMPACT_LABELS.indexOf(a) - KNOWN_IMPACT_LABELS.indexOf(b)
 }
 
-// Keep only a PR's impact labels, deduplicated and in display order
-// (prefix rank, then alphabetical). Runs at discovery — so the DTO stores the
-// filtered set verbatim — and again at render (see `releaseImpacts`); display
-// naming stays a render concern.
-export function impactLabels(labels: readonly string[]): string[] {
-  return [...new Set(labels.filter(label => impactRank(label) !== -1))].sort(
+// Keep only a PR's known impact labels, deduplicated and in display order.
+// Runs at discovery — so the DTO stores the filtered set verbatim — and again
+// at render (see `releaseImpacts`); display naming stays a render concern.
+export function impactLabels(labels: readonly string[]): KnownImpactLabel[] {
+  return [...new Set(labels.filter(isKnownImpactLabel))].sort(
     compareImpactLabels
   )
 }
 
-// Human-readable display names for the known impact labels. An unmapped label
-// (a new area labelled before this map learns about it) falls back to its raw
-// name, so the vocabulary can grow on GitHub without a code change here.
-// The `satisfies` bound rejects keys outside the impact taxonomy at compile
-// time; `KnownImpactLabel` is the source of truth for registries keyed by
-// the same labels (e.g. the docs badge colors).
-const IMPACT_LABEL_DISPLAY_NAMES = {
+const IMPACT_LABEL_DISPLAY_NAMES: Record<KnownImpactLabel, string> = {
   'feature/useQueryState': 'useQueryState',
   'feature/useQueryStates': 'useQueryStates',
   'feature/serializer': 'Serializer',
@@ -256,40 +268,28 @@ const IMPACT_LABEL_DISPLAY_NAMES = {
   'adapters/tanstack-router': 'TanStack Router',
   'adapters/testing': 'Testing adapter',
   'adapters/community': 'Community adapters'
-} as const satisfies Record<`${ImpactLabelPrefix}${string}`, string>
-
-export type KnownImpactLabel = keyof typeof IMPACT_LABEL_DISPLAY_NAMES
-
-export function isKnownImpactLabel(label: string): label is KnownImpactLabel {
-  return Object.hasOwn(IMPACT_LABEL_DISPLAY_NAMES, label)
 }
 
-export function formatImpactLabel(label: string): string {
-  return isKnownImpactLabel(label) ? IMPACT_LABEL_DISPLAY_NAMES[label] : label
+export function formatImpactLabel(label: KnownImpactLabel): string {
+  return IMPACT_LABEL_DISPLAY_NAMES[label]
 }
-
-// The full vocabulary as values, for surfaces that enumerate it
-// (e.g. the docs design-system badge gallery).
-export const KNOWN_IMPACT_LABELS = Object.keys(
-  IMPACT_LABEL_DISPLAY_NAMES
-) as readonly KnownImpactLabel[]
 
 // The release-level aggregate: every distinct impact label across the
 // release's changes, in display order. Derived at render (like `category`),
-// never stored — the DTO keeps labels per change. Re-running the taxonomy
+// never stored — the DTO keeps labels per change. Re-running the vocabulary
 // filter here is load-bearing, not redundant: `labelSchema` only bounds the
-// string, so a hand-edited release body could carry a non-impact label that
+// string, so a hand-edited release body could carry an unknown label that
 // must still be kept off the rendered surfaces.
-export function releaseImpacts(changes: readonly Change[]): string[] {
+export function releaseImpacts(changes: readonly Change[]): KnownImpactLabel[] {
   const labels = changes.flatMap(change =>
     change.source === 'squashedPR' ? change.labels : []
   )
-  const rejected = labels.filter(label => impactRank(label) === -1)
+  const rejected = labels.filter(label => !isKnownImpactLabel(label))
   if (rejected.length > 0) {
     // Discovery pre-filters, so a reject here is always an anomaly (hand-edit
-    // or taxonomy drift) — dropping it silently would hide the tampering.
+    // or vocabulary drift) — dropping it silently would hide the tampering.
     console.warn(
-      'changelog: dropping non-impact labels from a release body: %s',
+      'changelog: dropping unknown labels from a release body: %s',
       rejected.join(', ')
     )
   }

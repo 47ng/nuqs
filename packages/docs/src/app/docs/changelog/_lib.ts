@@ -3,6 +3,7 @@ import {
   type Category,
   type Change,
   groupChangesByCategory,
+  type KnownImpactLabel,
   parseChangelogComment,
   releaseImpacts,
   stripChangelogComment
@@ -67,7 +68,7 @@ export type ReleaseModel = {
   grouped: Record<Category, Change[]> | null
   preamble: string | null
   contributors: string[]
-  impacts: string[]
+  impacts: KnownImpactLabel[]
 }
 
 export function buildReleaseModel(release: GithubRelease): ReleaseModel {

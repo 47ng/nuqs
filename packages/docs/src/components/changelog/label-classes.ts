@@ -41,5 +41,3 @@ export const LABEL_CLASSES: Record<KnownImpactLabel, string> = {
   'adapters/testing': amber,
   'adapters/community': gray
 }
-
-export const FALLBACK_CLASSES = gray
