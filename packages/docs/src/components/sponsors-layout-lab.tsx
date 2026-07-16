@@ -12,80 +12,80 @@ type LabSponsor = {
   name: string
   url: string
   tagline: string
-  logo: (className?: string) => ReactNode
+  logo: (props: { className?: string }) => ReactNode
   wide?: boolean
 }
 
-function sponsorImage(handle: string) {
+const newTab = {
+  target: '_blank',
+  rel: 'noopener noreferrer'
+} as const
+
+function avatarLogo(handle: string, rounded: boolean) {
   const sponsor = SPONSORS.find(s => s.handle === handle)
   if (!sponsor) {
     throw new Error(`Unknown sponsor handle: ${handle}`)
   }
-  return sponsor.img
-}
-
-function avatarLogo(handle: string, name: string, rounded: boolean) {
-  const src = sponsorImage(handle)
-  return function AvatarLogo(className?: string) {
+  return function AvatarLogo({ className }: { className?: string }) {
     return (
       <img
-        src={src}
-        alt={name}
+        src={sponsor.img}
+        alt={sponsor.name ?? sponsor.handle}
         className={cn(rounded ? 'rounded-full' : 'rounded-md', className)}
       />
     )
   }
 }
 
-const LAB_SPONSORS: LabSponsor[] = [
+const LAB_SPONSORS: [LabSponsor & { wide: true }, ...LabSponsor[]] = [
   {
     name: 'Next.js Weekly',
     url: 'https://nextjsweekly.com?utm_source=nuqs&utm_medium=sponsor&utm_campaign=nuqs',
     tagline: 'Stay up to date on Next.js',
-    logo: className => <NextJSWeeklyLogo className={className} />,
+    logo: NextJSWeeklyLogo,
     wide: true
   },
   {
     name: 'shadcn/studio',
     url: 'https://shadcnstudio.com/?utm_source=nuqs&utm_medium=banner&utm_campaign=github',
     tagline: 'shadcn blocks & templates',
-    logo: className => <ShadcnStudioIcon className={className} />
+    logo: ShadcnStudioIcon
   },
   {
     name: '1771 Technologies',
     url: 'https://1771technologies.com/?utm_source=nuqs&utm_medium=banner&utm_campaign=nuqs',
     tagline: 'The fastest React data grid',
-    logo: avatarLogo('1771-Technologies', '1771 Technologies', true)
+    logo: avatarLogo('1771-Technologies', true)
   },
   {
     name: 'Sentry',
     url: 'https://sentry.io/?utm_source=nuqs&utm_medium=sponsor&utm_campaign=nuqs',
     tagline: 'Application monitoring',
-    logo: avatarLogo('getsentry', 'Sentry', true)
+    logo: avatarLogo('getsentry', true)
   },
   {
     name: 'CodeRabbit',
     url: 'https://www.coderabbit.ai/?dub_id=4fJt7M9XtciYhwpj',
     tagline: 'AI code reviews',
-    logo: avatarLogo('coderabbitai', 'CodeRabbit', true)
+    logo: avatarLogo('coderabbitai', true)
   },
   {
     name: 'Upstash',
     url: 'https://upstash.com/?utm_source=nuqs&utm_medium=sponsor&utm_campaign=nuqs',
     tagline: 'Serverless data platform',
-    logo: avatarLogo('upstash', 'Upstash', true)
+    logo: avatarLogo('upstash', true)
   },
   {
     name: 'Vercel',
     url: 'https://vercel.com/',
     tagline: 'Frontend cloud',
-    logo: avatarLogo('vercel', 'Vercel', false)
+    logo: avatarLogo('vercel', false)
   },
   {
     name: 'Syntax.fm',
     url: 'https://syntax.fm/?utm_source=nuqs&utm_medium=sponsor&utm_campaign=nuqs',
     tagline: 'Web dev podcast',
-    logo: avatarLogo('syntaxfm', 'Syntax.fm', false)
+    logo: avatarLogo('syntaxfm', false)
   }
 ]
 
@@ -93,8 +93,7 @@ function SponsoredByHeader() {
   return (
     <a
       href="https://github.com/sponsors/franky47"
-      target="_blank"
-      rel="noopener noreferrer"
+      {...newTab}
       className="text-muted-foreground group mb-2 inline-flex items-center gap-2 text-xs"
     >
       <Heart
@@ -108,7 +107,6 @@ function SponsoredByHeader() {
   )
 }
 
-// Variant 1: featured card on top, compact two-line rows below.
 function AsideSponsorsTieredRows() {
   const [featured, ...rest] = LAB_SPONSORS
   return (
@@ -116,11 +114,10 @@ function AsideSponsorsTieredRows() {
       <SponsoredByHeader />
       <a
         href={featured.url}
-        target="_blank"
-        rel="noopener noreferrer"
+        {...newTab}
         className="text-muted-foreground group block space-y-2 rounded-md border border-dashed px-4 py-4 text-center transition-colors hover:text-current"
       >
-        {featured.logo('mx-auto w-3/4')}
+        <featured.logo className="mx-auto w-3/4" />
         <p className="text-xs">{featured.tagline}</p>
       </a>
       <ul className="mt-2">
@@ -128,12 +125,11 @@ function AsideSponsorsTieredRows() {
           <li key={sponsor.name}>
             <a
               href={sponsor.url}
-              target="_blank"
-              rel="noopener noreferrer"
+              {...newTab}
               className="group hover:bg-accent flex items-center gap-2.5 rounded-md px-2 py-1.5 transition-colors"
             >
               <span className="opacity-60 grayscale transition-all group-hover:opacity-100 group-hover:grayscale-0">
-                {sponsor.logo('size-6')}
+                <sponsor.logo className="size-6" />
               </span>
               <span className="flex flex-col">
                 <span className="text-xs leading-tight font-medium">
@@ -151,7 +147,6 @@ function AsideSponsorsTieredRows() {
   )
 }
 
-// Variant 2: wordmark banner + grid of mini tiles (logo & name).
 function AsideSponsorsMiniTiles() {
   const [featured, ...rest] = LAB_SPONSORS
   return (
@@ -160,24 +155,22 @@ function AsideSponsorsMiniTiles() {
       <div className="grid grid-cols-2 gap-2">
         <a
           href={featured.url}
-          target="_blank"
-          rel="noopener noreferrer"
+          {...newTab}
           className="text-muted-foreground col-span-2 flex items-center justify-center rounded-md border border-dashed px-4 py-3 transition-colors hover:text-current"
         >
-          {featured.logo('h-3.5 w-auto')}
+          <featured.logo className="h-3.5 w-auto" />
           <span className="sr-only">{featured.name}</span>
         </a>
         {rest.map(sponsor => (
           <a
             key={sponsor.name}
             href={sponsor.url}
-            target="_blank"
-            rel="noopener noreferrer"
+            {...newTab}
             title={sponsor.tagline}
             className="text-muted-foreground flex flex-col items-center gap-1.5 rounded-md border border-dashed px-2 py-3 transition-colors hover:text-current"
           >
             <span className="opacity-60 grayscale transition-all hover:opacity-100 hover:grayscale-0">
-              {sponsor.logo('size-7')}
+              <sponsor.logo className="size-7" />
             </span>
             <span className="text-[10px] leading-none font-medium">
               {sponsor.name}
@@ -189,7 +182,6 @@ function AsideSponsorsMiniTiles() {
   )
 }
 
-// Variant 3: logos only, packed in a single bordered box.
 function AsideSponsorsLogoBox() {
   const [featured, ...rest] = LAB_SPONSORS
   return (
@@ -198,12 +190,11 @@ function AsideSponsorsLogoBox() {
       <div className="rounded-md border border-dashed p-3">
         <a
           href={featured.url}
-          target="_blank"
-          rel="noopener noreferrer"
+          {...newTab}
           className="text-muted-foreground mb-3 flex justify-center transition-colors hover:text-current"
           title={featured.tagline}
         >
-          {featured.logo('h-4 w-auto')}
+          <featured.logo className="h-4 w-auto" />
           <span className="sr-only">{featured.name}</span>
         </a>
         <ul className="flex flex-wrap items-center justify-center gap-2">
@@ -211,12 +202,11 @@ function AsideSponsorsLogoBox() {
             <li key={sponsor.name}>
               <a
                 href={sponsor.url}
-                target="_blank"
-                rel="noopener noreferrer"
+                {...newTab}
                 title={`${sponsor.name} — ${sponsor.tagline}`}
                 className="block opacity-60 grayscale transition-all hover:scale-110 hover:opacity-100 hover:grayscale-0"
               >
-                {sponsor.logo('size-8')}
+                <sponsor.logo className="size-8" />
                 <span className="sr-only">{sponsor.name}</span>
               </a>
             </li>
@@ -227,7 +217,6 @@ function AsideSponsorsLogoBox() {
   )
 }
 
-// Variant 4: borderless logo cloud of inline name lockups.
 function AsideSponsorsLogoCloud() {
   const [featured, ...rest] = LAB_SPONSORS
   return (
@@ -236,25 +225,23 @@ function AsideSponsorsLogoCloud() {
       <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
         <a
           href={featured.url}
-          target="_blank"
-          rel="noopener noreferrer"
+          {...newTab}
           className="text-muted-foreground mb-1 w-full transition-colors hover:text-current"
           title={featured.tagline}
         >
-          {featured.logo('h-3.5 w-auto')}
+          <featured.logo className="h-3.5 w-auto" />
           <span className="sr-only">{featured.name}</span>
         </a>
         {rest.map(sponsor => (
           <a
             key={sponsor.name}
             href={sponsor.url}
-            target="_blank"
-            rel="noopener noreferrer"
+            {...newTab}
             title={sponsor.tagline}
             className="text-muted-foreground flex items-center gap-1.5 transition-all hover:text-current"
           >
             <span className="opacity-60 grayscale transition-all hover:opacity-100 hover:grayscale-0">
-              {sponsor.logo('size-4')}
+              <sponsor.logo className="size-4" />
             </span>
             <span className="text-xs font-medium">{sponsor.name}</span>
           </a>
@@ -264,7 +251,6 @@ function AsideSponsorsLogoCloud() {
   )
 }
 
-// Variant 5: CSS-only rotating spotlight card + avatar strip.
 function AsideSponsorsSpotlight() {
   const featured = LAB_SPONSORS.slice(0, 3)
   return (
@@ -288,8 +274,7 @@ function AsideSponsorsSpotlight() {
           <a
             key={sponsor.name}
             href={sponsor.url}
-            target="_blank"
-            rel="noopener noreferrer"
+            {...newTab}
             className={cn(
               'sponsor-spotlight-card text-muted-foreground col-start-1 row-start-1 flex flex-col items-center justify-center gap-2 rounded-md border border-dashed px-4 py-4 text-center transition-colors hover:text-current',
               index > 0 && 'invisible opacity-0'
@@ -298,12 +283,12 @@ function AsideSponsorsSpotlight() {
           >
             {sponsor.wide ? (
               <>
-                {sponsor.logo('mx-auto w-3/4')}
+                <sponsor.logo className="mx-auto w-3/4" />
                 <span className="sr-only">{sponsor.name}</span>
               </>
             ) : (
               <span className="flex items-center gap-2">
-                {sponsor.logo('size-6')}
+                <sponsor.logo className="size-6" />
                 <span className="text-sm font-medium">{sponsor.name}</span>
               </span>
             )}
@@ -316,12 +301,11 @@ function AsideSponsorsSpotlight() {
           <li key={sponsor.name}>
             <a
               href={sponsor.url}
-              target="_blank"
-              rel="noopener noreferrer"
+              {...newTab}
               title={`${sponsor.name} — ${sponsor.tagline}`}
               className="block opacity-60 grayscale transition-all hover:scale-110 hover:opacity-100 hover:grayscale-0"
             >
-              {sponsor.logo('size-6')}
+              <sponsor.logo className="size-6" />
               <span className="sr-only">{sponsor.name}</span>
             </a>
           </li>
@@ -364,7 +348,6 @@ const VARIANTS: { title: string; note: string; render: () => ReactNode }[] = [
   }
 ]
 
-/** @public - used in the design-system MDX page (not traceable by knip) */
 export function SponsorsLayoutLab() {
   return (
     <div className="not-prose flex flex-wrap gap-6">
