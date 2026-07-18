@@ -20,12 +20,12 @@ jobs:
     name: Measure (base)
     runs-on: ubuntu-24.04-arm
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           persist-credentials: false
-          ref: ${{ github.base_ref }}
+          ref: ${{ github.event.pull_request.base.sha }}
       - uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093 # v6.0.8
-      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
         with:
           node-version-file: .node-version
           cache: pnpm
@@ -37,7 +37,7 @@ jobs:
         # size-limit --json exits non-zero if a limit is exceeded,
         # but we still want the JSON output for the diff table.
         run: pnpm run build:size-json --filter nuqs || true
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: base-size
           path: packages/nuqs/size.json
@@ -47,11 +47,11 @@ jobs:
     name: Measure (PR)
     runs-on: ubuntu-24.04-arm
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           persist-credentials: false
       - uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093 # v6.0.8
-      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
         with:
           node-version-file: .node-version
           cache: pnpm
@@ -61,14 +61,10 @@ jobs:
         run: pnpm build --filter nuqs
       - name: Generate size report
         run: pnpm run build:size-json --filter nuqs || true
-      - name: Save PR number
-        run: echo "${{ github.event.pull_request.number }}" > pr-number.txt
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: pr-size
-          path: |
-            packages/nuqs/size.json
-            pr-number.txt
+          path: packages/nuqs/size.json
           retention-days: 1
 
   compare:
@@ -76,27 +72,41 @@ jobs:
     needs: [measure-base, measure-pr]
     runs-on: ubuntu-24.04-arm
     steps:
-      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           name: base-size
           path: artifacts/base
-      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           name: pr-size
           path: artifacts/pr
       - name: Generate comparison
         run: |
           node --input-type=module << 'EOF'
-          import { readFileSync, writeFileSync } from 'fs'
-          import { mkdirSync } from 'fs'
+          import { mkdirSync, readFileSync, writeFileSync } from 'fs'
 
           const base = JSON.parse(readFileSync('artifacts/base/size.json', 'utf8'))
           const pr = JSON.parse(readFileSync('artifacts/pr/size.json', 'utf8'))
-          const prNumber = readFileSync('artifacts/pr/pr-number.txt', 'utf8').trim()
+
+          if (!Array.isArray(base) || !Array.isArray(pr)) {
+            throw new TypeError('Expected both size reports to contain arrays')
+          }
+
+          function cell(value) {
+            return String(value)
+              .replace(/[\r\n]+/g, ' ')
+              .replace(/\|/g, '\\|')
+              .replace(/`/g, '\\`')
+              .replace(/[<>]/g, '')
+              .replace(/@/g, '@\u200b')
+              .slice(0, 80)
+          }
 
           function formatBytes(bytes) {
-            if (bytes < 1024) return `${bytes} B`
-            return `${(bytes / 1024).toFixed(2)} kB`
+            const value = Number(bytes)
+            if (!Number.isFinite(value)) return 'n/a'
+            if (value < 1024) return `${value} B`
+            return `${(value / 1024).toFixed(2)} kB`
           }
 
           function formatDiff(diff) {
@@ -108,17 +118,25 @@ jobs:
 
           let anyChange = false
           let rows = ''
-          for (const prEntry of pr) {
-            const baseEntry = base.find(b => b.name === prEntry.name)
-            if (!baseEntry) continue
-            const diff = prEntry.brotli - baseEntry.brotli
+          for (const baseEntry of base) {
+            const prEntry = pr.find(entry => entry.name === baseEntry.name)
+            if (!prEntry) {
+              anyChange = true
+              rows += `| ⚠️ ${cell(baseEntry.name)} | ${formatBytes(baseEntry.brotli)} | n/a | Removed |\n`
+              continue
+            }
+            const baseSize = Number(baseEntry.brotli)
+            const prSize = Number(prEntry.brotli)
+            if (!Number.isFinite(baseSize) || !Number.isFinite(prSize)) {
+              throw new TypeError(`Invalid Brotli size for ${cell(baseEntry.name)}`)
+            }
+            const diff = prSize - baseSize
             if (Math.abs(diff) >= 10) anyChange = true
-            const status = prEntry.passed ? '✅' : '❌'
-            rows += `| ${status} ${prEntry.name} | ${formatBytes(baseEntry.brotli)} | ${formatBytes(prEntry.brotli)} | ${formatDiff(diff)} |\n`
+            const status = prEntry.passed === true ? '✅' : '❌'
+            rows += `| ${status} ${cell(baseEntry.name)} | ${formatBytes(baseSize)} | ${formatBytes(prSize)} | ${formatDiff(diff)} |\n`
           }
 
           mkdirSync('artifacts/result', { recursive: true })
-          writeFileSync('artifacts/result/pr-number.txt', prNumber)
 
           if (!anyChange) {
             writeFileSync('artifacts/result/skip', '1')
@@ -137,7 +155,7 @@ jobs:
             console.log(comment)
           }
           EOF
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: size-result
           path: artifacts/result/

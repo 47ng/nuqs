@@ -8,16 +8,25 @@ on:
     workflows: ["Bundle Size"]
     types: [completed]
 
-permissions:
-  pull-requests: write
+permissions: {}
+
+concurrency:
+  group: bundle-size-comment-${{ github.event.workflow_run.pull_requests[0].number }}
+  cancel-in-progress: true
 
 jobs:
   comment:
     name: Post comment
-    if: github.event.workflow_run.conclusion == 'success'
+    if: >-
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'pull_request' &&
+      github.event.workflow_run.pull_requests[0]
     runs-on: ubuntu-24.04-arm
+    permissions:
+      actions: read # Download artifacts from the unprivileged workflow.
+      pull-requests: write # Create or update the bundle-size PR comment.
     steps:
-      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           name: size-result
           run-id: ${{ github.event.workflow_run.id }}
@@ -27,18 +36,18 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.workflow_run.pull_requests[0].number }}
         run: |
           if [ -f "artifacts/skip" ]; then
             echo "No meaningful size change — skipping comment."
             exit 0
           fi
 
-          if [ ! -f "artifacts/comment.md" ] || [ ! -f "artifacts/pr-number.txt" ]; then
+          if [ ! -f "artifacts/comment.md" ]; then
             echo "Artifact files missing — nothing to post."
             exit 0
           fi
 
-          PR_NUMBER=$(cat artifacts/pr-number.txt)
           MARKER="<!-- bundle-size-comment -->"
 
           # Build full comment in a temp file to avoid shell quoting issues
