@@ -244,12 +244,48 @@ describe('combineStats', () => {
       date: 'd1',
       nuqs: 10,
       'next-usequerystate': 5,
-      estimated: true
+      estimated: { nuqs: true }
     })
     expect(combined.last90Days[0]).toEqual({
       date: 'w1',
       nuqs: 70,
       'next-usequerystate': 35
     })
+  })
+
+  it('aligns package stats by date and fills missing values with zero', () => {
+    const combined = combineStats(
+      stats(
+        100,
+        [
+          { date: 'd1', downloads: 10 },
+          { date: 'd2', downloads: 20 }
+        ],
+        [{ date: 'w1', downloads: 70 }]
+      ),
+      stats(
+        50,
+        [
+          { date: 'd2', downloads: 5, estimated: true },
+          { date: 'd3', downloads: 6 }
+        ],
+        [{ date: 'w2', downloads: 35 }]
+      )
+    )
+
+    expect(combined.last30Days).toEqual([
+      { date: 'd1', nuqs: 10, 'next-usequerystate': 0 },
+      {
+        date: 'd2',
+        nuqs: 20,
+        'next-usequerystate': 5,
+        estimated: { 'next-usequerystate': true }
+      },
+      { date: 'd3', nuqs: 0, 'next-usequerystate': 6 }
+    ])
+    expect(combined.last90Days).toEqual([
+      { date: 'w1', nuqs: 70, 'next-usequerystate': 0 },
+      { date: 'w2', nuqs: 0, 'next-usequerystate': 35 }
+    ])
   })
 })
