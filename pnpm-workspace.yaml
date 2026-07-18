@@ -37,16 +37,17 @@ catalogs:
     '@react-router/node': ^8.2.0
     '@react-router/serve': ^8.2.0
 
-  # Pinned: 1.161.3 migrated to @tanstack/store 0.9, which changes search
-  # param re-encoding ({ -> %7B, breaking pretty URLs) and scroll behavior.
+  # react-router pinned below 1.170.16, which re-encodes search params
+  # ({ -> %7B, breaking pretty URLs) and resets scroll on mount
+  # (reproduced without nuqs, bisected to the 1.170.15 -> 1.170.16 gap).
   # The nuqs devDependency must match the e2e app exactly, otherwise pnpm
-  # auto-peer-install resolves a second router copy and mixed store majors
-  # crash at runtime.
+  # auto-peer-install resolves a second router copy and mixed
+  # @tanstack/store majors crash at runtime.
   tanstack-router:
-    '@tanstack/react-router': 1.161.1
-    '@tanstack/react-router-devtools': 1.161.1
-    '@tanstack/router-plugin': 1.161.1
-    '@tanstack/router-cli': 1.161.1
+    '@tanstack/react-router': 1.170.15
+    '@tanstack/react-router-devtools': 1.167.0
+    '@tanstack/router-plugin': 1.168.20
+    '@tanstack/router-cli': 1.167.19
 
   react19:
     '@types/react': ^19.2.17
