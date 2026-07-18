@@ -37,9 +37,10 @@ catalogs:
     '@react-router/node': ^8.2.0
     '@react-router/serve': ^8.2.0
 
-  # react-router pinned below 1.170.16, which re-encodes search params
-  # ({ -> %7B, breaking pretty URLs) and resets scroll on mount
-  # (reproduced without nuqs, bisected to the 1.170.15 -> 1.170.16 gap).
+  # react-router pinned below 1.170.16: TSR PR #7596 (1.170.16) resets
+  # scroll on mount, and PR #7695 (1.170.17, router-core 1.171.14)
+  # re-encodes search params ({ -> %7B, breaking pretty URLs). Both
+  # reproduced without nuqs and root-caused by reverting each change.
   # The nuqs devDependency must match the e2e app exactly, otherwise pnpm
   # auto-peer-install resolves a second router copy and mixed
   # @tanstack/store majors crash at runtime.
