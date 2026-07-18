@@ -13,11 +13,13 @@ export type Datum = {
   estimated?: boolean
 }
 
+export type MultiDatumSeries = 'nuqs' | 'next-usequerystate'
+
 export type MultiDatum = {
   date: string
   nuqs: number
   'next-usequerystate': number
-  estimated?: boolean
+  estimated?: Partial<Record<MultiDatumSeries, true>>
 }
 
 export type NpmPackageStatsData = {
@@ -89,8 +91,7 @@ export function interpolateZeroDays(data: Datum[]): Datum[] {
       data[i - 8].downloads > 0
     ) {
       backwardTrend =
-        (data[i - 1].downloads - data[i - 8].downloads) /
-        data[i - 8].downloads
+        (data[i - 1].downloads - data[i - 8].downloads) / data[i - 8].downloads
     }
 
     // Forward trend: (D+1 vs D-6) week-over-week
@@ -102,8 +103,7 @@ export function interpolateZeroDays(data: Datum[]): Datum[] {
       data[i - 6].downloads > 0
     ) {
       forwardTrend =
-        (data[i + 1].downloads - data[i - 6].downloads) /
-        data[i - 6].downloads
+        (data[i + 1].downloads - data[i - 6].downloads) / data[i - 6].downloads
     }
 
     // Average available trends
@@ -220,11 +220,13 @@ function groupByWeek(data: Datum[]): Datum[] {
       estimated: existing.estimated || (d.estimated ?? false)
     })
   }
-  return Array.from(weeks.entries()).map(([date, { downloads, estimated }]) => ({
-    date,
-    downloads,
-    ...(estimated ? { estimated: true } : {})
-  }))
+  return Array.from(weeks.entries()).map(
+    ([date, { downloads, estimated }]) => ({
+      date,
+      downloads,
+      ...(estimated ? { estimated: true } : {})
+    })
+  )
 }
 
 export function combineStats(
@@ -233,19 +235,31 @@ export function combineStats(
 ) {
   return {
     allTime: nuqs.allTime + n_uqs.allTime,
-    last30Days: nuqs.last30Days.map((d, i) => ({
-      date: d.date,
-      nuqs: d.downloads,
-      ['next-usequerystate']: n_uqs.last30Days[i].downloads,
-      ...(d.estimated ? { estimated: true } : {})
-    })),
-    last90Days: nuqs.last90Days.map((d, i) => ({
-      date: d.date,
-      nuqs: d.downloads,
-      ['next-usequerystate']: n_uqs.last90Days[i].downloads,
-      ...(d.estimated ? { estimated: true } : {})
-    }))
+    last30Days: combineDownloads(nuqs.last30Days, n_uqs.last30Days),
+    last90Days: combineDownloads(nuqs.last90Days, n_uqs.last90Days)
   }
+}
+
+function combineDownloads(nuqs: Datum[], n_uqs: Datum[]): MultiDatum[] {
+  const nuqsByDate = new Map(nuqs.map(datum => [datum.date, datum]))
+  const n_uqsByDate = new Map(n_uqs.map(datum => [datum.date, datum]))
+  const dates = new Set([...nuqsByDate.keys(), ...n_uqsByDate.keys()])
+
+  return Array.from(dates)
+    .sort()
+    .map(date => {
+      const nuqsDatum = nuqsByDate.get(date)
+      const n_uqsDatum = n_uqsByDate.get(date)
+      const estimated: NonNullable<MultiDatum['estimated']> = {}
+      if (nuqsDatum?.estimated) estimated.nuqs = true
+      if (n_uqsDatum?.estimated) estimated['next-usequerystate'] = true
+      return {
+        date,
+        nuqs: nuqsDatum?.downloads ?? 0,
+        'next-usequerystate': n_uqsDatum?.downloads ?? 0,
+        ...(Object.keys(estimated).length > 0 ? { estimated } : {})
+      }
+    })
 }
 
 // Re-export to avoid importing dayjs everywhere
