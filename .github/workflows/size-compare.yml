@@ -3,9 +3,9 @@ name: Bundle Size
 on:
   pull_request:
     paths:
-      - "packages/nuqs/src/**"
-      - "packages/nuqs/package.json"
-      - "packages/nuqs/tsdown.config.ts"
+      - 'packages/nuqs/src/**'
+      - 'packages/nuqs/package.json'
+      - 'packages/nuqs/tsdown.config.ts'
 
 concurrency:
   group: bundle-size-${{ github.event.pull_request.number }}
@@ -38,10 +38,12 @@ jobs:
         run: |
           pnpm --filter nuqs run build:size-json || true
           test -s packages/nuqs/size.json
+          mv packages/nuqs/size.json packages/nuqs/size-limit.json
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: base-size
-          path: packages/nuqs/size.json
+          path: packages/nuqs/size-limit.json
+          if-no-files-found: error
           retention-days: 1
 
   measure-pr:
@@ -64,111 +66,10 @@ jobs:
         run: |
           pnpm --filter nuqs run build:size-json || true
           test -s packages/nuqs/size.json
+          mv packages/nuqs/size.json packages/nuqs/size-limit.json
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: pr-size
-          path: packages/nuqs/size.json
-          retention-days: 1
-
-  compare:
-    name: Compare
-    needs: [measure-base, measure-pr]
-    runs-on: ubuntu-24.04-arm
-    steps:
-      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
-        with:
-          name: base-size
-          path: artifacts/base
-      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
-        with:
-          name: pr-size
-          path: artifacts/pr
-      - name: Record PR number
-        # workflow_run.pull_requests is empty for fork PRs, so the privileged
-        # comment workflow reads the PR number from the artifact instead,
-        # and validates it against the run's head SHA before posting.
-        env:
-          PR_NUMBER: ${{ github.event.pull_request.number }}
-        run: |
-          mkdir -p artifacts/result
-          printf '%s' "$PR_NUMBER" > artifacts/result/pr-number
-      - name: Generate comparison
-        run: |
-          node --input-type=module << 'EOF'
-          import { mkdirSync, readFileSync, writeFileSync } from 'fs'
-
-          const base = JSON.parse(readFileSync('artifacts/base/size.json', 'utf8'))
-          const pr = JSON.parse(readFileSync('artifacts/pr/size.json', 'utf8'))
-
-          if (!Array.isArray(base) || !Array.isArray(pr)) {
-            throw new TypeError('Expected both size reports to contain arrays')
-          }
-
-          function cell(value) {
-            return String(value)
-              .replace(/[\r\n]+/g, ' ')
-              .replace(/\|/g, '\\|')
-              .replace(/`/g, '\\`')
-              .replace(/[<>]/g, '')
-              .replace(/@/g, '@\u200b')
-              .slice(0, 80)
-          }
-
-          function formatBytes(bytes) {
-            const value = Number(bytes)
-            if (!Number.isFinite(value)) return 'n/a'
-            if (value < 1024) return `${value} B`
-            return `${(value / 1024).toFixed(2)} kB`
-          }
-
-          function formatDiff(diff) {
-            if (Math.abs(diff) < 10) return '—'
-            const sign = diff > 0 ? '+' : ''
-            const arrow = diff > 0 ? '⬆️' : '⬇️'
-            return `${arrow} ${sign}${formatBytes(diff)}`
-          }
-
-          let anyChange = false
-          let rows = ''
-          for (const baseEntry of base) {
-            const prEntry = pr.find(entry => entry.name === baseEntry.name)
-            if (!prEntry) {
-              anyChange = true
-              rows += `| ⚠️ ${cell(baseEntry.name)} | ${formatBytes(baseEntry.size)} | n/a | Removed |\n`
-              continue
-            }
-            const baseSize = Number(baseEntry.size)
-            const prSize = Number(prEntry.size)
-            if (!Number.isFinite(baseSize) || !Number.isFinite(prSize)) {
-              throw new TypeError(`Invalid size for ${cell(baseEntry.name)}`)
-            }
-            const diff = prSize - baseSize
-            if (Math.abs(diff) >= 10) anyChange = true
-            const status = prEntry.passed === true ? '✅' : '❌'
-            rows += `| ${status} ${cell(baseEntry.name)} | ${formatBytes(baseSize)} | ${formatBytes(prSize)} | ${formatDiff(diff)} |\n`
-          }
-
-          mkdirSync('artifacts/result', { recursive: true })
-
-          if (!anyChange) {
-            writeFileSync('artifacts/result/skip', '1')
-            console.log('No meaningful size change (< 10 B). Skipping comment.')
-          } else {
-            const comment = [
-              '## Bundle size',
-              '',
-              '| | Base | PR | Δ |',
-              '|---|---|---|---|',
-              rows.trimEnd(),
-              '',
-              '_Brotli-compressed. Limits are set in the `size-limit` config in `packages/nuqs/package.json`._',
-            ].join('\n')
-            writeFileSync('artifacts/result/comment.md', comment)
-            console.log(comment)
-          }
-          EOF
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: size-result
-          path: artifacts/result/
+          path: packages/nuqs/size-limit.json
+          if-no-files-found: error
           retention-days: 1
