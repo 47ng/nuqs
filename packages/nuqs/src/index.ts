@@ -25,6 +25,3 @@ export {
 } from './standard-schema'
 export * from './useQueryState'
 export * from './useQueryStates'
-
-export const __bundleSizeCanary =
-  'q7Xv9kM2pLzR4wTb8nJdY3fGh6sCa1eWi5uHo0NgKrPmZxQtSjVyBl'
