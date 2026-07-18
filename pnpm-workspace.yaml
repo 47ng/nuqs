@@ -3,42 +3,42 @@ packages:
 
 catalogs:
   e2e:
-    playwright: ^1.58.1
-    '@playwright/test': ^1.58.1
+    playwright: ^1.61.1
+    '@playwright/test': ^1.61.1
 
   knip:
-    knip: ^6.14.2
+    knip: ^6.27.0
 
   msw:
-    msw: ^2.14.6
+    msw: ^2.15.0
 
   vitest:
-    vitest: ^4.1.0
-    '@vitest/browser-playwright': ^4.1.0
-    '@vitest/coverage-v8': ^4.1.0
+    vitest: ^4.1.10
+    '@vitest/browser-playwright': ^4.1.10
+    '@vitest/coverage-v8': ^4.1.10
 
   vite:
-    vite: ^8.0.0
+    vite: ^8.1.5
 
   next:
-    next: 16.2.7
+    next: 16.3.0-preview.6
 
   react-router7:
-    react-router: ^7.18.0
-    '@react-router/dev': ^7.18.0
-    '@react-router/express': ^7.18.0
-    '@react-router/node': ^7.18.0
-    '@react-router/serve': ^7.18.0
+    react-router: ^7.18.1
+    '@react-router/dev': ^7.18.1
+    '@react-router/express': ^7.18.1
+    '@react-router/node': ^7.18.1
+    '@react-router/serve': ^7.18.1
 
   react-router8:
-    react-router: ^8.0.0
-    '@react-router/dev': ^8.0.0
-    '@react-router/express': ^8.0.0
-    '@react-router/node': ^8.0.0
-    '@react-router/serve': ^8.0.0
+    react-router: ^8.2.0
+    '@react-router/dev': ^8.2.0
+    '@react-router/express': ^8.2.0
+    '@react-router/node': ^8.2.0
+    '@react-router/serve': ^8.2.0
 
   react19:
-    '@types/react': ^19.2.10
+    '@types/react': ^19.2.17
     '@types/react-dom': ^19.2.3
     react: ^19.2.7
     react-dom: ^19.2.7

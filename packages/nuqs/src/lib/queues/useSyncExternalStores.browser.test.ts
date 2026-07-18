@@ -65,7 +65,7 @@ describe('useSyncExternalStores', () => {
       )
     const { result, rerender } = await renderHook(useTest)
     expect(result.current).toEqual({ a: 0 })
-    rerender({ keys: ['b'] })
+    await rerender({ keys: ['b'] })
     expect(result.current).toEqual({ b: 0 })
   })
   it('should not re-render when a non-listened key changes', async () => {
