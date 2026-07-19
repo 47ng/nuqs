@@ -7,9 +7,10 @@
 @plugin '@headlessui/tailwindcss';
 
 /*
-  fumadocs-ui dropped its `container` utility override in 16.11
-  (it centered content and capped it at 1400px on 2xl screens).
-  The site layouts rely on it, so keep providing it locally.
+  fumadocs-ui's preset.css no longer ships the `container` utility
+  (moved upstream to preset-legacy.css in 16.2, which we don't import).
+  It centered content and capped it at 1400px on 2xl screens; the site
+  layouts rely on it, so keep providing it locally.
 */
 @utility container {
   margin-inline: auto;
