@@ -9,6 +9,7 @@ import {
 } from '@/src/components/ai/page-actions'
 import { getPublishedVersion, isPublished } from '@/src/lib/published-version'
 import { gatedHeadingIds } from '@/src/lib/strip-unreleased'
+import { StraightTOC } from '@/src/components/straight-toc'
 import { getBaseUrl } from '@/src/lib/url'
 import { github } from '@/src/lib/utils'
 import {
@@ -47,7 +48,7 @@ export default async function Page(props: PageProps<'/docs/[[...slug]]'>) {
     <DocsPage
       toc={toc}
       tableOfContent={{
-        footer: <AsideSponsors />
+        component: <StraightTOC footer={<AsideSponsors />} />
       }}
     >
       <DocsTitle>{page.data.title}</DocsTitle>

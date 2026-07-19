@@ -69,7 +69,12 @@
 @layer base {
   html,
   body {
-    height: 100%;
+    /*
+      min-, not plain height: fumadocs-ui 16.11 positions the docs
+      sidebar and TOC with `sticky` inside a grid that must grow with
+      the page content; a viewport-capped body freezes them in place.
+    */
+    min-height: 100%;
   }
   body {
     display: flex;
