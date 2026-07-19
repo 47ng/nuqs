@@ -13,6 +13,10 @@ export function getSharedLayoutProps(): BaseLayoutProps {
       ),
       transparentMode: 'top'
     },
+    // fumadocs-ui 16.11 defaults to light-dark only
+    themeSwitch: {
+      mode: 'light-dark-system'
+    },
     links: [
       {
         text: 'Documentation',

@@ -1,4 +1,5 @@
 import { useMDXComponents } from '@/mdx-components'
+import type { TOCItemType } from 'fumadocs-core/toc'
 import { AsideSponsors } from '@/src/app/(pages)/_landing/sponsors'
 import { source } from '@/src/app/source'
 import {
@@ -40,7 +41,7 @@ export default async function Page(props: PageProps<'/docs/[[...slug]]'>) {
   const gated = gatedHeadingIds(await page.data.getText('raw'), version =>
     isPublished(version, published)
   )
-  const toc = page.data.toc.filter(item => !gated.has(item.url.replace(/^#/, '')))
+  const toc = page.data.toc.filter((item: TOCItemType) => !gated.has(item.url.replace(/^#/, '')))
 
   return (
     <DocsPage

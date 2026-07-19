@@ -63,8 +63,8 @@
       "ignoreDependencies": [
         "@headlessui/tailwindcss",
         "@tailwindcss/container-queries",
-        "@types/mdx",
         "hast-util-to-jsx-runtime",
+        "tailwindcss",
         "tailwindcss-animate"
       ]
     },

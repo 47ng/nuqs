@@ -6,6 +6,18 @@
 @plugin '@tailwindcss/container-queries';
 @plugin '@headlessui/tailwindcss';
 
+/*
+  fumadocs-ui dropped its `container` utility override in 16.11
+  (it centered content and capped it at 1400px on 2xl screens).
+  The site layouts rely on it, so keep providing it locally.
+*/
+@utility container {
+  margin-inline: auto;
+  padding-inline: 1rem;
+
+  @apply 2xl:max-w-[1400px];
+}
+
 :root {
   --fd-layout-width: 1600px;
 

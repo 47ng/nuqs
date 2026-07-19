@@ -8,7 +8,7 @@ import type {
   RegistryBuiltItem
 } from '@/src/registry/schemas'
 import { SiTypescript } from '@icons-pack/react-simple-icons'
-import { Markdown } from 'fumadocs-core/content'
+import { Markdown } from 'fumadocs-core/content/md'
 import { rehypeCode, remarkHeading } from 'fumadocs-core/mdx-plugins'
 import { Callout } from 'fumadocs-ui/components/callout'
 import { Tab, Tabs } from 'fumadocs-ui/components/tabs'

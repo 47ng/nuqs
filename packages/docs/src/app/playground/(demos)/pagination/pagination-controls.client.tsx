@@ -29,7 +29,7 @@ export function ClientPaginationControls({
         <PaginationItem>
           <PaginationPrevious
             disabled={page === 1}
-            onClick={() => setPage(p => Math.max(1, p - 1))}
+            onClick={() => setPage((p: number) => Math.max(1, p - 1))}
           />
         </PaginationItem>
         {Array.from({ length: numPages }, (_, i) => (
@@ -45,7 +45,7 @@ export function ClientPaginationControls({
         <PaginationItem>
           <PaginationNext
             disabled={page === numPages}
-            onClick={() => setPage(p => Math.min(numPages, p + 1))}
+            onClick={() => setPage((p: number) => Math.min(numPages, p + 1))}
           />
         </PaginationItem>
       </PaginationContent>

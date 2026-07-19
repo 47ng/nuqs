@@ -89,7 +89,7 @@ export default async function RegistryLayout({
         nav={{ ...sharedLayoutProps.nav, mode: 'top' }}
         sidebar={{
           collapsible: false,
-          banner: SideBanner,
+          banner: <SideBanner />,
           footer: (
             <Suspense>
               <SidebarFooter />
