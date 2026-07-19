@@ -53,7 +53,8 @@
       ],
       "project": ["content/**/*.{ts,tsx}", "src/**/*.{ts,tsx}"],
       "paths": {
-        "@/*": ["./*"]
+        "@/*": ["./*"],
+        "collections/*": ["./.source/*"]
       },
       "next": true,
       "ignoreFiles": [
