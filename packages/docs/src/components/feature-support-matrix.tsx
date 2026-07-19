@@ -1,3 +1,4 @@
+import { getPublishedVersion, isReleased } from '@/src/lib/published-version'
 import { cn } from '@/src/lib/utils'
 import { Callout } from 'fumadocs-ui/components/callout'
 import { CheckCircle, XCircle } from 'lucide-react'
@@ -80,7 +81,7 @@ export function renderFeatureSupportMatrixText(
   return sentences.join(' ')
 }
 
-export function FeatureSupportMatrix({
+export async function FeatureSupportMatrix({
   introducedInVersion,
   deprecatedInVersion,
   highlightUnsupported = false,
@@ -92,22 +93,17 @@ export function FeatureSupportMatrix({
     includeAllFrameworksSupport: true
   })
   const unsupportedLabel = getUnsupportedFrameworksText(notSupportedIn)
+  const released = isReleased(introducedInVersion, await getPublishedVersion())
 
   return (
-    <Callout
-      type={deprecatedInVersion ? 'warning' : 'success'}
-      className="pr-1"
-    >
+    <Callout type={calloutTone(released, deprecatedInVersion)} className="pr-1">
       <div className="flex flex-wrap gap-4">
         <span className="text-balance">
-          Introduced in version <strong>{introducedInVersion}</strong>
-          {deprecatedInVersion ? (
-            <>
-              , and deprecated in version <strong>{deprecatedInVersion}</strong>
-            </>
-          ) : (
-            '.'
-          )}
+          <VersionLine
+            introducedInVersion={introducedInVersion}
+            deprecatedInVersion={deprecatedInVersion}
+            released={released}
+          />
         </span>
         {!hideFrameworks && (
           <div className="not-prose ml-auto flex items-center gap-1 text-xl">
@@ -204,6 +200,47 @@ export function FeatureSupportMatrix({
         )}
       </div>
     </Callout>
+  )
+}
+
+function calloutTone(
+  released: boolean,
+  deprecatedInVersion?: string
+): 'info' | 'warning' | 'success' {
+  if (!released) {
+    return 'info'
+  }
+  return deprecatedInVersion ? 'warning' : 'success'
+}
+
+function VersionLine({
+  introducedInVersion,
+  deprecatedInVersion,
+  released
+}: Pick<
+  FeatureSupportMatrixProps,
+  'introducedInVersion' | 'deprecatedInVersion'
+> & { released: boolean }) {
+  if (!released) {
+    return (
+      <>
+        Coming in version <strong>{introducedInVersion}</strong> — not yet
+        released.
+      </>
+    )
+  }
+  if (deprecatedInVersion) {
+    return (
+      <>
+        Introduced in version <strong>{introducedInVersion}</strong>, and
+        deprecated in version <strong>{deprecatedInVersion}</strong>
+      </>
+    )
+  }
+  return (
+    <>
+      Introduced in version <strong>{introducedInVersion}</strong>.
+    </>
   )
 }
 

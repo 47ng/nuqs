@@ -12,19 +12,20 @@
     "test:types": "tsc --noEmit"
   },
   "dependencies": {
-    "@t3-oss/env-core": "^0.13.10",
+    "@t3-oss/env-core": "^0.13.11",
     "minimist": "^1.2.8",
     "octokit": "^5.0.5",
-    "semver": "^7.7.3",
-    "zod": "^4.3.6"
+    "semver": "^7.8.5",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@octokit/plugin-throttling": "^11.0.3",
     "@types/minimist": "^1.2.5",
-    "@types/node": "^24.10.10",
+    "@types/node": "^24.13.3",
     "@types/semver": "^7.7.1",
-    "msw": "^2.14.6",
+    "msw": "catalog:msw",
     "typescript": "catalog:typescript",
+    "typescript-7": "catalog:typescript",
     "vitest": "catalog:vitest"
   }
 }

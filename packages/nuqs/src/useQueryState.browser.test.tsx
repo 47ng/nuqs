@@ -112,7 +112,7 @@ describe('useQueryState: referential equality', () => {
       wrapper: withNuqsTestingAdapter()
     })
     expect(result.current.str[0]).toBe('foo')
-    rerender({ defaultValue: 'b' })
+    await rerender({ defaultValue: 'b' })
     const { str, obj, arr } = result.current
     expect(str[0]).toBe('b')
     expect(obj[0]).toBe(defaults.obj)
@@ -128,7 +128,7 @@ describe('useQueryState: referential equality', () => {
       }
     )
     const [, setState1] = result.current
-    rerender()
+    await rerender()
     const [, setState2] = result.current
     expect(setState1).toBe(setState2)
     await act(() => setState1('pass'))
@@ -449,6 +449,34 @@ describe('useQueryState: adapter defaults', () => {
     await act(() => result.current[1]('pass'))
     expect(onUrlUpdate).toHaveBeenCalledOnce()
     expect(onUrlUpdate.mock.calls[0]![0].queryString).toBe('?test=pass')
+  })
+  it('should use adapter default value for `history` when provided', async () => {
+    const onUrlUpdate = vi.fn<OnUrlUpdateFunction>()
+    const { result, act } = await renderHook(() => useQueryState('test'), {
+      wrapper: withNuqsTestingAdapter({
+        defaultOptions: {
+          history: 'push'
+        },
+        onUrlUpdate
+      })
+    })
+    await act(() => result.current[1]('update'))
+    expect(onUrlUpdate).toHaveBeenCalledOnce()
+    expect(onUrlUpdate.mock.calls[0]![0].options.history).toBe('push')
+  })
+  it('should let a call-level `history` override the adapter default', async () => {
+    const onUrlUpdate = vi.fn<OnUrlUpdateFunction>()
+    const { result, act } = await renderHook(() => useQueryState('test'), {
+      wrapper: withNuqsTestingAdapter({
+        defaultOptions: {
+          history: 'push'
+        },
+        onUrlUpdate
+      })
+    })
+    await act(() => result.current[1]('update', { history: 'replace' }))
+    expect(onUrlUpdate).toHaveBeenCalledOnce()
+    expect(onUrlUpdate.mock.calls[0]![0].options.history).toBe('replace')
   })
 })
 

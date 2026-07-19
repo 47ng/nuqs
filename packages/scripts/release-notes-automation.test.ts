@@ -4,6 +4,7 @@ import {
   breakingChanges,
   formatChangeLine,
   formatClosingIssues,
+  formatMultilineOutput,
   formatThanksSection,
   formatTitle,
   groupChangesByCategory,
@@ -394,6 +395,26 @@ describe('formatThanksSection', () => {
   it('formats three+ contributors with oxford comma', () => {
     expect(formatThanksSection(['alice', 'bob', 'charlie'])).toBe(
       'Huge thanks to @alice, @bob, and @charlie for helping!'
+    )
+  })
+})
+
+describe('formatMultilineOutput', () => {
+  it('wraps the value in a heredoc envelope on its own lines', () => {
+    expect(formatMultilineOutput('notes', 'line one\nline two', 'EOF')).toBe(
+      'notes<<EOF\nline one\nline two\nEOF\n'
+    )
+  })
+
+  it('keeps the closing delimiter on its own line when the value already ends in a newline', () => {
+    expect(formatMultilineOutput('notes', 'ends with newline\n', 'EOF')).toBe(
+      'notes<<EOF\nends with newline\n\nEOF\n'
+    )
+  })
+
+  it('throws rather than emit when the value contains the delimiter', () => {
+    expect(() => formatMultilineOutput('notes', 'a\nEOF\nb', 'EOF')).toThrow(
+      /delimiter/
     )
   })
 })

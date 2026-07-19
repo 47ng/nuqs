@@ -3,45 +3,67 @@ packages:
 
 catalogs:
   e2e:
-    playwright: ^1.58.1
-    '@playwright/test': ^1.58.1
+    playwright: ^1.61.1
+    '@playwright/test': ^1.61.1
 
   knip:
-    knip: ^6.14.2
+    knip: ^6.27.0
+
+  msw:
+    msw: ^2.15.0
 
   vitest:
-    vitest: ^4.1.0
-    '@vitest/browser-playwright': ^4.1.0
-    '@vitest/coverage-v8': ^4.1.0
+    vitest: ^4.1.10
+    '@vitest/browser-playwright': ^4.1.10
+    '@vitest/coverage-v8': ^4.1.10
 
   vite:
-    vite: ^8.0.0
+    vite: ^8.1.5
 
   next:
-    next: 16.2.7
+    next: 16.3.0-preview.6
 
   react-router7:
-    react-router: ^7.18.0
-    '@react-router/dev': ^7.18.0
-    '@react-router/express': ^7.18.0
-    '@react-router/node': ^7.18.0
-    '@react-router/serve': ^7.18.0
+    react-router: ^7.18.1
+    '@react-router/dev': ^7.18.1
+    '@react-router/express': ^7.18.1
+    '@react-router/node': ^7.18.1
+    '@react-router/serve': ^7.18.1
 
   react-router8:
-    react-router: ^8.0.0
-    '@react-router/dev': ^8.0.0
-    '@react-router/express': ^8.0.0
-    '@react-router/node': ^8.0.0
-    '@react-router/serve': ^8.0.0
+    react-router: ^8.2.0
+    '@react-router/dev': ^8.2.0
+    '@react-router/express': ^8.2.0
+    '@react-router/node': ^8.2.0
+    '@react-router/serve': ^8.2.0
+
+  # react-router pinned below 1.170.16: TSR PR #7596 (1.170.16) resets
+  # scroll on mount, and PR #7695 (1.170.17, router-core 1.171.14)
+  # re-encodes search params ({ -> %7B, breaking pretty URLs). Both
+  # reproduced without nuqs and root-caused by reverting each change.
+  # The nuqs devDependency must match the e2e app exactly, otherwise pnpm
+  # auto-peer-install resolves a second router copy and mixed
+  # @tanstack/store majors crash at runtime.
+  tanstack-router:
+    '@tanstack/react-router': 1.170.15
+    '@tanstack/react-router-devtools': 1.167.0
+    '@tanstack/router-plugin': 1.168.20
+    '@tanstack/router-cli': 1.167.19
 
   react19:
-    '@types/react': ^19.2.10
+    '@types/react': ^19.2.17
     '@types/react-dom': ^19.2.3
     react: ^19.2.7
     react-dom: ^19.2.7
 
   typescript:
-    typescript: ^5.9.2
+    # JS API provider for tooling that imports `typescript` (tsdown, vitest,
+    # knip, next). TS 7 drops the JS API until 7.1, so tooling stays on the
+    # 6.0 bridge, which exposes its binary as `tsc6` to avoid clashing with 7.
+    typescript: 'npm:@typescript/typescript6@^6.0.2'
+    # Native Go compiler shipped as TypeScript 7. Exposes `tsc`, so the CLI
+    # type-check scripts pick it up with no change.
+    typescript-7: 'npm:typescript@^7.0.2'
 
 enablePrePostScripts: false
 

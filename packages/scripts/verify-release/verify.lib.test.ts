@@ -14,8 +14,8 @@ import {
 const PINS: Toolchain = { node: '24.11.0', npm: '11.16.0', pnpm: '11.0.9' }
 
 const REPRO: Reproduction = {
-  shasum: 'a'.repeat(40),
   integrity: 'sha512-AAAA',
+  shasum: 'a'.repeat(40),
   localTgz: '/out/local.tgz'
 }
 
@@ -39,15 +39,15 @@ describe('verifyReproducibility', () => {
         ref: 'v1.2.3',
         pkg: 'nuqs',
         version: '1.2.3',
-        shasum: 'a'.repeat(40),
-        integrity: 'sha512-AAAA'
+        integrity: 'sha512-AAAA',
+        shasum: 'a'.repeat(40)
       },
       verifier
     )
     expect(outcome).toEqual({
       kind: 'mismatch',
       reproduced: { ...REPRO, shasum: 'b'.repeat(40) },
-      expected: { shasum: 'a'.repeat(40), integrity: 'sha512-AAAA' }
+      expected: { integrity: 'sha512-AAAA', shasum: 'a'.repeat(40) }
     })
   })
 
@@ -58,15 +58,15 @@ describe('verifyReproducibility', () => {
         ref: 'v1.2.3',
         pkg: 'nuqs',
         version: '1.2.3',
-        shasum: REPRO.shasum,
-        integrity: REPRO.integrity
+        integrity: REPRO.integrity,
+        shasum: REPRO.shasum
       },
       fakeVerifier({ reproduce })
     )
     expect(outcome).toEqual({
       kind: 'match',
       reproduced: REPRO,
-      expected: { shasum: REPRO.shasum, integrity: REPRO.integrity }
+      expected: { integrity: REPRO.integrity, shasum: REPRO.shasum }
     })
     expect(reproduce).toHaveBeenCalledExactlyOnceWith({
       ref: 'v1.2.3',
@@ -75,34 +75,26 @@ describe('verifyReproducibility', () => {
     })
   })
 
-  it('matches on sha1 alone when no integrity is provided', async () => {
-    const outcome = await verifyReproducibility(
-      { ref: 'v1.2.3', pkg: 'nuqs', version: '1.2.3', shasum: REPRO.shasum },
-      fakeVerifier({
-        reproduce: async () => ({ ...REPRO, integrity: 'sha512-DIFFERENT' })
-      })
-    )
-    expect(outcome).toEqual({
-      kind: 'match',
-      reproduced: { ...REPRO, integrity: 'sha512-DIFFERENT' },
-      expected: { shasum: REPRO.shasum, integrity: undefined }
-    })
-  })
-
-  it('reports mismatch when integrity diverges even if sha1 agrees', async () => {
+  // integrity (sha512) is the required anchor: a sha1 that agrees while the
+  // sha512 diverges is exactly the shape of a collision attempt, and is rejected.
+  it('reports mismatch when integrity (the anchor) diverges even if sha1 agrees', async () => {
     const outcome = await verifyReproducibility(
       {
         ref: 'v1.2.3',
         pkg: 'nuqs',
         version: '1.2.3',
-        shasum: REPRO.shasum,
-        integrity: 'sha512-EXPECTED'
+        integrity: 'sha512-EXPECTED',
+        shasum: REPRO.shasum
       },
       fakeVerifier({
         reproduce: async () => ({ ...REPRO, integrity: 'sha512-ACTUAL' })
       })
     )
-    expect(outcome).toMatchObject({ kind: 'mismatch' })
+    expect(outcome).toEqual({
+      kind: 'mismatch',
+      reproduced: { ...REPRO, integrity: 'sha512-ACTUAL' },
+      expected: { integrity: 'sha512-EXPECTED', shasum: REPRO.shasum }
+    })
   })
 
   it('short-circuits on a toolchain mismatch without reproducing', async () => {
@@ -112,6 +104,7 @@ describe('verifyReproducibility', () => {
         ref: 'v1.2.3',
         pkg: 'nuqs',
         version: '1.2.3',
+        integrity: REPRO.integrity,
         shasum: REPRO.shasum
       },
       fakeVerifier({
@@ -219,8 +212,8 @@ describe('fetchRegistryMeta', () => {
     version: '2.8.9',
     gitHead: 'f3e2d176d549f38f00daa765e6cd1c83cc826174',
     dist: {
-      shasum: 'e2c27d87c0dd0e3b4412fe867bcd0947cc4c998f',
       integrity: 'sha512-8ou6AEwsxMWSYo2qkfZtYFVzngwbKmg4c00HVxC',
+      shasum: 'e2c27d87c0dd0e3b4412fe867bcd0947cc4c998f',
       tarball: 'https://registry.npmjs.org/nuqs/-/nuqs-2.8.9.tgz'
     }
   }
@@ -230,8 +223,8 @@ describe('fetchRegistryMeta', () => {
   it('reads digests + gitHead from the canonical registry URL', async () => {
     const fetchFn = okFetch(validBody)
     const meta = await fetchRegistryMeta('nuqs', '2.8.9', fetchFn)
-    expect(meta.dist.shasum).toBe(validBody.dist.shasum)
     expect(meta.dist.integrity).toBe(validBody.dist.integrity)
+    expect(meta.dist.shasum).toBe(validBody.dist.shasum)
     expect(meta.gitHead).toBe(validBody.gitHead)
     expect(fetchFn).toHaveBeenCalledExactlyOnceWith(
       'https://registry.npmjs.org/nuqs/2.8.9'
@@ -262,6 +255,16 @@ describe('fetchRegistryMeta', () => {
       fetchRegistryMeta('nuqs', '2.8.9', okFetch(bad))
     ).rejects.toThrow()
   })
+
+  it('rejects a payload whose integrity is not a sha512 integrity', async () => {
+    const bad = {
+      ...validBody,
+      dist: { ...validBody.dist, integrity: 'sha1-deadbeef' }
+    }
+    await expect(
+      fetchRegistryMeta('nuqs', '2.8.9', okFetch(bad))
+    ).rejects.toThrow()
+  })
 })
 
 describe('verdictFor', () => {
@@ -272,11 +275,11 @@ describe('verdictFor', () => {
       {
         kind: 'match',
         reproduced: {
-          shasum: 'a'.repeat(40),
           integrity: 'sha512-SAME',
+          shasum: 'a'.repeat(40),
           localTgz: '/out/local.tgz'
         },
-        expected: { shasum: 'a'.repeat(40), integrity: 'sha512-SAME' }
+        expected: { integrity: 'sha512-SAME', shasum: 'a'.repeat(40) }
       },
       ctx
     )
@@ -295,11 +298,11 @@ describe('verdictFor', () => {
       {
         kind: 'mismatch',
         reproduced: {
-          shasum: 'b'.repeat(40),
           integrity: 'sha512-LOCAL',
+          shasum: 'b'.repeat(40),
           localTgz: '/out/local.tgz'
         },
-        expected: { shasum: 'a'.repeat(40), integrity: 'sha512-PUBLISHED' }
+        expected: { integrity: 'sha512-PUBLISHED', shasum: 'a'.repeat(40) }
       },
       ctx
     )

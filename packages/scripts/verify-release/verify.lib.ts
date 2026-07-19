@@ -42,10 +42,14 @@ export function normalizeTag(input: string): TagVersion {
   return { tag: `v${version}`, version }
 }
 
-/** A reproduced tarball, as hashed on the host from the sandbox's output. */
-export type Reproduction = {
-  shasum: string // sha1 hex of the .tgz
+/** A tarball's digest pair: npm SRI integrity (sha512) + legacy sha1 shasum. */
+export type Digests = {
   integrity: string // npm integrity: `sha512-` + base64(sha512(.tgz))
+  shasum: string // sha1 hex of the .tgz
+}
+
+/** A reproduced tarball, as hashed on the host from the sandbox's output. */
+export type Reproduction = Digests & {
   localTgz: string // host path to the reproduced tarball (staged diff needs it)
 }
 
@@ -55,10 +59,7 @@ export type ReproduceInput = {
   version: string
 }
 
-export type VerifyInput = ReproduceInput & {
-  shasum: string
-  integrity?: string
-}
+export type VerifyInput = ReproduceInput & Digests
 
 // The I/O surface the engine consumes. Production wires `makeDockerVerifier`
 // (docker + git + fs); tests inject an in-memory fake, controlling the returned
@@ -122,10 +123,10 @@ export const registryMetaSchema = z.object({
     .regex(/^[0-9a-f]{40}$/)
     .optional(),
   dist: z.object({
-    shasum: z.string().regex(/^[0-9a-f]{40}$/, 'dist.shasum must be a sha1'),
     integrity: z
       .string()
       .regex(/^sha512-/, 'dist.integrity must be a sha512 integrity'),
+    shasum: z.string().regex(/^[0-9a-f]{40}$/, 'dist.shasum must be a sha1'),
     tarball: z.string()
   })
 })
@@ -180,7 +181,7 @@ export function checkGitHead(
 /** The host-computed reproduction set against the expected (published) digests. */
 export type DigestComparison = {
   reproduced: Reproduction
-  expected: { shasum: string; integrity?: string }
+  expected: Digests
 }
 
 export type Outcome =
@@ -212,11 +213,15 @@ export async function verifyReproducibility(
     pkg: input.pkg,
     version: input.version
   })
+  // integrity (sha512) is the cryptographic anchor and must match: sha1 is
+  // collision-broken, so it can't be the gate. A crafted tarball with a
+  // matching sha1 but divergent content still fails here, because its sha512
+  // differs. shasum is kept only as a cheap corroborating cross-check; both
+  // digests derive from the same bytes, so an honest reproduction agrees on both.
+  const intOk = reproduced.integrity === input.integrity
   const shaOk = reproduced.shasum === input.shasum
-  const intOk =
-    input.integrity === undefined || reproduced.integrity === input.integrity
-  const expected = { shasum: input.shasum, integrity: input.integrity }
-  return shaOk && intOk
+  const expected = { integrity: input.integrity, shasum: input.shasum }
+  return intOk && shaOk
     ? { kind: 'match', reproduced, expected }
     : { kind: 'mismatch', reproduced, expected }
 }
@@ -237,10 +242,10 @@ export type Verdict = {
  *  so the match (or divergence) is visually checkable, like run1 used to print. */
 function digestLines(c: DigestComparison): string[] {
   return [
-    `  reproduced shasum    : ${c.reproduced.shasum}`,
-    `  published  shasum    : ${c.expected.shasum}`,
     `  reproduced integrity : ${c.reproduced.integrity}`,
-    `  published  integrity : ${c.expected.integrity ?? '<not provided>'}`
+    `  published  integrity : ${c.expected.integrity}`,
+    `  reproduced shasum    : ${c.reproduced.shasum}`,
+    `  published  shasum    : ${c.expected.shasum}`
   ]
 }
 
@@ -483,8 +488,8 @@ export function makeDockerVerifier(config: DockerVerifierConfig): Verifier {
       const localTgz = join(config.outDir, 'local.tgz')
       const bytes = readFileSync(localTgz)
       return {
-        shasum: createHash('sha1').update(bytes).digest('hex'),
         integrity: `sha512-${createHash('sha512').update(bytes).digest('base64')}`,
+        shasum: createHash('sha1').update(bytes).digest('hex'),
         localTgz
       }
     }

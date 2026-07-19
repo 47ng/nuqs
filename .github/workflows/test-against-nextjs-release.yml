@@ -41,18 +41,18 @@ jobs:
             }
             console.log(\`Version '\${version}' is valid SemVer\`);
           "
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
         with:
           persist-credentials: false
-      - uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093 # v6.0.8
+      - uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
       - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
         with:
           node-version-file: .node-version
           cache: pnpm
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm install --frozen-lockfile
       - name: Install Next.js version ${{ env.VERSION }}
-        run: pnpm add --filter e2e-next --filter nuqs --config.minimumReleaseAgeExclude=next "next@${{ env.VERSION }}"
+        run: pnpm add --filter e2e-next --filter nuqs --config.minimumReleaseAgeExclude=next "next@$VERSION"
       - name: Run cacheComponents codemod
         if: ${{ matrix.cache-components }}
         run: pnpm run cacheComponents:codemod
@@ -92,10 +92,10 @@ jobs:
       contents: read
       actions: read
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
         with:
           persist-credentials: false
-      - uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093 # v6.0.8
+      - uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
       - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
         with:
           node-version-file: .node-version
@@ -103,7 +103,7 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile --filter docs...
       - name: Install Next.js version ${{ env.VERSION }}
-        run: pnpm add --filter docs --filter nuqs "next@${{ env.VERSION }}"
+        run: pnpm add --filter docs --filter nuqs "next@$VERSION"
       # TURBO_TOKEN/TURBO_TEAM are intentionally omitted below: these steps
       # execute an arbitrary, caller-supplied Next.js version, so a compromised
       # release must not be able to exfiltrate or poison the shared Turborepo
@@ -132,7 +132,15 @@ jobs:
     if: ${{ always() }}
     steps:
       - name: Invalidate ISR cache for GitHub Actions status on landing page
-        run: curl -s "https://nuqs.dev/api/isr?tag=github-actions-status&token=${{ secrets.ISR_TOKEN }}"
+        run: |
+          set -euo pipefail
+          : "${ISR_TOKEN:?secret is empty or unset; cannot bust the ISR cache}"
+          curl -fsSL "https://nuqs.dev/api/isr?tag=github-actions-status&token=$ISR_TOKEN"
+        env:
+          # Passed via env and read as $ISR_TOKEN at runtime, so the literal
+          # secret never appears in the workflow YAML text (same stance as
+          # release-finalize.yml).
+          ISR_TOKEN: ${{ secrets.ISR_TOKEN }}
 
   notify:
     name: Notify on Slack

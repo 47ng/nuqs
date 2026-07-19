@@ -246,7 +246,7 @@ describe('useQueryStates: referential equality', () => {
       wrapper: withNuqsTestingAdapter()
     })
     expect(result.current[0].str).toBe('foo')
-    rerender({ defaultValue: 'b' })
+    await rerender({ defaultValue: 'b' })
     const [state] = result.current
     expect(state.str).toBe('b')
     expect(state.obj).toBe(defaults.obj)
@@ -355,7 +355,7 @@ describe('useQueryStates: urlKeys remapping', () => {
       }
     )
     const [, setState1] = result.current
-    rerender()
+    await rerender()
     const [, setState2] = result.current
     expect(setState1).toBe(setState2)
     await act(() => setState2({ test: 'pass' }))
@@ -476,7 +476,7 @@ describe('useQueryStates: dynamic keys', () => {
     expect(result.current[0].b).toEqual(2)
     expect(result.current[0].c).toBeUndefined()
     expect(result.current[0].d).toBeUndefined()
-    rerender(['c', 'd'])
+    await rerender(['c', 'd'])
     expect(result.current[0].a).toBeUndefined()
     expect(result.current[0].b).toBeUndefined()
     expect(result.current[0].c).toEqual(3)
@@ -494,11 +494,11 @@ describe('useQueryStates: dynamic keys', () => {
       })
     })
     expect(result.current[0]).toStrictEqual({ a: null, b: null })
-    rerender(['a']) // remove b
+    await rerender(['a']) // remove b
     expect(result.current[0]).toStrictEqual({ a: null })
-    rerender(['a', 'b', 'c']) // add c
+    await rerender(['a', 'b', 'c']) // add c
     expect(result.current[0]).toStrictEqual({ a: null, b: null, c: null })
-    rerender(['a', 'b', 'd']) // remove c, add d
+    await rerender(['a', 'b', 'd']) // remove c, add d
     expect(result.current[0]).toStrictEqual({ a: null, b: null, d: null })
   })
 
@@ -529,7 +529,7 @@ describe('useQueryStates: dynamic keys', () => {
     expect(result.current[0].x).toBeUndefined()
     expect(result.current[0].y).toBeUndefined()
     expect(result.current[0].z).toBeUndefined()
-    rerender(['c', 'd'])
+    await rerender(['c', 'd'])
     expect(result.current[0].a).toBeUndefined()
     expect(result.current[0].b).toBeUndefined()
     expect(result.current[0].c).toEqual(3)
@@ -876,6 +876,119 @@ describe('useQueryStates: update sequencing', () => {
   })
 })
 
+describe('limitUrlUpdates precedence', () => {
+  it('call-level throttle overrides global debounce', async () => {
+    const onUrlUpdate = vi.fn<OnUrlUpdateFunction>()
+    const { result, act } = await renderHook(
+      () =>
+        useQueryStates(
+          { test: parseAsString },
+          { limitUrlUpdates: debounce(300) }
+        ),
+      {
+        wrapper: withNuqsTestingAdapter({
+          onUrlUpdate
+        })
+      }
+    )
+    let p: Promise<URLSearchParams> | undefined = undefined
+    await act(async () => {
+      p = result.current[1]({ test: 'pass' }, { limitUrlUpdates: throttle(50) })
+      await waitForNextTick()
+    })
+    // A real throttle flushes on the next tick.
+    // A debounce would still be waiting out its timer.
+    expect(onUrlUpdate).toHaveBeenCalledOnce()
+    expect(onUrlUpdate.mock.calls[0]![0].queryString).toEqual('?test=pass')
+    await expect(p).resolves.toEqual(new URLSearchParams('?test=pass'))
+  })
+
+  it('parser-level throttle overrides global debounce', async () => {
+    const onUrlUpdate = vi.fn<OnUrlUpdateFunction>()
+    const { result, act } = await renderHook(
+      () =>
+        useQueryStates(
+          {
+            test: parseAsString.withOptions({
+              limitUrlUpdates: throttle(50)
+            })
+          },
+          { limitUrlUpdates: debounce(300) }
+        ),
+      {
+        wrapper: withNuqsTestingAdapter({
+          onUrlUpdate
+        })
+      }
+    )
+    let p: Promise<URLSearchParams> | undefined = undefined
+    await act(async () => {
+      p = result.current[1]({ test: 'pass' })
+      await waitForNextTick()
+    })
+    expect(onUrlUpdate).toHaveBeenCalledOnce()
+    expect(onUrlUpdate.mock.calls[0]![0].queryString).toEqual('?test=pass')
+    await expect(p).resolves.toEqual(new URLSearchParams('?test=pass'))
+  })
+
+  it('parser-level debounce timeMs overrides global debounce timeMs', async () => {
+    const onUrlUpdate = vi.fn<OnUrlUpdateFunction>()
+    const { result, act } = await renderHook(
+      () =>
+        useQueryStates(
+          {
+            test: parseAsString.withOptions({
+              limitUrlUpdates: debounce(50)
+            })
+          },
+          { limitUrlUpdates: debounce(500) }
+        ),
+      {
+        wrapper: withNuqsTestingAdapter({
+          onUrlUpdate
+        })
+      }
+    )
+    let p: Promise<URLSearchParams> | undefined = undefined
+    await act(async () => {
+      p = result.current[1]({ test: 'pass' })
+      // Past the parser's 50ms debounce.
+      // Short of the global 500ms one.
+      await new Promise(resolve => setTimeout(resolve, 150))
+    })
+    expect(onUrlUpdate).toHaveBeenCalledOnce()
+    expect(onUrlUpdate.mock.calls[0]![0].queryString).toEqual('?test=pass')
+    await expect(p).resolves.toEqual(new URLSearchParams('?test=pass'))
+  })
+
+  it('parser-level debounce alone still debounces (no global set)', async () => {
+    const onUrlUpdate = vi.fn<OnUrlUpdateFunction>()
+    const { result, act } = await renderHook(
+      () =>
+        useQueryStates({
+          test: parseAsString.withOptions({
+            limitUrlUpdates: debounce(100)
+          })
+        }),
+      {
+        wrapper: withNuqsTestingAdapter({
+          onUrlUpdate
+        })
+      }
+    )
+    let p: Promise<URLSearchParams> | undefined = undefined
+    await act(async () => {
+      p = result.current[1]({ test: 'pass' })
+      await waitForNextTick()
+    })
+    // Still pending: the debounce timer hasn't elapsed yet.
+    expect(onUrlUpdate).not.toHaveBeenCalled()
+    await expect(p).resolves.toEqual(new URLSearchParams('?test=pass'))
+    expect(onUrlUpdate).toHaveBeenCalledOnce()
+    expect(onUrlUpdate.mock.calls[0]![0].queryString).toEqual('?test=pass')
+  })
+})
+
 describe('useQueryStates: adapter defaults', () => {
   it('should use adapter default value for `shallow` when provided', async () => {
     const onUrlUpdate = vi.fn<OnUrlUpdateFunction>()
@@ -922,6 +1035,56 @@ describe('useQueryStates: adapter defaults', () => {
     await act(() => result.current[1]({ test: 'pass' }))
     expect(onUrlUpdate).toHaveBeenCalledOnce()
     expect(onUrlUpdate.mock.calls[0]![0].queryString).toBe('?test=pass')
+  })
+  it('should use adapter default value for `history` when provided', async () => {
+    const onUrlUpdate = vi.fn<OnUrlUpdateFunction>()
+    const useTestHook = () => useQueryStates({ test: parseAsString })
+    const { result, act } = await renderHook(useTestHook, {
+      wrapper: withNuqsTestingAdapter({
+        defaultOptions: {
+          history: 'push'
+        },
+        onUrlUpdate
+      })
+    })
+    await act(() => result.current[1]({ test: 'update' }))
+    expect(onUrlUpdate).toHaveBeenCalledOnce()
+    expect(onUrlUpdate.mock.calls[0]![0].options.history).toBe('push')
+  })
+  it('should let a call-level `history` override the adapter default', async () => {
+    const onUrlUpdate = vi.fn<OnUrlUpdateFunction>()
+    const useTestHook = () => useQueryStates({ test: parseAsString })
+    const { result, act } = await renderHook(useTestHook, {
+      wrapper: withNuqsTestingAdapter({
+        defaultOptions: {
+          history: 'push'
+        },
+        onUrlUpdate
+      })
+    })
+    await act(() =>
+      result.current[1]({ test: 'update' }, { history: 'replace' })
+    )
+    expect(onUrlUpdate).toHaveBeenCalledOnce()
+    expect(onUrlUpdate.mock.calls[0]![0].options.history).toBe('replace')
+  })
+  it('should let a parser-level `history` override the adapter default', async () => {
+    const onUrlUpdate = vi.fn<OnUrlUpdateFunction>()
+    const useTestHook = () =>
+      useQueryStates({
+        test: parseAsString.withOptions({ history: 'replace' })
+      })
+    const { result, act } = await renderHook(useTestHook, {
+      wrapper: withNuqsTestingAdapter({
+        defaultOptions: {
+          history: 'push'
+        },
+        onUrlUpdate
+      })
+    })
+    await act(() => result.current[1]({ test: 'update' }))
+    expect(onUrlUpdate).toHaveBeenCalledOnce()
+    expect(onUrlUpdate.mock.calls[0]![0].options.history).toBe('replace')
   })
 })
 

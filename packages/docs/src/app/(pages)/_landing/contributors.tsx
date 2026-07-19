@@ -10,7 +10,7 @@ const contributorSchema = z.object({
 })
 type Contributor = z.infer<typeof contributorSchema>
 
-async function fetchContributors(): Promise<Contributor[]> {
+export async function fetchContributors(): Promise<Contributor[]> {
   const headers: Record<string, string> = {
     Accept: 'application/vnd.github+json'
   }

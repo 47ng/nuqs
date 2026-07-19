@@ -1,5 +1,6 @@
 import { debug } from '../debug'
 import { createEmitter, type Emitter } from '../emitter'
+import { globalSingleton } from '../global-singleton'
 import type { Query } from '../search-params'
 import { timeout } from '../timeout'
 import { withResolvers, type Resolvers } from '../with-resolvers'
@@ -72,14 +73,6 @@ export class DebounceController {
 
   constructor(throttleQueue: ThrottledQueue = new ThrottledQueue()) {
     this.throttleQueue = throttleQueue
-  }
-
-  useQueuedQueries(keys: string[]): Record<string, Query | null | undefined> {
-    return useSyncExternalStores(
-      keys,
-      (key, callback) => this.queuedQuerySync.on(key, callback),
-      (key: string) => this.getQueuedQuery(key)
-    )
   }
 
   push(
@@ -161,6 +154,20 @@ export class DebounceController {
   }
 }
 
-export const debounceController: DebounceController = new DebounceController(
-  globalThrottleQueue
+export const debounceController: DebounceController = globalSingleton(
+  'debounce-controller',
+  () => new DebounceController(globalThrottleQueue)
 )
+
+// Module-scoped rather than a DebounceController method: the controller is
+// shared across duplicate library copies, and each copy must compose the
+// shared data with hooks from its own React instance.
+export function useQueuedQueries(
+  keys: string[]
+): Record<string, Query | null | undefined> {
+  return useSyncExternalStores(
+    keys,
+    (key, callback) => debounceController.queuedQuerySync.on(key, callback),
+    (key: string) => debounceController.getQueuedQuery(key)
+  )
+}

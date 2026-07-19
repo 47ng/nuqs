@@ -1,5 +1,6 @@
 import { HumanContent, LLMContent } from '@/src/components/audience'
 import { FeatureSupportMatrix } from '@/src/components/feature-support-matrix'
+import { SinceVersion } from '@/src/components/since-version'
 import { Callout } from 'fumadocs-ui/components/callout'
 import { CodeBlock, Pre } from 'fumadocs-ui/components/codeblock'
 import { Tab, Tabs } from 'fumadocs-ui/components/tabs'
@@ -23,6 +24,7 @@ const components = {
   FeatureSupportMatrix,
   HumanContent,
   LLMContent,
+  SinceVersion,
   Suspense,
   Tab,
   Tabs,

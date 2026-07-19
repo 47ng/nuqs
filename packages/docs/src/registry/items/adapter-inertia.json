@@ -9,7 +9,7 @@
   "files": [
     {
       "type": "registry:file",
-      "path": "https://raw.githubusercontent.com/47ng/nuqs-inertia-pingcrm/refs/heads/with-nuqs/resources/js/lib/nuqs-inertia-adapter.ts",
+      "path": "https://raw.githubusercontent.com/47ng/nuqs-inertia-pingcrm/70aeb29b9ce9e333ac5124d84191a6778fd62b3f/resources/js/lib/nuqs-inertia-adapter.ts",
       "target": "~/resources/js/lib/nuqs-inertia-adapter.ts"
     }
   ]
