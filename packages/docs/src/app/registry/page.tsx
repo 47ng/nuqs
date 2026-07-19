@@ -1,3 +1,4 @@
+import { docsPageClassName } from '@/src/components/shared-layout'
 import { H2 } from '@/src/components/typography'
 import { Card, Cards } from 'fumadocs-ui/components/card'
 import {
@@ -17,7 +18,7 @@ export const metadata = {
 
 export default function Page() {
   return (
-    <DocsPage>
+    <DocsPage className={docsPageClassName}>
       <nav className="mb-4 flex items-center justify-between">
         <DocsTitle>Shadcn Registry</DocsTitle>
         <RssFeedLink />

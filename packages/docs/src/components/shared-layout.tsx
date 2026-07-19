@@ -42,3 +42,9 @@ export function getSharedLayoutProps(): BaseLayoutProps {
     ]
   }
 }
+
+/*
+  fumadocs-ui 16.11 caps DocsPage children at 900px but leaves them
+  start-aligned in the main grid track; center them like before.
+*/
+export const docsPageClassName = '*:mx-auto *:w-full'

@@ -1,3 +1,4 @@
+import { docsPageClassName } from '@/src/components/shared-layout'
 import { AsideSponsors } from '@/src/app/(pages)/_landing/sponsors'
 import {
   CopyAsMarkdownButton,
@@ -77,6 +78,7 @@ export default async function ChangelogPage() {
 
   return (
     <DocsPage
+      className={docsPageClassName}
       toc={toc}
       tableOfContent={{
         footer: <AsideSponsors />
