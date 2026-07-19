@@ -28,7 +28,6 @@ import type {
   ReleaseChanges,
   SquashedPRChange
 } from './change.ts'
-import { impactLabels } from './changelog-dto.ts'
 import {
   parseCommit,
   parseSubject,
@@ -377,7 +376,6 @@ function fetchChangeDetails(
         number
         title
         author { login }
-        # 100 is GitHub's per-issue label cap: truncation is impossible
         labels(first: 100) { nodes { name } }
         participants(first: 20) { nodes { login } }
         closingIssuesReferences(first: 10) {
@@ -599,7 +597,7 @@ function toSquashedPRChange(
     closingIssues: pr.closingIssuesReferences.edges.map(
       edge => edge.node.number
     ),
-    labels: impactLabels(pr.labels.nodes.map(node => node.name))
+    labels: pr.labels.nodes.map(node => node.name)
   }
 }
 

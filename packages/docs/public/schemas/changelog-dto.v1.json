@@ -54,15 +54,6 @@
                   "exclusiveMinimum": 0,
                   "maximum": 9007199254740991
                 }
-              },
-              "labels": {
-                "default": [],
-                "type": "array",
-                "items": {
-                  "type": "string",
-                  "minLength": 1,
-                  "maxLength": 50
-                }
               }
             },
             "required": [
@@ -74,7 +65,7 @@
               "author",
               "closingIssues"
             ],
-            "additionalProperties": false
+            "additionalProperties": {}
           },
           {
             "type": "object",
@@ -118,7 +109,7 @@
               "description",
               "author"
             ],
-            "additionalProperties": false
+            "additionalProperties": {}
           }
         ]
       }
@@ -140,5 +131,5 @@
     "contributors",
     "$schema"
   ],
-  "additionalProperties": false
+  "additionalProperties": {}
 }

@@ -1,15 +1,12 @@
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import { z } from 'zod'
 import {
-  CHANGELOG_DTO_SCHEMA_URL,
   type Change,
   type ChangelogDTO,
   type ReleaseChanges,
   changelogDtoSchema,
-  changelogJsonSchema,
   formatImpactLabel,
   groupChangesByCategory,
-  impactLabels,
   parseChangelogComment,
   parseCodeSpans,
   releaseImpacts,
@@ -18,8 +15,8 @@ import {
   toChangelogDTO
 } from './changelog-dto.ts'
 
-// A full release payload exercising both change variants. The DTO is this exact
-// shape plus a `$schema` tag — domain and wire no longer diverge.
+// A full release payload exercising both change variants. The emitted DTO is
+// this exact shape: Zod validates it without adding wire-only metadata.
 const release: ReleaseChanges = {
   changes: [
     {
@@ -45,7 +42,6 @@ const release: ReleaseChanges = {
 }
 
 const expectedDto: ChangelogDTO = {
-  $schema: CHANGELOG_DTO_SCHEMA_URL,
   ...release
 }
 
@@ -103,8 +99,9 @@ describe('parseCodeSpans', () => {
 })
 
 describe('toChangelogDTO', () => {
-  it('wraps a ReleaseChanges with the $schema tag (no per-change projection)', () => {
+  it('validates a ReleaseChanges without adding wire-only metadata', () => {
     expect(toChangelogDTO(release)).toEqual(expectedDto)
+    expect(toChangelogDTO(release)).not.toHaveProperty('$schema')
   })
 
   // The forward .parse() in toChangelogDTO only guarantees the emitted JSON is
@@ -170,6 +167,7 @@ describe('renderChangelogComment / parseChangelogComment round-trip', () => {
     const comment = renderChangelogComment(release)
     expect(comment.startsWith('<!--')).toBe(true)
     expect(comment.trimEnd().endsWith('-->')).toBe(true)
+    expect(comment).not.toContain('"$schema"')
     const parsed = parseChangelogComment(comment)
     expect(parsed).toEqual({ status: 'ok', preamble: null, dto: expectedDto })
   })
@@ -273,9 +271,8 @@ describe('parseChangelogComment degrade signals', () => {
     expect(parseChangelogComment(body).status).toBe('invalid')
   })
 
-  it('reports invalid for schema-invalid JSON (missing required field)', () => {
+  it('reports invalid for DTO JSON missing a required field', () => {
     const body = `<!--\n<changelog:dto>\n${JSON.stringify({
-      $schema: CHANGELOG_DTO_SCHEMA_URL,
       changes: [{ source: 'squashedPR', prNumber: 1 }]
     })}\n</changelog:dto>\n-->`
     expect(parseChangelogComment(body).status).toBe('invalid')
@@ -290,23 +287,26 @@ describe('parseChangelogComment degrade signals', () => {
     expect(parseChangelogComment(body).status).toBe('invalid')
   })
 
-  // Runtime must reject unknown keys, so the parse agrees with the published
-  // JSON Schema's `additionalProperties: false` rather than silently stripping.
-  it('reports invalid for a body carrying an unknown key', () => {
+  it('accepts and preserves unknown properties for forward compatibility', () => {
     const body = `<!--\n<changelog:dto>\n${JSON.stringify({
       ...expectedDto,
-      unexpected: 'extra'
+      futureRootField: true,
+      changes: expectedDto.changes.map((change, index) =>
+        index === 0 ? { ...change, futureChangeField: true } : change
+      )
     })}\n</changelog:dto>\n-->`
-    expect(parseChangelogComment(body).status).toBe('invalid')
+    const parsed = parseChangelogComment(body)
+    expect(parsed.status).toBe('ok')
+    if (parsed.status !== 'ok') return
+    expect(parsed.dto).toHaveProperty('futureRootField', true)
+    expect(parsed.dto.changes[0]).toHaveProperty('futureChangeField', true)
   })
 })
 
 describe('parseChangelogComment v1 back-compat', () => {
-  // A hand-frozen, real-world-shaped v1 body (NOT generated from the current
-  // schema): if a future change adds a *required* field without bumping the
-  // `$schema` URL, this body stops parsing and this test goes red — forcing the
-  // field to be optional, or the version to bump, instead of silently degrading
-  // every already-published release to a bare title+link.
+  // A hand-frozen historical body (not generated from the current codec). It
+  // keeps the legacy marker and lacks newer optional fields, matching releases
+  // already published on GitHub.
   const FROZEN_V1_BODY = [
     '## Features',
     '',
@@ -546,37 +546,6 @@ describe('stripChangelogComment', () => {
   })
 })
 
-describe('impactLabels', () => {
-  it('drops labels outside the known vocabulary', () => {
-    expect(
-      impactLabels([
-        'bug',
-        'deploy:preview',
-        'adapters/remix',
-        'adapters/solid-router',
-        'released'
-      ])
-    ).toEqual(['adapters/remix'])
-  })
-
-  it('deduplicates and orders by vocabulary order (features, parsers, adapters)', () => {
-    expect(
-      impactLabels([
-        'adapters/react',
-        'feature/useQueryStates',
-        'adapters/next/app',
-        'parsers/built-in',
-        'feature/useQueryStates'
-      ])
-    ).toEqual([
-      'feature/useQueryStates',
-      'parsers/built-in',
-      'adapters/next/app',
-      'adapters/react'
-    ])
-  })
-})
-
 describe('formatImpactLabel', () => {
   it('maps known impact labels to display names', () => {
     expect(formatImpactLabel('adapters/next/app')).toBe('Next.js (app router)')
@@ -596,7 +565,7 @@ describe('releaseImpacts', () => {
         description: 'a feature',
         author: null,
         closingIssues: [],
-        labels: ['adapters/react-router', 'feature/useQueryStates']
+        labels: ['bug', 'adapters/react-router', 'feature/useQueryStates']
       },
       {
         source: 'squashedPR',
@@ -606,7 +575,7 @@ describe('releaseImpacts', () => {
         description: 'a fix',
         author: null,
         closingIssues: [],
-        labels: ['feature/useQueryStates', 'parsers/built-in']
+        labels: ['deploy:preview', 'feature/useQueryStates', 'parsers/built-in']
       },
       {
         source: 'directCommit',
@@ -626,86 +595,5 @@ describe('releaseImpacts', () => {
 
   it('returns nothing when no change carries an impact label', () => {
     expect(releaseImpacts([])).toEqual([])
-  })
-
-  // The re-filter at this boundary is load-bearing: labelSchema only bounds
-  // the string, so a hand-edited release body can carry a triage label that
-  // parses as valid — it must still be kept off the rendered surfaces, and
-  // loudly: discovery pre-filters, so a reject here is always an anomaly.
-  it('drops an unknown label smuggled into a hand-edited DTO, warning', () => {
-    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
-    try {
-      const changes: Change[] = [
-        {
-          source: 'squashedPR',
-          prNumber: 1,
-          type: 'fix',
-          breaking: false,
-          description: 'a fix',
-          author: null,
-          closingIssues: [],
-          labels: ['bug', 'adapters/react', 'deploy:preview']
-        }
-      ]
-      expect(releaseImpacts(changes)).toEqual(['adapters/react'])
-      expect(warn).toHaveBeenCalledWith(
-        expect.stringContaining('unknown labels'),
-        'bug, deploy:preview'
-      )
-    } finally {
-      warn.mockRestore()
-    }
-  })
-
-  it('stays silent when every label is an impact label', () => {
-    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
-    try {
-      const changes: Change[] = [
-        {
-          source: 'squashedPR',
-          prNumber: 1,
-          type: 'fix',
-          breaking: false,
-          description: 'a fix',
-          author: null,
-          closingIssues: [],
-          labels: ['adapters/react']
-        }
-      ]
-      expect(releaseImpacts(changes)).toEqual(['adapters/react'])
-      expect(warn).not.toHaveBeenCalled()
-    } finally {
-      warn.mockRestore()
-    }
-  })
-})
-
-describe('changelogJsonSchema', () => {
-  // The docs drift test only pins generated === committed; if `io: 'input'`
-  // were dropped, regenerating the artifact would "fix" that test while
-  // making `labels` required, invalidating every pre-labels release body
-  // against the published schema. Pin the intent, not just the bytes.
-  it('keeps labels optional for pre-labels release bodies', () => {
-    const artifactShape = z.object({
-      properties: z.object({
-        changes: z.object({
-          items: z.object({
-            oneOf: z.array(
-              z.object({
-                properties: z.object({
-                  source: z.object({ const: z.string() })
-                }),
-                required: z.array(z.string())
-              })
-            )
-          })
-        })
-      })
-    })
-    const schema = artifactShape.parse(changelogJsonSchema())
-    const squashedPR = schema.properties.changes.items.oneOf.find(
-      variant => variant.properties.source.const === 'squashedPR'
-    )
-    expect(squashedPR?.required).not.toContain('labels')
   })
 })

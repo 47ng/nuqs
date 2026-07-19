@@ -618,7 +618,7 @@ describe('discoverChanges', () => {
     const pr1 = createPR({
       number: 1,
       title: 'feat: first',
-      // The triage label is dropped; only the impact label reaches the change.
+      // Store all GitHub labels; the changelog renderer derives impacts later.
       labels: { nodes: [{ name: 'bug' }, { name: 'adapters/react' }] },
       participants: { nodes: [{ login: 'alice' }] },
       closingIssuesReferences: {
@@ -654,7 +654,7 @@ describe('discoverChanges', () => {
           description: 'first',
           author: null,
           closingIssues: [100],
-          labels: ['adapters/react']
+          labels: ['bug', 'adapters/react']
         },
         {
           source: 'squashedPR',

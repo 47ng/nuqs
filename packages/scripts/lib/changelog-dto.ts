@@ -12,55 +12,46 @@ import { z } from 'zod'
 import {
   type Change,
   type ReleaseChanges,
-  releaseChangesSchema
+  directCommitChangeSchema,
+  releaseChangesSchema,
+  squashedPRChangeSchema
 } from './change.ts'
 
 // Re-export the change-domain types so consumers have a single import site for
 // the changelog shapes.
 export type { Change, ReleaseChanges } from './change.ts'
 
-// Branded, stable, versioned identity for the DTO. A `z.literal`, so a future
-// breaking `v2` URL simply fails `parse` → the consumer degrades that release,
-// with no version branching anywhere. The matching JSON Schema artifact served
-// at this URL (for out-of-band/editor validation) is generated in a later slice;
-// runtime validation is always Zod, never a fetch of this URL.
+// Early DTOs used this JSON Schema URL as a format marker. Keep accepting it so
+// already-published releases remain readable, but new DTOs omit the marker:
+// runtime validation has always been owned by Zod, not the linked document.
 export const CHANGELOG_DTO_SCHEMA_URL =
   'https://nuqs.dev/schemas/changelog-dto.v1.json'
 
 // --- DTO schema -------------------------------------------------------------
 
-// The DTO is a release's changes plus a `$schema` tag — the serialized form is
-// the exact `ReleaseChanges` shape, so wire and domain can't drift. `category`
-// is intentionally never stored: it is derived from each change's `type` at
-// render via `categoryForType`, so a future mapping change re-buckets every
-// release consistently.
-export const changelogDtoSchema = releaseChangesSchema.extend({
-  $schema: z.literal(CHANGELOG_DTO_SCHEMA_URL)
-})
+// Unknown properties are accepted for forward compatibility, while all known
+// properties stay fully validated. `$schema` is optional solely for reading
+// historical release bodies. `category` is intentionally never stored: it is
+// derived from each change's `type` at render via `categoryForType`, so a future
+// mapping change re-buckets every release consistently.
+const changelogChangeSchema = z.discriminatedUnion('source', [
+  squashedPRChangeSchema.loose(),
+  directCommitChangeSchema.loose()
+])
+
+export const changelogDtoSchema = releaseChangesSchema
+  .extend({
+    changes: z.array(changelogChangeSchema),
+    $schema: z.literal(CHANGELOG_DTO_SCHEMA_URL).optional()
+  })
+  .loose()
 
 export type ChangelogDTO = z.infer<typeof changelogDtoSchema>
 
-// Serialize a release into the DTO: its changes verbatim, tagged with `$schema`.
-// Validates through the Zod schema before emitting, so an invalid release throws
-// here instead of producing a DTO the consumer would silently degrade.
+// Validate a release before emitting it. An invalid release throws here instead
+// of producing a DTO the consumer would silently degrade.
 export function toChangelogDTO(release: ReleaseChanges): ChangelogDTO {
-  return changelogDtoSchema.parse({
-    $schema: CHANGELOG_DTO_SCHEMA_URL,
-    ...release
-  })
-}
-
-// The JSON Schema artifact (Draft 2020-12) derived from the Zod SSOT. Served
-// out-of-band at `CHANGELOG_DTO_SCHEMA_URL` for editor/tooling validation —
-// consumers never fetch it and validate at runtime with Zod, never this. The
-// derivation lives here, beside the schema, so the throwaway generator (which
-// writes the committed artifact) and the drift test (which guards it) share one
-// source and cannot disagree about what the artifact should contain.
-export function changelogJsonSchema() {
-  // The artifact validates DTO *documents* (the parse-side input), so a field
-  // with a default — `labels`, absent from pre-labels releases — must be
-  // optional, not required as it is in the parsed output type.
-  return z.toJSONSchema(changelogDtoSchema, { io: 'input' })
+  return releaseChangesSchema.parse(release)
 }
 
 // --- Embedding: the HTML comment block --------------------------------------
@@ -122,9 +113,9 @@ function extractBetween(
 // single `null` conflated:
 //   - `absent`  — no `<changelog:dto>` block at all (a legitimate pre-DTO or
 //     hand-written release): degrade quietly.
-//   - `invalid` — the block is present but its JSON is malformed or fails the
-//     schema (incl. an unrecognized `$schema`): the signature of a tampered body
-//     or a pipeline schema drift. Degrade too, but loudly, carrying the `reason`.
+//   - `invalid` — the block is present but its JSON is malformed or fails Zod
+//     validation (including an unrecognized legacy `$schema` marker). Degrade
+//     too, but loudly, carrying the `reason`.
 export type ParsedChangelog =
   | { status: 'ok'; preamble: string | null; dto: ChangelogDTO }
   | { status: 'absent' }
@@ -235,7 +226,7 @@ export const KNOWN_IMPACT_LABELS = [
 
 export type KnownImpactLabel = (typeof KNOWN_IMPACT_LABELS)[number]
 
-export function isKnownImpactLabel(label: string): label is KnownImpactLabel {
+function isKnownImpactLabel(label: string): label is KnownImpactLabel {
   return (KNOWN_IMPACT_LABELS as readonly string[]).includes(label)
 }
 
@@ -243,10 +234,8 @@ function compareImpactLabels(a: KnownImpactLabel, b: KnownImpactLabel) {
   return KNOWN_IMPACT_LABELS.indexOf(a) - KNOWN_IMPACT_LABELS.indexOf(b)
 }
 
-// Keep only a PR's known impact labels, deduplicated and in display order.
-// Runs at discovery — so the DTO stores the filtered set verbatim — and again
-// at render (see `releaseImpacts`); display naming stays a render concern.
-export function impactLabels(labels: readonly string[]): KnownImpactLabel[] {
+// Keep only known impact labels, deduplicated and in display order.
+function impactLabels(labels: readonly string[]): KnownImpactLabel[] {
   return [...new Set(labels.filter(isKnownImpactLabel))].sort(
     compareImpactLabels
   )
@@ -274,25 +263,13 @@ export function formatImpactLabel(label: KnownImpactLabel): string {
   return IMPACT_LABEL_DISPLAY_NAMES[label]
 }
 
-// The release-level aggregate: every distinct impact label across the
-// release's changes, in display order. Derived at render (like `category`),
-// never stored — the DTO keeps labels per change. Re-running the vocabulary
-// filter here is load-bearing, not redundant: `labelSchema` only bounds the
-// string, so a hand-edited release body could carry an unknown label that
-// must still be kept off the rendered surfaces.
+// The release-level aggregate: every distinct known impact label across the
+// release's changes, in display order. The DTO keeps each PR's raw labels so a
+// future taxonomy change can reinterpret already-published releases.
 export function releaseImpacts(changes: readonly Change[]): KnownImpactLabel[] {
   const labels = changes.flatMap(change =>
     change.source === 'squashedPR' ? change.labels : []
   )
-  const rejected = labels.filter(label => !isKnownImpactLabel(label))
-  if (rejected.length > 0) {
-    // Discovery pre-filters, so a reject here is always an anomaly (hand-edit
-    // or vocabulary drift) — dropping it silently would hide the tampering.
-    console.warn(
-      'changelog: dropping unknown labels from a release body: %s',
-      rejected.join(', ')
-    )
-  }
   return impactLabels(labels)
 }
 

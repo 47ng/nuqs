@@ -18,7 +18,6 @@
     "build": "pnpm run build:registry && pnpm run build:next",
     "build:next": "next build",
     "build:registry": "./src/registry/assemble.ts && shadcn build",
-    "gen:schema": "./src/schemas/changelog-dto.gen.ts",
     "start": "next start",
     "postinstall": "fumadocs-mdx",
     "test": "fumadocs-mdx && next typegen && fumadocs-mdx && tsc && vitest run"
