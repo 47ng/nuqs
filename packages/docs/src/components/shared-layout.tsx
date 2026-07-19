@@ -48,3 +48,10 @@ export function getSharedLayoutProps(): BaseLayoutProps {
   start-aligned in the main grid track; center them like before.
 */
 export const docsPageClassName = '*:mx-auto *:w-full'
+
+/*
+  Playground pages were full-bleed before the DocsPage wrapper became
+  structurally required; lift the 900px child cap (important beats the
+  container's *:max-w-[900px] regardless of stylesheet order).
+*/
+export const fullBleedPageClassName = `${docsPageClassName} *:max-w-none!`
