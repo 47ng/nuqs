@@ -46,10 +46,12 @@ export function StraightTOC({ container, header, footer }: TOCProps) {
             <Primitive.TOCItem
               key={item.url}
               href={item.url}
-              className="py-1.5 text-sm text-fd-muted-foreground transition-colors [overflow-wrap:anywhere] first:pt-0 last:pb-0 data-[active=true]:text-fd-primary"
-              style={{
-                paddingInlineStart: 12 * Math.max(item.depth - 1, 1)
-              }}
+              className={cn(
+                'prose py-1.5 text-sm text-fd-muted-foreground transition-colors [overflow-wrap:anywhere] first:pt-0 last:pb-0 data-[active=true]:text-fd-primary',
+                item.depth <= 2 && 'ps-3',
+                item.depth === 3 && 'ps-6',
+                item.depth >= 4 && 'ps-8'
+              )}
             >
               {item.title}
             </Primitive.TOCItem>
