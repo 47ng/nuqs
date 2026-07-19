@@ -1,0 +1,75 @@
+name: Bundle Size
+
+on:
+  pull_request:
+    paths:
+      - 'packages/nuqs/src/**'
+      - 'packages/nuqs/package.json'
+      - 'packages/nuqs/tsdown.config.ts'
+
+concurrency:
+  group: bundle-size-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  measure-base:
+    name: Measure (base)
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+          ref: ${{ github.event.pull_request.base.sha }}
+      - uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - name: Install dependencies
+        run: pnpm install --ignore-scripts --frozen-lockfile --filter nuqs...
+      - name: Build package
+        run: pnpm build --filter nuqs
+      - name: Generate size report
+        # size-limit --json exits non-zero if a limit is exceeded,
+        # but we still want the JSON output for the diff table.
+        run: |
+          pnpm --filter nuqs run build:size-json || true
+          test -s packages/nuqs/size.json
+          mv packages/nuqs/size.json packages/nuqs/size-limit.json
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: base-size
+          path: packages/nuqs/size-limit.json
+          if-no-files-found: error
+          retention-days: 1
+
+  measure-pr:
+    name: Measure (PR)
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - name: Install dependencies
+        run: pnpm install --ignore-scripts --frozen-lockfile --filter nuqs...
+      - name: Build package
+        run: pnpm build --filter nuqs
+      - name: Generate size report
+        run: |
+          pnpm --filter nuqs run build:size-json || true
+          test -s packages/nuqs/size.json
+          mv packages/nuqs/size.json packages/nuqs/size-limit.json
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: pr-size
+          path: packages/nuqs/size-limit.json
+          if-no-files-found: error
+          retention-days: 1
