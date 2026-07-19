@@ -79,6 +79,7 @@ export default async function ChangelogPage() {
   return (
     <DocsPage
       className={docsPageClassName}
+      tableOfContentPopover={{ list: { thumbBox: false } }}
       toc={toc}
       tableOfContent={{
         footer: <AsideSponsors />

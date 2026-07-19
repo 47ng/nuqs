@@ -18,7 +18,10 @@ export const metadata = {
 
 export default function Page() {
   return (
-    <DocsPage className={docsPageClassName}>
+    <DocsPage
+      className={docsPageClassName}
+      tableOfContentPopover={{ list: { thumbBox: false } }}
+    >
       <nav className="mb-4 flex items-center justify-between">
         <DocsTitle>Shadcn Registry</DocsTitle>
         <RssFeedLink />

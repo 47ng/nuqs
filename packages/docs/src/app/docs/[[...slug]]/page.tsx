@@ -48,6 +48,7 @@ export default async function Page(props: PageProps<'/docs/[[...slug]]'>) {
   return (
     <DocsPage
       className={docsPageClassName}
+      tableOfContentPopover={{ list: { thumbBox: false } }}
       toc={toc}
       tableOfContent={{
         component: <StraightTOC footer={<AsideSponsors />} />

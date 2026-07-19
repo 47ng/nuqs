@@ -36,6 +36,7 @@ export default async function Page({ params }: PageProps<'/registry/[name]'>) {
   return (
     <DocsPage
       className={docsPageClassName}
+      tableOfContentPopover={{ list: { thumbBox: false } }}
       toc={[
         {
           url: '#installation',
