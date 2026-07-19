@@ -337,24 +337,8 @@ export function QuotesSection() {
           avatar: { service: 'x', handle: 'ajaypatel_aj' }
           // 'https://pbs.twimg.com/profile_images/1957717329397141507/7ctDgOuc_400x400.jpg'
         }}
-        text={
-          <>
-            <p>
-              Big thanks to nuqs for making URL state management actually
-              enjoyable! 🙌
-            </p>
-            <br />
-            <ul>
-              <li>useState but synced with the URL? ✅</li>
-              <li>Type-safe? ✅</li>
-              <li>Works everywhere (Next.js, Remix, React Router)? ✅</li>
-              <li>Only 6kb? ✅</li>
-            </ul>
-            <br />
-            <p>Happy to support such a well-crafted library 😇</p>
-          </>
-        }
-        url="https://x.com/ajaypatel_aj/status/2004082719047778362"
+        text="nuqs is what URL state management should have always been. Just use it."
+        url="https://x.com/ajaypatel_aj/status/2036094460757717062"
       />
       <Quote
         author={{
