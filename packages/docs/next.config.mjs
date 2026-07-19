@@ -19,9 +19,6 @@ const config = {
   // The changelog page imports the IO-free changelog codec straight from the
   // `scripts` workspace as raw TypeScript; transpile it as part of the build.
   transpilePackages: ['scripts'],
-  experimental: {
-    isolatedDevBuild: true
-  },
   redirects: async () => {
     return [
       {
