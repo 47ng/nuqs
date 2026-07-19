@@ -13,11 +13,6 @@ export function getSharedLayoutProps(): BaseLayoutProps {
       ),
       transparentMode: 'top'
     },
-    // fumadocs-ui defaults to a two-state light/dark toggle since 16.7;
-    // restore the 3-way switch with the system option
-    themeSwitch: {
-      mode: 'light-dark-system'
-    },
     links: [
       {
         text: 'Documentation',
