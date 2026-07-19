@@ -112,7 +112,7 @@ describe('useQueryState: referential equality', () => {
       wrapper: withNuqsTestingAdapter()
     })
     expect(result.current.str[0]).toBe('foo')
-    rerender({ defaultValue: 'b' })
+    await rerender({ defaultValue: 'b' })
     const { str, obj, arr } = result.current
     expect(str[0]).toBe('b')
     expect(obj[0]).toBe(defaults.obj)
@@ -128,7 +128,7 @@ describe('useQueryState: referential equality', () => {
       }
     )
     const [, setState1] = result.current
-    rerender()
+    await rerender()
     const [, setState2] = result.current
     expect(setState1).toBe(setState2)
     await act(() => setState1('pass'))

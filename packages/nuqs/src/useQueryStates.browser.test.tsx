@@ -246,7 +246,7 @@ describe('useQueryStates: referential equality', () => {
       wrapper: withNuqsTestingAdapter()
     })
     expect(result.current[0].str).toBe('foo')
-    rerender({ defaultValue: 'b' })
+    await rerender({ defaultValue: 'b' })
     const [state] = result.current
     expect(state.str).toBe('b')
     expect(state.obj).toBe(defaults.obj)
@@ -355,7 +355,7 @@ describe('useQueryStates: urlKeys remapping', () => {
       }
     )
     const [, setState1] = result.current
-    rerender()
+    await rerender()
     const [, setState2] = result.current
     expect(setState1).toBe(setState2)
     await act(() => setState2({ test: 'pass' }))
@@ -476,7 +476,7 @@ describe('useQueryStates: dynamic keys', () => {
     expect(result.current[0].b).toEqual(2)
     expect(result.current[0].c).toBeUndefined()
     expect(result.current[0].d).toBeUndefined()
-    rerender(['c', 'd'])
+    await rerender(['c', 'd'])
     expect(result.current[0].a).toBeUndefined()
     expect(result.current[0].b).toBeUndefined()
     expect(result.current[0].c).toEqual(3)
@@ -494,11 +494,11 @@ describe('useQueryStates: dynamic keys', () => {
       })
     })
     expect(result.current[0]).toStrictEqual({ a: null, b: null })
-    rerender(['a']) // remove b
+    await rerender(['a']) // remove b
     expect(result.current[0]).toStrictEqual({ a: null })
-    rerender(['a', 'b', 'c']) // add c
+    await rerender(['a', 'b', 'c']) // add c
     expect(result.current[0]).toStrictEqual({ a: null, b: null, c: null })
-    rerender(['a', 'b', 'd']) // remove c, add d
+    await rerender(['a', 'b', 'd']) // remove c, add d
     expect(result.current[0]).toStrictEqual({ a: null, b: null, d: null })
   })
 
@@ -529,7 +529,7 @@ describe('useQueryStates: dynamic keys', () => {
     expect(result.current[0].x).toBeUndefined()
     expect(result.current[0].y).toBeUndefined()
     expect(result.current[0].z).toBeUndefined()
-    rerender(['c', 'd'])
+    await rerender(['c', 'd'])
     expect(result.current[0].a).toBeUndefined()
     expect(result.current[0].b).toBeUndefined()
     expect(result.current[0].c).toEqual(3)

@@ -40,8 +40,7 @@ export type MultiParser<T> = {
 
 export type GenericParser<T> = SingleParser<T> | MultiParser<T>
 export type GenericParserBuilder<T> =
-  | SingleParserBuilder<T>
-  | MultiParserBuilder<T>
+  SingleParserBuilder<T> | MultiParserBuilder<T>
 
 /* type aliases for backwards compatibility */
 /** @deprecated use SingleParser instead */

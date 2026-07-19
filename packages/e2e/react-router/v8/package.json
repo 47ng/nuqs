@@ -14,7 +14,7 @@
   "dependencies": {
     "@react-router/node": "catalog:react-router8",
     "@react-router/serve": "catalog:react-router8",
-    "isbot": "^5.1.34",
+    "isbot": "^5.2.1",
     "nuqs": "workspace:*",
     "react": "catalog:react19",
     "react-dom": "catalog:react19",
@@ -24,16 +24,16 @@
     "@playwright/test": "catalog:e2e",
     "@react-router/dev": "catalog:react-router8",
     "@react-router/express": "catalog:react-router8",
-    "@types/node": "^24.10.10",
+    "@types/node": "^24.13.3",
     "@types/react": "catalog:react19",
     "@types/react-dom": "catalog:react19",
     "compression": "^1.8.1",
     "cross-env": "^10.1.0",
     "e2e-shared": "workspace:*",
-    "express": "^4.22.1",
+    "express": "^4.22.2",
     "typescript": "catalog:typescript",
     "typescript-7": "catalog:typescript",
     "vite": "catalog:vite",
-    "vite-tsconfig-paths": "^6.0.5"
+    "vite-tsconfig-paths": "^6.1.1"
   }
 }
