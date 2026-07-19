@@ -1,12 +1,7 @@
 import type { DebugCode } from '../debug-messages'
 
 export type LogCategory =
-  | 'state'
-  | 'throttle'
-  | 'debounce'
-  | 'queue'
-  | 'adapter'
-  | 'parse'
+  'state' | 'throttle' | 'debounce' | 'queue' | 'adapter' | 'parse'
 
 /**
  * Map a debug code to a coarse category, mirroring the comment groups in the
