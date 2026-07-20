@@ -5,16 +5,25 @@ description: Enabling debug logs and user timings markers
 
 ## Browser
 
-You can enable debug logs in the browser by setting the `debug` item in localStorage
-to `nuqs`, and reload the page.
+You can enable debug logs in the browser by importing the `nuqs/debug` entry
+point once from client-side code loaded by your app. This keeps the log messages
+out of your bundle unless you opt in.
+
+```ts
+// Once, from client-side code loaded by your app:
+import 'nuqs/debug'
+```
+
+Then set the `debug` item in localStorage to `nuqs`, and reload the page.
 
 ```js
 // In your devtools:
 localStorage.setItem('debug', 'nuqs')
 ```
 
-Log lines for both `useQueryState` and `useQueryStates` will be prefixed with
-`[nuq+]`, along with other internal debug logs.
+Log lines are prefixed with `[nuq+ …]` for hook-level messages, and
+`[nuqs <subsystem>]` for internal subsystems such as the throttle and debounce
+queues and adapters.
 
 > Note: unlike the `debug` package, this will not work with wildcards, but
 > you can combine it: `localStorage.setItem('debug', '*,nuqs')`
