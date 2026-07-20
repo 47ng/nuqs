@@ -5,12 +5,12 @@ description: Enabling debug logs and user timings markers
 
 ## Browser
 
-You can enable debug logs in the browser by importing the `nuqs/debug` entry
-point once from client-side code loaded by your app. This keeps the log messages
-out of your bundle unless you opt in.
+Start by importing the `nuqs/debug` entry point once in your app. This keeps the
+log messages out of your bundles unless you opt in. In frameworks with separate
+client and server bundles, import it in each runtime where you want logs.
 
 ```ts
-// Once, from client-side code loaded by your app:
+// Once in your app:
 import 'nuqs/debug'
 ```
 
@@ -31,8 +31,10 @@ queues and adapters.
 ## Server (Node.js)
 
 Debug logs apply in any Node environment: server-side rendering (SSR), React
-Server Components (RSC), or when using `nuqs/server`. Hooks like
-`useQueryState` and `useQueryStates` can run on the server in these contexts.
+Server Components (RSC), or when using `nuqs/server`. Importing `nuqs/debug`
+from a server entry point, such as a Next.js root layout, installs the server log
+sink. Importing `nuqs/server` also wires it in automatically.
+
 Enable logs by setting the `DEBUG` environment variable so it contains `nuqs`:
 
 ```bash

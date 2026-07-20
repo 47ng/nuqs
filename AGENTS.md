@@ -71,7 +71,7 @@ For detailed development guidelines organized by task, see:
 
 ## Debugging
 
-Import the opt-in debug bundle once in client-side code:
+Import the opt-in debug bundle once in each runtime where logs are needed:
 
 ```ts
 import 'nuqs/debug'
