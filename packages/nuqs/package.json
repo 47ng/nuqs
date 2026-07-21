@@ -193,6 +193,7 @@
     "arktype": "^2.2.3",
     "fast-check": "^4.9.0",
     "knip": "catalog:knip",
+    "next": "16.2.11",
     "playwright": "catalog:e2e",
     "react": "catalog:react19",
     "react-router-dom": "6.30.3",
