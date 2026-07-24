@@ -11,7 +11,7 @@ const loadedFolders = new Set<string>()
 const loadedFolderListeners = new Set<() => void>()
 
 function getLoadedFolders() {
-  return [...loadedFolders].toSorted().join(',')
+  return [...loadedFolders].sort().join(',')
 }
 
 function subscribeToLoadedFolders(listener: () => void) {
