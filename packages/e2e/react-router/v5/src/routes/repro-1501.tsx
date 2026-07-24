@@ -1,9 +1,8 @@
 import { Repro1501 } from 'e2e-shared/specs/repro-1501'
-
-import { useSearchParams } from 'react-router-dom'
+import { useLocation } from 'react-router-dom'
 
 function useRouterValue() {
-  return useSearchParams()[0].get('folder')
+  return new URLSearchParams(useLocation().search).get('folder')
 }
 
 export default function Page() {

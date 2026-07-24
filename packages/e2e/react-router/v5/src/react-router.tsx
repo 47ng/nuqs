@@ -49,6 +49,7 @@ const routes = {
   '/repro-1099/useQueryState':  lazy(() => import('./routes/repro-1099.useQueryState')),
   '/repro-1099/useQueryStates': lazy(() => import('./routes/repro-1099.useQueryStates')),
   '/repro-1444':                lazy(() => import('./routes/repro-1444')),
+  '/repro-1501':                lazy(() => import('./routes/repro-1501')),
 }
 
 export function ReactRouter() {
