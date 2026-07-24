@@ -234,6 +234,33 @@ loadSearchParams('?count=banana', { strict: true })
 // [nuqs] Error while parsing query `banana` for key `count`
 ```
 
+<SinceVersion v="2.10.0">
+
+### Required params
+
+<FeatureSupportMatrix introducedInVersion='2.10.0' />
+
+You can mark individual parsers as `required{:ts}`, so that the loader throws
+if the key resolves to `null{:ts}`: either the param is missing from the URL,
+or it failed to parse, and there is no [default value](/docs/basic-usage#default-values)
+to fall back to. A `defaultValue{:ts}` always satisfies the requirement, even
+when the param itself is absent from the URL.
+
+```ts
+const loadSearchParams = createLoader({
+  count: parseAsInteger.withOptions({ required: true })
+})
+
+// Throws: `count` is missing from the URL and has no default value
+loadSearchParams('')
+// [nuqs] Missing required query param `count`
+
+// Works fine: `count` is present and parses successfully
+loadSearchParams('?count=1')
+```
+
+</SinceVersion>
+
 ## Cache
 
 <FeatureSupportMatrix introducedInVersion='1.13.0' support={{ supported: true, frameworks: ['Next.js (app router)']}} />
