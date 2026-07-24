@@ -197,6 +197,9 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
         })
       )
     }
+  } else if (onCommittedPathname && internalState !== stateRef.current) {
+    // Recover a render-phase state update lost with an abandoned render.
+    setInternalState(stateRef.current)
   }
 
   // Backstop for the render-time reconciliation above: covers external changes
