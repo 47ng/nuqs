@@ -103,26 +103,30 @@ export function createLoader<Parsers extends ParserMap>(
           : searchParams.get(urlKey)
       if (isAbsentFromUrl(query)) {
         result[key] = parser.defaultValue ?? null
-        continue
-      }
-      let parsedValue
-      try {
-        // we have properly narrowed `query` here, but TS doesn't keep track of that
-        parsedValue = parser.parse(query as string & Array<string>)
-      } catch (error) {
-        if (strict) {
+      } else {
+        let parsedValue
+        try {
+          // we have properly narrowed `query` here, but TS doesn't keep track of that
+          parsedValue = parser.parse(query as string & Array<string>)
+        } catch (error) {
+          if (strict) {
+            throw new Error(
+              `[nuqs] Error while parsing query \`${query}\` for key \`${key}\`: ${error}`
+            )
+          }
+          parsedValue = null
+        }
+        if (strict && parsedValue === null) {
           throw new Error(
-            `[nuqs] Error while parsing query \`${query}\` for key \`${key}\`: ${error}`
+            `[nuqs] Failed to parse query \`${query}\` for key \`${key}\` (got null)`
           )
         }
-        parsedValue = null
+        result[key] = parsedValue ?? parser.defaultValue ?? null
       }
-      if (strict && query && parsedValue === null) {
-        throw new Error(
-          `[nuqs] Failed to parse query \`${query}\` for key \`${key}\` (got null)`
-        )
+
+      if (parser.required && result[key] === null) {
+        throw new Error(`[nuqs] Missing required query param \`${key}\``)
       }
-      result[key] = parsedValue ?? parser.defaultValue ?? null
     }
     return result
   }

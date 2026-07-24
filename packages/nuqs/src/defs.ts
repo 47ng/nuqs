@@ -87,6 +87,17 @@ export type Options = {
    * changes (prefer explicit URLs whose meaning don't change).
    */
   clearOnDefault?: boolean
+
+  /**
+   * Whether the parser is required to resolve to a non-null value
+   * when using a loader created with `createLoader`.
+   *
+   * A `defaultValue` on the parser counts as satisfying this requirement,
+   * even if the param itself is absent from the URL. The loader only throws
+   * when there is neither a value in the URL (or it failed to parse) nor a
+   * `defaultValue` to fall back to.
+   */
+  required?: boolean
 }
 
 export type Nullable<T> = {
