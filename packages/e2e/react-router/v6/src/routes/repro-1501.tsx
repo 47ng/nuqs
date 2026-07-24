@@ -7,5 +7,10 @@ function useRouterValue() {
 }
 
 export default function Page() {
-  return <Repro1501 useRouterValue={useRouterValue} />
+  return (
+    <Repro1501
+      useRouterValue={useRouterValue}
+      crossPathHref="/repro-1501/other?folder=def"
+    />
+  )
 }
