@@ -225,6 +225,61 @@ describe('loader', () => {
     })
   })
 
+  describe('required', () => {
+    it('throws when a required param is missing from the URL and has no default', () => {
+      const load = createLoader({
+        count: parseAsInteger.withOptions({ required: true })
+      })
+      expect(() => load('')).toThrow(
+        '[nuqs] Missing required query param `count`'
+      )
+    })
+    it('does not throw when a required param is missing but has a default', () => {
+      const load = createLoader({
+        count: parseAsInteger.withOptions({ required: true }).withDefault(0)
+      })
+      const result = load('')
+      expect(result).toEqual({ count: 0 })
+    })
+    it('does not throw when a required param is present and parses successfully', () => {
+      const load = createLoader({
+        count: parseAsInteger.withOptions({ required: true })
+      })
+      const result = load('?count=42')
+      expect(result).toEqual({ count: 42 })
+    })
+    it('throws when a required param is present but fails to parse and has no default', () => {
+      const load = createLoader({
+        test: createParser({
+          parse: () => null,
+          serialize: String
+        }).withOptions({ required: true })
+      })
+      expect(() => load('?test=will-be-null')).toThrow(
+        '[nuqs] Missing required query param `test`'
+      )
+    })
+    it('does not throw for non-required params that are missing or unparseable', () => {
+      const load = createLoader({
+        a: parseAsInteger,
+        b: parseAsInteger.withOptions({ required: true })
+      })
+      const result = load('?b=1')
+      expect(result).toEqual({ a: null, b: 1 })
+    })
+    it('strict error takes precedence over required when both apply', () => {
+      const load = createLoader({
+        test: createParser({
+          parse: () => null,
+          serialize: String
+        }).withOptions({ required: true })
+      })
+      expect(() => load('?test=will-be-null', { strict: true })).toThrow(
+        '[nuqs] Failed to parse query `will-be-null` for key `test` (got null)'
+      )
+    })
+  })
+
   describe('multi-parser', () => {
     it('supports multi-parsers', () => {
       const load = createLoader({
