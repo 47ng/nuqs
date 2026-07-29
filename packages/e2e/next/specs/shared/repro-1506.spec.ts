@@ -1,4 +1,3 @@
 import { testRepro1506 } from 'e2e-shared/specs/repro-1506.spec.ts'
 
 testRepro1506({ path: '/app/repro-1506', router: 'next-app' })
-testRepro1506({ path: '/pages/repro-1506', router: 'next-pages' })

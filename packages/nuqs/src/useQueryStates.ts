@@ -157,6 +157,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
       stateRef.current = state
       setInternalState(state)
     }
+    return hasChanged
   }
   // Reconcile during render, both on key-set changes (initialisation) and when
   // the URL source changes. The effect below does the same, but effects are
@@ -178,12 +179,13 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
   const onCommittedPathname =
     committedPathnameRef.current === null ||
     committedPathnameRef.current === (adapter.pathname ?? location.pathname)
+  let stateChanged = false
   if (
     keysChanged ||
     (onCommittedPathname && lastSyncKeyRef.current !== searchParamsSyncKey)
   ) {
     lastSyncKeyRef.current = searchParamsSyncKey
-    reconcile()
+    stateChanged = reconcile()
     if (keysChanged) {
       queryRef.current = Object.fromEntries(
         Object.entries(resolvedUrlKeys).map(([key, urlKey]) => {
@@ -197,8 +199,17 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
         })
       )
     }
-  } else if (onCommittedPathname && internalState !== stateRef.current) {
-    // Recover a render-phase state update lost with an abandoned render.
+  }
+  // A key-set change initializes from the current URL source; `stateRef` may
+  // still describe the previous key map and must not be restored.
+  if (
+    !keysChanged &&
+    !stateChanged &&
+    onCommittedPathname &&
+    internalState !== stateRef.current
+  ) {
+    // Recover a render-phase state update lost with an abandoned render or a
+    // concurrent rebase whose URL source is already reflected in the cache.
     setInternalState(stateRef.current)
   }
 

@@ -1,7 +1,7 @@
 'use client'
 
 import { parseAsInteger, useQueryState } from 'nuqs'
-import { useEffect, useRef, useTransition } from 'react'
+import { useEffect, useRef, useState, useTransition } from 'react'
 
 export function Repro1506() {
   const [isPending, startTransition] = useTransition()
@@ -10,6 +10,8 @@ export function Repro1506() {
     parseAsInteger.withDefault(0)
   )
   const renderLog = useRef<HTMLOutputElement>(null)
+  const transitionStarted = useRef(false)
+  const [transitionSettled, setTransitionSettled] = useState(false)
 
   useEffect(() => {
     const output = renderLog.current
@@ -17,6 +19,16 @@ export function Repro1506() {
       output.value = output.value ? `${output.value},${count}` : String(count)
     }
   }, [count])
+
+  useEffect(() => {
+    if (isPending) {
+      transitionStarted.current = true
+      setTransitionSettled(false)
+    } else if (transitionStarted.current) {
+      transitionStarted.current = false
+      setTransitionSettled(true)
+    }
+  }, [isPending])
 
   return (
     <main>
@@ -36,6 +48,12 @@ export function Repro1506() {
       <p>
         Committed values:{' '}
         <output ref={renderLog} aria-label="Committed values" />
+      </p>
+      <p>
+        Transition settled:{' '}
+        <output aria-label="Transition settled">
+          {transitionSettled ? 'yes' : 'no'}
+        </output>
       </p>
     </main>
   )
