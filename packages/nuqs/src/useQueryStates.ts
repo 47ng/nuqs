@@ -179,13 +179,13 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
   const onCommittedPathname =
     committedPathnameRef.current === null ||
     committedPathnameRef.current === (adapter.pathname ?? location.pathname)
-  let stateChanged = false
+  let didReconcileState = false
   if (
     keysChanged ||
     (onCommittedPathname && lastSyncKeyRef.current !== searchParamsSyncKey)
   ) {
     lastSyncKeyRef.current = searchParamsSyncKey
-    stateChanged = reconcile()
+    didReconcileState = reconcile()
     if (keysChanged) {
       queryRef.current = Object.fromEntries(
         Object.entries(resolvedUrlKeys).map(([key, urlKey]) => {
@@ -204,7 +204,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
   // still describe the previous key map and must not be restored.
   if (
     !keysChanged &&
-    !stateChanged &&
+    !didReconcileState &&
     onCommittedPathname &&
     internalState !== stateRef.current
   ) {
