@@ -99,11 +99,14 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
       JSON.stringify(Object.entries(keyMap), omitDefaultValue) &&
     Object.entries(keyMap).every(([key, parser]) => {
       const previousDefault = cachedKeyMap[key]?.defaultValue
+      const currentDefault = parser.defaultValue
+      if (Object.is(previousDefault, currentDefault)) {
+        return true
+      }
       return (
-        Object.is(previousDefault, parser.defaultValue) ||
-        (previousDefault !== undefined &&
-          parser.defaultValue !== undefined &&
-          parser.eq?.(previousDefault, parser.defaultValue) === true)
+        previousDefault !== undefined &&
+        currentDefault !== undefined &&
+        parser.eq?.(previousDefault, currentDefault) === true
       )
     })
       ? cachedKeyMap
