@@ -587,7 +587,7 @@ describe('useQueryStates: clearOnDefault', () => {
     type Props = { history: 'push' | 'replace' }
     const useTestHook = ({ history }: Props = { history: 'replace' }) =>
       useQueryStates({
-        test: parseAsString.withOptions({ history })
+        defaultValue: parseAsString.withOptions({ history })
       })
     const initialProps: Props = { history: 'replace' }
     const { result, rerender, act } = await renderHook(useTestHook, {
@@ -596,7 +596,7 @@ describe('useQueryStates: clearOnDefault', () => {
     })
 
     await rerender({ history: 'push' })
-    await act(() => result.current[1]({ test: 'pass' }))
+    await act(() => result.current[1]({ defaultValue: 'pass' }))
 
     expect(onUrlUpdate).toHaveBeenCalledOnce()
     expect(onUrlUpdate.mock.calls[0]![0].options.history).toBe('push')

@@ -94,8 +94,8 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
   const updateKeyMapRef = useRef(keyMap)
   const previousKeyMap = updateKeyMapRef.current
   const updateKeyMap =
-    JSON.stringify(previousKeyMap, omitDefaultValue) ===
-      JSON.stringify(keyMap, omitDefaultValue) &&
+    JSON.stringify(Object.entries(previousKeyMap), omitDefaultValue) ===
+      JSON.stringify(Object.entries(keyMap), omitDefaultValue) &&
     Object.entries(keyMap).every(([key, parser]) => {
       const previousDefault = previousKeyMap[key]?.defaultValue
       return (
