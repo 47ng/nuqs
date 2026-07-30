@@ -336,6 +336,22 @@ describe('useQueryStates: referential equality', () => {
     expect(result.current[0].obj).not.toBe(initialState.obj)
   })
 
+  it('supports defaults that cannot be JSON serialized', async () => {
+    const parser = createParser({
+      parse: BigInt,
+      serialize: String
+    }).withDefault(0n)
+    const useTestHook = () => useQueryStates({ value: parser })
+
+    const { result, rerender } = await renderHook(useTestHook, {
+      wrapper: withNuqsTestingAdapter()
+    })
+
+    expect(result.current[0].value).toBe(0n)
+    await rerender()
+    expect(result.current[0].value).toBe(0n)
+  })
+
   it('should use the latest default when another hook clears the value', async () => {
     const useTestHook = (
       { defaultValue }: { defaultValue: string } = {

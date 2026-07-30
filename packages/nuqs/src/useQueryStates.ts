@@ -59,6 +59,8 @@ export type UseQueryStatesReturn<T extends UseQueryStatesKeysMap> = [
 // by hoisting it out of the function scope.
 // Otherwise useEffect loops go brrrr
 const defaultUrlKeys = {}
+const omitDefaultValue = (key: string, value: unknown) =>
+  key === 'defaultValue' ? undefined : value
 
 /**
  * Synchronise multiple query string arguments to React state in Next.js
@@ -92,7 +94,8 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
   const updateKeyMapRef = useRef(keyMap)
   const previousKeyMap = updateKeyMapRef.current
   const updateKeyMap =
-    JSON.stringify(previousKeyMap) === JSON.stringify(keyMap) &&
+    JSON.stringify(previousKeyMap, omitDefaultValue) ===
+      JSON.stringify(keyMap, omitDefaultValue) &&
     Object.entries(keyMap).every(([key, parser]) => {
       const previousDefault = previousKeyMap[key]?.defaultValue
       return (
@@ -404,13 +407,10 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
     ]
   )
 
-  const outputStateRef = useRef<Values<KeyMap> | null>(null)
-  const outputState = applyDefaultValues(
-    internalState,
-    keyMap,
-    outputStateRef.current
+  const outputState = useMemo(
+    () => applyDefaultValues(internalState, updateKeyMap),
+    [internalState, updateKeyMap]
   )
-  outputStateRef.current = outputState
   return [outputState, update]
 }
 
@@ -475,30 +475,12 @@ function parseMap<KeyMap extends UseQueryStatesKeysMap>(
 
 function applyDefaultValues<KeyMap extends UseQueryStatesKeysMap>(
   state: NullableValues<KeyMap>,
-  keyMap: KeyMap,
-  cachedState?: Values<KeyMap> | null
+  keyMap: KeyMap
 ) {
-  const outputState = Object.fromEntries(
+  return Object.fromEntries(
     Object.keys(state).map(key => [
       key,
       state[key] ?? keyMap[key]?.defaultValue ?? null
     ])
   ) as Values<KeyMap>
-  const stateKeys = Object.keys(state)
-  return cachedState &&
-    stateKeys.length === Object.keys(cachedState).length &&
-    stateKeys.every(key => {
-      if (Object.is(outputState[key], cachedState[key])) {
-        return true
-      }
-      const parser = keyMap[key]
-      return (
-        state[key] == null &&
-        outputState[key] != null &&
-        cachedState[key] != null &&
-        parser?.eq?.(outputState[key], cachedState[key]) === true
-      )
-    })
-    ? cachedState
-    : outputState
 }
