@@ -320,9 +320,11 @@ describe('useQueryStates: referential equality', () => {
     const parser = createParser({
       parse: (value: string) => JSON.parse(value) as { value: string },
       serialize: JSON.stringify
+      // no eq function provided
     })
     const useTestHook = () =>
       useQueryStates({
+        // inline default object
         obj: parser.withDefault({ value: 'default' })
       })
     const { result, rerender } = await renderHook(useTestHook, {
