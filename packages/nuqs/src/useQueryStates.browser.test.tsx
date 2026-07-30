@@ -316,7 +316,7 @@ describe('useQueryStates: referential equality', () => {
     expect(nextState.arr[0]).not.toBe(initialState.arr[0])
   })
 
-  it('uses parser referential equality for structured defaults', async () => {
+  it('does not have referential stability for structured defaults passed inline without an eq function', async () => {
     const parser = createParser({
       parse: (value: string) => JSON.parse(value) as { value: string },
       serialize: JSON.stringify
