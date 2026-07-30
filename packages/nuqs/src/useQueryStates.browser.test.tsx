@@ -255,6 +255,56 @@ describe('useQueryStates: referential equality', () => {
     expect(state.multi).toBe(defaults.multi)
     expect(state.multi[0]).toBe(defaults.multi[0])
   })
+
+  it('should update when an object default changes', async () => {
+    const initialDefault = { value: 'initial' }
+    const nextDefault = { value: 'next' }
+    const useTestHook = (
+      {
+        defaultValue
+      }: {
+        defaultValue: typeof initialDefault
+      } = { defaultValue: initialDefault }
+    ) =>
+      useQueryStates({
+        obj: parseAsJson<typeof initialDefault>(
+          x => x as typeof initialDefault
+        ).withDefault(defaultValue)
+      })
+    const { result, rerender } = await renderHook(useTestHook, {
+      initialProps: { defaultValue: initialDefault },
+      wrapper: withNuqsTestingAdapter()
+    })
+
+    expect(result.current[0].obj).toBe(initialDefault)
+    await rerender({ defaultValue: nextDefault })
+
+    expect(result.current[0].obj).toBe(nextDefault)
+  })
+
+  it('should use the latest default when another hook clears the value', async () => {
+    const useTestHook = (
+      { defaultValue }: { defaultValue: string } = {
+        defaultValue: 'initial'
+      }
+    ) => ({
+      withDefault: useQueryStates({
+        test: parseAsString.withDefault(defaultValue)
+      }),
+      withoutDefault: useQueryState('test', parseAsString)
+    })
+    const { result, rerender, act } = await renderHook(useTestHook, {
+      initialProps: { defaultValue: 'initial' },
+      wrapper: withNuqsTestingAdapter()
+    })
+
+    await rerender({ defaultValue: 'next' })
+    await act(() => result.current.withoutDefault[1]('value'))
+    expect(result.current.withDefault[0].test).toBe('value')
+    await act(() => result.current.withoutDefault[1](null))
+
+    expect(result.current.withDefault[0].test).toBe('next')
+  })
 })
 
 describe('useQueryStates: rendering & bail-out', () => {
@@ -457,6 +507,26 @@ describe('useQueryStates: clearOnDefault', () => {
     )
     expect(onUrlUpdate).toHaveBeenCalledOnce()
     expect(onUrlUpdate.mock.calls[0]![0].queryString).toEqual('')
+  })
+
+  it('follows parser option changes', async () => {
+    const onUrlUpdate = vi.fn<OnUrlUpdateFunction>()
+    type Props = { history: 'push' | 'replace' }
+    const useTestHook = ({ history }: Props = { history: 'replace' }) =>
+      useQueryStates({
+        test: parseAsString.withOptions({ history })
+      })
+    const initialProps: Props = { history: 'replace' }
+    const { result, rerender, act } = await renderHook(useTestHook, {
+      initialProps,
+      wrapper: withNuqsTestingAdapter({ onUrlUpdate })
+    })
+
+    await rerender({ history: 'push' })
+    await act(() => result.current[1]({ test: 'pass' }))
+
+    expect(onUrlUpdate).toHaveBeenCalledOnce()
+    expect(onUrlUpdate.mock.calls[0]![0].options.history).toBe('push')
   })
 })
 
