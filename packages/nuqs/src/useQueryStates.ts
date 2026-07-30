@@ -88,6 +88,8 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
   } = options
 
   type V = NullableValues<KeyMap>
+  const keyMapRef = useRef(keyMap)
+  keyMapRef.current = keyMap
   const stateKeys = Object.keys(keyMap).join(',')
   const resolvedUrlKeys = useMemo(
     () =>
@@ -115,17 +117,6 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
   // render and skip the reconcile (#1273). A genuine `<Activity>` reveal keeps
   // the same pathname, so it still reconciles.
   const committedPathnameRef = useRef<string | null>(null)
-  const defaultValues = useMemo(
-    () =>
-      Object.fromEntries(
-        Object.keys(keyMap).map(key => [key, keyMap[key]!.defaultValue ?? null])
-      ) as Values<KeyMap>,
-    [
-      Object.values(keyMap)
-        .map(({ defaultValue }) => defaultValue)
-        .join(',')
-    ]
-  )
   const queuedQueries = useQueuedQueries(Object.values(resolvedUrlKeys))
   const [internalState, setInternalState] = useState<V>(
     () => parseMap(keyMap, urlKeys, initialSearchParams, queuedQueries).state
@@ -237,19 +228,15 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
           query
         }: CrossHookSyncPayload) => {
           setInternalState(currentState => {
-            const { defaultValue } = keyMap[stateKey]!
             const urlKey = resolvedUrlKeys[stateKey]!
-            const nextValue = state ?? defaultValue ?? null
-            const currentValue = currentState[stateKey] ?? defaultValue ?? null
-
-            if (Object.is(currentValue, nextValue)) {
+            if (Object.is(currentState[stateKey] ?? null, state)) {
               debug(
                 2,
                 hookId,
                 stateKeys,
                 urlKey,
                 state,
-                defaultValue,
+                keyMapRef.current[stateKey]?.defaultValue,
                 stateRef.current
               )
               // bail out by returning the current state
@@ -259,7 +246,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
             // for the subsequent setState to pick it up.
             stateRef.current = {
               ...stateRef.current,
-              [stateKey as keyof KeyMap]: nextValue
+              [stateKey as keyof KeyMap]: state
             }
             queryRef.current[urlKey] = query
             debug(
@@ -268,7 +255,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
               stateKeys,
               urlKey,
               state,
-              defaultValue,
+              keyMapRef.current[stateKey]?.defaultValue,
               stateRef.current
             )
             return stateRef.current
@@ -296,12 +283,12 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
   const update = useCallback<SetValues<KeyMap>>(
     (stateUpdater, callOptions = {}) => {
       const nullMap = Object.fromEntries(
-        Object.keys(keyMap).map(key => [key, null])
+        Object.keys(keyMapRef.current).map(key => [key, null])
       ) as Nullable<KeyMap>
       const newState: Partial<Nullable<KeyMap>> =
         typeof stateUpdater === 'function'
           ? (stateUpdater(
-              applyDefaultValues(stateRef.current, defaultValues)
+              applyDefaultValues(stateRef.current, keyMapRef.current)
             ) ?? nullMap)
           : (stateUpdater ?? nullMap)
       debug(6, hookId, stateKeys, newState)
@@ -312,7 +299,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
         (p: Promise<URLSearchParams>) => Promise<URLSearchParams>
       > = []
       for (let [stateKey, value] of Object.entries(newState)) {
-        const parser = keyMap[stateKey]
+        const parser = keyMapRef.current[stateKey]
         const urlKey = resolvedUrlKeys[stateKey]!
         if (!parser || value === undefined) {
           continue
@@ -398,15 +385,17 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
       adapter.updateUrl,
       adapter.getSearchParamsSnapshot,
       adapter.rateLimitFactor,
-      processUrlSearchParams,
-      defaultValues
+      processUrlSearchParams
     ]
   )
 
-  const outputState = useMemo(
-    () => applyDefaultValues(internalState, defaultValues),
-    [internalState, defaultValues]
+  const outputStateRef = useRef<Values<KeyMap> | null>(null)
+  const outputState = applyDefaultValues(
+    internalState,
+    keyMap,
+    outputStateRef.current
   )
+  outputStateRef.current = outputState
   return [outputState, update]
 }
 
@@ -471,9 +460,19 @@ function parseMap<KeyMap extends UseQueryStatesKeysMap>(
 
 function applyDefaultValues<KeyMap extends UseQueryStatesKeysMap>(
   state: NullableValues<KeyMap>,
-  defaults: Partial<Values<KeyMap>>
+  keyMap: KeyMap,
+  cachedState?: Values<KeyMap> | null
 ) {
-  return Object.fromEntries(
-    Object.keys(state).map(key => [key, state[key] ?? defaults[key] ?? null])
+  const outputState = Object.fromEntries(
+    Object.keys(state).map(key => [
+      key,
+      state[key] ?? keyMap[key]?.defaultValue ?? null
+    ])
   ) as Values<KeyMap>
+  const stateKeys = Object.keys(state)
+  return cachedState &&
+    stateKeys.length === Object.keys(cachedState).length &&
+    stateKeys.every(key => Object.is(outputState[key], cachedState[key]))
+    ? cachedState
+    : outputState
 }

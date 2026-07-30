@@ -304,6 +304,9 @@ describe('useQueryStates: referential equality', () => {
     await act(() => result.current.withoutDefault[1](null))
 
     expect(result.current.withDefault[0].test).toBe('next')
+
+    await rerender({ defaultValue: 'latest' })
+    expect(result.current.withDefault[0].test).toBe('latest')
   })
 })
 
