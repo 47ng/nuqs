@@ -59,8 +59,6 @@ export type UseQueryStatesReturn<T extends UseQueryStatesKeysMap> = [
 // by hoisting it out of the function scope.
 // Otherwise useEffect loops go brrrr
 const defaultUrlKeys = {}
-const objectIds = new WeakMap<object, number>()
-let nextObjectId = 0
 
 /**
  * Synchronise multiple query string arguments to React state in Next.js
@@ -91,42 +89,28 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
 
   type V = NullableValues<KeyMap>
   const stateKeys = Object.keys(keyMap).join(',')
+  const updateKeyMapRef = useRef(keyMap)
+  const previousKeyMap = updateKeyMapRef.current
+  const updateKeyMap =
+    JSON.stringify(previousKeyMap) === JSON.stringify(keyMap) &&
+    Object.entries(keyMap).every(([key, parser]) => {
+      const previousDefault = previousKeyMap[key]?.defaultValue
+      return (
+        Object.is(previousDefault, parser.defaultValue) ||
+        (previousDefault !== undefined &&
+          parser.defaultValue !== undefined &&
+          parser.eq?.(previousDefault, parser.defaultValue) === true)
+      )
+    })
+      ? previousKeyMap
+      : keyMap
+  updateKeyMapRef.current = updateKeyMap
   const resolvedUrlKeys = useMemo(
     () =>
       Object.fromEntries(
         Object.keys(keyMap).map(key => [key, urlKeys[key] ?? key])
       ),
     [stateKeys, JSON.stringify(urlKeys)]
-  )
-  const configurationKey = JSON.stringify(
-    Object.entries(keyMap).map(([key, parser]) => [
-      key,
-      resolvedUrlKeys[key],
-      getObjectId(parser.serialize),
-      getObjectId(parser.eq),
-      parser.history,
-      parser.scroll,
-      parser.shallow,
-      parser.throttleMs,
-      getObjectId(parser.startTransition),
-      parser.clearOnDefault,
-      parser.limitUrlUpdates?.method,
-      parser.limitUrlUpdates?.timeMs
-    ])
-  )
-  // This cache only invalidates the memo. The published value is created from
-  // the current render, never read back from this ref.
-  const defaultValuesRef = useRef({ keyMap, version: 0 })
-  if (!hasSameDefaultValues(defaultValuesRef.current.keyMap, keyMap)) {
-    defaultValuesRef.current = {
-      keyMap,
-      version: defaultValuesRef.current.version + 1
-    }
-  }
-  const defaultValuesVersion = defaultValuesRef.current.version
-  const defaultValues = useMemo(
-    () => collectDefaultValues(keyMap),
-    [defaultValuesVersion]
   )
   const adapter = useAdapter(Object.values(resolvedUrlKeys))
   const initialSearchParams = adapter.searchParams
@@ -310,18 +294,15 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
     }
   }, [stateKeys, resolvedUrlKeys])
 
-  // Parser and URL key share this callback's render generation. React discards
-  // a new callback with an abandoned render, leaving the committed one intact.
   const update = useCallback<SetValues<KeyMap>>(
     (stateUpdater, callOptions = {}) => {
       const nullMap = Object.fromEntries(
-        Object.keys(keyMap).map(key => [key, null])
+        Object.keys(updateKeyMap).map(key => [key, null])
       ) as Nullable<KeyMap>
       const newState: Partial<Nullable<KeyMap>> =
         typeof stateUpdater === 'function'
-          ? (stateUpdater(
-              applyDefaultValues(stateRef.current, defaultValues)
-            ) ?? nullMap)
+          ? (stateUpdater(applyDefaultValues(stateRef.current, updateKeyMap)) ??
+            nullMap)
           : (stateUpdater ?? nullMap)
       debug(6, hookId, stateKeys, newState)
       let returnedPromise: Promise<URLSearchParams> | undefined = undefined
@@ -331,9 +312,8 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
         (p: Promise<URLSearchParams>) => Promise<URLSearchParams>
       > = []
       for (let [stateKey, value] of Object.entries(newState)) {
-        const parser = keyMap[stateKey]
+        const parser = updateKeyMap[stateKey]
         const urlKey = resolvedUrlKeys[stateKey]
-        const defaultValue = defaultValues[stateKey]
         if (!parser || urlKey === undefined || value === undefined) {
           continue
         }
@@ -342,8 +322,8 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
             parser.clearOnDefault ??
             clearOnDefault) &&
           value !== null &&
-          defaultValue !== null &&
-          (parser.eq ?? ((a, b) => a === b))(value, defaultValue)
+          parser.defaultValue !== undefined &&
+          (parser.eq ?? ((a, b) => a === b))(value, parser.defaultValue)
         ) {
           value = null
         }
@@ -406,6 +386,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
       return returnedPromise ?? globalPromise
     },
     [
+      stateKeys,
       history,
       shallow,
       scroll,
@@ -414,68 +395,26 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
       limitUrlUpdates?.timeMs,
       startTransition,
       clearOnDefault,
+      updateKeyMap,
+      resolvedUrlKeys,
       adapter.updateUrl,
       adapter.getSearchParamsSnapshot,
       adapter.rateLimitFactor,
-      processUrlSearchParams,
-      configurationKey,
-      defaultValues
+      processUrlSearchParams
     ]
   )
 
-  const outputState = useMemo(
-    () => applyDefaultValues(internalState, defaultValues),
-    [internalState, defaultValues]
+  const outputStateRef = useRef<Values<KeyMap> | null>(null)
+  const outputState = applyDefaultValues(
+    internalState,
+    keyMap,
+    outputStateRef.current
   )
+  outputStateRef.current = outputState
   return [outputState, update]
 }
 
 // --
-
-function getObjectId(value: object | undefined) {
-  if (value === undefined) {
-    return null
-  }
-  const existing = objectIds.get(value)
-  if (existing !== undefined) {
-    return existing
-  }
-  const id = nextObjectId++
-  objectIds.set(value, id)
-  return id
-}
-
-function collectDefaultValues<KeyMap extends UseQueryStatesKeysMap>(
-  keyMap: KeyMap
-) {
-  return Object.fromEntries(
-    Object.entries(keyMap).map(([key, parser]) => [
-      key,
-      parser.defaultValue ?? null
-    ])
-  ) as Values<KeyMap>
-}
-
-function hasSameDefaultValues<KeyMap extends UseQueryStatesKeysMap>(
-  previous: KeyMap,
-  keyMap: KeyMap
-) {
-  const keys = Object.keys(keyMap)
-  return (
-    keys.length === Object.keys(previous).length &&
-    keys.every(key => {
-      const parser = keyMap[key]
-      const previousValue = previous[key]?.defaultValue ?? null
-      const value = parser?.defaultValue ?? null
-      return (
-        Object.is(previousValue, value) ||
-        (previousValue !== null &&
-          value !== null &&
-          parser?.eq?.(previousValue, value) === true)
-      )
-    })
-  )
-}
 
 function parseMap<KeyMap extends UseQueryStatesKeysMap>(
   keyMap: KeyMap,
@@ -514,6 +453,7 @@ function parseMap<KeyMap extends UseQueryStatesKeysMap>(
       ? null
       : // we have properly narrowed `query` here, but TS doesn't keep track of that
         safeParse(parser.parse, query as string & Array<string>, urlKey)
+
     out[stateKey as keyof KeyMap] = value ?? null
     if (cachedQuery) {
       cachedQuery[urlKey] = query
@@ -535,9 +475,30 @@ function parseMap<KeyMap extends UseQueryStatesKeysMap>(
 
 function applyDefaultValues<KeyMap extends UseQueryStatesKeysMap>(
   state: NullableValues<KeyMap>,
-  defaults: Values<KeyMap>
+  keyMap: KeyMap,
+  cachedState?: Values<KeyMap> | null
 ) {
-  return Object.fromEntries(
-    Object.keys(state).map(key => [key, state[key] ?? defaults[key] ?? null])
+  const outputState = Object.fromEntries(
+    Object.keys(state).map(key => [
+      key,
+      state[key] ?? keyMap[key]?.defaultValue ?? null
+    ])
   ) as Values<KeyMap>
+  const stateKeys = Object.keys(state)
+  return cachedState &&
+    stateKeys.length === Object.keys(cachedState).length &&
+    stateKeys.every(key => {
+      if (Object.is(outputState[key], cachedState[key])) {
+        return true
+      }
+      const parser = keyMap[key]
+      return (
+        state[key] == null &&
+        outputState[key] != null &&
+        cachedState[key] != null &&
+        parser?.eq?.(outputState[key], cachedState[key]) === true
+      )
+    })
+    ? cachedState
+    : outputState
 }

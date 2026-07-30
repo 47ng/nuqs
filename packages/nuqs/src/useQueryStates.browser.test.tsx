@@ -18,6 +18,7 @@ import {
 } from './adapters/testing'
 import { debounce, throttle } from './lib/queues/rate-limiting'
 import {
+  createParser,
   parseAsArrayOf,
   parseAsInteger,
   parseAsJson,
@@ -315,14 +316,14 @@ describe('useQueryStates: referential equality', () => {
     expect(nextState.arr[0]).not.toBe(initialState.arr[0])
   })
 
-  it('uses referential equality when a parser has no eq function', async () => {
-    const parser = {
+  it('uses parser referential equality for structured defaults', async () => {
+    const parser = createParser({
       parse: (value: string) => JSON.parse(value) as { value: string },
       serialize: JSON.stringify
-    }
+    })
     const useTestHook = () =>
       useQueryStates({
-        obj: { ...parser, defaultValue: { value: 'default' } }
+        obj: parser.withDefault({ value: 'default' })
       })
     const { result, rerender } = await renderHook(useTestHook, {
       wrapper: withNuqsTestingAdapter()
