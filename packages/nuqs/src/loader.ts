@@ -117,7 +117,7 @@ export function createLoader<Parsers extends ParserMap>(
         }
         parsedValue = null
       }
-      if (strict && query && parsedValue === null) {
+      if (strict && parsedValue === null) {
         throw new Error(
           `[nuqs] Failed to parse query \`${query}\` for key \`${key}\` (got null)`
         )
