@@ -253,8 +253,9 @@ export const parseAsHex: SingleParserBuilder<number> = createParser({
     return int == int ? int : null // NaN check at low bundle size cost
   },
   serialize: v => {
-    const hex = Math.round(v).toString(16)
-    return (hex.length & 1 ? '0' : '') + hex
+    const rounded = Math.round(v)
+    const hex = Math.abs(rounded).toString(16)
+    return (rounded < 0 ? '-' : '') + (hex.length & 1 ? '0' : '') + hex
   }
 })
 

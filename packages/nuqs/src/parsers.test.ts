@@ -47,6 +47,7 @@ describe('parsers', () => {
     expect(parseAsHex.parse('a')).toBe(0xa)
     expect(parseAsHex.parse('g')).toBeNull()
     expect(parseAsHex.serialize(0xa)).toBe('0a')
+    expect(isParserBijective(parseAsHex, '-10', -0x10)).toBe(true)
     for (let byte = 0; byte < 256; byte++) {
       const hexString = byte.toString(16).padStart(2, '0')
       expect(isParserBijective(parseAsHex, hexString, byte)).toBe(true)
