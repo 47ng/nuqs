@@ -253,9 +253,9 @@ export const parseAsHex: SingleParserBuilder<number> = createParser({
     return int == int ? int : null // NaN check at low bundle size cost
   },
   serialize: v => {
-    const rounded = Math.round(v)
-    const hex = Math.abs(rounded).toString(16)
-    return (rounded < 0 ? '-' : '') + (hex.length & 1 ? '0' : '') + hex
+    const hex = Math.round(v).toString(16)
+    // Negative hex starts with '-', which sorts before '0' and needs no padding
+    return hex < '0' || !(hex.length & 1) ? hex : '0' + hex
   }
 })
 
