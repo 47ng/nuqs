@@ -104,6 +104,7 @@ describe('parsers', () => {
 
   it('parseAsTimestamp', () => {
     expect(parseAsTimestamp.parse('')).toBeNull()
+    expect(parseAsTimestamp.parse('8640000000000001')).toBeNull()
     expect(parseAsTimestamp.parse('0')).toStrictEqual(new Date(0))
     expect(testParseThenSerialize(parseAsTimestamp, '0')).toBe(true)
     expect(testSerializeThenParse(parseAsTimestamp, new Date(1234567890))).toBe(
