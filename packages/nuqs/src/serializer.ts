@@ -129,10 +129,8 @@ function splitBase<BaseType extends Base>(base: BaseType) {
     return ['', new URLSearchParams(base), ''] as const // Operate on a copy of URLSearchParams, as derived classes may restrict its allowed methods
   } else {
     const baseLength = base.href.length - base.search.length - base.hash.length
-    return [
-      base.href.slice(0, baseLength),
-      new URLSearchParams(base.searchParams),
-      base.hash
-    ] as const
+    const path = base.href.slice(0, baseLength).replace(/[?#]+$/, '')
+    const hash = base.hash || (base.href.endsWith('#') ? '#' : '')
+    return [path, new URLSearchParams(base.searchParams), hash] as const
   }
 }
