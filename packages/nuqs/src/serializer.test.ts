@@ -73,6 +73,14 @@ describe('serializer', () => {
     const result = serialize(url, { str: 'foo' })
     expect(result).toBe('https://example.com/path?bar=egg&str=foo')
   })
+  it('preserves credentials in a URL base', () => {
+    const serialize = createSerializer(parsers)
+    const url = new URL('https://user:password@example.com/path?bar=egg')
+    const result = serialize(url, { str: 'foo' })
+    expect(result).toBe(
+      'https://user:password@example.com/path?bar=egg&str=foo'
+    )
+  })
   it('deletes a null value from base', () => {
     const serialize = createSerializer(parsers)
     const result = serialize('?str=bar&int=-1', { str: 'foo', int: null })
