@@ -63,6 +63,7 @@ const routes: Record<string, React.LazyExoticComponent<() => JSX.Element>> = {
   '/repro-1365':                lazy(() => import('./routes/repro-1365')),
   '/repro-1444':                lazy(() => import('./routes/repro-1444')),
   '/repro-1501':                lazy(() => import('./routes/repro-1501')),
+  '/repro-1506':                lazy(() => import('./routes/repro-1506')),
 }
 
 export function Router() {

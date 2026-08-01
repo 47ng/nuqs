@@ -254,7 +254,8 @@ export const parseAsHex: SingleParserBuilder<number> = createParser({
   },
   serialize: v => {
     const hex = Math.round(v).toString(16)
-    return (hex.length & 1 ? '0' : '') + hex
+    // Negative hex starts with '-', which sorts before '0' and needs no padding
+    return hex < '0' || !(hex.length & 1) ? hex : '0' + hex
   }
 })
 
@@ -281,8 +282,8 @@ function compareDates(a: Date, b: Date) {
  */
 export const parseAsTimestamp: SingleParserBuilder<Date> = createParser({
   parse: v => {
-    const ms = parseInt(v)
-    return ms == ms ? new Date(ms) : null // NaN check at low bundle size cost
+    const date = new Date(parseInt(v))
+    return date.valueOf() == date.valueOf() ? date : null // NaN check at low bundle size cost
   },
   serialize: (v: Date) => '' + v.valueOf(),
   eq: compareDates

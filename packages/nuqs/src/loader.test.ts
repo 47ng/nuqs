@@ -116,6 +116,14 @@ describe('loader', () => {
         '[nuqs] Failed to parse query `will-be-null` for key `test` (got null)'
       )
     })
+    it('throws errors in strict mode when the parser rejects an empty query', () => {
+      const load = createLoader({
+        count: parseAsInteger
+      })
+      expect(() => load('?count=', { strict: true })).toThrow(
+        '[nuqs] Failed to parse query `` for key `count` (got null)'
+      )
+    })
     it('throws errors in strict mode when the parser throws an error', () => {
       const load = createLoader({
         test: createParser({
