@@ -18,7 +18,13 @@ const config = {
   reactCompiler: process.env.REACT_COMPILER === 'true',
   experimental: {
     clientRouterFilter: false,
-    serverSourceMaps: true
+    serverSourceMaps: true,
+    // Next.js 16.3.0 defaults to the TypeScript CLI checker, which requires
+    // a `tsc` binary that the @typescript/typescript6 bridge does not expose
+    // (it ships `tsc6`). Opting out routes all Next.js versions in the CI
+    // matrix through the TypeScript JS API, which the bridge provides.
+    // Next.js < 16.3.0 warns about this unknown key and ignores it.
+    useTypeScriptCli: false
   },
   transpilePackages: ['e2e-shared'],
   rewrites: async () => [
