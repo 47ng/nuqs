@@ -82,7 +82,6 @@
     "shadcn": "^4.13.0",
     "shiki": "^3.23.0",
     "typescript": "catalog:typescript",
-    "typescript-7": "catalog:typescript",
     "unified": "^11.0.5",
     "vitest": "catalog:vitest"
   },
