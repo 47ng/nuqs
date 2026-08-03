@@ -19,11 +19,9 @@ const config = {
   experimental: {
     clientRouterFilter: false,
     serverSourceMaps: true,
-    // Next.js 16.3.0 defaults to the TypeScript CLI checker, which requires
-    // a `tsc` binary that the @typescript/typescript6 bridge does not expose
-    // (it ships `tsc6`). Opting out routes all Next.js versions in the CI
-    // matrix through the TypeScript JS API, which the bridge provides.
-    // Next.js < 16.3.0 warns about this unknown key and ignores it.
+    // next ≤16.2.x: type-checks via TS JS API (not in typescript@^7.0.0, will ship in 7.1)
+    // next  16.3.0: new default = type-checks via `tsc` CLI.
+    // When `typescript@7.1.x` lands, we can remove this option & the typescript6 bridge.
     useTypeScriptCli: false
   },
   transpilePackages: ['e2e-shared'],
