@@ -201,7 +201,6 @@
     "tsdown": "^0.22.9",
     "tsnapi": "^1.0.0",
     "typescript": "catalog:typescript",
-    "typescript-7": "catalog:typescript",
     "valibot": "^1.4.2",
     "vite": "catalog:vite",
     "vitest": "catalog:vitest",

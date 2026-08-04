@@ -28,15 +28,6 @@ export type NpmPackageStatsData = {
   last90Days: Datum[]
 }
 
-// const regexp = /https:\/\/npmjs\.com\/package\/([\w.-]+|@[\w.-]+\/[\w.-]+)/gm
-
-type RangeResponse = {
-  downloads: Array<{
-    downloads: number
-    day: string
-  }>
-}
-
 const rangeResponseSchema = z.object({
   downloads: z.array(
     z.object({
@@ -46,32 +37,14 @@ const rangeResponseSchema = z.object({
   )
 })
 
-export async function getLastNDays(pkg: string, n: number): Promise<Datum[]> {
-  const start = dayjs().subtract(n, 'day').format('YYYY-MM-DD')
-  const end = dayjs().subtract(1, 'day').endOf('day').format('YYYY-MM-DD')
-  const url = `https://api.npmjs.org/downloads/range/${start}:${end}/${pkg}`
-  try {
-    const { downloads } = rangeResponseSchema.parse(await get(url))
-    const data = downloads.map(d => ({
-      date: d.day,
-      downloads: d.downloads
-    }))
-    if (data.at(-1)?.downloads === 0) {
-      data.pop() // Remove last day if it's zero (stats not available yet)
-    }
-    return data
-  } catch (cause) {
-    const error = new Error(`error: getLastNDays(${pkg}, ${n}) - url: ${url}`, {
-      cause
-    })
-    console.error(error)
-    return []
-  }
-}
+const combinedRangeResponseSchema = z.object({
+  nuqs: rangeResponseSchema,
+  'next-usequerystate': rangeResponseSchema
+})
 
 /**
- * Interpolate zero-download days using weekly rhythm-aware estimation.
- * Processes left-to-right so earlier interpolated values can feed later ones.
+ * Interpolate zero-download days in a dense, chronological daily series.
+ * Mutates the array from left to right so earlier estimates can feed later ones.
  */
 export function interpolateZeroDays(data: Datum[]): Datum[] {
   for (let i = 0; i < data.length; i++) {
@@ -127,6 +100,18 @@ export function interpolateZeroDays(data: Datum[]): Datum[] {
   return data
 }
 
+export function getDownloadsNDaysBeforeLatest(
+  data: Datum[],
+  days: number
+): Datum | undefined {
+  const latestDate = data.at(-1)?.date
+  if (!latestDate) return undefined
+  const targetDate = dayjs(latestDate)
+    .subtract(days, 'day')
+    .format('YYYY-MM-DD')
+  return data.find(d => d.date === targetDate)
+}
+
 const packageResponseSchema = z.object({
   time: z.object({
     created: z.string()
@@ -176,24 +161,90 @@ export async function getAllTime(pkg: string): Promise<number> {
   return downloads
 }
 
-export async function fetchNpmPackage(
-  pkg: string
-): Promise<NpmPackageStatsData> {
-  // Ensure we cover 90 days + a full first week
-  const startOfFirstWeek = dayjs().subtract(90, 'day').startOf('isoWeek')
-  const ninetyOrSoDays = dayjs().diff(startOfFirstWeek, 'day')
-  const [allTime, last30DaysRaw, last90DaysRaw] = await Promise.all([
-    getAllTime(pkg),
-    getLastNDays(pkg, 30),
-    getLastNDays(pkg, ninetyOrSoDays)
-  ])
-  const last30Days = interpolateZeroDays(last30DaysRaw)
-  const last90Days = interpolateZeroDays(last90DaysRaw)
-  return {
-    allTime,
-    last30Days,
-    last90Days: groupByWeek(last90Days)
+async function getRecentPackages(url: string) {
+  try {
+    return combinedRangeResponseSchema.parse(await get(url))
+  } catch (cause) {
+    console.error(
+      new Error(`error: getRecentPackages() - url: ${url}`, { cause })
+    )
+    return {
+      nuqs: { downloads: [] },
+      'next-usequerystate': { downloads: [] }
+    }
   }
+}
+
+export async function fetchNpmPackages(): Promise<
+  readonly [nuqs: NpmPackageStatsData, nextUseQueryState: NpmPackageStatsData]
+> {
+  // Fetch one range for both packages, then derive both chart windows locally.
+  // This keeps all recent views on the same npm response and cache entry.
+  const startOfFirstWeek = dayjs().subtract(90, 'day').startOf('isoWeek')
+  const endDate = dayjs().subtract(1, 'day')
+  const end = endDate.format('YYYY-MM-DD')
+  const last30DaysStart = endDate.subtract(29, 'day').format('YYYY-MM-DD')
+  const rangeDates: string[] = []
+  for (
+    let date = startOfFirstWeek;
+    !date.isAfter(endDate, 'day');
+    date = date.add(1, 'day')
+  ) {
+    rangeDates.push(date.format('YYYY-MM-DD'))
+  }
+  const url = `https://api.npmjs.org/downloads/range/${startOfFirstWeek.format(
+    'YYYY-MM-DD'
+  )}:${end}/nuqs,next-usequerystate`
+  const [nuqsAllTime, nextUseQueryStateAllTime, recent] = await Promise.all([
+    getAllTime('nuqs'),
+    getAllTime('next-usequerystate'),
+    getRecentPackages(url)
+  ])
+  const nuqsByDate = new Map(
+    recent.nuqs.downloads.map(d => [d.day, d.downloads])
+  )
+  const nextUseQueryStateByDate = new Map(
+    recent['next-usequerystate'].downloads.map(d => [d.day, d.downloads])
+  )
+  const sharedDates = new Set(
+    rangeDates.filter(
+      date => nuqsByDate.has(date) && nextUseQueryStateByDate.has(date)
+    )
+  )
+  // npm can include tomorrow's placeholder before either package has stats.
+  // Drop that date only when both package totals are still zero.
+  const lastSharedDate = rangeDates.findLast(date => sharedDates.has(date))
+  if (
+    lastSharedDate &&
+    nuqsByDate.get(lastSharedDate) === 0 &&
+    nextUseQueryStateByDate.get(lastSharedDate) === 0
+  ) {
+    sharedDates.delete(lastSharedDate)
+  }
+  const nuqs = interpolateZeroDays(
+    rangeDates.map(date => ({
+      date,
+      downloads: nuqsByDate.get(date) ?? 0
+    }))
+  ).filter(d => sharedDates.has(d.date))
+  const nextUseQueryState = interpolateZeroDays(
+    rangeDates.map(date => ({
+      date,
+      downloads: nextUseQueryStateByDate.get(date) ?? 0
+    }))
+  ).filter(d => sharedDates.has(d.date))
+  return [
+    {
+      allTime: nuqsAllTime,
+      last30Days: nuqs.filter(d => d.date >= last30DaysStart),
+      last90Days: groupByWeek(nuqs)
+    },
+    {
+      allTime: nextUseQueryStateAllTime,
+      last30Days: nextUseQueryState.filter(d => d.date >= last30DaysStart),
+      last90Days: groupByWeek(nextUseQueryState)
+    }
+  ]
 }
 
 async function get(url: string): Promise<unknown> {
@@ -203,6 +254,11 @@ async function get(url: string): Promise<unknown> {
       tags: ['npm-stats']
     }
   })
+  if (!res.ok) {
+    throw new Error(
+      `npm downloads request failed: ${res.status} ${res.statusText}`
+    )
+  }
   return res.json()
 }
 
@@ -243,23 +299,23 @@ export function combineStats(
 function combineDownloads(nuqs: Datum[], n_uqs: Datum[]): MultiDatum[] {
   const nuqsByDate = new Map(nuqs.map(datum => [datum.date, datum]))
   const n_uqsByDate = new Map(n_uqs.map(datum => [datum.date, datum]))
-  const dates = new Set([...nuqsByDate.keys(), ...n_uqsByDate.keys()])
+  const dates = Array.from(nuqsByDate.keys()).filter(date =>
+    n_uqsByDate.has(date)
+  )
 
-  return Array.from(dates)
-    .sort()
-    .map(date => {
-      const nuqsDatum = nuqsByDate.get(date)
-      const n_uqsDatum = n_uqsByDate.get(date)
-      const estimated: NonNullable<MultiDatum['estimated']> = {}
-      if (nuqsDatum?.estimated) estimated.nuqs = true
-      if (n_uqsDatum?.estimated) estimated['next-usequerystate'] = true
-      return {
-        date,
-        nuqs: nuqsDatum?.downloads ?? 0,
-        'next-usequerystate': n_uqsDatum?.downloads ?? 0,
-        ...(Object.keys(estimated).length > 0 ? { estimated } : {})
-      }
-    })
+  return dates.sort().map(date => {
+    const nuqsDatum = nuqsByDate.get(date)!
+    const n_uqsDatum = n_uqsByDate.get(date)!
+    const estimated: NonNullable<MultiDatum['estimated']> = {}
+    if (nuqsDatum.estimated) estimated.nuqs = true
+    if (n_uqsDatum.estimated) estimated['next-usequerystate'] = true
+    return {
+      date,
+      nuqs: nuqsDatum.downloads,
+      'next-usequerystate': n_uqsDatum.downloads,
+      ...(Object.keys(estimated).length > 0 ? { estimated } : {})
+    }
+  })
 }
 
 // Re-export to avoid importing dayjs everywhere

@@ -604,6 +604,24 @@ describe('useQueryStates: clearOnDefault', () => {
     expect(onUrlUpdate.mock.calls[0]![0].options.history).toBe('push')
   })
 
+  it('follows parser startTransition changes', async () => {
+    const initialStartTransition = vi.fn((callback: () => void) => callback())
+    const nextStartTransition = vi.fn((callback: () => void) => callback())
+    const useTestHook = ({ startTransition = initialStartTransition } = {}) =>
+      useQueryStates({
+        test: parseAsString.withOptions({ startTransition })
+      })
+    const { result, rerender, act } = await renderHook(useTestHook, {
+      wrapper: withNuqsTestingAdapter()
+    })
+
+    await rerender({ startTransition: nextStartTransition })
+    await act(() => result.current[1]({ test: 'pass' }))
+
+    expect(initialStartTransition).not.toHaveBeenCalled()
+    expect(nextStartTransition).toHaveBeenCalledOnce()
+  })
+
   it('follows hook-level clearOnDefault changes', async () => {
     const onUrlUpdate = vi.fn<OnUrlUpdateFunction>()
     const useTestHook = (
