@@ -54,7 +54,7 @@ function warnIfURLIsTooLong(queryString: string): void {
   if (typeof location === 'undefined') {
     return
   }
-  if (typeof process !== 'undefined' && process.env.NODE_ENV === 'production') {
+  if (process.env.NODE_ENV === 'production') {
     return
   }
   const url = new URL(location.href)
