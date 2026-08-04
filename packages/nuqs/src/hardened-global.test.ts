@@ -23,7 +23,7 @@ describe('hardened globalThis', () => {
       [
         '--input-type=module',
         '--eval',
-        `await import('react'); delete globalThis.process; await import(${JSON.stringify(entry)})`
+        `await import('react'); delete globalThis.process; const nuqs = await import(${JSON.stringify(entry)}); nuqs.createSerializer({ q: nuqs.parseAsString })({ q: 'hello' })`
       ],
       { encoding: 'utf8' }
     )
