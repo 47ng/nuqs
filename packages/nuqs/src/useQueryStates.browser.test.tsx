@@ -34,6 +34,38 @@ const waitForNextTick = () =>
   })
 
 describe('useQueryStates', () => {
+  it('distinguishes comma-containing values from repeated values', async () => {
+    function Child() {
+      const [{ tag }] = useQueryStates({
+        tag: parseAsNativeArrayOf(parseAsString)
+      })
+      return <div data-testid="value">{JSON.stringify(tag)}</div>
+    }
+    function TestComponent() {
+      const [searchParams, setSearchParams] = useState('?tag=a%2Cb')
+      return (
+        <>
+          <button onClick={() => setSearchParams('?tag=a&tag=b')}>
+            Navigate
+          </button>
+          <NuqsTestingAdapter searchParams={searchParams} hasMemory>
+            <Child />
+          </NuqsTestingAdapter>
+        </>
+      )
+    }
+
+    const user = userEvent.setup()
+    render(<TestComponent />)
+    await expect.element(page.getByTestId('value')).toHaveTextContent('["a,b"]')
+
+    await user.click(page.getByRole('button', { name: 'Navigate' }))
+
+    await expect
+      .element(page.getByTestId('value'))
+      .toHaveTextContent('["a","b"]')
+  })
+
   it('allows setting a single value', async () => {
     const onUrlUpdate = vi.fn<OnUrlUpdateFunction>()
     const useTestHook = () =>
