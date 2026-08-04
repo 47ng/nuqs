@@ -21,7 +21,7 @@ catalogs:
     vite: ^8.1.5
 
   next:
-    next: 16.3.0-preview.7
+    next: 16.3.0
 
   react-router7:
     react-router: ^7.18.1
@@ -57,13 +57,14 @@ catalogs:
     react-dom: ^19.2.7
 
   typescript:
-    # JS API provider for tooling that imports `typescript` (tsdown, vitest,
-    # knip, next). TS 7 drops the JS API until 7.1, so tooling stays on the
-    # 6.0 bridge, which exposes its binary as `tsc6` to avoid clashing with 7.
+    typescript: '^7.0.2'
+
+  # Next.js before 16.3.0 requires the TypeScript JS API for build-time
+  # type checking, which TS 7 does not provide. The e2e/next bench builds
+  # against older Next.js versions in CI, so it stays on the 6.0 bridge
+  # (which 16.3.0 also supports).
+  typescript6:
     typescript: 'npm:@typescript/typescript6@^6.0.2'
-    # Native Go compiler shipped as TypeScript 7. Exposes `tsc`, so the CLI
-    # type-check scripts pick it up with no change.
-    typescript-7: 'npm:typescript@^7.0.2'
 
 enablePrePostScripts: false
 
