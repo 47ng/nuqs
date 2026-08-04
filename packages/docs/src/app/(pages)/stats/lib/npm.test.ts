@@ -36,7 +36,7 @@ afterAll(() => server.close())
 // deterministic, while leaving real timers for the fetch/MSW plumbing.
 beforeEach(() => {
   vi.useFakeTimers({ toFake: ['Date'] })
-  vi.setSystemTime(new Date('2024-06-15T12:00:00Z'))
+  vi.setSystemTime(new Date(2024, 5, 15, 12))
 })
 afterEach(() => {
   vi.useRealTimers()
@@ -101,6 +101,7 @@ describe('getDownloadsNDaysBeforeLatest', () => {
       date: '2024-06-06',
       downloads: 60
     })
+    expect(getDownloadsNDaysBeforeLatest(data, 6)).toBeUndefined()
   })
 })
 
@@ -177,6 +178,7 @@ describe('fetchNpmPackages', () => {
       new Date(Date.UTC(2024, 4, 15 + i)).toISOString().slice(0, 10)
     )
     let combinedRangeRequests = 0
+    let combinedRange: string | undefined
     server.use(
       http.get(registryEndpoint, () =>
         HttpResponse.json({ time: { created: '2024-06-01T00:00:00Z' } })
@@ -184,6 +186,7 @@ describe('fetchNpmPackages', () => {
       http.get(rangeEndpoint, ({ params }) => {
         if (params.pkg === 'nuqs,next-usequerystate') {
           combinedRangeRequests++
+          combinedRange = String(params.range)
           return HttpResponse.json({
             nuqs: {
               downloads: dates.map((day, i) => ({ downloads: i + 1, day }))
@@ -200,6 +203,7 @@ describe('fetchNpmPackages', () => {
     const [nuqs, nextUseQueryState] = await fetchNpmPackages()
 
     expect(combinedRangeRequests).toBe(1)
+    expect(combinedRange).toBe('2024-03-11:2024-06-14')
     expect(nuqs.last30Days).toEqual(
       dates.slice(-30).map((date, i) => ({ date, downloads: i + 2 }))
     )
@@ -208,9 +212,10 @@ describe('fetchNpmPackages', () => {
     )
     expect(nuqs.last90Days.at(-1)?.downloads).toBe(145)
     expect(nextUseQueryState.last90Days.at(-1)?.downloads).toBe(640)
+    expect(nuqs.last90Days.every(d => /^'\d{2}W\d{2}$/.test(d.date))).toBe(true)
   })
 
-  it('drops a trailing date from both packages when either is not published yet', async () => {
+  it('keeps a trailing date when only one package reports zero downloads', async () => {
     const dates = Array.from(
       { length: 9 },
       (_, i) => `2024-05-${String(i + 23).padStart(2, '0')}`
@@ -224,6 +229,49 @@ describe('fetchNpmPackages', () => {
           return HttpResponse.json({
             nuqs: {
               downloads: dates.map(day => ({ downloads: 10, day }))
+            },
+            'next-usequerystate': {
+              downloads: dates.map((day, i) => ({
+                downloads: i === dates.length - 1 ? 0 : 5,
+                day
+              }))
+            }
+          })
+        }
+        return HttpResponse.json({ downloads: [{ downloads: 12, day: 'x' }] })
+      })
+    )
+
+    const [nuqs, nextUseQueryState] = await fetchNpmPackages()
+
+    expect(nuqs.last30Days.at(-1)).toEqual({
+      date: '2024-05-31',
+      downloads: 10
+    })
+    expect(nextUseQueryState.last30Days.at(-1)).toEqual({
+      date: '2024-05-31',
+      downloads: 5,
+      estimated: true
+    })
+  })
+
+  it('drops a trailing date when both packages report zero downloads', async () => {
+    const dates = Array.from(
+      { length: 9 },
+      (_, i) => `2024-05-${String(i + 23).padStart(2, '0')}`
+    )
+    server.use(
+      http.get(registryEndpoint, () =>
+        HttpResponse.json({ time: { created: '2024-06-01T00:00:00Z' } })
+      ),
+      http.get(rangeEndpoint, ({ params }) => {
+        if (params.pkg === 'nuqs,next-usequerystate') {
+          return HttpResponse.json({
+            nuqs: {
+              downloads: dates.map((day, i) => ({
+                downloads: i === dates.length - 1 ? 0 : 10,
+                day
+              }))
             },
             'next-usequerystate': {
               downloads: dates.map((day, i) => ({
@@ -314,6 +362,40 @@ describe('fetchNpmPackages', () => {
     })
   })
 
+  it('rejects an unsuccessful combined response before parsing its body', async () => {
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+    server.use(
+      http.get(registryEndpoint, () =>
+        HttpResponse.json({ time: { created: '2024-06-01T00:00:00Z' } })
+      ),
+      http.get(rangeEndpoint, ({ params }) => {
+        if (params.pkg === 'nuqs,next-usequerystate') {
+          return HttpResponse.json(
+            {
+              nuqs: { downloads: [{ downloads: 10, day: '2024-06-14' }] },
+              'next-usequerystate': {
+                downloads: [{ downloads: 5, day: '2024-06-14' }]
+              }
+            },
+            { status: 503 }
+          )
+        }
+        return HttpResponse.json({ downloads: [{ downloads: 12, day: 'x' }] })
+      })
+    )
+
+    const [nuqs, nextUseQueryState] = await fetchNpmPackages()
+
+    expect(nuqs.last30Days).toEqual([])
+    expect(nextUseQueryState.last30Days).toEqual([])
+    expect(errorSpy).toHaveBeenCalledOnce()
+    expect(errorSpy.mock.calls[0][0]).toMatchObject({
+      cause: expect.objectContaining({
+        message: expect.stringContaining('503')
+      })
+    })
+  })
+
   it('returns empty recent series and logs when the combined response is malformed', async () => {
     const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
     server.use(
@@ -329,6 +411,8 @@ describe('fetchNpmPackages', () => {
 
     const [nuqs, nextUseQueryState] = await fetchNpmPackages()
 
+    expect(nuqs.allTime).toBe(12)
+    expect(nextUseQueryState.allTime).toBe(12)
     expect(nuqs.last30Days).toEqual([])
     expect(nuqs.last90Days).toEqual([])
     expect(nextUseQueryState.last30Days).toEqual([])

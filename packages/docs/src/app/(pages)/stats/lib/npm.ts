@@ -28,8 +28,6 @@ export type NpmPackageStatsData = {
   last90Days: Datum[]
 }
 
-// const regexp = /https:\/\/npmjs\.com\/package\/([\w.-]+|@[\w.-]+\/[\w.-]+)/gm
-
 const rangeResponseSchema = z.object({
   downloads: z.array(
     z.object({
@@ -45,8 +43,8 @@ const combinedRangeResponseSchema = z.object({
 })
 
 /**
- * Interpolate zero-download days using weekly rhythm-aware estimation.
- * Processes left-to-right so earlier interpolated values can feed later ones.
+ * Interpolate zero-download days in a dense, chronological daily series.
+ * Mutates the array from left to right so earlier estimates can feed later ones.
  */
 export function interpolateZeroDays(data: Datum[]): Datum[] {
   for (let i = 0; i < data.length; i++) {
@@ -178,10 +176,10 @@ async function getRecentPackages(url: string) {
 }
 
 export async function fetchNpmPackages(): Promise<
-  readonly [NpmPackageStatsData, NpmPackageStatsData]
+  readonly [nuqs: NpmPackageStatsData, nextUseQueryState: NpmPackageStatsData]
 > {
-  // Ensure we cover 90 days + a full first week. The same response is also
-  // derived for the 30-day chart so both views share one cache watermark.
+  // Fetch one range for both packages, then derive both chart windows locally.
+  // This keeps all recent views on the same npm response and cache entry.
   const startOfFirstWeek = dayjs().subtract(90, 'day').startOf('isoWeek')
   const endDate = dayjs().subtract(1, 'day')
   const end = endDate.format('YYYY-MM-DD')
@@ -213,11 +211,13 @@ export async function fetchNpmPackages(): Promise<
       date => nuqsByDate.has(date) && nextUseQueryStateByDate.has(date)
     )
   )
+  // npm can include tomorrow's placeholder before either package has stats.
+  // Drop that date only when both package totals are still zero.
   const lastSharedDate = rangeDates.findLast(date => sharedDates.has(date))
   if (
     lastSharedDate &&
-    (nuqsByDate.get(lastSharedDate) === 0 ||
-      nextUseQueryStateByDate.get(lastSharedDate) === 0)
+    nuqsByDate.get(lastSharedDate) === 0 &&
+    nextUseQueryStateByDate.get(lastSharedDate) === 0
   ) {
     sharedDates.delete(lastSharedDate)
   }
@@ -254,6 +254,11 @@ async function get(url: string): Promise<unknown> {
       tags: ['npm-stats']
     }
   })
+  if (!res.ok) {
+    throw new Error(
+      `npm downloads request failed: ${res.status} ${res.statusText}`
+    )
+  }
   return res.json()
 }
 
