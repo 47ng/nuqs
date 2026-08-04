@@ -34,6 +34,97 @@ const waitForNextTick = () =>
   })
 
 describe('useQueryStates', () => {
+  it.each([
+    {
+      name: 'comma-containing values to repeated values',
+      from: '?a=a%2Cb',
+      to: '?a=a&a=b',
+      initial: '{"a":["a,b"],"b":[]}',
+      expected: '{"a":["a","b"],"b":[]}'
+    },
+    {
+      name: 'repeated values to comma-containing values',
+      from: '?a=a&a=b',
+      to: '?a=a%2Cb',
+      initial: '{"a":["a","b"],"b":[]}',
+      expected: '{"a":["a,b"],"b":[]}'
+    },
+    {
+      name: 'an empty value to an absent key',
+      from: '?a=',
+      to: '',
+      initial: '{"a":[""],"b":[]}',
+      expected: '{"a":[],"b":[]}'
+    },
+    {
+      name: 'a trailing comma to a repeated empty value',
+      from: '?a=a%2C',
+      to: '?a=a&a=',
+      initial: '{"a":["a,"],"b":[]}',
+      expected: '{"a":["a",""],"b":[]}'
+    },
+    {
+      name: 'encoded separators to values split across keys',
+      from: '?a=1%26b%3D2',
+      to: '?a=1&b=2%26b%3D',
+      initial: '{"a":["1&b=2"],"b":[]}',
+      expected: '{"a":["1"],"b":["2&b="]}'
+    }
+  ])('distinguishes $name', async ({ from, to, initial, expected }) => {
+    function Child() {
+      const [state] = useQueryStates({
+        a: parseAsNativeArrayOf(parseAsString),
+        b: parseAsNativeArrayOf(parseAsString)
+      })
+      return <div data-testid="value">{JSON.stringify(state)}</div>
+    }
+    function TestComponent() {
+      const [searchParams, setSearchParams] = useState(from)
+      return (
+        <>
+          <button onClick={() => setSearchParams(to)}>Navigate</button>
+          <NuqsTestingAdapter searchParams={searchParams} hasMemory>
+            <Child />
+          </NuqsTestingAdapter>
+        </>
+      )
+    }
+
+    const user = userEvent.setup()
+    render(<TestComponent />)
+    await expect.element(page.getByTestId('value')).toHaveTextContent(initial)
+
+    await user.click(page.getByRole('button', { name: 'Navigate' }))
+
+    await expect.element(page.getByTestId('value')).toHaveTextContent(expected)
+  })
+
+  it('distinguishes comma-containing and repeated values for a single parser', async () => {
+    function Child() {
+      const [value] = useQueryState('q')
+      return <div data-testid="value">{JSON.stringify(value)}</div>
+    }
+    function TestComponent() {
+      const [searchParams, setSearchParams] = useState('?q=a%2Cb')
+      return (
+        <>
+          <button onClick={() => setSearchParams('?q=a&q=b')}>Navigate</button>
+          <NuqsTestingAdapter searchParams={searchParams} hasMemory>
+            <Child />
+          </NuqsTestingAdapter>
+        </>
+      )
+    }
+
+    const user = userEvent.setup()
+    render(<TestComponent />)
+    await expect.element(page.getByTestId('value')).toHaveTextContent('"a,b"')
+
+    await user.click(page.getByRole('button', { name: 'Navigate' }))
+
+    await expect.element(page.getByTestId('value')).toHaveTextContent('"a"')
+  })
+
   it('allows setting a single value', async () => {
     const onUrlUpdate = vi.fn<OnUrlUpdateFunction>()
     const useTestHook = () =>
