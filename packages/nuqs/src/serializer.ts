@@ -1,6 +1,7 @@
 import type { Nullable, Options, UrlKeys } from './defs'
 import { write } from './lib/search-params'
 import { renderQueryString } from './lib/url-encoding'
+import { getUrlKey } from './lib/url-keys'
 import type { inferParserType, ParserMap } from './parsers'
 
 type Base = string | URLSearchParams | URL
@@ -73,7 +74,7 @@ export function createSerializer<
     const values = isBase(arg1BaseOrValues) ? arg2values : arg1BaseOrValues
     if (values === null) {
       for (const key in parsers) {
-        const urlKey = urlKeys[key] ?? key
+        const urlKey = getUrlKey(urlKeys, key)
         search.delete(urlKey)
       }
       if (processUrlSearchParams) {
@@ -87,7 +88,7 @@ export function createSerializer<
       if (!parser || value === undefined) {
         continue
       }
-      const urlKey = urlKeys[key] ?? key
+      const urlKey = getUrlKey(urlKeys, key)
       const isMatchingDefault =
         parser.defaultValue !== undefined &&
         value !== null &&

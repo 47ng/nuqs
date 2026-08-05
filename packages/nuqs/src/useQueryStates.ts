@@ -16,6 +16,7 @@ import {
 import { safeParse } from './lib/safe-parse'
 import { isAbsentFromUrl, type Query } from './lib/search-params'
 import { emitter, type CrossHookSyncPayload } from './lib/sync'
+import { getUrlKey } from './lib/url-keys'
 import { type GenericParser } from './parsers'
 
 type KeyMapValue<Type> = GenericParser<Type> &
@@ -118,7 +119,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
   const resolvedUrlKeys = useMemo(
     () =>
       Object.fromEntries(
-        Object.keys(keyMap).map(key => [key, urlKeys[key] ?? key])
+        Object.keys(keyMap).map(key => [key, getUrlKey(urlKeys, key)])
       ),
     [stateKeys, JSON.stringify(urlKeys)]
   )

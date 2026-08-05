@@ -6,9 +6,21 @@ import {
   parseAsNativeArrayOf,
   parseAsString
 } from './parsers'
+import { createSerializer } from './serializer'
 
 describe('loader', () => {
   describe('sync', () => {
+    it.each(['constructor', 'toString', 'hasOwnProperty'])(
+      'supports the object prototype key %s',
+      key => {
+        const parsers = { [key]: parseAsString }
+        const serialize = createSerializer(parsers)
+        const load = createLoader(parsers)
+
+        expect(serialize({ [key]: 'hello' })).toBe(`?${key}=hello`)
+        expect(load(`?${key}=hello`)).toEqual({ [key]: 'hello' })
+      }
+    )
     it('parses a URL object', () => {
       const load = createLoader({
         a: parseAsInteger,
