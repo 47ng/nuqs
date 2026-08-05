@@ -40,15 +40,15 @@ describe('useQueryStates', () => {
       () => useQueryState('constructor', parseAsString),
       {
         wrapper: withNuqsTestingAdapter({
-          searchParams: '?constructor=hello',
+          searchParams: '?constructor=acme',
           onUrlUpdate
         })
       }
     )
 
-    expect(result.current[0]).toBe('hello')
-    await act(() => result.current[1]('world'))
-    expect(onUrlUpdate.mock.calls[0]![0].queryString).toBe('?constructor=world')
+    expect(result.current[0]).toBe('acme')
+    await act(() => result.current[1]('ajax'))
+    expect(onUrlUpdate.mock.calls[0]![0].queryString).toBe('?constructor=ajax')
   })
   it.each([
     {

@@ -254,11 +254,12 @@ describe('serializer', () => {
     expect(result).toBe('?multi=a&multi=b&multi=c')
   })
   it('ignores omitted parser keys from Object.prototype', () => {
+    const prototypeKey: string = 'toString'
     const serialize = createSerializer({
       a: parseAsString,
-      toString: parseAsString
+      [prototypeKey]: parseAsString
     })
-    expect(serialize({ a: 'hello' } as any)).toBe('?a=hello')
+    expect(serialize({ a: 'hello' })).toBe('?a=hello')
   })
   describe('supports processUrlSearchParams', () => {
     it('modifies search params in place', () => {
