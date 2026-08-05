@@ -66,46 +66,46 @@ export function useNuqsNextPagesRouterAdapter(): AdapterInterface {
   const updateUrl: UpdateUrlFunction = useCallback((search, options) => {
     const nextRouter = Router
     const urlParams = extractDynamicUrlParams(
-        nextRouter.pathname,
-        nextRouter.query
+      nextRouter.pathname,
+      nextRouter.query
     )
     const asPath =
-        getAsPathPathname(nextRouter.asPath) +
-        renderQueryString(search) +
-        location.hash
+      getAsPathPathname(nextRouter.asPath) +
+      renderQueryString(search) +
+      location.hash
     debug(20, 'next/pages', asPath)
     const method =
-        options.history === 'push' ? nextRouter.push : nextRouter.replace
+      options.history === 'push' ? nextRouter.push : nextRouter.replace
     updateState.isNuqsUpdate = true
     try {
       method
-          .call(
-              nextRouter,
-              // This is what makes the URL work (mapping dynamic segments placeholders
-              // in pathname to their values in query, plus search params in query too).
-              {
-                pathname: nextRouter.pathname,
-                query: {
-                  // Note: we put search params first so that one that conflicts
-                  // with dynamic params will be overwritten.
-                  ...urlSearchParamsToObject(search),
-                  ...urlParams
-                }
-                // For some reason we don't need to pass the hash here,
-                // it's preserved when passed as part of the asPath.
-              },
-              // This is what makes the URL pretty (resolved dynamic segments
-              // and nuqs-formatted search params).
-              asPath,
-              // And these are the options that are passed to the router.
-              {
-                scroll: options.scroll,
-                shallow: options.shallow
-              }
-          )
-          .finally(() => {
-            updateState.isNuqsUpdate = false
-          })
+        .call(
+          nextRouter,
+          // This is what makes the URL work (mapping dynamic segments placeholders
+          // in pathname to their values in query, plus search params in query too).
+          {
+            pathname: nextRouter.pathname,
+            query: {
+              // Note: we put search params first so that one that conflicts
+              // with dynamic params will be overwritten.
+              ...urlSearchParamsToObject(search),
+              ...urlParams
+            }
+            // For some reason we don't need to pass the hash here,
+            // it's preserved when passed as part of the asPath.
+          },
+          // This is what makes the URL pretty (resolved dynamic segments
+          // and nuqs-formatted search params).
+          asPath,
+          // And these are the options that are passed to the router.
+          {
+            scroll: options.scroll,
+            shallow: options.shallow
+          }
+        )
+        .finally(() => {
+          updateState.isNuqsUpdate = false
+        })
     } catch (error) {
       updateState.isNuqsUpdate = false
       throw error
@@ -121,12 +121,12 @@ export function useNuqsNextPagesRouterAdapter(): AdapterInterface {
 
 export function getAsPathPathname(asPath: string): string {
   return asPath
-      .replace(/#.*$/, '') // Remove hash
-      .replace(/\?.*$/, '') // Remove search
+    .replace(/#.*$/, '') // Remove hash
+    .replace(/\?.*$/, '') // Remove search
 }
 
 export function urlSearchParamsToObject(
-    search: URLSearchParams
+  search: URLSearchParams
 ): Record<string, string | string[]> {
   const out: Record<string, string | string[]> = {}
   for (const key of search.keys()) {
@@ -150,8 +150,8 @@ export function urlSearchParamsToObject(
  * query state object, leaving out any other search params.
  */
 export function extractDynamicUrlParams(
-    pathname: string,
-    values: Record<string, string | string[] | undefined>
+  pathname: string,
+  values: Record<string, string | string[] | undefined>
 ): Record<string, string | string[] | undefined> {
   const paramNames = new Set<string>()
   const dynamicRegex = /\[([^\]]+)\]/g
@@ -166,7 +166,7 @@ export function extractDynamicUrlParams(
     }
   }
   const dynamicValues = Object.fromEntries(
-      Object.entries(values).filter(([key]) => paramNames.has(key))
+    Object.entries(values).filter(([key]) => paramNames.has(key))
   )
   const matchCatchAll = catchAllRegex.exec(pathname)
   if (matchCatchAll && matchCatchAll[1]) {
