@@ -191,7 +191,11 @@ export class ThrottledQueue {
       }
     }
     if (processUrlSearchParams) {
-      search = processUrlSearchParams(search)
+      try {
+        search = processUrlSearchParams(search)
+      } catch (err) {
+        return [search, err]
+      }
     }
     try {
       compose(transitions, () => updateUrl(search, options))

@@ -322,6 +322,22 @@ describe('throttle: flush', () => {
       new Error('updateUrl error')
     )
   })
+  it('rejects and resets when processUrlSearchParams throws', async () => {
+    const adapter = createMockAdapter()
+    const queue = new ThrottledQueue()
+    queue.push({ key: 'a', query: 'a', options: {} })
+    const promise = queue.flush(adapter, () => {
+      throw new Error('middleware error')
+    })
+
+    expect(() => vi.runAllTimers()).not.toThrow()
+    await expect(promise).rejects.toEqual(new URLSearchParams('?a=a'))
+
+    queue.push({ key: 'b', query: 'b', options: {} })
+    const nextPromise = queue.flush(adapter)
+    vi.runAllTimers()
+    await expect(nextPromise).resolves.toEqual(new URLSearchParams('?b=b'))
+  })
   it('should process url search params', async () => {
     const mockAdapter = createMockAdapter()
     const queue = new ThrottledQueue()
