@@ -34,6 +34,22 @@ const waitForNextTick = () =>
   })
 
 describe('useQueryStates', () => {
+  it('supports a query key named constructor', async () => {
+    const onUrlUpdate = vi.fn<OnUrlUpdateFunction>()
+    const { result, act } = await renderHook(
+      () => useQueryState('constructor', parseAsString),
+      {
+        wrapper: withNuqsTestingAdapter({
+          searchParams: '?constructor=hello',
+          onUrlUpdate
+        })
+      }
+    )
+
+    expect(result.current[0]).toBe('hello')
+    await act(() => result.current[1]('world'))
+    expect(onUrlUpdate.mock.calls[0]![0].queryString).toBe('?constructor=world')
+  })
   it.each([
     {
       name: 'comma-containing values to repeated values',

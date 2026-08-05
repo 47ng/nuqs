@@ -144,7 +144,9 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
   const committedPathnameRef = useRef<string | null>(null)
   const queuedQueries = useQueuedQueries(Object.values(resolvedUrlKeys))
   const [internalState, setInternalState] = useState<V>(
-    () => parseMap(keyMap, urlKeys, initialSearchParams, queuedQueries).state
+    () =>
+      parseMap(keyMap, resolvedUrlKeys, initialSearchParams, queuedQueries)
+        .state
   )
 
   const stateRef = useRef(internalState)
@@ -165,7 +167,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
   const reconcile = () => {
     const { state, hasChanged } = parseMap(
       keyMap,
-      urlKeys,
+      resolvedUrlKeys,
       initialSearchParams,
       queuedQueries,
       queryRef.current,
@@ -429,7 +431,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
 
 function parseMap<KeyMap extends UseQueryStatesKeysMap>(
   keyMap: KeyMap,
-  urlKeys: Partial<Record<keyof KeyMap, string>>,
+  resolvedUrlKeys: Record<string, string>,
   searchParams: URLSearchParams,
   queuedQueries: Record<string, Query | null | undefined>,
   cachedQuery?: Record<string, Query | null>,
@@ -440,7 +442,7 @@ function parseMap<KeyMap extends UseQueryStatesKeysMap>(
 } {
   let hasChanged = false
   const state = Object.entries(keyMap).reduce((out, [stateKey, parser]) => {
-    const urlKey = urlKeys?.[stateKey] ?? stateKey
+    const urlKey = resolvedUrlKeys[stateKey] ?? stateKey
     const queuedQuery = queuedQueries[urlKey]
     const fallbackValue = parser.type === 'multi' ? [] : null
     const query =

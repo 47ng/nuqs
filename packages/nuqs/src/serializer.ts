@@ -85,7 +85,11 @@ export function createSerializer<
     for (const key in parsers) {
       const parser = parsers[key]
       const value = values[key]
-      if (!parser || value === undefined) {
+      if (
+        !parser ||
+        !Object.prototype.hasOwnProperty.call(values, key) ||
+        value === undefined
+      ) {
         continue
       }
       const urlKey = getUrlKey(urlKeys, key)
