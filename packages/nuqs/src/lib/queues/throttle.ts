@@ -48,6 +48,8 @@ export class ThrottledQueue {
     timeMs: number = defaultRateLimit.timeMs
   ): void {
     if (this.resetQueueOnNextPush) {
+      // Some adapters keep queued values available during concurrent renders,
+      // so defer cleanup until the next update starts rather than after a flush.
       this.reset()
       this.resetQueueOnNextPush = false
     }
