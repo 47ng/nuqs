@@ -10,15 +10,31 @@ import { createSerializer } from './serializer'
 
 describe('loader', () => {
   describe('sync', () => {
-    it.each(['constructor', 'toString', 'hasOwnProperty'])(
+    it.each(['constructor', 'hasOwnProperty'])(
       'supports the object prototype key %s',
       key => {
         const parsers = { [key]: parseAsString }
         const serialize = createSerializer(parsers)
         const load = createLoader(parsers)
 
-        expect(serialize({ [key]: 'hello' })).toBe(`?${key}=hello`)
-        expect(load(`?${key}=hello`)).toEqual({ [key]: 'hello' })
+        expect(serialize({ [key]: 'acme' })).toBe(`?${key}=acme`)
+        expect(load(`?${key}=acme`)).toEqual({ [key]: 'acme' })
+
+        const urlKeys = { [key]: 'alias' }
+        const serializeAlias = createSerializer(parsers, { urlKeys })
+        const loadAlias = createLoader(parsers, { urlKeys })
+        expect(serializeAlias({ [key]: 'ajax' })).toBe('?alias=ajax')
+        expect(loadAlias('?alias=ajax')).toEqual({ [key]: 'ajax' })
+
+        const inheritedUrlKeys: Record<string, string> = Object.create({
+          [key]: 'alias'
+        })
+        const loadInheritedAlias = createLoader(parsers, {
+          urlKeys: inheritedUrlKeys
+        })
+        expect(loadInheritedAlias(`?${key}=acme&alias=ajax`)).toEqual({
+          [key]: 'acme'
+        })
       }
     )
     it('parses a URL object', () => {

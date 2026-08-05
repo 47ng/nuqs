@@ -1,7 +1,7 @@
 import type { Nullable, Options, UrlKeys } from './defs'
 import { write } from './lib/search-params'
 import { renderQueryString } from './lib/url-encoding'
-import { getUrlKey } from './lib/url-keys'
+import { getOwn, getUrlKey } from './lib/url-keys'
 import type { inferParserType, ParserMap } from './parsers'
 
 type Base = string | URLSearchParams | URL
@@ -73,7 +73,7 @@ export function createSerializer<
       : ['', new URLSearchParams(), '']
     const values = isBase(arg1BaseOrValues) ? arg2values : arg1BaseOrValues
     if (values === null) {
-      for (const key in parsers) {
+      for (const key of Object.keys(parsers)) {
         const urlKey = getUrlKey(urlKeys, key)
         search.delete(urlKey)
       }
@@ -82,14 +82,10 @@ export function createSerializer<
       }
       return (base + renderQueryString(search) + hash) as Return
     }
-    for (const key in parsers) {
-      const parser = parsers[key]
-      const value = values[key]
-      if (
-        !parser ||
-        !Object.prototype.hasOwnProperty.call(values, key) ||
-        value === undefined
-      ) {
+    for (const key of Object.keys(parsers)) {
+      const parser = parsers[key]!
+      const value = getOwn(values, key)
+      if (value === undefined) {
         continue
       }
       const urlKey = getUrlKey(urlKeys, key)
