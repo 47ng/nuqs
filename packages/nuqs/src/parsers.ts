@@ -518,7 +518,11 @@ export function parseAsNativeArrayOf<ItemType>(
       const parsed = query
         .map((item, index) => safeParse(itemParser.parse, item, `[${index}]`))
         .filter(value => value !== null && value !== undefined) as ItemType[]
-      return parsed.length === 0 ? null : parsed
+      if (parsed.length > 0) {
+        return parsed
+      }
+      // Parse a single empty query value as an explicit empty array.
+      return query.length === 1 && query[0] === '' ? [] : null
     },
     serialize: values => {
       // defensive check because we potentially get a single value passed from a standard schema

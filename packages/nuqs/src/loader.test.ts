@@ -37,6 +37,15 @@ describe('loader', () => {
         })
       }
     )
+    it('round-trips an explicit empty native array', () => {
+      const parser = parseAsNativeArrayOf(parseAsInteger).withDefault([42])
+      const serialize = createSerializer({ a: parser })
+      const load = createLoader({ a: parser })
+
+      const query = serialize({ a: [] })
+      expect(query).toBe('?a=')
+      expect(load(query)).toEqual({ a: [] })
+    })
     it('parses a URL object', () => {
       const load = createLoader({
         a: parseAsInteger,
