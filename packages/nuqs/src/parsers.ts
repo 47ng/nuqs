@@ -521,7 +521,7 @@ export function parseAsNativeArrayOf<ItemType>(
       if (parsed.length > 0) {
         return parsed
       }
-      // An explicit empty array serializes as one empty query value.
+      // Parse a single empty query value as an explicit empty array.
       return query.length === 1 && query[0] === '' ? [] : null
     },
     serialize: values => {
