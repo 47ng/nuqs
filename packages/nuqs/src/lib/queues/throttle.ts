@@ -194,6 +194,8 @@ export class ThrottledQueue {
       try {
         search = processUrlSearchParams(search)
       } catch (err) {
+        console.error(error(502), items.map(([key]) => key).join(), err)
+        this.resetQueueOnNextPush = true
         return [search, err]
       }
     }

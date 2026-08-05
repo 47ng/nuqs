@@ -323,7 +323,13 @@ describe('throttle: flush', () => {
     )
   })
   it('rejects and resets when processUrlSearchParams throws', async () => {
-    const adapter = createMockAdapter()
+    const consoleErrorSpy = vi
+      .spyOn(console, 'error')
+      .mockImplementation(() => {})
+    const adapter = {
+      ...createMockAdapter(),
+      autoResetQueueOnUpdate: false
+    }
     const queue = new ThrottledQueue()
     queue.push({ key: 'a', query: 'a', options: {} })
     const promise = queue.flush(adapter, () => {
@@ -332,6 +338,12 @@ describe('throttle: flush', () => {
 
     expect(() => vi.runAllTimers()).not.toThrow()
     await expect(promise).rejects.toEqual(new URLSearchParams('?a=a'))
+    expect(adapter.updateUrl).not.toHaveBeenCalled()
+    expect(consoleErrorSpy).toHaveBeenCalledExactlyOnceWith(
+      '[nuqs] `processUrlSearchParams` threw while processing key(s) `%s`. %O\n  See https://nuqs.dev/NUQS-502',
+      'a',
+      new Error('middleware error')
+    )
 
     queue.push({ key: 'b', query: 'b', options: {} })
     const nextPromise = queue.flush(adapter)
