@@ -34,6 +34,44 @@ const waitForNextTick = () =>
   })
 
 describe('useQueryStates', () => {
+  it.each(['constructor', 'hasOwnProperty'])(
+    'supports a scalar query key named %s',
+    async key => {
+      const onUrlUpdate = vi.fn<OnUrlUpdateFunction>()
+      const { result, act } = await renderHook(
+        () => useQueryState(key, parseAsString),
+        {
+          wrapper: withNuqsTestingAdapter({
+            searchParams: `?${key}=acme`,
+            onUrlUpdate
+          })
+        }
+      )
+
+      expect(result.current[0]).toBe('acme')
+      await act(() => result.current[1]('ajax'))
+      expect(onUrlUpdate.mock.calls[0]![0].queryString).toBe(`?${key}=ajax`)
+    }
+  )
+  it.each(['constructor', 'hasOwnProperty'])(
+    'supports a native array query key named %s',
+    async key => {
+      const onUrlUpdate = vi.fn<OnUrlUpdateFunction>()
+      const { result, act } = await renderHook(
+        () => useQueryState(key, parseAsNativeArrayOf(parseAsString)),
+        {
+          wrapper: withNuqsTestingAdapter({
+            searchParams: `?${key}=acme`,
+            onUrlUpdate
+          })
+        }
+      )
+
+      expect(result.current[0]).toEqual(['acme'])
+      await act(() => result.current[1](['ajax']))
+      expect(onUrlUpdate.mock.calls[0]![0].queryString).toBe(`?${key}=ajax`)
+    }
+  )
   it.each([
     {
       name: 'comma-containing values to repeated values',
@@ -798,6 +836,35 @@ describe('useQueryStates: clearOnDefault', () => {
 })
 
 describe('useQueryStates: dynamic keys', () => {
+  it.each(['constructor', 'hasOwnProperty'])(
+    'supports adding a dynamic native array key named %s',
+    async key => {
+      const parser = parseAsNativeArrayOf(parseAsString)
+      const useTestHook = (includePrototypeKey = false) => {
+        const parsers: Record<string, typeof parser> = { a: parser }
+        if (includePrototypeKey) {
+          parsers[key] = parser
+        }
+        return useQueryStates(parsers)
+      }
+      const onUrlUpdate = vi.fn<OnUrlUpdateFunction>()
+      const { result, rerender, act } = await renderHook(useTestHook, {
+        wrapper: withNuqsTestingAdapter({
+          searchParams: `?${key}=acme`,
+          onUrlUpdate
+        })
+      })
+
+      await act(() => result.current[1]({ [key]: ['ignored'] }))
+      expect(onUrlUpdate).not.toHaveBeenCalled()
+      await rerender(true)
+      expect(Object.hasOwn(result.current[0], key)).toBe(true)
+      expect(result.current[0][key]).toEqual(['acme'])
+      await act(() => result.current[1]({ [key]: ['ajax'] }))
+      expect(onUrlUpdate.mock.calls[0]![0].queryString).toBe(`?${key}=ajax`)
+    }
+  )
+
   it('supports dynamic keys', async () => {
     const useTestHook = (keys: [string, string] = ['a', 'b']) =>
       useQueryStates({

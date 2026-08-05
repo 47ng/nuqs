@@ -22,6 +22,14 @@ describe('cache', () => {
       string: "I'm a string"
     }
 
+    it.each(['constructor', 'hasOwnProperty'])(
+      'throws when reading %s before parsing',
+      key => {
+        const cache = createSearchParamsCache({ [key]: parseAsString })
+        expect(() => cache.get(key)).toThrow(/in get/)
+      }
+    )
+
     it('allows parsing the same object multiple times in a request', () => {
       const cache = createSearchParamsCache({
         string: parseAsString

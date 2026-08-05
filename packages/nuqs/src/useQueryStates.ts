@@ -16,6 +16,7 @@ import {
 import { safeParse } from './lib/safe-parse'
 import { isAbsentFromUrl, type Query } from './lib/search-params'
 import { emitter, type CrossHookSyncPayload } from './lib/sync'
+import { getOwn, getUrlKey } from './lib/url-keys'
 import { type GenericParser } from './parsers'
 
 type KeyMapValue<Type> = GenericParser<Type> &
@@ -118,7 +119,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
   const resolvedUrlKeys = useMemo(
     () =>
       Object.fromEntries(
-        Object.keys(keyMap).map(key => [key, urlKeys[key] ?? key])
+        Object.keys(keyMap).map(key => [key, getUrlKey(urlKeys, key)])
       ),
     [stateKeys, JSON.stringify(urlKeys)]
   )
@@ -143,7 +144,9 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
   const committedPathnameRef = useRef<string | null>(null)
   const queuedQueries = useQueuedQueries(Object.values(resolvedUrlKeys))
   const [internalState, setInternalState] = useState<V>(
-    () => parseMap(keyMap, urlKeys, initialSearchParams, queuedQueries).state
+    () =>
+      parseMap(keyMap, resolvedUrlKeys, initialSearchParams, queuedQueries)
+        .state
   )
 
   const stateRef = useRef(internalState)
@@ -164,7 +167,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
   const reconcile = () => {
     const { state, hasChanged } = parseMap(
       keyMap,
-      urlKeys,
+      resolvedUrlKeys,
       initialSearchParams,
       queuedQueries,
       queryRef.current,
@@ -325,8 +328,8 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
         (p: Promise<URLSearchParams>) => Promise<URLSearchParams>
       > = []
       for (let [stateKey, value] of Object.entries(newState)) {
-        const parser = stableKeyMap[stateKey]
-        const urlKey = resolvedUrlKeys[stateKey]
+        const parser = getOwn(stableKeyMap, stateKey)
+        const urlKey = resolvedUrlKeys[stateKey]!
         if (!parser || urlKey === undefined || value === undefined) {
           continue
         }
@@ -428,7 +431,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
 
 function parseMap<KeyMap extends UseQueryStatesKeysMap>(
   keyMap: KeyMap,
-  urlKeys: Partial<Record<keyof KeyMap, string>>,
+  resolvedUrlKeys: Record<string, string>,
   searchParams: URLSearchParams,
   queuedQueries: Record<string, Query | null | undefined>,
   cachedQuery?: Record<string, Query | null>,
@@ -439,8 +442,8 @@ function parseMap<KeyMap extends UseQueryStatesKeysMap>(
 } {
   let hasChanged = false
   const state = Object.entries(keyMap).reduce((out, [stateKey, parser]) => {
-    const urlKey = urlKeys?.[stateKey] ?? stateKey
-    const queuedQuery = queuedQueries[urlKey]
+    const urlKey = resolvedUrlKeys[stateKey]!
+    const queuedQuery = getOwn(queuedQueries, urlKey)
     const fallbackValue = parser.type === 'multi' ? [] : null
     const query =
       queuedQuery === undefined
@@ -448,13 +451,14 @@ function parseMap<KeyMap extends UseQueryStatesKeysMap>(
             ? searchParams.getAll(urlKey)
             : searchParams.get(urlKey)) ?? fallbackValue)
         : queuedQuery
+    const cachedStateValue = cachedState && getOwn(cachedState, stateKey)
     if (
       cachedQuery &&
-      cachedState &&
-      compareQuery(cachedQuery[urlKey] ?? fallbackValue, query)
+      cachedStateValue !== undefined &&
+      compareQuery(getOwn(cachedQuery, urlKey) ?? fallbackValue, query)
     ) {
       // Cache hit
-      out[stateKey as keyof KeyMap] = cachedState[stateKey] ?? null
+      out[stateKey as keyof KeyMap] = cachedStateValue
       return out
     }
     // Cache miss
