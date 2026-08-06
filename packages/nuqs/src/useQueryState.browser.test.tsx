@@ -3,6 +3,7 @@ import React, {
   useCallback,
   useEffect,
   useLayoutEffect,
+  useRef,
   useState
 } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -26,6 +27,7 @@ import { resetQueues } from './lib/queues/reset'
 import {
   parseAsArrayOf,
   parseAsInteger,
+  parseAsIsoDateTime,
   parseAsJson,
   parseAsNativeArrayOf,
   parseAsString
@@ -146,6 +148,90 @@ describe('useQueryState: referential equality', () => {
     await act(() => setState1('pass'))
     const [, setState3] = result.current
     expect(setState1).toBe(setState3)
+  })
+
+  // Parsers that return an object (Date) do not keep referential equality
+  // for a value read from the URL, unlike the parseAsJson cases above:
+  // `parse` runs again and mints a new object even though neither the
+  // query string nor the instant it encodes has changed.
+  it('should keep referential equality for a Date parsed from the URL', async () => {
+    const searchParams = { date: '2024-01-01T00:00:00.000Z' }
+    const seen: (Date | null)[] = []
+    const { rerender } = await renderHook(
+      () => {
+        const [date] = useQueryState('date', parseAsIsoDateTime)
+        seen.push(date)
+        return date
+      },
+      { wrapper: withNuqsTestingAdapter({ searchParams }) }
+    )
+    await rerender()
+    await rerender()
+    // The instant never changes, only the identity does.
+    expect(new Set(seen.map(date => date?.valueOf())).size).toBe(1)
+    expect(new Set(seen).size).toBe(1)
+  })
+
+  it('should keep referential equality for a Date across remounts', async () => {
+    const searchParams = { date: '2024-01-01T00:00:00.000Z' }
+    const seen: (Date | null)[] = []
+    let remount = () => {}
+    function Reader() {
+      const [date] = useQueryState('date', parseAsIsoDateTime)
+      seen.push(date)
+      return null
+    }
+    function Remounter() {
+      const [key, setKey] = useState(0)
+      remount = () => setKey(k => k + 1)
+      return <Reader key={key} />
+    }
+    render(<Remounter />, {
+      wrapper: withNuqsTestingAdapter({ searchParams })
+    })
+    await waitForNextTick()
+    remount()
+    await waitForNextTick()
+    remount()
+    await waitForNextTick()
+    expect(new Set(seen.map(date => date?.valueOf())).size).toBe(1)
+    expect(new Set(seen).size).toBe(1)
+  })
+
+  // Consequence: a remounted subscriber re-parses and reports a new object
+  // upward, which changes the parent's state identity, which re-keys the
+  // subscriber. Nothing writes to the URL and the instant never changes,
+  // but the pair never settles.
+  it('should not re-render indefinitely when a Date is reported upward', async () => {
+    const searchParams = { date: '2024-01-01T00:00:00.000Z' }
+    let renders = 0
+    function Subscriber({ report }: { report: (date: Date | null) => void }) {
+      const [date] = useQueryState('date', parseAsIsoDateTime)
+      useEffect(() => {
+        report(date)
+      }, [date, report])
+      return null
+    }
+    function Consumer() {
+      renders++
+      if (renders > 50) {
+        throw new Error(`render loop: ${renders} renders without settling`)
+      }
+      const [reported, setReported] = useState<Date | null>(null)
+      const version = useRef(0)
+      const previous = useRef<Date | null>(null)
+      if (previous.current !== reported) {
+        previous.current = reported
+        version.current++
+      }
+      const report = useCallback((date: Date | null) => setReported(date), [])
+      return <Subscriber key={version.current} report={report} />
+    }
+    render(<Consumer />, { wrapper: withNuqsTestingAdapter({ searchParams }) })
+    await waitForNextTick()
+    await waitForNextTick()
+    await waitForNextTick()
+    expect(renders).toBeLessThan(50)
   })
 
   it('keeps an equal default value reference when hook options change', async () => {
