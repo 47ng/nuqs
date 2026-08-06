@@ -36,9 +36,11 @@ Refer to: [README.md](README.md) & [CONTRIBUTING.md](CONTRIBUTING.md) for author
 ### Configuration
 
 - **Package manager:** `pnpm`
+- **New worktree setup:** Run `node --run setup:hooks` once per clone. Its synchronous `post-checkout` hook bootstraps new worktrees and then uses a per-worktree fingerprint to reinstall only when dependency inputs change. Immediately after `git worktree add`, verify setup completed before running tests or other package-manager commands; if hooks are unavailable, run `node packages/scripts/worktree-setup.mjs` directly. Setup validates `.node-version` and the pinned pnpm version, removes only `node_modules` symlinks in the worktree (without touching their targets), and installs the frozen lockfile with `CI=1`. It never builds `nuqs` directly: filtered Turbo checks build the dependencies they need.
+- **Docs credentials:** An authenticated GitHub CLI (`gh auth login`) is sufficient for local docs development and builds. `GITHUB_TOKEN` is an optional explicit override. The credential is passed only to the docs child process and is never written into the worktree. The network-derived docs build is not Turbo-cached, so fallback credentials cannot create cache entries whose hash omits the effective token.
 - **Build:** `pnpm build`
 - **Test suite:** `pnpm test` (5-10 minutes; includes build + unit + typing + e2e)
-- **Fast checks:** `pnpm --filter nuqs test:unit` (seconds, Node-only) / `pnpm --filter nuqs test:types` for quick iteration (both need `pnpm --filter nuqs build` first)
+- **Focused tests:** Always filter the root Turbo command so task dependencies are built, for example `pnpm test --filter nuqs` or `pnpm test --filter e2e-next`. Do not invoke package test scripts directly.
 - **Development:** `pnpm dev --filter <package-name>...` (triple dots start dependencies' dev script too)
 
 ---

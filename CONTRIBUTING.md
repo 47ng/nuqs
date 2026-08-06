@@ -5,7 +5,9 @@ First off, thanks for your help! 🙏
 ## Getting started
 
 1. Fork and clone the repository
-2. Install dependencies with `pnpm install`
+2. Set up the checkout with `node --run setup:worktree`. This validates the
+   pinned Node and pnpm versions and installs the frozen lockfile. Package
+   builds are handled by Turbo as dependencies of development and test tasks.
 3. Start the development environment with `pnpm dev --filter <package-name>...`
 
 ## Git hooks (optional)
@@ -21,6 +23,11 @@ clone, run once:
 ```sh
 node --run setup:hooks
 ```
+
+This also enables a fingerprinted `post-checkout` bootstrap for linked
+worktrees. If the current Node version cannot run package scripts yet, invoke
+the setup directly with `node packages/scripts/worktree-setup.mjs` after
+activating `.node-version`.
 
 ## Project structure
 
@@ -63,11 +70,13 @@ When proposing changes or fixing a bug, adding tests (unit or in the
 appropriate e2e test environment) can help tremendously to validate and
 understand the changes.
 
-For a fast inner loop, run:
+For a focused test run, filter the root Turbo command, for example:
 
-- `pnpm --filter nuqs build`
-- `pnpm --filter nuqs test:unit`
-- `pnpm --filter nuqs test:types`
+- `pnpm test --filter nuqs`
+- `pnpm test --filter e2e-next`
+
+Turbo builds each selected task's dependencies before testing them. Avoid
+calling package-level test scripts directly, as that bypasses the task graph.
 
 ## Opening issues
 

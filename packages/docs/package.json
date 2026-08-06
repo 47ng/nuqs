@@ -14,9 +14,9 @@
     "directory": "packages/docs"
   },
   "scripts": {
-    "dev": "next dev",
+    "dev": "node ../scripts/with-github-token.mjs next dev",
     "build": "pnpm run build:registry && pnpm run build:next",
-    "build:next": "next build",
+    "build:next": "node ../scripts/with-github-token.mjs next build",
     "build:registry": "./src/registry/assemble.ts && shadcn build",
     "gen:schema": "./src/schemas/changelog-dto.gen.ts",
     "start": "next start",

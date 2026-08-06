@@ -3,6 +3,7 @@
   "extends": ["//"],
   "tasks": {
     "build": {
+      "cache": false,
       "outputs": [".next/**", "!.next/cache/**"],
       "dependsOn": ["^build", "nuqs#build:size-json"],
       "env": [
