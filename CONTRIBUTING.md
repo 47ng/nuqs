@@ -35,7 +35,7 @@ activating `.node-version`.
 This monorepo contains:
 
 - The source code for the `nuqs` NPM package, in [`packages/nuqs`](./packages/nuqs).
-- A Next.js app under [`packages/docs`](./packages/docs) that serves the documentation and as a playground deployed at <https://nuqs.dev>. Worktree setup creates its `.env.local`; use [`.env.example`](./packages/docs/.env.example) for optional variables.
+- A Next.js app under [`packages/docs`](./packages/docs) that serves the documentation and as a playground deployed at <https://nuqs.dev>. Worktree setup creates its `.env.local`; see [`.env.example`](./packages/docs/.env.example) for optional variables.
 - Test benches for [end-to-end tests](./packages/e2e) for each supported framework, driven by Playwright
 - Examples of integration with other tools.
 
