@@ -6,8 +6,9 @@ First off, thanks for your help! 🙏
 
 1. Fork and clone the repository
 2. Set up the checkout with `node --run setup:worktree`. This validates the
-   pinned Node and pnpm versions and installs the frozen lockfile. Package
-   builds are handled by Turbo as dependencies of development and test tasks.
+   pinned Node and pnpm versions, installs the frozen lockfile, and creates the
+   docs `.env.local` using `GITHUB_TOKEN` or `gh auth token`. Package builds are
+   handled by Turbo as dependencies of development and test tasks.
 3. Start the development environment with `pnpm dev --filter <package-name>...`
 
 ## Git hooks (optional)
@@ -34,7 +35,7 @@ activating `.node-version`.
 This monorepo contains:
 
 - The source code for the `nuqs` NPM package, in [`packages/nuqs`](./packages/nuqs).
-- A Next.js app under [`packages/docs`](./packages/docs) that serves the documentation and as a playground deployed at <https://nuqs.dev>. Copy [`packages/docs/.env.example`](./packages/docs/.env.example) to `.env.local` for the env vars local docs dev needs.
+- A Next.js app under [`packages/docs`](./packages/docs) that serves the documentation and as a playground deployed at <https://nuqs.dev>. Worktree setup creates its `.env.local`; use [`.env.example`](./packages/docs/.env.example) for optional variables.
 - Test benches for [end-to-end tests](./packages/e2e) for each supported framework, driven by Playwright
 - Examples of integration with other tools.
 

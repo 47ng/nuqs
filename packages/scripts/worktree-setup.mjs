@@ -34,6 +34,44 @@ export function assertToolVersions(actual, expected) {
   }
 }
 
+export async function isLinkedWorktree(root) {
+  const stats = await lstat(join(root, '.git'))
+  return stats.isFile()
+}
+
+export async function ensureDocsEnvironment(
+  root,
+  {
+    env = process.env,
+    readGhToken = () => capture('gh', ['auth', 'token'], root)
+  } = {}
+) {
+  const path = join(root, 'packages/docs/.env.local')
+  if (await exists(path)) return false
+
+  let token = env.GITHUB_TOKEN?.trim()
+  if (!token) {
+    try {
+      token = (await readGhToken()).trim()
+    } catch {}
+  }
+  if (!token) {
+    throw new Error(
+      'Docs setup needs GitHub API authentication. Set GITHUB_TOKEN or run `gh auth login`.'
+    )
+  }
+  try {
+    await writeFile(path, `GITHUB_TOKEN=${JSON.stringify(token)}\n`, {
+      flag: 'wx',
+      mode: 0o600
+    })
+    return true
+  } catch (error) {
+    if (error.code === 'EEXIST') return false
+    throw error
+  }
+}
+
 async function unlinkNodeModulesSymlink(path) {
   let stats
   try {
@@ -200,6 +238,8 @@ export async function runWorktreeSetup({
   actualVersions,
   expectedVersions,
   install = true,
+  env = process.env,
+  readGhToken,
   run = (command, args, options = {}) =>
     spawnCommand(command, args, {
       cwd: root,
@@ -207,6 +247,7 @@ export async function runWorktreeSetup({
     })
 }) {
   assertToolVersions(actualVersions, expectedVersions)
+  await ensureDocsEnvironment(root, { env, readGhToken })
   const removedLinks = await prepareNodeModules(root)
   if (removedLinks.length > 0) {
     install = true
@@ -223,6 +264,9 @@ export async function runWorktreeSetup({
 
 async function main() {
   const root = resolve(dirname(fileURLToPath(import.meta.url)), '../..')
+  const hookMode = process.argv.includes('--hook')
+  if (hookMode && !(await isLinkedWorktree(root))) return
+
   const expectedVersions = await readExpectedVersions(root)
   const actualVersions = {
     node: cleanVersion(process.version),
@@ -237,7 +281,6 @@ async function main() {
   await withSetupLock(gitDirectory, async () => {
     const current = await readFingerprints(root, expectedVersions)
     const statePath = join(gitDirectory, 'nuqs-worktree-setup.json')
-    const hookMode = process.argv.includes('--hook')
     const plan = hookMode
       ? planHookSetup({
           current,

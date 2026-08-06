@@ -1,15 +1,81 @@
 import assert from 'node:assert/strict'
-import { mkdtemp, mkdir, readlink, symlink, writeFile } from 'node:fs/promises'
+import {
+  mkdtemp,
+  mkdir,
+  readFile,
+  readlink,
+  stat,
+  symlink,
+  writeFile
+} from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import test from 'node:test'
 
 import {
   assertToolVersions,
+  ensureDocsEnvironment,
+  isLinkedWorktree,
   planHookSetup,
   prepareNodeModules,
   runWorktreeSetup
 } from './worktree-setup.mjs'
+
+test('recognizes linked worktrees without treating the canonical checkout as one', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'nuqs-worktree-setup-'))
+  await mkdir(join(root, '.git'))
+  assert.equal(await isLinkedWorktree(root), false)
+
+  const linked = await mkdtemp(join(tmpdir(), 'nuqs-worktree-setup-'))
+  await writeFile(
+    join(linked, '.git'),
+    'gitdir: /tmp/repo/.git/worktrees/test\n'
+  )
+  assert.equal(await isLinkedWorktree(linked), true)
+})
+
+test('creates the docs environment once from the GitHub CLI credential', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'nuqs-worktree-setup-'))
+  await mkdir(join(root, 'packages/docs'), { recursive: true })
+  let calls = 0
+
+  await ensureDocsEnvironment(root, {
+    env: {},
+    readGhToken: async () => {
+      calls++
+      return 'from-gh\n'
+    }
+  })
+  await ensureDocsEnvironment(root, {
+    env: {},
+    readGhToken: async () => {
+      calls++
+      return 'replacement'
+    }
+  })
+
+  const path = join(root, 'packages/docs/.env.local')
+  assert.equal(await readFile(path, 'utf8'), 'GITHUB_TOKEN="from-gh"\n')
+  assert.equal((await stat(path)).mode & 0o777, 0o600)
+  assert.equal(calls, 1)
+})
+
+test('prefers an explicit GitHub token when creating the docs environment', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'nuqs-worktree-setup-'))
+  await mkdir(join(root, 'packages/docs'), { recursive: true })
+
+  await ensureDocsEnvironment(root, {
+    env: { GITHUB_TOKEN: 'from-env' },
+    readGhToken: async () => {
+      throw new Error('should not read gh auth')
+    }
+  })
+
+  assert.equal(
+    await readFile(join(root, 'packages/docs/.env.local'), 'utf8'),
+    'GITHUB_TOKEN="from-env"\n'
+  )
+})
 
 test('rejects a Node version that differs from .node-version', () => {
   assert.throws(
@@ -82,11 +148,13 @@ test('hook setup reinstalls when install inputs change', () => {
 test('installs from the lockfile without building packages directly', async () => {
   const commands = []
   const root = await mkdtemp(join(tmpdir(), 'nuqs-worktree-setup-'))
+  await mkdir(join(root, 'packages/docs'), { recursive: true })
 
   await runWorktreeSetup({
     root,
     actualVersions: { node: '24.11.0', pnpm: '11.0.9' },
     expectedVersions: { node: '24.11.0', pnpm: '11.0.9' },
+    env: { GITHUB_TOKEN: 'test-token' },
     run: async (command, args, options) =>
       commands.push([command, ...args, options?.env?.CI ?? null])
   })
