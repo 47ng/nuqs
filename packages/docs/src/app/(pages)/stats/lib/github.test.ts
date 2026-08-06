@@ -13,6 +13,28 @@ import {
 
 vi.mock('server-only', () => ({}))
 
+const { unstableCache, resetCache } = vi.hoisted(() => {
+  const cache = new Map<string, unknown>()
+  return {
+    resetCache: () => cache.clear(),
+    unstableCache: vi.fn(
+      <Args extends unknown[], Result>(
+        fn: (...args: Args) => Promise<Result>
+      ) =>
+        async (...args: Args): Promise<Result> => {
+          const key = JSON.stringify(args)
+          if (cache.has(key)) {
+            return cache.get(key) as Result
+          }
+          const result = await fn(...args)
+          cache.set(key, result)
+          return result
+        }
+    )
+  }
+})
+vi.mock('next/cache', () => ({ unstable_cache: unstableCache }))
+
 import { getStarHistory } from './github.ts'
 
 const endpoint = 'https://api.github.com/graphql'
@@ -61,9 +83,20 @@ beforeEach(() => {
   vi.useFakeTimers({ toFake: ['Date'] })
   vi.setSystemTime(new Date('2024-06-15T12:00:00Z'))
 })
-afterEach(() => vi.useRealTimers())
+afterEach(() => {
+  vi.useRealTimers()
+  resetCache()
+})
 
 describe('getStarHistory', () => {
+  it('caches validated star history for five minutes', () => {
+    expect(unstableCache).toHaveBeenCalledWith(
+      expect.any(Function),
+      ['github-star-history'],
+      { revalidate: 5 * 60 }
+    )
+  })
+
   it('fills the 12-day bins and computes end-of-day star totals', async () => {
     server.use(
       http.post(endpoint, () =>
@@ -174,9 +207,20 @@ describe('getStarHistory', () => {
     expect(history.bins.every(b => b.stargarzers.length === 0)).toBe(true)
   })
 
-  it('throws on a malformed GraphQL response', async () => {
-    server.use(http.post(endpoint, () => HttpResponse.json({ data: {} })))
+  it('does not cache malformed GraphQL responses', async () => {
+    let requests = 0
+    server.use(
+      http.post(endpoint, () => {
+        requests++
+        return HttpResponse.json(
+          requests === 1 ? { data: {} } : page([], { totalCount: 100 })
+        )
+      })
+    )
+
     await expect(getStarHistory()).rejects.toThrow()
+    await expect(getStarHistory()).resolves.toMatchObject({ count: 100 })
+    expect(requests).toBe(2)
   })
 
   it('throws on a non-ok API response', async () => {

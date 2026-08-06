@@ -1,5 +1,6 @@
 import dayjs from 'dayjs'
 import utc from 'dayjs/plugin/utc'
+import { unstable_cache } from 'next/cache'
 import 'server-only'
 import { z } from 'zod'
 
@@ -52,7 +53,7 @@ const starHistoryQuerySchema = z.object({
   })
 })
 
-export async function getStarHistory(
+async function fetchStarHistory(
   slug = '47ng/nuqs'
 ): Promise<GitHubStarHistory> {
   const [owner, repo] = slug.split('/')
@@ -183,3 +184,9 @@ ${await res.text()}`
     bins
   }
 }
+
+export const getStarHistory = unstable_cache(
+  fetchStarHistory,
+  ['github-star-history'],
+  { revalidate: 5 * 60 }
+)
