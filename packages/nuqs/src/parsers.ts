@@ -283,7 +283,7 @@ function compareDates(a: Date, b: Date) {
 export const parseAsTimestamp: SingleParserBuilder<Date> = createParser({
   parse: v => {
     const date = new Date(parseInt(v))
-    return date.valueOf() == date.valueOf() ? date : null // NaN check at low bundle size cost
+    return +date == +date ? date : null // NaN check at low bundle size cost
   },
   serialize: (v: Date) => '' + v.valueOf(),
   eq: compareDates
@@ -292,12 +292,18 @@ export const parseAsTimestamp: SingleParserBuilder<Date> = createParser({
 /**
  * Querystring encoded as an ISO-8601 string (UTC),
  * and returned as a Date object.
+ *
+ * The date part must be a valid `YYYY-MM-DD` calendar date:
+ * impossible dates like 2021-02-29 and reduced-precision
+ * or non-ISO forms parse to null.
  */
 export const parseAsIsoDateTime: SingleParserBuilder<Date> = createParser({
   parse: v => {
     const date = new Date(v)
-    // NaN check at low bundle size cost
-    return date.valueOf() == date.valueOf() ? date : null
+    // The NaN check rejects invalid time parts.
+    // parseAsIsoDate.parse rejects invalid calendar dates
+    // (reused to keep the bundle small).
+    return +date == +date && parseAsIsoDate.parse(v) ? date : null
   },
   serialize: (v: Date) => v.toISOString(),
   eq: compareDates
@@ -310,12 +316,20 @@ export const parseAsIsoDateTime: SingleParserBuilder<Date> = createParser({
  *
  * The Date is parsed without the time zone offset,
  * making it at 00:00:00 UTC.
+ *
+ * Only valid `YYYY-MM-DD` calendar dates are accepted:
+ * impossible dates like 2021-02-29 and reduced-precision
+ * or non-ISO forms parse to null.
  */
 export const parseAsIsoDate: SingleParserBuilder<Date> = createParser({
   parse: v => {
     const date = new Date(v.slice(0, 10))
-    // NaN check at low bundle size cost
-    return date.valueOf() == date.valueOf() ? date : null
+    // NaN check first: serialize throws on Invalid Date.
+    // new Date() turns 2021-02-29 into 2021-03-01 silently,
+    // so serialize back and compare with the input.
+    return +date == +date && parseAsIsoDate.serialize(date) === v.slice(0, 10)
+      ? date
+      : null
   },
   serialize: (v: Date) => v.toISOString().slice(0, 10),
   eq: compareDates
