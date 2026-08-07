@@ -58,7 +58,6 @@
       "next": true,
       "ignoreFiles": [
         "src/components/code-block-highlighter.skeleton.ts",
-        "src/components/sponsors-layout-lab.tsx",
         "src/lib/typed-links.ts"
       ],
       "ignoreDependencies": [
