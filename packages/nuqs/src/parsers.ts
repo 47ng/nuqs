@@ -300,8 +300,9 @@ export const parseAsTimestamp: SingleParserBuilder<Date> = createParser({
 export const parseAsIsoDateTime: SingleParserBuilder<Date> = createParser({
   parse: v => {
     const date = new Date(v)
-    // The NaN check rejects invalid time parts,
-    // reusing parseAsIsoDate.parse rejects invalid calendar dates
+    // The NaN check rejects invalid time parts.
+    // parseAsIsoDate.parse rejects invalid calendar dates
+    // (reused to keep the bundle small).
     return +date == +date && parseAsIsoDate.parse(v) ? date : null
   },
   serialize: (v: Date) => v.toISOString(),
@@ -324,7 +325,8 @@ export const parseAsIsoDate: SingleParserBuilder<Date> = createParser({
   parse: v => {
     const date = new Date(v.slice(0, 10))
     // NaN check first: serialize throws on Invalid Date.
-    // The roundtrip rejects dates the constructor normalizes.
+    // new Date() turns 2021-02-29 into 2021-03-01 silently,
+    // so serialize back and compare with the input.
     return +date == +date && parseAsIsoDate.serialize(date) === v.slice(0, 10)
       ? date
       : null
