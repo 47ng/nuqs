@@ -1,6 +1,7 @@
 import type { Nullable, Options, UrlKeys } from './defs'
 import { write } from './lib/search-params'
 import { renderQueryString } from './lib/url-encoding'
+import { getOwn, getUrlKey } from './lib/url-keys'
 import type { inferParserType, ParserMap } from './parsers'
 
 type Base = string | URLSearchParams | URL
@@ -72,8 +73,8 @@ export function createSerializer<
       : ['', new URLSearchParams(), '']
     const values = isBase(arg1BaseOrValues) ? arg2values : arg1BaseOrValues
     if (values === null) {
-      for (const key in parsers) {
-        const urlKey = urlKeys[key] ?? key
+      for (const key of Object.keys(parsers)) {
+        const urlKey = getUrlKey(urlKeys, key)
         search.delete(urlKey)
       }
       if (processUrlSearchParams) {
@@ -81,13 +82,13 @@ export function createSerializer<
       }
       return (base + renderQueryString(search) + hash) as Return
     }
-    for (const key in parsers) {
-      const parser = parsers[key]
-      const value = values[key]
-      if (!parser || value === undefined) {
+    for (const key of Object.keys(parsers)) {
+      const parser = parsers[key]!
+      const value = getOwn(values, key)
+      if (value === undefined) {
         continue
       }
-      const urlKey = urlKeys[key] ?? key
+      const urlKey = getUrlKey(urlKeys, key)
       const isMatchingDefault =
         parser.defaultValue !== undefined &&
         value !== null &&
@@ -128,10 +129,9 @@ function splitBase<BaseType extends Base>(base: BaseType) {
   } else if (base instanceof URLSearchParams) {
     return ['', new URLSearchParams(base), ''] as const // Operate on a copy of URLSearchParams, as derived classes may restrict its allowed methods
   } else {
-    return [
-      base.origin + base.pathname,
-      new URLSearchParams(base.searchParams),
-      base.hash
-    ] as const
+    const baseLength = base.href.length - base.search.length - base.hash.length
+    const path = base.href.slice(0, baseLength).replace(/[?#]+$/, '')
+    const hash = base.hash || (base.href.endsWith('#') ? '#' : '')
+    return [path, new URLSearchParams(base.searchParams), hash] as const
   }
 }

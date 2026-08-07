@@ -26,7 +26,6 @@
     "@vitejs/plugin-react": "^6.0.3",
     "e2e-shared": "workspace:*",
     "typescript": "catalog:typescript",
-    "typescript-7": "catalog:typescript",
     "vite": "catalog:vite"
   }
 }

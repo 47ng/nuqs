@@ -7,15 +7,17 @@ const commonConfig = {
   format: ['esm'],
   dts: true,
   outDir: 'dist',
-  external: [
-    'next',
-    'react',
-    '@remix-run/react',
-    'react-router-dom',
-    'react-router',
-    '@tanstack/react-router',
-    '@tanstack/devtools-event-client'
-  ],
+  deps: {
+    neverBundle: [
+      'next',
+      'react',
+      '@remix-run/react',
+      'react-router-dom',
+      'react-router',
+      '@tanstack/react-router',
+      '@tanstack/devtools-event-client'
+    ]
+  },
   outExtensions() {
     return {
       js: '.js',

@@ -9,6 +9,7 @@ import { TopBanner } from './banners'
 import { Favicon } from '../components/favicon'
 import { NuqsDevtoolsShell } from '../components/nuqs-devtools'
 import { ResponsiveHelper } from '../components/responsive-helpers'
+import { getBaseUrl } from '../lib/url'
 import { cn } from '../lib/utils'
 import './globals.css'
 
@@ -18,6 +19,7 @@ const inter = Inter({
 })
 
 export const metadata = {
+  metadataBase: new URL(getBaseUrl() || 'http://localhost:3000'),
   title: {
     template: '%s | nuqs',
     default: 'nuqs'

@@ -191,7 +191,15 @@ export class ThrottledQueue {
       }
     }
     if (processUrlSearchParams) {
-      search = processUrlSearchParams(search)
+      try {
+        search = processUrlSearchParams(search)
+      } catch (err) {
+        console.error(error(502), items.map(([key]) => key).join(), err)
+        // Some adapters keep the queue available during concurrent renders,
+        // so discard this failed batch only when the next update starts.
+        this.resetQueueOnNextPush = true
+        return [search, err]
+      }
     }
     try {
       compose(transitions, () => updateUrl(search, options))
