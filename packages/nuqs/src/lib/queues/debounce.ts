@@ -1,5 +1,6 @@
 import { debug } from '../debug'
 import { createEmitter, type Emitter } from '../emitter'
+import { globalSingleton } from '../global-singleton'
 import type { Query } from '../search-params'
 import { timeout } from '../timeout'
 import { withResolvers, type Resolvers } from '../with-resolvers'
@@ -38,9 +39,9 @@ export class DebouncedPromiseQueue<ValueType, OutputType> {
         // assigned to a new Promise (and not dropped).
         const outputResolvers = this.resolvers
         try {
-          debug('[nuqs dq] Flushing debounce queue', value)
+          debug(13, value)
           const callbackPromise = this.callback(value)
-          debug('[nuqs dq] Reset debounce queue %O', this.queuedValue)
+          debug(14, this.queuedValue)
           this.queuedValue = undefined
           this.resolvers = withResolvers<OutputType>()
           callbackPromise
@@ -74,14 +75,6 @@ export class DebounceController {
     this.throttleQueue = throttleQueue
   }
 
-  useQueuedQueries(keys: string[]): Record<string, Query | null | undefined> {
-    return useSyncExternalStores(
-      keys,
-      (key, callback) => this.queuedQuerySync.on(key, callback),
-      (key: string) => this.getQueuedQuery(key)
-    )
-  }
-
   push(
     update: Omit<UpdateQueuePushArgs, 'timeMs'>,
     timeMs: number,
@@ -95,7 +88,7 @@ export class DebounceController {
     }
     const key = update.key
     if (!this.queues.has(key)) {
-      debug('[nuqs dqc] Creating debounce queue for `%s`', key)
+      debug(15, key)
       const queue = new DebouncedPromiseQueue<
         Omit<UpdateQueuePushArgs, 'timeMs'>,
         URLSearchParams
@@ -106,7 +99,7 @@ export class DebounceController {
           .finally(() => {
             const queuedValue = this.queues.get(update.key)?.queuedValue
             if (queuedValue === undefined) {
-              debug('[nuqs dqc] Cleaning up empty queue for `%s`', update.key)
+              debug(16, update.key)
               this.queues.delete(update.key)
             }
             this.queuedQuerySync.emit(update.key)
@@ -114,7 +107,7 @@ export class DebounceController {
       })
       this.queues.set(key, queue)
     }
-    debug('[nuqs dqc] Enqueueing debounce update %O', update)
+    debug(17, update)
     const promise = this.queues.get(key)!.push(update, timeMs)
     this.queuedQuerySync.emit(key)
     return promise
@@ -127,11 +120,7 @@ export class DebounceController {
     if (!queue) {
       return passThrough => passThrough
     }
-    debug(
-      '[nuqs dqc] Aborting debounce queue %s=%s',
-      key,
-      queue.queuedValue?.query
-    )
+    debug(18, key, queue.queuedValue?.query)
     this.queues.delete(key)
     queue.abort() // Don't run to completion
     this.queuedQuerySync.emit(key)
@@ -144,11 +133,7 @@ export class DebounceController {
 
   abortAll(): void {
     for (const [key, queue] of this.queues.entries()) {
-      debug(
-        '[nuqs dqc] Aborting debounce queue %s=%s',
-        key,
-        queue.queuedValue?.query
-      )
+      debug(18, key, queue.queuedValue?.query)
       queue.abort()
       // todo: Better abort handling
       queue.resolvers.resolve(new URLSearchParams()) // Don't leave the Promise pending
@@ -169,6 +154,20 @@ export class DebounceController {
   }
 }
 
-export const debounceController: DebounceController = new DebounceController(
-  globalThrottleQueue
+export const debounceController: DebounceController = globalSingleton(
+  'debounce-controller',
+  () => new DebounceController(globalThrottleQueue)
 )
+
+// Module-scoped rather than a DebounceController method: the controller is
+// shared across duplicate library copies, and each copy must compose the
+// shared data with hooks from its own React instance.
+export function useQueuedQueries(
+  keys: string[]
+): Record<string, Query | null | undefined> {
+  return useSyncExternalStores(
+    keys,
+    (key, callback) => debounceController.queuedQuerySync.on(key, callback),
+    (key: string) => debounceController.getQueuedQuery(key)
+  )
+}

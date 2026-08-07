@@ -7,6 +7,7 @@ export function Author() {
     >
       <img
         src="/avatar-128.jpeg"
+        alt="François Best"
         role="presentation"
         className="size-9 rounded-full"
       />

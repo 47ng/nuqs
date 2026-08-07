@@ -1,0 +1,143 @@
+name: Finalize Release
+
+# Phase 2 of the two-phase, human-gated release pipeline (see the
+# "Phasing out semantic-release" design doc). Fires when the maintainer
+# publishes the draft GitHub release (which creates the git tag server-side),
+# replacing @semantic-release/github's "released" commenting/labelling.
+#
+# Flow: confirm the version is actually live on npm (a plain registry curl,
+# before any checkout) -> discover the impacted issues/PRs from the commit
+# graph between tag checkpoints (the shared engine, identical to the draft
+# notes) -> comment + label every one of them, channel-aware and re-run-safe
+# (the channel label is the idempotency filter) -> on a GA release, bust the
+# docs ISR cache tags (npm-version + contributors + releases) so nuqs.dev
+# reflects the new version without a redeploy.
+
+on:
+  release:
+    types: [published]
+
+# One finalize per tag; queue (don't cancel) a re-run so a manual
+# "Re-run failed jobs" never races an in-flight loop.
+concurrency:
+  group: release-finalize-${{ github.event.release.tag_name }}
+  cancel-in-progress: false
+
+jobs:
+  finalize:
+    name: Comment + label impacted issues/PRs
+    runs-on: ubuntu-24.04-arm
+    # Least privilege: contents:read is checkout's documented minimum (the
+    # `fetch-depth: 0` clone needs it; only public-repo anonymous read masks
+    # its absence). Never contents:write, never an id-token — finalize only
+    # comments/labels (issues & PRs via REST, discussions via GraphQL).
+    permissions:
+      contents: read
+      issues: write
+      pull-requests: write
+      discussions: write
+    env:
+      # `release.tag_name` is the only release field read — never the body, so
+      # the maintainer can freely edit published notes without affecting who
+      # gets commented. Passed via env (not inlined into a run script) to keep
+      # the tag out of any shell-expansion context.
+      TAG: ${{ github.event.release.tag_name }}
+    steps:
+      - name: Ensure version is published on NPM
+        # The very first step, before any checkout or npm CLI: a single
+        # registry curl for the per-version document. A not-yet-published
+        # release (npm 2FA approval skipped/failed) bails early and cheaply —
+        # no polling, since the manual approve->publish flow gives the registry
+        # ample propagation time and a transient failure is trivially re-run.
+        run: |
+          set -euo pipefail
+          if ! [[ "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-beta\.[0-9]+)?$ ]]; then
+            echo "::error::Unexpected release tag '$TAG'."
+            exit 1
+          fi
+          VERSION="${TAG#v}"
+          if ! curl -fsSL -o /dev/null "https://registry.npmjs.org/nuqs/$VERSION"; then
+            echo "::error::nuqs@$VERSION is not resolvable on the npm registry. Approve the staged package with 2FA, then re-run."
+            exit 1
+          fi
+          echo "nuqs@$VERSION is live on npm."
+          # Surface the v-stripped version (computed here from the validated tag)
+          # for the Slack release card's `version` input. Only set once the
+          # version is confirmed live, so the card never announces a phantom.
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          # Full history + tags: the engine resolves the release range from the
+          # commit graph between tag checkpoints (see lib/commit-graph.ts).
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version-file: .node-version
+          # No package-manager cache: this job holds a write-capable token and
+          # runs installed code, so it must not restore a potentially-poisoned
+          # store (same stance as release-draft.yml's staging job). The install
+          # is tiny (the scripts package only) and lockfile-frozen.
+          package-manager-cache: false
+      - name: Install scripts dependencies
+        run: pnpm install --ignore-scripts --frozen-lockfile --filter scripts
+
+      - name: Comment + label impacted issues/PRs
+        # Discover the impacted set from the commit graph (same engine as the
+        # draft notes), then comment + label each one sequentially through an
+        # octokit throttling layer. Re-run-safe: the channel label is the
+        # idempotency filter, so a re-run completes stragglers without
+        # double-commenting. Never aborts mid-loop; fails at the end if any
+        # recoverable error was collected.
+        run: ./release-finalize.ts
+        working-directory: packages/scripts
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Bust the docs ISR cache tags
+        # GA-only, gated on the comment loop succeeding. Merges to `next` deploy
+        # to prod, so by the time finalize runs the just-released docs source is
+        # already live on nuqs.dev — only version-gated. The gate compares the
+        # rendered version against npm's `latest` dist-tag, whose fetch is a
+        # force-cached, tag-only entry in Vercel's Data Cache (persisted across
+        # deployments, not updated at build time); the contributors and releases
+        # pages cache their GitHub fetches the same way. So one revalidateTag
+        # sweep is all it takes: busting `npm-version` re-resolves the gate and
+        # reveals the released content, while `contributors` + `releases` repaint
+        # those pages. No redeploy needed — the source is already shipped, and a
+        # bust forces a fresh fetch where a rebuild would reuse the persisted
+        # cache.
+        #
+        # Betas never bust: they don't move `latest`, so the gate wouldn't open.
+        # `success()` skips it on a failed comment loop; a green re-run is what
+        # finally fires it. Not best-effort: a failed bust fails the job (so the
+        # maintainer re-runs rather than leaving the docs silently stale) — the
+        # curl is idempotent, and the endpoint busts every tag in one call.
+        if: ${{ success() && !contains(github.event.release.tag_name, '-beta.') }}
+        run: |
+          set -euo pipefail
+          : "${ISR_TOKEN:?secret is empty or unset; cannot bust the docs ISR caches}"
+          curl -fsSL "https://nuqs.dev/api/isr?tag=npm-version&tag=contributors&tag=releases&token=$ISR_TOKEN"
+        env:
+          # Passed via env and read as $ISR_TOKEN at runtime, so the literal
+          # secret never appears in the workflow YAML text (same stance as TAG).
+          ISR_TOKEN: ${{ secrets.ISR_TOKEN }}
+
+      - name: Notify on Slack
+        # Last, and always: on success a 🚀/🧪 release card (packageName +
+        # version + channel → the action derives the npm + release-notes links);
+        # on a red run (a failed comment loop or a failed ISR cache bust above)
+        # the standard step-breakdown notice instead. So a shipped release and a
+        # finalize failure are both visible without watching the Actions tab.
+        if: always()
+        uses: 47ng/actions-slack-notify@df42545060c07ca99a040d0a520ab8457ce3c222
+        with:
+          status: ${{ job.status }}
+          steps: ${{ toJson(steps) }}
+          packageName: nuqs
+          version: ${{ env.VERSION }}
+          channel: ${{ contains(github.event.release.tag_name, '-beta.') && '🧪 beta' || '🚀 latest' }}
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}

@@ -3,6 +3,8 @@ title: useQueryStates
 description: How to read & update multiple search params at once
 ---
 
+import { HumanContent, LLMContent } from '@/src/components/audience'
+
 ## Multiple updates (batching)
 
 You can call as many state update functions as needed in a single event loop
@@ -35,6 +37,7 @@ randomCoordinates().then((search: URLSearchParams) => {
 })
 ```
 
+<HumanContent>
 <details>
 <summary><em>Implementation details (Promise caching)</em></summary>
 
@@ -53,6 +56,23 @@ to keep UI responsive.
 ---
 
 </details>
+</HumanContent>
+
+<LLMContent>
+### Implementation details (Promise caching)
+
+The returned Promise is cached until the next flush to the URL occurs,
+so all calls to a setState (of any hook) in the same event loop tick will
+return the same Promise reference.
+
+Due to throttling of calls to the Web History API, the Promise may be cached
+for several ticks. Batched updates will be merged and flushed once to the URL.
+This means not every setState will reflect to the URL, if another one comes
+overriding it before flush occurs.
+
+The returned React state will reflect all set values instantly,
+to keep UI responsive.
+</LLMContent>
 
 ## `useQueryStates`
 

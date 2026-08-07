@@ -5,11 +5,16 @@
     // Type checking
     "strict": true,
     "noUncheckedIndexedAccess": true,
-    "alwaysStrict": false, // Don't emit "use strict" to avoid conflicts with "use client"
     // Modules
     "module": "ESNext",
     "moduleResolution": "Bundler",
     "resolveJsonModule": true,
+    "paths": {
+      // Type resolution for the virtual second copy of the library served
+      // by the duplicateLibraryCopy plugin in vitest.config.ts
+      "nuqs-copy-b": ["./src/index.ts"],
+      "nuqs-copy-b/*": ["./src/*"]
+    },
     // Language & Environment
     "target": "ESNext",
     "lib": ["DOM", "DOM.Iterable", "ESNext"],
@@ -21,8 +26,6 @@
     "verbatimModuleSyntax": true,
     "isolatedDeclarations": true,
     "moduleDetection": "force",
-
-    "downlevelIteration": true,
     // Interop
     "isolatedModules": true,
     "esModuleInterop": true,

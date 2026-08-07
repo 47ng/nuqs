@@ -61,7 +61,7 @@ const ghaStatusSchema = z.object({
   })
 })
 
-async function getGitHubActionsStatus() {
+export async function getGitHubActionsStatus() {
   // Fetch a few more than needed to filter out non-completed runs
   const query = `query {
     node(id: "W_kwDOD6wJuM4EeKz5") {

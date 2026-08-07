@@ -1,4 +1,5 @@
 import { Star } from 'lucide-react'
+import { unstable_cache } from 'next/cache'
 import { connection } from 'next/server'
 import { getStarHistory } from '../lib/github'
 import { GraphSkeleton } from './graph.skeleton'
@@ -6,9 +7,15 @@ import { StarsGraph } from './stars.client'
 import StargazersList from './stars.gazers-list'
 import { WidgetSkeleton } from './widget.skeleton'
 
+const getCachedStarHistory = unstable_cache(
+  getStarHistory,
+  ['github-star-history'],
+  { revalidate: 5 * 60 }
+)
+
 export async function StarHistoryGraph() {
   await connection()
-  const stars = await getStarHistory()
+  const stars = await getCachedStarHistory()
   return (
     <StarsGraph data={stars} stargazersTab={<StargazersList stars={stars} />} />
   )

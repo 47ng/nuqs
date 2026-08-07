@@ -1,13 +1,14 @@
 import { Databuddy } from '@databuddy/sdk/react'
-import * as Sentry from '@sentry/nextjs'
 import { RootProvider } from 'fumadocs-ui/provider/next'
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import Script from 'next/script'
 import { NuqsAdapter } from 'nuqs/adapters/next/app'
 import { type ReactNode } from 'react'
+import { TopBanner } from './banners'
 import { Favicon } from '../components/favicon'
 import { ResponsiveHelper } from '../components/responsive-helpers'
+import { getBaseUrl } from '../lib/url'
 import { cn } from '../lib/utils'
 import './globals.css'
 
@@ -17,6 +18,7 @@ const inter = Inter({
 })
 
 export const metadata = {
+  metadataBase: new URL(getBaseUrl() || 'http://localhost:3000'),
   title: {
     template: '%s | nuqs',
     default: 'nuqs'
@@ -42,9 +44,6 @@ export const metadata = {
         }
       ] as const
     }
-  },
-  other: {
-    ...Sentry.getTraceData()
   }
 } satisfies Metadata
 
@@ -59,7 +58,7 @@ export default function Layout({ children }: { children: ReactNode }) {
     >
       <Favicon />
       <body>
-        {/* Top-level banners go here */}
+        <TopBanner />
         <RootProvider>
           <NuqsAdapter>{children}</NuqsAdapter>
         </RootProvider>

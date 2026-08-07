@@ -7,6 +7,7 @@ import {
   DemoFallback,
   BasicUsageDemo
 } from '@/content/docs/parsers/demos'
+import { HumanContent, LLMContent } from '@/src/components/audience'
 
 <Callout title="Prerequisite">
   Have you setup your app with the appropriate [**adapter**](/docs/adapters)? Then you
@@ -33,9 +34,15 @@ export function Demo() {
 }
 ```
 
+<HumanContent>
 <Suspense fallback={<DemoFallback/>}>
   <BasicUsageDemo />
 </Suspense>
+</HumanContent>
+
+<LLMContent>
+Interactive demo omitted. The code sample above shows the same `useQueryState` flow with an input, a clear button, and a rendered greeting bound to the `name` query parameter.
+</LLMContent>
 
 `useQueryState` takes one required argument: the key to use in the query string.
 

@@ -2,6 +2,7 @@ import { useRouter } from 'next/compat/router.js'
 import type { NextRouter } from 'next/router'
 import { useCallback, useEffect, useMemo } from 'react'
 import { debug } from '../../lib/debug'
+import { globalSingleton } from '../../lib/global-singleton'
 import { resetQueues } from '../../lib/queues/reset'
 import { renderQueryString } from '../../lib/url-encoding'
 import type { AdapterInterface, UpdateUrlFunction } from '../lib/defs'
@@ -22,10 +23,12 @@ export function isPagesRouter(): boolean {
   return typeof window.next?.router?.state?.asPath === 'string'
 }
 
-let isNuqsUpdateMutex: boolean = false
+const updateState = globalSingleton('next-pages-router-update', () => ({
+  isNuqsUpdate: false
+}))
 
 function onNavigation() {
-  if (isNuqsUpdateMutex) {
+  if (updateState.isNuqsUpdate) {
     return
   }
   resetQueues()
@@ -74,38 +77,43 @@ export function useNuqsNextPagesRouterAdapter(): AdapterInterface {
       getAsPathPathname(nextRouter.asPath) +
       renderQueryString(search) +
       location.hash
-    debug('[nuqs next/pages] Updating url: %s', asPath)
+    debug(20, 'next/pages', asPath)
     const method =
       options.history === 'push' ? nextRouter.push : nextRouter.replace
-    isNuqsUpdateMutex = true
-    method
-      .call(
-        nextRouter,
-        // This is what makes the URL work (mapping dynamic segments placeholders
-        // in pathname to their values in query, plus search params in query too).
-        {
-          pathname: nextRouter.pathname,
-          query: {
-            // Note: we put search params first so that one that conflicts
-            // with dynamic params will be overwritten.
-            ...urlSearchParamsToObject(search),
-            ...urlParams
+    updateState.isNuqsUpdate = true
+    try {
+      method
+        .call(
+          nextRouter,
+          // This is what makes the URL work (mapping dynamic segments placeholders
+          // in pathname to their values in query, plus search params in query too).
+          {
+            pathname: nextRouter.pathname,
+            query: {
+              // Note: we put search params first so that one that conflicts
+              // with dynamic params will be overwritten.
+              ...urlSearchParamsToObject(search),
+              ...urlParams
+            }
+            // For some reason we don't need to pass the hash here,
+            // it's preserved when passed as part of the asPath.
+          },
+          // This is what makes the URL pretty (resolved dynamic segments
+          // and nuqs-formatted search params).
+          asPath,
+          // And these are the options that are passed to the router.
+          {
+            scroll: options.scroll,
+            shallow: options.shallow
           }
-          // For some reason we don't need to pass the hash here,
-          // it's preserved when passed as part of the asPath.
-        },
-        // This is what makes the URL pretty (resolved dynamic segments
-        // and nuqs-formatted search params).
-        asPath,
-        // And these are the options that are passed to the router.
-        {
-          scroll: options.scroll,
-          shallow: options.shallow
-        }
-      )
-      .finally(() => {
-        isNuqsUpdateMutex = false
-      })
+        )
+        .finally(() => {
+          updateState.isNuqsUpdate = false
+        })
+    } catch (error) {
+      updateState.isNuqsUpdate = false
+      throw error
+    }
   }, [])
 
   return {

@@ -1,10 +1,20 @@
-# nuqs
+<div align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/47ng/nuqs/next/packages/res/wordmark.dark.svg">
+    <img alt="nuqs" src="https://raw.githubusercontent.com/47ng/nuqs/next/packages/res/wordmark.light.svg" width="384">
+  </picture>
+</div>
 
-[![NPM](https://img.shields.io/npm/v/nuqs?color=red)](https://www.npmjs.com/package/nuqs)
-[![MIT License](https://img.shields.io/github/license/47ng/nuqs.svg?color=blue)](https://github.com/47ng/nuqs/blob/next/LICENSE)
-[![GitHub Sponsors](https://img.shields.io/github/sponsors/franky47?color=%23db61a2&label=Sponsors)](https://github.com/sponsors/franky47)
-[![CI/CD](https://github.com/47ng/nuqs/actions/workflows/ci-cd.yml/badge.svg?branch=next)](https://github.com/47ng/nuqs/actions/workflows/ci-cd.yml)
-[![Depfu](https://badges.depfu.com/badges/acad53fa2b09b1e435a19d6d18f29af4/count.svg)](https://depfu.com/github/47ng/nuqs?project_id=22104)
+<br>
+
+<p align="center">
+  <a href="https://npmx.dev/package/nuqs"><picture><source media="(prefers-color-scheme: dark)" srcset="https://shieldcn.dev/npm/v/nuqs.svg?color=red&mode=dark&size=xs"><img alt="npm version" src="https://shieldcn.dev/npm/v/nuqs.svg?color=red&mode=light&size=xs"></picture></a>
+  <a href="https://npmx.dev/package/nuqs"><picture><source media="(prefers-color-scheme: dark)" srcset="https://shieldcn.dev/npm/dw/nuqs.svg?variant=secondary&mode=dark&size=xs"><img alt="npm downloads" src="https://shieldcn.dev/npm/dw/nuqs.svg?variant=secondary&mode=light&size=xs"></picture></a>
+  <a href="https://github.com/47ng/nuqs/blob/next/LICENSE"><picture><source media="(prefers-color-scheme: dark)" srcset="https://shieldcn.dev/github/license/47ng/nuqs.svg?variant=secondary&mode=dark&size=xs"><img alt="MIT License" src="https://shieldcn.dev/github/license/47ng/nuqs.svg?variant=secondary&mode=light&size=xs"></picture></a>
+  <a href="https://github.com/47ng/nuqs/actions/workflows/ci-cd.yml"><picture><source media="(prefers-color-scheme: dark)" srcset="https://shieldcn.dev/github/ci/47ng/nuqs.svg?variant=secondary&workflow=ci-cd.yml&branch=next&mode=dark&size=xs"><img alt="CI/CD" src="https://shieldcn.dev/github/ci/47ng/nuqs.svg?variant=secondary&workflow=ci-cd.yml&branch=next&mode=light&size=xs"></picture></a>
+  <a href="https://github.com/47ng/nuqs/graphs/contributors"><picture><source media="(prefers-color-scheme: dark)" srcset="https://shieldcn.dev/github/contributors/47ng/nuqs.svg?variant=secondary&mode=dark&size=xs"><img alt="Last commit" src="https://shieldcn.dev/github/contributors/47ng/nuqs.svg?variant=secondary&mode=light&size=xs"></picture></a>
+  <a href="https://github.com/sponsors/franky47"><picture><source media="(prefers-color-scheme: dark)" srcset="https://shieldcn.dev/github/sponsors/franky47.svg?mode=dark&size=xs"><img alt="GitHub Sponsors" src="https://shieldcn.dev/github/sponsors/franky47.svg?mode=light&size=xs"></picture></a>
+</p>
 
 Type-safe search params state manager for React frameworks. Like `useState`, but stored in the URL query string.
 
@@ -26,6 +36,10 @@ Read the complete documentation at [nuqs.dev](https://nuqs.dev).
 ## Installation
 
 ```shell
+npm install nuqs
+```
+
+```shell
 pnpm add nuqs
 ```
 
@@ -34,7 +48,15 @@ yarn add nuqs
 ```
 
 ```shell
-npm install nuqs
+bun add nuqs
+```
+
+```shell
+deno add nuqs
+```
+
+```shell
+vlt install nuqs
 ```
 
 ## Adapters
@@ -120,7 +142,7 @@ export default function App() {
 
 </details>
 
-<details><summary><span style="width:16px;height:16px;background:#fff;border-radius:2px;"><img width="16px" height="16px" src="https://reactrouter.com/_brand/React%20Router%20Brand%20Assets/React%20Router%20Logo/Light.svg" /></span> React Router v6
+<details><summary><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/47ng/nuqs/next/packages/res/react-router.dark.svg"><img height="14px" src="https://raw.githubusercontent.com/47ng/nuqs/next/packages/res/react-router.light.svg" /></picture> React Router v6
 </summary>
 
 > Supported React Router versions: `react-router-dom@^6`
@@ -148,7 +170,7 @@ export function ReactRouter() {
 
 </details>
 
-<details><summary><span style="width:16px;height:16px;background:#fff;border-radius:2px;"><img width="16px" height="16px" src="https://reactrouter.com/_brand/React%20Router%20Brand%20Assets/React%20Router%20Logo/Light.svg" /></span> React Router v7
+<details><summary><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/47ng/nuqs/next/packages/res/react-router.dark.svg"><img height="14px" src="https://raw.githubusercontent.com/47ng/nuqs/next/packages/res/react-router.light.svg" /></picture> React Router v7
 </summary>
 
 > Supported React Router versions: `react-router@^7`
@@ -156,6 +178,29 @@ export function ReactRouter() {
 ```tsx
 // app/root.tsx
 import { NuqsAdapter } from 'nuqs/adapters/react-router/v7'
+import { Outlet } from 'react-router'
+
+// ...
+
+export default function App() {
+  return (
+    <NuqsAdapter>
+      <Outlet />
+    </NuqsAdapter>
+  )
+}
+```
+
+</details>
+
+<details><summary><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/47ng/nuqs/next/packages/res/react-router.dark.svg"><img height="14px" src="https://raw.githubusercontent.com/47ng/nuqs/next/packages/res/react-router.light.svg" /></picture> React Router v8
+</summary>
+
+> Supported React Router versions: `react-router@^8`
+
+```tsx
+// app/root.tsx
+import { NuqsAdapter } from 'nuqs/adapters/react-router/v8'
 import { Outlet } from 'react-router'
 
 // ...
@@ -843,21 +888,20 @@ Here's an example using Testing Library and Vitest:
 ```tsx
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { NuqsTestingAdapter, type UrlUpdateEvent } from 'nuqs/adapters/testing'
+import {
+  withNuqsTestingAdapter,
+  type OnUrlUpdateFunction
+} from 'nuqs/adapters/testing'
 import { describe, expect, it, vi } from 'vitest'
 import { CounterButton } from './counter-button'
 
 it('should increment the count when clicked', async () => {
   const user = userEvent.setup()
-  const onUrlUpdate = vi.fn<[UrlUpdateEvent]>()
+  const onUrlUpdate = vi.fn<OnUrlUpdateFunction>()
   render(<CounterButton />, {
     // Setup the test by passing initial search params / querystring,
     // and give it a function to call on URL updates
-    wrapper: ({ children }) => (
-      <NuqsTestingAdapter searchParams="?count=42" onUrlUpdate={onUrlUpdate}>
-        {children}
-      </NuqsTestingAdapter>
-    )
+    wrapper: withNuqsTestingAdapter({ searchParams: '?count=42', onUrlUpdate })
   })
   // Initial state assertions: there's a clickable button displaying the count
   const button = screen.getByRole('button')
@@ -867,9 +911,10 @@ it('should increment the count when clicked', async () => {
   // Assert changes in the state and in the (mocked) URL
   expect(button).toHaveTextContent('count is 43')
   expect(onUrlUpdate).toHaveBeenCalledOnce()
-  expect(onUrlUpdate.mock.calls[0][0].queryString).toBe('?count=43')
-  expect(onUrlUpdate.mock.calls[0][0].searchParams.get('count')).toBe('43')
-  expect(onUrlUpdate.mock.calls[0][0].options.history).toBe('push')
+  const event = onUrlUpdate.mock.calls[0]![0]!
+  expect(event.queryString).toBe('?count=43')
+  expect(event.searchParams.get('count')).toBe('43')
+  expect(event.options.history).toBe('push')
 })
 ```
 
@@ -877,8 +922,15 @@ See [#259](https://github.com/47ng/nuqs/issues/259) for more testing-related dis
 
 ## Debugging
 
-You can enable debug logs in the browser by setting the `debug` item in localStorage
-to `nuqs`, and reload the page.
+Start by importing the `nuqs/debug` entry point once in your app. This keeps the
+log messages out of your bundles unless you opt in. In frameworks with separate
+client and server bundles, import it in each runtime where you want logs. Then
+set the `debug` item in localStorage to `nuqs`, and reload the page.
+
+```ts
+// Once in your app:
+import 'nuqs/debug'
+```
 
 ```js
 // In your devtools:
@@ -888,8 +940,10 @@ localStorage.setItem('debug', 'nuqs')
 > Note: unlike the `debug` package, this will not work with wildcards, but
 > you can combine it: `localStorage.setItem('debug', '*,nuqs')`
 
-Log lines will be prefixed with `[nuqs]` for `useQueryState` and `[nuq+]` for
-`useQueryStates`, along with other internal debug logs.
+Log lines are prefixed with `[nuq+ …]` for hook-level messages, and
+`[nuqs <subsystem>]` for internal subsystems (throttle & debounce queues,
+adapters), along with other internal debug logs — see
+`packages/nuqs/src/lib/debug-messages.ts` for the full catalog.
 
 User timings markers are also recorded, for advanced performance analysis using
 your browser's devtools.

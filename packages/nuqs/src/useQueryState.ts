@@ -1,6 +1,6 @@
 import { useCallback } from 'react'
 import type { Options } from './defs'
-import type { GenericParser, GenericParserBuilder } from './parsers'
+import type { GenericParser } from './parsers'
 import { useQueryStates } from './useQueryStates'
 
 export type UseQueryStateOptions<T> = GenericParser<T> & Options
@@ -206,8 +206,7 @@ export function useQueryState<T = string>(
         serialize,
         eq,
         defaultValue
-        // fixme: was `as GenericParser<T>`, revert to avoid type breaking changes
-      } as GenericParserBuilder<T> & { defaultValue?: T }
+      } as GenericParser<T>
     },
     hookOptions
   )

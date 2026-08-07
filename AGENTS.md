@@ -16,7 +16,7 @@ Refer to: [README.md](README.md) & [CONTRIBUTING.md](CONTRIBUTING.md) for author
 - **Documentation app** (Next.js + Fumadocs): `packages/docs`
   - MDX content: `packages/docs/content`
 - **End-to-end test benches:** `packages/e2e`
-  - Framework targets: Next.js app/pages, React SPA, Remix, TanStack Router, React Router v6/v7
+  - Framework targets: Next.js app/pages, React SPA, Remix, TanStack Router, React Router v6/v7/v8
 - **Examples:** `packages/examples/*`
 
 ### Core Concepts (nuqs)
@@ -38,6 +38,7 @@ Refer to: [README.md](README.md) & [CONTRIBUTING.md](CONTRIBUTING.md) for author
 - **Package manager:** `pnpm`
 - **Build:** `pnpm build`
 - **Test suite:** `pnpm test` (5-10 minutes; includes build + unit + typing + e2e)
+- **Fast checks:** `pnpm --filter nuqs test:unit` (seconds, Node-only) / `pnpm --filter nuqs test:types` for quick iteration (both need `pnpm --filter nuqs build` first)
 - **Development:** `pnpm dev --filter <package-name>...` (triple dots start dependencies' dev script too)
 
 ---
@@ -70,7 +71,13 @@ For detailed development guidelines organized by task, see:
 
 ## Debugging
 
-Enable debug logs in the browser console:
+Import the opt-in debug bundle once in each runtime where logs are needed:
+
+```ts
+import 'nuqs/debug'
+```
+
+Then enable debug logs in the browser console and reload the page:
 
 ```js
 localStorage.setItem('debug', 'nuqs')
@@ -82,7 +89,7 @@ In server or Node environments (e.g. when using `nuqs/server`), set the `DEBUG` 
 DEBUG=nuqs pnpm dev
 ```
 
-Log lines are prefixed with `[nuq+]`
+Hook-level logs are prefixed with `[nuq+ …]`; internal subsystems use `[nuqs <subsystem>]` (see `packages/nuqs/src/lib/debug-messages.ts` for the catalog).
 
 Encourage debug logs in issue reports and include them in reproduction scripts.
 

@@ -47,6 +47,7 @@ describe('parsers', () => {
     expect(parseAsHex.parse('a')).toBe(0xa)
     expect(parseAsHex.parse('g')).toBeNull()
     expect(parseAsHex.serialize(0xa)).toBe('0a')
+    expect(isParserBijective(parseAsHex, '-10', -0x10)).toBe(true)
     for (let byte = 0; byte < 256; byte++) {
       const hexString = byte.toString(16).padStart(2, '0')
       expect(isParserBijective(parseAsHex, hexString, byte)).toBe(true)
@@ -104,6 +105,7 @@ describe('parsers', () => {
 
   it('parseAsTimestamp', () => {
     expect(parseAsTimestamp.parse('')).toBeNull()
+    expect(parseAsTimestamp.parse('8640000000000001')).toBeNull()
     expect(parseAsTimestamp.parse('0')).toStrictEqual(new Date(0))
     expect(testParseThenSerialize(parseAsTimestamp, '0')).toBe(true)
     expect(testSerializeThenParse(parseAsTimestamp, new Date(1234567890))).toBe(
@@ -117,6 +119,16 @@ describe('parsers', () => {
   it('parseAsIsoDateTime', () => {
     expect(parseAsIsoDateTime.parse('')).toBeNull()
     expect(parseAsIsoDateTime.parse('not-a-date')).toBeNull()
+    expect(parseAsIsoDateTime.parse('2021-02-29T10:00:00Z')).toBeNull()
+    expect(parseAsIsoDateTime.parse('March 1, 2021')).toBeNull()
+    expect(parseAsIsoDateTime.parse('2020-02-29T10:00:00Z')).toStrictEqual(
+      new Date('2020-02-29T10:00:00Z')
+    )
+    // The calendar check applies to the written date part,
+    // not the UTC date of the parsed value
+    expect(parseAsIsoDateTime.parse('2021-03-01T00:30:00+01:00')).toStrictEqual(
+      new Date('2021-02-28T23:30:00.000Z')
+    )
     const moment = '2020-01-01T00:00:00.000Z'
     const ref = new Date(moment)
     expect(parseAsIsoDateTime.parse(moment)).toStrictEqual(ref)
@@ -131,6 +143,19 @@ describe('parsers', () => {
   it('parseAsIsoDate', () => {
     expect(parseAsIsoDate.parse('')).toBeNull()
     expect(parseAsIsoDate.parse('not-a-date')).toBeNull()
+    expect(parseAsIsoDate.parse('2021-02-29')).toBeNull()
+    expect(parseAsIsoDate.parse('2021-04-31')).toBeNull()
+    expect(parseAsIsoDate.parse('1900-02-29')).toBeNull()
+    expect(parseAsIsoDate.parse('2020-02-29')).toStrictEqual(
+      new Date('2020-02-29')
+    )
+    expect(parseAsIsoDate.parse('2000-02-29')).toStrictEqual(
+      new Date('2000-02-29')
+    )
+    // Reduced-precision and non-padded forms are rejected
+    expect(parseAsIsoDate.parse('2021')).toBeNull()
+    expect(parseAsIsoDate.parse('2021-02')).toBeNull()
+    expect(parseAsIsoDate.parse('2021-2-3')).toBeNull()
     const moment = '2020-01-01'
     const ref = new Date(moment)
     expect(parseAsIsoDate.parse(moment)).toStrictEqual(ref)

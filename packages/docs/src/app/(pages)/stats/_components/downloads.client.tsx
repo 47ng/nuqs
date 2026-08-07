@@ -10,9 +10,42 @@ import {
 import type { ReactNode } from 'react'
 import { CartesianGrid, Line, LineChart, XAxis, YAxis } from 'recharts'
 import { formatDate, formatStatNumber } from '../lib/format'
-import type { Datum, MultiDatum } from '../lib/npm'
+import type { Datum, MultiDatum, MultiDatumSeries } from '../lib/npm'
 import { PartialLine } from './partial-line'
 import { Widget, WidgetProps } from './widget'
+
+function isSeriesEstimated(
+  payload: Datum | MultiDatum | undefined,
+  series: MultiDatumSeries
+) {
+  const estimated = payload?.estimated
+  return typeof estimated === 'boolean'
+    ? estimated
+    : estimated?.[series] === true
+}
+
+function hasEstimatedData(payload: Datum | MultiDatum | undefined) {
+  const estimated = payload?.estimated
+  return typeof estimated === 'boolean'
+    ? estimated
+    : Object.values(estimated ?? {}).some(Boolean)
+}
+
+function EstimatedDot({ series, ...props }: any) {
+  const { cx, cy, payload } = props
+  if (!isSeriesEstimated(payload, series)) return null
+  return (
+    <circle
+      cx={cx}
+      cy={cy}
+      r={3}
+      fill="none"
+      stroke={props.stroke}
+      strokeWidth={1.5}
+      strokeDasharray="2 2"
+    />
+  )
+}
 
 type DownloadsGraphProps = WidgetProps & {
   data: (Datum | MultiDatum)[]
@@ -81,6 +114,27 @@ export function DownloadsGraph({
                 valueFormatter={value =>
                   formatStatNumber(value as number).toUpperCase()
                 }
+                labelClassName="border-border border-b px-3 py-2"
+                labelFormatter={(label, payload) => {
+                  const estimated = hasEstimatedData(payload?.[0]?.payload)
+                  const formattedLabel = String(label).startsWith("'")
+                    ? label
+                    : formatDate(String(label), '', {
+                        weekday: 'short',
+                        day: 'numeric',
+                        month: 'long'
+                      })
+                  return (
+                    <span>
+                      {formattedLabel}
+                      {estimated && (
+                        <span className="text-muted-foreground ml-1 text-xs font-normal">
+                          (estimated)
+                        </span>
+                      )}
+                    </span>
+                  )
+                }}
               />
             }
             isAnimationActive={false}
@@ -96,7 +150,7 @@ export function DownloadsGraph({
             type="monotone"
             stroke="var(--color-red-500)"
             className="stroke-red-500 dark:stroke-red-400"
-            dot={false}
+            dot={<EstimatedDot series="nuqs" />}
             strokeWidth={2}
           />
           <Line
@@ -105,7 +159,7 @@ export function DownloadsGraph({
             type="monotone"
             stroke="var(--color-zinc-500)"
             strokeOpacity={0.5}
-            dot={false}
+            dot={<EstimatedDot series="next-usequerystate" />}
             strokeWidth={2}
           />
         </LineChart>

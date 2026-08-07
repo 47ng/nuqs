@@ -5,6 +5,7 @@
 // root of the package.
 //
 // Note: this default react-router adapter is for react-router v6.
-// If you are using react-router v7, please import from `nuqs/adapters/react-router/v7`
+// If you are using react-router v7 or v8, please import from
+// `nuqs/adapters/react-router/v7` or `nuqs/adapters/react-router/v8`
 
 export * from '../dist/adapters/react-router'

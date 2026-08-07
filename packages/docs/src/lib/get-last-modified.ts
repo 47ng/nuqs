@@ -1,13 +1,14 @@
 import { getGithubLastEdit } from 'fumadocs-core/content/github'
+import { github } from './utils'
 
 export async function getLastModified(
   path: string,
-  branch = 'master'
+  branch = github.branch
 ): Promise<Date> {
   try {
     const lastEdit = await getGithubLastEdit({
-      owner: '47ng',
-      repo: 'nuqs',
+      owner: github.owner,
+      repo: github.repo,
       path: `packages/docs${path}`,
       sha: branch,
       token: `Bearer ${process.env.GITHUB_TOKEN}`

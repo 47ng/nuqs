@@ -7,8 +7,7 @@ import {
 import type { Nullable, Options, UrlKeys } from './defs'
 import { compareQuery } from './lib/compare'
 import { debug } from './lib/debug'
-import { error } from './lib/errors'
-import { debounceController } from './lib/queues/debounce'
+import { debounceController, useQueuedQueries } from './lib/queues/debounce'
 import { defaultRateLimit } from './lib/queues/rate-limiting'
 import {
   globalThrottleQueue,
@@ -17,10 +16,11 @@ import {
 import { safeParse } from './lib/safe-parse'
 import { isAbsentFromUrl, type Query } from './lib/search-params'
 import { emitter, type CrossHookSyncPayload } from './lib/sync'
-import { type GenericParserBuilder } from './parsers'
+import { getOwn, getUrlKey } from './lib/url-keys'
+import { type GenericParser, type ParserMap } from './parsers'
 import { $unified, type UnifiedAPI } from './unified'
 
-type KeyMapValue<Type> = GenericParserBuilder<Type> &
+type KeyMapValue<Type> = GenericParser<Type> &
   Options & {
     defaultValue?: Type
   }
@@ -57,6 +57,10 @@ export type UseQueryStatesReturn<T extends UseQueryStatesKeysMap> = [
   SetValues<T>
 ]
 
+// Defaults may not be JSON-serializable and are compared with parser eq below.
+const omitDefaultValue = (key: string, value: unknown) =>
+  key === 'defaultValue' ? undefined : value
+
 /**
  * Synchronise multiple query string arguments to React state in Next.js
  *
@@ -65,146 +69,221 @@ export type UseQueryStatesReturn<T extends UseQueryStatesKeysMap> = [
  *               Use `parseAs(String|Integer|Float|...)` for quick shorthands.
  * @param options - Optional history mode, shallow routing and scroll restoration options.
  */
+type UseQueryStatesInput = UseQueryStatesKeysMap | UnifiedAPI<any>
+type KeyMapFromInput<Input extends UseQueryStatesInput> =
+  Input extends UnifiedAPI<infer KeyMap>
+    ? KeyMap
+    : Input extends UseQueryStatesKeysMap
+      ? Input
+      : never
+
+export function useQueryStates<Input extends UseQueryStatesInput>(
+  keyMap: Input,
+  options?: Partial<UseQueryStatesOptions<KeyMapFromInput<Input>>>
+): UseQueryStatesReturn<KeyMapFromInput<Input>>
 export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
-  keyMap: KeyMap | UnifiedAPI<KeyMap>,
+  keyMap: KeyMap | UnifiedAPI<ParserMap>,
   options: Partial<UseQueryStatesOptions<KeyMap>> = {}
 ): UseQueryStatesReturn<KeyMap> {
   const hookId = useId()
-  const parsers = $unified in keyMap ? keyMap.parsers : keyMap
+  const unified = $unified in keyMap ? keyMap : undefined
+  const parsers = (unified?.parsers ?? keyMap) as KeyMap
   const defaultOptions = useAdapterDefaultOptions()
   const processUrlSearchParams = useAdapterProcessUrlSearchParams()
 
-  const unifiedOpts = $unified in keyMap ? keyMap.options : undefined
   const {
     history: hookHistory,
     scroll: hookScroll,
     shallow: hookShallow,
-    clearOnDefault: hookClearOnDefault,
-    limitUrlUpdates: hookLimitUrlUpdates,
-    urlKeys: hookUrlKeys,
     throttleMs: hookThrottleMs = defaultRateLimit.timeMs,
-    startTransition
+    limitUrlUpdates: hookLimitUrlUpdates,
+    clearOnDefault: hookClearOnDefault,
+    startTransition,
+    urlKeys: hookUrlKeys
   } = options
-  // Resolved base options: unified > adapter defaults > hardcoded defaults
-  const history = unifiedOpts?.history ?? 'replace'
-  const scroll = unifiedOpts?.scroll ?? defaultOptions?.scroll ?? false
-  const shallow = unifiedOpts?.shallow ?? defaultOptions?.shallow ?? true
+  // Resolved global options: hook > unified > adapter > hardcoded defaults.
+  // Call-level and parser-level options are applied later, per update.
+  const unifiedOptions = unified?.options
+  const history =
+    hookHistory ??
+    unifiedOptions?.history ??
+    defaultOptions?.history ??
+    'replace'
+  const scroll =
+    hookScroll ?? unifiedOptions?.scroll ?? defaultOptions?.scroll ?? false
+  const shallow =
+    hookShallow ?? unifiedOptions?.shallow ?? defaultOptions?.shallow ?? true
   const limitUrlUpdates =
-    unifiedOpts?.limitUrlUpdates ?? defaultOptions?.limitUrlUpdates
+    hookLimitUrlUpdates ??
+    unifiedOptions?.limitUrlUpdates ??
+    defaultOptions?.limitUrlUpdates
   const clearOnDefault =
-    unifiedOpts?.clearOnDefault ?? defaultOptions?.clearOnDefault ?? true
+    hookClearOnDefault ??
+    unifiedOptions?.clearOnDefault ??
+    defaultOptions?.clearOnDefault ??
+    true
   const urlKeys = {
-    ...(unifiedOpts?.urlKeys || {}),
-    ...(hookUrlKeys || {})
+    ...(unifiedOptions?.urlKeys ?? {}),
+    ...(hookUrlKeys ?? {})
   } as UrlKeys<KeyMap>
 
   type V = NullableValues<KeyMap>
   const stateKeys = Object.keys(parsers).join(',')
-
+  const cachedKeyMapRef = useRef(parsers)
+  const cachedKeyMap = cachedKeyMapRef.current
+  const stableKeyMap =
+    JSON.stringify(Object.entries(cachedKeyMap), omitDefaultValue) ===
+      JSON.stringify(Object.entries(parsers), omitDefaultValue) &&
+    Object.entries(parsers).every(([key, parser]) => {
+      if (cachedKeyMap[key]?.startTransition !== parser.startTransition) {
+        return false
+      }
+      const previousDefault = cachedKeyMap[key]?.defaultValue
+      const currentDefault = parser.defaultValue
+      if (Object.is(previousDefault, currentDefault)) {
+        return true
+      }
+      return (
+        previousDefault !== undefined &&
+        currentDefault !== undefined &&
+        parser.eq?.(previousDefault, currentDefault) === true
+      )
+    })
+      ? cachedKeyMap
+      : parsers
+  cachedKeyMapRef.current = stableKeyMap
   const resolvedUrlKeys = useMemo(
     () =>
       Object.fromEntries(
-        Object.keys(parsers).map(key => [key, urlKeys[key] ?? key])
+        Object.keys(parsers).map(key => [key, getUrlKey(urlKeys, key)])
       ),
     [stateKeys, JSON.stringify(urlKeys)]
   )
   const adapter = useAdapter(Object.values(resolvedUrlKeys))
   const initialSearchParams = adapter.searchParams
   const queryRef = useRef<Record<string, Query | null>>({})
-  const defaultValues = useMemo(
+  // Tracks the URL source (search params + queued queries) the internal state
+  // was last reconciled against during render. See the reconciliation block below.
+  const lastSyncKeyRef = useRef<string | null>(null)
+  // The pathname this hook last reconciled against from a committed render
+  // (set by the effect backstop below). The render-time reconcile is skipped when
+  // the current pathname no longer matches it: that means the component is
+  // rendering through a navigation transition for a different route (an outgoing
+  // or incoming page kept alive by the router, e.g. under cacheComponents),
+  // where adopting the in-flight URL would corrupt speculative renders (#1293).
+  // Both sides of the comparison use the adapter's pathname when provided
+  // (`usePathname()` in Next.js), which tracks the destination route from the
+  // start of a transition; the live `location.pathname` lags until the browser
+  // URL commits, which would misjudge a same-route reveal as a cross-route
+  // render and skip the reconcile (#1273). A genuine `<Activity>` reveal keeps
+  // the same pathname, so it still reconciles.
+  const committedPathnameRef = useRef<string | null>(null)
+  const queuedQueries = useQueuedQueries(Object.values(resolvedUrlKeys))
+  const [internalState, setInternalState] = useState<V>(
     () =>
-      Object.fromEntries(
-        Object.keys(parsers).map(key => [
-          key,
-          parsers[key]!.defaultValue ?? null
-        ])
-      ) as Values<KeyMap>,
-    [
-      Object.values(parsers)
-        .map(({ defaultValue }) => defaultValue)
-        .join(',')
-    ]
+      parseMap(parsers, resolvedUrlKeys, initialSearchParams, queuedQueries)
+        .state
   )
-  const queuedQueries = debounceController.useQueuedQueries(
-    Object.values(resolvedUrlKeys)
-  )
-  const [internalState, setInternalState] = useState<V>(() => {
-    const source = initialSearchParams ?? new URLSearchParams()
-    return parseMap(parsers, urlKeys, source, queuedQueries).state
-  })
 
   const stateRef = useRef(internalState)
-  debug(
-    '[nuq+ %s `%s`] render - state: %O, iSP: %s',
-    hookId,
-    stateKeys,
-    internalState,
-    initialSearchParams
-  )
 
-  // Initialise the refs with the initial values
-  if (
+  // Identifies the current URL source (resolved search params + queued queries).
+  // Mirrors the dependencies of the URL sync effect below so that render-time
+  // reconciliation reacts to the same external changes, and never to internal
+  // (optimistic) updates which don't immediately alter the URL source.
+  const searchParamsSyncKey = JSON.stringify([
+    Object.values(resolvedUrlKeys).map(key => [
+      key,
+      initialSearchParams.getAll(key)
+    ]),
+    queuedQueries
+  ])
+  // Adopts the current URL value into the internal state when it has changed.
+  // Used both during render (below) and from the effect backstop further down.
+  const reconcile = () => {
+    const { state, hasChanged } = parseMap(
+      parsers,
+      resolvedUrlKeys,
+      initialSearchParams,
+      queuedQueries,
+      queryRef.current,
+      stateRef.current
+    )
+    if (hasChanged) {
+      debug(1, hookId, stateKeys, state)
+      stateRef.current = state
+      setInternalState(state)
+    }
+    return hasChanged
+  }
+  // Reconcile during render, both on key-set changes (initialisation) and when
+  // the URL source changes. The effect below does the same, but effects are
+  // detached while a subtree is hidden under `<Activity>` and only re-run after
+  // the first commit on reveal, so without this, that first render would paint
+  // the value captured while hidden (#1444). Gating on `searchParamsSyncKey`
+  // means we only adopt the URL when its source actually changed, never
+  // reverting an optimistic update not yet propagated to the adapter's params.
+  //
+  // The URL-change branch is further gated to renders happening on the pathname
+  // the hook last committed against: during a route transition the router can
+  // render an outgoing/incoming page against the other route's in-flight URL,
+  // and adopting it there produces cross-page renders React discards (#1293).
+  const keysChanged =
     Object.keys(queryRef.current).join('&') !==
     Object.values(resolvedUrlKeys).join('&')
+  // `committedPathnameRef` is only ever assigned from the client,
+  // so a null value covers both SSR and the first client render.
+  const onCommittedPathname =
+    committedPathnameRef.current === null ||
+    committedPathnameRef.current === (adapter.pathname ?? location.pathname)
+  let didReconcileState = false
+  if (
+    keysChanged ||
+    (onCommittedPathname && lastSyncKeyRef.current !== searchParamsSyncKey)
   ) {
-    const { state, hasChanged } = parseMap(
-      parsers,
-      urlKeys,
-      initialSearchParams,
-      queuedQueries,
-      queryRef.current,
-      stateRef.current
-    )
-    if (hasChanged) {
-      debug('[nuq+ %s `%s`] State changed: %O', hookId, stateKeys, {
-        state,
-        initialSearchParams,
-        queuedQueries,
-        queryRef: queryRef.current,
-        stateRef: stateRef.current
-      })
-      stateRef.current = state
-      setInternalState(state)
+    lastSyncKeyRef.current = searchParamsSyncKey
+    didReconcileState = reconcile()
+    if (keysChanged) {
+      queryRef.current = Object.fromEntries(
+        Object.entries(resolvedUrlKeys).map(([key, urlKey]) => {
+          const parser = parsers[key]
+          return [
+            urlKey,
+            parser?.type === 'multi'
+              ? initialSearchParams.getAll(urlKey)
+              : (initialSearchParams.get(urlKey) ?? null)
+          ]
+        })
+      )
     }
-    queryRef.current = Object.fromEntries(
-      Object.entries(resolvedUrlKeys).map(([key, urlKey]) => {
-        const parser = parsers[key]
-        return [
-          urlKey,
-          parser?.type === 'multi'
-            ? initialSearchParams?.getAll(urlKey)
-            : (initialSearchParams?.get(urlKey) ?? null)
-        ]
-      })
-    )
+  }
+  // A key-set change initializes from the current URL source; `stateRef` may
+  // still describe the previous key map and must not be restored.
+  if (
+    !keysChanged &&
+    !didReconcileState &&
+    onCommittedPathname &&
+    internalState !== stateRef.current
+  ) {
+    // Recover a render-phase state update lost with an abandoned render or a
+    // concurrent rebase whose URL source is already reflected in the cache.
+    setInternalState(stateRef.current)
   }
 
+  // Backstop for the render-time reconciliation above: covers external changes
+  // landing in renders React discards before commit (e.g. interrupted
+  // transitions). Shares the `searchParamsSyncKey` dependency, so they can't
+  // drift. Also records the pathname of this committed reconciliation, which
+  // gates the render-time branch above (effects don't run while detached, so
+  // this freezes at the pathname the hook was last attached on).
+  // `adapter.pathname` is a dependency too: a same-search cross-route navigation
+  // leaves `searchParamsSyncKey` unchanged, so without it the recorded pathname
+  // would stay frozen on the previous route and wrongly gate off the next
+  // render-time reconcile there (a stale frame until the next URL change, #1273).
   useEffect(() => {
-    const { state, hasChanged } = parseMap(
-      parsers,
-      urlKeys,
-      initialSearchParams,
-      queuedQueries,
-      queryRef.current,
-      stateRef.current
-    )
-    if (hasChanged) {
-      debug('[nuq+ %s `%s`] State changed: %O', hookId, stateKeys, {
-        state,
-        initialSearchParams,
-        queuedQueries,
-        queryRef: queryRef.current,
-        stateRef: stateRef.current
-      })
-      stateRef.current = state
-      setInternalState(state)
-    }
-  }, [
-    Object.values(resolvedUrlKeys)
-      .map(key => `${key}=${initialSearchParams?.getAll(key)}`)
-      .join('&'),
-    JSON.stringify(queuedQueries)
-  ])
+    committedPathnameRef.current = adapter.pathname ?? location.pathname
+    reconcile()
+  }, [searchParamsSyncKey, adapter.pathname])
 
   // Sync all hooks together & with external URL changes
   useEffect(() => {
@@ -215,19 +294,15 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
           query
         }: CrossHookSyncPayload) => {
           setInternalState(currentState => {
-            const { defaultValue } = parsers[stateKey]!
             const urlKey = resolvedUrlKeys[stateKey]!
-            const nextValue = state ?? defaultValue ?? null
-            const currentValue = currentState[stateKey] ?? defaultValue ?? null
-
-            if (Object.is(currentValue, nextValue)) {
+            if (Object.is(currentState[stateKey] ?? null, state)) {
               debug(
-                '[nuq+ %s `%s`] Cross-hook key sync %s: %O (default: %O). no change, skipping, resolved: %O',
+                2,
                 hookId,
                 stateKeys,
                 urlKey,
                 state,
-                defaultValue,
+                parsers[stateKey]?.defaultValue,
                 stateRef.current
               )
               // bail out by returning the current state
@@ -237,16 +312,16 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
             // for the subsequent setState to pick it up.
             stateRef.current = {
               ...stateRef.current,
-              [stateKey as keyof KeyMap]: nextValue
+              [stateKey as keyof KeyMap]: state
             }
             queryRef.current[urlKey] = query
             debug(
-              '[nuq+ %s `%s`] Cross-hook key sync %s: %O (default: %O). updateInternalState, resolved: %O',
+              3,
               hookId,
               stateKeys,
               urlKey,
               state,
-              defaultValue,
+              parsers[stateKey]?.defaultValue,
               stateRef.current
             )
             return stateRef.current
@@ -259,23 +334,13 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
 
     for (const stateKey of Object.keys(parsers)) {
       const urlKey = resolvedUrlKeys[stateKey]!
-      debug(
-        '[nuq+ %s `%s`] Subscribing to sync for `%s`',
-        hookId,
-        urlKey,
-        stateKeys
-      )
+      debug(4, hookId, urlKey, stateKeys)
       emitter.on(urlKey, handlers[stateKey]!)
     }
     return () => {
       for (const stateKey of Object.keys(parsers)) {
         const urlKey = resolvedUrlKeys[stateKey]!
-        debug(
-          '[nuq+ %s `%s`] Unsubscribing to sync for `%s`',
-          hookId,
-          urlKey,
-          stateKeys
-        )
+        debug(5, hookId, urlKey, stateKeys)
         emitter.off(urlKey, handlers[stateKey])
       }
     }
@@ -284,15 +349,14 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
   const update = useCallback<SetValues<KeyMap>>(
     (stateUpdater, callOptions = {}) => {
       const nullMap = Object.fromEntries(
-        Object.keys(parsers).map(key => [key, null])
+        Object.keys(stableKeyMap).map(key => [key, null])
       ) as Nullable<KeyMap>
       const newState: Partial<Nullable<KeyMap>> =
         typeof stateUpdater === 'function'
-          ? (stateUpdater(
-              applyDefaultValues(stateRef.current, defaultValues)
-            ) ?? nullMap)
+          ? (stateUpdater(applyDefaultValues(stateRef.current, stableKeyMap)) ??
+            nullMap)
           : (stateUpdater ?? nullMap)
-      debug('[nuq+ %s `%s`] setState: %O', hookId, stateKeys, newState)
+      debug(6, hookId, stateKeys, newState)
       let returnedPromise: Promise<URLSearchParams> | undefined = undefined
       let maxDebounceTime = 0
       let doFlush = false
@@ -300,15 +364,14 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
         (p: Promise<URLSearchParams>) => Promise<URLSearchParams>
       > = []
       for (let [stateKey, value] of Object.entries(newState)) {
-        const parser = parsers[stateKey]
+        const parser = getOwn(stableKeyMap, stateKey)
         const urlKey = resolvedUrlKeys[stateKey]!
-        if (!parser || value === undefined) {
+        if (!parser || urlKey === undefined || value === undefined) {
           continue
         }
         if (
           (callOptions.clearOnDefault ??
             parser.clearOnDefault ??
-            hookClearOnDefault ??
             clearOnDefault) &&
           value !== null &&
           parser.defaultValue !== undefined &&
@@ -323,33 +386,23 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
           key: urlKey,
           query,
           options: {
-            // Call-level > hook-level > parser-level > unified-level > defaults
-            history:
-              callOptions.history ?? hookHistory ?? parser.history ?? history,
-            shallow:
-              callOptions.shallow ?? hookShallow ?? parser.shallow ?? shallow,
-            scroll: callOptions.scroll ?? hookScroll ?? parser.scroll ?? scroll,
+            // Call-level > parser-level > hook-level > unified-level > defaults
+            history: callOptions.history ?? parser.history ?? history,
+            shallow: callOptions.shallow ?? parser.shallow ?? shallow,
+            scroll: callOptions.scroll ?? parser.scroll ?? scroll,
             startTransition:
               callOptions.startTransition ??
-              startTransition ??
-              parser.startTransition
+              parser.startTransition ??
+              startTransition
           }
         }
-        if (
-          callOptions?.limitUrlUpdates?.method === 'debounce' ||
-          hookLimitUrlUpdates?.method === 'debounce' ||
-          parser.limitUrlUpdates?.method === 'debounce' ||
-          limitUrlUpdates?.method === 'debounce'
-        ) {
-          if (update.options.shallow === true) {
-            console.warn(error(422))
-          }
+        const resolvedLimitUrlUpdates =
+          callOptions.limitUrlUpdates ??
+          parser.limitUrlUpdates ??
+          limitUrlUpdates
+        if (resolvedLimitUrlUpdates?.method === 'debounce') {
           const timeMs =
-            callOptions?.limitUrlUpdates?.timeMs ??
-            hookLimitUrlUpdates?.timeMs ??
-            parser.limitUrlUpdates?.timeMs ??
-            limitUrlUpdates?.timeMs ??
-            defaultRateLimit.timeMs
+            resolvedLimitUrlUpdates.timeMs ?? defaultRateLimit.timeMs
           const debouncedPromise = debounceController.push(
             update,
             timeMs,
@@ -364,10 +417,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
           }
         } else {
           const timeMs =
-            callOptions?.limitUrlUpdates?.timeMs ??
-            hookLimitUrlUpdates?.timeMs ??
-            parser?.limitUrlUpdates?.timeMs ??
-            limitUrlUpdates?.timeMs ??
+            resolvedLimitUrlUpdates?.timeMs ??
             callOptions.throttleMs ??
             parser.throttleMs ??
             hookThrottleMs
@@ -401,18 +451,19 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
       limitUrlUpdates?.method,
       limitUrlUpdates?.timeMs,
       startTransition,
+      clearOnDefault,
+      stableKeyMap,
       resolvedUrlKeys,
       adapter.updateUrl,
       adapter.getSearchParamsSnapshot,
       adapter.rateLimitFactor,
-      processUrlSearchParams,
-      defaultValues
+      processUrlSearchParams
     ]
   )
 
   const outputState = useMemo(
-    () => applyDefaultValues(internalState, defaultValues),
-    [internalState, defaultValues]
+    () => applyDefaultValues(internalState, stableKeyMap),
+    [internalState, stableKeyMap]
   )
   return [outputState, update]
 }
@@ -421,7 +472,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
 
 function parseMap<KeyMap extends UseQueryStatesKeysMap>(
   keyMap: KeyMap,
-  urlKeys: Partial<Record<keyof KeyMap, string>>,
+  resolvedUrlKeys: Record<string, string>,
   searchParams: URLSearchParams,
   queuedQueries: Record<string, Query | null | undefined>,
   cachedQuery?: Record<string, Query | null>,
@@ -432,22 +483,23 @@ function parseMap<KeyMap extends UseQueryStatesKeysMap>(
 } {
   let hasChanged = false
   const state = Object.entries(keyMap).reduce((out, [stateKey, parser]) => {
-    const urlKey = urlKeys?.[stateKey] ?? stateKey
-    const queuedQuery = queuedQueries[urlKey]
+    const urlKey = resolvedUrlKeys[stateKey]!
+    const queuedQuery = getOwn(queuedQueries, urlKey)
     const fallbackValue = parser.type === 'multi' ? [] : null
     const query =
       queuedQuery === undefined
         ? ((parser.type === 'multi'
-            ? searchParams?.getAll(urlKey)
-            : searchParams?.get(urlKey)) ?? fallbackValue)
+            ? searchParams.getAll(urlKey)
+            : searchParams.get(urlKey)) ?? fallbackValue)
         : queuedQuery
+    const cachedStateValue = cachedState && getOwn(cachedState, stateKey)
     if (
       cachedQuery &&
-      cachedState &&
-      compareQuery(cachedQuery[urlKey] ?? fallbackValue, query)
+      cachedStateValue !== undefined &&
+      compareQuery(getOwn(cachedQuery, urlKey) ?? fallbackValue, query)
     ) {
       // Cache hit
-      out[stateKey as keyof KeyMap] = cachedState[stateKey] ?? null
+      out[stateKey as keyof KeyMap] = cachedStateValue
       return out
     }
     // Cache miss
@@ -478,9 +530,12 @@ function parseMap<KeyMap extends UseQueryStatesKeysMap>(
 
 function applyDefaultValues<KeyMap extends UseQueryStatesKeysMap>(
   state: NullableValues<KeyMap>,
-  defaults: Partial<Values<KeyMap>>
+  keyMap: KeyMap
 ) {
   return Object.fromEntries(
-    Object.keys(state).map(key => [key, state[key] ?? defaults[key] ?? null])
+    Object.keys(state).map(key => [
+      key,
+      state[key] ?? keyMap[key]?.defaultValue ?? null
+    ])
   ) as Values<KeyMap>
 }

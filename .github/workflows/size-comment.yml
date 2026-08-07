@@ -1,0 +1,344 @@
+name: Post Bundle Size Comment
+
+# Runs after Bundle Size completes. The triggering workflow is unprivileged and
+# may be modified by a fork PR, so its size reports are treated as hostile data.
+# A read-only job validates the reports and renders a bounded comment. Only a
+# separate job can write to pull requests, and it consumes that trusted output.
+on:
+  workflow_run:
+    workflows: ['Bundle Size']
+    types: [completed]
+
+permissions: {}
+
+concurrency:
+  group: bundle-size-comment-${{ github.event.workflow_run.head_repository.full_name }}-${{ github.event.workflow_run.head_branch }}
+  cancel-in-progress: true
+
+jobs:
+  prepare:
+    name: Validate reports and prepare comment
+    if: >-
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'pull_request'
+    runs-on: ubuntu-24.04-arm
+    permissions:
+      actions: read # Download artifacts from the unprivileged workflow.
+      pull-requests: read # Resolve the fork commit to exactly one PR.
+    outputs:
+      prNumber: ${{ steps.resolve.outputs.prNumber }}
+      shouldPost: ${{ steps.compare.outputs.shouldPost }}
+    steps:
+      - name: Resolve and validate PR
+        id: resolve
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RUN_HEAD_REPOSITORY: ${{ github.event.workflow_run.head_repository.full_name }}
+          RUN_HEAD_BRANCH: ${{ github.event.workflow_run.head_branch }}
+          RUN_HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          set -euo pipefail
+
+          # workflow_run.pull_requests and the base-repository commit lookup are
+          # empty for fork PRs. Query open PRs by the head owner/ref, then bind
+          # the full head repository and SHA below.
+          if ! [[ "$RUN_HEAD_REPOSITORY" =~ ^[^/]+/[^/]+$ ]]; then
+            echo "Invalid head repository: '$RUN_HEAD_REPOSITORY'"
+            exit 1
+          fi
+          HEAD_OWNER=${RUN_HEAD_REPOSITORY%%/*}
+          gh api --method GET --paginate --slurp \
+            "repos/$GH_REPO/pulls" \
+            -f state=open \
+            -f "head=$HEAD_OWNER:$RUN_HEAD_BRANCH" \
+            -F per_page=100 \
+            > /tmp/pulls.json
+
+          PR_NUMBER=$(
+            jq -er \
+              --arg baseRepo "$GH_REPO" \
+              --arg headRepo "$RUN_HEAD_REPOSITORY" \
+              --arg headRef "$RUN_HEAD_BRANCH" \
+              --arg headSha "$RUN_HEAD_SHA" \
+              '
+                add
+                | map(select(
+                    .base.repo.full_name == $baseRepo and
+                    .head.repo.full_name == $headRepo and
+                    .head.ref == $headRef and
+                    .head.sha == $headSha
+                  ))
+                | if length == 1 then
+                    .[0].number
+                  else
+                    error("Expected exactly one pull request for the workflow run")
+                  end
+              ' \
+              /tmp/pulls.json
+          )
+
+          if ! [[ "$PR_NUMBER" =~ ^[0-9]+$ ]]; then
+            echo "Resolved an invalid PR number: '$PR_NUMBER'"
+            exit 1
+          fi
+          printf 'prNumber=%s\n' "$PR_NUMBER" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: base-size
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ github.token }}
+          path: artifacts/base
+
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: pr-size
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ github.token }}
+          path: artifacts/pr
+
+      - name: Validate reports and generate comparison
+        id: compare
+        run: |
+          node --input-type=module << 'EOF'
+          import {
+            appendFileSync,
+            mkdirSync,
+            readFileSync,
+            statSync,
+            writeFileSync
+          } from 'node:fs'
+
+          const MAX_REPORT_BYTES = 64 * 1024
+          const MAX_REPORT_ENTRIES = 20
+          const MAX_ENTRY_NAME_LENGTH = 200
+          const MAX_BUNDLE_BYTES = 100 * 1024 * 1024
+          const MAX_COMMENT_BYTES = 32 * 1024
+
+          function readReport(path, label) {
+            const stats = statSync(path)
+            if (!stats.isFile() || stats.size === 0 || stats.size > MAX_REPORT_BYTES) {
+              throw new TypeError(`${label} report has an invalid file size`)
+            }
+
+            const report = JSON.parse(readFileSync(path, 'utf8'))
+            if (
+              !Array.isArray(report) ||
+              report.length === 0 ||
+              report.length > MAX_REPORT_ENTRIES
+            ) {
+              throw new TypeError(`${label} report has an invalid entry count`)
+            }
+
+            const names = new Set()
+            return report.map((entry, index) => {
+              if (entry === null || typeof entry !== 'object' || Array.isArray(entry)) {
+                throw new TypeError(`${label} entry ${index} is not an object`)
+              }
+              if (
+                typeof entry.name !== 'string' ||
+                entry.name.length === 0 ||
+                entry.name.length > MAX_ENTRY_NAME_LENGTH
+              ) {
+                throw new TypeError(`${label} entry ${index} has an invalid name`)
+              }
+              if (names.has(entry.name)) {
+                throw new TypeError(`${label} report contains duplicate names`)
+              }
+              names.add(entry.name)
+
+              if (
+                !Number.isSafeInteger(entry.size) ||
+                entry.size < 0 ||
+                entry.size > MAX_BUNDLE_BYTES
+              ) {
+                throw new TypeError(`${label} entry ${index} has an invalid size`)
+              }
+              if (typeof entry.passed !== 'boolean') {
+                throw new TypeError(`${label} entry ${index} has an invalid status`)
+              }
+
+              return {
+                name: entry.name,
+                size: entry.size,
+                passed: entry.passed
+              }
+            })
+          }
+
+          // Render names as plain text rather than accepting Markdown from the
+          // untrusted artifacts. Current size-limit labels fit this allowlist.
+          function cell(value) {
+            const output = value.replace(/[^A-Za-z0-9 ()/_-]/g, '').slice(0, 80)
+            if (output.length === 0) {
+              throw new TypeError('Bundle name is empty after sanitization')
+            }
+            return output
+          }
+
+          function formatBytes(bytes) {
+            if (bytes < 1024) return `${bytes} B`
+            return `${(bytes / 1024).toFixed(2)} kB`
+          }
+
+          function formatDiff(diff) {
+            if (Math.abs(diff) < 10) return '—'
+            const sign = diff > 0 ? '+' : ''
+            const arrow = diff > 0 ? '⬆️' : '⬇️'
+            return `${arrow} ${sign}${formatBytes(diff)}`
+          }
+
+          const base = readReport('artifacts/base/size-limit.json', 'Base')
+          const pr = readReport('artifacts/pr/size-limit.json', 'PR')
+          const baseByName = new Map(base.map(entry => [entry.name, entry]))
+          const prByName = new Map(pr.map(entry => [entry.name, entry]))
+
+          let anyChange = false
+          const rows = []
+
+          for (const baseEntry of base) {
+            const prEntry = prByName.get(baseEntry.name)
+            if (!prEntry) {
+              anyChange = true
+              rows.push(
+                `| ⚠️ ${cell(baseEntry.name)} | ${formatBytes(baseEntry.size)} | n/a | Removed |`
+              )
+              continue
+            }
+
+            const diff = prEntry.size - baseEntry.size
+            if (Math.abs(diff) >= 10) anyChange = true
+            const status = prEntry.passed ? '✅' : '❌'
+            rows.push(
+              `| ${status} ${cell(baseEntry.name)} | ${formatBytes(baseEntry.size)} | ${formatBytes(prEntry.size)} | ${formatDiff(diff)} |`
+            )
+          }
+
+          for (const prEntry of pr) {
+            if (baseByName.has(prEntry.name)) continue
+            anyChange = true
+            const status = prEntry.passed ? '✅' : '❌'
+            rows.push(
+              `| ${status} ${cell(prEntry.name)} | n/a | ${formatBytes(prEntry.size)} | Added |`
+            )
+          }
+
+          if (!anyChange) {
+            appendFileSync(process.env.GITHUB_OUTPUT, 'shouldPost=false\n')
+            console.log('No meaningful size change (< 10 B). Skipping comment.')
+            process.exit(0)
+          }
+
+          const comment = [
+            '## Bundle size',
+            '',
+            '| | Base | PR | Δ |',
+            '|---|---|---|---|',
+            ...rows,
+            '',
+            '_Brotli-compressed. Limits are set in the `size-limit` config in `packages/nuqs/package.json`._',
+            ''
+          ].join('\n')
+
+          if (Buffer.byteLength(comment, 'utf8') > MAX_COMMENT_BYTES) {
+            throw new TypeError('Generated comment is too large')
+          }
+
+          mkdirSync('artifacts/prepared', { recursive: true })
+          writeFileSync('artifacts/prepared/comment.md', comment)
+          appendFileSync(process.env.GITHUB_OUTPUT, 'shouldPost=true\n')
+          console.log(comment)
+          EOF
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: steps.compare.outputs.shouldPost == 'true'
+        with:
+          name: prepared-comment
+          path: artifacts/prepared/comment.md
+          if-no-files-found: error
+          retention-days: 1
+
+  post:
+    name: Post comment
+    needs: prepare
+    if: needs.prepare.outputs.shouldPost == 'true'
+    runs-on: ubuntu-24.04-arm
+    permissions:
+      actions: read # Download the validated comment from the prepare job.
+      pull-requests: write # Create or update the bundle-size PR comment.
+    steps:
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: prepared-comment
+          path: artifacts/prepared
+
+      - name: Post PR comment
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          PR_NUMBER: ${{ needs.prepare.outputs.prNumber }}
+          RUN_HEAD_REPOSITORY: ${{ github.event.workflow_run.head_repository.full_name }}
+          RUN_HEAD_BRANCH: ${{ github.event.workflow_run.head_branch }}
+          RUN_HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          set -euo pipefail
+
+          if ! [[ "$PR_NUMBER" =~ ^[0-9]+$ ]]; then
+            echo "Invalid PR number: '$PR_NUMBER'"
+            exit 1
+          fi
+
+          validate_pr() {
+            gh api "repos/$GH_REPO/pulls/$PR_NUMBER" > /tmp/pr.json
+            jq -e \
+              --arg baseRepo "$GH_REPO" \
+              --arg headRepo "$RUN_HEAD_REPOSITORY" \
+              --arg headRef "$RUN_HEAD_BRANCH" \
+              --arg headSha "$RUN_HEAD_SHA" \
+              '
+                .state == "open" and
+                .base.repo.full_name == $baseRepo and
+                .head.repo.full_name == $headRepo and
+                .head.ref == $headRef and
+                .head.sha == $headSha
+              ' \
+              /tmp/pr.json \
+              > /dev/null
+          }
+
+          validate_pr
+
+          MARKER="<!-- bundle-size-comment -->"
+          {
+            printf '%s\n' "$MARKER"
+            cat artifacts/prepared/comment.md
+          } > /tmp/full-comment.md
+
+          # Only update a comment owned by the GitHub Actions bot. An attacker-
+          # authored marker comment must never be selected as trusted output.
+          EXISTING=$(gh api --paginate \
+            "repos/$GH_REPO/issues/$PR_NUMBER/comments" \
+            --jq '.[] | select(
+              .user.login == "github-actions[bot]" and
+              (.body | startswith("<!-- bundle-size-comment -->"))
+            ) | .id' \
+            | sed -n '1p')
+
+          # Re-check immediately before using the write-scoped token so a push
+          # between preparation and posting cannot attach a stale result.
+          validate_pr
+
+          if [ -n "$EXISTING" ]; then
+            gh api \
+              --method PATCH \
+              "repos/$GH_REPO/issues/comments/$EXISTING" \
+              -F body=@/tmp/full-comment.md
+            echo "Updated comment $EXISTING on PR #$PR_NUMBER."
+          else
+            gh api \
+              --method POST \
+              "repos/$GH_REPO/issues/$PR_NUMBER/comments" \
+              -F body=@/tmp/full-comment.md
+            echo "Posted new comment on PR #$PR_NUMBER."
+          fi

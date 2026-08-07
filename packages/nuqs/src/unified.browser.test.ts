@@ -183,7 +183,7 @@ describe('Unified API', () => {
       scroll: true
     })
   })
-  it('lets useQueryStates hook options override unified options', async () => {
+  it('uses call > parser > hook > unified option precedence', async () => {
     const out = defineSearchParams(
       {
         a: parseAsString.withOptions({ history: 'push' }),
@@ -210,8 +210,8 @@ describe('Unified API', () => {
     await act(() => result.current[1]({ a: 'updated', b: 100 }))
     expect(onUrlUpdate).toHaveBeenCalledOnce()
     expect(onUrlUpdate.mock.calls[0]![0].options).toEqual({
-      history: 'replace',
-      shallow: true,
+      history: 'push',
+      shallow: false,
       scroll: false
     })
   })
