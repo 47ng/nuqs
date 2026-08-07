@@ -15,9 +15,9 @@ vi.mock('server-only', () => ({}))
 
 import {
   combineStats,
-  fetchNpmPackage,
+  fetchNpmPackages,
   getAllTime,
-  getLastNDays,
+  getDownloadsNDaysBeforeLatest,
   getPackageCreationDate,
   interpolateZeroDays,
   type Datum,
@@ -36,7 +36,7 @@ afterAll(() => server.close())
 // deterministic, while leaving real timers for the fetch/MSW plumbing.
 beforeEach(() => {
   vi.useFakeTimers({ toFake: ['Date'] })
-  vi.setSystemTime(new Date('2024-06-15T12:00:00Z'))
+  vi.setSystemTime(new Date(2024, 5, 15, 12))
 })
 afterEach(() => {
   vi.useRealTimers()
@@ -89,44 +89,19 @@ describe('interpolateZeroDays', () => {
   })
 })
 
-describe('getLastNDays', () => {
-  it('maps the range response to dated download counts', async () => {
-    server.use(
-      http.get(rangeEndpoint, () =>
-        HttpResponse.json({
-          downloads: [
-            { downloads: 10, day: '2024-06-01' },
-            { downloads: 20, day: '2024-06-02' }
-          ]
-        })
-      )
-    )
-    await expect(getLastNDays('nuqs', 30)).resolves.toEqual([
-      { date: '2024-06-01', downloads: 10 },
-      { date: '2024-06-02', downloads: 20 }
-    ])
-  })
+describe('getDownloadsNDaysBeforeLatest', () => {
+  it('looks up by calendar date rather than array position', () => {
+    const data = [
+      { date: '2024-06-06', downloads: 60 },
+      { date: '2024-06-08', downloads: 80 },
+      { date: '2024-06-13', downloads: 130 }
+    ]
 
-  it('drops a trailing zero-download day (stats not in yet)', async () => {
-    server.use(
-      http.get(rangeEndpoint, () =>
-        HttpResponse.json({
-          downloads: [
-            { downloads: 20, day: '2024-06-01' },
-            { downloads: 0, day: '2024-06-02' }
-          ]
-        })
-      )
-    )
-    const data = await getLastNDays('nuqs', 30)
-    expect(data).toEqual([{ date: '2024-06-01', downloads: 20 }])
-  })
-
-  it('returns an empty array and logs on a malformed response', async () => {
-    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
-    server.use(http.get(rangeEndpoint, () => HttpResponse.json({ nope: true })))
-    await expect(getLastNDays('nuqs', 30)).resolves.toEqual([])
-    expect(errorSpy).toHaveBeenCalled()
+    expect(getDownloadsNDaysBeforeLatest(data, 7)).toEqual({
+      date: '2024-06-06',
+      downloads: 60
+    })
+    expect(getDownloadsNDaysBeforeLatest(data, 6)).toBeUndefined()
   })
 })
 
@@ -197,27 +172,252 @@ describe('getAllTime', () => {
   })
 })
 
-describe('fetchNpmPackage', () => {
-  it('combines all-time, last-30-day and weekly-grouped last-90-day stats', async () => {
-    const days = Array.from({ length: 14 }, (_, i) => ({
-      downloads: 100,
-      day: `2024-06-${String(i + 1).padStart(2, '0')}`
-    }))
+describe('fetchNpmPackages', () => {
+  it('derives both time windows from one combined recent-download snapshot', async () => {
+    const dates = Array.from({ length: 31 }, (_, i) =>
+      new Date(Date.UTC(2024, 4, 15 + i)).toISOString().slice(0, 10)
+    )
+    let combinedRangeRequests = 0
+    let combinedRange: string | undefined
     server.use(
       http.get(registryEndpoint, () =>
         HttpResponse.json({ time: { created: '2024-06-01T00:00:00Z' } })
       ),
-      http.get(rangeEndpoint, () => HttpResponse.json({ downloads: days }))
+      http.get(rangeEndpoint, ({ params }) => {
+        if (params.pkg === 'nuqs,next-usequerystate') {
+          combinedRangeRequests++
+          combinedRange = String(params.range)
+          return HttpResponse.json({
+            nuqs: {
+              downloads: dates.map((day, i) => ({ downloads: i + 1, day }))
+            },
+            'next-usequerystate': {
+              downloads: dates.map((day, i) => ({ downloads: 100 + i, day }))
+            }
+          })
+        }
+        return HttpResponse.json({ downloads: [{ downloads: 12, day: 'x' }] })
+      })
     )
-    const stats = await fetchNpmPackage('nuqs')
-    // One 18-month window from a June-2024 creation date: 14 × 100.
-    expect(stats.allTime).toBe(1400)
-    expect(stats.last30Days).toHaveLength(14)
-    // last90Days is grouped by ISO week, so fewer entries keyed as 'YYWww.
-    expect(stats.last90Days.length).toBeLessThan(14)
-    expect(stats.last90Days.every(d => /^'\d{2}W\d{2}$/.test(d.date))).toBe(
-      true
+
+    const [nuqs, nextUseQueryState] = await fetchNpmPackages()
+
+    expect(combinedRangeRequests).toBe(1)
+    expect(combinedRange).toBe('2024-03-11:2024-06-14')
+    expect(nuqs.last30Days).toEqual(
+      dates.slice(-30).map((date, i) => ({ date, downloads: i + 2 }))
     )
+    expect(nextUseQueryState.last30Days).toEqual(
+      dates.slice(-30).map((date, i) => ({ date, downloads: 101 + i }))
+    )
+    expect(nuqs.last90Days.at(-1)?.downloads).toBe(145)
+    expect(nextUseQueryState.last90Days.at(-1)?.downloads).toBe(640)
+    expect(nuqs.last90Days.every(d => /^'\d{2}W\d{2}$/.test(d.date))).toBe(true)
+  })
+
+  it('keeps a trailing date when only one package reports zero downloads', async () => {
+    const dates = Array.from(
+      { length: 9 },
+      (_, i) => `2024-05-${String(i + 23).padStart(2, '0')}`
+    )
+    server.use(
+      http.get(registryEndpoint, () =>
+        HttpResponse.json({ time: { created: '2024-06-01T00:00:00Z' } })
+      ),
+      http.get(rangeEndpoint, ({ params }) => {
+        if (params.pkg === 'nuqs,next-usequerystate') {
+          return HttpResponse.json({
+            nuqs: {
+              downloads: dates.map(day => ({ downloads: 10, day }))
+            },
+            'next-usequerystate': {
+              downloads: dates.map((day, i) => ({
+                downloads: i === dates.length - 1 ? 0 : 5,
+                day
+              }))
+            }
+          })
+        }
+        return HttpResponse.json({ downloads: [{ downloads: 12, day: 'x' }] })
+      })
+    )
+
+    const [nuqs, nextUseQueryState] = await fetchNpmPackages()
+
+    expect(nuqs.last30Days.at(-1)).toEqual({
+      date: '2024-05-31',
+      downloads: 10
+    })
+    expect(nextUseQueryState.last30Days.at(-1)).toEqual({
+      date: '2024-05-31',
+      downloads: 5,
+      estimated: true
+    })
+  })
+
+  it('drops a trailing date when both packages report zero downloads', async () => {
+    const dates = Array.from(
+      { length: 9 },
+      (_, i) => `2024-05-${String(i + 23).padStart(2, '0')}`
+    )
+    server.use(
+      http.get(registryEndpoint, () =>
+        HttpResponse.json({ time: { created: '2024-06-01T00:00:00Z' } })
+      ),
+      http.get(rangeEndpoint, ({ params }) => {
+        if (params.pkg === 'nuqs,next-usequerystate') {
+          return HttpResponse.json({
+            nuqs: {
+              downloads: dates.map((day, i) => ({
+                downloads: i === dates.length - 1 ? 0 : 10,
+                day
+              }))
+            },
+            'next-usequerystate': {
+              downloads: dates.map((day, i) => ({
+                downloads: i === dates.length - 1 ? 0 : 5,
+                day
+              }))
+            }
+          })
+        }
+        return HttpResponse.json({ downloads: [{ downloads: 12, day: 'x' }] })
+      })
+    )
+
+    const [nuqs, nextUseQueryState] = await fetchNpmPackages()
+
+    expect(nuqs.last30Days.at(-1)?.date).toBe('2024-05-30')
+    expect(nextUseQueryState.last30Days.at(-1)?.date).toBe('2024-05-30')
+  })
+
+  it('uses only dates present for both packages without extending the 30-day window', async () => {
+    const dates = Array.from({ length: 31 }, (_, i) =>
+      new Date(Date.UTC(2024, 4, 15 + i)).toISOString().slice(0, 10)
+    )
+    const missingDate = '2024-06-01'
+    server.use(
+      http.get(registryEndpoint, () =>
+        HttpResponse.json({ time: { created: '2024-06-01T00:00:00Z' } })
+      ),
+      http.get(rangeEndpoint, ({ params }) => {
+        if (params.pkg === 'nuqs,next-usequerystate') {
+          return HttpResponse.json({
+            nuqs: {
+              downloads: dates.map(day => ({ downloads: 10, day }))
+            },
+            'next-usequerystate': {
+              downloads: dates
+                .filter(day => day !== missingDate)
+                .map(day => ({ downloads: 5, day }))
+            }
+          })
+        }
+        return HttpResponse.json({ downloads: [{ downloads: 12, day: 'x' }] })
+      })
+    )
+
+    const [nuqs, nextUseQueryState] = await fetchNpmPackages()
+
+    const expectedDates = dates.slice(-30).filter(date => date !== missingDate)
+    expect(nuqs.last30Days.map(d => d.date)).toEqual(expectedDates)
+    expect(nextUseQueryState.last30Days.map(d => d.date)).toEqual(expectedDates)
+  })
+
+  it('preserves calendar offsets when a package omits an internal date', async () => {
+    const dates = Array.from({ length: 15 }, (_, i) =>
+      new Date(Date.UTC(2024, 4, 31 + i)).toISOString().slice(0, 10)
+    )
+    const missingDate = '2024-06-06'
+    server.use(
+      http.get(registryEndpoint, () =>
+        HttpResponse.json({ time: { created: '2024-06-01T00:00:00Z' } })
+      ),
+      http.get(rangeEndpoint, ({ params }) => {
+        if (params.pkg === 'nuqs,next-usequerystate') {
+          return HttpResponse.json({
+            nuqs: {
+              downloads: dates.map((day, i) => ({
+                downloads: i === 5 ? 10 : i === 13 ? 0 : 100,
+                day
+              }))
+            },
+            'next-usequerystate': {
+              downloads: dates
+                .filter(day => day !== missingDate)
+                .map(day => ({ downloads: 5, day }))
+            }
+          })
+        }
+        return HttpResponse.json({ downloads: [{ downloads: 12, day: 'x' }] })
+      })
+    )
+
+    const [nuqs] = await fetchNpmPackages()
+
+    expect(nuqs.last30Days.find(d => d.date === '2024-06-13')).toEqual({
+      date: '2024-06-13',
+      downloads: 550,
+      estimated: true
+    })
+  })
+
+  it('rejects an unsuccessful combined response before parsing its body', async () => {
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+    server.use(
+      http.get(registryEndpoint, () =>
+        HttpResponse.json({ time: { created: '2024-06-01T00:00:00Z' } })
+      ),
+      http.get(rangeEndpoint, ({ params }) => {
+        if (params.pkg === 'nuqs,next-usequerystate') {
+          return HttpResponse.json(
+            {
+              nuqs: { downloads: [{ downloads: 10, day: '2024-06-14' }] },
+              'next-usequerystate': {
+                downloads: [{ downloads: 5, day: '2024-06-14' }]
+              }
+            },
+            { status: 503 }
+          )
+        }
+        return HttpResponse.json({ downloads: [{ downloads: 12, day: 'x' }] })
+      })
+    )
+
+    const [nuqs, nextUseQueryState] = await fetchNpmPackages()
+
+    expect(nuqs.last30Days).toEqual([])
+    expect(nextUseQueryState.last30Days).toEqual([])
+    expect(errorSpy).toHaveBeenCalledOnce()
+    expect(errorSpy.mock.calls[0][0]).toMatchObject({
+      cause: expect.objectContaining({
+        message: expect.stringContaining('503')
+      })
+    })
+  })
+
+  it('returns empty recent series and logs when the combined response is malformed', async () => {
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+    server.use(
+      http.get(registryEndpoint, () =>
+        HttpResponse.json({ time: { created: '2024-06-01T00:00:00Z' } })
+      ),
+      http.get(rangeEndpoint, ({ params }) =>
+        params.pkg === 'nuqs,next-usequerystate'
+          ? HttpResponse.json({ broken: true })
+          : HttpResponse.json({ downloads: [{ downloads: 12, day: 'x' }] })
+      )
+    )
+
+    const [nuqs, nextUseQueryState] = await fetchNpmPackages()
+
+    expect(nuqs.allTime).toBe(12)
+    expect(nextUseQueryState.allTime).toBe(12)
+    expect(nuqs.last30Days).toEqual([])
+    expect(nuqs.last90Days).toEqual([])
+    expect(nextUseQueryState.last30Days).toEqual([])
+    expect(nextUseQueryState.last90Days).toEqual([])
+    expect(errorSpy).toHaveBeenCalledOnce()
   })
 })
 
@@ -244,12 +444,43 @@ describe('combineStats', () => {
       date: 'd1',
       nuqs: 10,
       'next-usequerystate': 5,
-      estimated: true
+      estimated: { nuqs: true }
     })
     expect(combined.last90Days[0]).toEqual({
       date: 'w1',
       nuqs: 70,
       'next-usequerystate': 35
     })
+  })
+
+  it('combines only dates shared by both packages', () => {
+    const combined = combineStats(
+      stats(
+        100,
+        [
+          { date: 'd1', downloads: 10 },
+          { date: 'd2', downloads: 20 }
+        ],
+        [{ date: 'w1', downloads: 70 }]
+      ),
+      stats(
+        50,
+        [
+          { date: 'd2', downloads: 5, estimated: true },
+          { date: 'd3', downloads: 6 }
+        ],
+        [{ date: 'w2', downloads: 35 }]
+      )
+    )
+
+    expect(combined.last30Days).toEqual([
+      {
+        date: 'd2',
+        nuqs: 20,
+        'next-usequerystate': 5,
+        estimated: { 'next-usequerystate': true }
+      }
+    ])
+    expect(combined.last90Days).toEqual([])
   })
 })

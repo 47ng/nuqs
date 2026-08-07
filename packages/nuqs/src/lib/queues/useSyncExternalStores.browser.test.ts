@@ -42,7 +42,7 @@ describe('useSyncExternalStores', () => {
     const { result, act } = await renderHook(useTest)
     expect(result.current).toEqual({ a: 0 })
     // Update the store
-    act(() => {
+    await act(() => {
       store.a = 1
       emitter.emit('a')
     })
@@ -65,7 +65,7 @@ describe('useSyncExternalStores', () => {
       )
     const { result, rerender } = await renderHook(useTest)
     expect(result.current).toEqual({ a: 0 })
-    rerender({ keys: ['b'] })
+    await rerender({ keys: ['b'] })
     expect(result.current).toEqual({ b: 0 })
   })
   it('should not re-render when a non-listened key changes', async () => {
@@ -93,14 +93,14 @@ describe('useSyncExternalStores', () => {
     expect(result.current.result).toEqual({ a: 0 })
     expect(result.current.renderCount).toBe(1)
     // Update another key
-    act(() => {
+    await act(() => {
       store.b = 1
       emitter.emit('b')
     })
     expect(result.current.result).toEqual({ a: 0 })
     expect(result.current.renderCount).toBe(1)
     // Update the listened key
-    act(() => {
+    await act(() => {
       store.a = 1
       emitter.emit('a')
     })

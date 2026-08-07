@@ -87,6 +87,12 @@ export const SPONSORS: Sponsors = [
     img: 'https://avatars.githubusercontent.com/u/93287080?s=200&v=4'
   },
   {
+    handle: 'teknikgeek',
+    name: 'TeknikGeek',
+    url: 'https://www.teknikgeek.se/',
+    img: '/sponsors/teknikgeek.jpeg'
+  },
+  {
     handle: 'pqoqubbw',
     name: 'dmytro',
     url: 'https://pqoqubbw.dev/',

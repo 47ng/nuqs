@@ -40,8 +40,7 @@ export type MultiParser<T> = {
 
 export type GenericParser<T> = SingleParser<T> | MultiParser<T>
 export type GenericParserBuilder<T> =
-  | SingleParserBuilder<T>
-  | MultiParserBuilder<T>
+  SingleParserBuilder<T> | MultiParserBuilder<T>
 
 /* type aliases for backwards compatibility */
 /** @deprecated use SingleParser instead */
@@ -255,7 +254,8 @@ export const parseAsHex: SingleParserBuilder<number> = createParser({
   },
   serialize: v => {
     const hex = Math.round(v).toString(16)
-    return (hex.length & 1 ? '0' : '') + hex
+    // Negative hex starts with '-', which sorts before '0' and needs no padding
+    return hex < '0' || !(hex.length & 1) ? hex : '0' + hex
   }
 })
 
@@ -282,8 +282,8 @@ function compareDates(a: Date, b: Date) {
  */
 export const parseAsTimestamp: SingleParserBuilder<Date> = createParser({
   parse: v => {
-    const ms = parseInt(v)
-    return ms == ms ? new Date(ms) : null // NaN check at low bundle size cost
+    const date = new Date(parseInt(v))
+    return date.valueOf() == date.valueOf() ? date : null // NaN check at low bundle size cost
   },
   serialize: (v: Date) => '' + v.valueOf(),
   eq: compareDates
@@ -518,7 +518,11 @@ export function parseAsNativeArrayOf<ItemType>(
       const parsed = query
         .map((item, index) => safeParse(itemParser.parse, item, `[${index}]`))
         .filter(value => value !== null && value !== undefined) as ItemType[]
-      return parsed.length === 0 ? null : parsed
+      if (parsed.length > 0) {
+        return parsed
+      }
+      // Parse a single empty query value as an explicit empty array.
+      return query.length === 1 && query[0] === '' ? [] : null
     },
     serialize: values => {
       // defensive check because we potentially get a single value passed from a standard schema

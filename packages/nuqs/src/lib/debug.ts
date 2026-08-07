@@ -37,7 +37,10 @@ export function isDebugFlagSet(): boolean {
   // Backend (Node/server): use DEBUG env var, never touch localStorage.
   // --localstorage-file triggers a warning.
   if (typeof window === 'undefined') {
-    return (process.env.DEBUG || '').includes('nuqs')
+    return (
+      typeof process !== 'undefined' &&
+      (process.env.DEBUG || '').includes('nuqs')
+    )
   }
 
   // Check if localStorage is available.

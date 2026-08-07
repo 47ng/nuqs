@@ -3,8 +3,7 @@
   "ignoreExportsUsedInFile": true,
   "workspaces": {
     ".": {
-      "ignoreDependencies": ["@commitlint/config-conventional", "commitlint"],
-      "ignoreBinaries": ["packages/scripts/verify-release/verify.production.ts"]
+      "ignoreDependencies": ["@commitlint/config-conventional", "commitlint"]
     },
     "packages/scripts": {
       "entry": [
@@ -13,8 +12,7 @@
         "release-finalize.ts",
         "release-notes-automation.ts",
         "validate-changelog-dto.ts",
-        "verify-release/verify.staged.ts",
-        "verify-release/verify.production.ts"
+        "verify-release/verify.staged.ts"
       ],
       "project": ["**/*.ts"]
     },
@@ -38,11 +36,10 @@
         "src/adapters/testing.ts"
       ],
       "project": ["src/**/*.ts"],
-      "ignoreDependencies": ["@vitejs/plugin-react", "typescript-7"]
+      "ignoreDependencies": ["@vitejs/plugin-react"]
     },
     "packages/docs": {
       "entry": [
-        "source.config.ts",
         "rehype-code.config.ts",
         "content/**/*.{ts,tsx,mdx}",
         "src/app/**/page.tsx",
@@ -52,8 +49,7 @@
         "src/components/code-block-highlighter.ts",
         "src/components/feature-support-matrix.tsx",
         "src/components/since-version.tsx",
-        "src/components/frameworks.tsx",
-        "src/schemas/changelog-dto.gen.ts"
+        "src/components/frameworks.tsx"
       ],
       "project": ["content/**/*.{ts,tsx}", "src/**/*.{ts,tsx}"],
       "paths": {
@@ -62,20 +58,13 @@
       "next": true,
       "ignoreFiles": [
         "src/components/code-block-highlighter.skeleton.ts",
-        "src/components/github-profile.tsx",
-        "src/components/kibo-ui/**",
-        "src/components/release-contribution-graph.client.tsx",
-        "src/components/release-contribution-graph.tsx",
         "src/components/sponsors-layout-lab.tsx",
-        "src/components/ui/pr-line.tsx",
-        "src/components/vercel-oss-badge.tsx",
         "src/lib/typed-links.ts"
       ],
       "ignoreDependencies": [
         "@headlessui/tailwindcss",
         "@tailwindcss/container-queries",
         "@types/mdx",
-        "date-fns",
         "hast-util-to-jsx-runtime",
         "tailwindcss-animate"
       ]
@@ -107,11 +96,7 @@
       "project": ["**/*.{ts,tsx}"]
     },
     "packages/e2e/tanstack-router": {
-      "entry": [
-        "src/routes/**/*.tsx",
-        "src/routeTree.gen.ts",
-        "specs/**/*.ts"
-      ],
+      "entry": ["src/routes/**/*.tsx", "src/routeTree.gen.ts", "specs/**/*.ts"],
       "project": ["**/*.{ts,tsx}"]
     },
     "packages/e2e/react-router/v5": {
@@ -142,7 +127,8 @@
     }
   },
   "ignoreIssues": {
-    "packages/docs/src/components/ui/**": ["exports", "types"]
+    "packages/docs/src/components/ui/**": ["exports", "types"],
+    "packages/docs/src/components/kibo-ui/**": ["exports", "types"]
   },
   "rules": {
     "optionalPeerDependencies": "off"

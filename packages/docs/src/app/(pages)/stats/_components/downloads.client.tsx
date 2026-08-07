@@ -10,13 +10,30 @@ import {
 import type { ReactNode } from 'react'
 import { CartesianGrid, Line, LineChart, XAxis, YAxis } from 'recharts'
 import { formatDate, formatStatNumber } from '../lib/format'
-import type { Datum, MultiDatum } from '../lib/npm'
+import type { Datum, MultiDatum, MultiDatumSeries } from '../lib/npm'
 import { PartialLine } from './partial-line'
 import { Widget, WidgetProps } from './widget'
 
-function EstimatedDot(props: any) {
+function isSeriesEstimated(
+  payload: Datum | MultiDatum | undefined,
+  series: MultiDatumSeries
+) {
+  const estimated = payload?.estimated
+  return typeof estimated === 'boolean'
+    ? estimated
+    : estimated?.[series] === true
+}
+
+function hasEstimatedData(payload: Datum | MultiDatum | undefined) {
+  const estimated = payload?.estimated
+  return typeof estimated === 'boolean'
+    ? estimated
+    : Object.values(estimated ?? {}).some(Boolean)
+}
+
+function EstimatedDot({ series, ...props }: any) {
   const { cx, cy, payload } = props
-  if (!payload?.estimated) return null
+  if (!isSeriesEstimated(payload, series)) return null
   return (
     <circle
       cx={cx}
@@ -99,7 +116,7 @@ export function DownloadsGraph({
                 }
                 labelClassName="border-border border-b px-3 py-2"
                 labelFormatter={(label, payload) => {
-                  const estimated = payload?.[0]?.payload?.estimated
+                  const estimated = hasEstimatedData(payload?.[0]?.payload)
                   const formattedLabel = String(label).startsWith("'")
                     ? label
                     : formatDate(String(label), '', {
@@ -133,7 +150,7 @@ export function DownloadsGraph({
             type="monotone"
             stroke="var(--color-red-500)"
             className="stroke-red-500 dark:stroke-red-400"
-            dot={<EstimatedDot />}
+            dot={<EstimatedDot series="nuqs" />}
             strokeWidth={2}
           />
           <Line
@@ -142,7 +159,7 @@ export function DownloadsGraph({
             type="monotone"
             stroke="var(--color-zinc-500)"
             strokeOpacity={0.5}
-            dot={<EstimatedDot />}
+            dot={<EstimatedDot series="next-usequerystate" />}
             strokeWidth={2}
           />
         </LineChart>
