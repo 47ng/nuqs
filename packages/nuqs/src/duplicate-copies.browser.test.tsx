@@ -6,6 +6,7 @@ import * as nextPagesAdapterA from './adapters/next/pages'
 import * as reactAdapterA from './adapters/react'
 import * as adapterA from './adapters/testing'
 import * as nuqsA from './index'
+import { resetQueues } from './lib/queues/reset'
 import * as nuqsB from 'nuqs-copy-b'
 import * as nextPagesAdapterB from 'nuqs-copy-b/adapters/next/pages'
 import * as reactAdapterB from 'nuqs-copy-b/adapters/react'
@@ -321,7 +322,7 @@ describe('duplicate library copies', () => {
     expect(event.searchParams.get('q')).toBe('fast')
   })
 
-  it('shows optimistic state from the other copy before the URL commits', async () => {
+  it('shows optimistic state from the other copy while a throttled URL update is pending', async () => {
     const onUrlUpdate = vi.fn<adapterA.OnUrlUpdateFunction>()
     function DemoA() {
       const [q] = nuqsA.useQueryState('q')
@@ -330,12 +331,17 @@ describe('duplicate library copies', () => {
     function DemoB() {
       const [, setQ] = nuqsB.useQueryState('q')
       return (
-        <button
-          data-testid="b"
-          onClick={() =>
-            setQ('optimistic', { limitUrlUpdates: nuqsB.throttle(500) })
-          }
-        />
+        <>
+          <button data-testid="flush" onClick={() => setQ('initial')} />
+          <button
+            data-testid="b"
+            onClick={() =>
+              setQ('optimistic', {
+                limitUrlUpdates: nuqsB.throttle(10_000)
+              })
+            }
+          />
+        </>
       )
     }
     render(
@@ -350,9 +356,21 @@ describe('duplicate library copies', () => {
         })
       }
     )
-    await page.getByTestId('b').click()
-    await expect.element(page.getByTestId('a')).toHaveTextContent('optimistic')
-    expect(onUrlUpdate).not.toHaveBeenCalled()
+    // Establish the start of the throttle window in this test instead of
+    // inheriting an indeterminate last-flush timestamp from an earlier test.
+    await page.getByTestId('flush').click()
+    await vi.waitFor(() => expect(onUrlUpdate).toHaveBeenCalledTimes(1))
+    onUrlUpdate.mockClear()
+
+    try {
+      await page.getByTestId('b').click()
+      await expect
+        .element(page.getByTestId('a'))
+        .toHaveTextContent('optimistic')
+      expect(onUrlUpdate).not.toHaveBeenCalled()
+    } finally {
+      resetQueues()
+    }
   })
 
   it('shows pending debounced state from the other copy', async () => {
