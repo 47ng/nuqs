@@ -1,10 +1,20 @@
 import { debug } from '../../lib/debug'
-import type { Emitter } from '../../lib/emitter'
+import { createEmitter, type Emitter } from '../../lib/emitter'
 import { error } from '../../lib/errors'
+import { globalSingleton } from '../../lib/global-singleton'
 import { resetQueues, spinQueueResetMutex } from '../../lib/queues/reset'
 import { getSearchParams } from '../../lib/search-params'
+import { version } from '../../lib/version'
 
 export type SearchParamsSyncEmitterEvents = { update: URLSearchParams }
+
+export function getHistorySyncEmitter(
+  adapter: string
+): Emitter<SearchParamsSyncEmitterEvents> {
+  return globalSingleton(`history-emitter.${adapter}`, () =>
+    createEmitter<SearchParamsSyncEmitterEvents>()
+  )
+}
 
 export const historyUpdateMarker = '__nuqs__'
 
@@ -15,14 +25,11 @@ export function shouldPatchHistory(adapter: string): boolean {
   if (typeof history === 'undefined') {
     return false
   }
-  if (
-    history.nuqs?.version &&
-    history.nuqs.version !== '0.0.0-inject-version-here'
-  ) {
+  if (history.nuqs?.version && history.nuqs.version !== version) {
     console.error(
       error(409),
       history.nuqs.version,
-      `0.0.0-inject-version-here`,
+      version,
       `the ${adapter} adapter`
     )
     return false
@@ -37,8 +44,7 @@ export function markHistoryAsPatched(adapter: string): void {
   // The slot may pre-exist (created by the update queue for rate-limit
   // accounting), so claim `version` and `adapters` individually.
   const slot = (history.nuqs ??= {})
-  // This will be replaced by the prepack script
-  slot.version ??= '0.0.0-inject-version-here'
+  slot.version ??= version
   slot.adapters ??= []
   slot.adapters.push(adapter)
 }
@@ -62,7 +68,7 @@ export function patchHistory(
     resetQueues()
   })
 
-  debug(21, '0.0.0-inject-version-here', adapter)
+  debug(21, version, adapter)
   function sync(url: URL | string) {
     spinQueueResetMutex()
     try {

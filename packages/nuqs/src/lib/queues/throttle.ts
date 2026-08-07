@@ -4,6 +4,7 @@ import { compose } from '../compose'
 import { debug } from '../debug'
 import { createEmitter, type Emitter } from '../emitter'
 import { error } from '../errors'
+import { globalSingleton } from '../global-singleton'
 import { write, type Query } from '../search-params'
 import { timeout } from '../timeout'
 import { withResolvers, type Resolvers } from '../with-resolvers'
@@ -15,13 +16,9 @@ declare global {
       version?: string
       adapters?: string[]
       lastFlushedAt?: number
-      queues?: number
     }
   }
 }
-
-// This will be replaced by the prepack script
-const version = '0.0.0-inject-version-here'
 
 // `version` is claimed by the history patch (adapters/lib/patch-history.ts),
 // keeping mount-order precedence for the version-skew detection there.
@@ -32,25 +29,6 @@ function getHistorySlot(): NonNullable<History['nuqs']> | null {
     return null
   }
   return (history.nuqs ??= { adapters: [] })
-}
-
-// Duplicated copies of this module (bundler or version duplication) would
-// each run their own queue against the browser's single History API budget.
-{
-  const slot = getHistorySlot()
-  if (slot) {
-    slot.queues = (slot.queues ?? 0) + 1
-    if (slot.queues > 1) {
-      // `version` is claimed by the first adapter to patch history, which may
-      // not have happened yet at module-evaluation time.
-      console.error(
-        error(409),
-        slot.version ?? 'unknown',
-        version,
-        'update queue'
-      )
-    }
-  }
 }
 
 type UpdateMap = Map<string, Query | null>
@@ -278,12 +256,18 @@ export class ThrottledQueue {
       }
     }
     if (processUrlSearchParams) {
-      search = processUrlSearchParams(search)
+      try {
+        search = processUrlSearchParams(search)
+      } catch (err) {
+        console.error(error(502), items.map(([key]) => key).join(), err)
+        // Some adapters keep the queue available during concurrent renders,
+        // so discard this failed batch only when the next update starts.
+        this.resetQueueOnNextPush = true
+        return [search, err]
+      }
     }
     try {
-      compose(transitions, () => {
-        updateUrl(search, options)
-      })
+      compose(transitions, () => updateUrl(search, options))
       return [search, null]
     } catch (err) {
       // This may fail due to rate-limiting of history methods,
@@ -304,4 +288,7 @@ export class ThrottledQueue {
   }
 }
 
-export const globalThrottleQueue: ThrottledQueue = new ThrottledQueue()
+export const globalThrottleQueue: ThrottledQueue = globalSingleton(
+  'throttle-queue',
+  () => new ThrottledQueue()
+)

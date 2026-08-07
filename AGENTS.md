@@ -71,7 +71,13 @@ For detailed development guidelines organized by task, see:
 
 ## Debugging
 
-Enable debug logs in the browser console:
+Import the opt-in debug bundle once in each runtime where logs are needed:
+
+```ts
+import 'nuqs/debug'
+```
+
+Then enable debug logs in the browser console and reload the page:
 
 ```js
 localStorage.setItem('debug', 'nuqs')

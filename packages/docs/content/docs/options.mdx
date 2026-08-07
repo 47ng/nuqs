@@ -326,6 +326,18 @@ function ClientComponent({ data }) {
 }
 ```
 
+<Callout title="React Router support">
+  In React Router v7+ data routers, `navigate(){:ts}` returns a Promise, so
+  `isLoading{:ts}` stays true until route loaders have settled (this requires
+  React 19, where transitions can await promises).
+
+  In declarative routers, React Router v6, and Remix, `navigate(){:ts}` doesn't
+  report navigation completion, so `isLoading{:ts}` only covers the URL update.
+  In data router apps, use
+  [`useNavigation{:ts}`](https://reactrouter.com/api/hooks/useNavigation) to
+  track loader states instead.
+</Callout>
+
 <Callout>
   In `nuqs@1.x.x`, passing `startTransition{:ts}` as an option automatically sets
   `shallow: false{:ts}`.

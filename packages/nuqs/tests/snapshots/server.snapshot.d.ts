@@ -34,7 +34,7 @@ export type MultiParserBuilder<T> = Required<MultiParser<T>> & Options & {
   };
   parseServerSide(_: string | string[] | undefined): T | null;
 };
-export type Nullable<T> = { [K in keyof T]: T[K] | null } & {};
+export type Nullable<T> = { [K in keyof T]: T[K] | null; } & {};
 export type Options = {
   history?: HistoryOptions;
   scroll?: boolean;
@@ -69,25 +69,14 @@ export type UrlKeys<Parsers extends Record<string, any>> = Partial<Record<keyof 
 // #endregion
 
 // #region Functions
-export declare function createLoader<Parsers extends ParserMap>(_: Parsers, {
-  urlKeys
-}?: CreateLoaderOptions<Parsers>): LoaderFunction<Parsers>;
+export declare function createLoader<Parsers extends ParserMap>(_: Parsers, { urlKeys }?: CreateLoaderOptions<Parsers>): LoaderFunction<Parsers>;
 export declare function createMultiParser<T>(_: Omit<Require<MultiParser<T>, "parse" | "serialize">, "type">): MultiParserBuilder<T>;
 export declare function createParser<T>(_: Require<SingleParser<T>, "parse" | "serialize">): SingleParserBuilder<T>;
-export declare function createSearchParamsCache<Parsers extends ParserMap>(_: Parsers, {
-  urlKeys
-}?: {
+export declare function createSearchParamsCache<Parsers extends ParserMap>(_: Parsers, { urlKeys }?: {
   urlKeys?: UrlKeys<Parsers>;
 }): CacheInterface<Parsers>;
-export declare function createSerializer<Parsers extends ParserMap, BaseType extends Base = Base, Return = string>(_: Parsers, {
-  clearOnDefault,
-  urlKeys,
-  processUrlSearchParams
-}?: CreateSerializerOptions<Parsers>): SerializeFunction<Parsers, BaseType, Return>;
-export declare function createStandardSchemaV1<Parsers extends ParserMap, PartialOutput extends boolean = false>(_: Parsers, {
-  urlKeys,
-  partialOutput
-}?: CreateStandardSchemaV1Options<Parsers, PartialOutput>): StandardSchemaV1<MaybePartial<PartialOutput, inferParserType<Parsers>>>;
+export declare function createSerializer<Parsers extends ParserMap, BaseType extends Base = Base, Return = string>(_: Parsers, { clearOnDefault, urlKeys, processUrlSearchParams }?: CreateSerializerOptions<Parsers>): SerializeFunction<Parsers, BaseType, Return>;
+export declare function createStandardSchemaV1<Parsers extends ParserMap, PartialOutput extends boolean = false>(_: Parsers, { urlKeys, partialOutput }?: CreateStandardSchemaV1Options<Parsers, PartialOutput>): StandardSchemaV1<MaybePartial<PartialOutput, inferParserType<Parsers>>>;
 export declare function debounce(_: number): LimitUrlUpdates;
 export declare function parseAsArrayOf<ItemType>(_: SingleParser<ItemType>, _?: string): SingleParserBuilder<ItemType[]>;
 export declare function parseAsJson<T>(_: ((_: unknown) => T | null) | StandardSchemaV1<T>): SingleParserBuilder<T>;

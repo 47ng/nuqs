@@ -5,7 +5,8 @@ export const errors = {
   414: 'Max safe URL length exceeded. Some browsers may not be able to accept this URL. Consider limiting the amount of state stored in the URL.',
   429: 'URL update rate-limited by the browser. Consider increasing `throttleMs` for key(s) `%s`. %O',
   500: "Empty search params cache. Search params can't be accessed in Layouts.",
-  501: 'Search params cache already populated. Have you called `parse` twice?'
+  501: 'Search params cache already populated. Have you called `parse` twice?',
+  502: '`processUrlSearchParams` threw while processing key(s) `%s`. %O'
 } as const
 
 export function error(code: keyof typeof errors) {

@@ -1,15 +1,14 @@
 import { startTransition, useCallback, useEffect, useState } from 'react'
 import { debug } from '../../lib/debug'
-import { createEmitter } from '../../lib/emitter'
 import { setQueueResetMutex } from '../../lib/queues/reset'
 import { renderQueryString } from '../../lib/url-encoding'
 import { createAdapterProvider, type AdapterProvider } from './context'
 import type { AdapterInterface, AdapterOptions } from './defs'
 import { applyChange, filterSearchParams } from './key-isolation'
 import {
-  patchHistory as applyHistoryPatch,
+  getHistorySyncEmitter,
   historyUpdateMarker,
-  type SearchParamsSyncEmitterEvents
+  patchHistory as applyHistoryPatch
 } from './patch-history'
 
 // Abstract away the types for the useNavigate hook from react-router-based frameworks
@@ -22,7 +21,13 @@ type NavigateOptions = {
   preventScrollReset?: boolean
   state?: unknown
 }
-type NavigateFn = (url: NavigateUrl, options: NavigateOptions) => void
+// In React Router v7+ data routers, navigate may return a Promise that
+// resolves when the navigation completes (loaders included). Declarative
+// routers (eg: BrowserRouter) and earlier versions return void.
+type NavigateFn = (
+  url: NavigateUrl,
+  options: NavigateOptions
+) => void | Promise<void>
 type UseNavigate = () => NavigateFn
 type UseSearchParams = (initial: URLSearchParams) => [URLSearchParams, {}]
 
@@ -42,7 +47,7 @@ export function createReactRouterBasedAdapter({
   NuqsAdapter: AdapterProvider
   useOptimisticSearchParams: () => URLSearchParams
 } {
-  const emitter = createEmitter<SearchParamsSyncEmitterEvents>()
+  const emitter = getHistorySyncEmitter(adapter)
   function useNuqsReactRouterBasedAdapter(
     watchKeys: string[]
   ): AdapterInterface {
@@ -67,8 +72,9 @@ export function createReactRouterBasedAdapter({
           historyUpdateMarker,
           url
         )
+        let navigationSettled: Promise<void> | undefined
         if (options.shallow === false) {
-          navigate(
+          const maybePromise = navigate(
             {
               // Somehow passing the full URL object here strips the search params
               // when accessing the request.url in loaders.
@@ -81,10 +87,20 @@ export function createReactRouterBasedAdapter({
               state: history.state?.usr
             }
           )
+          // Returning the navigation promise (v7+) turns the user's
+          // startTransition into an async action, keeping isPending true
+          // until loaders have settled (#1184). It must come from the router,
+          // not from observing a commit: while the action is pending, React
+          // entangles the router's own transition-wrapped state updates with
+          // it, so waiting on a commit would deadlock.
+          if (maybePromise instanceof Promise) {
+            navigationSettled = maybePromise
+          }
         }
         if (options.scroll) {
           window.scrollTo(0, 0)
         }
+        return navigationSettled
       },
       [navigate]
     )

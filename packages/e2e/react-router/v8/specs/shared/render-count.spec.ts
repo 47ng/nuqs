@@ -23,7 +23,10 @@ for (const hook of hooks) {
             // costs one extra render (down from two) thanks to upstream route
             // matching optimisations. With a loader, revalidation still adds a
             // second render (see the loader cases below).
-            update: 2 + (shallow === false ? 1 : 0)
+            // With a user startTransition, nuqs feeds the navigation promise to the
+            // transition (async action), entangling the router state updates with it:
+            // deep updates then render no more than shallow ones (#1184).
+            update: 2 + (shallow === false && !startTransition ? 1 : 0)
           }
         })
       }
@@ -46,7 +49,7 @@ for (const hook of hooks) {
           },
           expected: {
             mount: 1,
-            update: 2 + (shallow === false ? 2 : 0)
+            update: 2 + (shallow === false && !startTransition ? 2 : 0)
           }
         })
       }
@@ -71,7 +74,7 @@ for (const hook of hooks) {
             },
             expected: {
               mount: 1,
-              update: 2 + (shallow === false ? 2 : 0)
+              update: 2 + (shallow === false && !startTransition ? 2 : 0)
             }
           })
         }

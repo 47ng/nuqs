@@ -9,18 +9,17 @@ import {
   type ReactNode
 } from 'react'
 import { debug } from '../lib/debug'
-import { createEmitter } from '../lib/emitter'
 import { renderQueryString } from '../lib/url-encoding'
 import { createAdapterProvider, type AdapterProps } from './lib/context'
 import type { AdapterInterface, AdapterOptions } from './lib/defs'
 import { filterSearchParams } from './lib/key-isolation'
 import {
+  getHistorySyncEmitter,
   historyUpdateMarker,
-  patchHistory,
-  type SearchParamsSyncEmitterEvents
+  patchHistory
 } from './lib/patch-history'
 
-const emitter = createEmitter<SearchParamsSyncEmitterEvents>()
+const emitter = getHistorySyncEmitter('react')
 
 function generateUpdateUrlFn(fullPageNavigationOnShallowFalseUpdates: boolean) {
   return function updateUrl(search: URLSearchParams, options: AdapterOptions) {

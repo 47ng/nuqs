@@ -22,6 +22,14 @@ describe('cache', () => {
       string: "I'm a string"
     }
 
+    it.each(['constructor', 'hasOwnProperty'])(
+      'throws when reading %s before parsing',
+      key => {
+        const cache = createSearchParamsCache({ [key]: parseAsString })
+        expect(() => cache.get(key)).toThrow(/in get/)
+      }
+    )
+
     it('allows parsing the same object multiple times in a request', () => {
       const cache = createSearchParamsCache({
         string: parseAsString
@@ -163,10 +171,43 @@ describe('cache', () => {
       const array = ['a', 'b']
       expect(compareSearchParams({ x: array }, { x: array })).toBe(true)
     })
-    it('does not do deep comparison', () => {
+    it('does a deep comparison of array values', () => {
       expect(compareSearchParams({ x: ['a', 'b'] }, { x: ['a', 'b'] })).toBe(
+        true
+      )
+    })
+    it('rejects different array values', () => {
+      expect(
+        compareSearchParams({ tag: ['a', 'b'] }, { tag: ['a', 'c'] })
+      ).toBe(false)
+    })
+    it('rejects different array lengths', () => {
+      expect(compareSearchParams({ tag: ['a'] }, { tag: ['a', 'b'] })).toBe(
         false
       )
+    })
+    it('rejects an array compared to a string', () => {
+      expect(compareSearchParams({ tag: ['a'] }, { tag: 'a' })).toBe(false)
+    })
+    it('accepts equal strings', () => {
+      expect(compareSearchParams({ q: 'x' }, { q: 'x' })).toBe(true)
+    })
+    it('accepts the same object reference', () => {
+      const p = { q: 'x' }
+      expect(compareSearchParams(p, p)).toBe(true)
+    })
+    it('rejects a key with an undefined value vs an absent key', () => {
+      expect(
+        compareSearchParams({ q: 'x', empty: undefined }, { q: 'x' })
+      ).toBe(false)
+    })
+    it('rejects an absent key vs a key with an undefined value', () => {
+      expect(
+        compareSearchParams({ q: 'x' }, { q: 'x', empty: undefined })
+      ).toBe(false)
+    })
+    it('accepts both values being undefined', () => {
+      expect(compareSearchParams({ q: undefined }, { q: undefined })).toBe(true)
     })
   })
 })

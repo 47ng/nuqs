@@ -96,6 +96,23 @@ describe('throttle: ThrottleQueue option combination logic', () => {
     expect(startTransitionB).toHaveBeenCalledOnce()
     expect(startTransitionA).toHaveBeenCalledBefore(startTransitionB)
   })
+  it('passes the updateUrl result to the transition, so a Promise makes it an async action', async () => {
+    const navigationSettled = Promise.resolve()
+    const mockAdapter = createMockAdapter()
+    vi.mocked(mockAdapter.updateUrl).mockReturnValue(navigationSettled)
+    const onTransitionReturn = vi.fn()
+    const startTransition = vi
+      .fn()
+      .mockImplementation((callback: () => void | Promise<void>) =>
+        onTransitionReturn(callback())
+      )
+    const queue = new ThrottledQueue()
+    queue.push({ key: 'a', query: null, options: { startTransition } })
+    await queue.flush(mockAdapter)
+    expect(onTransitionReturn).toHaveBeenCalledExactlyOnceWith(
+      navigationSettled
+    )
+  })
   it('keeps the maximum value for timeMs', () => {
     const queue = new ThrottledQueue()
     queue.push({ key: 'a', query: null, options: {} }, 100)
@@ -426,6 +443,34 @@ describe('throttle: flush', () => {
       'a',
       new Error('updateUrl error')
     )
+  })
+  it('rejects and resets when processUrlSearchParams throws', async () => {
+    const consoleErrorSpy = vi
+      .spyOn(console, 'error')
+      .mockImplementation(() => {})
+    const adapter = {
+      ...createMockAdapter(),
+      autoResetQueueOnUpdate: false
+    }
+    const queue = new ThrottledQueue()
+    queue.push({ key: 'a', query: 'a', options: {} })
+    const promise = queue.flush(adapter, () => {
+      throw new Error('middleware error')
+    })
+
+    expect(() => vi.runAllTimers()).not.toThrow()
+    await expect(promise).rejects.toEqual(new URLSearchParams('?a=a'))
+    expect(adapter.updateUrl).not.toHaveBeenCalled()
+    expect(consoleErrorSpy).toHaveBeenCalledExactlyOnceWith(
+      '[nuqs] `processUrlSearchParams` threw while processing key(s) `%s`. %O\n  See https://nuqs.dev/NUQS-502',
+      'a',
+      new Error('middleware error')
+    )
+
+    queue.push({ key: 'b', query: 'b', options: {} })
+    const nextPromise = queue.flush(adapter)
+    vi.runAllTimers()
+    await expect(nextPromise).resolves.toEqual(new URLSearchParams('?b=b'))
   })
   it('should process url search params', async () => {
     const mockAdapter = createMockAdapter()

@@ -1,4 +1,5 @@
 import { debug } from '../debug'
+import { globalSingleton } from '../global-singleton'
 import type { Query } from '../search-params'
 import { timeout } from '../timeout'
 import { withResolvers, type Resolvers } from '../with-resolvers'
@@ -150,6 +151,7 @@ export class DebounceController {
   }
 }
 
-export const debounceController: DebounceController = new DebounceController(
-  globalThrottleQueue
+export const debounceController: DebounceController = globalSingleton(
+  'debounce-controller',
+  () => new DebounceController(globalThrottleQueue)
 )

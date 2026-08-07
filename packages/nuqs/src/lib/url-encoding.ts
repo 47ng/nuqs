@@ -51,10 +51,10 @@ export function encodeQueryValue(input: string): string {
 const URL_MAX_LENGTH = 2000
 
 function warnIfURLIsTooLong(queryString: string): void {
-  if (process.env.NODE_ENV === 'production') {
+  if (typeof location === 'undefined') {
     return
   }
-  if (typeof location === 'undefined') {
+  if (process.env.NODE_ENV === 'production') {
     return
   }
   const url = new URL(location.href)
