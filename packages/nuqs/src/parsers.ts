@@ -292,11 +292,16 @@ export const parseAsTimestamp: SingleParserBuilder<Date> = createParser({
 /**
  * Querystring encoded as an ISO-8601 string (UTC),
  * and returned as a Date object.
+ *
+ * The date part must be a valid `YYYY-MM-DD` calendar date:
+ * impossible dates like 2021-02-29 and reduced-precision
+ * or non-ISO forms parse to null.
  */
 export const parseAsIsoDateTime: SingleParserBuilder<Date> = createParser({
   parse: v => {
     const date = new Date(v)
-    // NaN check at low bundle size cost
+    // The NaN check rejects invalid time parts,
+    // reusing parseAsIsoDate.parse rejects invalid calendar dates
     return +date == +date && parseAsIsoDate.parse(v) ? date : null
   },
   serialize: (v: Date) => v.toISOString(),
@@ -310,11 +315,16 @@ export const parseAsIsoDateTime: SingleParserBuilder<Date> = createParser({
  *
  * The Date is parsed without the time zone offset,
  * making it at 00:00:00 UTC.
+ *
+ * Only valid `YYYY-MM-DD` calendar dates are accepted:
+ * impossible dates like 2021-02-29 and reduced-precision
+ * or non-ISO forms parse to null.
  */
 export const parseAsIsoDate: SingleParserBuilder<Date> = createParser({
   parse: v => {
     const date = new Date(v.slice(0, 10))
-    // NaN and calendar date normalization checks
+    // NaN check first: serialize throws on Invalid Date.
+    // The roundtrip rejects dates the constructor normalizes.
     return +date == +date && parseAsIsoDate.serialize(date) === v.slice(0, 10)
       ? date
       : null
