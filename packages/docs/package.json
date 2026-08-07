@@ -77,12 +77,11 @@
     "@types/react-dom": "catalog:react19",
     "hast-util-to-jsx-runtime": "^2.3.6",
     "msw": "catalog:msw",
-    "postcss": "^8.5.19",
+    "postcss": "^8.5.23",
     "prettier-plugin-tailwindcss": "^0.8.1",
     "shadcn": "^4.13.0",
     "shiki": "^4.3.1",
     "typescript": "catalog:typescript",
-    "typescript-7": "catalog:typescript",
     "unified": "^11.0.5",
     "vitest": "catalog:vitest"
   },

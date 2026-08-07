@@ -4,7 +4,8 @@ import { Download, Minus, TrendingDown, TrendingUp } from 'lucide-react'
 import { formatStatNumber } from '../lib/format'
 import {
   combineStats,
-  fetchNpmPackage,
+  fetchNpmPackages,
+  getDownloadsNDaysBeforeLatest,
   getIsoWeekday,
   getPartialPreviousWeekDownloads
 } from '../lib/npm'
@@ -13,10 +14,7 @@ import { GraphSkeleton } from './graph.skeleton'
 import { WidgetSkeleton } from './widget.skeleton'
 
 export async function NPMStats() {
-  const [nuqs, nextUseQueryState] = await Promise.all([
-    fetchNpmPackage('nuqs'),
-    fetchNpmPackage('next-usequerystate')
-  ])
+  const [nuqs, nextUseQueryState] = await fetchNpmPackages()
   const both = combineStats(nuqs, nextUseQueryState)
   return (
     <>
@@ -50,10 +48,7 @@ export const NPMStatsSkeleton = () => (
 )
 
 export async function NPMDownloads() {
-  const [nuqs, nextUseQueryState] = await Promise.all([
-    fetchNpmPackage('nuqs'),
-    fetchNpmPackage('next-usequerystate')
-  ])
+  const [nuqs, nextUseQueryState] = await fetchNpmPackages()
   const both = combineStats(nuqs, nextUseQueryState)
   const lastDate = both.last30Days.at(-1)?.date
   const lastDateWeekday = getIsoWeekday(lastDate ?? '')
@@ -119,7 +114,9 @@ export async function NPMDownloads() {
         trend={
           <TrendBadge
             label="nuqs downloads compared to 7 days ago"
-            oldValue={nuqs.last30Days.at(-8)?.downloads ?? 0}
+            oldValue={
+              getDownloadsNDaysBeforeLatest(nuqs.last30Days, 7)?.downloads ?? 0
+            }
             newValue={nuqs.last30Days.at(-1)?.downloads ?? 0}
           />
         }
@@ -238,7 +235,9 @@ function TrendBadge({ oldValue, newValue, label, estimated }: TrendBadgeProps) {
       {diff > 0 ? '+' : '-'}
       {formatStatNumber(Math.abs(diff)) || 'No change'}
       {oldValue !== 0 && (
-        <span className="font-normal">({pct.toFixed(1)}%){estimated && '*'}</span>
+        <span className="font-normal">
+          ({pct.toFixed(1)}%){estimated && '*'}
+        </span>
       )}
     </Badge>
   )

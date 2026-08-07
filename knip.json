@@ -36,7 +36,7 @@
         "src/adapters/testing.ts"
       ],
       "project": ["src/**/*.ts"],
-      "ignoreDependencies": ["@vitejs/plugin-react", "typescript-7"]
+      "ignoreDependencies": ["@vitejs/plugin-react"]
     },
     "packages/docs": {
       "entry": [
@@ -96,11 +96,7 @@
       "project": ["**/*.{ts,tsx}"]
     },
     "packages/e2e/tanstack-router": {
-      "entry": [
-        "src/routes/**/*.tsx",
-        "src/routeTree.gen.ts",
-        "specs/**/*.ts"
-      ],
+      "entry": ["src/routes/**/*.tsx", "src/routeTree.gen.ts", "specs/**/*.ts"],
       "project": ["**/*.{ts,tsx}"]
     },
     "packages/e2e/react-router/v5": {

@@ -47,6 +47,7 @@ describe('parsers', () => {
     expect(parseAsHex.parse('a')).toBe(0xa)
     expect(parseAsHex.parse('g')).toBeNull()
     expect(parseAsHex.serialize(0xa)).toBe('0a')
+    expect(isParserBijective(parseAsHex, '-10', -0x10)).toBe(true)
     for (let byte = 0; byte < 256; byte++) {
       const hexString = byte.toString(16).padStart(2, '0')
       expect(isParserBijective(parseAsHex, hexString, byte)).toBe(true)
@@ -104,6 +105,7 @@ describe('parsers', () => {
 
   it('parseAsTimestamp', () => {
     expect(parseAsTimestamp.parse('')).toBeNull()
+    expect(parseAsTimestamp.parse('8640000000000001')).toBeNull()
     expect(parseAsTimestamp.parse('0')).toStrictEqual(new Date(0))
     expect(testParseThenSerialize(parseAsTimestamp, '0')).toBe(true)
     expect(testSerializeThenParse(parseAsTimestamp, new Date(1234567890))).toBe(

@@ -888,7 +888,10 @@ Here's an example using Testing Library and Vitest:
 ```tsx
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { withNuqsTestingAdapter, type OnUrlUpdateFunction } from 'nuqs/adapters/testing'
+import {
+  withNuqsTestingAdapter,
+  type OnUrlUpdateFunction
+} from 'nuqs/adapters/testing'
 import { describe, expect, it, vi } from 'vitest'
 import { CounterButton } from './counter-button'
 
@@ -919,13 +922,13 @@ See [#259](https://github.com/47ng/nuqs/issues/259) for more testing-related dis
 
 ## Debugging
 
-You can enable debug logs in the browser by importing the `nuqs/debug`
-entry point once anywhere in your app (it keeps the log messages out of your
-bundle otherwise), then setting the `debug` item in localStorage to `nuqs`,
-and reload the page.
+Start by importing the `nuqs/debug` entry point once in your app. This keeps the
+log messages out of your bundles unless you opt in. In frameworks with separate
+client and server bundles, import it in each runtime where you want logs. Then
+set the `debug` item in localStorage to `nuqs`, and reload the page.
 
 ```ts
-// Once, anywhere in your app:
+// Once in your app:
 import 'nuqs/debug'
 ```
 
