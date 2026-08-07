@@ -283,7 +283,7 @@ function compareDates(a: Date, b: Date) {
 export const parseAsTimestamp: SingleParserBuilder<Date> = createParser({
   parse: v => {
     const date = new Date(parseInt(v))
-    return date.valueOf() == date.valueOf() ? date : null // NaN check at low bundle size cost
+    return +date == +date ? date : null // NaN check at low bundle size cost
   },
   serialize: (v: Date) => '' + v.valueOf(),
   eq: compareDates
@@ -297,9 +297,7 @@ export const parseAsIsoDateTime: SingleParserBuilder<Date> = createParser({
   parse: v => {
     const date = new Date(v)
     // NaN check at low bundle size cost
-    return parseAsIsoDate.parse(v) && date.valueOf() == date.valueOf()
-      ? date
-      : null
+    return +date == +date && parseAsIsoDate.parse(v) ? date : null
   },
   serialize: (v: Date) => v.toISOString(),
   eq: compareDates
@@ -317,8 +315,7 @@ export const parseAsIsoDate: SingleParserBuilder<Date> = createParser({
   parse: v => {
     const date = new Date(v.slice(0, 10))
     // NaN and calendar date normalization checks
-    return date.valueOf() == date.valueOf() &&
-      parseAsIsoDate.serialize(date) === v.slice(0, 10)
+    return +date == +date && parseAsIsoDate.serialize(date) === v.slice(0, 10)
       ? date
       : null
   },
