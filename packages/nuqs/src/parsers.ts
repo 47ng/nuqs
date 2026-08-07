@@ -306,9 +306,7 @@ export const parseAsIsoDateTime: SingleParserBuilder<Date> = createParser({
   parse: v => {
     const date = new Date(v)
     // NaN check at low bundle size cost
-    return date.valueOf() == date.valueOf() && parseIsoDatePart(v)
-      ? date
-      : null
+    return date.valueOf() == date.valueOf() && parseIsoDatePart(v) ? date : null
   },
   serialize: (v: Date) => v.toISOString(),
   eq: compareDates
