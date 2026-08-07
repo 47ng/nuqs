@@ -15,11 +15,11 @@
     "react-dom": "catalog:react19"
   },
   "devDependencies": {
-    "@tailwindcss/postcss": "^4.1.18",
-    "@types/node": "^24.10.10",
+    "@tailwindcss/postcss": "^4.3.3",
+    "@types/node": "^24.13.3",
     "@types/react": "catalog:react19",
     "@types/react-dom": "catalog:react19",
-    "tailwindcss": "^4.1.18",
+    "tailwindcss": "^4.3.3",
     "typescript": "catalog:typescript"
   }
 }

@@ -73,6 +73,39 @@ describe('serializer', () => {
     const result = serialize(url, { str: 'foo' })
     expect(result).toBe('https://example.com/path?bar=egg&str=foo')
   })
+  it('preserves credentials in string and URL bases', () => {
+    const serialize = createSerializer(parsers)
+    const base = 'https://user:password@example.com/path?bar=egg'
+    const expected = 'https://user:password@example.com/path?bar=egg&str=foo'
+    expect(serialize(base, { str: 'foo' })).toBe(expected)
+    expect(serialize(new URL(base), { str: 'foo' })).toBe(expected)
+  })
+  it.each([
+    [
+      'empty search',
+      'https://example.com/path?',
+      'https://example.com/path?str=foo'
+    ],
+    [
+      'empty hash',
+      'https://example.com/path#',
+      'https://example.com/path?str=foo#'
+    ],
+    [
+      'empty search and hash',
+      'https://example.com/path?#',
+      'https://example.com/path?str=foo#'
+    ],
+    [
+      'empty search before a hash',
+      'https://example.com/path?#section',
+      'https://example.com/path?str=foo#section'
+    ]
+  ])('handles $0 in string and URL bases', (_, base, expected) => {
+    const serialize = createSerializer(parsers)
+    expect(serialize(base, { str: 'foo' })).toBe(expected)
+    expect(serialize(new URL(base), { str: 'foo' })).toBe(expected)
+  })
   it('deletes a null value from base', () => {
     const serialize = createSerializer(parsers)
     const result = serialize('?str=bar&int=-1', { str: 'foo', int: null })
@@ -220,6 +253,16 @@ describe('serializer', () => {
     const result = serialize({ multi: ['a', 'b', 'c'] })
     expect(result).toBe('?multi=a&multi=b&multi=c')
   })
+  it.each(['constructor', 'hasOwnProperty'])(
+    'ignores an omitted parser key named %s',
+    key => {
+      const serialize = createSerializer({
+        a: parseAsString,
+        [key]: parseAsString
+      })
+      expect(serialize({ a: 'acme' })).toBe('?a=acme')
+    }
+  )
   describe('supports processUrlSearchParams', () => {
     it('modifies search params in place', () => {
       const serialize = createSerializer(parsers, {
