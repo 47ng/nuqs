@@ -289,15 +289,6 @@ export const parseAsTimestamp: SingleParserBuilder<Date> = createParser({
   eq: compareDates
 })
 
-const parseIsoDatePart = (v: string): Date | null => {
-  const date = new Date(v.slice(0, 10))
-  // NaN and calendar date normalization checks
-  return date.valueOf() == date.valueOf() &&
-    date.toISOString().slice(0, 10) === v.slice(0, 10)
-    ? date
-    : null
-}
-
 /**
  * Querystring encoded as an ISO-8601 string (UTC),
  * and returned as a Date object.
@@ -306,7 +297,9 @@ export const parseAsIsoDateTime: SingleParserBuilder<Date> = createParser({
   parse: v => {
     const date = new Date(v)
     // NaN check at low bundle size cost
-    return date.valueOf() == date.valueOf() && parseIsoDatePart(v) ? date : null
+    return parseAsIsoDate.parse(v) && date.valueOf() == date.valueOf()
+      ? date
+      : null
   },
   serialize: (v: Date) => v.toISOString(),
   eq: compareDates
@@ -321,7 +314,14 @@ export const parseAsIsoDateTime: SingleParserBuilder<Date> = createParser({
  * making it at 00:00:00 UTC.
  */
 export const parseAsIsoDate: SingleParserBuilder<Date> = createParser({
-  parse: parseIsoDatePart,
+  parse: v => {
+    const date = new Date(v.slice(0, 10))
+    // NaN and calendar date normalization checks
+    return date.valueOf() == date.valueOf() &&
+      parseAsIsoDate.serialize(date) === v.slice(0, 10)
+      ? date
+      : null
+  },
   serialize: (v: Date) => v.toISOString().slice(0, 10),
   eq: compareDates
 })
