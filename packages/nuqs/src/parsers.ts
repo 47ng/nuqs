@@ -313,9 +313,13 @@ export const parseAsIsoDateTime: SingleParserBuilder<Date> = createParser({
  */
 export const parseAsIsoDate: SingleParserBuilder<Date> = createParser({
   parse: v => {
-    const date = new Date(v.slice(0, 10))
-    // NaN check at low bundle size cost
-    return date.valueOf() == date.valueOf() ? date : null
+    const dateString = v.slice(0, 10)
+    const date = new Date(dateString)
+    // NaN and calendar date normalization checks
+    return date.valueOf() == date.valueOf() &&
+      date.toISOString().slice(0, 10) === dateString
+      ? date
+      : null
   },
   serialize: (v: Date) => v.toISOString().slice(0, 10),
   eq: compareDates

@@ -133,6 +133,7 @@ describe('parsers', () => {
   it('parseAsIsoDate', () => {
     expect(parseAsIsoDate.parse('')).toBeNull()
     expect(parseAsIsoDate.parse('not-a-date')).toBeNull()
+    expect(parseAsIsoDate.parse('2021-02-29')).toBeNull()
     const moment = '2020-01-01'
     const ref = new Date(moment)
     expect(parseAsIsoDate.parse(moment)).toStrictEqual(ref)
