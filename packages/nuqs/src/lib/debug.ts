@@ -28,10 +28,6 @@ export function debug<Code extends DebugCode>(
   code: Code,
   ...args: DebugArgs<Code>
 ): void {
-  // Fast path when no sink is attached (the 99% case): never touch the args.
-  if (sinks.size === 0) {
-    return
-  }
   for (const sink of sinks) {
     sink(code, args)
   }
@@ -41,9 +37,6 @@ export function warn<Code extends DebugCode>(
   code: Code,
   ...args: DebugArgs<Code>
 ): void {
-  if (sinks.size === 0) {
-    return
-  }
   for (const sink of sinks) {
     sink(code, args, true)
   }
@@ -56,7 +49,7 @@ export function isDebugFlagSet(): boolean {
   if (typeof window === 'undefined') {
     return (
       typeof process !== 'undefined' &&
-      (process.env.DEBUG || '').includes('nuqs')
+      process.env.DEBUG?.includes('nuqs') === true
     )
   }
 
@@ -74,7 +67,7 @@ export function isDebugFlagSet(): boolean {
     localStorage.removeItem(test)
     return (
       isStorageAvailable &&
-      (localStorage.getItem('debug') || '').includes('nuqs')
+      localStorage.getItem('debug')?.includes('nuqs') === true
     )
   } catch {
     return false
