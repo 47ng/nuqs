@@ -49,7 +49,7 @@ export function isDebugFlagSet(): boolean {
   if (typeof window === 'undefined') {
     return (
       typeof process !== 'undefined' &&
-      process.env.DEBUG?.includes('nuqs') === true
+      (process.env.DEBUG || '').includes('nuqs')
     )
   }
 
@@ -67,7 +67,7 @@ export function isDebugFlagSet(): boolean {
     localStorage.removeItem(test)
     return (
       isStorageAvailable &&
-      localStorage.getItem('debug')?.includes('nuqs') === true
+      (localStorage.getItem('debug') || '').includes('nuqs')
     )
   } catch {
     return false
