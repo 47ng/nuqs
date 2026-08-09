@@ -46,12 +46,6 @@ export default async function Page(props: PageProps<'/docs/[[...slug]]'>) {
 
   return (
     <DocsPage
-      article={{
-        id: 'main-content',
-        tabIndex: -1,
-        className:
-          'outline-none focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring'
-      }}
       toc={toc}
       tableOfContent={{
         footer: <AsideSponsors />
