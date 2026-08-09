@@ -17,6 +17,10 @@ export const FRAMEWORKS = [
 export type Frameworks = (typeof FRAMEWORKS)[number]
 export type IconProps = ComponentProps<'svg'> & ComponentProps<'img'> & {}
 
+function iconLabel(label: string, role: IconProps['role']) {
+  return role === 'presentation' || role === 'none' ? undefined : label
+}
+
 export const FRAMEWORK_ICONS: Record<
   Frameworks,
   (props: IconProps) => JSX.Element
@@ -35,7 +39,8 @@ export const FRAMEWORK_ICONS: Record<
 export function Vite({ className, ...props }: IconProps) {
   return (
     <svg
-      aria-label="Vite"
+      aria-label={iconLabel('Vite', props.role)}
+      role={props.role ?? 'img'}
       viewBox="0 0 256 257"
       width="0.9em"
       height="0.9em"
@@ -82,7 +87,8 @@ export function Vite({ className, ...props }: IconProps) {
 export function ReactSPA({ className, ...props }: IconProps) {
   return (
     <svg
-      aria-label="React (Single Page Application)"
+      aria-label={iconLabel('React (Single Page Application)', props.role)}
+      role={props.role ?? 'img'}
       width="1em"
       height="1em"
       viewBox="0 0 569 512"
@@ -109,7 +115,8 @@ export function ReactSPA({ className, ...props }: IconProps) {
 export function Vitest({ className, ...props }: IconProps) {
   return (
     <svg
-      aria-label="Vitest"
+      aria-label={iconLabel('Vitest', props.role)}
+      role={props.role ?? 'img'}
       viewBox="0 0 256 234"
       width="1em"
       height="1em"
@@ -138,7 +145,8 @@ export function Vitest({ className, ...props }: IconProps) {
 export function ReactRouter({ className, ...props }: IconProps) {
   return (
     <svg
-      aria-label="React Router"
+      aria-label={iconLabel('React Router', props.role)}
+      role={props.role ?? 'img'}
       width="1em"
       height="1em"
       viewBox="0 0 94 61"
@@ -171,7 +179,8 @@ export function ReactRouter({ className, ...props }: IconProps) {
 export function Remix({ className, ...props }: IconProps) {
   return (
     <svg
-      aria-label="Remix"
+      aria-label={iconLabel('Remix', props.role)}
+      role={props.role ?? 'img'}
       viewBox="0 0 256 297"
       width="0.9em"
       height="0.9em"
@@ -192,7 +201,11 @@ export function TanStackRouter({ className, ...props }: IconProps) {
   return (
     <img
       src="/tanstack-logo.png"
-      alt="TanStack Router"
+      alt={
+        props.role === 'presentation' || props.role === 'none'
+          ? ''
+          : 'TanStack Router'
+      }
       width="1em"
       height="1em"
       className={className}

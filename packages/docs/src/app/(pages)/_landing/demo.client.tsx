@@ -19,6 +19,7 @@ export function Demo() {
         Count: {count}
       </button>
       <input
+        aria-label="Name"
         value={hello}
         placeholder="Enter your name"
         autoComplete="off"
@@ -26,7 +27,7 @@ export function Demo() {
         onChange={e => setHello(e.target.value || null)}
         data-interacted={Boolean(hello)}
       />
-      <p className="max-w-full break-words line-clamp-2 sm:truncate">
+      <p className="line-clamp-2 max-w-full break-words sm:truncate">
         Hello, {hello || 'anonymous visitor'}!
       </p>
     </>

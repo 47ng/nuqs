@@ -7,11 +7,16 @@
 import { useId } from 'react'
 import type { IconProps } from './frameworks'
 
+function iconLabel(label: string, role: IconProps['role']) {
+  return role === 'presentation' || role === 'none' ? undefined : label
+}
+
 export function NextJS({ className, ...props }: IconProps) {
   const id = useId()
   return (
     <svg
-      aria-label="Next.js (app & pages routers)"
+      aria-label={iconLabel('Next.js (app & pages routers)', props.role)}
+      role={props.role ?? 'img'}
       width="1em"
       height="1em"
       viewBox="0 0 180 180"

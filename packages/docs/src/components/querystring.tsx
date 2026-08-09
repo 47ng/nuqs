@@ -19,10 +19,10 @@ export function Querystring({
   )
   return (
     <QuerystringSkeleton {...props}>
-      {path && <span className="text-zinc-500">{path}</span>}
+      {path && <span className="text-zinc-600 dark:text-zinc-400">{path}</span>}
       {Array.from(search.entries()).map(([key, value], i) => (
         <Fragment key={key + i}>
-          <span className="text-zinc-500">
+          <span className="text-zinc-600 dark:text-zinc-400">
             {i === 0 ? (
               '?'
             ) : (
@@ -36,7 +36,9 @@ export function Querystring({
         </Fragment>
       ))}
       {search.size === 0 && (
-        <span className="text-zinc-500 italic">{'<empty query>'}</span>
+        <span className="text-zinc-600 italic dark:text-zinc-400">
+          {'<empty query>'}
+        </span>
       )}
     </QuerystringSkeleton>
   )

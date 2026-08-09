@@ -18,6 +18,7 @@ export default function PlaygroundIndexPage() {
       <DocsTitle>{metadata.title}</DocsTitle>
       <DocsDescription>{metadata.description}</DocsDescription>
       <DocsBody>
+        <h2 className="sr-only">Examples</h2>
         <ul className="not-prose my-8 space-y-2">
           {Object.entries(demos).map(([path, { title, description }]) => (
             <li key={path}>

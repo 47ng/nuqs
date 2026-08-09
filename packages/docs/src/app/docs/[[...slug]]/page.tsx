@@ -40,10 +40,18 @@ export default async function Page(props: PageProps<'/docs/[[...slug]]'>) {
   const gated = gatedHeadingIds(await page.data.getText('raw'), version =>
     isPublished(version, published)
   )
-  const toc = page.data.toc.filter(item => !gated.has(item.url.replace(/^#/, '')))
+  const toc = page.data.toc.filter(
+    item => !gated.has(item.url.replace(/^#/, ''))
+  )
 
   return (
     <DocsPage
+      article={{
+        id: 'main-content',
+        tabIndex: -1,
+        className:
+          'outline-none focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring'
+      }}
       toc={toc}
       tableOfContent={{
         footer: <AsideSponsors />
