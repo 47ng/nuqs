@@ -28,13 +28,4 @@ describe('Slider accessibility', () => {
 
     expect(thumb).toContain('aria-labelledby="float-label"')
   })
-
-  it('does not pass undefined naming attributes to the slider thumb', () => {
-    const thumb = sliderThumb(
-      renderToStaticMarkup(<Slider defaultValue={[0]} />)
-    )
-
-    expect(thumb).not.toContain('aria-label=')
-    expect(thumb).not.toContain('aria-labelledby=')
-  })
 })

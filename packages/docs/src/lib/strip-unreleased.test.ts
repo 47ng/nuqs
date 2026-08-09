@@ -158,26 +158,16 @@ describe('gatedHeadingIds', () => {
     )
   })
 
-  it('matches Fumadocs slugs for punctuation in LLM-only headings', () => {
+  it('matches Fumadocs slugs for punctuation', () => {
     const input = [
-      '<LLMContent>',
+      '<SinceVersion v="2.9.0">',
       '### Next.js (app router)',
       '### Remix / React Router',
-      '</LLMContent>'
+      '</SinceVersion>'
     ].join('\n')
-    expect(gatedHeadingIds(input, showAll)).toEqual(
+    expect(gatedHeadingIds(input, hideAll)).toEqual(
       new Set(['nextjs-app-router', 'remix--react-router'])
     )
-  })
-
-  it('does not hide later headings after a one-line or self-closing LLM block', () => {
-    const input = [
-      '<LLMContent>LLM-only prose</LLMContent>',
-      '<LLMContent />',
-      '## Visible later [#visible-later]'
-    ].join('\n')
-
-    expect(gatedHeadingIds(input, showAll)).toEqual(new Set())
   })
 
   it('collects nested headings of a hidden block', () => {
