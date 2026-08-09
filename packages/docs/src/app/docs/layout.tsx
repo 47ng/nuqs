@@ -12,7 +12,7 @@ export default function RootDocsLayout({ children }: { children: ReactNode }) {
     <>
       <a
         href="#main-content"
-        className="bg-background text-foreground focus-visible:ring-ring fixed top-2 left-2 z-50 -translate-y-20 rounded-md px-3 py-2 font-medium focus:translate-y-0 focus-visible:ring-2 focus-visible:outline-none"
+        className="bg-background text-foreground focus-visible:ring-ring fixed top-2 left-40 z-50 -translate-y-20 rounded-md px-3 py-2 font-medium focus:translate-y-0 focus-visible:ring-2 focus-visible:outline-none"
       >
         Skip to content
       </a>
