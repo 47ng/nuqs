@@ -36,10 +36,10 @@ Refer to: [README.md](README.md) & [CONTRIBUTING.md](CONTRIBUTING.md) for author
 ### Configuration
 
 - **Package manager:** `pnpm`
-- **New worktrees:** Run `node --run setup:hooks` once per clone. The hook sets up linked worktrees after `git worktree add`; otherwise run `node --run setup:worktree` in the new worktree. Authenticate `gh` first so setup can configure the docs environment.
+- **New worktrees:** With Git 2.54+, run `node --run setup:hooks` once per trusted clone. The hook installs dependencies for linked worktrees after `git worktree add`; otherwise run `node --run setup:worktree` in the new worktree. GitHub auth is optional and only copied to the docs environment by the explicit setup command.
 - **Build:** `pnpm build`
 - **Test suite:** `pnpm test` (5-10 minutes; includes build + unit + typing + e2e)
-- **Focused tests:** Use the root Turbo command, for example `pnpm test --filter nuqs` or `pnpm test --filter e2e-next`. Do not invoke package test scripts directly.
+- **Focused tests:** Use the root Turbo command, for example `pnpm run test --filter nuqs` or `pnpm run test --filter e2e-next`. Do not invoke package test scripts directly.
 - **Development:** `pnpm dev --filter <package-name>...` (triple dots start dependencies' dev script too)
 
 ---

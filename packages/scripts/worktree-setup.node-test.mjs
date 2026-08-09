@@ -18,7 +18,9 @@ import {
   isLinkedWorktree,
   planHookSetup,
   prepareNodeModules,
-  runWorktreeSetup
+  recordSetup,
+  runWorktreeSetup,
+  withSetupLock
 } from './worktree-setup.mjs'
 
 test('recognizes linked worktrees without treating the canonical checkout as one', async () => {
@@ -75,6 +77,26 @@ test('prefers an explicit GitHub token when creating the docs environment', asyn
     await readFile(join(root, 'packages/docs/.env.local'), 'utf8'),
     'GITHUB_TOKEN="from-env"\n'
   )
+})
+
+test('keeps setup usable when GitHub authentication is unavailable', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'nuqs-worktree-setup-'))
+  await mkdir(join(root, 'packages/docs'), { recursive: true })
+  const warnings = []
+
+  assert.equal(
+    await ensureDocsEnvironment(root, {
+      env: {},
+      readGhToken: async () => {
+        throw new Error('gh is unavailable')
+      },
+      warn: message => warnings.push(message)
+    }),
+    false
+  )
+  assert.deepEqual(warnings, [
+    'Docs GitHub authentication was not configured; set GITHUB_TOKEN or run `gh auth login` before building the docs.'
+  ])
 })
 
 test('rejects a Node version that differs from .node-version', () => {
@@ -160,4 +182,68 @@ test('installs from the lockfile without building packages directly', async () =
   })
 
   assert.deepEqual(commands, [['pnpm', 'install', '--frozen-lockfile', '1']])
+})
+
+test('checkout hooks do not persist GitHub credentials', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'nuqs-worktree-setup-'))
+  await mkdir(join(root, 'packages/docs'), { recursive: true })
+  let credentialReads = 0
+
+  await runWorktreeSetup({
+    root,
+    actualVersions: { node: '24.11.0', pnpm: '11.0.9' },
+    expectedVersions: { node: '24.11.0', pnpm: '11.0.9' },
+    configureDocs: false,
+    env: {},
+    readGhToken: async () => {
+      credentialReads++
+      return 'secret'
+    },
+    run: async () => {}
+  })
+
+  assert.equal(credentialReads, 0)
+  await assert.rejects(
+    readFile(join(root, 'packages/docs/.env.local'), 'utf8'),
+    { code: 'ENOENT' }
+  )
+})
+
+test('does not keep a current fingerprint after setup fails', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'nuqs-worktree-setup-'))
+  const statePath = join(root, 'state.json')
+  await writeFile(statePath, '{"install":"old"}\n')
+
+  await assert.rejects(
+    recordSetup({
+      statePath,
+      current: { install: 'new' },
+      operation: async () => {
+        throw new Error('install failed')
+      }
+    }),
+    /install failed/
+  )
+  await assert.rejects(readFile(statePath, 'utf8'), { code: 'ENOENT' })
+})
+
+test('reclaims a setup lock owned by a dead process', async () => {
+  const gitDirectory = await mkdtemp(join(tmpdir(), 'nuqs-worktree-setup-'))
+  const lockPath = join(gitDirectory, 'nuqs-worktree-setup.lock')
+  await writeFile(lockPath, '999999999\n')
+
+  assert.equal(await withSetupLock(gitDirectory, async () => 'ready'), 'ready')
+  await assert.rejects(readFile(lockPath, 'utf8'), { code: 'ENOENT' })
+})
+
+test('does not reclaim a setup lock owned by a live process', async () => {
+  const gitDirectory = await mkdtemp(join(tmpdir(), 'nuqs-worktree-setup-'))
+  const lockPath = join(gitDirectory, 'nuqs-worktree-setup.lock')
+  await writeFile(lockPath, `${process.pid}\n`)
+
+  await assert.rejects(
+    withSetupLock(gitDirectory, async () => 'unreachable'),
+    /Another worktree setup is already running/
+  )
+  assert.equal(await readFile(lockPath, 'utf8'), `${process.pid}\n`)
 })

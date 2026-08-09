@@ -5,7 +5,6 @@ import { createHash } from 'node:crypto'
 import {
   access,
   lstat,
-  open,
   readFile,
   readdir,
   rename,
@@ -43,7 +42,8 @@ export async function ensureDocsEnvironment(
   root,
   {
     env = process.env,
-    readGhToken = () => capture('gh', ['auth', 'token'], root)
+    readGhToken = () => capture('gh', ['auth', 'token'], root),
+    warn = console.warn
   } = {}
 ) {
   const path = join(root, 'packages/docs/.env.local')
@@ -56,9 +56,10 @@ export async function ensureDocsEnvironment(
     } catch {}
   }
   if (!token) {
-    throw new Error(
-      'Docs setup needs GitHub API authentication. Set GITHUB_TOKEN or run `gh auth login`.'
+    warn(
+      'Docs GitHub authentication was not configured; set GITHUB_TOKEN or run `gh auth login` before building the docs.'
     )
+    return false
   }
   try {
     await writeFile(path, `GITHUB_TOKEN=${JSON.stringify(token)}\n`, {
@@ -213,22 +214,77 @@ async function writeState(path, fingerprints) {
   await rename(temporary, path)
 }
 
-async function withSetupLock(gitDirectory, operation) {
-  const lockPath = join(gitDirectory, 'nuqs-worktree-setup.lock')
-  let handle
+export async function recordSetup({ statePath, current, operation }) {
+  await unlink(statePath).catch(error => {
+    if (error.code !== 'ENOENT') throw error
+  })
+  const result = await operation()
+  await writeState(statePath, current)
+  return result
+}
+
+function processIsAlive(pid) {
+  if (!Number.isSafeInteger(pid) || pid <= 0) return false
   try {
-    handle = await open(lockPath, 'wx', 0o600)
+    process.kill(pid, 0)
+    return true
   } catch (error) {
-    if (error.code === 'EEXIST') {
-      throw new Error(`Another worktree setup is already running (${lockPath})`)
+    return error.code !== 'ESRCH'
+  }
+}
+
+export async function withSetupLock(gitDirectory, operation) {
+  const lockPath = join(gitDirectory, 'nuqs-worktree-setup.lock')
+  const reclaimPath = `${lockPath}.reclaim`
+  while (true) {
+    try {
+      await writeFile(lockPath, `${process.pid}\n`, {
+        flag: 'wx',
+        mode: 0o600
+      })
+      break
+    } catch (error) {
+      if (error.code !== 'EEXIST') throw error
+
+      let owner
+      try {
+        owner = Number.parseInt(await readFile(lockPath, 'utf8'), 10)
+      } catch (readError) {
+        if (readError.code === 'ENOENT') continue
+        throw readError
+      }
+      if (processIsAlive(owner)) {
+        throw new Error(
+          `Another worktree setup is already running (${lockPath})`
+        )
+      }
+
+      try {
+        await writeFile(reclaimPath, `${process.pid}\n`, {
+          flag: 'wx',
+          mode: 0o600
+        })
+      } catch (reclaimError) {
+        if (reclaimError.code === 'EEXIST') {
+          throw new Error(
+            `Another worktree setup is already running (${lockPath})`
+          )
+        }
+        throw reclaimError
+      }
+      try {
+        const latest = Number.parseInt(await readFile(lockPath, 'utf8'), 10)
+        if (latest === owner && !processIsAlive(latest)) await unlink(lockPath)
+      } catch (reclaimError) {
+        if (reclaimError.code !== 'ENOENT') throw reclaimError
+      } finally {
+        await unlink(reclaimPath).catch(() => {})
+      }
     }
-    throw error
   }
   try {
-    await handle.writeFile(`${process.pid}\n`)
     return await operation()
   } finally {
-    await handle.close()
     await unlink(lockPath).catch(() => {})
   }
 }
@@ -238,6 +294,7 @@ export async function runWorktreeSetup({
   actualVersions,
   expectedVersions,
   install = true,
+  configureDocs = true,
   env = process.env,
   readGhToken,
   run = (command, args, options = {}) =>
@@ -247,7 +304,6 @@ export async function runWorktreeSetup({
     })
 }) {
   assertToolVersions(actualVersions, expectedVersions)
-  await ensureDocsEnvironment(root, { env, readGhToken })
   const removedLinks = await prepareNodeModules(root)
   if (removedLinks.length > 0) {
     install = true
@@ -256,8 +312,9 @@ export async function runWorktreeSetup({
     )
   }
   if (!install) return { install }
-  if (install) {
-    await run('pnpm', ['install', '--frozen-lockfile'], { env: { CI: '1' } })
+  await run('pnpm', ['install', '--frozen-lockfile'], { env: { CI: '1' } })
+  if (configureDocs) {
+    await ensureDocsEnvironment(root, { env, readGhToken })
   }
   return { install }
 }
@@ -278,6 +335,7 @@ async function main() {
     ['rev-parse', '--path-format=absolute', '--git-dir'],
     root
   )
+  assertToolVersions(actualVersions, expectedVersions)
   await withSetupLock(gitDirectory, async () => {
     const current = await readFingerprints(root, expectedVersions)
     const statePath = join(gitDirectory, 'nuqs-worktree-setup.json')
@@ -289,13 +347,18 @@ async function main() {
         })
       : { install: true }
 
-    const completed = await runWorktreeSetup({
-      root,
-      actualVersions,
-      expectedVersions,
-      ...plan
+    const completed = await recordSetup({
+      statePath,
+      current,
+      operation: () =>
+        runWorktreeSetup({
+          root,
+          actualVersions,
+          expectedVersions,
+          configureDocs: !hookMode,
+          ...plan
+        })
     })
-    await writeState(statePath, current)
     if (!completed.install) {
       console.log('Worktree setup is current.')
       return

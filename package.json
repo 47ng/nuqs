@@ -21,7 +21,7 @@
     "setup:worktree": "node packages/scripts/worktree-setup.mjs",
     "test:worktree-setup": "node --test packages/scripts/*.node-test.mjs",
     "// setup:hooks": "Opt-in per clone (not on install). Removes only the obsolete Husky path, adds the tracked config idempotently, and verifies the worktree hook",
-    "setup:hooks": "if [ \"$(git config --local --get core.hooksPath || true)\" = .husky/_ ]; then git config --local --unset core.hooksPath; fi; git config --local --replace-all include.path ../.gitconfig '^\\.\\./\\.gitconfig$'; git hook list post-checkout",
+    "setup:hooks": "if [ \"$(git config --local --get core.hooksPath || true)\" = .husky/_ ]; then git config --local --unset core.hooksPath; fi && git config --local --replace-all include.path ../.gitconfig '^\\.\\./\\.gitconfig$' && git hook list post-checkout",
     "typegen": "pnpm run --filter \"e2e-*\" typegen && pnpm run --filter \"examples-trpc\" typegen",
     "lint": "pnpm run typegen && pnpm run -w --parallel --stream '/^lint:/'",
     "lint:knip": "knip",
