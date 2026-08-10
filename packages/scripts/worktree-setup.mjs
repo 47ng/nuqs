@@ -11,7 +11,7 @@ import {
   unlink,
   writeFile
 } from 'node:fs/promises'
-import { dirname, join, resolve } from 'node:path'
+import { join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 function cleanVersion(value) {
@@ -36,41 +36,6 @@ export function assertToolVersions(actual, expected) {
 export async function isLinkedWorktree(root) {
   const stats = await lstat(join(root, '.git'))
   return stats.isFile()
-}
-
-export async function ensureDocsEnvironment(
-  root,
-  {
-    env = process.env,
-    readGhToken = () => capture('gh', ['auth', 'token'], root),
-    warn = console.warn
-  } = {}
-) {
-  const path = join(root, 'packages/docs/.env.local')
-  if (await exists(path)) return false
-
-  let token = env.GITHUB_TOKEN?.trim()
-  if (!token) {
-    try {
-      token = (await readGhToken()).trim()
-    } catch {}
-  }
-  if (!token) {
-    warn(
-      'Docs GitHub authentication was not configured; set GITHUB_TOKEN or run `gh auth login` before building the docs.'
-    )
-    return false
-  }
-  try {
-    await writeFile(path, `GITHUB_TOKEN=${JSON.stringify(token)}\n`, {
-      flag: 'wx',
-      mode: 0o600
-    })
-    return true
-  } catch (error) {
-    if (error.code === 'EEXIST') return false
-    throw error
-  }
 }
 
 async function unlinkNodeModulesSymlink(path) {
@@ -144,6 +109,81 @@ function spawnCommand(command, args, options = {}) {
   })
 }
 
+function runGit(args, root) {
+  return new Promise((resolvePromise, reject) => {
+    const child = spawn('git', args, {
+      cwd: root,
+      stdio: ['ignore', 'pipe', 'inherit']
+    })
+    let stdout = ''
+    child.stdout.setEncoding('utf8')
+    child.stdout.on('data', chunk => {
+      stdout += chunk
+    })
+    child.stdout.on('error', reject)
+    child.on('error', reject)
+    child.on('close', code => resolvePromise({ code, stdout }))
+  })
+}
+
+export const hookInstallSourcePaths = [
+  'package.json',
+  'pnpm-lock.yaml',
+  'pnpm-workspace.yaml',
+  '.npmrc',
+  '.pnpmfile.cjs',
+  ':(glob)packages/**/package.json',
+  ':(glob)packages/**/.npmrc',
+  ':(glob)packages/**/.pnpmfile.cjs'
+]
+
+export async function verifyHookInstallSources(
+  root,
+  {
+    trustedRef = 'origin/HEAD',
+    paths = hookInstallSourcePaths,
+    git = args => runGit(args, root)
+  } = {}
+) {
+  const ref = await git([
+    'rev-parse',
+    '--verify',
+    '--quiet',
+    `${trustedRef}^{commit}`
+  ])
+  if (ref.code !== 0) {
+    return {
+      trusted: false,
+      reason:
+        `${trustedRef} is not available to compare dependency manifests against ` +
+        '(fix with `git remote set-head origin --auto`)'
+    }
+  }
+  const diff = await git(['diff', '--quiet', trustedRef, '--', ...paths])
+  if (diff.code === 1) {
+    return {
+      trusted: false,
+      reason: `dependency manifests differ from ${trustedRef}`
+    }
+  }
+  if (diff.code !== 0) {
+    throw new Error(`git diff exited with code ${diff.code}`)
+  }
+  // --others without --exclude-standard also surfaces ignored files,
+  // which neither git diff nor git status report
+  const untracked = await git(['ls-files', '--others', '--', ...paths])
+  if (untracked.code !== 0) {
+    throw new Error(`git ls-files exited with code ${untracked.code}`)
+  }
+  if (untracked.stdout.trim() !== '') {
+    return {
+      trusted: false,
+      reason: 'dependency manifests have untracked or ignored files'
+    }
+  }
+  return { trusted: true }
+}
+
 async function capture(command, args, root) {
   let output = ''
   await new Promise((resolvePromise, reject) => {
@@ -208,7 +248,11 @@ async function readState(path) {
 
 async function writeState(path, fingerprints) {
   const temporary = `${path}.${process.pid}.tmp`
+  await unlink(temporary).catch(error => {
+    if (error.code !== 'ENOENT') throw error
+  })
   await writeFile(temporary, JSON.stringify(fingerprints) + '\n', {
+    flag: 'wx',
     mode: 0o600
   })
   await rename(temporary, path)
@@ -246,14 +290,15 @@ export async function withSetupLock(gitDirectory, operation) {
     } catch (error) {
       if (error.code !== 'EEXIST') throw error
 
-      let owner
+      let ownerRaw
       try {
-        owner = Number.parseInt(await readFile(lockPath, 'utf8'), 10)
+        ownerRaw = await readFile(lockPath, 'utf8')
       } catch (readError) {
         if (readError.code === 'ENOENT') continue
         throw readError
       }
-      if (processIsAlive(owner)) {
+      const owner = Number.parseInt(ownerRaw, 10)
+      if (Number.isSafeInteger(owner) && processIsAlive(owner)) {
         throw new Error(
           `Another worktree setup is already running (${lockPath})`
         )
@@ -265,16 +310,37 @@ export async function withSetupLock(gitDirectory, operation) {
           mode: 0o600
         })
       } catch (reclaimError) {
-        if (reclaimError.code === 'EEXIST') {
+        if (reclaimError.code !== 'EEXIST') throw reclaimError
+        let reclaimOwner
+        try {
+          reclaimOwner = Number.parseInt(
+            await readFile(reclaimPath, 'utf8'),
+            10
+          )
+        } catch (readError) {
+          if (readError.code === 'ENOENT') continue
+          throw readError
+        }
+        if (
+          Number.isSafeInteger(reclaimOwner) &&
+          processIsAlive(reclaimOwner)
+        ) {
           throw new Error(
-            `Another worktree setup is already running (${lockPath})`
+            `Another worktree setup is already running (${reclaimPath}); ` +
+              'delete it if no setup is in progress'
           )
         }
-        throw reclaimError
+        await unlink(reclaimPath).catch(unlinkError => {
+          if (unlinkError.code !== 'ENOENT') throw unlinkError
+        })
+        continue
       }
       try {
-        const latest = Number.parseInt(await readFile(lockPath, 'utf8'), 10)
-        if (latest === owner && !processIsAlive(latest)) await unlink(lockPath)
+        const latestRaw = await readFile(lockPath, 'utf8')
+        const latest = Number.parseInt(latestRaw, 10)
+        const latestIsAlive =
+          Number.isSafeInteger(latest) && processIsAlive(latest)
+        if (latestRaw === ownerRaw && !latestIsAlive) await unlink(lockPath)
       } catch (reclaimError) {
         if (reclaimError.code !== 'ENOENT') throw reclaimError
       } finally {
@@ -294,9 +360,7 @@ export async function runWorktreeSetup({
   actualVersions,
   expectedVersions,
   install = true,
-  configureDocs = true,
-  env = process.env,
-  readGhToken,
+  ignoreScripts = false,
   run = (command, args, options = {}) =>
     spawnCommand(command, args, {
       cwd: root,
@@ -312,17 +376,43 @@ export async function runWorktreeSetup({
     )
   }
   if (!install) return { install }
-  await run('pnpm', ['install', '--frozen-lockfile'], { env: { CI: '1' } })
-  if (configureDocs) {
-    await ensureDocsEnvironment(root, { env, readGhToken })
-  }
+  const installArgs = ['install', '--frozen-lockfile']
+  if (ignoreScripts) installArgs.push('--ignore-scripts')
+  await run('pnpm', installArgs, { env: { CI: '1' } })
   return { install }
 }
 
 async function main() {
-  const root = resolve(dirname(fileURLToPath(import.meta.url)), '../..')
+  const root = await capture(
+    'git',
+    ['rev-parse', '--show-toplevel'],
+    process.cwd()
+  )
   const hookMode = process.argv.includes('--hook')
-  if (hookMode && !(await isLinkedWorktree(root))) return
+  if (hookMode) {
+    if (!(await isLinkedWorktree(root))) return
+    const sources = await verifyHookInstallSources(root)
+    if (!sources.trusted) {
+      const removedLinks = await prepareNodeModules(root)
+      if (removedLinks.length > 0) {
+        console.log(
+          `Removed ${removedLinks.length} worktree node_modules symlink(s); their targets were left untouched.`
+        )
+      }
+      const diffPaths = hookInstallSourcePaths
+        .map(path => (path.startsWith(':') ? `"${path}"` : path))
+        .join(' ')
+      console.warn(
+        [
+          `worktree-setup: skipping automatic dependency install: ${sources.reason}.`,
+          'Dependencies are required for builds and tests. To install them:',
+          `1. Review the changes: git diff origin/HEAD -- ${diffPaths} packages/scripts/worktree-setup.mjs`,
+          '2. If they are safe, run: node --run setup:worktree'
+        ].join('\n')
+      )
+      return
+    }
+  }
 
   const expectedVersions = await readExpectedVersions(root)
   const actualVersions = {
@@ -355,7 +445,7 @@ async function main() {
           root,
           actualVersions,
           expectedVersions,
-          configureDocs: !hookMode,
+          ignoreScripts: hookMode,
           ...plan
         })
     })
@@ -364,6 +454,11 @@ async function main() {
       return
     }
     console.log('Worktree ready: dependencies installed.')
+    if (hookMode) {
+      console.log(
+        'Lifecycle scripts were skipped; run `node --run setup:worktree` if a task needs them.'
+      )
+    }
     console.log('Turbo builds package dependencies for filtered checks.')
   })
 }
@@ -371,7 +466,10 @@ async function main() {
 const invokedPath = process.argv[1] ? resolve(process.argv[1]) : ''
 if (invokedPath === fileURLToPath(import.meta.url)) {
   main().catch(error => {
-    console.error(`Worktree setup failed: ${error.message}`)
+    console.error(`Worktree setup failed: ${error.stack ?? error.message}`)
+    console.error(
+      'Fix the cause, then run `node --run setup:worktree` in the worktree.'
+    )
     process.exitCode = 1
   })
 }
