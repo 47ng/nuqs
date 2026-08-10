@@ -120,8 +120,9 @@ function runGit(args, root) {
     child.stdout.on('data', chunk => {
       stdout += chunk
     })
+    child.stdout.on('error', reject)
     child.on('error', reject)
-    child.on('exit', code => resolvePromise({ code, stdout }))
+    child.on('close', code => resolvePromise({ code, stdout }))
   })
 }
 
@@ -168,14 +169,16 @@ export async function verifyHookInstallSources(
   if (diff.code !== 0) {
     throw new Error(`git diff exited with code ${diff.code}`)
   }
-  const status = await git(['status', '--porcelain', '--', ...paths])
-  if (status.code !== 0) {
-    throw new Error(`git status exited with code ${status.code}`)
+  // --others without --exclude-standard also surfaces ignored files,
+  // which neither git diff nor git status report
+  const untracked = await git(['ls-files', '--others', '--', ...paths])
+  if (untracked.code !== 0) {
+    throw new Error(`git ls-files exited with code ${untracked.code}`)
   }
-  if (status.stdout.trim() !== '') {
+  if (untracked.stdout.trim() !== '') {
     return {
       trusted: false,
-      reason: 'dependency manifests have uncommitted or untracked changes'
+      reason: 'dependency manifests have untracked or ignored files'
     }
   }
   return { trusted: true }

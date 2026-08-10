@@ -70,11 +70,11 @@ it('trusts hook installs only when dependency manifests match the trusted ref', 
 
   await expect(
     verifyHookInstallSources('/repo', {
-      git: gitStub({ status: { code: 0, stdout: '?? .npmrc\n' } })
+      git: gitStub({ 'ls-files': { code: 0, stdout: '.npmrc\n' } })
     })
   ).resolves.toMatchObject({
     trusted: false,
-    reason: expect.stringContaining('uncommitted or untracked')
+    reason: expect.stringContaining('untracked or ignored')
   })
 })
 
@@ -86,9 +86,9 @@ it('throws when git itself fails instead of reporting untrusted manifests', asyn
   ).rejects.toThrow(/git diff exited with code 128/)
   await expect(
     verifyHookInstallSources('/repo', {
-      git: gitStub({ status: { code: 128, stdout: '' } })
+      git: gitStub({ 'ls-files': { code: 128, stdout: '' } })
     })
-  ).rejects.toThrow(/git status exited with code 128/)
+  ).rejects.toThrow(/git ls-files exited with code 128/)
 })
 
 it('compares the dependency manifests that gate automatic installs', async () => {
@@ -102,7 +102,7 @@ it('compares the dependency manifests that gate automatic installs', async () =>
   expect(calls).toEqual([
     ['rev-parse', '--verify', '--quiet', 'origin/HEAD^{commit}'],
     ['diff', '--quiet', 'origin/HEAD', '--', ...hookInstallSourcePaths],
-    ['status', '--porcelain', '--', ...hookInstallSourcePaths]
+    ['ls-files', '--others', '--', ...hookInstallSourcePaths]
   ])
   expect(hookInstallSourcePaths).toContain(':(glob)packages/**/package.json')
   expect(hookInstallSourcePaths).toContain('.pnpmfile.cjs')
@@ -112,10 +112,22 @@ it('verifies dependency manifests against real git', async () => {
   const repo = await mkdtemp(join(tmpdir(), 'nuqs-worktree-setup-git-'))
   const git = (...args) =>
     new Promise((resolvePromise, reject) => {
-      execFile('git', args, { cwd: repo }, (error, stdout) => {
-        if (error) reject(error)
-        else resolvePromise(stdout)
-      })
+      execFile(
+        'git',
+        args,
+        {
+          cwd: repo,
+          env: {
+            ...process.env,
+            GIT_CONFIG_GLOBAL: '/dev/null',
+            GIT_CONFIG_SYSTEM: '/dev/null'
+          }
+        },
+        (error, stdout) => {
+          if (error) reject(error)
+          else resolvePromise(stdout)
+        }
+      )
     })
   await git('init', '--initial-branch=main')
   await git('config', 'user.email', 'test@example.com')
@@ -137,6 +149,12 @@ it('verifies dependency manifests against real git', async () => {
   await expect(verifyHookInstallSources(repo, options)).resolves.toMatchObject({
     trusted: false,
     reason: expect.stringContaining('untracked')
+  })
+
+  await writeFile(join(repo, '.git/info/exclude'), '.npmrc\n')
+  await expect(verifyHookInstallSources(repo, options)).resolves.toMatchObject({
+    trusted: false,
+    reason: expect.stringContaining('ignored')
   })
   await unlink(join(repo, '.npmrc'))
 
