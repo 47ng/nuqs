@@ -8,7 +8,6 @@
   },
   "scripts": {
     "test": "pnpm run --stream '/^test:/'",
-    "test:worktree-setup": "node --test worktree-setup.node-test.mjs",
     "test:unit": "vitest run",
     "test:types": "tsc --noEmit"
   },

@@ -10,7 +10,7 @@ import {
 } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import test from 'node:test'
+import { it } from 'vitest'
 
 import {
   assertToolVersions,
@@ -23,7 +23,7 @@ import {
   withSetupLock
 } from './worktree-setup.mjs'
 
-test('recognizes linked worktrees without treating the canonical checkout as one', async () => {
+it('recognizes linked worktrees without treating the canonical checkout as one', async () => {
   const root = await mkdtemp(join(tmpdir(), 'nuqs-worktree-setup-'))
   await mkdir(join(root, '.git'))
   assert.equal(await isLinkedWorktree(root), false)
@@ -36,7 +36,7 @@ test('recognizes linked worktrees without treating the canonical checkout as one
   assert.equal(await isLinkedWorktree(linked), true)
 })
 
-test('creates the docs environment once from the GitHub CLI credential', async () => {
+it('creates the docs environment once from the GitHub CLI credential', async () => {
   const root = await mkdtemp(join(tmpdir(), 'nuqs-worktree-setup-'))
   await mkdir(join(root, 'packages/docs'), { recursive: true })
   let calls = 0
@@ -62,7 +62,7 @@ test('creates the docs environment once from the GitHub CLI credential', async (
   assert.equal(calls, 1)
 })
 
-test('prefers an explicit GitHub token when creating the docs environment', async () => {
+it('prefers an explicit GitHub token when creating the docs environment', async () => {
   const root = await mkdtemp(join(tmpdir(), 'nuqs-worktree-setup-'))
   await mkdir(join(root, 'packages/docs'), { recursive: true })
 
@@ -79,7 +79,7 @@ test('prefers an explicit GitHub token when creating the docs environment', asyn
   )
 })
 
-test('keeps setup usable when GitHub authentication is unavailable', async () => {
+it('keeps setup usable when GitHub authentication is unavailable', async () => {
   const root = await mkdtemp(join(tmpdir(), 'nuqs-worktree-setup-'))
   await mkdir(join(root, 'packages/docs'), { recursive: true })
   const warnings = []
@@ -99,7 +99,7 @@ test('keeps setup usable when GitHub authentication is unavailable', async () =>
   ])
 })
 
-test('rejects a Node version that differs from .node-version', () => {
+it('rejects a Node version that differs from .node-version', () => {
   assert.throws(
     () =>
       assertToolVersions(
@@ -110,7 +110,7 @@ test('rejects a Node version that differs from .node-version', () => {
   )
 })
 
-test('rejects a pnpm version that differs from packageManager', () => {
+it('rejects a pnpm version that differs from packageManager', () => {
   assert.throws(
     () =>
       assertToolVersions(
@@ -121,7 +121,7 @@ test('rejects a pnpm version that differs from packageManager', () => {
   )
 })
 
-test('unlinks foreign root and package node_modules symlinks without touching their targets', async () => {
+it('unlinks foreign root and package node_modules symlinks without touching their targets', async () => {
   const root = await mkdtemp(join(tmpdir(), 'nuqs-worktree-setup-'))
   const foreign = join(root, 'foreign-node-modules')
   const rootLink = join(root, 'node_modules')
@@ -145,7 +145,7 @@ test('unlinks foreign root and package node_modules symlinks without touching th
   )
 })
 
-test('hook setup skips work when the install fingerprint is current', () => {
+it('hook setup skips work when the install fingerprint is current', () => {
   assert.deepEqual(
     planHookSetup({
       current: { install: 'lock-a' },
@@ -156,7 +156,7 @@ test('hook setup skips work when the install fingerprint is current', () => {
   )
 })
 
-test('hook setup reinstalls when install inputs change', () => {
+it('hook setup reinstalls when install inputs change', () => {
   assert.deepEqual(
     planHookSetup({
       current: { install: 'lock-b' },
@@ -167,7 +167,7 @@ test('hook setup reinstalls when install inputs change', () => {
   )
 })
 
-test('installs from the lockfile without building packages directly', async () => {
+it('installs from the lockfile without building packages directly', async () => {
   const commands = []
   const root = await mkdtemp(join(tmpdir(), 'nuqs-worktree-setup-'))
   await mkdir(join(root, 'packages/docs'), { recursive: true })
@@ -184,7 +184,7 @@ test('installs from the lockfile without building packages directly', async () =
   assert.deepEqual(commands, [['pnpm', 'install', '--frozen-lockfile', '1']])
 })
 
-test('checkout hooks do not persist GitHub credentials', async () => {
+it('checkout hooks do not persist GitHub credentials', async () => {
   const root = await mkdtemp(join(tmpdir(), 'nuqs-worktree-setup-'))
   await mkdir(join(root, 'packages/docs'), { recursive: true })
   let credentialReads = 0
@@ -209,7 +209,7 @@ test('checkout hooks do not persist GitHub credentials', async () => {
   )
 })
 
-test('does not keep a current fingerprint after setup fails', async () => {
+it('does not keep a current fingerprint after setup fails', async () => {
   const root = await mkdtemp(join(tmpdir(), 'nuqs-worktree-setup-'))
   const statePath = join(root, 'state.json')
   await writeFile(statePath, '{"install":"old"}\n')
@@ -227,7 +227,7 @@ test('does not keep a current fingerprint after setup fails', async () => {
   await assert.rejects(readFile(statePath, 'utf8'), { code: 'ENOENT' })
 })
 
-test('reclaims a setup lock owned by a dead process', async () => {
+it('reclaims a setup lock owned by a dead process', async () => {
   const gitDirectory = await mkdtemp(join(tmpdir(), 'nuqs-worktree-setup-'))
   const lockPath = join(gitDirectory, 'nuqs-worktree-setup.lock')
   await writeFile(lockPath, '999999999\n')
@@ -236,7 +236,7 @@ test('reclaims a setup lock owned by a dead process', async () => {
   await assert.rejects(readFile(lockPath, 'utf8'), { code: 'ENOENT' })
 })
 
-test('does not reclaim a setup lock owned by a live process', async () => {
+it('does not reclaim a setup lock owned by a live process', async () => {
   const gitDirectory = await mkdtemp(join(tmpdir(), 'nuqs-worktree-setup-'))
   const lockPath = join(gitDirectory, 'nuqs-worktree-setup.lock')
   await writeFile(lockPath, `${process.pid}\n`)
