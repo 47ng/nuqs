@@ -5,8 +5,7 @@ First off, thanks for your help! 🙏
 ## Getting started
 
 1. Fork and clone the repository
-2. Set up the checkout with `node --run setup:worktree`. This validates the
-   pinned Node and pnpm versions and installs the frozen lockfile.
+2. Set up the checkout with `node --run setup:worktree`
 3. Start the development environment with `pnpm dev --filter <package-name>...`
 
 ## Git hooks (optional)
@@ -28,23 +27,17 @@ worktrees. If the current Node version cannot run package scripts yet, invoke
 the setup directly with `node packages/scripts/worktree-setup.mjs` after
 activating `.node-version`.
 
-The checkout hook runs the setup script pinned at `origin/HEAD`, never the
-just-checked-out branch's copy. It installs dependencies automatically only
-when the branch's dependency manifests (root and workspace `package.json`,
-`pnpm-lock.yaml`, `pnpm-workspace.yaml`, `.npmrc`, `.pnpmfile.cjs`) match
-`origin/HEAD`, and it installs with `--ignore-scripts` so no lifecycle
-script runs from a checkout; otherwise it skips and asks for an explicit
-`node --run setup:worktree`. Review the whole branch (manifests and the
-setup script itself) before running explicit setup on a branch you do not
-trust: explicit setup executes the branch's code, including lifecycle
-scripts.
+The checkout hook only auto-installs dependencies for branches whose
+dependency manifests match `origin/HEAD`. When it skips, review the branch,
+then run `node --run setup:worktree` — explicit setup executes the branch's
+code.
 
 ## Project structure
 
 This monorepo contains:
 
 - The source code for the `nuqs` NPM package, in [`packages/nuqs`](./packages/nuqs).
-- A Next.js app under [`packages/docs`](./packages/docs) that serves the documentation and as a playground deployed at <https://nuqs.dev>. It runs without secrets, though cold builds without a token can hit GitHub rate limits; copy [`packages/docs/.env.example`](./packages/docs/.env.example) to `.env.local` for higher limits and the GitHub-powered sections.
+- A Next.js app under [`packages/docs`](./packages/docs) that serves the documentation and as a playground deployed at <https://nuqs.dev>. Copy [`packages/docs/.env.example`](./packages/docs/.env.example) to `.env.local` for the optional env vars local docs dev can use.
 - Test benches for [end-to-end tests](./packages/e2e) for each supported framework, driven by Playwright
 - Examples of integration with other tools.
 
