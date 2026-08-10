@@ -4,6 +4,7 @@ import {
   afterAll,
   afterEach,
   beforeAll,
+  beforeEach,
   describe,
   expect,
   it,
@@ -35,11 +36,18 @@ function respondWith(nodes: unknown[]) {
 describe('getGitHubActionsStatus', () => {
   const server = setupServer()
   beforeAll(() => server.listen({ onUnhandledRequest: 'error' }))
+  beforeEach(() => vi.stubEnv('GITHUB_TOKEN', 'test-token'))
   afterEach(() => {
     server.resetHandlers()
     vi.restoreAllMocks()
+    vi.unstubAllEnvs()
   })
   afterAll(() => server.close())
+
+  it('returns [] without a GitHub token', async () => {
+    vi.stubEnv('GITHUB_TOKEN', '')
+    expect(await getGitHubActionsStatus()).toEqual([])
+  })
 
   it('keeps the last 5 completed runs, ordered oldest to newest', async () => {
     // API returns newest-first; n2 and n8 are not completed and must drop out.

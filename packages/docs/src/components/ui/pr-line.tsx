@@ -47,13 +47,16 @@ export async function PullRequestLine({
   children,
   ...props
 }: PullRequestLineProps) {
+  const headers: Record<string, string> = {
+    Accept: 'application/vnd.github.v3+json'
+  }
+  if (process.env.GITHUB_TOKEN) {
+    headers.Authorization = `bearer ${process.env.GITHUB_TOKEN}`
+  }
   const response = await fetch(
     `https://api.github.com/repos/47ng/nuqs/pulls/${number}`,
     {
-      headers: {
-        Accept: 'application/vnd.github.v3+json',
-        Authorization: `bearer ${process.env.GITHUB_TOKEN}`
-      },
+      headers,
       cache: 'force-cache'
     }
   )

@@ -60,10 +60,21 @@ afterAll(() => server.close())
 beforeEach(() => {
   vi.useFakeTimers({ toFake: ['Date'] })
   vi.setSystemTime(new Date('2024-06-15T12:00:00Z'))
+  vi.stubEnv('GITHUB_TOKEN', 'test-token')
 })
-afterEach(() => vi.useRealTimers())
+afterEach(() => {
+  vi.useRealTimers()
+  vi.unstubAllEnvs()
+})
 
 describe('getStarHistory', () => {
+  it('returns empty bins without a GitHub token', async () => {
+    vi.stubEnv('GITHUB_TOKEN', '')
+    const history = await getStarHistory()
+    expect(history.count).toBe(0)
+    expect(history.bins).toHaveLength(12)
+    expect(history.bins.every(bin => bin.stars === 0)).toBe(true)
+  })
   it('fills the 12-day bins and computes end-of-day star totals', async () => {
     server.use(
       http.post(endpoint, () =>

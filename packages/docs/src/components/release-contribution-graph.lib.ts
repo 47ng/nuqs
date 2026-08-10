@@ -24,15 +24,18 @@ export async function fetchGitHubReleases(): Promise<GitHubRelease[]> {
   const releases: GitHubRelease[] = []
   let page = 1
   const perPage = 100
+  const headers: Record<string, string> = {
+    Accept: 'application/vnd.github.v3+json'
+  }
+  if (process.env.GITHUB_TOKEN) {
+    headers.Authorization = `Bearer ${process.env.GITHUB_TOKEN}`
+  }
 
   while (true) {
     const response = await fetch(
       `https://api.github.com/repos/47ng/nuqs/releases?per_page=${perPage}&page=${page}`,
       {
-        headers: {
-          Authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
-          Accept: 'application/vnd.github.v3+json'
-        },
+        headers,
         next: { revalidate: 3600 } // Cache for 1 hour
       }
     )
