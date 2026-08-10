@@ -1,9 +1,11 @@
+import { execFile } from 'node:child_process'
 import {
   mkdtemp,
   mkdir,
   readFile,
   readlink,
   symlink,
+  unlink,
   writeFile
 } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
@@ -12,6 +14,7 @@ import { expect, it } from 'vitest'
 
 import {
   assertToolVersions,
+  hookInstallSourcePaths,
   isLinkedWorktree,
   planHookSetup,
   prepareNodeModules,
@@ -34,47 +37,119 @@ it('recognizes linked worktrees without treating the canonical checkout as one',
   expect(await isLinkedWorktree(linked)).toBe(true)
 })
 
+function gitStub(overrides = {}) {
+  return async args => {
+    const result = overrides[args[0]]
+    if (result) return result
+    return { code: 0, stdout: '' }
+  }
+}
+
 it('trusts hook installs only when dependency manifests match the trusted ref', async () => {
-  const succeedAll = async () => true
   await expect(
-    verifyHookInstallSources('/repo', { gitSucceeds: succeedAll })
+    verifyHookInstallSources('/repo', { git: gitStub() })
   ).resolves.toEqual({ trusted: true })
 
-  const missingRef = async args => args[0] !== 'rev-parse'
   await expect(
-    verifyHookInstallSources('/repo', { gitSucceeds: missingRef })
-  ).resolves.toEqual({
+    verifyHookInstallSources('/repo', {
+      git: gitStub({ 'rev-parse': { code: 1, stdout: '' } })
+    })
+  ).resolves.toMatchObject({
     trusted: false,
-    reason: 'origin/HEAD is not available to compare dependency manifests against'
+    reason: expect.stringContaining('origin/HEAD is not available')
   })
 
-  const dirtyManifests = async args => args[0] !== 'diff'
   await expect(
-    verifyHookInstallSources('/repo', { gitSucceeds: dirtyManifests })
-  ).resolves.toEqual({
+    verifyHookInstallSources('/repo', {
+      git: gitStub({ diff: { code: 1, stdout: '' } })
+    })
+  ).resolves.toMatchObject({
     trusted: false,
-    reason: 'dependency manifests differ from origin/HEAD'
+    reason: expect.stringContaining('differ from origin/HEAD')
   })
+
+  await expect(
+    verifyHookInstallSources('/repo', {
+      git: gitStub({ status: { code: 0, stdout: '?? .npmrc\n' } })
+    })
+  ).resolves.toMatchObject({
+    trusted: false,
+    reason: expect.stringContaining('uncommitted or untracked')
+  })
+})
+
+it('throws when git itself fails instead of reporting untrusted manifests', async () => {
+  await expect(
+    verifyHookInstallSources('/repo', {
+      git: gitStub({ diff: { code: 128, stdout: '' } })
+    })
+  ).rejects.toThrow(/git diff exited with code 128/)
+  await expect(
+    verifyHookInstallSources('/repo', {
+      git: gitStub({ status: { code: 128, stdout: '' } })
+    })
+  ).rejects.toThrow(/git status exited with code 128/)
 })
 
 it('compares the dependency manifests that gate automatic installs', async () => {
   const calls = []
   await verifyHookInstallSources('/repo', {
-    gitSucceeds: async args => {
+    git: async args => {
       calls.push(args)
-      return true
+      return { code: 0, stdout: '' }
     }
   })
-  expect(calls[1]).toEqual([
-    'diff',
-    '--quiet',
-    'origin/HEAD',
-    '--',
-    'package.json',
-    'pnpm-lock.yaml',
-    'pnpm-workspace.yaml',
-    '.npmrc'
+  expect(calls).toEqual([
+    ['rev-parse', '--verify', '--quiet', 'origin/HEAD^{commit}'],
+    ['diff', '--quiet', 'origin/HEAD', '--', ...hookInstallSourcePaths],
+    ['status', '--porcelain', '--', ...hookInstallSourcePaths]
   ])
+  expect(hookInstallSourcePaths).toContain(':(glob)packages/**/package.json')
+  expect(hookInstallSourcePaths).toContain('.pnpmfile.cjs')
+})
+
+it('verifies dependency manifests against real git', async () => {
+  const repo = await mkdtemp(join(tmpdir(), 'nuqs-worktree-setup-git-'))
+  const git = (...args) =>
+    new Promise((resolvePromise, reject) => {
+      execFile('git', args, { cwd: repo }, (error, stdout) => {
+        if (error) reject(error)
+        else resolvePromise(stdout)
+      })
+    })
+  await git('init', '--initial-branch=main')
+  await git('config', 'user.email', 'test@example.com')
+  await git('config', 'user.name', 'Test')
+  await mkdir(join(repo, 'packages/nuqs'), { recursive: true })
+  await writeFile(join(repo, 'package.json'), '{}\n')
+  await writeFile(join(repo, 'pnpm-lock.yaml'), 'lockfileVersion: 9\n')
+  await writeFile(join(repo, 'packages/nuqs/package.json'), '{}\n')
+  await git('add', '--all')
+  await git('commit', '--message', 'baseline')
+  await git('branch', 'trusted')
+
+  const options = { trustedRef: 'trusted' }
+  await expect(verifyHookInstallSources(repo, options)).resolves.toEqual({
+    trusted: true
+  })
+
+  await writeFile(join(repo, '.npmrc'), 'registry=https://evil.example\n')
+  await expect(verifyHookInstallSources(repo, options)).resolves.toMatchObject({
+    trusted: false,
+    reason: expect.stringContaining('untracked')
+  })
+  await unlink(join(repo, '.npmrc'))
+
+  await writeFile(
+    join(repo, 'packages/nuqs/package.json'),
+    '{"scripts":{"postinstall":"true"}}\n'
+  )
+  await git('add', '--all')
+  await git('commit', '--message', 'workspace manifest change')
+  await expect(verifyHookInstallSources(repo, options)).resolves.toMatchObject({
+    trusted: false,
+    reason: expect.stringContaining('differ')
+  })
 })
 
 it('rejects a Node version that differs from .node-version', () => {
@@ -200,6 +275,38 @@ it('reclaims a setup lock owned by a dead process', async () => {
   await expect(readFile(lockPath, 'utf8')).rejects.toMatchObject({
     code: 'ENOENT'
   })
+})
+
+it('reclaims a corrupted (empty) setup lock instead of spinning forever', async () => {
+  const gitDirectory = await mkdtemp(join(tmpdir(), 'nuqs-worktree-setup-'))
+  const lockPath = join(gitDirectory, 'nuqs-worktree-setup.lock')
+  await writeFile(lockPath, '')
+
+  await expect(withSetupLock(gitDirectory, async () => 'ready')).resolves.toBe(
+    'ready'
+  )
+})
+
+it('self-heals a stale reclaim marker left by a dead process', async () => {
+  const gitDirectory = await mkdtemp(join(tmpdir(), 'nuqs-worktree-setup-'))
+  const lockPath = join(gitDirectory, 'nuqs-worktree-setup.lock')
+  await writeFile(lockPath, '999999999\n')
+  await writeFile(`${lockPath}.reclaim`, '999999999\n')
+
+  await expect(withSetupLock(gitDirectory, async () => 'ready')).resolves.toBe(
+    'ready'
+  )
+})
+
+it('does not steal a reclaim marker owned by a live process', async () => {
+  const gitDirectory = await mkdtemp(join(tmpdir(), 'nuqs-worktree-setup-'))
+  const lockPath = join(gitDirectory, 'nuqs-worktree-setup.lock')
+  await writeFile(lockPath, '999999999\n')
+  await writeFile(`${lockPath}.reclaim`, `${process.pid}\n`)
+
+  await expect(
+    withSetupLock(gitDirectory, async () => 'unreachable')
+  ).rejects.toThrow(/Another worktree setup is already running/)
 })
 
 it('does not reclaim a setup lock owned by a live process', async () => {

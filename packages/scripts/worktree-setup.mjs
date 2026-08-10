@@ -109,39 +109,73 @@ function spawnCommand(command, args, options = {}) {
   })
 }
 
-function commandSucceeds(command, args, root) {
+function runGit(args, root) {
   return new Promise((resolvePromise, reject) => {
-    const child = spawn(command, args, { cwd: root, stdio: 'ignore' })
+    const child = spawn('git', args, {
+      cwd: root,
+      stdio: ['ignore', 'pipe', 'inherit']
+    })
+    let stdout = ''
+    child.stdout.setEncoding('utf8')
+    child.stdout.on('data', chunk => {
+      stdout += chunk
+    })
     child.on('error', reject)
-    child.on('exit', code => resolvePromise(code === 0))
+    child.on('exit', code => resolvePromise({ code, stdout }))
   })
 }
+
+export const hookInstallSourcePaths = [
+  'package.json',
+  'pnpm-lock.yaml',
+  'pnpm-workspace.yaml',
+  '.npmrc',
+  '.pnpmfile.cjs',
+  ':(glob)packages/**/package.json',
+  ':(glob)packages/**/.npmrc',
+  ':(glob)packages/**/.pnpmfile.cjs'
+]
 
 export async function verifyHookInstallSources(
   root,
   {
     trustedRef = 'origin/HEAD',
-    paths = ['package.json', 'pnpm-lock.yaml', 'pnpm-workspace.yaml', '.npmrc'],
-    gitSucceeds = args => commandSucceeds('git', args, root)
+    paths = hookInstallSourcePaths,
+    git = args => runGit(args, root)
   } = {}
 ) {
-  const hasRef = await gitSucceeds([
+  const ref = await git([
     'rev-parse',
     '--verify',
     '--quiet',
     `${trustedRef}^{commit}`
   ])
-  if (!hasRef) {
+  if (ref.code !== 0) {
     return {
       trusted: false,
-      reason: `${trustedRef} is not available to compare dependency manifests against`
+      reason:
+        `${trustedRef} is not available to compare dependency manifests against ` +
+        '(fix with `git remote set-head origin --auto`)'
     }
   }
-  const unchanged = await gitSucceeds(['diff', '--quiet', trustedRef, '--', ...paths])
-  if (!unchanged) {
+  const diff = await git(['diff', '--quiet', trustedRef, '--', ...paths])
+  if (diff.code === 1) {
     return {
       trusted: false,
       reason: `dependency manifests differ from ${trustedRef}`
+    }
+  }
+  if (diff.code !== 0) {
+    throw new Error(`git diff exited with code ${diff.code}`)
+  }
+  const status = await git(['status', '--porcelain', '--', ...paths])
+  if (status.code !== 0) {
+    throw new Error(`git status exited with code ${status.code}`)
+  }
+  if (status.stdout.trim() !== '') {
+    return {
+      trusted: false,
+      reason: 'dependency manifests have uncommitted or untracked changes'
     }
   }
   return { trusted: true }
@@ -211,15 +245,13 @@ async function readState(path) {
 
 async function writeState(path, fingerprints) {
   const temporary = `${path}.${process.pid}.tmp`
-  const contents = JSON.stringify(fingerprints) + '\n'
-  const options = { flag: 'wx', mode: 0o600 }
-  try {
-    await writeFile(temporary, contents, options)
-  } catch (error) {
-    if (error.code !== 'EEXIST') throw error
-    await unlink(temporary)
-    await writeFile(temporary, contents, options)
-  }
+  await unlink(temporary).catch(error => {
+    if (error.code !== 'ENOENT') throw error
+  })
+  await writeFile(temporary, JSON.stringify(fingerprints) + '\n', {
+    flag: 'wx',
+    mode: 0o600
+  })
   await rename(temporary, path)
 }
 
@@ -255,14 +287,15 @@ export async function withSetupLock(gitDirectory, operation) {
     } catch (error) {
       if (error.code !== 'EEXIST') throw error
 
-      let owner
+      let ownerRaw
       try {
-        owner = Number.parseInt(await readFile(lockPath, 'utf8'), 10)
+        ownerRaw = await readFile(lockPath, 'utf8')
       } catch (readError) {
         if (readError.code === 'ENOENT') continue
         throw readError
       }
-      if (processIsAlive(owner)) {
+      const owner = Number.parseInt(ownerRaw, 10)
+      if (Number.isSafeInteger(owner) && processIsAlive(owner)) {
         throw new Error(
           `Another worktree setup is already running (${lockPath})`
         )
@@ -274,16 +307,37 @@ export async function withSetupLock(gitDirectory, operation) {
           mode: 0o600
         })
       } catch (reclaimError) {
-        if (reclaimError.code === 'EEXIST') {
+        if (reclaimError.code !== 'EEXIST') throw reclaimError
+        let reclaimOwner
+        try {
+          reclaimOwner = Number.parseInt(
+            await readFile(reclaimPath, 'utf8'),
+            10
+          )
+        } catch (readError) {
+          if (readError.code === 'ENOENT') continue
+          throw readError
+        }
+        if (
+          Number.isSafeInteger(reclaimOwner) &&
+          processIsAlive(reclaimOwner)
+        ) {
           throw new Error(
-            `Another worktree setup is already running (${lockPath})`
+            `Another worktree setup is already running (${reclaimPath}); ` +
+              'delete it if no setup is in progress'
           )
         }
-        throw reclaimError
+        await unlink(reclaimPath).catch(unlinkError => {
+          if (unlinkError.code !== 'ENOENT') throw unlinkError
+        })
+        continue
       }
       try {
-        const latest = Number.parseInt(await readFile(lockPath, 'utf8'), 10)
-        if (latest === owner && !processIsAlive(latest)) await unlink(lockPath)
+        const latestRaw = await readFile(lockPath, 'utf8')
+        const latest = Number.parseInt(latestRaw, 10)
+        const latestIsAlive =
+          Number.isSafeInteger(latest) && processIsAlive(latest)
+        if (latestRaw === ownerRaw && !latestIsAlive) await unlink(lockPath)
       } catch (reclaimError) {
         if (reclaimError.code !== 'ENOENT') throw reclaimError
       } finally {
@@ -329,13 +383,19 @@ async function main() {
     process.cwd()
   )
   const hookMode = process.argv.includes('--hook')
-  if (hookMode && !(await isLinkedWorktree(root))) return
   if (hookMode) {
+    if (!(await isLinkedWorktree(root))) return
     const sources = await verifyHookInstallSources(root)
     if (!sources.trusted) {
+      const removedLinks = await prepareNodeModules(root)
+      if (removedLinks.length > 0) {
+        console.log(
+          `Removed ${removedLinks.length} worktree node_modules symlink(s); their targets were left untouched.`
+        )
+      }
       console.warn(
-        `Skipping automatic worktree setup: ${sources.reason}. ` +
-          'Review the changes, then run `node --run setup:worktree` explicitly.'
+        `worktree-setup: skipping automatic setup: ${sources.reason}. ` +
+          'Review the branch (including its setup script), then run `node --run setup:worktree` explicitly.'
       )
       return
     }
@@ -387,7 +447,10 @@ async function main() {
 const invokedPath = process.argv[1] ? resolve(process.argv[1]) : ''
 if (invokedPath === fileURLToPath(import.meta.url)) {
   main().catch(error => {
-    console.error(`Worktree setup failed: ${error.message}`)
+    console.error(`Worktree setup failed: ${error.stack ?? error.message}`)
+    console.error(
+      'Fix the cause, then run `node --run setup:worktree` in the worktree.'
+    )
     process.exitCode = 1
   })
 }
