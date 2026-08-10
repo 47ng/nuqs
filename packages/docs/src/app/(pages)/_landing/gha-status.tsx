@@ -62,6 +62,13 @@ const ghaStatusSchema = z.object({
 })
 
 export async function getGitHubActionsStatus() {
+  // The GraphQL API rejects unauthenticated requests
+  if (!process.env.GITHUB_TOKEN) {
+    console.warn(
+      'GITHUB_TOKEN is not set: GitHub Actions status is unavailable.'
+    )
+    return []
+  }
   // Fetch a few more than needed to filter out non-completed runs
   const query = `query {
     node(id: "W_kwDOD6wJuM4EeKz5") {

@@ -11,7 +11,9 @@ export async function getLastModified(
       repo: github.repo,
       path: `packages/docs${path}`,
       sha: branch,
-      token: `Bearer ${process.env.GITHUB_TOKEN}`
+      token: process.env.GITHUB_TOKEN
+        ? `Bearer ${process.env.GITHUB_TOKEN}`
+        : undefined
     })
     return lastEdit ?? new Date()
   } catch (error) {
