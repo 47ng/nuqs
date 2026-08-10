@@ -5,6 +5,7 @@ import { getStarHistory } from '../lib/github'
 import { GraphSkeleton } from './graph.skeleton'
 import { StarsGraph } from './stars.client'
 import StargazersList from './stars.gazers-list'
+import { Widget } from './widget'
 import { WidgetSkeleton } from './widget.skeleton'
 
 const getCachedStarHistory = unstable_cache(
@@ -16,6 +17,21 @@ const getCachedStarHistory = unstable_cache(
 export async function StarHistoryGraph() {
   await connection()
   const stars = await getCachedStarHistory()
+  if (stars === null) {
+    return (
+      <Widget
+        title={
+          <>
+            <Star size={20} className="ml-2" /> Stars
+          </>
+        }
+      >
+        <p className="text-muted-foreground flex h-74.5 items-center justify-center text-sm">
+          Star history is unavailable: set GITHUB_TOKEN to enable it.
+        </p>
+      </Widget>
+    )
+  }
   return (
     <StarsGraph data={stars} stargazersTab={<StargazersList stars={stars} />} />
   )

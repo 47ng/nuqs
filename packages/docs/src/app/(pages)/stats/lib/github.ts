@@ -54,7 +54,13 @@ const starHistoryQuerySchema = z.object({
 
 export async function getStarHistory(
   slug = '47ng/nuqs'
-): Promise<GitHubStarHistory> {
+): Promise<GitHubStarHistory | null> {
+  // The GraphQL API rejects unauthenticated requests
+  if (!process.env.GITHUB_TOKEN) {
+    console.warn('GITHUB_TOKEN is not set: star history is unavailable.')
+    return null
+  }
+
   const [owner, repo] = slug.split('/')
 
   // Compute the 12-day window [today .. today-11d] in UTC
@@ -71,12 +77,6 @@ export async function getStarHistory(
     date,
     stargarzers: []
   }))
-
-  // The GraphQL API rejects unauthenticated requests
-  if (!process.env.GITHUB_TOKEN) {
-    console.warn('GITHUB_TOKEN is not set: star history is unavailable.')
-    return { count: 0, bins }
-  }
 
   // Paginate through stargazers 100 at a time until we reach older than the window start
   let after: string | undefined

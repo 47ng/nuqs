@@ -1,7 +1,16 @@
 import { http, HttpResponse } from 'msw'
 import { setupServer } from 'msw/node'
 import { renderToStaticMarkup } from 'react-dom/server'
-import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest'
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi
+} from 'vitest'
 import { PullRequestLine } from './pr-line.tsx'
 
 function endpoint(number: number | string) {
@@ -35,8 +44,37 @@ async function render(number: number | string) {
 describe('PullRequestLine', () => {
   const server = setupServer()
   beforeAll(() => server.listen({ onUnhandledRequest: 'error' }))
-  afterEach(() => server.resetHandlers())
+  beforeEach(() => vi.stubEnv('GITHUB_TOKEN', 'test-token'))
+  afterEach(() => {
+    server.resetHandlers()
+    vi.unstubAllEnvs()
+  })
   afterAll(() => server.close())
+
+  it('sends the token as an Authorization header when set', async () => {
+    let auth: string | null = null
+    server.use(
+      http.get(endpoint(1), ({ request }) => {
+        auth = request.headers.get('authorization')
+        return HttpResponse.json(pull())
+      })
+    )
+    await render(1)
+    expect(auth).toBe('bearer test-token')
+  })
+
+  it('makes anonymous requests without a GitHub token', async () => {
+    vi.stubEnv('GITHUB_TOKEN', '')
+    let auth: string | null = 'unset'
+    server.use(
+      http.get(endpoint(1), ({ request }) => {
+        auth = request.headers.get('authorization')
+        return HttpResponse.json(pull())
+      })
+    )
+    await render(1)
+    expect(auth).toBeNull()
+  })
 
   it('strips the conventional-commit prefix (with scope) from the title', async () => {
     server.use(

@@ -1,6 +1,15 @@
 import { http, HttpResponse } from 'msw'
 import { setupServer } from 'msw/node'
-import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest'
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi
+} from 'vitest'
 import {
   fetchGitHubReleases,
   isBetaVersion,
@@ -73,7 +82,11 @@ describe('processReleases', () => {
 describe('fetchGitHubReleases', () => {
   const server = setupServer()
   beforeAll(() => server.listen({ onUnhandledRequest: 'error' }))
-  afterEach(() => server.resetHandlers())
+  beforeEach(() => vi.stubEnv('GITHUB_TOKEN', 'test-token'))
+  afterEach(() => {
+    server.resetHandlers()
+    vi.unstubAllEnvs()
+  })
   afterAll(() => server.close())
 
   function release(i: number) {
@@ -86,6 +99,31 @@ describe('fetchGitHubReleases', () => {
     )
     const releases = await fetchGitHubReleases()
     expect(releases.map(r => r.tag_name)).toEqual(['v1', 'v2'])
+  })
+
+  it('sends the token as an Authorization header when set', async () => {
+    let auth: string | null = null
+    server.use(
+      http.get(endpoint, ({ request }) => {
+        auth = request.headers.get('authorization')
+        return HttpResponse.json([release(1)])
+      })
+    )
+    await fetchGitHubReleases()
+    expect(auth).toBe('Bearer test-token')
+  })
+
+  it('makes anonymous requests without a GitHub token', async () => {
+    vi.stubEnv('GITHUB_TOKEN', '')
+    let auth: string | null = 'unset'
+    server.use(
+      http.get(endpoint, ({ request }) => {
+        auth = request.headers.get('authorization')
+        return HttpResponse.json([release(1)])
+      })
+    )
+    await fetchGitHubReleases()
+    expect(auth).toBeNull()
   })
 
   it('concatenates across pages until a short page', async () => {

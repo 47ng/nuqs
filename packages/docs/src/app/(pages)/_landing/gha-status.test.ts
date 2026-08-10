@@ -44,9 +44,13 @@ describe('getGitHubActionsStatus', () => {
   })
   afterAll(() => server.close())
 
-  it('returns [] without a GitHub token', async () => {
+  it('returns [] and warns without a GitHub token', async () => {
     vi.stubEnv('GITHUB_TOKEN', '')
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
     expect(await getGitHubActionsStatus()).toEqual([])
+    expect(warn).toHaveBeenCalledWith(
+      'GITHUB_TOKEN is not set: GitHub Actions status is unavailable.'
+    )
   })
 
   it('keeps the last 5 completed runs, ordered oldest to newest', async () => {

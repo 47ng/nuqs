@@ -17,6 +17,14 @@ import { getStarHistory } from './github.ts'
 
 const endpoint = 'https://api.github.com/graphql'
 
+async function getAvailableStarHistory() {
+  const history = await getStarHistory()
+  if (history === null) {
+    throw new Error('Expected star history to be available')
+  }
+  return history
+}
+
 function edge(login: string, starredAt: string) {
   return {
     starredAt,
@@ -65,15 +73,17 @@ beforeEach(() => {
 afterEach(() => {
   vi.useRealTimers()
   vi.unstubAllEnvs()
+  vi.restoreAllMocks()
 })
 
 describe('getStarHistory', () => {
-  it('returns empty bins without a GitHub token', async () => {
+  it('returns null and warns without a GitHub token', async () => {
     vi.stubEnv('GITHUB_TOKEN', '')
-    const history = await getStarHistory()
-    expect(history.count).toBe(0)
-    expect(history.bins).toHaveLength(12)
-    expect(history.bins.every(bin => bin.stars === 0)).toBe(true)
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    expect(await getStarHistory()).toBeNull()
+    expect(warn).toHaveBeenCalledWith(
+      'GITHUB_TOKEN is not set: star history is unavailable.'
+    )
   })
   it('fills the 12-day bins and computes end-of-day star totals', async () => {
     server.use(
@@ -90,7 +100,7 @@ describe('getStarHistory', () => {
         )
       )
     )
-    const history = await getStarHistory()
+    const history = await getAvailableStarHistory()
     expect(history.count).toBe(100)
     expect(history.bins).toHaveLength(12)
     expect(history.bins[0]).toMatchObject({
@@ -119,7 +129,7 @@ describe('getStarHistory', () => {
         )
       )
     )
-    const history = await getStarHistory()
+    const history = await getAvailableStarHistory()
     expect(history.bins[11].date).toBe('2024-06-04')
     expect(history.bins[11].stargarzers.map(s => s.login)).toEqual(['boundary'])
     const allLogins = history.bins.flatMap(b => b.stargarzers.map(s => s.login))
@@ -149,7 +159,7 @@ describe('getStarHistory', () => {
         )
       })
     )
-    const history = await getStarHistory()
+    const history = await getAvailableStarHistory()
     // p2a only appears if the second page was fetched via the cursor.
     expect(history.bins[0].stargarzers.map(s => s.login)).toEqual(['p1a'])
     expect(history.bins[1].stargarzers.map(s => s.login)).toEqual(['p1b'])
@@ -164,7 +174,7 @@ describe('getStarHistory', () => {
         )
       )
     )
-    const history = await getStarHistory()
+    const history = await getAvailableStarHistory()
     expect(history.count).toBe(50)
     expect(history.bins).toHaveLength(12)
     expect(history.bins.every(b => b.diff === 0)).toBe(true)
@@ -179,7 +189,7 @@ describe('getStarHistory', () => {
         )
       )
     )
-    const history = await getStarHistory()
+    const history = await getAvailableStarHistory()
     expect(history.count).toBe(200)
     expect(history.bins[0]).toMatchObject({ stars: 200, diff: 0 })
     expect(history.bins.every(b => b.stargarzers.length === 0)).toBe(true)
