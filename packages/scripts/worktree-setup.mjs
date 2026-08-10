@@ -399,9 +399,16 @@ async function main() {
           `Removed ${removedLinks.length} worktree node_modules symlink(s); their targets were left untouched.`
         )
       }
+      const diffPaths = hookInstallSourcePaths
+        .map(path => (path.startsWith(':') ? `"${path}"` : path))
+        .join(' ')
       console.warn(
-        `worktree-setup: skipping automatic setup: ${sources.reason}. ` +
-          'Review the branch (including its setup script), then run `node --run setup:worktree` explicitly.'
+        [
+          `worktree-setup: skipping automatic dependency install: ${sources.reason}.`,
+          'Dependencies are required for builds and tests. To install them:',
+          `1. Review the changes: git diff origin/HEAD -- ${diffPaths} packages/scripts/worktree-setup.mjs`,
+          '2. If they are safe, run: node --run setup:worktree'
+        ].join('\n')
       )
       return
     }
