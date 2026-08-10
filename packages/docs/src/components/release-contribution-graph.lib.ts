@@ -20,7 +20,7 @@ const gitHubReleasesSchema = z.array(gitHubReleaseSchema)
 
 export type GitHubRelease = z.infer<typeof gitHubReleaseSchema>
 
-export async function fetchGitHubReleases(): Promise<GitHubRelease[]> {
+export async function fetchGitHubReleases(): Promise<GitHubRelease[] | null> {
   const releases: GitHubRelease[] = []
   let page = 1
   const perPage = 100
@@ -40,6 +40,12 @@ export async function fetchGitHubReleases(): Promise<GitHubRelease[]> {
       }
     )
 
+    if (response.status === 403 || response.status === 429) {
+      console.warn(
+        `GitHub rate limit reached (${response.status}): release calendar is unavailable. Set GITHUB_TOKEN to raise the limit.`
+      )
+      return null
+    }
     if (!response.ok) {
       throw new Error(`GitHub API error: ${response.status}`)
     }

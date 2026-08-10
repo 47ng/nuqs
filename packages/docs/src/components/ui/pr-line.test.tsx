@@ -144,6 +144,21 @@ describe('PullRequestLine', () => {
     expect(html).toContain('closed PR')
   })
 
+  it('degrades to a plain GitHub link when rate limited', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    server.use(
+      http.get(endpoint(42), () => HttpResponse.json({}, { status: 403 }))
+    )
+    const html = await render(42)
+    expect(html).toContain('https://github.com/47ng/nuqs/pull/42')
+    expect(html).toContain('View on GitHub')
+    expect(html).not.toContain('Failed to fetch details')
+    expect(warn).toHaveBeenCalledWith(
+      expect.stringContaining('GitHub rate limit reached (403)')
+    )
+    warn.mockRestore()
+  })
+
   it('renders a fallback message on a non-ok response without throwing', async () => {
     server.use(
       http.get(endpoint(42), () =>

@@ -86,6 +86,7 @@ describe('fetchGitHubReleases', () => {
   afterEach(() => {
     server.resetHandlers()
     vi.unstubAllEnvs()
+    vi.restoreAllMocks()
   })
   afterAll(() => server.close())
 
@@ -98,7 +99,7 @@ describe('fetchGitHubReleases', () => {
       http.get(endpoint, () => HttpResponse.json([release(1), release(2)]))
     )
     const releases = await fetchGitHubReleases()
-    expect(releases.map(r => r.tag_name)).toEqual(['v1', 'v2'])
+    expect(releases?.map(r => r.tag_name)).toEqual(['v1', 'v2'])
   })
 
   it('sends the token as an Authorization header when set', async () => {
@@ -136,7 +137,7 @@ describe('fetchGitHubReleases', () => {
     )
     const releases = await fetchGitHubReleases()
     expect(releases).toHaveLength(101)
-    expect(releases.at(-1)?.tag_name).toBe('v999')
+    expect(releases?.at(-1)?.tag_name).toBe('v999')
   })
 
   it('stops paginating on an empty page', async () => {
@@ -149,6 +150,17 @@ describe('fetchGitHubReleases', () => {
     )
     const releases = await fetchGitHubReleases()
     expect(releases).toHaveLength(100)
+  })
+
+  it('returns null and warns when rate limited', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    server.use(http.get(endpoint, () => HttpResponse.json({}, { status: 403 })))
+    expect(await fetchGitHubReleases()).toBeNull()
+    expect(warn).toHaveBeenCalledWith(
+      expect.stringContaining('GitHub rate limit reached (403)')
+    )
+    server.use(http.get(endpoint, () => HttpResponse.json({}, { status: 429 })))
+    expect(await fetchGitHubReleases()).toBeNull()
   })
 
   it('throws on a non-ok response', async () => {
