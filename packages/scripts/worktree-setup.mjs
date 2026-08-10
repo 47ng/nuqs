@@ -360,6 +360,7 @@ export async function runWorktreeSetup({
   actualVersions,
   expectedVersions,
   install = true,
+  ignoreScripts = false,
   run = (command, args, options = {}) =>
     spawnCommand(command, args, {
       cwd: root,
@@ -375,7 +376,9 @@ export async function runWorktreeSetup({
     )
   }
   if (!install) return { install }
-  await run('pnpm', ['install', '--frozen-lockfile'], { env: { CI: '1' } })
+  const installArgs = ['install', '--frozen-lockfile']
+  if (ignoreScripts) installArgs.push('--ignore-scripts')
+  await run('pnpm', installArgs, { env: { CI: '1' } })
   return { install }
 }
 
@@ -435,6 +438,7 @@ async function main() {
           root,
           actualVersions,
           expectedVersions,
+          ignoreScripts: hookMode,
           ...plan
         })
     })
@@ -443,6 +447,11 @@ async function main() {
       return
     }
     console.log('Worktree ready: dependencies installed.')
+    if (hookMode) {
+      console.log(
+        'Lifecycle scripts were skipped; run `node --run setup:worktree` if a task needs them.'
+      )
+    }
     console.log('Turbo builds package dependencies for filtered checks.')
   })
 }

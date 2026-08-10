@@ -32,10 +32,12 @@ The checkout hook runs the setup script pinned at `origin/HEAD`, never the
 just-checked-out branch's copy. It installs dependencies automatically only
 when the branch's dependency manifests (root and workspace `package.json`,
 `pnpm-lock.yaml`, `pnpm-workspace.yaml`, `.npmrc`, `.pnpmfile.cjs`) match
-`origin/HEAD`; otherwise it skips and asks for an explicit
+`origin/HEAD`, and it installs with `--ignore-scripts` so no lifecycle
+script runs from a checkout; otherwise it skips and asks for an explicit
 `node --run setup:worktree`. Review the whole branch (manifests and the
 setup script itself) before running explicit setup on a branch you do not
-trust: explicit setup executes the branch's code.
+trust: explicit setup executes the branch's code, including lifecycle
+scripts.
 
 ## Project structure
 

@@ -246,6 +246,23 @@ it('installs from the lockfile without building packages directly', async () => 
   expect(commands).toEqual([['pnpm', 'install', '--frozen-lockfile', '1']])
 })
 
+it('skips lifecycle scripts for hook-triggered installs', async () => {
+  const commands = []
+  const root = await mkdtemp(join(tmpdir(), 'nuqs-worktree-setup-'))
+
+  await runWorktreeSetup({
+    root,
+    actualVersions: { node: '24.11.0', pnpm: '11.0.9' },
+    expectedVersions: { node: '24.11.0', pnpm: '11.0.9' },
+    ignoreScripts: true,
+    run: async (command, args) => commands.push([command, ...args])
+  })
+
+  expect(commands).toEqual([
+    ['pnpm', 'install', '--frozen-lockfile', '--ignore-scripts']
+  ])
+})
+
 it('does not keep a current fingerprint after setup fails', async () => {
   const root = await mkdtemp(join(tmpdir(), 'nuqs-worktree-setup-'))
   const statePath = join(root, 'state.json')
