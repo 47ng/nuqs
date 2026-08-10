@@ -1,4 +1,3 @@
-import assert from 'node:assert/strict'
 import {
   mkdtemp,
   mkdir,
@@ -10,7 +9,7 @@ import {
 } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { it } from 'vitest'
+import { expect, it } from 'vitest'
 
 import {
   assertToolVersions,
@@ -26,14 +25,14 @@ import {
 it('recognizes linked worktrees without treating the canonical checkout as one', async () => {
   const root = await mkdtemp(join(tmpdir(), 'nuqs-worktree-setup-'))
   await mkdir(join(root, '.git'))
-  assert.equal(await isLinkedWorktree(root), false)
+  expect(await isLinkedWorktree(root)).toBe(false)
 
   const linked = await mkdtemp(join(tmpdir(), 'nuqs-worktree-setup-'))
   await writeFile(
     join(linked, '.git'),
     'gitdir: /tmp/repo/.git/worktrees/test\n'
   )
-  assert.equal(await isLinkedWorktree(linked), true)
+  expect(await isLinkedWorktree(linked)).toBe(true)
 })
 
 it('creates the docs environment once from the GitHub CLI credential', async () => {
@@ -57,9 +56,9 @@ it('creates the docs environment once from the GitHub CLI credential', async () 
   })
 
   const path = join(root, 'packages/docs/.env.local')
-  assert.equal(await readFile(path, 'utf8'), 'GITHUB_TOKEN="from-gh"\n')
-  assert.equal((await stat(path)).mode & 0o777, 0o600)
-  assert.equal(calls, 1)
+  expect(await readFile(path, 'utf8')).toBe('GITHUB_TOKEN="from-gh"\n')
+  expect((await stat(path)).mode & 0o777).toBe(0o600)
+  expect(calls).toBe(1)
 })
 
 it('prefers an explicit GitHub token when creating the docs environment', async () => {
@@ -73,8 +72,7 @@ it('prefers an explicit GitHub token when creating the docs environment', async 
     }
   })
 
-  assert.equal(
-    await readFile(join(root, 'packages/docs/.env.local'), 'utf8'),
+  expect(await readFile(join(root, 'packages/docs/.env.local'), 'utf8')).toBe(
     'GITHUB_TOKEN="from-env"\n'
   )
 })
@@ -84,41 +82,36 @@ it('keeps setup usable when GitHub authentication is unavailable', async () => {
   await mkdir(join(root, 'packages/docs'), { recursive: true })
   const warnings = []
 
-  assert.equal(
-    await ensureDocsEnvironment(root, {
+  await expect(
+    ensureDocsEnvironment(root, {
       env: {},
       readGhToken: async () => {
         throw new Error('gh is unavailable')
       },
       warn: message => warnings.push(message)
-    }),
-    false
-  )
-  assert.deepEqual(warnings, [
+    })
+  ).resolves.toBe(false)
+  expect(warnings).toEqual([
     'Docs GitHub authentication was not configured; set GITHUB_TOKEN or run `gh auth login` before building the docs.'
   ])
 })
 
 it('rejects a Node version that differs from .node-version', () => {
-  assert.throws(
-    () =>
-      assertToolVersions(
-        { node: '24.10.0', pnpm: '11.0.9' },
-        { node: '24.11.0', pnpm: '11.0.9' }
-      ),
-    /Node 24\.11\.0 is required/
-  )
+  expect(() =>
+    assertToolVersions(
+      { node: '24.10.0', pnpm: '11.0.9' },
+      { node: '24.11.0', pnpm: '11.0.9' }
+    )
+  ).toThrow(/Node 24\.11\.0 is required/)
 })
 
 it('rejects a pnpm version that differs from packageManager', () => {
-  assert.throws(
-    () =>
-      assertToolVersions(
-        { node: '24.11.0', pnpm: '10.0.0' },
-        { node: '24.11.0', pnpm: '11.0.9' }
-      ),
-    /pnpm 11\.0\.9 is required/
-  )
+  expect(() =>
+    assertToolVersions(
+      { node: '24.11.0', pnpm: '10.0.0' },
+      { node: '24.11.0', pnpm: '11.0.9' }
+    )
+  ).toThrow(/pnpm 11\.0\.9 is required/)
 })
 
 it('unlinks foreign root and package node_modules symlinks without touching their targets', async () => {
@@ -134,37 +127,34 @@ it('unlinks foreign root and package node_modules symlinks without touching thei
 
   const removed = await prepareNodeModules(root)
 
-  assert.deepEqual(removed.sort(), [packageLink, rootLink].sort())
-  await assert.rejects(readlink(rootLink))
-  await assert.rejects(readlink(packageLink))
-  assert.equal(
+  expect(removed.sort()).toEqual([packageLink, rootLink].sort())
+  await expect(readlink(rootLink)).rejects.toThrow()
+  await expect(readlink(packageLink)).rejects.toThrow()
+  expect(
     await import('node:fs/promises').then(({ readFile }) =>
       readFile(join(foreign, 'sentinel'), 'utf8')
-    ),
-    'foreign install'
-  )
+    )
+  ).toBe('foreign install')
 })
 
 it('hook setup skips work when the install fingerprint is current', () => {
-  assert.deepEqual(
+  expect(
     planHookSetup({
       current: { install: 'lock-a' },
       previous: { install: 'lock-a' },
       hasDependencies: true
-    }),
-    { install: false }
-  )
+    })
+  ).toEqual({ install: false })
 })
 
 it('hook setup reinstalls when install inputs change', () => {
-  assert.deepEqual(
+  expect(
     planHookSetup({
       current: { install: 'lock-b' },
       previous: { install: 'lock-a' },
       hasDependencies: true
-    }),
-    { install: true }
-  )
+    })
+  ).toEqual({ install: true })
 })
 
 it('installs from the lockfile without building packages directly', async () => {
@@ -181,7 +171,7 @@ it('installs from the lockfile without building packages directly', async () => 
       commands.push([command, ...args, options?.env?.CI ?? null])
   })
 
-  assert.deepEqual(commands, [['pnpm', 'install', '--frozen-lockfile', '1']])
+  expect(commands).toEqual([['pnpm', 'install', '--frozen-lockfile', '1']])
 })
 
 it('checkout hooks do not persist GitHub credentials', async () => {
@@ -202,11 +192,10 @@ it('checkout hooks do not persist GitHub credentials', async () => {
     run: async () => {}
   })
 
-  assert.equal(credentialReads, 0)
-  await assert.rejects(
-    readFile(join(root, 'packages/docs/.env.local'), 'utf8'),
-    { code: 'ENOENT' }
-  )
+  expect(credentialReads).toBe(0)
+  await expect(
+    readFile(join(root, 'packages/docs/.env.local'), 'utf8')
+  ).rejects.toMatchObject({ code: 'ENOENT' })
 })
 
 it('does not keep a current fingerprint after setup fails', async () => {
@@ -214,17 +203,18 @@ it('does not keep a current fingerprint after setup fails', async () => {
   const statePath = join(root, 'state.json')
   await writeFile(statePath, '{"install":"old"}\n')
 
-  await assert.rejects(
+  await expect(
     recordSetup({
       statePath,
       current: { install: 'new' },
       operation: async () => {
         throw new Error('install failed')
       }
-    }),
-    /install failed/
-  )
-  await assert.rejects(readFile(statePath, 'utf8'), { code: 'ENOENT' })
+    })
+  ).rejects.toThrow(/install failed/)
+  await expect(readFile(statePath, 'utf8')).rejects.toMatchObject({
+    code: 'ENOENT'
+  })
 })
 
 it('reclaims a setup lock owned by a dead process', async () => {
@@ -232,8 +222,12 @@ it('reclaims a setup lock owned by a dead process', async () => {
   const lockPath = join(gitDirectory, 'nuqs-worktree-setup.lock')
   await writeFile(lockPath, '999999999\n')
 
-  assert.equal(await withSetupLock(gitDirectory, async () => 'ready'), 'ready')
-  await assert.rejects(readFile(lockPath, 'utf8'), { code: 'ENOENT' })
+  await expect(withSetupLock(gitDirectory, async () => 'ready')).resolves.toBe(
+    'ready'
+  )
+  await expect(readFile(lockPath, 'utf8')).rejects.toMatchObject({
+    code: 'ENOENT'
+  })
 })
 
 it('does not reclaim a setup lock owned by a live process', async () => {
@@ -241,9 +235,8 @@ it('does not reclaim a setup lock owned by a live process', async () => {
   const lockPath = join(gitDirectory, 'nuqs-worktree-setup.lock')
   await writeFile(lockPath, `${process.pid}\n`)
 
-  await assert.rejects(
-    withSetupLock(gitDirectory, async () => 'unreachable'),
-    /Another worktree setup is already running/
-  )
-  assert.equal(await readFile(lockPath, 'utf8'), `${process.pid}\n`)
+  await expect(
+    withSetupLock(gitDirectory, async () => 'unreachable')
+  ).rejects.toThrow(/Another worktree setup is already running/)
+  expect(await readFile(lockPath, 'utf8')).toBe(`${process.pid}\n`)
 })
