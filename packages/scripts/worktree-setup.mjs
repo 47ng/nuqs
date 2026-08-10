@@ -11,7 +11,7 @@ import {
   unlink,
   writeFile
 } from 'node:fs/promises'
-import { dirname, join, resolve } from 'node:path'
+import { join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 function cleanVersion(value) {
@@ -36,41 +36,6 @@ export function assertToolVersions(actual, expected) {
 export async function isLinkedWorktree(root) {
   const stats = await lstat(join(root, '.git'))
   return stats.isFile()
-}
-
-export async function ensureDocsEnvironment(
-  root,
-  {
-    env = process.env,
-    readGhToken = () => capture('gh', ['auth', 'token'], root),
-    warn = console.warn
-  } = {}
-) {
-  const path = join(root, 'packages/docs/.env.local')
-  if (await exists(path)) return false
-
-  let token = env.GITHUB_TOKEN?.trim()
-  if (!token) {
-    try {
-      token = (await readGhToken()).trim()
-    } catch {}
-  }
-  if (!token) {
-    warn(
-      'Docs GitHub authentication was not configured; set GITHUB_TOKEN or run `gh auth login` before building the docs.'
-    )
-    return false
-  }
-  try {
-    await writeFile(path, `GITHUB_TOKEN=${JSON.stringify(token)}\n`, {
-      flag: 'wx',
-      mode: 0o600
-    })
-    return true
-  } catch (error) {
-    if (error.code === 'EEXIST') return false
-    throw error
-  }
 }
 
 async function unlinkNodeModulesSymlink(path) {
@@ -144,6 +109,44 @@ function spawnCommand(command, args, options = {}) {
   })
 }
 
+function commandSucceeds(command, args, root) {
+  return new Promise((resolvePromise, reject) => {
+    const child = spawn(command, args, { cwd: root, stdio: 'ignore' })
+    child.on('error', reject)
+    child.on('exit', code => resolvePromise(code === 0))
+  })
+}
+
+export async function verifyHookInstallSources(
+  root,
+  {
+    trustedRef = 'origin/HEAD',
+    paths = ['package.json', 'pnpm-lock.yaml', 'pnpm-workspace.yaml', '.npmrc'],
+    gitSucceeds = args => commandSucceeds('git', args, root)
+  } = {}
+) {
+  const hasRef = await gitSucceeds([
+    'rev-parse',
+    '--verify',
+    '--quiet',
+    `${trustedRef}^{commit}`
+  ])
+  if (!hasRef) {
+    return {
+      trusted: false,
+      reason: `${trustedRef} is not available to compare dependency manifests against`
+    }
+  }
+  const unchanged = await gitSucceeds(['diff', '--quiet', trustedRef, '--', ...paths])
+  if (!unchanged) {
+    return {
+      trusted: false,
+      reason: `dependency manifests differ from ${trustedRef}`
+    }
+  }
+  return { trusted: true }
+}
+
 async function capture(command, args, root) {
   let output = ''
   await new Promise((resolvePromise, reject) => {
@@ -208,9 +211,15 @@ async function readState(path) {
 
 async function writeState(path, fingerprints) {
   const temporary = `${path}.${process.pid}.tmp`
-  await writeFile(temporary, JSON.stringify(fingerprints) + '\n', {
-    mode: 0o600
-  })
+  const contents = JSON.stringify(fingerprints) + '\n'
+  const options = { flag: 'wx', mode: 0o600 }
+  try {
+    await writeFile(temporary, contents, options)
+  } catch (error) {
+    if (error.code !== 'EEXIST') throw error
+    await unlink(temporary)
+    await writeFile(temporary, contents, options)
+  }
   await rename(temporary, path)
 }
 
@@ -294,9 +303,6 @@ export async function runWorktreeSetup({
   actualVersions,
   expectedVersions,
   install = true,
-  configureDocs = true,
-  env = process.env,
-  readGhToken,
   run = (command, args, options = {}) =>
     spawnCommand(command, args, {
       cwd: root,
@@ -313,16 +319,27 @@ export async function runWorktreeSetup({
   }
   if (!install) return { install }
   await run('pnpm', ['install', '--frozen-lockfile'], { env: { CI: '1' } })
-  if (configureDocs) {
-    await ensureDocsEnvironment(root, { env, readGhToken })
-  }
   return { install }
 }
 
 async function main() {
-  const root = resolve(dirname(fileURLToPath(import.meta.url)), '../..')
+  const root = await capture(
+    'git',
+    ['rev-parse', '--show-toplevel'],
+    process.cwd()
+  )
   const hookMode = process.argv.includes('--hook')
   if (hookMode && !(await isLinkedWorktree(root))) return
+  if (hookMode) {
+    const sources = await verifyHookInstallSources(root)
+    if (!sources.trusted) {
+      console.warn(
+        `Skipping automatic worktree setup: ${sources.reason}. ` +
+          'Review the changes, then run `node --run setup:worktree` explicitly.'
+      )
+      return
+    }
+  }
 
   const expectedVersions = await readExpectedVersions(root)
   const actualVersions = {
@@ -355,7 +372,6 @@ async function main() {
           root,
           actualVersions,
           expectedVersions,
-          configureDocs: !hookMode,
           ...plan
         })
     })

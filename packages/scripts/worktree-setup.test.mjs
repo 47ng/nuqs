@@ -3,7 +3,6 @@ import {
   mkdir,
   readFile,
   readlink,
-  stat,
   symlink,
   writeFile
 } from 'node:fs/promises'
@@ -13,12 +12,12 @@ import { expect, it } from 'vitest'
 
 import {
   assertToolVersions,
-  ensureDocsEnvironment,
   isLinkedWorktree,
   planHookSetup,
   prepareNodeModules,
   recordSetup,
   runWorktreeSetup,
+  verifyHookInstallSources,
   withSetupLock
 } from './worktree-setup.mjs'
 
@@ -35,64 +34,46 @@ it('recognizes linked worktrees without treating the canonical checkout as one',
   expect(await isLinkedWorktree(linked)).toBe(true)
 })
 
-it('creates the docs environment once from the GitHub CLI credential', async () => {
-  const root = await mkdtemp(join(tmpdir(), 'nuqs-worktree-setup-'))
-  await mkdir(join(root, 'packages/docs'), { recursive: true })
-  let calls = 0
-
-  await ensureDocsEnvironment(root, {
-    env: {},
-    readGhToken: async () => {
-      calls++
-      return 'from-gh\n'
-    }
-  })
-  await ensureDocsEnvironment(root, {
-    env: {},
-    readGhToken: async () => {
-      calls++
-      return 'replacement'
-    }
-  })
-
-  const path = join(root, 'packages/docs/.env.local')
-  expect(await readFile(path, 'utf8')).toBe('GITHUB_TOKEN="from-gh"\n')
-  expect((await stat(path)).mode & 0o777).toBe(0o600)
-  expect(calls).toBe(1)
-})
-
-it('prefers an explicit GitHub token when creating the docs environment', async () => {
-  const root = await mkdtemp(join(tmpdir(), 'nuqs-worktree-setup-'))
-  await mkdir(join(root, 'packages/docs'), { recursive: true })
-
-  await ensureDocsEnvironment(root, {
-    env: { GITHUB_TOKEN: 'from-env' },
-    readGhToken: async () => {
-      throw new Error('should not read gh auth')
-    }
-  })
-
-  expect(await readFile(join(root, 'packages/docs/.env.local'), 'utf8')).toBe(
-    'GITHUB_TOKEN="from-env"\n'
-  )
-})
-
-it('keeps setup usable when GitHub authentication is unavailable', async () => {
-  const root = await mkdtemp(join(tmpdir(), 'nuqs-worktree-setup-'))
-  await mkdir(join(root, 'packages/docs'), { recursive: true })
-  const warnings = []
-
+it('trusts hook installs only when dependency manifests match the trusted ref', async () => {
+  const succeedAll = async () => true
   await expect(
-    ensureDocsEnvironment(root, {
-      env: {},
-      readGhToken: async () => {
-        throw new Error('gh is unavailable')
-      },
-      warn: message => warnings.push(message)
-    })
-  ).resolves.toBe(false)
-  expect(warnings).toEqual([
-    'Docs GitHub authentication was not configured; set GITHUB_TOKEN or run `gh auth login` before building the docs.'
+    verifyHookInstallSources('/repo', { gitSucceeds: succeedAll })
+  ).resolves.toEqual({ trusted: true })
+
+  const missingRef = async args => args[0] !== 'rev-parse'
+  await expect(
+    verifyHookInstallSources('/repo', { gitSucceeds: missingRef })
+  ).resolves.toEqual({
+    trusted: false,
+    reason: 'origin/HEAD is not available to compare dependency manifests against'
+  })
+
+  const dirtyManifests = async args => args[0] !== 'diff'
+  await expect(
+    verifyHookInstallSources('/repo', { gitSucceeds: dirtyManifests })
+  ).resolves.toEqual({
+    trusted: false,
+    reason: 'dependency manifests differ from origin/HEAD'
+  })
+})
+
+it('compares the dependency manifests that gate automatic installs', async () => {
+  const calls = []
+  await verifyHookInstallSources('/repo', {
+    gitSucceeds: async args => {
+      calls.push(args)
+      return true
+    }
+  })
+  expect(calls[1]).toEqual([
+    'diff',
+    '--quiet',
+    'origin/HEAD',
+    '--',
+    'package.json',
+    'pnpm-lock.yaml',
+    'pnpm-workspace.yaml',
+    '.npmrc'
   ])
 })
 
@@ -160,42 +141,16 @@ it('hook setup reinstalls when install inputs change', () => {
 it('installs from the lockfile without building packages directly', async () => {
   const commands = []
   const root = await mkdtemp(join(tmpdir(), 'nuqs-worktree-setup-'))
-  await mkdir(join(root, 'packages/docs'), { recursive: true })
 
   await runWorktreeSetup({
     root,
     actualVersions: { node: '24.11.0', pnpm: '11.0.9' },
     expectedVersions: { node: '24.11.0', pnpm: '11.0.9' },
-    env: { GITHUB_TOKEN: 'test-token' },
     run: async (command, args, options) =>
       commands.push([command, ...args, options?.env?.CI ?? null])
   })
 
   expect(commands).toEqual([['pnpm', 'install', '--frozen-lockfile', '1']])
-})
-
-it('checkout hooks do not persist GitHub credentials', async () => {
-  const root = await mkdtemp(join(tmpdir(), 'nuqs-worktree-setup-'))
-  await mkdir(join(root, 'packages/docs'), { recursive: true })
-  let credentialReads = 0
-
-  await runWorktreeSetup({
-    root,
-    actualVersions: { node: '24.11.0', pnpm: '11.0.9' },
-    expectedVersions: { node: '24.11.0', pnpm: '11.0.9' },
-    configureDocs: false,
-    env: {},
-    readGhToken: async () => {
-      credentialReads++
-      return 'secret'
-    },
-    run: async () => {}
-  })
-
-  expect(credentialReads).toBe(0)
-  await expect(
-    readFile(join(root, 'packages/docs/.env.local'), 'utf8')
-  ).rejects.toMatchObject({ code: 'ENOENT' })
 })
 
 it('does not keep a current fingerprint after setup fails', async () => {
@@ -215,6 +170,23 @@ it('does not keep a current fingerprint after setup fails', async () => {
   await expect(readFile(statePath, 'utf8')).rejects.toMatchObject({
     code: 'ENOENT'
   })
+})
+
+it('does not write state through a planted symlink at the temporary path', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'nuqs-worktree-setup-'))
+  const statePath = join(root, 'state.json')
+  const victim = join(root, 'victim')
+  await writeFile(victim, 'untouched')
+  await symlink(victim, `${statePath}.${process.pid}.tmp`)
+
+  await recordSetup({
+    statePath,
+    current: { install: 'fingerprint' },
+    operation: async () => {}
+  })
+
+  expect(await readFile(victim, 'utf8')).toBe('untouched')
+  expect(await readFile(statePath, 'utf8')).toBe('{"install":"fingerprint"}\n')
 })
 
 it('reclaims a setup lock owned by a dead process', async () => {
