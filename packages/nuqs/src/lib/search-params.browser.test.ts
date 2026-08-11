@@ -74,6 +74,14 @@ describe('search-params/getSearchParams', () => {
       history.replaceState(null, '', originalUrl)
     }
   })
+  it.each([
+    ['?foo=bar#details?ignored=fragment', 'foo=bar'],
+    ['?#details?ignored=fragment', ''],
+    ['?foo=bar#a#b', 'foo=bar'],
+    ['?a=%23b#c', 'a=%23b']
+  ])('ignores the fragment in query-only URL %s', (url, expected) => {
+    expect(getSearchParams(url).toString()).toBe(expected)
+  })
   it('falls back to an empty search params object for invalid inputs', () => {
     const received = getSearchParams('invalid')
     const expected = new URLSearchParams()
