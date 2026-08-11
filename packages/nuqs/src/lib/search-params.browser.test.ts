@@ -64,6 +64,12 @@ describe('search-params/getSearchParams', () => {
     const expected = new URLSearchParams('?foo=bar')
     expect(received).toEqual(expected)
   })
+  it.each([
+    ['?foo=bar#details?ignored=fragment', 'foo=bar'],
+    ['?#details?ignored=fragment', '']
+  ])('ignores the fragment in query-only URL %s', (url, expected) => {
+    expect(getSearchParams(url).toString()).toBe(expected)
+  })
   it('falls back to an empty search params object for invalid inputs', () => {
     const received = getSearchParams('invalid')
     const expected = new URLSearchParams()
