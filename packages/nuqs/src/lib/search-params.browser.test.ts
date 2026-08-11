@@ -66,7 +66,9 @@ describe('search-params/getSearchParams', () => {
   })
   it.each([
     ['?foo=bar#details?ignored=fragment', 'foo=bar'],
-    ['?#details?ignored=fragment', '']
+    ['?#details?ignored=fragment', ''],
+    ['?foo=bar#a#b', 'foo=bar'],
+    ['?a=%23b#c', 'a=%23b']
   ])('ignores the fragment in query-only URL %s', (url, expected) => {
     expect(getSearchParams(url).toString()).toBe(expected)
   })
