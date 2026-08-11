@@ -1572,6 +1572,57 @@ describe('useQueryStates: process url search params', () => {
     expect(onUrlUpdate).toHaveBeenCalledOnce()
     expect(onUrlUpdate.mock.calls[0]![0].queryString).toBe('?test=pass')
   })
+  it('should use the latest processUrlSearchParams when restarting a debounce', async () => {
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] })
+    const onUrlUpdate = vi.fn<OnUrlUpdateFunction>()
+    function DynamicWrapper({ children }: { children: ReactNode }) {
+      const [config, setConfig] = useState<'a' | 'b'>('a')
+      return createElement(NuqsTestingAdapter, {
+        onUrlUpdate,
+        processUrlSearchParams: search => {
+          search.set('config', config)
+          return search
+        },
+        rateLimitFactor: 1,
+        resetUrlUpdateQueueOnMount: config === 'a',
+        children: [
+          createElement('button', {
+            key: 'btn',
+            onClick: () => setConfig('b'),
+            'data-testid': 'btn'
+          }),
+          children
+        ]
+      })
+    }
+    try {
+      const { result, act } = await renderHook(
+        () => useQueryStates({ test: parseAsString }),
+        { wrapper: DynamicWrapper }
+      )
+      await act(() => {
+        void result.current[1](
+          { test: 'first' },
+          { limitUrlUpdates: debounce(100) }
+        )
+      })
+      await act(() => page.getByTestId('btn').click())
+      await act(() => {
+        void result.current[1](
+          { test: 'second' },
+          { limitUrlUpdates: debounce(100) }
+        )
+      })
+      await act(() => vi.advanceTimersByTimeAsync(200))
+
+      expect(onUrlUpdate).toHaveBeenCalledOnce()
+      expect(onUrlUpdate.mock.calls[0]![0].queryString).toBe(
+        '?test=second&config=b'
+      )
+    } finally {
+      vi.useRealTimers()
+    }
+  })
 })
 
 describe('useQueryStates: edge cases & repros', () => {

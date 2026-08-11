@@ -87,28 +87,32 @@ export class DebounceController {
       return Promise.resolve(getSnapshot())
     }
     const key = update.key
-    if (!this.queues.has(key)) {
+    const callback = (update: Omit<UpdateQueuePushArgs, 'timeMs'>) => {
+      this.throttleQueue.push(update)
+      return this.throttleQueue
+        .flush(adapter, processUrlSearchParams)
+        .finally(() => {
+          const queuedValue = this.queues.get(update.key)?.queuedValue
+          if (queuedValue === undefined) {
+            debug(16, update.key)
+            this.queues.delete(update.key)
+          }
+          this.queuedQuerySync.emit(update.key)
+        })
+    }
+    let queue = this.queues.get(key)
+    if (!queue) {
       debug(15, key)
-      const queue = new DebouncedPromiseQueue<
+      queue = new DebouncedPromiseQueue<
         Omit<UpdateQueuePushArgs, 'timeMs'>,
         URLSearchParams
-      >(update => {
-        this.throttleQueue.push(update)
-        return this.throttleQueue
-          .flush(adapter, processUrlSearchParams)
-          .finally(() => {
-            const queuedValue = this.queues.get(update.key)?.queuedValue
-            if (queuedValue === undefined) {
-              debug(16, update.key)
-              this.queues.delete(update.key)
-            }
-            this.queuedQuerySync.emit(update.key)
-          })
-      })
+      >(callback)
       this.queues.set(key, queue)
+    } else {
+      queue.callback = callback
     }
     debug(17, update)
-    const promise = this.queues.get(key)!.push(update, timeMs)
+    const promise = queue.push(update, timeMs)
     this.queuedQuerySync.emit(key)
     return promise
   }
