@@ -3,7 +3,9 @@ import { createRoot } from 'react-dom/client'
 import { RootLayout } from './layout'
 import { Router } from './routes'
 
-enableHistorySync()
+if (location.pathname !== '/popstate-queue-reset') {
+  enableHistorySync()
+}
 
 createRoot(document.getElementById('root')!).render(
   // <StrictMode>
