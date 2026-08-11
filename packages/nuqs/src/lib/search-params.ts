@@ -34,7 +34,7 @@ export function getSearchParams(url: string | URL): URLSearchParams {
     return new URLSearchParams(url)
   }
   try {
-    return new URL(url, location.origin).searchParams
+    return new URL(url, location.href).searchParams
   } catch {
     return new URLSearchParams(url)
   }

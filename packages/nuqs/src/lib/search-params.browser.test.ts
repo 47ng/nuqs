@@ -64,6 +64,16 @@ describe('search-params/getSearchParams', () => {
     const expected = new URLSearchParams('?foo=bar')
     expect(received).toEqual(expected)
   })
+  it('preserves the current search params for a fragment-only URL', () => {
+    const originalUrl = location.href
+    history.replaceState(null, '', '?foo=bar')
+    try {
+      const received = getSearchParams('#details')
+      expect(received.toString()).toBe('foo=bar')
+    } finally {
+      history.replaceState(null, '', originalUrl)
+    }
+  })
   it('falls back to an empty search params object for invalid inputs', () => {
     const received = getSearchParams('invalid')
     const expected = new URLSearchParams()
