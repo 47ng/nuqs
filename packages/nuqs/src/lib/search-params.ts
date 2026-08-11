@@ -35,7 +35,7 @@ export function getSearchParams(url: string | URL): URLSearchParams {
     return new URLSearchParams(hashIndex === -1 ? url : url.slice(0, hashIndex))
   }
   try {
-    return new URL(url, location.origin).searchParams
+    return new URL(url, location.href).searchParams
   } catch {
     return new URLSearchParams(url)
   }
