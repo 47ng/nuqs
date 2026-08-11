@@ -9,6 +9,7 @@ import {
   type ReactNode
 } from 'react'
 import { debug } from '../lib/debug'
+import { resetQueues } from '../lib/queues/reset'
 import { renderQueryString } from '../lib/url-encoding'
 import { createAdapterProvider, type AdapterProps } from './lib/context'
 import type { AdapterInterface, AdapterOptions } from './lib/defs'
@@ -55,11 +56,15 @@ function getServerSnapshot() {
 }
 
 function subscribe(onStoreChange: () => void) {
+  const onPopState = () => {
+    resetQueues()
+    onStoreChange()
+  }
   emitter.on('update', onStoreChange)
-  window.addEventListener('popstate', onStoreChange)
+  window.addEventListener('popstate', onPopState)
   return () => {
     emitter.off('update', onStoreChange)
-    window.removeEventListener('popstate', onStoreChange)
+    window.removeEventListener('popstate', onPopState)
   }
 }
 
