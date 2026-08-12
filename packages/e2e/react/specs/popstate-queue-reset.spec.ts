@@ -5,7 +5,7 @@ test.describe('React adapter popstate queue reset', () => {
   test('cancels a pending debounced update on browser back', async ({
     page
   }) => {
-    await navigateTo(page, '/popstate-queue-reset', '?q=selected')
+    await navigateTo(page, '/popstate-queue-reset.html', '?q=selected')
 
     const queryValue = page.getByRole('status', { name: 'Query value' })
     const updateStatus = page.getByRole('status', { name: 'Update status' })
