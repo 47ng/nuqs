@@ -20,6 +20,7 @@ export default [
     route('/linking/useQueryStates/other',              './routes/linking.useQueryStates.other.tsx'),
     route('/native-array',                              './routes/native-array.tsx'),
     route('/pretty-urls',                               './routes/pretty-urls.tsx'),
+    route('/queue-lifecycle',                            './routes/queue-lifecycle.tsx'),
     route('/referential-stability/useQueryState',       './routes/referential-stability.useQueryState.tsx'),
     route('/referential-stability/useQueryStates',      './routes/referential-stability.useQueryStates.tsx'),
     route('/routing/useQueryState',                     './routes/routing.useQueryState.tsx'),
