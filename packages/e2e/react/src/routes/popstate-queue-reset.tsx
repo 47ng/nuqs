@@ -1,8 +1,9 @@
+import { Display } from 'e2e-shared/components/display'
 import { debounce, useQueryState } from 'nuqs'
 import { useState } from 'react'
 
 export default function PopstateQueueReset() {
-  const [query, setQuery] = useQueryState('q')
+  const [query, setQuery] = useQueryState('q', { defaultValue: '' })
   const [updateStatus, setUpdateStatus] = useState<
     'idle' | 'pending' | 'settled'
   >('idle')
@@ -15,7 +16,7 @@ export default function PopstateQueueReset() {
 
   async function queueDebouncedValue(value: string) {
     setUpdateStatus('pending')
-    await setQuery(value || null, {
+    await setQuery(value, {
       limitUrlUpdates: debounce(500)
     })
     setUpdateStatus('settled')
@@ -29,12 +30,16 @@ export default function PopstateQueueReset() {
       <label>
         Query
         <input
-          value={query ?? ''}
+          value={query}
           onChange={event => queueDebouncedValue(event.target.value)}
         />
       </label>
-      <output aria-label="Query value">{query}</output>
-      <output aria-label="Update status">{updateStatus}</output>
+      <Display environment="client" target="query-value" state={query} />
+      <Display
+        environment="client"
+        target="update-status"
+        state={updateStatus}
+      />
     </>
   )
 }
