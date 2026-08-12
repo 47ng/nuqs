@@ -88,7 +88,7 @@
       "project": ["**/*.{ts,tsx}"]
     },
     "packages/e2e/react": {
-      "entry": ["specs/**/*.ts"],
+      "entry": ["specs/**/*.ts", "src/**/*.entry.tsx"],
       "project": ["**/*.{ts,tsx}"]
     },
     "packages/e2e/remix": {
