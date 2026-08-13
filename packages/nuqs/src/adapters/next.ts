@@ -1,7 +1,12 @@
+import { createElement } from 'react'
 import { createAdapterProvider, type AdapterProvider } from './lib/context'
 import type { AdapterInterface } from './lib/defs'
 import { useNuqsNextAppRouterAdapter } from './next/impl.app'
-import { isPagesRouter, useNuqsNextPagesRouterAdapter } from './next/impl.pages'
+import {
+  isPagesRouter,
+  NavigationSpy,
+  useNuqsNextPagesRouterAdapter
+} from './next/impl.pages'
 
 function useNuqsNextAdapter(): AdapterInterface {
   const pagesRouterImpl = useNuqsNextPagesRouterAdapter()
@@ -19,5 +24,13 @@ function useNuqsNextAdapter(): AdapterInterface {
   }
 }
 
-export const NuqsAdapter: AdapterProvider =
-  createAdapterProvider(useNuqsNextAdapter)
+const Provider = createAdapterProvider(useNuqsNextAdapter)
+
+export const NuqsAdapter: AdapterProvider = ({ children, ...adapterProps }) =>
+  createElement(Provider, {
+    ...adapterProps,
+    children: [
+      createElement(NavigationSpy, { key: 'nuqs-adapter-navigation-spy' }),
+      children
+    ]
+  }) as ReturnType<AdapterProvider>
