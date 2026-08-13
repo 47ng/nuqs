@@ -5,28 +5,23 @@ import { useState } from 'react'
 import { Display } from '../components/display'
 
 type QueueStatus = 'idle' | 'pending' | 'cancelled' | 'applied' | 'error'
+type QueueResult = 'cancelled' | 'applied' | 'error'
 
 export function QueueLifecycle() {
   const [hasSubscriber, setHasSubscriber] = useState(true)
   const [queueStatus, setQueueStatus] = useState<QueueStatus>('idle')
 
-  const handleQueuedUpdate = (promise: Promise<URLSearchParams>) => {
-    setQueueStatus('pending')
-    setHasSubscriber(false)
-    promise.then(
-      search =>
-        setQueueStatus(
-          search.get('test') === 'stale' ? 'applied' : 'cancelled'
-        ),
-      () => setQueueStatus('error')
-    )
-  }
-
   return (
     <>
       <Display environment="client" target="queue-status" state={queueStatus} />
       {hasSubscriber ? (
-        <QueueLifecycleSubscriber onQueuedUpdate={handleQueuedUpdate} />
+        <QueueLifecycleSubscriber
+          onQueued={() => {
+            setQueueStatus('pending')
+            setHasSubscriber(false)
+          }}
+          onSettled={result => setQueueStatus(result)}
+        />
       ) : (
         <p id="no-query-subscribers">No query subscribers</p>
       )}
@@ -35,9 +30,11 @@ export function QueueLifecycle() {
 }
 
 function QueueLifecycleSubscriber({
-  onQueuedUpdate
+  onQueued,
+  onSettled
 }: {
-  onQueuedUpdate: (promise: Promise<URLSearchParams>) => void
+  onQueued: () => void
+  onSettled: (result: QueueResult) => void
 }) {
   const [value, setValue] = useQueryState('test', parseAsString)
   const [pushStatus, setPushStatus] = useState('idle')
@@ -48,11 +45,15 @@ function QueueLifecycleSubscriber({
     setPushStatus(search.get('test') === 'current' ? 'settled' : 'error')
   }
 
-  const queueUpdateAndUnmount = () => {
-    onQueuedUpdate(
-      setValue('stale', {
-        limitUrlUpdates: debounce(600)
-      })
+  const queueUpdate = () => {
+    const pendingUpdate = setValue('stale', {
+      limitUrlUpdates: debounce(600)
+    })
+    onQueued()
+    void pendingUpdate.then(
+      search =>
+        onSettled(search.get('test') === 'stale' ? 'applied' : 'cancelled'),
+      () => onSettled('error')
     )
   }
 
@@ -61,7 +62,7 @@ function QueueLifecycleSubscriber({
       <Display environment="client" target="query-value" state={value} />
       <Display environment="client" target="push-status" state={pushStatus} />
       <button onClick={createHistoryEntry}>Create history entry</button>
-      <button onClick={queueUpdateAndUnmount}>Queue update and unmount</button>
+      <button onClick={queueUpdate}>Queue update</button>
     </>
   )
 }

@@ -5,7 +5,7 @@ import { navigateTo } from '../playwright/navigate'
 export const testQueueLifecycle = defineTest(
   'Queue lifecycle',
   ({ path }: TestConfig) => {
-    it('cancels a queued update on native Back after the last query subscriber unmounts', async ({
+    it('cancels a queued update when the Back button is used after the last query subscriber unmounts', async ({
       page
     }) => {
       await navigateTo(page, path)
@@ -17,9 +17,7 @@ export const testQueueLifecycle = defineTest(
       await expect(pushStatus).toHaveText('settled')
       await expect(page).toHaveURL(url => url.search === '?test=current')
 
-      await page
-        .getByRole('button', { name: 'Queue update and unmount' })
-        .click()
+      await page.getByRole('button', { name: 'Queue update' }).click()
       await expect(queueStatus).toHaveText('pending')
       await expect(page.locator('#no-query-subscribers').first()).toBeVisible()
       await expect(page.locator('#client-query-value')).toHaveCount(0)
