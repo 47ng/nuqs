@@ -2,6 +2,7 @@
 
 import { debounce, parseAsString, useQueryState } from 'nuqs'
 import { useState } from 'react'
+import { Display } from '../components/display'
 
 type QueueStatus = 'idle' | 'pending' | 'cancelled' | 'applied' | 'error'
 
@@ -23,7 +24,7 @@ export function QueueLifecycle() {
 
   return (
     <>
-      <output aria-label="Queue status">{queueStatus}</output>
+      <Display environment="client" target="queue-status" state={queueStatus} />
       {hasSubscriber ? (
         <QueueLifecycleSubscriber onQueuedUpdate={handleQueuedUpdate} />
       ) : (
@@ -57,8 +58,8 @@ function QueueLifecycleSubscriber({
 
   return (
     <>
-      <output aria-label="Query value">{value}</output>
-      <output aria-label="Push status">{pushStatus}</output>
+      <Display environment="client" target="query-value" state={value} />
+      <Display environment="client" target="push-status" state={pushStatus} />
       <button onClick={createHistoryEntry}>Create history entry</button>
       <button onClick={queueUpdateAndUnmount}>Queue update and unmount</button>
     </>
