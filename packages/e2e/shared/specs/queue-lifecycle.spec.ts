@@ -29,9 +29,8 @@ export const testQueueLifecycle = defineTest(
 
       await expect(queueStatus).toHaveText(/^(?:cancelled|applied|error)$/)
       await expect.soft(queueStatus).toHaveText('cancelled', { timeout: 250 })
-      await expect.soft(page).toHaveURL(url => url.search === '', {
-        timeout: 250
-      })
+      await page.waitForTimeout(700)
+      await expect(page).toHaveURL(url => url.search === '')
     })
   }
 )
