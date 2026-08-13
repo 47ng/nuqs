@@ -20,6 +20,7 @@ export const testQueueLifecycle = defineTest(
       await page.getByRole('button', { name: 'Queue update' }).click()
       await expect(queueStatus).toHaveText('pending')
       await expect(page.locator('#no-query-subscribers').first()).toBeVisible()
+      // The query value is absent because its subscriber has unmounted.
       await expect(page.locator('#client-query-value')).toHaveCount(0)
 
       await page.goBack()
