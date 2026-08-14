@@ -2,6 +2,7 @@ import {
   createContext,
   createElement,
   useContext,
+  useEffect,
   useMemo,
   useRef,
   useSyncExternalStore,
@@ -56,16 +57,20 @@ function getServerSnapshot() {
 }
 
 function subscribe(onStoreChange: () => void) {
-  const onPopState = () => {
-    resetQueues()
-    onStoreChange()
-  }
   emitter.on('update', onStoreChange)
-  window.addEventListener('popstate', onPopState)
+  window.addEventListener('popstate', onStoreChange)
   return () => {
     emitter.off('update', onStoreChange)
-    window.removeEventListener('popstate', onPopState)
+    window.removeEventListener('popstate', onStoreChange)
   }
+}
+
+function QueueReset() {
+  useEffect(() => {
+    window.addEventListener('popstate', resetQueues)
+    return () => window.removeEventListener('popstate', resetQueues)
+  }, [])
+  return null
 }
 
 function useNuqsReactAdapter(watchKeys: string[]): AdapterInterface {
@@ -121,7 +126,13 @@ export function NuqsAdapter({
   return createElement(
     NuqsReactAdapterContext.Provider,
     { value: { fullPageNavigationOnShallowFalseUpdates } },
-    createElement(NuqsReactAdapter, { ...adapterProps, children })
+    createElement(NuqsReactAdapter, {
+      ...adapterProps,
+      children: [
+        createElement(QueueReset, { key: 'nuqs-adapter-queue-reset' }),
+        children
+      ]
+    })
   )
 }
 

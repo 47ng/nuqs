@@ -11,7 +11,7 @@ function HistorySync() {
 }
 
 export function App() {
-  const historySyncEnabled = location.pathname !== '/popstate-queue-reset'
+  const historySyncEnabled = location.pathname !== '/queue-lifecycle'
   return (
     <NuqsAdapter
       fullPageNavigationOnShallowFalseUpdates={
