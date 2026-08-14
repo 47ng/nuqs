@@ -20,6 +20,7 @@ const routes: Record<string, React.LazyExoticComponent<() => JSX.Element>> = {
   '/native-array':                          lazy(() => import('./routes/native-array')),
   '/pretty-urls':                           lazy(() => import('./routes/pretty-urls')),
   '/popstate-queue-reset':                  lazy(() => import('./routes/popstate-queue-reset')),
+  '/queue-lifecycle':                       lazy(() => import('./routes/queue-lifecycle')),
   '/referential-stability/useQueryState':   lazy(() => import('./routes/referential-stability.useQueryState')),
   '/referential-stability/useQueryStates':  lazy(() => import('./routes/referential-stability.useQueryStates')),
   '/routing/useQueryState':                 lazy(() => import('./routes/routing.useQueryState')),

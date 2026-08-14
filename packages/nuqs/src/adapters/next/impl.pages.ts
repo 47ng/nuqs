@@ -23,15 +23,32 @@ export function isPagesRouter(): boolean {
   return typeof window.next?.router?.state?.asPath === 'string'
 }
 
-const updateState = globalSingleton('next-pages-router-update', () => ({
-  isNuqsUpdate: false
+const adapterState = globalSingleton('next-pages-router-update', () => ({
+  isNuqsUpdate: false,
+  navigationHandled: false,
+  fallbackScheduled: false
 }))
 
 function onNavigation() {
-  if (updateState.isNuqsUpdate) {
+  if (adapterState.isNuqsUpdate) {
     return
   }
+  adapterState.navigationHandled = true
   resetQueues()
+}
+
+function onNavigationWithoutSubscribers() {
+  if (adapterState.isNuqsUpdate || adapterState.fallbackScheduled) {
+    return
+  }
+  adapterState.fallbackScheduled = true
+  queueMicrotask(() => {
+    if (!adapterState.navigationHandled) {
+      resetQueues()
+    }
+    adapterState.navigationHandled = false
+    adapterState.fallbackScheduled = false
+  })
 }
 
 export function useNuqsNextPagesRouterAdapter(): AdapterInterface {
@@ -80,7 +97,7 @@ export function useNuqsNextPagesRouterAdapter(): AdapterInterface {
     debug(20, 'next/pages', asPath)
     const method =
       options.history === 'push' ? nextRouter.push : nextRouter.replace
-    updateState.isNuqsUpdate = true
+    adapterState.isNuqsUpdate = true
     try {
       method
         .call(
@@ -108,10 +125,10 @@ export function useNuqsNextPagesRouterAdapter(): AdapterInterface {
           }
         )
         .finally(() => {
-          updateState.isNuqsUpdate = false
+          adapterState.isNuqsUpdate = false
         })
     } catch (error) {
-      updateState.isNuqsUpdate = false
+      adapterState.isNuqsUpdate = false
       throw error
     }
   }, [])
@@ -121,6 +138,21 @@ export function useNuqsNextPagesRouterAdapter(): AdapterInterface {
     updateUrl,
     autoResetQueueOnUpdate: false
   }
+}
+
+export function NavigationSpy() {
+  const router = useRouter()
+
+  useEffect(() => {
+    router?.events.on('routeChangeStart', onNavigationWithoutSubscribers)
+    router?.events.on('beforeHistoryChange', onNavigationWithoutSubscribers)
+    return () => {
+      router?.events.off('routeChangeStart', onNavigationWithoutSubscribers)
+      router?.events.off('beforeHistoryChange', onNavigationWithoutSubscribers)
+    }
+  }, [router?.events])
+
+  return null
 }
 
 export function getAsPathPathname(asPath: string): string {
