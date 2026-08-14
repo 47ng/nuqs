@@ -195,6 +195,23 @@ describe('getStarHistory', () => {
     expect(history.bins.every(b => b.stargarzers.length === 0)).toBe(true)
   })
 
+  it('returns null when GitHub cannot return the repository', async () => {
+    server.use(
+      http.post(endpoint, () =>
+        HttpResponse.json({
+          data: { repository: null },
+          errors: [{ message: 'Repository data is unavailable' }]
+        })
+      )
+    )
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {})
+
+    expect(await getStarHistory()).toBeNull()
+    expect(error).toHaveBeenCalledWith(
+      new Error('GitHub API error: Repository data is unavailable')
+    )
+  })
+
   it('throws on a malformed GraphQL response', async () => {
     server.use(http.post(endpoint, () => HttpResponse.json({ data: {} })))
     await expect(getStarHistory()).rejects.toThrow()
