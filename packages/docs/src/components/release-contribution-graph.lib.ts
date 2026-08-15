@@ -20,23 +20,32 @@ const gitHubReleasesSchema = z.array(gitHubReleaseSchema)
 
 export type GitHubRelease = z.infer<typeof gitHubReleaseSchema>
 
-export async function fetchGitHubReleases(): Promise<GitHubRelease[]> {
+export async function fetchGitHubReleases(): Promise<GitHubRelease[] | null> {
   const releases: GitHubRelease[] = []
   let page = 1
   const perPage = 100
+  const headers: Record<string, string> = {
+    Accept: 'application/vnd.github.v3+json'
+  }
+  if (process.env.GITHUB_TOKEN) {
+    headers.Authorization = `Bearer ${process.env.GITHUB_TOKEN}`
+  }
 
   while (true) {
     const response = await fetch(
       `https://api.github.com/repos/47ng/nuqs/releases?per_page=${perPage}&page=${page}`,
       {
-        headers: {
-          Authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
-          Accept: 'application/vnd.github.v3+json'
-        },
+        headers,
         next: { revalidate: 3600 } // Cache for 1 hour
       }
     )
 
+    if (response.status === 403 || response.status === 429) {
+      console.warn(
+        `GitHub rate limit reached (${response.status}): release calendar is unavailable. Set GITHUB_TOKEN to raise the limit.`
+      )
+      return null
+    }
     if (!response.ok) {
       throw new Error(`GitHub API error: ${response.status}`)
     }

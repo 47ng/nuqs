@@ -47,16 +47,44 @@ export async function PullRequestLine({
   children,
   ...props
 }: PullRequestLineProps) {
+  const headers: Record<string, string> = {
+    Accept: 'application/vnd.github.v3+json'
+  }
+  if (process.env.GITHUB_TOKEN) {
+    headers.Authorization = `bearer ${process.env.GITHUB_TOKEN}`
+  }
   const response = await fetch(
     `https://api.github.com/repos/47ng/nuqs/pulls/${number}`,
     {
-      headers: {
-        Accept: 'application/vnd.github.v3+json',
-        Authorization: `bearer ${process.env.GITHUB_TOKEN}`
-      },
+      headers,
       cache: 'force-cache'
     }
   )
+  if (response.status === 403 || response.status === 429) {
+    // Rate limited: degrade to a plain link, the PR URL is predictable
+    console.warn(
+      `GitHub rate limit reached (${response.status}) fetching PR #${number}. Set GITHUB_TOKEN to raise the limit.`
+    )
+    return (
+      <li className={cn('not-prose space-x-2', className)} {...props}>
+        <a
+          href={`https://github.com/47ng/nuqs/pull/${number}`}
+          className="group space-x-1.5"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <span className="text-sm text-gray-500 tabular-nums sm:text-base sm:font-medium">
+            <span aria-label="number">#</span>
+            {number}
+          </span>
+          <span className="font-medium group-hover:underline">
+            View on GitHub
+          </span>
+        </a>
+        {children}
+      </li>
+    )
+  }
   if (!response.ok) {
     return (
       <li className={cn('not-prose space-x-2', className)} {...props}>

@@ -72,7 +72,7 @@ export function patchHistory(
   function sync(url: URL | string) {
     spinQueueResetMutex()
     try {
-      const newSearch = new URL(url, location.origin).search
+      const newSearch = new URL(url, location.href).search
       if (newSearch === lastSearchSeen) {
         return
       }
