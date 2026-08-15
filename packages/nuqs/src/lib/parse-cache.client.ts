@@ -12,77 +12,64 @@ type ParseCacheEntry = [
 ]
 
 type ParseCacheBucket = {
-  entry?: ParseCacheEntry
-  version: number
-  retained: number
+  e?: ParseCacheEntry
+  v?: number
+  r: number
 }
 
 const parseCache = new Map<string, ParseCacheBucket>()
-const maxParseCacheSize = 1000
 
 function getParseCacheBucket(urlKey: string): ParseCacheBucket {
   let bucket = parseCache.get(urlKey)
   if (!bucket) {
-    if (parseCache.size >= maxParseCacheSize) {
+    if (parseCache.size >= 1e3) {
       for (const [key, candidate] of parseCache) {
-        if (!candidate.retained) {
+        if (!candidate.r) {
           parseCache.delete(key)
           break
         }
       }
     }
-    bucket = { version: 0, retained: 0 }
-    parseCache.set(urlKey, bucket)
+    parseCache.set(urlKey, (bucket = { r: 0 }))
   }
   return bucket
 }
 
 export function clearParseCache(): void {
-  for (const bucket of parseCache.values()) {
-    bucket.entry = undefined
-  }
+  parseCache.forEach(bucket => (bucket.e = undefined))
 }
 
 export function retainParseCache(urlKey: string, delta: 1 | -1): void {
   const bucket = getParseCacheBucket(urlKey)
-  bucket.retained += delta
-  if (!bucket.retained && parseCache.size > maxParseCacheSize) {
+  if (!(bucket.r += delta) && parseCache.size > 1e3) {
     parseCache.delete(urlKey)
   }
 }
 
-export function cacheParsedValue<T>(
-  urlKey: string,
-  parse: (query: string & Array<string>) => T | null,
-  query: string & Array<string>,
-  value: T
-): void {
-  if (typeof window !== 'undefined') {
-    const cached = parseCache.get(urlKey)?.entry
-    if (
-      cached &&
-      cached[0] === parse &&
-      compareQuery(cached[1], query) &&
-      Object.is(cached[2], value)
-    ) {
-      return
-    }
-    const bucket = getParseCacheBucket(urlKey)
-    bucket.entry = [parse, query, value]
-    bucket.version++
-  }
-}
-
-export function getParseCacheVersion(urlKey: string): number {
-  return parseCache.get(urlKey)?.version ?? 0
+export function getParseCacheVersion(urlKey: string): number | undefined {
+  return parseCache.get(urlKey)?.v
 }
 
 export function parseWithClientCache<T>(
   urlKey: string,
   parse: (query: string & Array<string>) => T | null,
-  query: string & Array<string>
+  query: string & Array<string>,
+  value?: T
 ): T | null {
-  const cached = parseCache.get(urlKey)?.entry
+  const cached = parseCache.get(urlKey)?.e
+  if (value !== undefined) {
+    if (
+      cached?.[0] === parse &&
+      compareQuery(cached[1], query) &&
+      Object.is(cached[2], value)
+    ) {
+      return value
+    }
+    const bucket = getParseCacheBucket(urlKey)
+    bucket.e = [parse, query, value]
+    bucket.v = (bucket.v ?? -1) + 1
+    return value
+  }
   if (cached?.[0] === parse && compareQuery(cached[1], query)) {
     if (cached[3] !== undefined) {
       warn(25, query, cached[3], urlKey)
@@ -96,6 +83,6 @@ export function parseWithClientCache<T>(
     warn(25, query, error, urlKey)
     entry[3] = error
   }
-  getParseCacheBucket(urlKey).entry = entry
+  getParseCacheBucket(urlKey).e = entry
   return entry[2] as T | null
 }

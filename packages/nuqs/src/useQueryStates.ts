@@ -8,7 +8,6 @@ import type { Nullable, Options, UrlKeys } from './defs'
 import { compareQuery, isEqual } from './lib/compare'
 import { debug } from './lib/debug'
 import {
-  cacheParsedValue,
   getParseCacheVersion,
   parseWithCache,
   retainParseCache
@@ -46,7 +45,7 @@ export type Values<T extends UseQueryStatesKeysMap> = {
     : ReturnType<T[K]['parse']> | null
 }
 type NullableValues<T extends UseQueryStatesKeysMap> = Nullable<Values<T>>
-type RawValue = [query: Query | null, cacheVersion: number]
+type RawValue = [query: Query | null, cacheVersion?: number]
 
 type UpdaterFn<T extends UseQueryStatesKeysMap> = (
   old: Values<T>
@@ -204,24 +203,16 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
     subscribeToOverlay,
     getRawValue
   )
-  // Seed the query cache from the same parse as the state, so the effect
-  // backstop below cache-hits instead of setting state after the first render.
-  // The initializer returns the cache rather than writing it to a ref:
-  // initializers must stay pure (for StrictMode compatibility).
-  const [initial] = useState(() => {
-    const cachedQuery: Record<string, Query | null> = {}
-    const [, state] = parseMap(keyMap, resolvedUrlKeys, rawValues, cachedQuery)
-    return [state, cachedQuery] as const
-  })
-  const queryRef = useRef(initial[1])
+  const [internalState, setInternalState] = useState<V>(
+    () => parseMap(keyMap, resolvedUrlKeys, rawValues).state
+  )
   // Starts at the source used by the state initializer. The search string is
   // published with it after commit so discarded renders can be distinguished
   // from hidden cross-route renders without reading location during SSR.
-  const lastSyncRef = useRef<[Record<string, Query | null>, string]>([
+  const lastSyncRef = useRef<[Record<string, RawValue>, string]>([
     rawValues,
     ''
   ])
-  const [internalState, setInternalState] = useState<V>(initial[0])
 
   const stateRef = useRef(internalState)
   // Tracks the latest state adopted from a URL source. Optimistic updates only
@@ -229,14 +220,15 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
   const urlStateRef = useRef(internalState)
   // Adopts the current URL value into the internal state when it has changed.
   // Used both during render (below) and from the effect backstop further down.
-  const reconcile = () => {
-    const [hasChanged, state] = parseMap(
+  const reconcile = (cachedRawValues = lastSyncRef.current[0]) => {
+    let { state, hasChanged } = parseMap(
       keyMap,
       resolvedUrlKeys,
       rawValues,
-      queryRef.current,
+      cachedRawValues,
       stateRef.current
     )
+    hasChanged ||= stableKeyMap !== cachedKeyMap
     if (hasChanged) {
       debug(1, hookId, stateKeys, state)
       stateRef.current = state
@@ -339,8 +331,8 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
         // overlay notification so hooks using the same parser adopt that
         // identity; hooks using another parser still re-parse the raw query.
         const nextValue = value ?? parser.defaultValue ?? null
-        if (query !== null && value !== null) {
-          cacheParsedValue(
+        if (value !== null) {
+          parseWithCache(
             urlKey,
             parser.parse,
             query as string & Array<string>,
@@ -356,7 +348,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
         // Update both caches before scheduling React state. A higher-priority
         // render may run before React evaluates the updater below; it must see
         // the optimistic query as cached state without adopting its React lane.
-        queryRef.current[urlKey] = [query, getParseCacheVersion(urlKey)]
+        lastSyncRef.current[0][urlKey] = [query, getParseCacheVersion(urlKey)]
         const nextCachedState = wasCached
           ? previousState
           : {
@@ -494,45 +486,41 @@ function parseMap<KeyMap extends UseQueryStatesKeysMap>(
   keyMap: KeyMap,
   resolvedUrlKeys: Record<string, string>,
   rawValues: Record<string, RawValue>,
-  cachedRawValues: Record<string, RawValue> = {},
-  cachedState: Partial<NullableValues<KeyMap>> = {}
-): [hasChanged: boolean, state: NullableValues<KeyMap>] {
+  cachedRawValues?: Record<string, RawValue> | null,
+  cachedState?: NullableValues<KeyMap>
+): {
+  state: NullableValues<KeyMap>
+  hasChanged: boolean
+} {
   let hasChanged = false
-  const state = Object.entries(keyMap).reduce((out, [stateKey, parser]) => {
+  const state = {} as NullableValues<KeyMap>
+  for (const [stateKey, parser] of Object.entries(keyMap)) {
     const urlKey = getOwn(resolvedUrlKeys, stateKey)!
-    const fallbackValue = parser.type === 'multi' ? [] : null
-    const rawValue = getOwn(rawValues, urlKey) ?? [fallbackValue, 0]
-    const query = rawValue[0] ?? fallbackValue
-    const cachedRawValue = getOwn(cachedRawValues, urlKey)
-    const cachedStateValue = getOwn(cachedState, stateKey)
+    const rawValue = getOwn(rawValues, urlKey) ?? [
+      parser.type === 'multi' ? [] : null
+    ]
+    const query = rawValue[0]
+    const cachedRawValue = cachedRawValues && getOwn(cachedRawValues, urlKey)
+    const cachedStateValue = cachedState && getOwn(cachedState, stateKey)
     if (
       cachedRawValue &&
       cachedStateValue !== undefined &&
       cachedRawValue[1] === rawValue[1] &&
-      compareQuery(cachedRawValue[0] ?? fallbackValue, query)
+      compareQuery(cachedRawValue[0], query)
     ) {
-      // Cache hit
-      out[stateKey as keyof KeyMap] = cachedStateValue
-      return out
+      state[stateKey as keyof KeyMap] = cachedStateValue
+      continue
     }
-    // Cache miss
     hasChanged = true
+
     const value = isAbsentFromUrl(query)
       ? null
       : // we have properly narrowed `query` here, but TS doesn't keep track of that
         parseWithCache(urlKey, parser.parse, query as string & Array<string>)
 
-    out[stateKey as keyof KeyMap] = value ?? null
-    cachedRawValues[urlKey] = rawValue
-    return out
-  }, {} as NullableValues<KeyMap>)
-
-  // Detect removed keys.
-  // Every key of the map hit the cache above, so it exists in the cached state:
-  // the key sets can only differ by keys that were removed.
-  hasChanged ||= Object.keys(state).length !== Object.keys(cachedState).length
-
-  return [hasChanged, state]
+    state[stateKey as keyof KeyMap] = value ?? null
+  }
+  return { state, hasChanged }
 }
 
 function applyDefaultValues<KeyMap extends UseQueryStatesKeysMap>(
