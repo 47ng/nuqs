@@ -595,6 +595,34 @@ describe('useQueryStates: optimistic adoption', () => {
     expect(result.current.b[0].obj).toBe(written)
   })
 
+  it('keeps the written identity with an inline parser factory', async () => {
+    let referenceCount = 0
+    const { result, act } = await renderHook(
+      () => {
+        const state = useQueryStates({
+          items: parseAsArrayOf(parseAsString)
+        })
+        useEffect(() => {
+          referenceCount++
+        }, [state[0].items])
+        return state
+      },
+      {
+        wrapper: withNuqsTestingAdapter({
+          searchParams: '?items=a,b'
+        })
+      }
+    )
+    const written = ['a', 'b']
+
+    await act(() => result.current[1]({ items: written }))
+    expect(result.current[0].items).toBe(written)
+    expect(referenceCount).toBe(2)
+
+    await act(() => result.current[1](value => value))
+    expect(referenceCount).toBe(2)
+  })
+
   it('keeps a publication until mounted siblings adopt it', async () => {
     const objParser = parseAsJson<{ v: number }>(x => x as { v: number })
     const { result, act } = await renderHook(
@@ -714,11 +742,9 @@ describe('useQueryStates: rendering & bail-out', () => {
   it('should bail out of rendering the same component when setting to the same value', async () => {
     let renderCount = 0
     function TestComponent() {
+      renderCount++
       const [{ test }, setSearchParams] = useQueryStates({
         test: parseAsString
-      })
-      useEffect(() => {
-        renderCount++
       })
       return (
         <>

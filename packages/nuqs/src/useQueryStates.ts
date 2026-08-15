@@ -129,7 +129,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
       return (
         previousDefault !== undefined &&
         currentDefault !== undefined &&
-        parser.eq?.(previousDefault, currentDefault) === true
+        parser.eq?.(previousDefault, currentDefault)
       )
     })
       ? cachedKeyMap
@@ -203,6 +203,10 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
     subscribeToOverlay,
     getRawValue
   )
+  // Tracks the URL source (committed search params + pending updates overlay)
+  // the internal state was last reconciled against during render. It starts at
+  // the source used by the state initializer, so mount does not reconcile twice.
+  const lastSyncRef = useRef(rawValues)
   const [internalState, setInternalState] = useState<V>(
     () => parseMap(keyMap, resolvedUrlKeys, rawValues).state
   )
@@ -222,7 +226,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
   // Used both during render (below) and from the effect backstop further down.
   const reconcile = (cachedRawValues = lastSyncRef.current[0]) => {
     let { state, hasChanged } = parseMap(
-      keyMap,
+      stableKeyMap,
       resolvedUrlKeys,
       rawValues,
       cachedRawValues,
