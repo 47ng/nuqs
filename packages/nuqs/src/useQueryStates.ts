@@ -203,12 +203,8 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
     subscribeToOverlay,
     getRawValue
   )
-  // Tracks the URL source (committed search params + pending updates overlay)
-  // the internal state was last reconciled against during render. It starts at
-  // the source used by the state initializer, so mount does not reconcile twice.
-  const lastSyncRef = useRef(rawValues)
   const [internalState, setInternalState] = useState<V>(
-    () => parseMap(keyMap, resolvedUrlKeys, rawValues).state
+    () => parseMap(keyMap, resolvedUrlKeys, rawValues)[0]
   )
   // Starts at the source used by the state initializer. The search string is
   // published with it after commit so discarded renders can be distinguished
@@ -225,7 +221,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
   // Adopts the current URL value into the internal state when it has changed.
   // Used both during render (below) and from the effect backstop further down.
   const reconcile = (cachedRawValues = lastSyncRef.current[0]) => {
-    let { state, hasChanged } = parseMap(
+    let [state, hasChanged] = parseMap(
       stableKeyMap,
       resolvedUrlKeys,
       rawValues,
@@ -486,16 +482,14 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
 
 // --
 
+// The tuple keeps the change flag without adding object property names to the bundle.
 function parseMap<KeyMap extends UseQueryStatesKeysMap>(
   keyMap: KeyMap,
   resolvedUrlKeys: Record<string, string>,
   rawValues: Record<string, RawValue>,
   cachedRawValues?: Record<string, RawValue> | null,
   cachedState?: NullableValues<KeyMap>
-): {
-  state: NullableValues<KeyMap>
-  hasChanged: boolean
-} {
+): readonly [NullableValues<KeyMap>, boolean] {
   let hasChanged = false
   const state = {} as NullableValues<KeyMap>
   for (const [stateKey, parser] of Object.entries(keyMap)) {
@@ -515,16 +509,18 @@ function parseMap<KeyMap extends UseQueryStatesKeysMap>(
       state[stateKey as keyof KeyMap] = cachedStateValue
       continue
     }
-    hasChanged = true
-
     const value = isAbsentFromUrl(query)
       ? null
       : // we have properly narrowed `query` here, but TS doesn't keep track of that
         parseWithCache(urlKey, parser.parse, query as string & Array<string>)
 
-    state[stateKey as keyof KeyMap] = value ?? null
+    hasChanged =
+      !Object.is(
+        cachedStateValue,
+        (state[stateKey as keyof KeyMap] = value ?? null)
+      ) || hasChanged
   }
-  return { state, hasChanged }
+  return [state, hasChanged] as const
 }
 
 function applyDefaultValues<KeyMap extends UseQueryStatesKeysMap>(
