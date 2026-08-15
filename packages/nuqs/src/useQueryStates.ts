@@ -7,7 +7,12 @@ import {
 import type { Nullable, Options, UrlKeys } from './defs'
 import { compareQuery, isEqual } from './lib/compare'
 import { debug } from './lib/debug'
-import { parseWithCache } from './lib/parse-cache'
+import {
+  cacheParsedValue,
+  getParseCacheVersion,
+  parseWithCache,
+  retainParseCache
+} from './lib/parse-cache'
 import { debounceController } from './lib/queues/debounce'
 import { defaultRateLimit } from './lib/queues/rate-limiting'
 import {
@@ -41,6 +46,7 @@ export type Values<T extends UseQueryStatesKeysMap> = {
     : ReturnType<T[K]['parse']> | null
 }
 type NullableValues<T extends UseQueryStatesKeysMap> = Nullable<Values<T>>
+type RawValue = [query: Query | null, cacheVersion: number]
 
 type UpdaterFn<T extends UseQueryStatesKeysMap> = (
   old: Values<T>
@@ -66,8 +72,17 @@ const omitDefaultValue = (key: string, value: unknown) =>
 
 // Hoisted for referential stability: subscriptions only churn when the
 // watched keys change, not on every render.
-const subscribeToOverlay = (key: string, callback: () => void): (() => void) =>
-  debounceController.throttleQueue.sync.on(key, callback)
+const subscribeToOverlay = (
+  key: string,
+  callback: () => void
+): (() => void) => {
+  retainParseCache(key, 1)
+  const unsubscribe = debounceController.throttleQueue.sync.on(key, callback)
+  return () => {
+    retainParseCache(key, -1)
+    unsubscribe()
+  }
+}
 
 /**
  * Synchronise multiple query string arguments to React state in Next.js
@@ -158,30 +173,32 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
       ),
     [resolvedUrlKeys]
   )
-  // The raw optimistic value for a url key: the global pending updates overlay
-  // (throttle & debounce queues) merged over the adapter's committed search
-  // params. Reading the committed value live in the snapshot (rather than from
-  // state synced by an effect) keeps the value fresh even on the first render
-  // after an `<Activity>` subtree is revealed: its effects — and thus the
-  // overlay subscription — were detached while hidden and missed updates (#1444).
+  // The raw optimistic value and parse-cache version for a url key. The query
+  // comes from the global pending updates overlay (throttle & debounce queues),
+  // falling back to the adapter's committed search params. Reading the committed
+  // value live in the snapshot (rather than from state synced by an effect) keeps
+  // it fresh even on the first render after an `<Activity>` subtree is revealed:
+  // its effects — and thus the overlay subscription — were detached while hidden
+  // and missed updates (#1444). The cache version makes a same-query write with
+  // a new value identity observable to sibling hooks.
   const getRawValue = useCallback(
-    (urlKey: string): Query | null => {
+    (urlKey: string): RawValue => {
       const queued = debounceController.getQueuedQuery(urlKey)
-      if (queued !== undefined) {
-        return queued
-      }
-      return getOwn(isMultiUrlKey, urlKey)
-        ? initialSearchParams.getAll(urlKey)
-        : initialSearchParams.get(urlKey)
+      const query =
+        queued !== undefined
+          ? queued
+          : getOwn(isMultiUrlKey, urlKey)
+            ? initialSearchParams.getAll(urlKey)
+            : initialSearchParams.get(urlKey)
+      return [query, getParseCacheVersion(urlKey)]
     },
     [initialSearchParams, isMultiUrlKey]
   )
-  // Referentially stable while the raw values of the watched keys are
-  // unchanged, so identity comparison detects any URL source change,
-  // committed or overlay. Internal (optimistic) updates also change this
-  // identity, but the resulting reconcile is a no-op: the setter records the
-  // query in queryRef before the notification renders, so parseMap
-  // cache-hits and nothing is reverted.
+  // Referentially stable while the raw queries and cache versions of the watched
+  // keys are unchanged, so identity comparison detects URL source changes and
+  // same-query identity publications. Internal (optimistic) updates also change
+  // this identity, but the writer records the tuple in queryRef before the
+  // notification renders, so it cache-hits and keeps the exact written value.
   const rawValues = useSyncExternalStores(
     urlKeyList,
     subscribeToOverlay,
@@ -318,10 +335,18 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
           value === null ? null : (parser.serialize ?? String)(value)
         // Optimistic local adoption: the writer keeps the exact value
         // identity it was given (===), unless clearOnDefault rewrote it to
-        // the parser's defaultValue above. Other hooks watching this key
-        // re-render via the overlay notification (from the queue pushes
-        // below) and re-parse the raw query with their own parser.
+        // the parser's defaultValue above. Seed the parse cache before the
+        // overlay notification so hooks using the same parser adopt that
+        // identity; hooks using another parser still re-parse the raw query.
         const nextValue = value ?? parser.defaultValue ?? null
+        if (query !== null && value !== null) {
+          cacheParsedValue(
+            urlKey,
+            parser.parse,
+            query as string & Array<string>,
+            value
+          )
+        }
         const previousState = stateRef.current
         const wasCached = Object.is(
           previousState[stateKey] ?? parser.defaultValue ?? null,
@@ -331,7 +356,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
         // Update both caches before scheduling React state. A higher-priority
         // render may run before React evaluates the updater below; it must see
         // the optimistic query as cached state without adopting its React lane.
-        queryRef.current[urlKey] = query
+        queryRef.current[urlKey] = [query, getParseCacheVersion(urlKey)]
         const nextCachedState = wasCached
           ? previousState
           : {
@@ -468,19 +493,23 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
 function parseMap<KeyMap extends UseQueryStatesKeysMap>(
   keyMap: KeyMap,
   resolvedUrlKeys: Record<string, string>,
-  rawValues: Record<string, Query | null>,
-  cachedQuery: Record<string, Query | null> = {},
+  rawValues: Record<string, RawValue>,
+  cachedRawValues: Record<string, RawValue> = {},
   cachedState: Partial<NullableValues<KeyMap>> = {}
 ): [hasChanged: boolean, state: NullableValues<KeyMap>] {
   let hasChanged = false
   const state = Object.entries(keyMap).reduce((out, [stateKey, parser]) => {
     const urlKey = getOwn(resolvedUrlKeys, stateKey)!
     const fallbackValue = parser.type === 'multi' ? [] : null
-    const query = getOwn(rawValues, urlKey) ?? fallbackValue
+    const rawValue = getOwn(rawValues, urlKey) ?? [fallbackValue, 0]
+    const query = rawValue[0] ?? fallbackValue
+    const cachedRawValue = getOwn(cachedRawValues, urlKey)
     const cachedStateValue = getOwn(cachedState, stateKey)
     if (
+      cachedRawValue &&
       cachedStateValue !== undefined &&
-      compareQuery(getOwn(cachedQuery, urlKey) ?? fallbackValue, query)
+      cachedRawValue[1] === rawValue[1] &&
+      compareQuery(cachedRawValue[0] ?? fallbackValue, query)
     ) {
       // Cache hit
       out[stateKey as keyof KeyMap] = cachedStateValue
@@ -494,7 +523,7 @@ function parseMap<KeyMap extends UseQueryStatesKeysMap>(
         parseWithCache(urlKey, parser.parse, query as string & Array<string>)
 
     out[stateKey as keyof KeyMap] = value ?? null
-    cachedQuery[urlKey] = query
+    cachedRawValues[urlKey] = rawValue
     return out
   }, {} as NullableValues<KeyMap>)
 

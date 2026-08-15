@@ -21,6 +21,7 @@ import {
   withNuqsTestingAdapter,
   type OnUrlUpdateFunction
 } from './adapters/testing'
+import { clearParseCache, parseWithCache } from './lib/parse-cache'
 import { debounce, throttle } from './lib/queues/rate-limiting'
 import { resetQueues } from './lib/queues/reset'
 import { globalThrottleQueue } from './lib/queues/throttle'
@@ -559,6 +560,95 @@ describe('useQueryStates: shared parse cache', () => {
 })
 
 describe('useQueryStates: optimistic adoption', () => {
+  it('shares the exact written value with hooks using the same parser', async () => {
+    const objParser = parseAsJson<{ v: number }>(x => x as { v: number })
+    const { result, act } = await renderHook(
+      () => ({
+        a: useQueryStates({ obj: objParser }),
+        b: useQueryStates({ obj: objParser })
+      }),
+      { wrapper: withNuqsTestingAdapter() }
+    )
+    const written = { v: 42 }
+    await act(() => result.current.a[1]({ obj: written }))
+    expect(result.current.a[0].obj).toBe(written)
+    expect(result.current.b[0].obj).toBe(written)
+  })
+  it('shares a written value when its serialized query is unchanged', async () => {
+    const objParser = parseAsJson<{ v: number }>(x => x as { v: number })
+    const { result, act } = await renderHook(
+      () => ({
+        a: useQueryStates({ obj: objParser }),
+        b: useQueryStates({ obj: objParser })
+      }),
+      {
+        wrapper: withNuqsTestingAdapter({
+          searchParams: '?obj={"v":1}'
+        })
+      }
+    )
+    const previous = result.current.a[0].obj
+    const written = { v: 1 }
+    expect(result.current.b[0].obj).toBe(previous)
+    await act(() => result.current.a[1]({ obj: written }))
+    expect(result.current.a[0].obj).toBe(written)
+    expect(result.current.b[0].obj).toBe(written)
+  })
+
+  it('keeps a publication until mounted siblings adopt it', async () => {
+    const objParser = parseAsJson<{ v: number }>(x => x as { v: number })
+    const { result, act } = await renderHook(
+      () => ({
+        a: useQueryStates({ obj: objParser }),
+        b: useQueryStates({ obj: objParser })
+      }),
+      { wrapper: withNuqsTestingAdapter() }
+    )
+    const written = { v: 42 }
+    // The testing adapter clears parsed values while hooks remain subscribed.
+    clearParseCache()
+    await act(async () => {
+      result.current.a[1](
+        { obj: written },
+        { limitUrlUpdates: throttle(Infinity) }
+      )
+      const identity = (query: string) => query
+      for (let i = 0; i < 1000; i++) {
+        parseWithCache(
+          `publication-filler-${i}`,
+          identity,
+          'x' as string & Array<string>
+        )
+      }
+      await Promise.resolve()
+    })
+    expect(result.current.a[0].obj).toBe(written)
+    expect(result.current.b[0].obj).toBe(written)
+  })
+  it('does not rerender an equal primitive write under cache pressure', async () => {
+    let renders = 0
+    const { result, act } = await renderHook(
+      () => {
+        renders++
+        return useQueryStates({ n: parseAsInteger })
+      },
+      { wrapper: withNuqsTestingAdapter({ searchParams: '?n=1' }) }
+    )
+    const rendersBeforeUpdate = renders
+    const identity = (query: string) => query
+    for (let i = 0; i < 1000; i++) {
+      parseWithCache(
+        `primitive-filler-${i}`,
+        identity,
+        'x' as string & Array<string>
+      )
+    }
+    await act(async () => {
+      result.current[1]({ n: 1 }, { limitUrlUpdates: throttle(Infinity) })
+      await Promise.resolve()
+    })
+    expect(renders).toBe(rendersBeforeUpdate)
+  })
   it('keeps the exact value identity for the writer (non-identity parse round-trip)', async () => {
     const objParser = parseAsJson<{ v: number }>(x => x as { v: number })
     const { result, act } = await renderHook(
