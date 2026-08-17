@@ -13,7 +13,7 @@ export async function LandingDemo() {
     .replace(/className=".+"/g, '') // Strip styling
     .replace('autoComplete="off"', '') // Strip irrelevant attributes
     .split('\n')
-    .filter(line => !line.includes('data-interacted='))
+    .filter(line => line.trim() && !line.includes('data-interacted='))
     .join('\n')
   const formattedCode = await format(demoCode, {
     parser: 'typescript'
