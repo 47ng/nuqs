@@ -49,8 +49,6 @@ const NuqsReactAdapterContext = createContext<{
   fullPageNavigationOnShallowFalseUpdates: false
 })
 
-const emptySearchParams = new URLSearchParams()
-
 function subscribe(onStoreChange: () => void) {
   emitter.on('update', onStoreChange)
   window.addEventListener('popstate', onStoreChange)
@@ -64,50 +62,36 @@ function useNuqsReactAdapter(watchKeys: string[]): AdapterInterface {
   const { fullPageNavigationOnShallowFalseUpdates, serverSearch } = useContext(
     NuqsReactAdapterContext
   )
-  // There is no location to read from when server-side rendering: snapshot the
-  // server-provided search string instead (eg: in Astro SSR, Inertia, Fastify,
-  // Hono etc). React also renders from this snapshot when hydrating, so server
-  // and client markup agree by construction for deep links.
-  // Cached for referential stability (useSyncExternalStore Object.is bail-out).
-  const serverSnapshotCache = useRef<URLSearchParams | null>(null)
-  const getServerSnapshot = () => {
-    if (serverSnapshotCache.current === null) {
-      serverSnapshotCache.current =
-        serverSearch === undefined
-          ? emptySearchParams
-          : filterSearchParams(
-              new URLSearchParams(serverSearch),
-              watchKeys,
-              false
-            )
-    }
-    return serverSnapshotCache.current
-  }
-  // Reading location.search live in getSnapshot (rather than from React state
-  // synced by an effect) keeps the value fresh even on the first render after an
-  // <Activity> subtree is revealed: its effects — and thus the emitter
-  // subscription — were detached while hidden and missed the URL update (#1444).
+  // Return a referentially-stable snapshot while the watched keys are unchanged:
+  // required by useSyncExternalStore (Object.is bail-out),
+  // and it preserves key isolation (a change to an unwatched key keeps the same ref,
+  // so this hook doesn't re-render).
   const cache = useRef<{ key: string; search: URLSearchParams } | null>(null)
+  function snapshot(source: string | URLSearchParams) {
+    const filteredSearch = filterSearchParams(
+      new URLSearchParams(source),
+      watchKeys,
+      false
+    )
+    const key = filteredSearch.toString()
+    if (cache.current?.key === key) {
+      return cache.current.search
+    }
+    cache.current = { key, search: filteredSearch }
+    return filteredSearch
+  }
   const searchParams = useSyncExternalStore(
     subscribe,
-    () => {
-      const filteredSearch = filterSearchParams(
-        new URLSearchParams(location.search),
-        watchKeys,
-        false
-      )
-      // Return a referentially-stable snapshot while the watched keys are unchanged:
-      // required by useSyncExternalStore (Object.is bail-out),
-      // and it preserves key isolation (a change to an unwatched key keeps the same ref,
-      // so this hook doesn't re-render).
-      const key = filteredSearch.toString()
-      if (cache.current?.key === key) {
-        return cache.current.search
-      }
-      cache.current = { key, search: filteredSearch }
-      return filteredSearch
-    },
-    getServerSnapshot
+    // Reading location.search live in getSnapshot (rather than from React state
+    // synced by an effect) keeps the value fresh even on the first render after an
+    // <Activity> subtree is revealed: its effects — and thus the emitter
+    // subscription — were detached while hidden and missed the URL update (#1444).
+    () => snapshot(location.search),
+    // There is no location to read from when server-side rendering: snapshot the
+    // server-provided search string instead (eg: in Astro SSR, Inertia, Fastify,
+    // Hono etc). React also renders from this snapshot when hydrating, so the
+    // first client render matches the server markup, then re-syncs to location.
+    () => snapshot(serverSearch ?? '')
   )
   const updateUrl = useMemo(
     () => generateUpdateUrlFn(fullPageNavigationOnShallowFalseUpdates),
@@ -135,7 +119,7 @@ export function NuqsAdapter({
    * or the request URL's search string in Inertia, Fastify, Hono etc).
    *
    * Without it, the server renders parsers' default values, which causes
-   * hydration errors and a flash of default content on deep links.
+   * a flash of default content on deep links once the client hydrates.
    * Accepts the search string with or without the leading `?`.
    */
   serverSearch?: string | URLSearchParams
