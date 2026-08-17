@@ -11,17 +11,46 @@ declare global {
 }
 globalThis.IS_REACT_ACT_ENVIRONMENT = true
 
-function Display() {
+type AppProps = {
+  serverSearch?: string | URLSearchParams
+  onRender?: (value: string) => void
+}
+
+function Display({ onRender }: Pick<AppProps, 'onRender'>) {
   const [hello] = useQueryState('hello', parseAsString.withDefault('default'))
+  onRender?.(hello)
   return <span data-testid="value">{hello}</span>
 }
 
-function App({ serverSearch }: { serverSearch?: string | URLSearchParams }) {
+function App({ serverSearch, onRender }: AppProps) {
   return (
     <NuqsAdapter serverSearch={serverSearch}>
-      <Display />
+      <Display onRender={onRender} />
     </NuqsAdapter>
   )
+}
+
+async function hydrate(serverSearch: string) {
+  const renders: string[] = []
+  const app = (
+    <App serverSearch={serverSearch} onRender={value => renders.push(value)} />
+  )
+  const container = document.createElement('div')
+  container.innerHTML = renderToString(app)
+  document.body.appendChild(container)
+  renders.length = 0
+  const consoleError = vi.spyOn(console, 'error')
+  const root = await act(() => hydrateRoot(container, app))
+  return {
+    renders,
+    consoleError,
+    textContent: container.querySelector('[data-testid="value"]')?.textContent,
+    async cleanup() {
+      consoleError.mockRestore()
+      await act(() => root.unmount())
+      container.remove()
+    }
+  }
 }
 
 describe('adapters/react: serverSearch', () => {
@@ -52,23 +81,29 @@ describe('adapters/react: serverSearch', () => {
     expect(html).toContain('world')
   })
 
-  it('hydrates deep links without mismatch errors', async () => {
+  it('hydrates deep links from the server snapshot, without a flash of defaults', async () => {
     history.replaceState(null, '', '?hello=world')
-    const app = <App serverSearch="?hello=world" />
-    const container = document.createElement('div')
-    container.innerHTML = renderToString(app)
-    document.body.appendChild(container)
-    const consoleError = vi.spyOn(console, 'error')
+    const { renders, consoleError, textContent, cleanup } =
+      await hydrate('?hello=world')
     try {
-      const root = await act(() => hydrateRoot(container, app))
       expect(consoleError).not.toHaveBeenCalled()
-      expect(
-        container.querySelector('[data-testid="value"]')?.textContent
-      ).toBe('world')
-      await act(() => root.unmount())
+      expect(renders).not.toContain('default')
+      expect(textContent).toBe('world')
     } finally {
-      consoleError.mockRestore()
-      container.remove()
+      await cleanup()
+    }
+  })
+
+  it('re-syncs to the location after hydrating from a stale server snapshot', async () => {
+    history.replaceState(null, '', '?hello=client')
+    const { renders, consoleError, textContent, cleanup } =
+      await hydrate('?hello=server')
+    try {
+      expect(consoleError).not.toHaveBeenCalled()
+      expect(renders[0]).toBe('server')
+      expect(textContent).toBe('client')
+    } finally {
+      await cleanup()
     }
   })
 })
