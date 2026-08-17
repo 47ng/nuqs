@@ -155,8 +155,8 @@ When the React tree is server-rendered by a framework nuqs has no adapter for
 — an Astro island, an Inertia page component, a server rendering the tree with
 `renderToString{:ts}` (Fastify, Hono, Express) — there is no `location{:ts}`
 to read from on the server, so query states render their default values.
-On deep links, this causes hydration errors and a flash of default content
-before the client corrects it.
+On deep links, this causes a flash of default content before the client
+corrects it once hydrated.
 
 Passing the request's search string to the adapter fixes this, by seeding
 the initial query states with it on the server, and letting React hydrate
