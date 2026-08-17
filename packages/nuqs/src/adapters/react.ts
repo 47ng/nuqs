@@ -42,17 +42,14 @@ function generateUpdateUrlFn(fullPageNavigationOnShallowFalseUpdates: boolean) {
   }
 }
 
-const NuqsReactAdapterContext = createContext({
+const NuqsReactAdapterContext = createContext<{
+  fullPageNavigationOnShallowFalseUpdates: boolean
+  serverSearch?: string | URLSearchParams
+}>({
   fullPageNavigationOnShallowFalseUpdates: false
 })
 
 const emptySearchParams = new URLSearchParams()
-
-// Note: we could expose a getServerSnapshot() function to allow server-side rendering
-// to let consumers wire that to their backend router (eg: in Astro SSR, Fastify, Hono etc).
-function getServerSnapshot() {
-  return emptySearchParams
-}
 
 function subscribe(onStoreChange: () => void) {
   emitter.on('update', onStoreChange)
@@ -64,9 +61,28 @@ function subscribe(onStoreChange: () => void) {
 }
 
 function useNuqsReactAdapter(watchKeys: string[]): AdapterInterface {
-  const { fullPageNavigationOnShallowFalseUpdates } = useContext(
+  const { fullPageNavigationOnShallowFalseUpdates, serverSearch } = useContext(
     NuqsReactAdapterContext
   )
+  // There is no location to read from when server-side rendering: snapshot the
+  // server-provided search string instead (eg: in Astro SSR, Inertia, Fastify,
+  // Hono etc). React also renders from this snapshot when hydrating, so server
+  // and client markup agree by construction for deep links.
+  // Cached for referential stability (useSyncExternalStore Object.is bail-out).
+  const serverSnapshotCache = useRef<URLSearchParams | null>(null)
+  const getServerSnapshot = () => {
+    if (serverSnapshotCache.current === null) {
+      serverSnapshotCache.current =
+        serverSearch === undefined
+          ? emptySearchParams
+          : filterSearchParams(
+              new URLSearchParams(serverSearch),
+              watchKeys,
+              false
+            )
+    }
+    return serverSnapshotCache.current
+  }
   // Reading location.search live in getSnapshot (rather than from React state
   // synced by an effect) keeps the value fresh even on the first render after an
   // <Activity> subtree is revealed: its effects — and thus the emitter
@@ -108,14 +124,25 @@ const NuqsReactAdapter = createAdapterProvider(useNuqsReactAdapter)
 export function NuqsAdapter({
   children,
   fullPageNavigationOnShallowFalseUpdates = false,
+  serverSearch,
   ...adapterProps
 }: AdapterProps & {
   children: ReactNode
   fullPageNavigationOnShallowFalseUpdates?: boolean
+  /**
+   * Search params to seed the initial state with when server-side rendering,
+   * where `location` is not available (eg: `Astro.url.search` in Astro SSR,
+   * or the request URL's search string in Inertia, Fastify, Hono etc).
+   *
+   * Without it, the server renders parsers' default values, which causes
+   * hydration errors and a flash of default content on deep links.
+   * Accepts the search string with or without the leading `?`.
+   */
+  serverSearch?: string | URLSearchParams
 }): ReactElement {
   return createElement(
     NuqsReactAdapterContext.Provider,
-    { value: { fullPageNavigationOnShallowFalseUpdates } },
+    { value: { fullPageNavigationOnShallowFalseUpdates, serverSearch } },
     createElement(NuqsReactAdapter, { ...adapterProps, children })
   )
 }

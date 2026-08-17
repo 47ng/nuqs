@@ -144,6 +144,51 @@ createRoot(document.getElementById('root')!).render(
 This may be useful for servers not written in JavaScript, like Django (Python),
 Rails (Ruby), Laravel (PHP), Phoenix (Elixir) etc...
 
+### Server-rendered islands <HumanContent><br className='hidden in-[#nd-toc]:block'/></HumanContent>(Astro, Inertia, etc.) [#server-rendered-islands]
+
+<FeatureSupportMatrix introducedInVersion='2.10.0' support={{
+  supported: true,
+  frameworks: ['React SPA']
+}}/>
+
+When the React tree is server-rendered by a framework nuqs has no adapter for
+— an Astro island, an Inertia page component, a server rendering the tree with
+`renderToString{:ts}` (Fastify, Hono, Express) — there is no `location{:ts}`
+to read from on the server, so query states render their default values.
+On deep links, this causes hydration errors and a flash of default content
+before the client corrects it.
+
+Passing the request's search string to the adapter fixes this, by seeding
+the initial query states with it on the server, and letting React hydrate
+from that same snapshot on the client:
+
+```astro title="src/pages/search.astro"
+---
+import { SearchIsland } from '../islands/SearchIsland'
+---
+
+<SearchIsland client:load serverSearch={Astro.url.search} />
+```
+
+```tsx title="src/islands/SearchIsland.tsx"
+// [!code word:serverSearch]
+import { NuqsAdapter } from 'nuqs/adapters/react'
+
+export function SearchIsland({ serverSearch }: { serverSearch: string }) {
+  return (
+    <NuqsAdapter serverSearch={serverSearch}>
+      {/* useQueryState works here, on the server & the client */}
+    </NuqsAdapter>
+  )
+}
+```
+
+`serverSearch{:ts}` accepts a search string (with or without the leading
+`?{:ts}`) or a `URLSearchParams{:ts}` object. It is only read when
+server-side rendering and during hydration; afterwards, the adapter reads
+`location.search{:ts}` as usual. Multiple islands on the same page each get
+their own `NuqsAdapter{:ts}`, and stay in sync through the History API.
+
 ## <HumanContent><Remix className='inline mr-2 -mt-1' role="presentation"/></HumanContent>Remix [#remix]
 
 ```tsx title="app/root.tsx"
