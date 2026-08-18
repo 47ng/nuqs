@@ -144,6 +144,8 @@ createRoot(document.getElementById('root')!).render(
 This may be useful for servers not written in JavaScript, like Django (Python),
 Rails (Ruby), Laravel (PHP), Phoenix (Elixir) etc...
 
+<SinceVersion v="2.10.0">
+
 ### Server-rendered islands <HumanContent><br className='hidden in-[#nd-toc]:block'/></HumanContent>(Astro, Inertia, etc.) [#server-rendered-islands]
 
 <FeatureSupportMatrix introducedInVersion='2.10.0' support={{
@@ -188,6 +190,8 @@ export function SearchIsland({ serverSearch }: { serverSearch: string }) {
 server-side rendering and during hydration; afterwards, the adapter reads
 `location.search{:ts}` as usual. Multiple islands on the same page each get
 their own `NuqsAdapter{:ts}`, and stay in sync through the History API.
+
+</SinceVersion>
 
 ## <HumanContent><Remix className='inline mr-2 -mt-1' role="presentation"/></HumanContent>Remix [#remix]
 
