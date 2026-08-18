@@ -23,33 +23,36 @@ export type GitHubStarHistory = {
 
 const starHistoryQuerySchema = z.object({
   data: z.object({
-    repository: z.object({
-      stargazers: z.object({
-        totalCount: z.number(),
-        pageInfo: z.object({
-          hasNextPage: z.boolean(),
-          endCursor: z.string().nullish()
-        }),
-        edges: z.array(
-          z.object({
-            starredAt: z
-              .string()
-              .datetime()
-              .transform(d => new Date(d)),
-            node: z.object({
-              login: z.string(),
-              name: z.string().nullish(),
-              avatarUrl: z.string(),
-              company: z.string().nullish(),
-              followers: z.object({
-                totalCount: z.number()
+    repository: z
+      .object({
+        stargazers: z.object({
+          totalCount: z.number(),
+          pageInfo: z.object({
+            hasNextPage: z.boolean(),
+            endCursor: z.string().nullish()
+          }),
+          edges: z.array(
+            z.object({
+              starredAt: z
+                .string()
+                .datetime()
+                .transform(d => new Date(d)),
+              node: z.object({
+                login: z.string(),
+                name: z.string().nullish(),
+                avatarUrl: z.string(),
+                company: z.string().nullish(),
+                followers: z.object({
+                  totalCount: z.number()
+                })
               })
             })
-          })
-        )
+          )
+        })
       })
-    })
-  })
+      .nullable()
+  }),
+  errors: z.array(z.object({ message: z.string() })).optional()
 })
 
 export async function getStarHistory(
@@ -127,13 +130,17 @@ ${await res.text()}`
       )
     }
 
+    const response = starHistoryQuerySchema.parse(await res.json())
+    if (response.data.repository === null) {
+      const message =
+        response.errors?.map(error => error.message).join('; ') ||
+        'Repository data is unavailable'
+      console.error(new Error(`GitHub API error: ${message}`))
+      return null
+    }
     const {
-      data: {
-        repository: {
-          stargazers: { totalCount: tc, pageInfo, edges }
-        }
-      }
-    } = starHistoryQuerySchema.parse(await res.json())
+      stargazers: { totalCount: tc, pageInfo, edges }
+    } = response.data.repository
 
     totalCount = tc
 

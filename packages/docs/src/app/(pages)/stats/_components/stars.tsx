@@ -27,7 +27,7 @@ export async function StarHistoryGraph() {
         }
       >
         <p className="text-muted-foreground flex h-74.5 items-center justify-center text-sm">
-          Star history is unavailable: set GITHUB_TOKEN to enable it.
+          Star history is unavailable.
         </p>
       </Widget>
     )

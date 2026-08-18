@@ -31,10 +31,11 @@ export function getSearchParams(url: string | URL): URLSearchParams {
     return url.searchParams
   }
   if (url.startsWith('?')) {
-    return new URLSearchParams(url)
+    const hashIndex = url.indexOf('#')
+    return new URLSearchParams(hashIndex === -1 ? url : url.slice(0, hashIndex))
   }
   try {
-    return new URL(url, location.origin).searchParams
+    return new URL(url, location.href).searchParams
   } catch {
     return new URLSearchParams(url)
   }
