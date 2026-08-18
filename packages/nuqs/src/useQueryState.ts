@@ -197,18 +197,20 @@ export function useQueryState<T = string>(
     defaultValue?: T
   } = {}
 ) {
-  const { parse, type, serialize, eq, defaultValue, ...hookOptions } = options
+  // The single parser carries the options too: parser-level and hook-level
+  // options resolve to the same values here, so precedence is unaffected.
+  // Only JSON-serialisable options may go through the spread: `useQueryStates`
+  // compares key map entries with `JSON.stringify`, which drops functions, so
+  // function-valued options like `startTransition` must stay out of the parser.
+  const { startTransition, ...parser } = options
   const [{ [key]: state }, setState] = useQueryStates(
     {
       [key]: {
-        parse: parse ?? ((x: any) => x as unknown as T),
-        type,
-        serialize,
-        eq,
-        defaultValue
+        ...parser,
+        parse: parser.parse ?? ((x: any) => x as unknown as T)
       } as GenericParser<T>
     },
-    hookOptions
+    options
   )
   const update = useCallback(
     (stateUpdater: React.SetStateAction<T | null>, callOptions: Options = {}) =>
