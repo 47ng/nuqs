@@ -19,13 +19,13 @@ function Name() {
 
 export function Repro1444() {
   const [visible, setVisible] = useState(true)
-  const [name, setName] = useQueryState('name', parseAsString)
+  const [name, setName] = useQueryState('name', { defaultValue: '' })
   return (
     <>
       <input
         aria-label="name"
-        value={name ?? ''}
-        onChange={e => setName(e.target.value || null)}
+        value={name}
+        onChange={e => setName(e.target.value)}
       />
       <button onClick={() => setVisible(v => !v)}>toggle visibility</button>
       <Activity mode={visible ? 'visible' : 'hidden'}>
