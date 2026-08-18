@@ -124,12 +124,16 @@ export function NuqsAdapter({
   children: ReactNode
   fullPageNavigationOnShallowFalseUpdates?: boolean
   /**
-   * Search params to seed the initial state with when server-side rendering,
-   * where `location` is not available (eg: `Astro.url.search` in Astro SSR,
+   * The search string of the request, for server-side rendering where
+   * `location` is not available (eg: `Astro.url.search` in Astro SSR,
    * or the request URL's search string in Inertia, Fastify, Hono etc).
    *
-   * Without it, the server renders parsers' default values, which causes
-   * a flash of default content on deep links once the client hydrates.
+   * React reads this value on the server and again on the client
+   * during hydration, so both render the same markup.
+   * After hydration, the adapter reads `location.search`.
+   *
+   * Without it, the server renders the parsers' default values,
+   * and deep links show default content until the client hydrates.
    * Accepts the search string with or without the leading `?`.
    */
   serverSearch?: string | URLSearchParams

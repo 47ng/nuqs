@@ -1,4 +1,4 @@
-import React, { act } from 'react'
+import React, { act, useEffect, type ReactNode } from 'react'
 import { hydrateRoot } from 'react-dom/client'
 import { renderToString } from 'react-dom/server'
 import { afterEach, describe, expect, it, vi } from 'vitest'
@@ -11,40 +11,45 @@ declare global {
 }
 globalThis.IS_REACT_ACT_ENVIRONMENT = true
 
-type AppProps = {
-  serverSearch?: string | URLSearchParams
+type ServerSearch = string | URLSearchParams
+
+type DisplayProps = {
+  queryKey?: string
   onRender?: (value: string) => void
 }
 
-function Display({ onRender }: Pick<AppProps, 'onRender'>) {
-  const [hello] = useQueryState('hello', parseAsString.withDefault('default'))
-  onRender?.(hello)
-  return <span data-testid="value">{hello}</span>
+function Display({ queryKey = 'hello', onRender }: DisplayProps) {
+  const [value] = useQueryState(queryKey, parseAsString.withDefault('default'))
+  useEffect(() => {
+    onRender?.(value)
+  })
+  return <span data-testid={queryKey}>{value}</span>
 }
 
-function App({ serverSearch, onRender }: AppProps) {
-  return (
-    <NuqsAdapter serverSearch={serverSearch}>
-      <Display onRender={onRender} />
-    </NuqsAdapter>
-  )
+function App({
+  serverSearch,
+  children = <Display />
+}: {
+  serverSearch?: ServerSearch
+  children?: ReactNode
+}) {
+  return <NuqsAdapter serverSearch={serverSearch}>{children}</NuqsAdapter>
 }
 
-async function hydrate(serverSearch: string) {
-  const renders: string[] = []
-  const app = (
-    <App serverSearch={serverSearch} onRender={value => renders.push(value)} />
-  )
+async function hydrate(app: React.ReactElement) {
   const container = document.createElement('div')
   container.innerHTML = renderToString(app)
   document.body.appendChild(container)
-  renders.length = 0
   const consoleError = vi.spyOn(console, 'error')
-  const root = await act(() => hydrateRoot(container, app))
+  const onRecoverableError = vi.fn()
+  const root = await act(() =>
+    hydrateRoot(container, app, { onRecoverableError })
+  )
   return {
-    renders,
     consoleError,
-    textContent: container.querySelector('[data-testid="value"]')?.textContent,
+    onRecoverableError,
+    textContent: (queryKey = 'hello') =>
+      container.querySelector(`[data-testid="${queryKey}"]`)?.textContent,
     async cleanup() {
       consoleError.mockRestore()
       await act(() => root.unmount())
@@ -83,12 +88,18 @@ describe('adapters/react: serverSearch', () => {
 
   it('hydrates deep links from the server snapshot, without a flash of defaults', async () => {
     history.replaceState(null, '', '?hello=world')
-    const { renders, consoleError, textContent, cleanup } =
-      await hydrate('?hello=world')
+    const onRender = vi.fn()
+    const { consoleError, onRecoverableError, textContent, cleanup } =
+      await hydrate(
+        <App serverSearch="?hello=world">
+          <Display onRender={onRender} />
+        </App>
+      )
     try {
       expect(consoleError).not.toHaveBeenCalled()
-      expect(renders).not.toContain('default')
-      expect(textContent).toBe('world')
+      expect(onRecoverableError).not.toHaveBeenCalled()
+      expect(onRender).not.toHaveBeenCalledWith('default')
+      expect(textContent()).toBe('world')
     } finally {
       await cleanup()
     }
@@ -96,12 +107,67 @@ describe('adapters/react: serverSearch', () => {
 
   it('re-syncs to the location after hydrating from a stale server snapshot', async () => {
     history.replaceState(null, '', '?hello=client')
-    const { renders, consoleError, textContent, cleanup } =
-      await hydrate('?hello=server')
+    const onRender = vi.fn()
+    const { consoleError, onRecoverableError, textContent, cleanup } =
+      await hydrate(
+        <App serverSearch="?hello=server">
+          <Display onRender={onRender} />
+        </App>
+      )
     try {
       expect(consoleError).not.toHaveBeenCalled()
-      expect(renders[0]).toBe('server')
-      expect(textContent).toBe('client')
+      expect(onRecoverableError).not.toHaveBeenCalled()
+      expect(onRender).toHaveBeenNthCalledWith(1, 'server')
+      expect(textContent()).toBe('client')
+    } finally {
+      await cleanup()
+    }
+  })
+
+  it('hydrates from default values when not provided, then re-syncs to the location', async () => {
+    history.replaceState(null, '', '?hello=world')
+    const onRender = vi.fn()
+    const { consoleError, onRecoverableError, textContent, cleanup } =
+      await hydrate(
+        <App>
+          <Display onRender={onRender} />
+        </App>
+      )
+    try {
+      expect(consoleError).not.toHaveBeenCalled()
+      expect(onRecoverableError).not.toHaveBeenCalled()
+      expect(onRender).toHaveBeenNthCalledWith(1, 'default')
+      expect(textContent()).toBe('world')
+    } finally {
+      await cleanup()
+    }
+  })
+
+  it('hydrates each hook from its own keys, and keeps key isolation afterwards', async () => {
+    history.replaceState(null, '', '?a=1&b=2')
+    const onRenderA = vi.fn()
+    const onRenderB = vi.fn()
+    const { consoleError, onRecoverableError, textContent, cleanup } =
+      await hydrate(
+        <App serverSearch="?a=1&b=2">
+          <Display queryKey="a" onRender={onRenderA} />
+          <Display queryKey="b" onRender={onRenderB} />
+        </App>
+      )
+    try {
+      expect(consoleError).not.toHaveBeenCalled()
+      expect(onRecoverableError).not.toHaveBeenCalled()
+      expect(onRenderA).toHaveBeenCalledExactlyOnceWith('1')
+      expect(onRenderB).toHaveBeenCalledExactlyOnceWith('2')
+      await act(() => {
+        history.replaceState(null, '', '?a=1&b=3')
+        window.dispatchEvent(new PopStateEvent('popstate'))
+      })
+      expect(onRenderA).toHaveBeenCalledOnce()
+      expect(onRenderB).toHaveBeenCalledTimes(2)
+      expect(onRenderB).toHaveBeenLastCalledWith('3')
+      expect(textContent('a')).toBe('1')
+      expect(textContent('b')).toBe('3')
     } finally {
       await cleanup()
     }
