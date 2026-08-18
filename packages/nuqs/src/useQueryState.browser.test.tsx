@@ -135,6 +135,24 @@ describe('useQueryState: referential equality', () => {
     const [, setState3] = result.current
     expect(setState1).toBe(setState3)
   })
+
+  it('keeps an equal default value reference when hook options change', async () => {
+    const useTestHook = (history: 'replace' | 'push' = 'replace') =>
+      useQueryState(
+        'test',
+        parseAsNativeArrayOf(parseAsString)
+          .withDefault([])
+          .withOptions({ history })
+      )
+    const { result, rerender } = await renderHook(useTestHook, {
+      wrapper: withNuqsTestingAdapter()
+    })
+    const defaultValue = result.current[0]
+
+    await rerender('push')
+
+    expect(result.current[0]).toBe(defaultValue)
+  })
 })
 
 describe('useQueryState: clearOnDefault', () => {

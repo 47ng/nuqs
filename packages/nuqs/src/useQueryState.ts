@@ -197,21 +197,24 @@ export function useQueryState<T = string>(
     defaultValue?: T
   } = {}
 ) {
-  // The single parser carries the options too: parser-level and hook-level
-  // options resolve to the same values here, so precedence is unaffected.
-  // `startTransition` stays hook-level: `useQueryStates` compares it by
-  // identity per parser (the other options compare structurally), so an
-  // unstable callback in the parser would invalidate the stable key map and the
-  // returned state object on every render.
-  const { startTransition, ...parser } = options
+  const {
+    parse = (x: any) => x as unknown as T,
+    type,
+    serialize,
+    eq,
+    defaultValue,
+    ...hookOptions
+  } = options
+  const parser = {
+    parse,
+    type,
+    serialize,
+    eq,
+    defaultValue
+  } as GenericParser<T>
   const [{ [key]: state }, setState] = useQueryStates(
-    {
-      [key]: {
-        ...parser,
-        parse: parser.parse ?? ((x: any) => x as unknown as T)
-      } as GenericParser<T>
-    },
-    options
+    { [key]: parser },
+    hookOptions
   )
   const update = useCallback(
     (stateUpdater: React.SetStateAction<T | null>, callOptions: Options = {}) =>
