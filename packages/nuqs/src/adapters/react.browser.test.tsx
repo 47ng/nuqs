@@ -1,7 +1,7 @@
-import React, { act, useEffect, type ReactNode } from 'react'
+import React, { act, type ReactNode } from 'react'
 import { hydrateRoot } from 'react-dom/client'
 import { renderToString } from 'react-dom/server'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi, type Mock } from 'vitest'
 import { parseAsString } from '../parsers'
 import { useQueryState } from '../useQueryState'
 import { NuqsAdapter } from './react'
@@ -20,9 +20,7 @@ type DisplayProps = {
 
 function Display({ queryKey = 'hello', onRender }: DisplayProps) {
   const [value] = useQueryState(queryKey, parseAsString.withDefault('default'))
-  useEffect(() => {
-    onRender?.(value)
-  })
+  onRender?.(value)
   return <span data-testid={queryKey}>{value}</span>
 }
 
@@ -36,9 +34,10 @@ function App({
   return <NuqsAdapter serverSearch={serverSearch}>{children}</NuqsAdapter>
 }
 
-async function hydrate(app: React.ReactElement) {
+async function hydrate(app: React.ReactElement, ...onRenderSpies: Mock[]) {
   const container = document.createElement('div')
   container.innerHTML = renderToString(app)
+  onRenderSpies.forEach(spy => spy.mockClear())
   document.body.appendChild(container)
   const consoleError = vi.spyOn(console, 'error')
   const onRecoverableError = vi.fn()
@@ -93,7 +92,8 @@ describe('adapters/react: serverSearch', () => {
       await hydrate(
         <App serverSearch="?hello=world">
           <Display onRender={onRender} />
-        </App>
+        </App>,
+        onRender
       )
     try {
       expect(consoleError).not.toHaveBeenCalled()
@@ -112,7 +112,8 @@ describe('adapters/react: serverSearch', () => {
       await hydrate(
         <App serverSearch="?hello=server">
           <Display onRender={onRender} />
-        </App>
+        </App>,
+        onRender
       )
     try {
       expect(consoleError).not.toHaveBeenCalled()
@@ -131,7 +132,8 @@ describe('adapters/react: serverSearch', () => {
       await hydrate(
         <App>
           <Display onRender={onRender} />
-        </App>
+        </App>,
+        onRender
       )
     try {
       expect(consoleError).not.toHaveBeenCalled()
@@ -152,19 +154,22 @@ describe('adapters/react: serverSearch', () => {
         <App serverSearch="?a=1&b=2">
           <Display queryKey="a" onRender={onRenderA} />
           <Display queryKey="b" onRender={onRenderB} />
-        </App>
+        </App>,
+        onRenderA,
+        onRenderB
       )
     try {
       expect(consoleError).not.toHaveBeenCalled()
       expect(onRecoverableError).not.toHaveBeenCalled()
-      expect(onRenderA).toHaveBeenCalledExactlyOnceWith('1')
-      expect(onRenderB).toHaveBeenCalledExactlyOnceWith('2')
+      expect(onRenderA).not.toHaveBeenCalledWith('default')
+      expect(onRenderB).not.toHaveBeenCalledWith('default')
+      onRenderA.mockClear()
+      onRenderB.mockClear()
       await act(() => {
         history.replaceState(null, '', '?a=1&b=3')
         window.dispatchEvent(new PopStateEvent('popstate'))
       })
-      expect(onRenderA).toHaveBeenCalledOnce()
-      expect(onRenderB).toHaveBeenCalledTimes(2)
+      expect(onRenderA).not.toHaveBeenCalled()
       expect(onRenderB).toHaveBeenLastCalledWith('3')
       expect(textContent('a')).toBe('1')
       expect(textContent('b')).toBe('3')
