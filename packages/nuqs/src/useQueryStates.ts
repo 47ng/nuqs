@@ -142,12 +142,11 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
   // the same pathname, so it still reconciles.
   const committedPathnameRef = useRef<string | null>(null)
   const queuedQueries = useQueuedQueries(Object.values(resolvedUrlKeys))
-  // Parsing the initial state also fills the query cache, so the first
-  // render-time reconciliation below hits the cache instead of scheduling
-  // a render-phase state update for an unchanged value.
-  // The cache travels through state rather than being assigned to the ref
-  // in the initializer: that keeps the initializer pure, and under StrictMode
-  // both the ref and the state come from the same (retained) parse.
+  // Seed the query cache from the same parse as the state, so the first
+  // render-time reconcile below hits the cache instead of setting state
+  // during render (one extra render on mount when the URL holds a value).
+  // The initializer returns the cache rather than writing it to a ref:
+  // initializers must stay pure (for StrictMode compatibility).
   const [initial] = useState(() => {
     const cachedQuery: Record<string, Query | null> = {}
     const [, state] = parseMap(
