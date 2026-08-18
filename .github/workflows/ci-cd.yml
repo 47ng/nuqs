@@ -265,7 +265,16 @@ jobs:
         run: pnpm install --frozen-lockfile ${{ matrix.next-version != 'latest' && '--filter e2e-next...' || '' }}
       - name: Install Next.js version ${{ matrix.next-version }}
         if: ${{ matrix.next-version != 'local' }}
-        run: pnpm add --filter e2e-next next@${{ matrix.next-version }}
+        # Point the `next` catalog at the tested version so that every
+        # workspace package (nuqs devDependencies included) resolves a single
+        # Next.js copy. With two copies, Turbopack externalizes the one imported
+        # by nuqs under a hashed alias, which splits RouterContext between nuqs
+        # and the app during pages router SSR.
+        env:
+          NEXT_VERSION: ${{ matrix.next-version }}
+        run: |
+          sed -i -E "s/^([[:space:]]+next: ).*$/\1${NEXT_VERSION}/" pnpm-workspace.yaml
+          pnpm install --no-frozen-lockfile ${{ matrix.next-version != 'latest' && '--filter e2e-next...' || '' }}
       - name: Run cacheComponents codemod
         if: ${{ matrix.cache-components }}
         run: pnpm run cacheComponents:codemod
