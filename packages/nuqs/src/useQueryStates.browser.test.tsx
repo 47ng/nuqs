@@ -923,6 +923,24 @@ describe('useQueryStates: dynamic keys', () => {
     expect(result.current[0]).toStrictEqual({ a: null, b: null, d: null })
   })
 
+  it('moves the cross-hook subscriptions when the key set changes', async () => {
+    const useTestHook = (keys: string[] = ['a']) => ({
+      dynamic: useQueryStates(
+        Object.fromEntries(keys.map(key => [key, parseAsString]))
+      ),
+      a: useQueryStates({ a: parseAsString }),
+      b: useQueryStates({ b: parseAsString })
+    })
+    const { result, rerender, act } = await renderHook(useTestHook, {
+      wrapper: withNuqsTestingAdapter({ searchParams: '' })
+    })
+    await rerender(['b'])
+    await act(() => result.current.a[1]({ a: 'stale' }))
+    expect(result.current.dynamic[0]).toStrictEqual({ b: null })
+    await act(() => result.current.b[1]({ b: 'live' }))
+    expect(result.current.dynamic[0]).toStrictEqual({ b: 'live' })
+  })
+
   it('supports dynamic keys with remapping', async () => {
     const useTestHook = (keys: [string, string] = ['a', 'b']) =>
       useQueryStates(
@@ -1238,6 +1256,37 @@ describe('useQueryStates: update sequencing', () => {
     expect(onUrlUpdate).toHaveBeenCalledTimes(2)
     expect(onUrlUpdate.mock.calls[0]![0].queryString).toEqual('?b=pass')
     expect(onUrlUpdate.mock.calls[1]![0].queryString).toEqual('?a=debounced')
+  })
+
+  it('flushes the throttled key and debounces the other in a single update', async () => {
+    const onUrlUpdate = vi.fn<OnUrlUpdateFunction>()
+    // The adapter re-renders on each URL update when it has memory,
+    // so the queue reset must not run on render.
+    resetQueues()
+    const { result, act } = await renderHook(
+      () =>
+        useQueryStates({
+          a: parseAsString.withOptions({ limitUrlUpdates: debounce(100) }),
+          b: parseAsString
+        }),
+      {
+        wrapper: withNuqsTestingAdapter({
+          onUrlUpdate,
+          rateLimitFactor: 1,
+          hasMemory: true,
+          resetUrlUpdateQueueOnMount: false
+        })
+      }
+    )
+    let p: Promise<URLSearchParams> | undefined = undefined
+    await act(async () => {
+      p = result.current[1]({ a: 'slow', b: 'fast' })
+      await vi.waitFor(() => expect(onUrlUpdate).toHaveBeenCalledOnce())
+    })
+    expect(onUrlUpdate.mock.calls[0]![0].queryString).toEqual('?b=fast')
+    await expect(p).resolves.toEqual(new URLSearchParams('?b=fast&a=slow'))
+    expect(onUrlUpdate).toHaveBeenCalledTimes(2)
+    expect(onUrlUpdate.mock.calls[1]![0].queryString).toEqual('?b=fast&a=slow')
   })
 
   it('does flush when pushing throttled updates', async () => {

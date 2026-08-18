@@ -199,9 +199,10 @@ export function useQueryState<T = string>(
 ) {
   // The single parser carries the options too: parser-level and hook-level
   // options resolve to the same values here, so precedence is unaffected.
-  // Only JSON-serialisable options may go through the spread: `useQueryStates`
-  // compares key map entries with `JSON.stringify`, which drops functions, so
-  // function-valued options like `startTransition` must stay out of the parser.
+  // `startTransition` stays hook-level: `useQueryStates` compares it by
+  // identity per parser (the other options compare structurally), so an
+  // unstable callback in the parser would invalidate the stable key map and the
+  // returned state object on every render.
   const { startTransition, ...parser } = options
   const [{ [key]: state }, setState] = useQueryStates(
     {

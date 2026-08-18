@@ -224,7 +224,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
     )
   } else {
     // Skipped on key-set changes: `stateRef` may still describe the previous
-    // key map, so restoring from it would resurrect removed keys.
+    // key map, so restoring from it would bring back removed keys.
     let didReconcileState = false
     if (onCommittedPathname && lastSyncKeyRef.current !== searchParamsSyncKey) {
       lastSyncKeyRef.current = searchParamsSyncKey
@@ -316,7 +316,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
         typeof stateUpdater === 'function'
           ? stateUpdater(applyDefaultValues(stateRef.current, stableKeyMap))
           : stateUpdater
-      // A null update clears every key of the map.
+      // `null` (or an updater returning `null`) clears every key of the map.
       const newState: Partial<Nullable<KeyMap>> =
         requestedState ??
         (Object.fromEntries(
@@ -474,9 +474,9 @@ function parseMap<KeyMap extends UseQueryStatesKeysMap>(
   }, {} as NullableValues<KeyMap>)
 
   if (!hasChanged) {
-    // Check that keyMap keys have not changed. `state` holds every key of the
-    // key map, and each one hit the cache above, so it is present in the cached
-    // state too: the key sets can only differ by removed keys.
+    // Detect removed keys.
+    // Every key of the map hit the cache above, so it exists in the cached state:
+    // the key sets can only differ by keys that were removed.
     hasChanged = Object.keys(state).length !== Object.keys(cachedState).length
   }
 
