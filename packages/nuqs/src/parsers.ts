@@ -153,19 +153,12 @@ export function createParser<T>(
     if (typeof value === 'undefined') {
       return null
     }
-    let str = ''
-    if (Array.isArray(value)) {
-      // Follow the spec:
-      // https://url.spec.whatwg.org/#dom-urlsearchparams-get
-      if (value[0] === undefined) {
-        return null
-      }
-      str = value[0]
+    const isArray = Array.isArray(value)
+    if (isArray && value[0] === undefined) {
+      return null
     }
-    if (typeof value === 'string') {
-      str = value
-    }
-    return safeParse(parser.parse, str)
+    value = isArray ? value[0]! : typeof value === 'string' ? value : ''
+    return safeParse(parser.parse, value)
   }
 
   return {
