@@ -125,7 +125,6 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
   )
   const adapter = useAdapter(Object.values(resolvedUrlKeys))
   const initialSearchParams = adapter.searchParams
-  const queryRef = useRef<Record<string, Query | null>>({})
   // Tracks the URL source (search params + queued queries) the internal state
   // was last reconciled against during render. See the reconciliation block below.
   const lastSyncKeyRef = useRef<string | null>(null)
@@ -143,10 +142,25 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
   // the same pathname, so it still reconciles.
   const committedPathnameRef = useRef<string | null>(null)
   const queuedQueries = useQueuedQueries(Object.values(resolvedUrlKeys))
-  const [internalState, setInternalState] = useState<V>(
-    () =>
-      parseMap(keyMap, resolvedUrlKeys, initialSearchParams, queuedQueries)[1]
-  )
+  // Parsing the initial state also fills the query cache, so the first
+  // render-time reconciliation below hits the cache instead of scheduling
+  // a render-phase state update for an unchanged value.
+  // The cache travels through state rather than being assigned to the ref
+  // in the initializer: that keeps the initializer pure, and under StrictMode
+  // both the ref and the state come from the same (retained) parse.
+  const [initial] = useState(() => {
+    const cachedQuery: Record<string, Query | null> = {}
+    const [, state] = parseMap(
+      keyMap,
+      resolvedUrlKeys,
+      initialSearchParams,
+      queuedQueries,
+      cachedQuery
+    )
+    return [state, cachedQuery] as const
+  })
+  const queryRef = useRef(initial[1])
+  const [internalState, setInternalState] = useState<V>(initial[0])
 
   const stateRef = useRef(internalState)
 
@@ -442,7 +456,7 @@ function parseMap<KeyMap extends UseQueryStatesKeysMap>(
   resolvedUrlKeys: Record<string, string>,
   searchParams: URLSearchParams,
   queuedQueries: Record<string, Query | null | undefined>,
-  cachedQuery?: Record<string, Query | null>,
+  cachedQuery: Record<string, Query | null> = {},
   cachedState?: NullableValues<KeyMap>
 ): [hasChanged: boolean, state: NullableValues<KeyMap>] {
   let hasChanged = false
@@ -458,7 +472,6 @@ function parseMap<KeyMap extends UseQueryStatesKeysMap>(
         : queuedQuery
     const cachedStateValue = cachedState && getOwn(cachedState, stateKey)
     if (
-      cachedQuery &&
       cachedStateValue !== undefined &&
       compareQuery(getOwn(cachedQuery, urlKey) ?? fallbackValue, query)
     ) {
@@ -474,9 +487,7 @@ function parseMap<KeyMap extends UseQueryStatesKeysMap>(
         safeParse(parser.parse, query as string & Array<string>, urlKey)
 
     out[stateKey as keyof KeyMap] = value ?? null
-    if (cachedQuery) {
-      cachedQuery[urlKey] = query
-    }
+    cachedQuery[urlKey] = query
     return out
   }, {} as NullableValues<KeyMap>)
 
