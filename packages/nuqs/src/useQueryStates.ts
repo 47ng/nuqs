@@ -473,12 +473,10 @@ function parseMap<KeyMap extends UseQueryStatesKeysMap>(
     return out
   }, {} as NullableValues<KeyMap>)
 
-  if (!hasChanged) {
-    // Detect removed keys.
-    // Every key of the map hit the cache above, so it exists in the cached state:
-    // the key sets can only differ by keys that were removed.
-    hasChanged = Object.keys(state).length !== Object.keys(cachedState).length
-  }
+  // Detect removed keys.
+  // Every key of the map hit the cache above, so it exists in the cached state:
+  // the key sets can only differ by keys that were removed.
+  hasChanged ||= Object.keys(state).length !== Object.keys(cachedState).length
 
   return [hasChanged, state]
 }
