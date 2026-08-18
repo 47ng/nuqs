@@ -2,6 +2,7 @@ import {
   createContext,
   createElement,
   useContext,
+  useEffect,
   useMemo,
   useRef,
   useSyncExternalStore,
@@ -9,6 +10,7 @@ import {
   type ReactNode
 } from 'react'
 import { debug } from '../lib/debug'
+import { resetQueues } from '../lib/queues/reset'
 import { renderQueryString } from '../lib/url-encoding'
 import { createAdapterProvider, type AdapterProps } from './lib/context'
 import type { AdapterInterface, AdapterOptions } from './lib/defs'
@@ -56,6 +58,14 @@ function subscribe(onStoreChange: () => void) {
     emitter.off('update', onStoreChange)
     window.removeEventListener('popstate', onStoreChange)
   }
+}
+
+function QueueReset() {
+  useEffect(() => {
+    window.addEventListener('popstate', resetQueues)
+    return () => window.removeEventListener('popstate', resetQueues)
+  }, [])
+  return null
 }
 
 function useNuqsReactAdapter(watchKeys: string[]): AdapterInterface {
@@ -127,7 +137,13 @@ export function NuqsAdapter({
   return createElement(
     NuqsReactAdapterContext.Provider,
     { value: { fullPageNavigationOnShallowFalseUpdates, serverSearch } },
-    createElement(NuqsReactAdapter, { ...adapterProps, children })
+    createElement(NuqsReactAdapter, {
+      ...adapterProps,
+      children: [
+        createElement(QueueReset, { key: 'nuqs-adapter-queue-reset' }),
+        children
+      ]
+    })
   )
 }
 

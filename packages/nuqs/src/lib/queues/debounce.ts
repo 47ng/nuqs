@@ -14,21 +14,20 @@ import {
 import { useSyncExternalStores } from './useSyncExternalStores'
 
 export class DebouncedPromiseQueue<ValueType, OutputType> {
-  callback: (value: ValueType) => Promise<OutputType>
   resolvers: Resolvers<OutputType> = withResolvers<OutputType>()
   controller: AbortController = new AbortController()
   queuedValue: ValueType | undefined = undefined
-
-  constructor(callback: (value: ValueType) => Promise<OutputType>) {
-    this.callback = callback
-  }
 
   abort(): void {
     this.controller.abort()
     this.queuedValue = undefined
   }
 
-  push(value: ValueType, timeMs: number): Promise<OutputType> {
+  push(
+    value: ValueType,
+    timeMs: number,
+    callback: (value: ValueType) => Promise<OutputType>
+  ): Promise<OutputType> {
     this.queuedValue = value
     this.controller.abort()
     this.controller = new AbortController()
@@ -40,7 +39,7 @@ export class DebouncedPromiseQueue<ValueType, OutputType> {
         const outputResolvers = this.resolvers
         try {
           debug(13, value)
-          const callbackPromise = this.callback(value)
+          const callbackPromise = callback(value)
           debug(14, this.queuedValue)
           this.queuedValue = undefined
           this.resolvers = withResolvers<OutputType>()
@@ -87,28 +86,28 @@ export class DebounceController {
       return Promise.resolve(getSnapshot())
     }
     const key = update.key
-    if (!this.queues.has(key)) {
+    let queue = this.queues.get(key)
+    if (!queue) {
       debug(15, key)
-      const queue = new DebouncedPromiseQueue<
-        Omit<UpdateQueuePushArgs, 'timeMs'>,
-        URLSearchParams
-      >(update => {
-        this.throttleQueue.push(update)
-        return this.throttleQueue
-          .flush(adapter, processUrlSearchParams)
-          .finally(() => {
-            const queuedValue = this.queues.get(update.key)?.queuedValue
-            if (queuedValue === undefined) {
-              debug(16, update.key)
-              this.queues.delete(update.key)
-            }
-            this.queuedQuerySync.emit(update.key)
-          })
-      })
+      queue = new DebouncedPromiseQueue()
       this.queues.set(key, queue)
     }
     debug(17, update)
-    const promise = this.queues.get(key)!.push(update, timeMs)
+    // A restarted debounce must flush with the adapter
+    // and processUrlSearchParams of its latest push.
+    const flush = () => {
+      this.throttleQueue.push(update)
+      return this.throttleQueue
+        .flush(adapter, processUrlSearchParams)
+        .finally(() => {
+          if (this.queues.get(key)?.queuedValue === undefined) {
+            debug(16, key)
+            this.queues.delete(key)
+          }
+          this.queuedQuerySync.emit(key)
+        })
+    }
+    const promise = queue.push(update, timeMs, flush)
     this.queuedQuerySync.emit(key)
     return promise
   }
