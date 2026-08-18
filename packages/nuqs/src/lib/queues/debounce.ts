@@ -93,15 +93,14 @@ export class DebounceController {
       this.queues.set(key, queue)
     }
     debug(17, update)
-    // The queue runs the callback of its most recent push, so this closure
-    // always flushes with the adapter & processUrlSearchParams given here.
+    // A restarted debounce must flush with the adapter
+    // and processUrlSearchParams of its latest push.
     const flush = () => {
       this.throttleQueue.push(update)
       return this.throttleQueue
         .flush(adapter, processUrlSearchParams)
         .finally(() => {
-          const queuedValue = this.queues.get(key)?.queuedValue
-          if (queuedValue === undefined) {
+          if (this.queues.get(key)?.queuedValue === undefined) {
             debug(16, key)
             this.queues.delete(key)
           }

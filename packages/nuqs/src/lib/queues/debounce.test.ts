@@ -72,7 +72,7 @@ describe('debounce: DebouncedPromiseQueue', () => {
   it('clears the queued value when the callback returns its promise (not when it resolves)', () => {
     vi.useFakeTimers()
     const queue = new DebouncedPromiseQueue<string, string>()
-    queue.push('a', 100, async (input: string) => {
+    queue.push('a', 100, async input => {
       await setTimeout(100)
       return input
     })
@@ -178,6 +178,33 @@ describe('debounce: DebounceController', () => {
     await expect(promise1).resolves.toEqual(new URLSearchParams('?a=a'))
     await expect(promise2).resolves.toEqual(new URLSearchParams('?b=b'))
     expect(fakeAdapter.updateUrl).toHaveBeenCalledTimes(2)
+  })
+  it('flushes with the adapter of the most recent push', async () => {
+    vi.useFakeTimers()
+    const makeAdapter = (): UpdateQueueAdapterContext => ({
+      updateUrl: vi.fn<UpdateUrlFunction>(),
+      getSearchParamsSnapshot() {
+        return new URLSearchParams()
+      }
+    })
+    const stale = makeAdapter()
+    const latest = makeAdapter()
+    const controller = new DebounceController()
+    const update = { key: 'key', query: 'value', options: {} }
+    controller.push(update, 100, stale, search => {
+      search.set('config', 'stale')
+      return search
+    })
+    const promise = controller.push(update, 100, latest, search => {
+      search.set('config', 'latest')
+      return search
+    })
+    vi.runAllTimers()
+    await expect(promise).resolves.toEqual(
+      new URLSearchParams('?key=value&config=latest')
+    )
+    expect(stale.updateUrl).not.toHaveBeenCalled()
+    expect(latest.updateUrl).toHaveBeenCalledOnce()
   })
   it('keeps a record of pending updates', async () => {
     vi.useFakeTimers()

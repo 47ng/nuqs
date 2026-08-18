@@ -17,6 +17,7 @@ import {
   type OnUrlUpdateFunction
 } from './adapters/testing'
 import { debounce, throttle } from './lib/queues/rate-limiting'
+import { resetQueues } from './lib/queues/reset'
 import {
   createParser,
   parseAsArrayOf,
@@ -1584,7 +1585,7 @@ describe('useQueryStates: process url search params', () => {
           return search
         },
         rateLimitFactor: 1,
-        resetUrlUpdateQueueOnMount: config === 'a',
+        resetUrlUpdateQueueOnMount: false,
         children: [
           createElement('button', {
             key: 'btn',
@@ -1596,6 +1597,7 @@ describe('useQueryStates: process url search params', () => {
       })
     }
     try {
+      resetQueues()
       const { result, act } = await renderHook(
         () => useQueryStates({ test: parseAsString }),
         { wrapper: DynamicWrapper }
