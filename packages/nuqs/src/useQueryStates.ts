@@ -200,6 +200,20 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
   const onCommittedPathname =
     committedPathnameRef.current === null ||
     committedPathnameRef.current === (adapter.pathname ?? location.pathname)
+  const locationSearchParams =
+    typeof location === 'undefined'
+      ? null
+      : new URLSearchParams(location.search)
+  const lastSyncMatchesLocation =
+    locationSearchParams !== null &&
+    lastSyncKeyRef.current ===
+      JSON.stringify([
+        Object.values(resolvedUrlKeys).map(key => [
+          key,
+          locationSearchParams.getAll(key)
+        ]),
+        queuedQueries
+      ])
   let didReconcileState = false
   if (
     keysChanged ||
@@ -226,7 +240,8 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
   if (
     !keysChanged &&
     !didReconcileState &&
-    onCommittedPathname &&
+    (onCommittedPathname ||
+      (adapter.pathname === undefined && lastSyncMatchesLocation)) &&
     internalState !== stateRef.current
   ) {
     // Recover a render-phase state update lost with an abandoned render or a

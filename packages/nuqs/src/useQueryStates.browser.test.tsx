@@ -1,12 +1,15 @@
 import React, {
   createElement,
+  Suspense,
   useEffect,
   useState,
   type ReactNode
 } from 'react'
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { render, renderHook } from 'vitest-browser-react'
 import { page, userEvent } from 'vitest/browser'
+import { historyUpdateMarker } from './adapters/lib/patch-history'
+import { createReactRouterBasedAdapter } from './adapters/lib/react-router'
 import {
   NullDetector,
   useFakeLoadingState
@@ -1674,5 +1677,73 @@ describe('useQueryStates: edge cases & repros', () => {
     await expect
       .element(page.getByTestId('null-detector'))
       .toHaveTextContent('pass')
+  })
+})
+
+describe('useQueryStates: discarded renders', () => {
+  const { NuqsAdapter, useOptimisticSearchParams } =
+    createReactRouterBasedAdapter({
+      adapter: 'test-discarded-render',
+      useNavigate: () => () => {},
+      useSearchParams: (initial): [URLSearchParams, {}] => [initial, {}]
+    })
+
+  const originalUrl = location.href
+
+  afterEach(() => {
+    history.replaceState(null, historyUpdateMarker, originalUrl)
+  })
+
+  it('recovers after an external navigation discards a render', async () => {
+    const hold = new Promise<never>(() => {})
+
+    function Value() {
+      const [value] = useQueryState('test', parseAsString)
+      return <div data-testid="value">{String(value)}</div>
+    }
+
+    function SuspendOnIncomingParams() {
+      const searchParams = useOptimisticSearchParams()
+      if (searchParams.get('test') === 'incoming') {
+        throw hold
+      }
+      return null
+    }
+
+    function App() {
+      const [pokes, poke] = useState(0)
+      return (
+        <NuqsAdapter>
+          <button onClick={() => poke(count => count + 1)}>
+            Poke ({pokes})
+          </button>
+          <Value />
+          <Suspense fallback={null}>
+            <SuspendOnIncomingParams />
+          </Suspense>
+        </NuqsAdapter>
+      )
+    }
+
+    history.replaceState(null, historyUpdateMarker, '/page?test=old')
+    render(<App />)
+    await expect.element(page.getByTestId('value')).toHaveTextContent('old')
+
+    history.pushState(null, '', '/page?test=incoming')
+    await new Promise(resolve => setTimeout(resolve, 100))
+    await expect.element(page.getByTestId('value')).toHaveTextContent('old')
+
+    history.pushState(null, '', '/elsewhere?test=incoming')
+
+    const user = userEvent.setup()
+    await user.click(page.getByRole('button', { name: /Poke/ }))
+    await expect
+      .element(page.getByTestId('value'), { timeout: 2000 })
+      .toHaveTextContent('incoming')
+
+    await user.click(page.getByRole('button', { name: /Poke/ }))
+    await expect
+      .element(page.getByTestId('value'))
+      .toHaveTextContent('incoming')
   })
 })
