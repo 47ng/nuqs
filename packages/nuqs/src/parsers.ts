@@ -1,6 +1,6 @@
 import type { StandardSchemaV1 } from '@standard-schema/spec'
 import type { Options } from './defs'
-import { isEqual } from './lib/compare'
+import { compareArrays, isEqual } from './lib/compare'
 import { safeParse } from './lib/safe-parse'
 
 type Require<T, Keys extends keyof T> = Pick<Required<T>, Keys> & Omit<T, Keys>
@@ -471,13 +471,6 @@ export function parseAsJson<T>(
  * @param itemParser Parser for each individual item in the array
  * @param separator The character to use to separate items (default ',')
  */
-function compareArrays<T>(a: T[], b: T[], eq: (a: T, b: T) => boolean) {
-  return (
-    a === b ||
-    (a.length === b.length && a.every((value, index) => eq(value, b[index]!)))
-  )
-}
-
 export function parseAsArrayOf<ItemType>(
   itemParser: SingleParser<ItemType>,
   separator = ','
