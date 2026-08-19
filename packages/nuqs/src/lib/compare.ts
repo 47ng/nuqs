@@ -1,5 +1,9 @@
 import type { Query } from './search-params'
 
+export function isEqual(a: unknown, b: unknown): boolean {
+  return a === b
+}
+
 export function compareQuery<T extends Query>(
   a: T | null,
   b: T | null

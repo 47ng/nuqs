@@ -5,7 +5,7 @@ import {
   useAdapterProcessUrlSearchParams
 } from './adapters/lib/context'
 import type { Nullable, Options, UrlKeys } from './defs'
-import { compareQuery } from './lib/compare'
+import { compareQuery, isEqual } from './lib/compare'
 import { debug } from './lib/debug'
 import { debounceController, useQueuedQueries } from './lib/queues/debounce'
 import { defaultRateLimit } from './lib/queues/rate-limiting'
@@ -261,32 +261,15 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
 
   // Sync all hooks together & with external URL changes
   useEffect(() => {
-    const subscriptions = Object.entries(resolvedUrlKeys).map(
-      ([stateKey, urlKey]) => {
-        const handler = ({ state, query }: CrossHookSyncPayload) => {
-          setInternalState(currentState => {
-            if (Object.is(currentState[stateKey] ?? null, state)) {
-              debug(
-                2,
-                hookId,
-                stateKeys,
-                urlKey,
-                state,
-                keyMap[stateKey]?.defaultValue,
-                stateRef.current
-              )
-              // bail out by returning the current state
-              return currentState
-            }
-            // Note: cannot mutate in-place, the object ref must change
-            // for the subsequent setState to pick it up.
-            stateRef.current = {
-              ...stateRef.current,
-              [stateKey as keyof KeyMap]: state
-            }
-            queryRef.current[urlKey] = query
+    const subscriptions: Array<
+      readonly [string, (payload: CrossHookSyncPayload) => void]
+    > = []
+    for (const [stateKey, urlKey] of Object.entries(resolvedUrlKeys)) {
+      const handler = ({ state, query }: CrossHookSyncPayload) => {
+        setInternalState(currentState => {
+          if (Object.is(currentState[stateKey] ?? null, state)) {
             debug(
-              3,
+              2,
               hookId,
               stateKeys,
               urlKey,
@@ -294,14 +277,32 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
               keyMap[stateKey]?.defaultValue,
               stateRef.current
             )
-            return stateRef.current
-          })
-        }
-        debug(4, hookId, urlKey, stateKeys)
-        emitter.on(urlKey, handler)
-        return [urlKey, handler] as const
+            // bail out by returning the current state
+            return currentState
+          }
+          // Note: cannot mutate in-place, the object ref must change
+          // for the subsequent setState to pick it up.
+          stateRef.current = {
+            ...stateRef.current,
+            [stateKey as keyof KeyMap]: state
+          }
+          queryRef.current[urlKey] = query
+          debug(
+            3,
+            hookId,
+            stateKeys,
+            urlKey,
+            state,
+            keyMap[stateKey]?.defaultValue,
+            stateRef.current
+          )
+          return stateRef.current
+        })
       }
-    )
+      debug(4, hookId, urlKey, stateKeys)
+      emitter.on(urlKey, handler)
+      subscriptions.push([urlKey, handler] as const)
+    }
     return () => {
       for (const [urlKey, handler] of subscriptions) {
         debug(5, hookId, urlKey, stateKeys)
@@ -342,7 +343,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
             clearOnDefault) &&
           value !== null &&
           parser.defaultValue !== undefined &&
-          (parser.eq ?? ((a, b) => a === b))(value, parser.defaultValue)
+          (parser.eq ?? isEqual)(value, parser.defaultValue)
         ) {
           value = null
         }
@@ -395,12 +396,12 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
       }
       // We need to flush the throttle queue, but we may have a pending
       // debounced update that will resolve afterwards.
-      const globalPromise = debounceAborts.reduce(
-        (previous, fn) => fn(previous),
-        debounceAborts.length
-          ? globalThrottleQueue.flush(adapter, processUrlSearchParams)
-          : globalThrottleQueue.getPendingPromise(adapter)
-      )
+      let globalPromise = debounceAborts.length
+        ? globalThrottleQueue.flush(adapter, processUrlSearchParams)
+        : globalThrottleQueue.getPendingPromise(adapter)
+      for (const abort of debounceAborts) {
+        globalPromise = abort(globalPromise)
+      }
       return returnedPromise ?? globalPromise
     },
     [
