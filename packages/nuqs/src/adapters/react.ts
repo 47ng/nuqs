@@ -44,17 +44,12 @@ function generateUpdateUrlFn(fullPageNavigationOnShallowFalseUpdates: boolean) {
   }
 }
 
-const NuqsReactAdapterContext = createContext({
+const NuqsReactAdapterContext = createContext<{
+  fullPageNavigationOnShallowFalseUpdates: boolean
+  serverSearch?: string | URLSearchParams
+}>({
   fullPageNavigationOnShallowFalseUpdates: false
 })
-
-const emptySearchParams = new URLSearchParams()
-
-// Note: we could expose a getServerSnapshot() function to allow server-side rendering
-// to let consumers wire that to their backend router (eg: in Astro SSR, Fastify, Hono etc).
-function getServerSnapshot() {
-  return emptySearchParams
-}
 
 function subscribe(onStoreChange: () => void) {
   emitter.on('update', onStoreChange)
@@ -74,34 +69,39 @@ function QueueReset() {
 }
 
 function useNuqsReactAdapter(watchKeys: string[]): AdapterInterface {
-  const { fullPageNavigationOnShallowFalseUpdates } = useContext(
+  const { fullPageNavigationOnShallowFalseUpdates, serverSearch } = useContext(
     NuqsReactAdapterContext
   )
-  // Reading location.search live in getSnapshot (rather than from React state
-  // synced by an effect) keeps the value fresh even on the first render after an
-  // <Activity> subtree is revealed: its effects — and thus the emitter
-  // subscription — were detached while hidden and missed the URL update (#1444).
+  // Return a referentially-stable snapshot while the watched keys are unchanged:
+  // required by useSyncExternalStore (Object.is bail-out),
+  // and it preserves key isolation (a change to an unwatched key keeps the same ref,
+  // so this hook doesn't re-render).
   const cache = useRef<{ key: string; search: URLSearchParams } | null>(null)
+  function snapshot(source: string | URLSearchParams) {
+    const filteredSearch = filterSearchParams(
+      new URLSearchParams(source),
+      watchKeys,
+      false
+    )
+    const key = filteredSearch.toString()
+    if (cache.current?.key === key) {
+      return cache.current.search
+    }
+    cache.current = { key, search: filteredSearch }
+    return filteredSearch
+  }
   const searchParams = useSyncExternalStore(
     subscribe,
-    () => {
-      const filteredSearch = filterSearchParams(
-        new URLSearchParams(location.search),
-        watchKeys,
-        false
-      )
-      // Return a referentially-stable snapshot while the watched keys are unchanged:
-      // required by useSyncExternalStore (Object.is bail-out),
-      // and it preserves key isolation (a change to an unwatched key keeps the same ref,
-      // so this hook doesn't re-render).
-      const key = filteredSearch.toString()
-      if (cache.current?.key === key) {
-        return cache.current.search
-      }
-      cache.current = { key, search: filteredSearch }
-      return filteredSearch
-    },
-    getServerSnapshot
+    // Reading location.search live in getSnapshot (rather than from React state
+    // synced by an effect) keeps the value fresh even on the first render after an
+    // <Activity> subtree is revealed: its effects — and thus the emitter
+    // subscription — were detached while hidden and missed the URL update (#1444).
+    () => snapshot(location.search),
+    // There is no location to read from when server-side rendering: snapshot the
+    // server-provided search string instead (eg: in Astro SSR, Inertia, Fastify,
+    // Hono etc). React also renders from this snapshot when hydrating, so the
+    // first client render matches the server markup, then re-syncs to location.
+    () => snapshot(serverSearch ?? '')
   )
   const updateUrl = useMemo(
     () => generateUpdateUrlFn(fullPageNavigationOnShallowFalseUpdates),
@@ -118,14 +118,29 @@ const NuqsReactAdapter = createAdapterProvider(useNuqsReactAdapter)
 export function NuqsAdapter({
   children,
   fullPageNavigationOnShallowFalseUpdates = false,
+  serverSearch,
   ...adapterProps
 }: AdapterProps & {
   children: ReactNode
   fullPageNavigationOnShallowFalseUpdates?: boolean
+  /**
+   * The search string of the request, for server-side rendering where
+   * `location` is not available (eg: `Astro.url.search` in Astro SSR,
+   * or the request URL's search string in Inertia, Fastify, Hono etc).
+   *
+   * React reads this value on the server and again on the client
+   * during hydration, so both render the same markup.
+   * After hydration, the adapter reads `location.search`.
+   *
+   * Without it, the server renders the parsers' default values,
+   * and deep links show default content until the client hydrates.
+   * Accepts the search string with or without the leading `?`.
+   */
+  serverSearch?: string | URLSearchParams
 }): ReactElement {
   return createElement(
     NuqsReactAdapterContext.Provider,
-    { value: { fullPageNavigationOnShallowFalseUpdates } },
+    { value: { fullPageNavigationOnShallowFalseUpdates, serverSearch } },
     createElement(NuqsReactAdapter, {
       ...adapterProps,
       children: [
