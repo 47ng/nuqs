@@ -1,5 +1,6 @@
 import type { Query } from './search-params'
 
+// Replaces inline `(a, b) => a === b` calls for bundle size reduction.
 export function isEqual(a: unknown, b: unknown): boolean {
   return a === b
 }
