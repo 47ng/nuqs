@@ -21,20 +21,21 @@ The main metric we want to reduce is the Client bundle size (minified & brotli-c
 
 size-limit does all the processing and gives out a metric, no other build steps are needed: this is a trial and error process.
 
-You (the main agent) are not to do this work yourself: delegate it to N subagents. Each subagent works in its own worktree (setup with `pnpm setup:worktree`), with the following instructions:
+You (the main agent) are not to do this work yourself: delegate it to N subagents. Each subagent works in its own worktree. (you create them and set them up with `pnpm setup:worktree` at the baseline SHA1), with the following instructions:
 
 1. Start by measuring the baseline bundle size before making changes
 2. Reason about and refactor scoped pieces of code (renaming things, organising logic, merging & splitting functions)
 3. Measure the bundle size again
-4. If the changes are over the baseline, restore it and start over.
-   Otherwise, keep going for a few rounds based on the changes complexity.
+4. If the changes are over the baseline, revert them and start over.
+   Otherwise, commit it as a checkpoint, and keep going for a few rounds based on the changes complexity.
+5. Once you have a good candidate, squash the checkpoint commits into one "chore: reduce bundle size" commit.
 
 Try both small incremental steps and larger changes. Sometimes moving back and trying something else will give a better result (use a gradient descent approach, avoid local minima).
 
 Note: some changes will play better with compression than others
 (sometimes, duplication will give better results than abstractions due to dictionaries).
 
-## Validation criteria:
+## Validation
 
 The changes must:
 
@@ -71,4 +72,8 @@ What they did:
 3. lets the bundler inline small calls.
 ```
 
-Once the user has accepted the changes, fold the accepted candidate into your own worktree, and clear the subagent worktrees & branches.
+Once the user has accepted the changes:
+
+1. Fold the accepted candidate into your own worktree
+2. Run the complete validation suite above locally
+3. Clear the subagent worktrees & branches
