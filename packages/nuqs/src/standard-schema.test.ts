@@ -111,6 +111,27 @@ describe('standard schema', () => {
       '[nuqs] Error while parsing query `should-not-parse` for key `test`: Error: Boom'
     )
   })
+  it('strips extra properties from the input', async () => {
+    const schema = {
+      foo: parseAsString,
+      bar: parseAsInteger.withDefault(0)
+    }
+    const validator = createStandardSchemaV1(schema)
+    const input = {
+      foo: 'hello',
+      bar: 42,
+      extra: 'should be removed'
+    }
+    const result = await validator['~standard'].validate(input)
+    expect(result.issues).toBeUndefined()
+    if (result.issues === undefined) {
+      expect(result.value).toEqual({
+        foo: 'hello',
+        bar: 42
+      })
+      expect(result.value).not.toHaveProperty('extra')
+    }
+  })
   it('allows for partial outputs', async () => {
     const schema = {
       foo: parseAsString,

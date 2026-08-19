@@ -6,17 +6,21 @@ export type CreateSerializerOptions<Parsers extends ParserMap> = Pick<Options, "
 };
 export type CreateStandardSchemaV1Options<Parsers extends ParserMap, PartialOutput extends boolean = false> = CreateLoaderOptions<Parsers> & {
   partialOutput?: PartialOutput;
+  serialize?: ReturnType<typeof createSerializer<Parsers>>;
+  load?: ReturnType<typeof createLoader<Parsers>>;
 };
 export type GenericParser<T> = SingleParser<T> | MultiParser<T>;
 export type GenericParserBuilder<T> = SingleParserBuilder<T> | MultiParserBuilder<T>;
 export type HistoryOptions = "replace" | "push";
-export type inferParserType<Input> = Input extends GenericParserBuilder<any> ? inferSingleParserType<Input> : Input extends Record<string, GenericParserBuilder<any>> ? inferParserRecordType<Input> : never;
+export type inferParserType<Input> = Input extends GenericParserBuilder<any> ? inferSingleParserType<Input> : Input extends {
+  [$unified]: true;
+  parsers: infer Parsers;
+} ? Parsers extends Record<string, GenericParserBuilder<any>> ? inferParserRecordType<Parsers> : never : Input extends Record<string, GenericParserBuilder<any>> ? inferParserRecordType<Input> : never;
 export type LoaderFunction<Parsers extends ParserMap> = {
   (_: LoaderInput, _?: LoaderFunctionOptions): inferParserType<Parsers>;
   (_: Promise<LoaderInput>, _?: LoaderFunctionOptions): Promise<inferParserType<Parsers>>;
 };
 export type LoaderInput = URL | Request | URLSearchParams | Record<string, string | string[] | undefined> | string;
-/** @deprecated */
 export type LoaderOptions<Parsers extends ParserMap> = {
   urlKeys?: UrlKeys<Parsers>;
 };
@@ -44,9 +48,7 @@ export type Options = {
   startTransition?: TransitionStartFunction;
   clearOnDefault?: boolean;
 };
-/** @deprecated */
 export type Parser<T> = SingleParser<T>;
-/** @deprecated */
 export type ParserBuilder<T> = SingleParserBuilder<T>;
 export type ParserMap = Record<string, ParserWithOptionalDefault<any>>;
 export type ParserWithOptionalDefault<T> = GenericParserBuilder<T> & {
@@ -68,6 +70,17 @@ export type SingleParserBuilder<T> = Required<SingleParser<T>> & Options & {
   };
   parseServerSide(_: string | string[] | undefined): T | null;
 };
+export type UnifiedAPI<Parsers extends ParserMap, PartialOutput extends boolean = false> = ReturnType<typeof createStandardSchemaV1<Parsers, PartialOutput>> & {
+  [$unified]: true;
+  parsers: Parsers;
+  options: UnifiedOptions<Parsers, PartialOutput>;
+  load: LoaderFunction<Parsers>;
+  serialize: ReturnType<typeof createSerializer<Parsers>>;
+  extend: <NewParsers extends ParserMap, NewPartialOutput extends boolean = PartialOutput>(_: NewParsers | UnifiedAPI<NewParsers, NewPartialOutput>, _?: UnifiedOptions<NewParsers, NewPartialOutput>) => UnifiedAPI<Parsers & NewParsers, NewPartialOutput>;
+  pick: <Keys extends Partial<Record<keyof Parsers, true>>>(_: Keys) => UnifiedAPI<{ [K in keyof Keys & keyof Parsers]: Parsers[K]; }, PartialOutput>;
+  $infer: inferParserType<Parsers>;
+};
+export type UnifiedOptions<Parsers extends ParserMap, PartialOutput extends boolean = false> = Partial<Pick<Options, "shallow" | "history" | "scroll" | "limitUrlUpdates" | "clearOnDefault">> & CreateSerializerOptions<Parsers> & CreateLoaderOptions<Parsers> & Omit<CreateStandardSchemaV1Options<Parsers, PartialOutput>, "load" | "serialize"> & {};
 export type UrlKeys<Parsers extends Record<string, any>> = Partial<Record<keyof Parsers, string>>;
 export type UseQueryStateOptions<T> = GenericParser<T> & Options;
 export type UseQueryStateReturn<Parsed, Default> = [Default extends undefined ? Parsed | null : Parsed, (value: null | Parsed | ((old: Default extends Parsed ? Parsed : Parsed | null) => Parsed | null), options?: Options) => Promise<URLSearchParams>];
@@ -84,8 +97,9 @@ export declare function createLoader<Parsers extends ParserMap>(_: Parsers, { ur
 export declare function createMultiParser<T>(_: Omit<Require<MultiParser<T>, "parse" | "serialize">, "type">): MultiParserBuilder<T>;
 export declare function createParser<T>(_: Require<SingleParser<T>, "parse" | "serialize">): SingleParserBuilder<T>;
 export declare function createSerializer<Parsers extends ParserMap, BaseType extends Base = Base, Return = string>(_: Parsers, { clearOnDefault, urlKeys, processUrlSearchParams }?: CreateSerializerOptions<Parsers>): SerializeFunction<Parsers, BaseType, Return>;
-export declare function createStandardSchemaV1<Parsers extends ParserMap, PartialOutput extends boolean = false>(_: Parsers, { urlKeys, partialOutput }?: CreateStandardSchemaV1Options<Parsers, PartialOutput>): StandardSchemaV1<MaybePartial<PartialOutput, inferParserType<Parsers>>>;
+export declare function createStandardSchemaV1<Parsers extends ParserMap, PartialOutput extends boolean = false>(_: Parsers, { urlKeys, partialOutput, serialize, load }?: CreateStandardSchemaV1Options<Parsers, PartialOutput>): StandardSchemaV1<MaybePartial<PartialOutput, inferParserType<Parsers>>>;
 export declare function debounce(_: number): LimitUrlUpdates;
+export declare function defineSearchParams<Parsers extends ParserMap, PartialOutput extends boolean = false>(_: Parsers, _?: UnifiedOptions<Parsers, PartialOutput>): UnifiedAPI<Parsers, PartialOutput>;
 export declare function parseAsArrayOf<ItemType>(_: SingleParser<ItemType>, _?: string): SingleParserBuilder<ItemType[]>;
 export declare function parseAsJson<T>(_: ((_: unknown) => T | null) | StandardSchemaV1<T>): SingleParserBuilder<T>;
 export declare function parseAsNativeArrayOf<ItemType>(_: SingleParser<ItemType>): ReturnType<MultiParserBuilder<ItemType[]>["withDefault"]>;
@@ -102,7 +116,7 @@ export declare function useQueryState(_: string, _: Options & {
 } & { [K in keyof GenericParser<unknown>]?: never; }): UseQueryStateReturn<string, typeof options.defaultValue>;
 export declare function useQueryState(_: string, _: Pick<UseQueryStateOptions<string>, keyof Options>): UseQueryStateReturn<string, undefined>;
 export declare function useQueryState(_: string): UseQueryStateReturn<string, undefined>;
-export declare function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(_: KeyMap, _?: Partial<UseQueryStatesOptions<KeyMap>>): UseQueryStatesReturn<KeyMap>;
+export declare function useQueryStates<Input extends UseQueryStatesInput>(_: Input, _?: Partial<UseQueryStatesOptions<KeyMapFromInput<Input>>>): UseQueryStatesReturn<KeyMapFromInput<Input>>;
 // #endregion
 
 // #region Variables

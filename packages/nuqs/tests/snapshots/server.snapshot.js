@@ -6,6 +6,7 @@ export function createSearchParamsCache(_, _) {}
 export function createSerializer(_, _) {}
 export function createStandardSchemaV1(_, _) {}
 export function debounce(_) {}
+export function defineSearchParams(_, _) {}
 export function parseAsArrayOf(_, _) {}
 export function parseAsJson(_) {}
 export function parseAsNativeArrayOf(_) {}

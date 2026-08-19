@@ -26,3 +26,8 @@ export {
   createStandardSchemaV1,
   type CreateStandardSchemaV1Options
 } from './standard-schema'
+export {
+  defineSearchParams,
+  type UnifiedAPI,
+  type UnifiedOptions
+} from './unified'

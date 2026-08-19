@@ -57,33 +57,39 @@ const entrypoints = {
   }
 }
 
-const config: UserConfig = defineConfig([
-  // Client bundles
-  {
-    ...commonConfig,
-    entry: entrypoints.client,
-    outputOptions: {
+const clientEntryNames = new Set(Object.keys(entrypoints.client))
+
+const config: UserConfig = defineConfig({
+  ...commonConfig,
+  entry: {
+    ...entrypoints.client,
+    ...entrypoints.server
+  },
+  outputOptions: {
+    intro: ({ isEntry, fileName }) => {
+      if (!isEntry || fileName.endsWith('.d.ts')) return ''
+      const entryName = fileName.replace(/\.js$/, '')
       // The `nuqs/debug` opt-in is isomorphic (it also reads `DEBUG` on the
       // server), so it must not be marked as a client-only module.
-      intro: ({ isEntry, fileName }) =>
-        isEntry && !fileName.endsWith('.d.ts') && fileName !== 'debug.js'
-          ? "'use client';\n"
-          : ''
-    },
-    async onSuccess() {
-      // Mark the un-versionned React Router adapter as deprecated
-      // (will be removed in nuqs@3.0.0).
-      const filePath = resolve(
-        import.meta.dirname,
-        'dist',
-        'adapters',
-        'react-router.d.ts'
-      )
-      try {
-        const fileContents = await readFile(filePath, 'utf-8')
-        const updatedContents = fileContents.replace(
-          'export { NuqsAdapter, useOptimisticSearchParams };',
-          `export {
+      return clientEntryNames.has(entryName) && entryName !== 'debug'
+        ? "'use client';\n"
+        : ''
+    }
+  },
+  async onSuccess() {
+    // Mark the un-versionned React Router adapter as deprecated
+    // (will be removed in nuqs@3.0.0).
+    const filePath = resolve(
+      import.meta.dirname,
+      'dist',
+      'adapters',
+      'react-router.d.ts'
+    )
+    try {
+      const fileContents = await readFile(filePath, 'utf-8')
+      const updatedContents = fileContents.replace(
+        'export { NuqsAdapter, useOptimisticSearchParams };',
+        `export {
   /**
    * @deprecated This import will be removed in nuqs@3.0.0.
    *
@@ -107,19 +113,13 @@ const config: UserConfig = defineConfig([
    */
   useOptimisticSearchParams
 };`
-        )
-        await writeFile(filePath, updatedContents, 'utf-8')
-      } catch (error) {
-        console.error('Error updating react-router barrel adapter:', error)
-        return
-      }
+      )
+      await writeFile(filePath, updatedContents, 'utf-8')
+    } catch (error) {
+      console.error('Error updating react-router barrel adapter:', error)
+      return
     }
-  },
-  // Server bundle
-  {
-    ...commonConfig,
-    entry: entrypoints.server
   }
-]) as UserConfig
+}) as UserConfig
 
 export default config
