@@ -452,7 +452,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
       for (const abort of debounceAborts) {
         globalPromise = abort(globalPromise)
       }
-      return returnedPromise ?? globalPromise
+      return returnedPromise || globalPromise
     },
     [
       stateKeys,
@@ -490,11 +490,12 @@ function parseMap<KeyMap extends UseQueryStatesKeysMap>(
   cachedRawValues?: Record<string, RawValue> | null,
   cachedState?: NullableValues<KeyMap>
 ): readonly [NullableValues<KeyMap>, boolean] {
-  let hasChanged = false
+  let hasChanged =
+    Object.keys(keyMap).length !== Object.keys(cachedState || {}).length
   const state = {} as NullableValues<KeyMap>
   for (const [stateKey, parser] of Object.entries(keyMap)) {
     const urlKey = getOwn(resolvedUrlKeys, stateKey)!
-    const rawValue = getOwn(rawValues, urlKey) ?? [
+    const rawValue = getOwn(rawValues, urlKey) || [
       parser.type === 'multi' ? [] : null
     ]
     const query = rawValue[0]
@@ -528,9 +529,9 @@ function applyDefaultValues<KeyMap extends UseQueryStatesKeysMap>(
   keyMap: KeyMap
 ) {
   return Object.fromEntries(
-    Object.entries(state).map(([key, value]) => [
+    Object.keys(state).map(key => [
       key,
-      value ?? getOwn(keyMap, key)?.defaultValue ?? null
+      getOwn(state, key) ?? getOwn(keyMap, key)?.defaultValue ?? null
     ])
   ) as Values<KeyMap>
 }
