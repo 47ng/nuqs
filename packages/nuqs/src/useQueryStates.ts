@@ -145,8 +145,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
   const queuedQueries = useQueuedQueries(Object.values(resolvedUrlKeys))
   const [internalState, setInternalState] = useState<V>(
     () =>
-      parseMap(keyMap, resolvedUrlKeys, initialSearchParams, queuedQueries)
-        .state
+      parseMap(keyMap, resolvedUrlKeys, initialSearchParams, queuedQueries)[1]
   )
 
   const stateRef = useRef(internalState)
@@ -155,17 +154,19 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
   // Mirrors the dependencies of the URL sync effect below so that render-time
   // reconciliation reacts to the same external changes, and never to internal
   // (optimistic) updates which don't immediately alter the URL source.
-  const searchParamsSyncKey = JSON.stringify([
-    Object.values(resolvedUrlKeys).map(key => [
-      key,
-      initialSearchParams.getAll(key)
-    ]),
-    queuedQueries
-  ])
+  const getSearchParamsSyncKey = (searchParams: URLSearchParams) =>
+    JSON.stringify([
+      Object.values(resolvedUrlKeys).map(key => [
+        key,
+        searchParams.getAll(key)
+      ]),
+      queuedQueries
+    ])
+  const searchParamsSyncKey = getSearchParamsSyncKey(initialSearchParams)
   // Adopts the current URL value into the internal state when it has changed.
   // Used both during render (below) and from the effect backstop further down.
   const reconcile = () => {
-    const { state, hasChanged } = parseMap(
+    const [hasChanged, state] = parseMap(
       keyMap,
       resolvedUrlKeys,
       initialSearchParams,
@@ -226,12 +227,19 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
   if (
     !keysChanged &&
     !didReconcileState &&
-    onCommittedPathname &&
     internalState !== stateRef.current
   ) {
     // Recover a render-phase state update lost with an abandoned render or a
     // concurrent rebase whose URL source is already reflected in the cache.
-    setInternalState(stateRef.current)
+    if (onCommittedPathname) {
+      setInternalState(stateRef.current)
+    } else if (
+      adapter.pathname === undefined &&
+      lastSyncKeyRef.current ===
+        getSearchParamsSyncKey(new URLSearchParams(location.search))
+    ) {
+      setInternalState(stateRef.current)
+    }
   }
 
   // Backstop for the render-time reconciliation above: covers external changes
@@ -436,10 +444,7 @@ function parseMap<KeyMap extends UseQueryStatesKeysMap>(
   queuedQueries: Record<string, Query | null | undefined>,
   cachedQuery?: Record<string, Query | null>,
   cachedState?: NullableValues<KeyMap>
-): {
-  state: NullableValues<KeyMap>
-  hasChanged: boolean
-} {
+): [hasChanged: boolean, state: NullableValues<KeyMap>] {
   let hasChanged = false
   const state = Object.entries(keyMap).reduce((out, [stateKey, parser]) => {
     const urlKey = resolvedUrlKeys[stateKey]!
@@ -484,7 +489,7 @@ function parseMap<KeyMap extends UseQueryStatesKeysMap>(
       keyMapKeys.some(key => !cachedStateKeys.includes(key))
   }
 
-  return { state, hasChanged }
+  return [hasChanged, state]
 }
 
 function applyDefaultValues<KeyMap extends UseQueryStatesKeysMap>(
