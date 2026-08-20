@@ -197,8 +197,13 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
     return [state, cachedQuery] as const
   })
   const queryRef = useRef(initial[1])
-  // Starts at the source used by the state initializer.
-  const lastSyncRef = useRef(rawValues)
+  // Starts at the source used by the state initializer. The search string is
+  // published with it after commit so discarded renders can be distinguished
+  // from hidden cross-route renders without reading location during SSR.
+  const lastSyncRef = useRef<[Record<string, Query | null>, string]>([
+    rawValues,
+    ''
+  ])
   const [internalState, setInternalState] = useState<V>(initial[0])
 
   const stateRef = useRef(internalState)
@@ -217,7 +222,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
       stateRef.current = state
       setInternalState(state)
     }
-    lastSyncRef.current = rawValues
+    lastSyncRef.current = [rawValues, location.search]
     return hasChanged
   }
   // Reconcile during render, both on key-set changes (initialisation) and when
@@ -227,21 +232,24 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
   // the value captured while hidden (#1444). Gating on the `rawValues` identity
   // means we only adopt the URL when its source actually changed.
   //
-  // Detached cross-route renders are the exception: they neither adopt nor
-  // recover, and keep the state of the route they last committed on.
-  let didReconcileState = false
+  // Detached cross-route renders are normally ignored. A discarded render is
+  // different: the last reconciled source already matches the live browser
+  // search, so restore the state React abandoned even though the pathname moved.
+  const discardedSourceMatchesLocation =
+    adapter.pathname === undefined &&
+    committedPathnameRef.current !== null &&
+    lastSyncRef.current[0] !== rawValues &&
+    lastSyncRef.current[1] === location.search &&
+    committedPathnameRef.current !== location.pathname
   if (
-    !detachedRef.current ||
-    committedPathnameRef.current === (adapter.pathname ?? location.pathname)
+    (discardedSourceMatchesLocation ||
+      ((!detachedRef.current ||
+        committedPathnameRef.current ===
+          (adapter.pathname ?? location.pathname)) &&
+        (lastSyncRef.current[0] === rawValues || !reconcile()))) &&
+    internalState !== stateRef.current
   ) {
-    if (lastSyncRef.current !== rawValues) {
-      didReconcileState = reconcile()
-    }
-    if (!didReconcileState && internalState !== stateRef.current) {
-      // Recover a render-phase state update lost with an abandoned render or a
-      // concurrent rebase whose URL source is already reflected in the cache.
-      setInternalState(stateRef.current)
-    }
+    setInternalState(stateRef.current)
   }
 
   // Backstop for the render-time reconciliation above: covers external changes
@@ -256,8 +264,10 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
   // render-time reconcile there (a stale frame until the next URL change, #1273).
   useEffect(() => {
     detachedRef.current = false
-    committedPathnameRef.current = adapter.pathname ?? location.pathname
-    reconcile()
+    if (!discardedSourceMatchesLocation) {
+      committedPathnameRef.current = adapter.pathname ?? location.pathname
+      reconcile()
+    }
     return () => {
       detachedRef.current = true
     }
