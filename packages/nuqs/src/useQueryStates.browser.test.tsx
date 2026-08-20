@@ -515,6 +515,20 @@ describe('useQueryStates: referential equality', () => {
 })
 
 describe('useQueryStates: rendering & bail-out', () => {
+  it('should render once on mount with an initial value in the URL', async () => {
+    let renderBodyCount = 0
+    function TestComponent() {
+      renderBodyCount++
+      const [{ test }] = useQueryStates({ test: parseAsString })
+      return <div>value: {test}</div>
+    }
+    await render(<TestComponent />, {
+      wrapper: withNuqsTestingAdapter({ searchParams: '?test=init' })
+    })
+    await expect.element(page.getByText('value: init')).toBeInTheDocument()
+    expect(renderBodyCount).toBe(1)
+  })
+
   it('should bail out of rendering the same component when setting to the same value', async () => {
     let renderCount = 0
     function TestComponent() {
