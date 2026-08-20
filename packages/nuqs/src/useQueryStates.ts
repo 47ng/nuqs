@@ -528,9 +528,9 @@ function applyDefaultValues<KeyMap extends UseQueryStatesKeysMap>(
   keyMap: KeyMap
 ) {
   return Object.fromEntries(
-    Object.keys(state).map(key => [
+    Object.entries(state).map(([key, value]) => [
       key,
-      getOwn(state, key) ?? getOwn(keyMap, key)?.defaultValue ?? null
+      value ?? getOwn(keyMap, key)?.defaultValue ?? null
     ])
   ) as Values<KeyMap>
 }
