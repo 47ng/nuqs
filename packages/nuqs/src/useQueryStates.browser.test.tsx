@@ -1,12 +1,14 @@
 import React, {
   createElement,
+  Suspense,
   useEffect,
   useState,
   type ReactNode
 } from 'react'
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { render, renderHook } from 'vitest-browser-react'
 import { page, userEvent } from 'vitest/browser'
+import { createReactRouterBasedAdapter } from './adapters/lib/react-router'
 import {
   NullDetector,
   useFakeLoadingState
@@ -17,6 +19,7 @@ import {
   type OnUrlUpdateFunction
 } from './adapters/testing'
 import { debounce, throttle } from './lib/queues/rate-limiting'
+import { resetQueues } from './lib/queues/reset'
 import {
   createParser,
   parseAsArrayOf,
@@ -578,6 +581,20 @@ describe('useQueryStates: debounce(Infinity)', () => {
 })
 
 describe('useQueryStates: rendering & bail-out', () => {
+  it('should render once on mount with an initial value in the URL', async () => {
+    let renderBodyCount = 0
+    function TestComponent() {
+      renderBodyCount++
+      const [{ test }] = useQueryStates({ test: parseAsString })
+      return <div>value: {test}</div>
+    }
+    await render(<TestComponent />, {
+      wrapper: withNuqsTestingAdapter({ searchParams: '?test=init' })
+    })
+    await expect.element(page.getByText('value: init')).toBeInTheDocument()
+    expect(renderBodyCount).toBe(1)
+  })
+
   it('should bail out of rendering the same component when setting to the same value', async () => {
     let renderCount = 0
     function TestComponent() {
@@ -972,6 +989,24 @@ describe('useQueryStates: dynamic keys', () => {
     expect(result.current[0]).toStrictEqual({ a: null, b: null, d: null })
   })
 
+  it('moves the cross-hook subscriptions when the key set changes', async () => {
+    const useTestHook = (keys: string[] = ['a']) => ({
+      dynamic: useQueryStates(
+        Object.fromEntries(keys.map(key => [key, parseAsString]))
+      ),
+      a: useQueryStates({ a: parseAsString }),
+      b: useQueryStates({ b: parseAsString })
+    })
+    const { result, rerender, act } = await renderHook(useTestHook, {
+      wrapper: withNuqsTestingAdapter({ searchParams: '' })
+    })
+    await rerender(['b'])
+    await act(() => result.current.a[1]({ a: 'stale' }))
+    expect(result.current.dynamic[0]).toStrictEqual({ b: null })
+    await act(() => result.current.b[1]({ b: 'live' }))
+    expect(result.current.dynamic[0]).toStrictEqual({ b: 'live' })
+  })
+
   it('supports dynamic keys with remapping', async () => {
     const useTestHook = (keys: [string, string] = ['a', 'b']) =>
       useQueryStates(
@@ -1287,6 +1322,37 @@ describe('useQueryStates: update sequencing', () => {
     expect(onUrlUpdate).toHaveBeenCalledTimes(2)
     expect(onUrlUpdate.mock.calls[0]![0].queryString).toEqual('?b=pass')
     expect(onUrlUpdate.mock.calls[1]![0].queryString).toEqual('?a=debounced')
+  })
+
+  it('flushes the throttled key and debounces the other in a single update', async () => {
+    const onUrlUpdate = vi.fn<OnUrlUpdateFunction>()
+    // The adapter re-renders on each URL update when it has memory,
+    // so the queue reset must not run on render.
+    resetQueues()
+    const { result, act } = await renderHook(
+      () =>
+        useQueryStates({
+          a: parseAsString.withOptions({ limitUrlUpdates: debounce(100) }),
+          b: parseAsString
+        }),
+      {
+        wrapper: withNuqsTestingAdapter({
+          onUrlUpdate,
+          rateLimitFactor: 1,
+          hasMemory: true,
+          resetUrlUpdateQueueOnMount: false
+        })
+      }
+    )
+    let p: Promise<URLSearchParams> | undefined = undefined
+    await act(async () => {
+      p = result.current[1]({ a: 'slow', b: 'fast' })
+      await vi.waitFor(() => expect(onUrlUpdate).toHaveBeenCalledOnce())
+    })
+    expect(onUrlUpdate.mock.calls[0]![0].queryString).toEqual('?b=fast')
+    await expect(p).resolves.toEqual(new URLSearchParams('?b=fast&a=slow'))
+    expect(onUrlUpdate).toHaveBeenCalledTimes(2)
+    expect(onUrlUpdate.mock.calls[1]![0].queryString).toEqual('?b=fast&a=slow')
   })
 
   it('does flush when pushing throttled updates', async () => {
@@ -1638,6 +1704,58 @@ describe('useQueryStates: process url search params', () => {
     expect(onUrlUpdate).toHaveBeenCalledOnce()
     expect(onUrlUpdate.mock.calls[0]![0].queryString).toBe('?test=pass')
   })
+  it('should use the latest processUrlSearchParams when restarting a debounce', async () => {
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] })
+    const onUrlUpdate = vi.fn<OnUrlUpdateFunction>()
+    function DynamicWrapper({ children }: { children: ReactNode }) {
+      const [config, setConfig] = useState<'a' | 'b'>('a')
+      return createElement(NuqsTestingAdapter, {
+        onUrlUpdate,
+        processUrlSearchParams: search => {
+          search.set('config', config)
+          return search
+        },
+        rateLimitFactor: 1,
+        resetUrlUpdateQueueOnMount: false,
+        children: [
+          createElement('button', {
+            key: 'btn',
+            onClick: () => setConfig('b'),
+            'data-testid': 'btn'
+          }),
+          children
+        ]
+      })
+    }
+    try {
+      resetQueues()
+      const { result, act } = await renderHook(
+        () => useQueryStates({ test: parseAsString }),
+        { wrapper: DynamicWrapper }
+      )
+      await act(() => {
+        void result.current[1](
+          { test: 'first' },
+          { limitUrlUpdates: debounce(100) }
+        )
+      })
+      await act(() => page.getByTestId('btn').click())
+      await act(() => {
+        void result.current[1](
+          { test: 'second' },
+          { limitUrlUpdates: debounce(100) }
+        )
+      })
+      await act(() => vi.advanceTimersByTimeAsync(200))
+
+      expect(onUrlUpdate).toHaveBeenCalledOnce()
+      expect(onUrlUpdate.mock.calls[0]![0].queryString).toBe(
+        '?test=second&config=b'
+      )
+    } finally {
+      vi.useRealTimers()
+    }
+  })
 })
 
 describe('useQueryStates: edge cases & repros', () => {
@@ -1687,5 +1805,76 @@ describe('useQueryStates: edge cases & repros', () => {
     await expect
       .element(page.getByTestId('null-detector'))
       .toHaveTextContent('pass')
+  })
+})
+
+describe('useQueryStates: discarded renders', () => {
+  const { NuqsAdapter, useOptimisticSearchParams } =
+    createReactRouterBasedAdapter({
+      adapter: 'test-discarded-render',
+      useNavigate: () => () => {},
+      useSearchParams: (initial): [URLSearchParams, {}] => [initial, {}]
+    })
+
+  const originalUrl = location.href
+
+  afterEach(() => {
+    history.replaceState(null, '', originalUrl)
+  })
+
+  it('recovers after an external navigation discards a render', async () => {
+    const hold = new Promise<never>(() => {})
+
+    function Value() {
+      const [value] = useQueryState('test')
+      return <div data-testid="value">{String(value)}</div>
+    }
+
+    function SuspendOnIncomingParams() {
+      const searchParams = useOptimisticSearchParams()
+      if (searchParams.get('test') === 'incoming') {
+        throw hold
+      }
+      return null
+    }
+
+    function App() {
+      const [count, setCount] = useState(0)
+      return (
+        <NuqsAdapter>
+          <button onClick={() => setCount(count => count + 1)}>
+            Count ({count})
+          </button>
+          <Value />
+          <Suspense fallback={null}>
+            <SuspendOnIncomingParams />
+          </Suspense>
+        </NuqsAdapter>
+      )
+    }
+
+    history.replaceState(null, '', '/page?test=old')
+    render(<App />)
+    await expect.element(page.getByTestId('value')).toHaveTextContent('old')
+
+    history.pushState(null, '', '/page?test=incoming')
+    await new Promise(resolve => setTimeout(resolve, 100))
+    await expect.element(page.getByTestId('value')).toHaveTextContent('old')
+
+    history.pushState(null, '', '/elsewhere?test=incoming')
+
+    const user = userEvent.setup()
+    const count = page.getByRole('button', { name: /Count/ })
+    await user.click(count)
+    await expect.element(count).toHaveTextContent('Count (1)')
+    await expect
+      .element(page.getByTestId('value'), { timeout: 2000 })
+      .toHaveTextContent('incoming')
+
+    await user.click(count)
+    await expect.element(count).toHaveTextContent('Count (2)')
+    await expect
+      .element(page.getByTestId('value'))
+      .toHaveTextContent('incoming')
   })
 })

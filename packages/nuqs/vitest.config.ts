@@ -88,9 +88,6 @@ const config: ViteUserConfig = defineConfig({
         './**/*.d.ts' // neither do type definitions
       ]
     },
-    env: {
-      IS_REACT_ACT_ENVIRONMENT: 'true'
-    },
     projects: [
       {
         extends: true,

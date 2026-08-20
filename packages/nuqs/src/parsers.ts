@@ -1,5 +1,6 @@
 import type { StandardSchemaV1 } from '@standard-schema/spec'
 import type { Options } from './defs'
+import { compareArrays, isEqual } from './lib/compare'
 import { safeParse } from './lib/safe-parse'
 
 type Require<T, Keys extends keyof T> = Pick<Required<T>, Keys> & Omit<T, Keys>
@@ -153,19 +154,12 @@ export function createParser<T>(
     if (typeof value === 'undefined') {
       return null
     }
-    let str = ''
-    if (Array.isArray(value)) {
-      // Follow the spec:
-      // https://url.spec.whatwg.org/#dom-urlsearchparams-get
-      if (value[0] === undefined) {
-        return null
-      }
-      str = value[0]
+    const isArray = Array.isArray(value)
+    if (isArray && value[0] === undefined) {
+      return null
     }
-    if (typeof value === 'string') {
-      str = value
-    }
-    return safeParse(parser.parse, str)
+    value = isArray ? value[0]! : typeof value === 'string' ? value : ''
+    return safeParse(parser.parse, value)
   }
 
   return {
@@ -481,7 +475,7 @@ export function parseAsArrayOf<ItemType>(
   itemParser: SingleParser<ItemType>,
   separator = ','
 ): SingleParserBuilder<ItemType[]> {
-  const itemEq = itemParser.eq ?? ((a: ItemType, b: ItemType) => a === b)
+  const itemEq = itemParser.eq ?? isEqual
   const encodedSeparator = encodeURIComponent(separator)
   // todo: Handle default item values and make return type non-nullable
   return createParser({
@@ -511,22 +505,14 @@ export function parseAsArrayOf<ItemType>(
           return str.replaceAll(separator, encodedSeparator)
         })
         .join(separator),
-    eq(a, b) {
-      if (a === b) {
-        return true // Referentially stable
-      }
-      if (a.length !== b.length) {
-        return false
-      }
-      return a.every((value, index) => itemEq(value, b[index]!))
-    }
+    eq: (a, b) => compareArrays(a, b, itemEq)
   })
 }
 
 export function parseAsNativeArrayOf<ItemType>(
   itemParser: SingleParser<ItemType>
 ): ReturnType<MultiParserBuilder<ItemType[]>['withDefault']> {
-  const itemEq = itemParser.eq ?? ((a: ItemType, b: ItemType) => a === b)
+  const itemEq = itemParser.eq ?? isEqual
   return createMultiParser({
     parse: query => {
       const parsed = query
@@ -546,15 +532,7 @@ export function parseAsNativeArrayOf<ItemType>(
         return typeof serialized === 'string' ? [serialized] : [...serialized]
       })
     },
-    eq(a, b) {
-      if (a === b) {
-        return true // Referentially stable
-      }
-      if (a.length !== b.length) {
-        return false
-      }
-      return a.every((value, index) => itemEq(value, b[index]!))
-    }
+    eq: (a, b) => compareArrays(a, b, itemEq)
   }).withDefault([])
 }
 
