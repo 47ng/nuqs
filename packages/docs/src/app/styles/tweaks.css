@@ -43,6 +43,13 @@
 /* Highlighted words in code blocks */
 .shiki:not(.not-fumadocs-codeblock *) code span.highlighted-word {
   @apply -mx-1 rounded-sm border-none px-1;
+  /* Join a word split across several tokens into one box */
+  &:has(+ .highlighted-word) {
+    @apply mr-0 rounded-r-none pr-0;
+  }
+  .highlighted-word + & {
+    @apply ml-0 rounded-l-none pl-0;
+  }
 }
 
 /* Highlighted lines in code blocks */
