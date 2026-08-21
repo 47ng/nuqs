@@ -1,5 +1,6 @@
 import type { UrlKeys } from './defs'
 import { isAbsentFromUrl } from './lib/search-params'
+import { getUrlKey } from './lib/url-keys'
 import type { inferParserType, ParserMap } from './parsers'
 
 export type LoaderInput =
@@ -96,7 +97,7 @@ export function createLoader<Parsers extends ParserMap>(
     const searchParams = extractSearchParams(input)
     const result = {} as any
     for (const [key, parser] of Object.entries(parsers)) {
-      const urlKey = urlKeys[key] ?? key
+      const urlKey = getUrlKey(urlKeys, key)
       const query =
         parser.type === 'multi'
           ? searchParams.getAll(urlKey)
@@ -117,7 +118,7 @@ export function createLoader<Parsers extends ParserMap>(
         }
         parsedValue = null
       }
-      if (strict && query && parsedValue === null) {
+      if (strict && parsedValue === null) {
         throw new Error(
           `[nuqs] Failed to parse query \`${query}\` for key \`${key}\` (got null)`
         )
@@ -154,7 +155,7 @@ function extractSearchParams(input: LoaderInput): URLSearchParams {
       return searchParams
     }
     if (typeof input === 'string') {
-      if (URL.hasOwnProperty('canParse') && URL.canParse(input)) {
+      if (URL.canParse(input)) {
         return new URL(input).searchParams
       }
       return new URLSearchParams(input)

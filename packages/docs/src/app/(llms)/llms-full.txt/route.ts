@@ -1,5 +1,5 @@
 import { fullSource } from '@/src/app/source'
-import { getLLMText } from '@/src/lib/get-llm-text'
+import { getLLMText, llmFooter } from '@/src/lib/get-llm-text'
 import { flattenTree } from 'fumadocs-core/page-tree'
 
 export const revalidate = false
@@ -29,5 +29,5 @@ export async function GET() {
 
 `
 
-  return new Response(header + scanned.join('\n---\n\n'))
+  return new Response(header + scanned.join('\n---\n\n') + '\n' + llmFooter + '\n')
 }

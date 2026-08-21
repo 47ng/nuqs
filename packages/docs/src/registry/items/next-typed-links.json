@@ -3,6 +3,8 @@
   "name": "next-typed-links",
   "title": "Typed Links for Next.js",
   "description": "Type-safe linking for Next.js (using typedRoutes + nuqs)",
+  "author": "François Best <franky47>",
+  "categories": ["utility"],
   "dependencies": ["next@>=15.5.0", "nuqs"],
   "files": [
     {

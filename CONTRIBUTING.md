@@ -5,21 +5,45 @@ First off, thanks for your help! 🙏
 ## Getting started
 
 1. Fork and clone the repository
-2. Install dependencies with `pnpm install`
-3. Start the development environment with `pnpm dev`
+2. Set up the checkout with `node --run setup:worktree`
+3. Start the development environment with `pnpm dev --filter <package-name>...`
+
+## Git hooks (optional)
+
+This repo ships [Git config-based hooks](.gitconfig) (requires Git 2.54+) that
+run the same lint checks as CI locally — Prettier and Sherif on `git commit`,
+Commitlint on the message, and the full lint suite on `git push`. They catch CI
+failures before you open a PR.
+
+They are **opt-in** and not installed automatically. To enable them in your
+clone, run once:
+
+```sh
+node --run setup:hooks
+```
+
+This also enables a fingerprinted `post-checkout` bootstrap for linked
+worktrees. If the current Node version cannot run package scripts yet, invoke
+the setup directly with `node packages/scripts/worktree-setup.mjs` after
+activating `.node-version`.
+
+The checkout hook only auto-installs dependencies for branches whose
+dependency manifests match `origin/HEAD`. When it skips, review the branch,
+then run `node --run setup:worktree` — explicit setup executes the branch's
+code.
 
 ## Project structure
 
 This monorepo contains:
 
 - The source code for the `nuqs` NPM package, in [`packages/nuqs`](./packages/nuqs).
-- A Next.js app under [`packages/docs`](./packages/docs) that serves the documentation and as a playground deployed at <https://nuqs.dev>
+- A Next.js app under [`packages/docs`](./packages/docs) that serves the documentation and as a playground deployed at <https://nuqs.dev>. Copy [`packages/docs/.env.example`](./packages/docs/.env.example) to `.env.local` for the optional env vars local docs dev can use.
 - Test benches for [end-to-end tests](./packages/e2e) for each supported framework, driven by Playwright
 - Examples of integration with other tools.
 
-When running `next dev`, this will:
+When running `pnpm dev`, this will:
 
-- Build the library and watch for changes using [`tsup`](https://tsup.egoist.dev/)
+- Build the library and watch for changes using [`tsdown`](https://tsdown.dev)
 - Start the docs app, which will be available at <http://localhost:3000>.
 - Start the end-to-end test benches:
   - http://localhost:3001 - [Next.js](./packages/e2e/next)
@@ -29,9 +53,14 @@ When running `next dev`, this will:
   - http://localhost:3005 - [React Router v5](./packages/e2e/react-router/v5)
   - http://localhost:3006 - [React Router v6](./packages/e2e/react-router/v6)
   - http://localhost:3007 - [React Router v7](./packages/e2e/react-router/v7)
+  - http://localhost:3008 - [React Router v8](./packages/e2e/react-router/v8)
 - Start the examples:
   - http://localhost:4000 - [tRPC](./packages/examples/trpc)
   - http://localhost:4001 - [Next.js - App router](./packages/examples/next-app)
+
+Since this will start a lot of processes, you may want to run `pnpm dev --filter <package-name>...`
+to only start the packages you are working on (eg: `pnpm dev --filter docs...`).
+The triple dots `...` will also start any dependencies of the package you specify.
 
 ## Testing
 
@@ -43,6 +72,14 @@ run the end-to-end tests against the test bench apps (which uses the built libra
 When proposing changes or fixing a bug, adding tests (unit or in the
 appropriate e2e test environment) can help tremendously to validate and
 understand the changes.
+
+For a focused test run, filter the root Turbo command, for example:
+
+- `pnpm run test --filter nuqs`
+- `pnpm run test --filter e2e-next`
+
+Turbo builds each selected task's dependencies before testing them. Avoid
+calling package-level test scripts directly, as that bypasses the task graph.
 
 ## Opening issues
 
@@ -59,10 +96,10 @@ Make sure your changes:
 2. Pass linting checks: `pnpm lint`
 3. Have relevant documentation additions / updates (in the `packages/docs/content` and the README.md file).
 
-This repository uses [`semantic-release`](https://semantic-release.gitbook.io/semantic-release/)
-to automatically publish new versions of the package to NPM.
-To do this, the Git history follows the
-[Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) format.
+This repository uses [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/)
+for commit messages. Any bumping keywords (fix, feat, perf, etc) should be reserved to changes
+in the `nuqs` package itself (enforced in CI).
+For example, fixes in the docs are named `doc: fix <whatever>`.
 
 Pull requests should target the `next` branch.
 

@@ -2,27 +2,47 @@ import { Link as TanStackLink, useNavigate } from '@tanstack/react-router'
 import { HydrationMarker } from 'e2e-shared/components/hydration-marker'
 import { LinkProvider, type LinkProps } from 'e2e-shared/components/link'
 import { RouterProvider, type Router } from 'e2e-shared/components/router'
-import type { ReactNode } from 'react'
+import { useEffect, type ReactNode } from 'react'
 
 function Link({ href, ...props }: LinkProps) {
   return <TanStackLink to={href} {...props} />
 }
 
-function useRouter(): Router {
+// The navigation subscription lives in a null-rendering leaf component, and
+// the Router context value is a stable module-level object reading from a
+// ref: this keeps navigation updates from re-rendering the app shell (which
+// would pollute render-count tests).
+const navigateRef: { current: ReturnType<typeof useNavigate> | null } = {
+  current: null
+}
+
+function RouterBinder() {
   const navigate = useNavigate()
-  return {
-    replace(url) {
-      navigate({
-        to: url,
-        replace: true
-      })
-    },
-    push(url) {
-      navigate({
-        to: url,
-        replace: false
-      })
-    }
+  useEffect(() => {
+    navigateRef.current = navigate
+  }, [navigate])
+  return null
+}
+
+function getNavigate() {
+  if (navigateRef.current === null) {
+    throw new Error('Router is not bound yet')
+  }
+  return navigateRef.current
+}
+
+const router: Router = {
+  replace(url) {
+    getNavigate()({
+      to: url,
+      replace: true
+    })
+  },
+  push(url) {
+    getNavigate()({
+      to: url,
+      replace: false
+    })
   }
 }
 
@@ -30,8 +50,9 @@ export function RootLayout({ children }: { children: ReactNode }) {
   return (
     <>
       <HydrationMarker />
+      <RouterBinder />
       <LinkProvider Link={Link}>
-        <RouterProvider useRouter={useRouter}>{children}</RouterProvider>
+        <RouterProvider router={router}>{children}</RouterProvider>
       </LinkProvider>
     </>
   )

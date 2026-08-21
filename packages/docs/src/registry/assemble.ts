@@ -59,6 +59,9 @@ async function hydrateItem(item: RegistrySourceItem) {
     await writeFile(tempFilePath, content)
     file.path = tempFilePath.replace(packageRoot + '/', '')
   }
+  if (!item.docs) {
+    item.docs = `https://nuqs.dev/registry/${item.name}`
+  }
   return Promise.all(item.files.map(file => hydrateFile(file)))
 }
 

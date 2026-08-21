@@ -3,6 +3,8 @@
   "name": "adapter-onejs",
   "title": "One.js Adapter",
   "description": "Using nuqs in One.js applications.",
+  "author": "François Best <franky47>",
+  "categories": ["adapter"],
   "dependencies": ["one", "nuqs"],
   "files": [
     {

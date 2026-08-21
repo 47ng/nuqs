@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 
-import MailPace from '@mailpace/mailpace.js'
 import { createEnv } from '@t3-oss/env-core'
 import minimist from 'minimist'
 import { z } from 'zod'
+import { sendEmail } from './lib/mailpace.ts'
 
 const gaRegexp = /^\d+\.\d+\.\d+$/
 const canaryRegexp = /^(\d+)\.(\d+)\.(\d+)-canary\.(\d+)$/
@@ -74,7 +74,6 @@ function getPreviousVersion(version: string) {
 }
 
 async function sendNotificationEmail(thisVersion: string, files: File[]) {
-  const client = new MailPace.DomainClient(env.MAILPACE_API_TOKEN)
   const release = await fetch(
     `https://api.github.com/repos/vercel/next.js/releases/tags/v${thisVersion}`
   ).then(res => res.json())
@@ -104,7 +103,7 @@ ${patchSection}
   if (!env.CI) {
     return
   }
-  return client.sendEmail({
+  return sendEmail(env.MAILPACE_API_TOKEN, {
     from: env.EMAIL_ADDRESS_FROM,
     to: env.EMAIL_ADDRESS_TO,
     subject,
@@ -114,7 +113,6 @@ ${patchSection}
 }
 
 function sendGAEmail(thisVersion: string) {
-  const client = new MailPace.DomainClient(env.MAILPACE_API_TOKEN)
   const subject = `[nuqs] Next.js ${thisVersion} was published to GA`
   const body = `https://github.com/vercel/next.js/releases/tag/v${thisVersion}`
   console.info('Sending email:', subject)
@@ -122,7 +120,7 @@ function sendGAEmail(thisVersion: string) {
   if (!env.CI) {
     return
   }
-  return client.sendEmail({
+  return sendEmail(env.MAILPACE_API_TOKEN, {
     from: env.EMAIL_ADDRESS_FROM,
     to: env.EMAIL_ADDRESS_TO,
     subject,

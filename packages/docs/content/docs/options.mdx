@@ -3,6 +3,8 @@ title: Options
 description: Configuring nuqs
 ---
 
+import { HumanContent, LLMContent } from '@/src/components/audience'
+
 By default, `nuqs` will update search params:
 1. On the client only (not sending requests to the server),
 2. by replacing the current history entry,
@@ -94,7 +96,7 @@ One caveat is that the stock `useSearchParams{:ts}` hook from those frameworks d
 reflect shallow-updated search params, so we provide you with one that does:
 
 ```tsx
-import { useOptimisticSearchParams } from 'nuqs/adapters/remix' // or '…/react-router/v6' or '…/react-router/v7'
+import { useOptimisticSearchParams } from 'nuqs/adapters/remix' // or '…/react-router/v{6,7,8}'
 
 function Component() {
   // Note: this is read-only, but reactive to all URL changes
@@ -324,6 +326,18 @@ function ClientComponent({ data }) {
 }
 ```
 
+<Callout title="React Router support">
+  In React Router v7+ data routers, `navigate(){:ts}` returns a Promise, so
+  `isLoading{:ts}` stays true until route loaders have settled (this requires
+  React 19, where transitions can await promises).
+
+  In declarative routers, React Router v6, and Remix, `navigate(){:ts}` doesn't
+  report navigation completion, so `isLoading{:ts}` only covers the URL update.
+  In data router apps, use
+  [`useNavigation{:ts}`](https://reactrouter.com/api/hooks/useNavigation) to
+  track loader states instead.
+</Callout>
+
 <Callout>
   In `nuqs@1.x.x`, passing `startTransition{:ts}` as an option automatically sets
   `shallow: false{:ts}`.
@@ -340,8 +354,9 @@ However, sometimes you might want to keep the search parameter in the URL,
 because **default values _can_ change**, and the meaning of the URL along with it.
 
 <Callout title="Example of defaults changing">
-  In `nuqs@1.x.x`, `clearOnDefault{:ts}` was `false{:ts}` by default.<br/>
-  in `nuqs@2.0.0`, `clearOnDefault{:ts}` is now `true{:ts}` by default, in response
+  In `nuqs@1.x.x`, `clearOnDefault{:ts}` was `false{:ts}` by default.
+  <HumanContent><br/></HumanContent>
+  In `nuqs@2.0.0`, `clearOnDefault{:ts}` is now `true{:ts}` by default, in response
   to [user feedback](https://x.com/fortysevenfx/status/1841610237540696261).
 </Callout>
 
@@ -390,6 +405,7 @@ adapter prop:
 // [!code word:defaultOptions]
 <NuqsAdapter
   defaultOptions={{
+    history: 'push',
     shallow: false,
     scroll: true,
     clearOnDefault: false,
@@ -399,6 +415,16 @@ adapter prop:
   {children}
 </NuqsAdapter>
 ```
+
+<Callout title="Don't break the Back button" type="warn">
+Setting `history: 'push'{:ts}` globally will add a new entry to the navigation
+history for **every** search param update across your whole app, which is likely
+to pollute the Back/Forward history and degrade that experience.
+
+Prefer opting into `history: 'push'{:ts}` on a per-hook or per-call basis, only
+where the search params contribute to a navigation-like experience (eg: tabs,
+modals).
+</Callout>
 
 ### Processing `URLSearchParams`
 
@@ -432,11 +458,17 @@ Sort the search parameters alphabetically:
 import { Suspense } from 'react'
 import { AlphabeticalSortDemo, DemoSkeleton } from './options.client'
 
+<HumanContent>
 _Try toggling **c**, then **b**, then **a**, and note how the URL remains ordered:_
 
 <Suspense fallback={<DemoSkeleton/>}>
   <AlphabeticalSortDemo />
 </Suspense>
+</HumanContent>
+
+<LLMContent>
+Interactive demo omitted. `processUrlSearchParams` can sort the merged `URLSearchParams` before the adapter writes them to the URL.
+</LLMContent>
 
 #### Timestamp
 
@@ -456,6 +488,12 @@ Add a timestamp to the search parameters:
 
 import { TimestampDemo } from './options.client'
 
+<HumanContent>
 <Suspense fallback={<DemoSkeleton/>}>
   <TimestampDemo />
 </Suspense>
+</HumanContent>
+
+<LLMContent>
+Interactive demo omitted. `processUrlSearchParams` can also add derived values such as a timestamp before the URL update is committed.
+</LLMContent>

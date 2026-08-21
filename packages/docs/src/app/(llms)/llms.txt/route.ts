@@ -1,4 +1,5 @@
 import { fullSource } from '@/src/app/source'
+import { llmFooter } from '@/src/lib/get-llm-text'
 import { getBaseUrl } from '@/src/lib/url'
 import { flattenTree } from 'fumadocs-core/page-tree'
 
@@ -37,7 +38,9 @@ export async function GET() {
     '',
     '## Complete documentation',
     '',
-    `For the complete documentation in a single file, fetch: ${baseUrl}/llms-full.txt`
+    `For the complete documentation in a single file, fetch: ${baseUrl}/llms-full.txt`,
+    '',
+    llmFooter
   ]
 
   return new Response(lines.join('\n'))

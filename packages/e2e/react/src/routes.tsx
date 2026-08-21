@@ -10,6 +10,7 @@ const routes: Record<string, React.LazyExoticComponent<() => JSX.Element>> = {
   '/form/useQueryState':                    lazy(() => import('./routes/form.useQueryState')),
   '/form/useQueryStates':                   lazy(() => import('./routes/form.useQueryStates')),
   '/hash-preservation':                     lazy(() => import('./routes/hash-preservation')),
+  '/history-sync':                          lazy(() => import('./routes/history-sync')),
   '/json':                                  lazy(() => import('./routes/json')),
   '/life-and-death':                        lazy(() => import('./routes/life-and-death')),
   '/linking/useQueryState':                 lazy(() => import('./routes/linking.useQueryState')),
@@ -18,6 +19,7 @@ const routes: Record<string, React.LazyExoticComponent<() => JSX.Element>> = {
   '/linking/useQueryStates/other':          lazy(() => import('./routes/linking.useQueryStates.other')),
   '/native-array':                          lazy(() => import('./routes/native-array')),
   '/pretty-urls':                           lazy(() => import('./routes/pretty-urls')),
+  '/queue-lifecycle':                       lazy(() => import('./routes/queue-lifecycle')),
   '/referential-stability/useQueryState':   lazy(() => import('./routes/referential-stability.useQueryState')),
   '/referential-stability/useQueryStates':  lazy(() => import('./routes/referential-stability.useQueryStates')),
   '/routing/useQueryState':                 lazy(() => import('./routes/routing.useQueryState')),
@@ -59,6 +61,10 @@ const routes: Record<string, React.LazyExoticComponent<() => JSX.Element>> = {
   '/repro-982':                 lazy(() => import('./routes/repro-982')),
   '/repro-1099/useQueryState':  lazy(() => import('./routes/repro-1099.useQueryState')),
   '/repro-1099/useQueryStates': lazy(() => import('./routes/repro-1099.useQueryStates')),
+  '/repro-1365':                lazy(() => import('./routes/repro-1365')),
+  '/repro-1444':                lazy(() => import('./routes/repro-1444')),
+  '/repro-1501':                lazy(() => import('./routes/repro-1501')),
+  '/repro-1506':                lazy(() => import('./routes/repro-1506')),
 }
 
 export function Router() {

@@ -1,3 +1,5 @@
+import './debug'
+
 export { createSearchParamsCache } from './cache'
 export type {
   HistoryOptions,
@@ -20,4 +22,7 @@ export {
 } from './loader'
 export * from './parsers'
 export { createSerializer, type CreateSerializerOptions } from './serializer'
-export { createStandardSchemaV1 } from './standard-schema'
+export {
+  createStandardSchemaV1,
+  type CreateStandardSchemaV1Options
+} from './standard-schema'

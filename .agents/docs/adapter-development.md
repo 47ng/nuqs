@@ -12,6 +12,7 @@ Adapters wrap the app root and provide the minimal translation layer between nuq
 - **Remix:** `nuqs/adapters/remix`
 - **React Router v6:** `nuqs/adapters/react-router/v6`
 - **React Router v7:** `nuqs/adapters/react-router/v7`
+- **React Router v8:** `nuqs/adapters/react-router/v8`
 - **TanStack Router:** `nuqs/adapters/tanstack-router`
 - **Testing:** `nuqs/adapters/testing`
 

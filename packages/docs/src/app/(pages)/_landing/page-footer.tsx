@@ -55,6 +55,15 @@ export function PageFooter() {
               </li>
               <li>
                 <Link
+                  href="/docs/changelog"
+                  className="hover:underline"
+                  prefetch={false}
+                >
+                  Changelog
+                </Link>
+              </li>
+              <li>
+                <Link
                   href="/registry"
                   className="hover:underline"
                   prefetch={false}

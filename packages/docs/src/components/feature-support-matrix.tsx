@@ -1,3 +1,4 @@
+import { getPublishedVersion, isReleased } from '@/src/lib/published-version'
 import { cn } from '@/src/lib/utils'
 import { Callout } from 'fumadocs-ui/components/callout'
 import { CheckCircle, XCircle } from 'lucide-react'
@@ -21,39 +22,94 @@ type Support = {
   frameworks: 'all' | Frameworks[]
 }
 
-export function FeatureSupportMatrix({
+type FeatureSupportMatrixTextOptions = {
+  includeAllFrameworksSupport?: boolean
+}
+
+type ResolvedSupport = {
+  supportedIn: readonly Frameworks[]
+  notSupportedIn: readonly Frameworks[]
+}
+
+export function parseFeatureSupportMatrixProps(
+  markdown: string
+): FeatureSupportMatrixProps | null {
+  const introducedInVersion = markdown.match(
+    /introducedInVersion=['"]([^'"]+)['"]/)
+    ?.[1]
+
+  if (!introducedInVersion) {
+    return null
+  }
+
+  const deprecatedInVersion = markdown.match(
+    /deprecatedInVersion=['"]([^'"]+)['"]/)
+    ?.[1]
+
+  const highlightUnsupported = /highlightUnsupported\b/.test(markdown)
+  const hideFrameworks = /hideFrameworks\b/.test(markdown)
+  const supported = markdown.match(/supported:\s*(true|false)/)?.[1] !== 'false'
+  const frameworks = parseSupportFrameworks(markdown)
+
+  return {
+    introducedInVersion,
+    deprecatedInVersion,
+    highlightUnsupported,
+    hideFrameworks,
+    support: {
+      supported,
+      frameworks
+    }
+  }
+}
+
+export function renderFeatureSupportMatrixText(
+  props: FeatureSupportMatrixProps,
+  options: FeatureSupportMatrixTextOptions = {}
+) {
+  const sentences = [`Available since \`nuqs@${props.introducedInVersion}\`.`]
+
+  if (props.deprecatedInVersion) {
+    sentences.push(`Deprecated in \`nuqs@${props.deprecatedInVersion}\`.`)
+  }
+
+  const supportText = getFrameworkSupportText(props, options)
+  if (supportText.length > 0) {
+    sentences.push(supportText)
+  }
+
+  return sentences.join(' ')
+}
+
+export async function FeatureSupportMatrix({
   introducedInVersion,
   deprecatedInVersion,
   highlightUnsupported = false,
   hideFrameworks = false,
   support = { supported: true, frameworks: 'all' }
 }: FeatureSupportMatrixProps) {
-  const supportedIn = support.supported
-    ? resolveFrameworks(support.frameworks)
-    : FRAMEWORKS.filter(fw => support.frameworks.includes(fw) === false)
-  const notSupportedIn = FRAMEWORKS.filter(
-    fw => supportedIn.includes(fw) === false
-  )
+  const { supportedIn, notSupportedIn } = resolveSupport({ support })
+  const supportedLabel = getSupportedFrameworksText(supportedIn, {
+    includeAllFrameworksSupport: true
+  })
+  const unsupportedLabel = getUnsupportedFrameworksText(notSupportedIn)
+  const released = isReleased(introducedInVersion, await getPublishedVersion())
+
   return (
-    <Callout
-      type={deprecatedInVersion ? 'warning' : 'success'}
-      className="pr-1"
-    >
+    <Callout type={calloutTone(released, deprecatedInVersion)} className="pr-1">
       <div className="flex flex-wrap gap-4">
         <span className="text-balance">
-          Introduced in version <strong>{introducedInVersion}</strong>
-          {deprecatedInVersion ? (
-            <>
-              , and deprecated in version <strong>{deprecatedInVersion}</strong>
-            </>
-          ) : (
-            '.'
-          )}
+          <VersionLine
+            introducedInVersion={introducedInVersion}
+            deprecatedInVersion={deprecatedInVersion}
+            released={released}
+          />
         </span>
         {!hideFrameworks && (
           <div className="not-prose ml-auto flex items-center gap-1 text-xl">
             <TooltipPopover delayDuration={100}>
               <TooltipPopoverTrigger
+                aria-label={supportedLabel}
                 className={cn(
                   '-my-2 flex flex-shrink-0 items-center gap-2 rounded-lg py-2 pr-2.5 pl-2',
                   // Outline variant
@@ -67,7 +123,7 @@ export function FeatureSupportMatrix({
                       key={framework}
                       className="pointer-events-none flex-shrink-0 select-none"
                     >
-                      <Icon />
+                      <Icon aria-hidden />
                     </span>
                   )
                 })}
@@ -77,29 +133,30 @@ export function FeatureSupportMatrix({
                   role="presentation"
                 />
               </TooltipPopoverTrigger>
-              <TooltipPopoverContent className="py-2 text-xs">
-                {supportedIn.length === FRAMEWORKS.length ? (
-                  'This feature is supported in all frameworks.'
-                ) : supportedIn.length === 1 ? (
-                  <>Only supported in {supportedIn[0]}.</>
-                ) : (
-                  <>
-                    Supported frameworks:
-                    <ul className="mt-1 ml-3 list-disc">
-                      {supportedIn.map(fw => (
-                        <li key={fw}>{fw}</li>
-                      ))}
-                    </ul>
-                  </>
-                )}
-              </TooltipPopoverContent>
-            </TooltipPopover>
-            {notSupportedIn.length > 0 && (
-              <TooltipPopover delayDuration={100}>
-                <TooltipPopoverTrigger
-                  className={cn(
-                    '-my-2 flex flex-shrink-0 items-center gap-2 rounded-lg py-2 pr-2.5 pl-2',
-                    // Gray-out effect
+                <TooltipPopoverContent className="py-2 text-xs">
+                  {supportedIn.length === FRAMEWORKS.length ? (
+                    'This feature is supported in all frameworks.'
+                  ) : supportedIn.length === 1 ? (
+                    <>Only supported in {supportedIn[0]}.</>
+                  ) : (
+                    <>
+                      Supported frameworks:
+                      <ul className="mt-1 ml-3 list-disc">
+                        {supportedIn.map(fw => (
+                          <li key={fw}>{fw}</li>
+                        ))}
+                      </ul>
+                    </>
+                  )}
+                </TooltipPopoverContent>
+              </TooltipPopover>
+              {notSupportedIn.length > 0 && (
+                <TooltipPopover delayDuration={100}>
+                  <TooltipPopoverTrigger
+                    aria-label={unsupportedLabel}
+                    className={cn(
+                      '-my-2 flex flex-shrink-0 items-center gap-2 rounded-lg py-2 pr-2.5 pl-2',
+                      // Gray-out effect
                     !highlightUnsupported &&
                       'opacity-50 grayscale transition-all will-change-transform hover:opacity-100 hover:grayscale-0 focus:opacity-100 focus:grayscale-0 data-[state=open]:opacity-100 data-[state=open]:grayscale-0',
                     // Outline variant
@@ -113,7 +170,7 @@ export function FeatureSupportMatrix({
                         key={framework}
                         className="pointer-events-none flex-shrink-0 select-none"
                       >
-                        <Icon />
+                        <Icon aria-hidden />
                       </span>
                     )
                   })}
@@ -146,6 +203,143 @@ export function FeatureSupportMatrix({
   )
 }
 
+function calloutTone(
+  released: boolean,
+  deprecatedInVersion?: string
+): 'info' | 'warning' | 'success' {
+  if (!released) {
+    return 'info'
+  }
+  return deprecatedInVersion ? 'warning' : 'success'
+}
+
+function VersionLine({
+  introducedInVersion,
+  deprecatedInVersion,
+  released
+}: Pick<
+  FeatureSupportMatrixProps,
+  'introducedInVersion' | 'deprecatedInVersion'
+> & { released: boolean }) {
+  if (!released) {
+    return (
+      <>
+        Coming in version <strong>{introducedInVersion}</strong> — not yet
+        released.
+      </>
+    )
+  }
+  if (deprecatedInVersion) {
+    return (
+      <>
+        Introduced in version <strong>{introducedInVersion}</strong>, and
+        deprecated in version <strong>{deprecatedInVersion}</strong>
+      </>
+    )
+  }
+  return (
+    <>
+      Introduced in version <strong>{introducedInVersion}</strong>.
+    </>
+  )
+}
+
+function parseSupportFrameworks(markdown: string): 'all' | Frameworks[] {
+  const frameworksValue = markdown.match(/frameworks:\s*('all'|"all"|\[[\s\S]*?\])/)
+    ?.[1]
+
+  if (!frameworksValue || frameworksValue === "'all'" || frameworksValue === '"all"') {
+    return 'all'
+  }
+
+  return Array.from(
+    frameworksValue.matchAll(/['"]([^'"]+)['"]/g),
+    match => match[1]
+  ).filter(isFramework)
+}
+
+function isFramework(value: string): value is Frameworks {
+  return FRAMEWORKS.some(framework => framework === value)
+}
+
+function formatList(items: readonly string[]) {
+  if (items.length === 0) {
+    return ''
+  }
+  if (items.length === 1) {
+    return items[0]!
+  }
+  if (items.length === 2) {
+    return `${items[0]} and ${items[1]}`
+  }
+  return `${items.slice(0, -1).join(', ')}, and ${items.at(-1)}`
+}
+
+function resolveSupport({
+  support = { supported: true, frameworks: 'all' }
+}: Pick<FeatureSupportMatrixProps, 'support'>): ResolvedSupport {
+  const supportedIn = support.supported
+    ? resolveFrameworks(support.frameworks)
+    : FRAMEWORKS.filter(fw => support.frameworks.includes(fw) === false)
+
+  return {
+    supportedIn,
+    notSupportedIn: FRAMEWORKS.filter(fw => supportedIn.includes(fw) === false)
+  }
+}
+
+function getSupportedFrameworksText(
+  supportedIn: readonly Frameworks[],
+  { includeAllFrameworksSupport = false }: FeatureSupportMatrixTextOptions = {}
+) {
+  if (supportedIn.length === FRAMEWORKS.length) {
+    return includeAllFrameworksSupport ? 'Supported in all frameworks.' : ''
+  }
+  if (supportedIn.length === 1) {
+    return `Supported only in ${supportedIn[0]}.`
+  }
+  return `Supported in ${formatList(supportedIn)}.`
+}
+
+function getUnsupportedFrameworksText(notSupportedIn: readonly Frameworks[]) {
+  if (notSupportedIn.length === 0) {
+    return ''
+  }
+  if (notSupportedIn.length === 1) {
+    return `Not supported in ${notSupportedIn[0]}.`
+  }
+  return `Not supported in ${formatList(notSupportedIn)}.`
+}
+
+function getFrameworkSupportText(
+  props: FeatureSupportMatrixProps,
+  options: FeatureSupportMatrixTextOptions
+) {
+  if (props.hideFrameworks) {
+    return ''
+  }
+
+  const { supportedIn, notSupportedIn } = resolveSupport(props)
+
+  if (props.support?.supported !== false) {
+    return getSupportedFrameworksText(supportedIn, options)
+  }
+
+  if (notSupportedIn.length === FRAMEWORKS.length) {
+    return 'Not supported in any framework.'
+  }
+  if (supportedIn.length === FRAMEWORKS.length - 1 && notSupportedIn.length === 1) {
+    return `Supported in all frameworks except ${notSupportedIn[0]}.`
+  }
+  if (supportedIn.length === 1) {
+    return `Supported only in ${supportedIn[0]}. ${getUnsupportedFrameworksText(notSupportedIn)}`
+  }
+  if (supportedIn.length === 0) {
+    return getUnsupportedFrameworksText(notSupportedIn)
+  }
+  return `Supported in ${formatList(supportedIn)}. ${getUnsupportedFrameworksText(notSupportedIn)}`
+}
+
 function dedupeFrameworks(frameworks: readonly Frameworks[]) {
   // If both Next.js app router and pages router are included, only keep Next.js app router
   if (
@@ -153,6 +347,13 @@ function dedupeFrameworks(frameworks: readonly Frameworks[]) {
     frameworks.includes('Next.js (pages router)')
   ) {
     frameworks = frameworks.filter(fw => fw !== 'Next.js (pages router)')
+  }
+  // React Router v6/v7/v8 share one icon, so keep only the first version present
+  const reactRouter = FRAMEWORKS.filter(
+    fw => fw.startsWith('React Router') && frameworks.includes(fw)
+  )
+  if (reactRouter.length > 1) {
+    frameworks = frameworks.filter(fw => reactRouter.indexOf(fw) <= 0)
   }
   return frameworks
 }

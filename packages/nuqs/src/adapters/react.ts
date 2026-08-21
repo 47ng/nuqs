@@ -4,29 +4,30 @@ import {
   useContext,
   useEffect,
   useMemo,
-  useState,
+  useRef,
+  useSyncExternalStore,
   type ReactElement,
   type ReactNode
 } from 'react'
 import { debug } from '../lib/debug'
-import { createEmitter } from '../lib/emitter'
+import { resetQueues } from '../lib/queues/reset'
 import { renderQueryString } from '../lib/url-encoding'
 import { createAdapterProvider, type AdapterProps } from './lib/context'
 import type { AdapterInterface, AdapterOptions } from './lib/defs'
-import { applyChange, filterSearchParams } from './lib/key-isolation'
+import { filterSearchParams } from './lib/key-isolation'
 import {
+  getHistorySyncEmitter,
   historyUpdateMarker,
-  patchHistory,
-  type SearchParamsSyncEmitterEvents
+  patchHistory
 } from './lib/patch-history'
 
-const emitter = createEmitter<SearchParamsSyncEmitterEvents>()
+const emitter = getHistorySyncEmitter('react')
 
 function generateUpdateUrlFn(fullPageNavigationOnShallowFalseUpdates: boolean) {
   return function updateUrl(search: URLSearchParams, options: AdapterOptions) {
     const url = new URL(location.href)
     url.search = renderQueryString(search)
-    debug('[nuqs react] Updating url: %s', url)
+    debug(20, 'react', url)
     if (fullPageNavigationOnShallowFalseUpdates && options.shallow === false) {
       const method =
         options.history === 'push' ? location.assign : location.replace
@@ -43,42 +44,65 @@ function generateUpdateUrlFn(fullPageNavigationOnShallowFalseUpdates: boolean) {
   }
 }
 
-const NuqsReactAdapterContext = createContext({
+const NuqsReactAdapterContext = createContext<{
+  fullPageNavigationOnShallowFalseUpdates: boolean
+  serverSearch?: string | URLSearchParams
+}>({
   fullPageNavigationOnShallowFalseUpdates: false
 })
 
+function subscribe(onStoreChange: () => void) {
+  emitter.on('update', onStoreChange)
+  window.addEventListener('popstate', onStoreChange)
+  return () => {
+    emitter.off('update', onStoreChange)
+    window.removeEventListener('popstate', onStoreChange)
+  }
+}
+
+function QueueReset() {
+  useEffect(() => {
+    window.addEventListener('popstate', resetQueues)
+    return () => window.removeEventListener('popstate', resetQueues)
+  }, [])
+  return null
+}
+
 function useNuqsReactAdapter(watchKeys: string[]): AdapterInterface {
-  const { fullPageNavigationOnShallowFalseUpdates } = useContext(
+  const { fullPageNavigationOnShallowFalseUpdates, serverSearch } = useContext(
     NuqsReactAdapterContext
   )
-  const [searchParams, setSearchParams] = useState(() => {
-    if (typeof location === 'undefined') {
-      return new URLSearchParams()
-    }
-    return filterSearchParams(
-      new URLSearchParams(location.search),
+  // Return a referentially-stable snapshot while the watched keys are unchanged:
+  // required by useSyncExternalStore (Object.is bail-out),
+  // and it preserves key isolation (a change to an unwatched key keeps the same ref,
+  // so this hook doesn't re-render).
+  const cache = useRef<{ key: string; search: URLSearchParams } | null>(null)
+  function snapshot(source: string | URLSearchParams) {
+    const filteredSearch = filterSearchParams(
+      new URLSearchParams(source),
       watchKeys,
       false
     )
-  })
-  useEffect(() => {
-    // Popstate event is only fired when the user navigates
-    // via the browser's back/forward buttons.
-    const onPopState = () => {
-      setSearchParams(
-        applyChange(new URLSearchParams(location.search), watchKeys, false)
-      )
+    const key = filteredSearch.toString()
+    if (cache.current?.key === key) {
+      return cache.current.search
     }
-    const onEmitterUpdate = (search: URLSearchParams) => {
-      setSearchParams(applyChange(search, watchKeys, true))
-    }
-    emitter.on('update', onEmitterUpdate)
-    window.addEventListener('popstate', onPopState)
-    return () => {
-      emitter.off('update', onEmitterUpdate)
-      window.removeEventListener('popstate', onPopState)
-    }
-  }, [watchKeys.join('&')])
+    cache.current = { key, search: filteredSearch }
+    return filteredSearch
+  }
+  const searchParams = useSyncExternalStore(
+    subscribe,
+    // Reading location.search live in getSnapshot (rather than from React state
+    // synced by an effect) keeps the value fresh even on the first render after an
+    // <Activity> subtree is revealed: its effects — and thus the emitter
+    // subscription — were detached while hidden and missed the URL update (#1444).
+    () => snapshot(location.search),
+    // There is no location to read from when server-side rendering: snapshot the
+    // server-provided search string instead (eg: in Astro SSR, Inertia, Fastify,
+    // Hono etc). React also renders from this snapshot when hydrating, so the
+    // first client render matches the server markup, then re-syncs to location.
+    () => snapshot(serverSearch ?? '')
+  )
   const updateUrl = useMemo(
     () => generateUpdateUrlFn(fullPageNavigationOnShallowFalseUpdates),
     [fullPageNavigationOnShallowFalseUpdates]
@@ -94,15 +118,36 @@ const NuqsReactAdapter = createAdapterProvider(useNuqsReactAdapter)
 export function NuqsAdapter({
   children,
   fullPageNavigationOnShallowFalseUpdates = false,
+  serverSearch,
   ...adapterProps
 }: AdapterProps & {
   children: ReactNode
   fullPageNavigationOnShallowFalseUpdates?: boolean
+  /**
+   * The search string of the request, for server-side rendering where
+   * `location` is not available (eg: `Astro.url.search` in Astro SSR,
+   * or the request URL's search string in Inertia, Fastify, Hono etc).
+   *
+   * React reads this value on the server and again on the client
+   * during hydration, so both render the same markup.
+   * After hydration, the adapter reads `location.search`.
+   *
+   * Without it, the server renders the parsers' default values,
+   * and deep links show default content until the client hydrates.
+   * Accepts the search string with or without the leading `?`.
+   */
+  serverSearch?: string | URLSearchParams
 }): ReactElement {
   return createElement(
     NuqsReactAdapterContext.Provider,
-    { value: { fullPageNavigationOnShallowFalseUpdates } },
-    createElement(NuqsReactAdapter, { ...adapterProps, children })
+    { value: { fullPageNavigationOnShallowFalseUpdates, serverSearch } },
+    createElement(NuqsReactAdapter, {
+      ...adapterProps,
+      children: [
+        createElement(QueueReset, { key: 'nuqs-adapter-queue-reset' }),
+        children
+      ]
+    })
   )
 }
 

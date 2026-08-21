@@ -12,26 +12,37 @@ describe('debounce: DebouncedPromiseQueue', () => {
   it('calls the callback after the timer expired', () => {
     vi.useFakeTimers()
     const spy = vi.fn().mockResolvedValue('output')
-    const queue = new DebouncedPromiseQueue(spy)
-    queue.push('value', 100)
+    const queue = new DebouncedPromiseQueue<string, string>()
+    queue.push('value', 100, spy)
     vi.advanceTimersToNextTimer()
     expect(spy).toHaveBeenCalledExactlyOnceWith('value')
   })
   it('debounces the queue', () => {
     vi.useFakeTimers()
     const spy = vi.fn().mockResolvedValue('output')
-    const queue = new DebouncedPromiseQueue(spy)
-    queue.push('a', 100)
-    queue.push('b', 100)
-    queue.push('c', 100)
+    const queue = new DebouncedPromiseQueue<string, string>()
+    queue.push('a', 100, spy)
+    queue.push('b', 100, spy)
+    queue.push('c', 100, spy)
     vi.advanceTimersToNextTimer()
     expect(spy).toHaveBeenCalledExactlyOnceWith('c')
   })
+  it('calls the callback of the most recent push', () => {
+    vi.useFakeTimers()
+    const stale = vi.fn().mockResolvedValue('stale')
+    const latest = vi.fn().mockResolvedValue('latest')
+    const queue = new DebouncedPromiseQueue<string, string>()
+    queue.push('a', 100, stale)
+    queue.push('b', 100, latest)
+    vi.advanceTimersToNextTimer()
+    expect(stale).not.toHaveBeenCalled()
+    expect(latest).toHaveBeenCalledExactlyOnceWith('b')
+  })
   it('returns a stable promise to the next time the callback is called', async () => {
     vi.useFakeTimers()
-    const queue = new DebouncedPromiseQueue(passThrough)
-    const p1 = queue.push('a', 100)
-    const p2 = queue.push('b', 100)
+    const queue = new DebouncedPromiseQueue<string, string>()
+    const p1 = queue.push('a', 100, passThrough)
+    const p2 = queue.push('b', 100, passThrough)
     expect(p1).toBe(p2)
     vi.advanceTimersToNextTimer()
     await expect(p1).resolves.toBe('b')
@@ -39,19 +50,20 @@ describe('debounce: DebouncedPromiseQueue', () => {
   it('returns a new Promise once the callback is called', async () => {
     vi.useFakeTimers()
     let count = 0
-    const queue = new DebouncedPromiseQueue(() => Promise.resolve(count++))
-    const p1 = queue.push('value', 100)
+    const callback = () => Promise.resolve(count++)
+    const queue = new DebouncedPromiseQueue<string, number>()
+    const p1 = queue.push('value', 100, callback)
     vi.advanceTimersToNextTimer()
     await expect(p1).resolves.toBe(0)
-    const p2 = queue.push('value', 100)
+    const p2 = queue.push('value', 100, callback)
     expect(p2).not.toBe(p1)
     vi.advanceTimersToNextTimer()
     await expect(p2).resolves.toBe(1)
   })
   it('keeps a record of the last queued value', async () => {
     vi.useFakeTimers()
-    const queue = new DebouncedPromiseQueue(passThrough)
-    const p = queue.push('a', 100)
+    const queue = new DebouncedPromiseQueue<string, string>()
+    const p = queue.push('a', 100, passThrough)
     expect(queue.queuedValue).toBe('a')
     vi.advanceTimersToNextTimer()
     await expect(p).resolves.toBe('a')
@@ -59,43 +71,42 @@ describe('debounce: DebouncedPromiseQueue', () => {
   })
   it('clears the queued value when the callback returns its promise (not when it resolves)', () => {
     vi.useFakeTimers()
-    const queue = new DebouncedPromiseQueue(async input => {
+    const queue = new DebouncedPromiseQueue<string, string>()
+    queue.push('a', 100, async input => {
       await setTimeout(100)
       return input
     })
-    queue.push('a', 100)
     vi.advanceTimersByTime(100)
     expect(queue.queuedValue).toBeUndefined()
   })
   it('clears the queued value when the callback throws an error synchronously', async () => {
     vi.useFakeTimers()
-    const queue = new DebouncedPromiseQueue(() => {
+    const queue = new DebouncedPromiseQueue<string, string>()
+    const p = queue.push('a', 100, () => {
       throw new Error('error')
     })
-    const p = queue.push('a', 100)
     vi.advanceTimersToNextTimer()
     expect(queue.queuedValue).toBeUndefined()
     await expect(p).rejects.toThrowError('error')
   })
   it('clears the queued value when the callback rejects', async () => {
     vi.useFakeTimers()
-    const queue = new DebouncedPromiseQueue(() =>
-      Promise.reject(new Error('error'))
-    )
-    const p = queue.push('a', 100)
+    const queue = new DebouncedPromiseQueue<string, string>()
+    const p = queue.push('a', 100, () => Promise.reject(new Error('error')))
     vi.advanceTimersToNextTimer()
     expect(queue.queuedValue).toBeUndefined()
     await expect(p).rejects.toThrowError('error')
   })
   it('returns a new Promise when an update is pushed while the callback is pending', async () => {
     vi.useFakeTimers()
-    const queue = new DebouncedPromiseQueue(async input => {
+    const callback = async (input: string) => {
       await setTimeout(100)
       return input
-    })
-    const p1 = queue.push('a', 100)
+    }
+    const queue = new DebouncedPromiseQueue<string, string>()
+    const p1 = queue.push('a', 100, callback)
     vi.advanceTimersByTime(150) // 100ms debounce + half the callback settle time
-    const p2 = queue.push('b', 100)
+    const p2 = queue.push('b', 100, callback)
     expect(p1).not.toBe(p2)
     vi.advanceTimersToNextTimer()
     await expect(p1).resolves.toBe('a')
@@ -167,6 +178,33 @@ describe('debounce: DebounceController', () => {
     await expect(promise1).resolves.toEqual(new URLSearchParams('?a=a'))
     await expect(promise2).resolves.toEqual(new URLSearchParams('?b=b'))
     expect(fakeAdapter.updateUrl).toHaveBeenCalledTimes(2)
+  })
+  it('flushes with the adapter of the most recent push', async () => {
+    vi.useFakeTimers()
+    const makeAdapter = (): UpdateQueueAdapterContext => ({
+      updateUrl: vi.fn<UpdateUrlFunction>(),
+      getSearchParamsSnapshot() {
+        return new URLSearchParams()
+      }
+    })
+    const stale = makeAdapter()
+    const latest = makeAdapter()
+    const controller = new DebounceController()
+    const update = { key: 'key', query: 'value', options: {} }
+    controller.push(update, 100, stale, search => {
+      search.set('config', 'stale')
+      return search
+    })
+    const promise = controller.push(update, 100, latest, search => {
+      search.set('config', 'latest')
+      return search
+    })
+    vi.runAllTimers()
+    await expect(promise).resolves.toEqual(
+      new URLSearchParams('?key=value&config=latest')
+    )
+    expect(stale.updateUrl).not.toHaveBeenCalled()
+    expect(latest.updateUrl).toHaveBeenCalledOnce()
   })
   it('keeps a record of pending updates', async () => {
     vi.useFakeTimers()

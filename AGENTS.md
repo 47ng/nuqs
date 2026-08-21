@@ -16,7 +16,7 @@ Refer to: [README.md](README.md) & [CONTRIBUTING.md](CONTRIBUTING.md) for author
 - **Documentation app** (Next.js + Fumadocs): `packages/docs`
   - MDX content: `packages/docs/content`
 - **End-to-end test benches:** `packages/e2e`
-  - Framework targets: Next.js app/pages, React SPA, Remix, TanStack Router, React Router v6/v7
+  - Framework targets: Next.js app/pages, React SPA, Remix, TanStack Router, React Router v6/v7/v8
 - **Examples:** `packages/examples/*`
 
 ### Core Concepts (nuqs)
@@ -36,8 +36,10 @@ Refer to: [README.md](README.md) & [CONTRIBUTING.md](CONTRIBUTING.md) for author
 ### Configuration
 
 - **Package manager:** `pnpm`
+- **New worktrees:** With Git 2.54+, run `node --run setup:hooks` once per trusted clone to auto-install dependencies after `git worktree add`. If the hook skips (branch manifests differ from `origin/HEAD`), review the branch and run `node --run setup:worktree` in the worktree.
 - **Build:** `pnpm build`
 - **Test suite:** `pnpm test` (5-10 minutes; includes build + unit + typing + e2e)
+- **Focused tests:** Use the root Turbo command, for example `pnpm run test --filter nuqs` or `pnpm run test --filter e2e-next`. Do not invoke package test scripts directly.
 - **Development:** `pnpm dev --filter <package-name>...` (triple dots start dependencies' dev script too)
 
 ---
@@ -70,16 +72,25 @@ For detailed development guidelines organized by task, see:
 
 ## Debugging
 
-Enable debug logs in the browser console:
+Import the opt-in debug bundle once in each runtime where logs are needed:
+
+```ts
+import 'nuqs/debug'
+```
+
+Then enable debug logs in the browser console and reload the page:
 
 ```js
 localStorage.setItem('debug', 'nuqs')
 ```
 
-Log prefixes:
+In server or Node environments (e.g. when using `nuqs/server`), set the `DEBUG` environment variable so it contains `nuqs`:
 
-- `[nuqs]` — single-key operations
-- `[nuq+]` — multi-key operations
+```bash
+DEBUG=nuqs pnpm dev
+```
+
+Hook-level logs are prefixed with `[nuq+ …]`; internal subsystems use `[nuqs <subsystem>]` (see `packages/nuqs/src/lib/debug-messages.ts` for the catalog).
 
 Encourage debug logs in issue reports and include them in reproduction scripts.
 

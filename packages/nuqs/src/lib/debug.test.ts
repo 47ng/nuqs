@@ -1,5 +1,32 @@
-import { describe, expect, it } from 'vitest'
-import { sprintf } from './debug'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+import { isDebugFlagSet } from './debug'
+import { sprintf } from './debug-messages'
+
+afterEach(() => {
+  vi.unstubAllEnvs()
+})
+
+describe('debug/server (DEBUG env)', () => {
+  it('enables when DEBUG includes nuqs', () => {
+    vi.stubEnv('DEBUG', 'nuqs')
+    expect(isDebugFlagSet()).toBe(true)
+  })
+
+  it('enables when DEBUG contains nuqs among others', () => {
+    vi.stubEnv('DEBUG', '*,nuqs,other')
+    expect(isDebugFlagSet()).toBe(true)
+  })
+
+  it('disables when DEBUG is unset', () => {
+    vi.stubEnv('DEBUG', '')
+    expect(isDebugFlagSet()).toBe(false)
+  })
+
+  it('disables when DEBUG does not include nuqs', () => {
+    vi.stubEnv('DEBUG', 'other,*')
+    expect(isDebugFlagSet()).toBe(false)
+  })
+})
 
 describe('debug/sprintf', () => {
   it('formats strings with %s', () => {

@@ -8,13 +8,16 @@ import {
   type ReactNode
 } from 'react'
 import type { Options } from '../../defs'
-import { debugEnabled } from '../../lib/debug'
 import { error } from '../../lib/errors'
+import { globalWeakSingleton } from '../../lib/global-singleton'
 import type { AdapterInterface, UseAdapterHook } from './defs'
 
 export type AdapterProps = {
   defaultOptions?: Partial<
-    Pick<Options, 'shallow' | 'clearOnDefault' | 'scroll' | 'limitUrlUpdates'>
+    Pick<
+      Options,
+      'history' | 'shallow' | 'clearOnDefault' | 'scroll' | 'limitUrlUpdates'
+    >
   >
   processUrlSearchParams?: (search: URLSearchParams) => URLSearchParams
 }
@@ -23,12 +26,24 @@ export type AdapterContext = AdapterProps & {
   useAdapter: UseAdapterHook
 }
 
-export const context: Context<AdapterContext> = createContext<AdapterContext>({
-  useAdapter() {
-    throw new Error(error(404))
+// Keyed by createContext identity: copies sharing one React instance share
+// the context, while distinct React instances keep isolated contexts.
+// Revisit in nuqs@3 (react@^19 only): the React 18/19 Provider shape hazard
+// goes away, but distinct React instances on one page would then share one
+// context object (concurrent renders interleave its _currentValue).
+export const context: Context<AdapterContext> = globalWeakSingleton(
+  'adapter-context',
+  createContext,
+  () => {
+    const ctx = createContext<AdapterContext>({
+      useAdapter() {
+        throw new Error(error(404))
+      }
+    })
+    ctx.displayName = 'NuqsAdapterContext'
+    return ctx
   }
-})
-context.displayName = 'NuqsAdapterContext'
+)
 
 declare global {
   interface Window {
@@ -36,7 +51,10 @@ declare global {
   }
 }
 
-if (debugEnabled && typeof window !== 'undefined') {
+// Detect adapter contexts that cannot be shared across duplicate copies:
+// nuqs version mismatch, or multiple React instances. Same-version copies
+// on one React share a single context via globalWeakSingleton above.
+if (typeof window !== 'undefined') {
   if (window.__NuqsAdapterContext && window.__NuqsAdapterContext !== context) {
     console.error(error(303))
   }

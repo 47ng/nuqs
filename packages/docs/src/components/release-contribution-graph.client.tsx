@@ -16,7 +16,7 @@ import {
 } from '@/src/components/ui/tooltip'
 import { cn } from '@/src/lib/utils'
 import { useState } from 'react'
-import type { ReleasesByDate } from './release-contribution-graph'
+import type { ReleasesByDate } from './release-contribution-graph.lib'
 
 type ReleaseContributionGraphClientProps = {
   activities: Activity[]

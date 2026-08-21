@@ -18,6 +18,7 @@ import {
   JsonParserDemo,
   NativeArrayParserDemo
 } from '@/content/docs/parsers/demos'
+import { HumanContent, LLMContent } from '@/src/components/audience'
 
 Search params are strings by default, but chances are your state is more complex than that.
 
@@ -26,15 +27,21 @@ This is where **parsers** come in.
 
 `nuqs` provides built-in parsers for the most common types, and allows you to [define your own](/docs/parsers/making-your-own).
 
+<LLMContent>
+Interactive parser demos are omitted from the LLM output on this page when the surrounding code samples already describe the parser behavior.
+</LLMContent>
+
 ## String
 
 ```ts
 import { parseAsString } from 'nuqs'
 ```
 
+<HumanContent>
 <Suspense fallback={<DemoFallback />}>
   <StringParserDemo />
 </Suspense>
+</HumanContent>
 
 <Callout title="Type-safety tip">
 `parseAsString` is a noop: it does not perform any validation when parsing,
@@ -71,9 +78,11 @@ import { parseAsInteger } from 'nuqs'
 useQueryState('int', parseAsInteger.withDefault(0))
 ```
 
+<HumanContent>
 <Suspense fallback={<DemoFallback />}>
   <IntegerParserDemo />
 </Suspense>
+</HumanContent>
 
 ### Floating point
 
@@ -85,9 +94,11 @@ import { parseAsFloat } from 'nuqs'
 useQueryState('float', parseAsFloat.withDefault(0))
 ```
 
+<HumanContent>
 <Suspense fallback={<DemoFallback />}>
   <FloatParserDemo />
 </Suspense>
+</HumanContent>
 
 ### Hexadecimal
 
@@ -99,13 +110,17 @@ import { parseAsHex } from 'nuqs'
 useQueryState('hex', parseAsHex.withDefault(0x00))
 ```
 
+<HumanContent>
 <Suspense fallback={<DemoFallback />}>
   <HexParserDemo />
 </Suspense>
+</HumanContent>
 
+<HumanContent>
 <Callout title="Going further">
   Check out the [Hex Colors](/playground/hex-colors) playground for a demo.
 </Callout>
+</HumanContent>
 
 ### Index
 
@@ -118,9 +133,11 @@ import { parseAsIndex } from 'nuqs'
 const [pageIndex] = useQueryState('page', parseAsIndex.withDefault(0))
 ```
 
+<HumanContent>
 <Suspense fallback={<DemoFallback />}>
   <IndexParserDemo />
 </Suspense>
+</HumanContent>
 
 ## Boolean
 
@@ -130,9 +147,11 @@ import { parseAsBoolean } from 'nuqs'
 useQueryState('bool', parseAsBoolean.withDefault(false))
 ```
 
+<HumanContent>
 <Suspense fallback={<DemoFallback />}>
   <BooleanParserDemo />
 </Suspense>
+</HumanContent>
 
 ## Literals
 
@@ -171,9 +190,11 @@ const sortOrder = ['asc', 'desc'] as const
 parseAsStringLiteral(sortOrder)
 ```
 
+<HumanContent>
 <Suspense fallback={<DemoFallback />}>
   <StringLiteralParserDemo />
 </Suspense>
+</HumanContent>
 
 ### Numeric literals
 
@@ -225,9 +246,11 @@ on how they encode the value into the query string.
 import { parseAsIsoDateTime } from 'nuqs'
 ```
 
+<HumanContent>
 <Suspense>
   <DatetimeISOParserDemo />
 </Suspense>
+</HumanContent>
 
 ### ISO 8601 Date
 
@@ -237,9 +260,11 @@ import { parseAsIsoDateTime } from 'nuqs'
 import { parseAsIsoDate } from 'nuqs'
 ```
 
+<HumanContent>
 <Suspense>
   <DateISOParserDemo />
 </Suspense>
+</HumanContent>
 
 <Callout>
   The Date is parsed without the time zone offset, making it at 00:00:00 UTC.
@@ -253,9 +278,11 @@ Miliseconds since the Unix epoch.
 import { parseAsTimestamp } from 'nuqs'
 ```
 
+<HumanContent>
 <Suspense>
   <DateTimestampParserDemo />
 </Suspense>
+</HumanContent>
 
 ## Arrays
 
@@ -299,9 +326,11 @@ setJson({
 })
 ```
 
+<HumanContent>
 <Suspense>
   <JsonParserDemo />
 </Suspense>
+</HumanContent>
 
 Using other validation libraries is possible: `parseAsJson{:ts}` accepts
 any Standard Schema compatible input (eg: ArkType, Valibot),
@@ -331,7 +360,13 @@ If you want to use the native URL format for arrays, repeating the same key mult
 
 import { Querystring } from '@/src/components/querystring'
 
+<HumanContent>
 <Querystring path="/products" value='?tag=books&tag=tech&tag=design' />
+</HumanContent>
+
+<LLMContent>
+Example URL: `/products?tag=books&tag=tech&tag=design`
+</LLMContent>
 
 you can now use `MultiParsers{:ts}` like `parseAsNativeArrayOf{:ts}` to read and write those values in a fully type-safe way.
 
@@ -346,9 +381,11 @@ const [projectIds, setProjectIds] = useQueryState(
 // ?project=123&project=456 → [123, 456]
 ```
 
+<HumanContent>
 <Suspense fallback={<DemoFallback />}>
   <NativeArrayParserDemo />
 </Suspense>
+</HumanContent>
 
 <Callout title="Note: empty array default">
   `parseAsNativeArrayOf{:ts}` has a built-in default value of empty array (`.withDefault([]){:ts}`) so that you don't have to handle `null{:ts}` cases.

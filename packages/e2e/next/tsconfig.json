@@ -3,18 +3,20 @@
   "compilerOptions": {
     // Type checking
     "strict": true,
-    "alwaysStrict": false, // Don't emit "use strict" to avoid conflicts with "use client"
     // Modules
     "module": "ESNext",
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "resolveJsonModule": true,
     // Language & Environment
     "target": "ESNext",
-    "lib": ["DOM", "DOM.Iterable", "ESNext"],
+    "lib": [
+      "DOM",
+      "DOM.Iterable",
+      "ESNext"
+    ],
     // Emit
     "noEmit": true,
     "declaration": false,
-    "downlevelIteration": true,
     "jsx": "react-jsx",
     // Interop
     "allowJs": true,
@@ -33,7 +35,9 @@
       }
     ],
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": [
+        "./src/*"
+      ]
     }
   },
   "include": [
@@ -43,5 +47,7 @@
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts"
   ],
-  "exclude": ["node_modules"]
+  "exclude": [
+    "node_modules"
+  ]
 }

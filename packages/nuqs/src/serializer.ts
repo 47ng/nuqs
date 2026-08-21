@@ -1,7 +1,9 @@
 import type { Nullable, Options, UrlKeys } from './defs'
-import { renderQueryString } from './lib/url-encoding'
-import type { inferParserType, ParserMap } from './parsers'
+import { isEqual } from './lib/compare'
 import { write } from './lib/search-params'
+import { renderQueryString } from './lib/url-encoding'
+import { getOwn, getUrlKey } from './lib/url-keys'
+import type { inferParserType, ParserMap } from './parsers'
 
 type Base = string | URLSearchParams | URL
 
@@ -67,31 +69,31 @@ export function createSerializer<
     arg1BaseOrValues: BaseType | Values,
     arg2values: Values | null = {}
   ) {
-    let [base, search] = isBase<BaseType>(arg1BaseOrValues)
+    let [base, search, hash] = isBase<BaseType>(arg1BaseOrValues)
       ? splitBase(arg1BaseOrValues)
-      : ['', new URLSearchParams()]
+      : ['', new URLSearchParams(), '']
     const values = isBase(arg1BaseOrValues) ? arg2values : arg1BaseOrValues
     if (values === null) {
-      for (const key in parsers) {
-        const urlKey = urlKeys[key] ?? key
+      for (const key of Object.keys(parsers)) {
+        const urlKey = getUrlKey(urlKeys, key)
         search.delete(urlKey)
       }
       if (processUrlSearchParams) {
         search = processUrlSearchParams(search)
       }
-      return (base + renderQueryString(search)) as Return
+      return (base + renderQueryString(search) + hash) as Return
     }
-    for (const key in parsers) {
-      const parser = parsers[key]
-      const value = values[key]
-      if (!parser || value === undefined) {
+    for (const key of Object.keys(parsers)) {
+      const parser = parsers[key]!
+      const value = getOwn(values, key)
+      if (value === undefined) {
         continue
       }
-      const urlKey = urlKeys[key] ?? key
+      const urlKey = getUrlKey(urlKeys, key)
       const isMatchingDefault =
         parser.defaultValue !== undefined &&
         value !== null &&
-        (parser.eq ?? ((a, b) => a === b))(value, parser.defaultValue)
+        (parser.eq ?? isEqual)(value, parser.defaultValue)
 
       if (
         value === null ||
@@ -100,13 +102,13 @@ export function createSerializer<
         search.delete(urlKey)
       } else {
         const serialized = parser.serialize(value)
-        search = write(serialized, urlKey, search)
+        search = write(search, urlKey, serialized)
       }
     }
     if (processUrlSearchParams) {
       search = processUrlSearchParams(search)
     }
-    return base + renderQueryString(search)
+    return base + renderQueryString(search) + hash
   }
   return serialize
 }
@@ -121,14 +123,16 @@ function isBase<BaseType>(base: any): base is BaseType {
 
 function splitBase<BaseType extends Base>(base: BaseType) {
   if (typeof base === 'string') {
-    const [path = '', ...search] = base.split('?')
-    return [path, new URLSearchParams(search.join('?'))] as const
+    const [pathAndSearch = '', ...hashParts] = base.split('#')
+    const hash = hashParts.length ? '#' + hashParts.join('#') : ''
+    const [path = '', ...search] = pathAndSearch.split('?')
+    return [path, new URLSearchParams(search.join('?')), hash] as const
   } else if (base instanceof URLSearchParams) {
-    return ['', new URLSearchParams(base)] as const // Operate on a copy of URLSearchParams, as derived classes may restrict its allowed methods
+    return ['', new URLSearchParams(base), ''] as const // Operate on a copy of URLSearchParams, as derived classes may restrict its allowed methods
   } else {
-    return [
-      base.origin + base.pathname,
-      new URLSearchParams(base.searchParams)
-    ] as const
+    const baseLength = base.href.length - base.search.length - base.hash.length
+    const path = base.href.slice(0, baseLength).replace(/[?#]+$/, '')
+    const hash = base.hash || (base.href.endsWith('#') ? '#' : '')
+    return [path, new URLSearchParams(base.searchParams), hash] as const
   }
 }

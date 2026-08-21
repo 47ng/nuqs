@@ -3,6 +3,8 @@ title: TanStack Table Parsers
 description: Store your table state in the URL, with style.
 ---
 
+import { HumanContent, LLMContent } from '@/src/components/audience'
+
 [TanStack Table](https://tanstack.com/table) is a popular library for managing
 tabular content in React (and other frameworks).
 
@@ -21,9 +23,17 @@ You will likely want the URL to follow your UI and be one-based for the page ind
 
 import { TanStackTablePagination } from './tanstack-table.generator'
 
+<HumanContent>
 <Suspense>
   <TanStackTablePagination />
 </Suspense>
+</HumanContent>
+
+<LLMContent>
+Interactive pagination example omitted. The key idea is to map TanStack Table's zero-based `pageIndex` state to a one-based query parameter representation.
+</LLMContent>
+
+<HumanContent>
 
 ## Filtering
 
@@ -31,8 +41,14 @@ import { TanStackTablePagination } from './tanstack-table.generator'
   This section is empty for now, [contributions](https://github.com/47ng/nuqs) are welcome!
 </Callout>
 
+</HumanContent>
+
+<HumanContent>
+
 ## Sorting
 
 <Callout>
   This section is empty for now, [contributions](https://github.com/47ng/nuqs) are welcome!
 </Callout>
+
+</HumanContent>

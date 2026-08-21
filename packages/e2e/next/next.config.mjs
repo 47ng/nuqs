@@ -18,7 +18,11 @@ const config = {
   reactCompiler: process.env.REACT_COMPILER === 'true',
   experimental: {
     clientRouterFilter: false,
-    serverSourceMaps: true
+    serverSourceMaps: true,
+    // next ≤16.2.x: type-checks via TS JS API (not in typescript@^7.0.0, will ship in 7.1)
+    // next  16.3.0: new default = type-checks via `tsc` CLI.
+    // When `typescript@7.1.x` lands, we can remove this option & the typescript6 bridge.
+    useTypeScriptCli: false
   },
   transpilePackages: ['e2e-shared'],
   rewrites: async () => [

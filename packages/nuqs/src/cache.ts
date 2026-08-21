@@ -1,6 +1,8 @@
 import * as React from 'react'
 import type { SearchParams, UrlKeys } from './defs'
+import { compareQuery } from './lib/compare'
 import { error } from './lib/errors'
+import { getOwn } from './lib/url-keys'
 import { createLoader, type LoaderFunctionOptions } from './loader'
 import type { inferParserType, ParserMap } from './parsers'
 
@@ -122,7 +124,7 @@ export function createSearchParamsCache<Parsers extends ParserMap>(
   }
   function get<Key extends Keys>(key: Key): ParsedSearchParams[Key] {
     const { searchParams } = getCache()
-    const entry = searchParams[key]
+    const entry = getOwn(searchParams, key)
     if (typeof entry === 'undefined') {
       throw new Error(
         error(500) +
@@ -144,7 +146,7 @@ export function compareSearchParams(a: SearchParams, b: SearchParams): boolean {
     return false
   }
   for (const key in a) {
-    if (a[key] !== b[key]) {
+    if (!compareQuery(a[key] ?? null, b[key] ?? null)) {
       return false
     }
   }

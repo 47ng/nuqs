@@ -6,9 +6,46 @@ import {
   parseAsNativeArrayOf,
   parseAsString
 } from './parsers'
+import { createSerializer } from './serializer'
 
 describe('loader', () => {
   describe('sync', () => {
+    it.each(['constructor', 'hasOwnProperty'])(
+      'supports the object prototype key %s',
+      key => {
+        const parsers = { [key]: parseAsString }
+        const serialize = createSerializer(parsers)
+        const load = createLoader(parsers)
+
+        expect(serialize({ [key]: 'acme' })).toBe(`?${key}=acme`)
+        expect(load(`?${key}=acme`)).toEqual({ [key]: 'acme' })
+
+        const urlKeys = { [key]: 'alias' }
+        const serializeAlias = createSerializer(parsers, { urlKeys })
+        const loadAlias = createLoader(parsers, { urlKeys })
+        expect(serializeAlias({ [key]: 'ajax' })).toBe('?alias=ajax')
+        expect(loadAlias('?alias=ajax')).toEqual({ [key]: 'ajax' })
+
+        const inheritedUrlKeys: Record<string, string> = Object.create({
+          [key]: 'alias'
+        })
+        const loadInheritedAlias = createLoader(parsers, {
+          urlKeys: inheritedUrlKeys
+        })
+        expect(loadInheritedAlias(`?${key}=acme&alias=ajax`)).toEqual({
+          [key]: 'acme'
+        })
+      }
+    )
+    it('round-trips an explicit empty native array', () => {
+      const parser = parseAsNativeArrayOf(parseAsInteger).withDefault([42])
+      const serialize = createSerializer({ a: parser })
+      const load = createLoader({ a: parser })
+
+      const query = serialize({ a: [] })
+      expect(query).toBe('?a=')
+      expect(load(query)).toEqual({ a: [] })
+    })
     it('parses a URL object', () => {
       const load = createLoader({
         a: parseAsInteger,
@@ -114,6 +151,14 @@ describe('loader', () => {
       })
       expect(() => load('?test=will-be-null', { strict: true })).toThrow(
         '[nuqs] Failed to parse query `will-be-null` for key `test` (got null)'
+      )
+    })
+    it('throws errors in strict mode when the parser rejects an empty query', () => {
+      const load = createLoader({
+        count: parseAsInteger
+      })
+      expect(() => load('?count=', { strict: true })).toThrow(
+        '[nuqs] Failed to parse query `` for key `count` (got null)'
       )
     })
     it('throws errors in strict mode when the parser throws an error', () => {

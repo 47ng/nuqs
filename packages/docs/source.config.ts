@@ -13,7 +13,17 @@ export default defineConfig({
   lastModifiedTime: 'git',
   mdxOptions: {
     remarkPlugins: [remarkSmartypants, remarkAudience],
-    rehypeCodeOptions
+    rehypeCodeOptions,
+    remarkNpmOptions: {
+      packageManagers: [
+        { name: 'npm', command: () => 'npm i nuqs' },
+        { name: 'pnpm', command: () => 'pnpm add nuqs' },
+        { name: 'yarn', command: () => 'yarn add nuqs' },
+        { name: 'bun', command: () => 'bun add nuqs' },
+        { name: 'deno', command: () => 'deno add nuqs' },
+        { name: 'vlt', command: () => 'vlt install nuqs' }
+      ]
+    }
   }
 })
 

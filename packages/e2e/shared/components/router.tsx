@@ -9,28 +9,24 @@ export type Router = {
   push(url: string, options: RouterOptions): void
 }
 
-type RouterContextValue = () => Router
+const RouterContext = createContext<Router | null>(null)
 
-const RouterContext = createContext<RouterContextValue>(
-  function useAbstractRouter() {
+export function useRouter(): Router {
+  const router = useContext(RouterContext)
+  if (router === null) {
     throw new Error('Router was not provided')
   }
-)
-
-export function useRouter() {
-  return useContext(RouterContext)()
+  return router
 }
 
 export function RouterProvider({
   children,
-  useRouter
+  router
 }: {
   children: React.ReactNode
-  useRouter: () => Router
+  router: Router
 }) {
   return (
-    <RouterContext.Provider value={useRouter}>
-      {children}
-    </RouterContext.Provider>
+    <RouterContext.Provider value={router}>{children}</RouterContext.Provider>
   )
 }

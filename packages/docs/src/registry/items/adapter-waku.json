@@ -3,6 +3,8 @@
   "name": "adapter-waku",
   "title": "Waku Adapter",
   "description": "Using nuqs in ⛩️ Waku applications.",
+  "author": "François Best <franky47>",
+  "categories": ["adapter"],
   "dependencies": ["waku@>=0.22.0", "nuqs"],
   "files": [
     {

@@ -4,7 +4,8 @@ export {
    *
    * Please pin your version of React Router in the import:
    * - `nuqs/adapters/react-router/v6`
-   * - `nuqs/adapters/react-router/v7`.
+   * - `nuqs/adapters/react-router/v7`
+   * - `nuqs/adapters/react-router/v8`.
    *
    * Note: this deprecated import (`nuqs/adapters/react-router`) is for React Router v6 only.
    */
@@ -14,7 +15,8 @@ export {
    *
    * Please pin your version of React Router in the import:
    * - `nuqs/adapters/react-router/v6`
-   * - `nuqs/adapters/react-router/v7`.
+   * - `nuqs/adapters/react-router/v7`
+   * - `nuqs/adapters/react-router/v8`.
    *
    * Note: this deprecated import (`nuqs/adapters/react-router`) is for React Router v6 only.
    */
