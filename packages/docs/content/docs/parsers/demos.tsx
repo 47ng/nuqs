@@ -480,7 +480,7 @@ export function CustomParserDemo() {
   const ratingName = React.useId()
   return (
     <DemoContainer demoKey="rating">
-      <fieldset className="group">
+      <fieldset>
         <legend className="sr-only">Rating</legend>
         <StarButton
           name={ratingName}
