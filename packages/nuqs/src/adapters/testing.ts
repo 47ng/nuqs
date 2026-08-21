@@ -93,14 +93,15 @@ export function NuqsTestingAdapter({
   // Simulate a central location.search in memory
   // for the getSearchParamsSnapshot to be referentially stable.
   const locationSearchRef = useRef(renderedInitialSearchParams)
-  // The reset must happen once per mounted instance, not on every render:
-  // the component body also runs on re-renders (with hasMemory, on every
-  // flushed URL update), where resetting would abort updates enqueued since
-  // the previous render.
-  const didResetQueuesRef = useRef(false)
-  if (resetUrlUpdateQueueOnMount && !didResetQueuesRef.current) {
-    didResetQueuesRef.current = true
-    resetQueues()
+  // The reset option is sampled once per mounted instance. The component body
+  // also runs on re-renders (with hasMemory, on every flushed URL update),
+  // where resetting would abort updates enqueued since the previous render.
+  const isFirstRender = useRef(true)
+  if (isFirstRender.current) {
+    isFirstRender.current = false
+    if (resetUrlUpdateQueueOnMount) {
+      resetQueues()
+    }
   }
   const [searchParams, setSearchParams] = useState(
     () => new URLSearchParams(locationSearchRef.current)
