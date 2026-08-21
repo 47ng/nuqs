@@ -28,4 +28,14 @@ describe('Slider accessibility', () => {
 
     expect(thumb).toContain('aria-labelledby="float-label"')
   })
+
+  it('applies a value text to the slider thumb', () => {
+    const thumb = sliderThumb(
+      renderToStaticMarkup(
+        <Slider aria-valuetext="ff" defaultValue={[255]} max={255} />
+      )
+    )
+
+    expect(thumb).toContain('aria-valuetext="ff"')
+  })
 })
