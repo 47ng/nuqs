@@ -1,14 +1,10 @@
+import {
+  isThemeSwitcherKeydown,
+  readThemeSwitcherKey
+} from '@/src/lib/theme-switcher-key'
+
 window.addEventListener('keydown', event => {
-  if (
-    event.key.toLowerCase() !== 'd' ||
-    event.defaultPrevented ||
-    event.repeat ||
-    event.metaKey ||
-    event.ctrlKey ||
-    event.altKey ||
-    (event.target instanceof HTMLElement &&
-      event.target.closest('input, textarea, select, [contenteditable]'))
-  ) {
+  if (!isThemeSwitcherKeydown(event, readThemeSwitcherKey(localStorage))) {
     return
   }
 
