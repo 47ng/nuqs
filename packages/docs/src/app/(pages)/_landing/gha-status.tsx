@@ -2,6 +2,11 @@ import { cn } from '@/src/lib/utils'
 import React from 'react'
 import { z } from 'zod'
 
+const runDateFormat = new Intl.DateTimeFormat('en-GB', {
+  dateStyle: 'long',
+  timeZone: 'UTC'
+})
+
 export async function GitHubActionsStatus({
   className,
   ...props
@@ -32,7 +37,7 @@ export async function GitHubActionsStatus({
           <li key={status.id}>
             <a
               href={status.url}
-              aria-label={`GitHub Actions run ${index + 1} of ${statuses.length} on ${status.createdAt}: ${metadata.label}`}
+              aria-label={`GitHub Actions run ${index + 1} of ${statuses.length}, most recent first, on ${runDateFormat.format(new Date(status.createdAt))}: ${metadata.label}`}
               className="flex size-6 items-center justify-center rounded-full"
             >
               <div
