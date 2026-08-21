@@ -19,6 +19,7 @@ export function Demo() {
         Count: {count}
       </button>
       <input
+        aria-label="Name"
         placeholder="Enter your name"
         value={hello}
         autoComplete="off"

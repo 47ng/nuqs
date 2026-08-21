@@ -15,7 +15,7 @@ export function PageFooter() {
         <div className="grid gap-12 lg:grid-cols-3">
           <div className="space-y-4">
             <NuqsWordmark className="text-4xl" />
-            <p className="text-sm text-zinc-500">
+            <p className="text-sm text-zinc-600 dark:text-zinc-400">
               Made by{' '}
               <a
                 href="https://francoisbest.com"

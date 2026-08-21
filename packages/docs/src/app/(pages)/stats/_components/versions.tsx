@@ -56,9 +56,14 @@ export function Versions({ records, versions }: VersionProps) {
         <>
           <Boxes size={24} strokeWidth={1.5} />
           Version adoption
-          <Label className="ml-auto flex items-center gap-2">
+          <Label
+            id="beta-label"
+            htmlFor="beta"
+            className="ml-auto flex items-center gap-2"
+          >
             <Checkbox
               id="beta"
+              aria-labelledby="beta-label"
               checked={beta}
               onCheckedChange={checked =>
                 setSearchParams({ beta: checked === true })
