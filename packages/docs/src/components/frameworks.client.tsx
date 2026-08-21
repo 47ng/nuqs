@@ -11,6 +11,7 @@ export function NextJS({ className, ...props }: IconProps) {
   const id = useId()
   return (
     <svg
+      role="img"
       aria-label="Next.js (app & pages routers)"
       width="1em"
       height="1em"
@@ -86,6 +87,7 @@ export function Vitest({ className, ...props }: IconProps) {
   const id = useId()
   return (
     <svg
+      role="img"
       aria-label="Vitest"
       height=".8em"
       viewBox="0 0 77 47"

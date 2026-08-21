@@ -93,7 +93,9 @@ describe('gatedHeadingIds', () => {
       '## React Router v8 [#react-router-v8]',
       '</SinceVersion>'
     ].join('\n')
-    expect(gatedHeadingIds(input, hideAll)).toEqual(new Set(['react-router-v8']))
+    expect(gatedHeadingIds(input, hideAll)).toEqual(
+      new Set(['react-router-v8'])
+    )
   })
 
   it('collects nothing when the block is visible', () => {
@@ -111,7 +113,9 @@ describe('gatedHeadingIds', () => {
       '### Some New Option',
       '</SinceVersion>'
     ].join('\n')
-    expect(gatedHeadingIds(input, hideAll)).toEqual(new Set(['some-new-option']))
+    expect(gatedHeadingIds(input, hideAll)).toEqual(
+      new Set(['some-new-option'])
+    )
   })
 
   it('uses the explicit id for a heading that carries inline JSX', () => {
@@ -120,7 +124,9 @@ describe('gatedHeadingIds', () => {
       "## <Icon className='mr-2' />React Router v8 [#react-router-v8]",
       '</SinceVersion>'
     ].join('\n')
-    expect(gatedHeadingIds(input, hideAll)).toEqual(new Set(['react-router-v8']))
+    expect(gatedHeadingIds(input, hideAll)).toEqual(
+      new Set(['react-router-v8'])
+    )
   })
 
   it('ignores headings outside any hidden block', () => {
@@ -138,6 +144,35 @@ describe('gatedHeadingIds', () => {
       '</SinceVersion>'
     ].join('\n')
     expect(gatedHeadingIds(input, hideAll)).toEqual(new Set(['real']))
+  })
+
+  it('keeps headings from LLM-only blocks, which the page anchors to', () => {
+    const input = [
+      '## Visible [#visible]',
+      '<LLMContent>',
+      '### Next.js app router [#nextjs-app-router]',
+      '</LLMContent>'
+    ].join('\n')
+    expect(gatedHeadingIds(input, showAll)).toEqual(new Set())
+  })
+
+  it('matches Fumadocs slugs for punctuation', () => {
+    const input = [
+      '<SinceVersion v="2.9.0">',
+      '### Next.js (app router)',
+      '### Remix / React Router',
+      '### snake_case option',
+      '### Café & crème',
+      '</SinceVersion>'
+    ].join('\n')
+    expect(gatedHeadingIds(input, hideAll)).toEqual(
+      new Set([
+        'nextjs-app-router',
+        'remix--react-router',
+        'snake_case-option',
+        'café--crème'
+      ])
+    )
   })
 
   it('collects nested headings of a hidden block', () => {

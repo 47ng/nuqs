@@ -76,14 +76,14 @@
 }
 
 @layer components {
-  button:hover .star,
-  button:focus .star {
+  .star-rating-option:hover .star,
+  .star-rating-option:has(.peer:focus-visible) .star {
     fill: currentColor;
   }
 
   /* Fill the left siblings of the hovered/focused star */
-  button:has(~ :hover) .star,
-  button:has(~ :focus) .star {
+  .star-rating-option:has(~ .star-rating-option:hover) .star,
+  .star-rating-option:has(~ .star-rating-option .peer:focus-visible) .star {
     fill: currentColor;
   }
 }

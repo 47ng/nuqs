@@ -18,6 +18,11 @@ import { cn } from '@/src/lib/utils'
 import { useState } from 'react'
 import type { ReleasesByDate } from './release-contribution-graph.lib'
 
+const releaseDateFormat = new Intl.DateTimeFormat('en-GB', {
+  dateStyle: 'long',
+  timeZone: 'UTC'
+})
+
 type ReleaseContributionGraphClientProps = {
   activities: Activity[]
   releasesByDate: ReleasesByDate
@@ -35,6 +40,15 @@ export function ReleaseContributionGraphClient({
   const [highlightBeta, setHighlightBeta] = useState(false)
   return (
     <TooltipProvider>
+      <ul className="sr-only" aria-label="Releases by date">
+        {Object.entries(releasesByDate)
+          .sort(([dateA], [dateB]) => dateA.localeCompare(dateB))
+          .map(([date, versions]) => (
+            <li key={date}>
+              {releaseDateFormat.format(new Date(date))}: {versions.join(', ')}
+            </li>
+          ))}
+      </ul>
       <ContributionGraph
         data={activities}
         maxLevel={2}
@@ -89,7 +103,7 @@ export function ReleaseContributionGraphClient({
           <ContributionGraphTotalCount />
           <div className="text-muted-foreground ml-auto flex items-center gap-4">
             <button
-              aria-label="Toggle highlight stable releases"
+              aria-pressed={highlightStable}
               className="flex cursor-pointer items-center gap-1.5"
               onClick={() => setHighlightStable(x => !x)}
             >
@@ -104,7 +118,7 @@ export function ReleaseContributionGraphClient({
               <span>Stable ({stableCount})</span>
             </button>
             <button
-              aria-label="Toggle highlight beta releases"
+              aria-pressed={highlightBeta}
               className="flex cursor-pointer items-center gap-1.5"
               onClick={() => setHighlightBeta(x => !x)}
             >

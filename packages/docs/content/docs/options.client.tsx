@@ -34,8 +34,14 @@ export function AlphabeticalSortDemo() {
       processUrlSearchParams={enableSorting ? sortAlphabetically : passThrough}
     >
       <>
-        <Label className="flex items-center gap-2">
+        <Label
+          id="sort-query-parameters-label"
+          htmlFor="sort-query-parameters"
+          className="flex items-center gap-2"
+        >
           <Checkbox
+            id="sort-query-parameters"
+            aria-labelledby="sort-query-parameters-label"
             checked={enableSorting}
             onCheckedChange={checked => setEnableSorting(checked === true)}
           />{' '}
