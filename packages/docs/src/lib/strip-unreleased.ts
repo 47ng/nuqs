@@ -1,3 +1,5 @@
+import { slug } from 'github-slugger'
+
 const OPEN_TAG = /^<SinceVersion\s+[^>]*?\bv=['"]([^'"]+)['"][^>]*>/
 const CLOSE_TAG = '</SinceVersion>'
 const LLM_OPEN_TAG = /^<LLMContent(?:\s[^>]*)?>/
@@ -130,14 +132,5 @@ export function gatedHeadingIds(
  * fallback for plain-text headings without one.
  */
 function headingId(headingText: string): string {
-  return headingText.match(EXPLICIT_ID)?.[1] ?? slugify(headingText)
-}
-
-function slugify(text: string): string {
-  return text
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9\s-]/g, '')
-    .replace(/\s/g, '-')
-    .replace(/^-+|-+$/g, '')
+  return headingText.match(EXPLICIT_ID)?.[1] ?? slug(headingText)
 }

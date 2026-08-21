@@ -51,6 +51,7 @@
     "fumadocs-core": "16.0.4",
     "fumadocs-mdx": "13.0.2",
     "fumadocs-ui": "16.0.4",
+    "github-slugger": "^2.0.0",
     "lucide-react": "^0.563.0",
     "mdast-util-mdx-jsx": "^3.2.0",
     "mdast-util-to-markdown": "^2.1.2",

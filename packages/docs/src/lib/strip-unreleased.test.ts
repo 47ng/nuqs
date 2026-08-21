@@ -163,10 +163,17 @@ describe('gatedHeadingIds', () => {
       '<SinceVersion v="2.9.0">',
       '### Next.js (app router)',
       '### Remix / React Router',
+      '### snake_case option',
+      '### Café & crème',
       '</SinceVersion>'
     ].join('\n')
     expect(gatedHeadingIds(input, hideAll)).toEqual(
-      new Set(['nextjs-app-router', 'remix--react-router'])
+      new Set([
+        'nextjs-app-router',
+        'remix--react-router',
+        'snake_case-option',
+        'café--crème'
+      ])
     )
   })
 
