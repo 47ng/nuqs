@@ -14,10 +14,10 @@ describe('ReleaseContributionGraphClient accessibility', () => {
     )
 
     expect(html).toContain('aria-label="Releases by date"')
-    expect(html).toContain('2026-08-09: v2.8.0')
+    expect(html).toContain('9 August 2026: v2.8.0')
   })
 
-  it('removes the visual calendar from the accessibility tree and tab order', () => {
+  it('removes the visual calendar from the accessibility tree', () => {
     const html = renderToStaticMarkup(
       <ReleaseContributionGraphClient
         activities={[{ date: '2026-08-09', count: 1, level: 2 }]}

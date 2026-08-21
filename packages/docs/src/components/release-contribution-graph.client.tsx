@@ -18,6 +18,11 @@ import { cn } from '@/src/lib/utils'
 import { useState } from 'react'
 import type { ReleasesByDate } from './release-contribution-graph.lib'
 
+const releaseDateFormat = new Intl.DateTimeFormat('en-GB', {
+  dateStyle: 'long',
+  timeZone: 'UTC'
+})
+
 type ReleaseContributionGraphClientProps = {
   activities: Activity[]
   releasesByDate: ReleasesByDate
@@ -40,7 +45,7 @@ export function ReleaseContributionGraphClient({
           .sort(([dateA], [dateB]) => dateA.localeCompare(dateB))
           .map(([date, versions]) => (
             <li key={date}>
-              {date}: {versions.join(', ')}
+              {releaseDateFormat.format(new Date(date))}: {versions.join(', ')}
             </li>
           ))}
       </ul>
