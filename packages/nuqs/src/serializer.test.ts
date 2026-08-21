@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { Options } from './defs'
 import {
+  createParser,
   parseAsArrayOf,
   parseAsBoolean,
   parseAsInteger,
@@ -106,6 +107,12 @@ describe('serializer', () => {
     expect(serialize(base, { str: 'foo' })).toBe(expected)
     expect(serialize(new URL(base), { str: 'foo' })).toBe(expected)
   })
+  it('preserves hashes that contain hash characters', () => {
+    const serialize = createSerializer(parsers)
+    expect(serialize('/foo#section#nested', { str: 'foo' })).toBe(
+      '/foo?str=foo#section#nested'
+    )
+  })
   it('deletes a null value from base', () => {
     const serialize = createSerializer(parsers)
     const result = serialize('?str=bar&int=-1', { str: 'foo', int: null })
@@ -120,6 +127,27 @@ describe('serializer', () => {
     const serialize = createSerializer(parsers)
     const result = serialize('?str=foo', { str: undefined })
     expect(result).toBe('?str=foo')
+  })
+  it('runs the search-parameter processor when clearing all managed values', () => {
+    const serialize = createSerializer(parsers, {
+      processUrlSearchParams(search) {
+        search.set('processed', 'true')
+        return search
+      }
+    })
+    expect(serialize('?str=foo&external=kept', null)).toBe(
+      '?external=kept&processed=true'
+    )
+  })
+  it('keeps values from parsers without a default even when their equality function is permissive', () => {
+    const serialize = createSerializer({
+      str: createParser({
+        parse: String,
+        serialize: String,
+        eq: () => true
+      })
+    })
+    expect(serialize({ str: 'value' })).toBe('?str=value')
   })
   it('keeps search params not managed by the serializer when fed null', () => {
     const serialize = createSerializer(parsers)

@@ -111,6 +111,21 @@ describe('standard schema', () => {
       '[nuqs] Error while parsing query `should-not-parse` for key `test`: Error: Boom'
     )
   })
+  it('validates values through their configured URL keys', async () => {
+    const validator = createStandardSchemaV1(
+      { search: parseAsString },
+      { urlKeys: { search: 'q' } }
+    )
+    const result = await validator['~standard'].validate({ search: 'nuqs' })
+    expect(result).toEqual({ value: { search: 'nuqs' } })
+  })
+
+  it('identifies itself as a nuqs standard schema', () => {
+    const validator = createStandardSchemaV1({ search: parseAsString })
+    expect(validator['~standard'].vendor).toBe('nuqs')
+    expect(validator['~standard'].version).toBe(1)
+  })
+
   it('allows for partial outputs', async () => {
     const schema = {
       foo: parseAsString,
@@ -118,14 +133,14 @@ describe('standard schema', () => {
       egg: parseAsBoolean.withDefault(false)
     }
     const validator = createStandardSchemaV1(schema, { partialOutput: true })
-    const input = {}
+    const input = { foo: 'present' }
     const resultMaybePromise = validator['~standard'].validate(input)
     expect(resultMaybePromise).not.toBeInstanceOf(Promise)
     // But we have to await it for TypeScript to understand
     const result = await resultMaybePromise
     expect(result.issues).toBeUndefined()
     if (result.issues === undefined) {
-      expect(result.value).toEqual({})
+      expect(result.value).toEqual({ foo: 'present' })
     }
   })
 })

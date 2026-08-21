@@ -367,6 +367,77 @@ describe('throttle: flush', () => {
     vi.runAllTimers()
     await expect(promise).resolves.toEqual(new URLSearchParams('?a=a&b=b'))
   })
+  it('starts each completed batch with fresh values and options', async () => {
+    const adapter = createMockAdapter()
+    const queue = new ThrottledQueue()
+    queue.push({
+      key: 'first',
+      query: 'one',
+      options: { history: 'push', scroll: true, shallow: false }
+    })
+    const first = queue.flush(adapter)
+    vi.runAllTimers()
+    await first
+
+    queue.push({ key: 'second', query: 'two', options: {} })
+    queue.push({ key: 'third', query: 'three', options: {} })
+    const second = queue.flush(adapter)
+    vi.runAllTimers()
+    await second
+
+    expect(adapter.updateUrl).toHaveBeenLastCalledWith(
+      new URLSearchParams('?second=two&third=three'),
+      { history: 'replace', scroll: false, shallow: true }
+    )
+  })
+
+  it('keeps a completed batch available when the adapter disables automatic reset', async () => {
+    const adapter = {
+      ...createMockAdapter(),
+      autoResetQueueOnUpdate: false
+    }
+    const queue = new ThrottledQueue()
+    queue.push({ key: 'search', query: 'nuqs', options: {} })
+    const first = queue.flush(adapter)
+    vi.runAllTimers()
+    await first
+
+    const second = queue.flush(adapter)
+    vi.runAllTimers()
+    await second
+
+    expect(adapter.updateUrl).toHaveBeenCalledTimes(2)
+    expect(adapter.updateUrl).toHaveBeenLastCalledWith(
+      new URLSearchParams('?search=nuqs'),
+      { history: 'replace', scroll: false, shallow: true }
+    )
+  })
+
+  it('waits for the remaining rate-limit window before flushing', async () => {
+    let now = 100
+    vi.spyOn(performance, 'now').mockImplementation(() => now)
+    const adapter = {
+      ...createMockAdapter(),
+      rateLimitFactor: 2
+    }
+    const queue = new ThrottledQueue()
+    queue.push({ key: 'first', query: 'one', options: {} }, 100)
+    const first = queue.flush(adapter)
+    vi.advanceTimersToNextTimer()
+    await first
+    expect(adapter.updateUrl).toHaveBeenCalledTimes(1)
+
+    now = 150
+    queue.push({ key: 'second', query: 'two', options: {} }, 100)
+    const second = queue.flush(adapter)
+    vi.advanceTimersToNextTimer()
+    vi.advanceTimersByTime(99)
+    expect(adapter.updateUrl).toHaveBeenCalledTimes(1)
+    vi.advanceTimersByTime(1)
+    await second
+    expect(adapter.updateUrl).toHaveBeenCalledTimes(2)
+  })
+
   describe('should process url search params', () => {
     it('should add new params', async () => {
       const mockAdapter = createMockAdapter()
