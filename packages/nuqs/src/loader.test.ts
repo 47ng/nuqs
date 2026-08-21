@@ -93,6 +93,18 @@ describe('loader', () => {
         b: 2
       })
     })
+    it('preserves repeated values from record inputs', () => {
+      const load = createLoader({
+        a: parseAsNativeArrayOf(parseAsInteger)
+      })
+      expect(load({ a: ['1', '2'] })).toStrictEqual({ a: [1, 2] })
+    })
+    it('treats undefined record values as absent', () => {
+      const load = createLoader({
+        q: parseAsString.withDefault('fallback')
+      })
+      expect(load({ q: undefined })).toEqual({ q: 'fallback' })
+    })
     it('parses a URL string', () => {
       const load = createLoader({
         a: parseAsInteger,
@@ -174,9 +186,28 @@ describe('loader', () => {
         '[nuqs] Error while parsing query `will-throw` for key `test`: Error: Boom'
       )
     })
+    it('falls back to the default when a parser throws outside strict mode', () => {
+      const parser = createParser({
+        parse: () => {
+          throw new Error('Boom')
+        },
+        serialize: String
+      }).withDefault('fallback')
+      expect(createLoader({ value: parser })('?value=x')).toEqual({
+        value: 'fallback'
+      })
+    })
   })
 
   describe('async', () => {
+    it('preserves strict mode for promised inputs', async () => {
+      const load = createLoader({
+        count: parseAsInteger.withDefault(0)
+      })
+      await expect(
+        load(Promise.resolve('?count=invalid'), { strict: true })
+      ).rejects.toThrow()
+    })
     it('parses a URL object', () => {
       const load = createLoader({
         a: parseAsInteger,

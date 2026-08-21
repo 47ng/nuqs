@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { Options } from './defs'
 import {
+  createMultiParser,
   createParser,
   parseAsArrayOf,
   parseAsBoolean,
@@ -148,6 +149,15 @@ describe('serializer', () => {
       })
     })
     expect(serialize({ str: 'value' })).toBe('?str=value')
+  })
+  it('clears a multi-parser default using its default equality', () => {
+    const parser = createMultiParser({
+      parse: values => values[0] ?? null,
+      serialize: value => [value]
+    }).withDefault('default')
+    const serialize = createSerializer({ value: parser })
+    expect(serialize({ value: 'default' })).toBe('')
+    expect(serialize({ value: 'other' })).toBe('?value=other')
   })
   it('keeps search params not managed by the serializer when fed null', () => {
     const serialize = createSerializer(parsers)

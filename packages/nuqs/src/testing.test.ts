@@ -52,6 +52,31 @@ describe('parser testing helpers', () => {
       })
       expect(isParserBijective(caseInsensitive, 'NUQS', 'nuqs')).toBe(true)
     })
+
+    it('checks both round-trip directions', () => {
+      const eq = (a: number, b: number) => a % 2 === b % 2
+      const singleDirectionDrift = createParser({
+        parse: () => 3,
+        serialize: value => (value === 1 ? 'one' : 'three'),
+        eq
+      })
+      const multiDirectionDrift = createMultiParser({
+        parse: () => 3,
+        serialize: value => [value === 1 ? 'one' : 'three'],
+        eq
+      })
+      expect(() => isParserBijective(singleDirectionDrift, 'one', 1)).toThrow()
+      expect(() => isParserBijective(multiDirectionDrift, ['one'], 1)).toThrow()
+    })
+
+    it('validates the exact supplied serialization', () => {
+      const parser = createParser({
+        parse: value => (value === 'one' ? 1 : 3),
+        serialize: value => (value === 1 ? 'one' : 'three'),
+        eq: (a, b) => a % 2 === b % 2
+      })
+      expect(() => isParserBijective(parser, 'three', 1)).toThrow()
+    })
   })
 
   describe('testSerializeThenParse', () => {
@@ -86,6 +111,21 @@ describe('parser testing helpers', () => {
         /parser is not bijective/
       )
     })
+
+    it('rejects serializers that return the wrong query shape', () => {
+      const wrongSingle = createParser({
+        parse: () => 'value',
+        serialize: () => ['value'] as never,
+        eq: () => true
+      })
+      const wrongMulti = createMultiParser({
+        parse: () => 'value',
+        serialize: () => 'value' as never,
+        eq: () => true
+      })
+      expect(() => testSerializeThenParse(wrongSingle, 'value')).toThrow()
+      expect(() => testSerializeThenParse(wrongMulti, 'value')).toThrow()
+    })
   })
 
   describe('testParseThenSerialize', () => {
@@ -111,6 +151,19 @@ describe('parser testing helpers', () => {
       expect(() => testParseThenSerialize(normalizing, 'NUQS')).toThrow(
         /parser is not bijective/
       )
+    })
+
+    it('rejects input queries with the wrong shape', () => {
+      expect(() => testParseThenSerialize(single, ['value'] as never)).toThrow()
+      expect(() => testParseThenSerialize(multi, 'value' as never)).toThrow()
+    })
+
+    it('always rejects null parse results', () => {
+      const parser = createParser<string>({
+        parse: () => null,
+        serialize: String
+      })
+      expect(() => testParseThenSerialize(parser, 'null')).toThrow()
     })
   })
 })

@@ -187,6 +187,33 @@ describe('throttle: Abort & reset logic', () => {
     expect(queue.controller).not.toBe(controller) // Reassigned after abort
     await expect(promise).resolves.toEqual(new URLSearchParams(''))
   })
+  it('allows aborting an unused queue', async () => {
+    const queue = new ThrottledQueue()
+    expect(queue.abort()).toEqual([])
+    const adapter = createMockAdapter()
+    queue.push({ key: 'a', query: 'a', options: {} })
+    const promise = queue.flush(adapter)
+    vi.runAllTimers()
+    await expect(promise).resolves.toEqual(new URLSearchParams('?a=a'))
+  })
+  it('restores default options after reset', async () => {
+    const queue = new ThrottledQueue()
+    queue.push({
+      key: 'stale',
+      query: 'stale',
+      options: { history: 'push', scroll: true, shallow: false }
+    })
+    queue.reset()
+    const adapter = createMockAdapter()
+    queue.push({ key: 'fresh', query: 'fresh', options: {} })
+    const promise = queue.flush(adapter)
+    vi.runAllTimers()
+    await promise
+    expect(adapter.updateUrl).toHaveBeenCalledExactlyOnceWith(
+      new URLSearchParams('?fresh=fresh'),
+      { history: 'replace', scroll: false, shallow: true }
+    )
+  })
 })
 
 describe('throttle: flush', () => {
@@ -220,6 +247,33 @@ describe('throttle: flush', () => {
         scroll: false,
         shallow: true
       }
+    )
+  })
+  it('deletes a queued null value from the current URL', async () => {
+    const queue = new ThrottledQueue()
+    const adapter = {
+      ...createMockAdapter(),
+      getSearchParamsSnapshot: () => new URLSearchParams('?a=old&keep=value')
+    }
+    queue.push({ key: 'a', query: null, options: {} })
+    const promise = queue.flush(adapter)
+    vi.runAllTimers()
+    await expect(promise).resolves.toEqual(new URLSearchParams('?keep=value'))
+    expect(adapter.updateUrl).toHaveBeenCalledExactlyOnceWith(
+      new URLSearchParams('?keep=value'),
+      { history: 'replace', scroll: false, shallow: true }
+    )
+  })
+  it('preserves an explicitly shallow update', async () => {
+    const queue = new ThrottledQueue()
+    const adapter = createMockAdapter()
+    queue.push({ key: 'a', query: 'a', options: { shallow: true } })
+    const promise = queue.flush(adapter)
+    vi.runAllTimers()
+    await promise
+    expect(adapter.updateUrl).toHaveBeenCalledExactlyOnceWith(
+      new URLSearchParams('?a=a'),
+      { history: 'replace', scroll: false, shallow: true }
     )
   })
   it('combines updates in order of push', async () => {
@@ -346,9 +400,10 @@ describe('throttle: flush', () => {
     )
 
     queue.push({ key: 'b', query: 'b', options: {} })
+    queue.push({ key: 'c', query: 'c', options: {} })
     const nextPromise = queue.flush(adapter)
     vi.runAllTimers()
-    await expect(nextPromise).resolves.toEqual(new URLSearchParams('?b=b'))
+    await expect(nextPromise).resolves.toEqual(new URLSearchParams('?b=b&c=c'))
   })
   it('should process url search params', async () => {
     const mockAdapter = createMockAdapter()
@@ -401,6 +456,7 @@ describe('throttle: flush', () => {
     const first = queue.flush(adapter)
     vi.runAllTimers()
     await first
+    expect(queue.getQueuedQuery('search')).toBe('nuqs')
 
     const second = queue.flush(adapter)
     vi.runAllTimers()
@@ -411,6 +467,30 @@ describe('throttle: flush', () => {
       new URLSearchParams('?search=nuqs'),
       { history: 'replace', scroll: false, shallow: true }
     )
+
+    queue.push({ key: 'next', query: 'batch', options: {} })
+    const third = queue.flush(adapter)
+    vi.runAllTimers()
+    await third
+    expect(adapter.updateUrl).toHaveBeenLastCalledWith(
+      new URLSearchParams('?next=batch'),
+      { history: 'replace', scroll: false, shallow: true }
+    )
+  })
+
+  it('applies the adapter rate-limit factor to the initial delay', async () => {
+    const adapter = {
+      ...createMockAdapter(),
+      rateLimitFactor: 2
+    }
+    const queue = new ThrottledQueue()
+    queue.push({ key: 'a', query: 'a', options: {} }, 100)
+    const promise = queue.flush(adapter)
+    vi.advanceTimersByTime(199)
+    expect(adapter.updateUrl).not.toHaveBeenCalled()
+    vi.advanceTimersByTime(1)
+    await promise
+    expect(adapter.updateUrl).toHaveBeenCalledOnce()
   })
 
   it('waits for the remaining rate-limit window before flushing', async () => {

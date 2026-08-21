@@ -29,6 +29,22 @@ describe('emitter', () => {
     emitter.emit('test', 'pass')
     expect(handler).not.toHaveBeenCalled()
   })
+  it('ignores removing a handler from an event with no subscribers', () => {
+    const emitter = createEmitter<Events>()
+    const handler = vi.fn()
+    expect(() => emitter.off('test', handler)).not.toThrow()
+  })
+  it('removes only the requested handler', () => {
+    const emitter = createEmitter<Events>()
+    const removed = vi.fn()
+    const kept = vi.fn()
+    emitter.on('test', removed)
+    emitter.on('test', kept)
+    emitter.off('test', removed)
+    emitter.emit('test', 'pass')
+    expect(removed).not.toHaveBeenCalled()
+    expect(kept).toHaveBeenCalledExactlyOnceWith('pass')
+  })
   it('allows emitting events with no payload', () => {
     const emitter = createEmitter<{ test: never }>()
     const handler = vi.fn()

@@ -231,6 +231,46 @@ describe('debounce: DebounceController', () => {
     throttleQueue.reset()
     expect(controller.getQueuedQuery('key')).toBeUndefined()
   })
+  it('notifies when a queued query appears and when it settles', async () => {
+    vi.useFakeTimers()
+    const adapter: UpdateQueueAdapterContext = {
+      updateUrl: vi.fn<UpdateUrlFunction>(),
+      getSearchParamsSnapshot: () => new URLSearchParams()
+    }
+    const controller = new DebounceController()
+    const subscriber = vi.fn()
+    controller.queuedQuerySync.on('key', subscriber)
+    const promise = controller.push(
+      { key: 'key', query: 'value', options: {} },
+      100,
+      adapter
+    )
+    expect(subscriber).toHaveBeenCalledTimes(1)
+    vi.runAllTimers()
+    await promise
+    expect(subscriber).toHaveBeenCalledTimes(2)
+    expect(controller.getQueuedQuery('key')).toBeUndefined()
+  })
+  it('does not retain settled debounces for later aborts', async () => {
+    vi.useFakeTimers()
+    const adapter: UpdateQueueAdapterContext = {
+      updateUrl: vi.fn<UpdateUrlFunction>(),
+      getSearchParamsSnapshot: () => new URLSearchParams()
+    }
+    const controller = new DebounceController()
+    const subscriber = vi.fn()
+    controller.queuedQuerySync.on('key', subscriber)
+    const promise = controller.push(
+      { key: 'key', query: 'value', options: {} },
+      100,
+      adapter
+    )
+    vi.runAllTimers()
+    await promise
+    subscriber.mockClear()
+    controller.abortAll()
+    expect(subscriber).not.toHaveBeenCalled()
+  })
   it('falls back to the throttle queue pending values if nothing is debounced', () => {
     const throttleQueue = new ThrottledQueue()
     throttleQueue.push({
@@ -269,6 +309,15 @@ describe('debounce: DebounceController', () => {
     expect(attachedPromise).toBe(resolvedPromise) // Referential equality
     await expect(debouncedPromise).resolves.toEqual(
       new URLSearchParams('?key=override')
+    )
+  })
+  it('passes a replacement promise through when aborting an unknown key', async () => {
+    const controller = new DebounceController()
+    const attach = controller.abort('missing')
+    const replacement = Promise.resolve(new URLSearchParams('?key=value'))
+    expect(attach(replacement)).toBe(replacement)
+    await expect(replacement).resolves.toEqual(
+      new URLSearchParams('?key=value')
     )
   })
   it('does not queue an update with a timeout of Infinity', async () => {
