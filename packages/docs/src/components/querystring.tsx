@@ -31,14 +31,13 @@ export function Querystring({
               </>
             )}
           </span>
-          <span className="text-[#005CC5] dark:text-[#79B8FF]">{key}</span>=
+          <span className="text-[#005CC5] dark:text-[#79B8FF]">{key}</span>
+          <span className="text-zinc-600 dark:text-zinc-400">=</span>
           <span className="text-[#D73A49] dark:text-[#F97583]">{value}</span>
         </Fragment>
       ))}
       {search.size === 0 && (
-        <span className="text-zinc-600 italic dark:text-zinc-400">
-          {'<empty query>'}
-        </span>
+        <span className="text-zinc-500 italic">{'<empty query>'}</span>
       )}
     </QuerystringSkeleton>
   )
