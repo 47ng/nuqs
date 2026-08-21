@@ -4,7 +4,6 @@ import { render } from 'vitest-browser-react'
 import { page, userEvent } from 'vitest/browser'
 import { debounce } from '../lib/queues/rate-limiting'
 import { resetQueues } from '../lib/queues/reset'
-import { parseAsString } from '../parsers'
 import { useQueryState } from '../useQueryState'
 import {
   NuqsTestingAdapter,
@@ -17,7 +16,7 @@ describe('adapters/testing: update queue lifecycle', () => {
     const onUrlUpdate = vi.fn<OnUrlUpdateFunction>()
 
     function TestComponent() {
-      const [state, setState] = useQueryState('test', parseAsString)
+      const [state, setState] = useQueryState('test')
       return (
         <button
           onClick={() => {
