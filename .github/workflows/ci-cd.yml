@@ -92,6 +92,7 @@ jobs:
           pnpm run lint:knip --workspace packages/e2e/react-router/v8
           pnpm run lint:knip --workspace packages/e2e/remix
           pnpm run lint:knip --workspace packages/e2e/tanstack-router
+          pnpm run lint:knip --workspace packages/e2e/waku
       - name: Run Knip (docs)
         # fumadocs-mdx must generate .source/ first (skipped by the
         # --ignore-scripts install) so knip can resolve collections/*
@@ -463,6 +464,43 @@ jobs:
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
+  e2e-waku:
+    name: E2E (waku)
+    runs-on: ubuntu-22.04-arm
+    needs: [ci-core]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile --filter e2e-waku...
+      - name: Run tests
+        run: pnpm run test ${{ github.event_name == 'workflow_dispatch' && '--force' || '' }} --filter e2e-waku
+        env:
+          TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+          TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
+          E2E_NO_CACHE_ON_RERUN: ${{ github.run_attempt }}
+      - name: Save Playwright report
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        if: failure()
+        with:
+          path: packages/e2e/waku/.playwright/*
+          name: playwright-waku
+          include-hidden-files: true
+      - uses: 47ng/actions-slack-notify@df42545060c07ca99a040d0a520ab8457ce3c222
+        name: Notify on Slack
+        if: failure()
+        with:
+          status: ${{ job.status }}
+          jobName: waku
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
   ci-notify:
     name: Notify on Slack
     runs-on: ubuntu-24.04-arm
@@ -477,6 +515,7 @@ jobs:
       - e2e-react-router
       - e2e-remix
       - e2e-tanstack-router
+      - e2e-waku
     # Suppress the success ping only when a caller explicitly passes
     # finalNotification: false. toJSON is load-bearing: a bare comparison hits
     # GitHub's mismatched-type coercion (booleans and unset → numbers, the

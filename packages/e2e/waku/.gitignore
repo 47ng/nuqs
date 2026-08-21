@@ -5,5 +5,5 @@ dist
 .cache
 .DS_Store
 *.pem
-src/pages.gen.ts
 .playwright/
+src/pages.gen.ts

@@ -1,5 +1,5 @@
+import { NuqsAdapter } from 'nuqs/adapters/waku'
 import type { ReactNode } from 'react'
-import { NuqsAdapter } from '../lib/nuqs-waku-adapter'
 import { Providers } from '../lib/providers'
 
 type RootLayoutProps = { children: ReactNode }

@@ -4,26 +4,26 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "dev": "waku dev --port 3008",
+    "dev": "waku dev --port 3009",
     "build": "waku build",
-    "start": "waku start --port 3008",
-    "pretest": "playwright install chromium",
-    "test": "playwright test --project=chromium"
+    "start": "waku start --port 3009",
+    "test": "pnpm run --stream '/^test:/'",
+    "test:types": "tsc",
+    "test:playwright": "playwright install chromium && playwright test --project=chromium"
   },
   "dependencies": {
     "nuqs": "workspace:*",
     "react": "catalog:react19",
     "react-dom": "catalog:react19",
     "react-server-dom-webpack": "catalog:react19",
-    "waku": "1.0.0-alpha.0"
+    "waku": "catalog:waku"
   },
   "devDependencies": {
     "@playwright/test": "catalog:e2e",
+    "@types/node": "^24.13.3",
     "@types/react": "catalog:react19",
     "@types/react-dom": "catalog:react19",
-    "@vitejs/plugin-react": "^5.1.0",
-    "babel-plugin-react-compiler": "^1.0.0",
     "e2e-shared": "workspace:*",
-    "typescript": "^5.9.3"
+    "typescript": "catalog:typescript"
   }
 }
