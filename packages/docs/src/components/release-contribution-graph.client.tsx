@@ -15,7 +15,7 @@ import {
   TooltipTrigger
 } from '@/src/components/ui/tooltip'
 import { cn } from '@/src/lib/utils'
-import { useState } from 'react'
+import { useId, useState } from 'react'
 import type { ReleasesByDate } from './release-contribution-graph.lib'
 
 const releaseDateFormat = new Intl.DateTimeFormat('en-GB', {
@@ -38,9 +38,10 @@ export function ReleaseContributionGraphClient({
 }: ReleaseContributionGraphClientProps) {
   const [highlightStable, setHighlightStable] = useState(true)
   const [highlightBeta, setHighlightBeta] = useState(false)
+  const releaseListId = useId()
   return (
     <TooltipProvider>
-      <ul className="sr-only" aria-label="Releases by date">
+      <ul id={releaseListId} className="sr-only" aria-label="Releases by date">
         {Object.entries(releasesByDate)
           .sort(([dateA], [dateB]) => dateA.localeCompare(dateB))
           .map(([date, versions]) => (
@@ -60,7 +61,12 @@ export function ReleaseContributionGraphClient({
           totalCount: `${stableCount + betaCount} releases in {{year}}`
         }}
       >
-        <ContributionGraphCalendar aria-hidden>
+        <ContributionGraphCalendar
+          tabIndex={0}
+          role="group"
+          aria-label="Release calendar"
+          aria-describedby={releaseListId}
+        >
           {({ activity, dayIndex, weekIndex }) => {
             const versions = releasesByDate[activity.date]
             const block = (
