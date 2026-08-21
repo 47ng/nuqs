@@ -238,7 +238,10 @@ describe('debounce: DebounceController', () => {
       getSearchParamsSnapshot: () => new URLSearchParams()
     }
     const controller = new DebounceController()
-    const subscriber = vi.fn()
+    const queuedValues: Array<ReturnType<typeof controller.getQueuedQuery>> = []
+    const subscriber = vi.fn(() => {
+      queuedValues.push(controller.getQueuedQuery('key'))
+    })
     controller.queuedQuerySync.on('key', subscriber)
     const promise = controller.push(
       { key: 'key', query: 'value', options: {} },
@@ -249,7 +252,7 @@ describe('debounce: DebounceController', () => {
     vi.runAllTimers()
     await promise
     expect(subscriber).toHaveBeenCalledTimes(2)
-    expect(controller.getQueuedQuery('key')).toBeUndefined()
+    expect(queuedValues).toStrictEqual(['value', undefined])
   })
   it('does not retain settled debounces for later aborts', async () => {
     vi.useFakeTimers()

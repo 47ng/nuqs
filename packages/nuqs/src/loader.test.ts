@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { createLoader } from './loader'
 import {
+  createMultiParser,
   createParser,
   parseAsInteger,
   parseAsNativeArrayOf,
@@ -98,6 +99,18 @@ describe('loader', () => {
         a: parseAsNativeArrayOf(parseAsInteger)
       })
       expect(load({ a: ['1', '2'] })).toStrictEqual({ a: [1, 2] })
+    })
+    it('distinguishes absent and present native-array values', () => {
+      const load = createLoader({
+        a: createMultiParser({
+          parse: values => (values.length === 0 ? ['parsed-empty'] : values),
+          serialize: values => [...values]
+        }).withDefault(['fallback'])
+      })
+
+      expect(load({ a: [] })).toStrictEqual({ a: ['fallback'] })
+      expect(load({ a: [''] })).toStrictEqual({ a: [''] })
+      expect(load({ a: ['one', 'two'] })).toStrictEqual({ a: ['one', 'two'] })
     })
     it('treats undefined record values as absent', () => {
       const load = createLoader({

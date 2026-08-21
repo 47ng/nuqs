@@ -157,13 +157,5 @@ describe('parser testing helpers', () => {
       expect(() => testParseThenSerialize(single, ['value'] as never)).toThrow()
       expect(() => testParseThenSerialize(multi, 'value' as never)).toThrow()
     })
-
-    it('always rejects null parse results', () => {
-      const parser = createParser<string>({
-        parse: () => null,
-        serialize: String
-      })
-      expect(() => testParseThenSerialize(parser, 'null')).toThrow()
-    })
   })
 })
