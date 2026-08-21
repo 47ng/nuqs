@@ -324,7 +324,6 @@ export const coordinatesParsers = {
   lng: parseAsFloat.withDefault(5.72)
 }
 export const coordinatesCache = createSearchParamsCache(coordinatesParsers)
-
 ```
 
 ```tsx title="page.tsx"
@@ -344,7 +343,6 @@ export default async function Page({ searchParams }) {
     </>
   )
 }
-
 ```
 
 ```tsx title="server.tsx"
@@ -361,7 +359,6 @@ export function Server() {
     </span>
   )
 }
-
 ```
 
 ```tsx title="client.tsx"
