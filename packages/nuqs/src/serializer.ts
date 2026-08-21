@@ -1,4 +1,5 @@
 import type { Nullable, Options, UrlKeys } from './defs'
+import { isEqual } from './lib/compare'
 import { write } from './lib/search-params'
 import { renderQueryString } from './lib/url-encoding'
 import { getOwn, getUrlKey } from './lib/url-keys'
@@ -92,7 +93,7 @@ export function createSerializer<
       const isMatchingDefault =
         parser.defaultValue !== undefined &&
         value !== null &&
-        (parser.eq ?? ((a, b) => a === b))(value, parser.defaultValue)
+        (parser.eq ?? isEqual)(value, parser.defaultValue)
 
       if (
         value === null ||
