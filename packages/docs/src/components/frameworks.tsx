@@ -35,6 +35,7 @@ export const FRAMEWORK_ICONS: Record<
 export function Vite({ className, ...props }: IconProps) {
   return (
     <svg
+      role="img"
       aria-label="Vite"
       viewBox="0 0 256 257"
       width="0.9em"
@@ -82,6 +83,7 @@ export function Vite({ className, ...props }: IconProps) {
 export function ReactSPA({ className, ...props }: IconProps) {
   return (
     <svg
+      role="img"
       aria-label="React (Single Page Application)"
       width="1em"
       height="1em"
@@ -109,6 +111,7 @@ export function ReactSPA({ className, ...props }: IconProps) {
 export function Vitest({ className, ...props }: IconProps) {
   return (
     <svg
+      role="img"
       aria-label="Vitest"
       viewBox="0 0 256 234"
       width="1em"
@@ -138,6 +141,7 @@ export function Vitest({ className, ...props }: IconProps) {
 export function ReactRouter({ className, ...props }: IconProps) {
   return (
     <svg
+      role="img"
       aria-label="React Router"
       width="1em"
       height="1em"
@@ -171,6 +175,7 @@ export function ReactRouter({ className, ...props }: IconProps) {
 export function Remix({ className, ...props }: IconProps) {
   return (
     <svg
+      role="img"
       aria-label="Remix"
       viewBox="0 0 256 297"
       width="0.9em"
