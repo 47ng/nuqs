@@ -43,8 +43,10 @@ export function getSharedLayoutProps(): BaseLayoutProps {
 /*
   fumadocs-ui 16.11 caps DocsPage children at 900px but leaves them
   start-aligned in the main grid track; center them like before.
+  16.14 also pads the article 24px on mobile and 56px on xl screens;
+  keep the 32px it had at every breakpoint.
 */
-export const docsPageClassName = '*:mx-auto *:w-full'
+export const docsPageClassName = 'pt-8 xl:pt-8 *:mx-auto *:w-full'
 
 /*
   Playground pages were full-bleed before the DocsPage wrapper became

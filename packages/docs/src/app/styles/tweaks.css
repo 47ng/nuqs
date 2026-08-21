@@ -59,14 +59,14 @@
   }
 }
 
-.shiki:not(.not-fumadocs-codeblock *):has(> code .line) {
-  & code {
-    /*
-      Reduce vertical padding to allow two inline code blocks
-      on adjacent lines to avoid overlapping.
-    */
-    padding-block: 1.5px;
-  }
+/*
+  Reduce the vertical padding of highlighted inline code so two chips
+  on adjacent lines do not overlap. fumadocs-ui 16.14 renders them as
+  `code.shiki` instead of `span.shiki > code`; match both.
+*/
+.shiki:not(.not-fumadocs-codeblock *):has(> code .line) code,
+code.shiki:not(pre *) {
+  padding-block: 1.5px;
 }
 
 /* Avoid a flash of black (in dark mode) in the navbar background when scrolling */
@@ -88,5 +88,36 @@ header#nd-subnav.bg-fd-background\/80 {
         @apply rounded-t-none border-t-0;
       }
     }
+  }
+}
+
+/*
+  fumadocs-ui 16.14 restyled the notebook layout: the desktop navbar
+  shrank from 64px to 56px, sidebar rows gained a 2px gap, and the first
+  sidebar group label gained a top margin (its `first:mt-0` never applies
+  because hidden mobile nav links precede it). Restore the previous
+  vertical rhythm so content, sidebar and TOC sit where they used to.
+*/
+@media (width >= 48rem) {
+  #nd-notebook-layout > #nd-subnav {
+    --fd-header-height: 4rem;
+    & > .h-14 {
+      height: 4rem;
+    }
+  }
+}
+@layer utilities {
+  #nd-sidebar .overscroll-contain > * {
+    gap: 0 !important;
+    & > p:nth-of-type(1) {
+      margin-top: 0;
+    }
+  }
+}
+
+/* Code block copy button: 16.14 moved it from top-2 to top-3 */
+@layer utilities {
+  figure:has(pre) > div.absolute:has(> button) {
+    @apply top-2;
   }
 }
