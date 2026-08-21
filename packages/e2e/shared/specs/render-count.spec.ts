@@ -37,6 +37,15 @@ export function testRenderCount({
         await assertLogCount(logSpy, 'render', expected.mount)
       })
 
+      it(`should render ${times(expected.mount)} on mount with an initial value`, async ({
+        page
+      }) => {
+        using logSpy = setupLogSpy(page)
+        await navigateTo(page, withInitialValue(path))
+        await expect(page.locator('#state')).toHaveText('init')
+        await assertLogCount(logSpy, 'render', expected.mount)
+      })
+
       it(`should then render ${times(expected.update)} on updates`, async ({
         page
       }) => {
@@ -60,4 +69,9 @@ function times(n: number) {
     return 'once'
   }
   return `${n} times`
+}
+
+function withInitialValue(path: string) {
+  const separator = path.includes('?') ? '&' : '?'
+  return `${path}${separator}test=init`
 }

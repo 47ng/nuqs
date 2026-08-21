@@ -77,14 +77,14 @@ function DemoContainer({
 }
 
 export function BasicUsageDemo() {
-  const [name, setName] = useQueryState('name', { defaultValue: '' })
+  const [name, setName] = useQueryState('name')
   return (
     <DemoContainer className="flex-col items-stretch" demoKey="name">
       <input
         aria-label="Name"
         className="border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring h-10 flex-1 rounded-md border px-3 py-2 text-sm file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
-        value={name}
-        onChange={e => setName(e.target.value || null)}
+        value={name || ''}
+        onChange={e => setName(e.target.value)}
         placeholder="Enter your name..."
         autoComplete="off"
       />
@@ -108,7 +108,7 @@ export function StringParserDemo() {
         aria-label="String value"
         className="border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring h-10 flex-1 rounded-md border px-3 py-2 text-sm file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
         value={value}
-        onChange={e => setValue(e.target.value || null)}
+        onChange={e => setValue(e.target.value)}
         placeholder="Type something here..."
         autoComplete="off"
       />

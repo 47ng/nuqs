@@ -20,14 +20,14 @@ export function Demo() {
       </button>
       <input
         aria-label="Name"
-        value={hello}
         placeholder="Enter your name"
+        value={hello}
         autoComplete="off"
         className="peer border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring flex h-10 rounded-md border px-3 py-2 text-sm file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
-        onChange={e => setHello(e.target.value || null)}
+        onChange={e => setHello(e.target.value)}
         data-interacted={Boolean(hello)}
       />
-      <p className="line-clamp-2 max-w-full break-words sm:truncate">
+      <p className="wrap-break-words line-clamp-2 max-w-full sm:truncate">
         Hello, {hello || 'anonymous visitor'}!
       </p>
     </>

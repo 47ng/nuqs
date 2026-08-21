@@ -51,6 +51,13 @@ async function ReleaseContributionGraphLoader({
   year
 }: ReleaseContributionGraphProps) {
   const releases = await fetchGitHubReleases()
+  if (releases === null) {
+    return (
+      <p className="text-muted-foreground text-sm">
+        The release calendar is unavailable: GitHub rate limit reached.
+      </p>
+    )
+  }
   const { activities, releasesByDate } = processReleases(releases, year)
   const stableCount = activities.filter(a => a.level === 2).length
   const betaCount = activities.filter(a => a.level === 1).length
