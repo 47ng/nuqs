@@ -5,6 +5,7 @@ import type { BaseLayoutProps } from 'fumadocs-ui/layouts/shared'
 export function getSharedLayoutProps(): BaseLayoutProps {
   return {
     githubUrl: 'https://github.com/47ng/nuqs',
+    themeSwitch: { mode: 'light-dark' },
     nav: {
       title: (
         <BrandAssetsMenu>
