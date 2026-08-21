@@ -185,6 +185,7 @@ export function HexParserDemo() {
     <DemoContainer demoKey="hex">
       <Slider
         aria-label="Hexadecimal value"
+        aria-valuetext={value.toString(16).padStart(2, '0')}
         value={[value]}
         onValueChange={([v]) => setValue(v).catch(console.error)}
         className="w-auto flex-1"
