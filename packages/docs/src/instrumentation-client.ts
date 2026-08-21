@@ -6,19 +6,12 @@ import {
 
 window.addEventListener('keydown', event => {
   const switcherKey = activeThemeSwitcherKey(
-    readThemeSwitcherSettings(localStorage)
+    readThemeSwitcherSettings(() => localStorage)
   )
   if (!isThemeSwitcherKeydown(event, switcherKey)) {
     return
   }
-
-  const nextTheme = document.documentElement.classList.contains('dark')
-    ? 'light'
-    : 'dark'
-
   document
-    .querySelector<HTMLButtonElement>(
-      `button[data-theme-toggle], [data-theme-toggle] button[aria-label="${nextTheme}"]`
-    )
+    .querySelector<HTMLButtonElement>('button[data-theme-toggle]')
     ?.click()
 })

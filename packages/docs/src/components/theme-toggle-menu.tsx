@@ -39,7 +39,7 @@ function subscribeThemeSwitcherSettings(onChange: () => void) {
 let cachedSettings = serverSettings
 
 function readCachedSettings() {
-  const next = readThemeSwitcherSettings(localStorage)
+  const next = readThemeSwitcherSettings(() => localStorage)
   if (
     next.key !== cachedSettings.key ||
     next.enabled !== cachedSettings.enabled
@@ -60,12 +60,13 @@ function useThemeSwitcherSettings() {
     window.dispatchEvent(new Event(CHANGE_EVENT))
   }, [])
   const setKey = useCallback(
-    (key: string) => update(() => writeThemeSwitcherKey(localStorage, key)),
+    (key: string) =>
+      update(() => writeThemeSwitcherKey(() => localStorage, key)),
     [update]
   )
   const setEnabled = useCallback(
     (enabled: boolean) =>
-      update(() => writeThemeSwitcherEnabled(localStorage, enabled)),
+      update(() => writeThemeSwitcherEnabled(() => localStorage, enabled)),
     [update]
   )
   return { settings, setKey, setEnabled }
@@ -86,7 +87,7 @@ function useNextKeyCapture(enabled: boolean, onKey: (key: string) => void) {
         event.preventDefault()
         event.stopPropagation()
         controller.abort()
-        onKey(event.key.toLowerCase())
+        onKey(event.key)
       },
       { capture: true, signal: controller.signal }
     )
@@ -105,7 +106,7 @@ function HotkeyStatus({ settings }: { settings: ThemeSwitcherSettings }) {
   )
 }
 
-export function ThemeToggleMenu({ className }: { className?: string }) {
+export function ThemeToggleMenu() {
   const { settings, setKey, setEnabled } = useThemeSwitcherSettings()
   const [listening, setListening] = useState(false)
   const [open, setOpen] = useState(false)
@@ -133,7 +134,6 @@ export function ThemeToggleMenu({ className }: { className?: string }) {
       <ContextMenuTrigger asChild>
         <ThemeToggle
           mode="light-dark"
-          className={className}
           aria-keyshortcuts={activeThemeSwitcherKey(settings) ?? undefined}
         />
       </ContextMenuTrigger>

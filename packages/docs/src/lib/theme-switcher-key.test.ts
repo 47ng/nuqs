@@ -21,19 +21,21 @@ describe('resolveThemeSwitcherSettings', () => {
       enabled: true
     })
   })
-  it('normalises a custom key', () => {
-    expect(resolveThemeSwitcherSettings('T', null).key).toBe('t')
-    expect(resolveThemeSwitcherSettings(' F2 ', null).key).toBe('f2')
+  it('keeps the stored key spelling', () => {
+    expect(resolveThemeSwitcherSettings('T', null).key).toBe('T')
+    expect(resolveThemeSwitcherSettings(' F2 ', null).key).toBe('F2')
+    expect(resolveThemeSwitcherSettings('ArrowUp', null).key).toBe('ArrowUp')
   })
   it('keeps the custom key when disabled', () => {
     expect(resolveThemeSwitcherSettings('t', 'true')).toEqual({
       key: 't',
       enabled: false
     })
+    expect(resolveThemeSwitcherSettings('t', ' true ').enabled).toBe(false)
   })
   it('treats anything but true as enabled', () => {
     expect(resolveThemeSwitcherSettings(null, 'false').enabled).toBe(true)
-    expect(resolveThemeSwitcherSettings(null, 'yes').enabled).toBe(true)
+    expect(resolveThemeSwitcherSettings(null, 'TRUE').enabled).toBe(true)
   })
 })
 
@@ -44,6 +46,10 @@ describe('activeThemeSwitcherKey', () => {
   })
 })
 
+function throwing(): never {
+  throw new Error('SecurityError')
+}
+
 describe('readThemeSwitcherSettings', () => {
   it('reads both entries from storage', () => {
     const store: Record<string, string> = {
@@ -51,17 +57,22 @@ describe('readThemeSwitcherSettings', () => {
       'theme-switcher-key-disabled': 'true'
     }
     expect(
-      readThemeSwitcherSettings({ getItem: name => store[name] ?? null })
+      readThemeSwitcherSettings(() => ({
+        getItem: name => store[name] ?? null
+      }))
     ).toEqual({ key: 'x', enabled: false })
   })
-  it('falls back to defaults when storage throws', () => {
-    expect(
-      readThemeSwitcherSettings({
-        getItem: () => {
-          throw new Error('SecurityError')
-        }
-      })
-    ).toEqual({ key: 'd', enabled: true })
+  it('falls back to defaults when getItem throws', () => {
+    expect(readThemeSwitcherSettings(() => ({ getItem: throwing }))).toEqual({
+      key: 'd',
+      enabled: true
+    })
+  })
+  it('falls back to defaults when storage access throws', () => {
+    expect(readThemeSwitcherSettings(throwing)).toEqual({
+      key: 'd',
+      enabled: true
+    })
   })
 })
 
@@ -72,21 +83,33 @@ function storage() {
 describe('writeThemeSwitcherKey', () => {
   it('removes the entry for the default key', () => {
     const s = storage()
-    writeThemeSwitcherKey(s, 'd')
+    writeThemeSwitcherKey(() => s, 'd')
     expect(s.removeItem).toHaveBeenCalledExactlyOnceWith('theme-switcher-key')
     expect(s.setItem).not.toHaveBeenCalled()
   })
-  it('stores a custom key', () => {
+  it('stores a custom key as spelled', () => {
     const s = storage()
-    writeThemeSwitcherKey(s, 't')
-    expect(s.setItem).toHaveBeenCalledExactlyOnceWith('theme-switcher-key', 't')
+    writeThemeSwitcherKey(() => s, 'ArrowUp')
+    expect(s.setItem).toHaveBeenCalledExactlyOnceWith(
+      'theme-switcher-key',
+      'ArrowUp'
+    )
+  })
+  it('does not throw when storage is blocked', () => {
+    expect(() => writeThemeSwitcherKey(throwing, 't')).not.toThrow()
+    expect(() =>
+      writeThemeSwitcherKey(
+        () => ({ setItem: throwing, removeItem: throwing }),
+        't'
+      )
+    ).not.toThrow()
   })
 })
 
 describe('writeThemeSwitcherEnabled', () => {
   it('stores the disabled flag without touching the key', () => {
     const s = storage()
-    writeThemeSwitcherEnabled(s, false)
+    writeThemeSwitcherEnabled(() => s, false)
     expect(s.setItem).toHaveBeenCalledExactlyOnceWith(
       'theme-switcher-key-disabled',
       'true'
@@ -95,11 +118,35 @@ describe('writeThemeSwitcherEnabled', () => {
   })
   it('removes the disabled flag when enabling', () => {
     const s = storage()
-    writeThemeSwitcherEnabled(s, true)
+    writeThemeSwitcherEnabled(() => s, true)
     expect(s.removeItem).toHaveBeenCalledExactlyOnceWith(
       'theme-switcher-key-disabled'
     )
     expect(s.setItem).not.toHaveBeenCalled()
+  })
+  it('does not throw when storage is blocked', () => {
+    expect(() => writeThemeSwitcherEnabled(throwing, false)).not.toThrow()
+  })
+})
+
+describe('write then read round-trip', () => {
+  it('matches a keydown with the same key', () => {
+    const store = new Map<string, string>()
+    const s = {
+      getItem: (name: string) => store.get(name) ?? null,
+      setItem: (name: string, value: string) => void store.set(name, value),
+      removeItem: (name: string) => void store.delete(name)
+    }
+    for (const key of ['d', 'T', 'ArrowUp', 'F2']) {
+      writeThemeSwitcherKey(() => s, key)
+      const settings = readThemeSwitcherSettings(() => s)
+      expect(
+        isThemeSwitcherKeydown(
+          keydown({ key }),
+          activeThemeSwitcherKey(settings)
+        )
+      ).toBe(true)
+    }
   })
 })
 
@@ -124,6 +171,9 @@ describe('isThemeSwitcherKeydown', () => {
     expect(isThemeSwitcherKeydown(keydown(), 'd')).toBe(true)
     expect(isThemeSwitcherKeydown(keydown({ key: 'D' }), 'd')).toBe(true)
     expect(isThemeSwitcherKeydown(keydown({ key: 'T' }), 't')).toBe(true)
+    expect(isThemeSwitcherKeydown(keydown({ key: 'ArrowUp' }), 'ArrowUp')).toBe(
+      true
+    )
     expect(isThemeSwitcherKeydown(keydown(), 't')).toBe(false)
   })
   it('never matches when disabled', () => {
@@ -146,12 +196,22 @@ describe('isThemeSwitcherKeydown', () => {
       isThemeSwitcherKeydown(keydown({ target: { closest: () => ({}) } }), 'd')
     ).toBe(false)
     expect(isThemeSwitcherKeydown(keydown({ target: null }), 'd')).toBe(true)
+    expect(isThemeSwitcherKeydown(keydown({ target: {} }), 'd')).toBe(true)
   })
 })
 
 describe('isAssignableThemeSwitcherKey', () => {
-  it('rejects modifiers and escape', () => {
-    for (const key of ['Shift', 'Control', 'Alt', 'Meta', 'Escape']) {
+  it('rejects modifiers, escape and navigation keys', () => {
+    for (const key of [
+      'Shift',
+      'Control',
+      'Alt',
+      'Meta',
+      'Escape',
+      'Tab',
+      'Enter',
+      ' '
+    ]) {
       expect(isAssignableThemeSwitcherKey(key)).toBe(false)
     }
   })
@@ -165,6 +225,7 @@ describe('isAssignableThemeSwitcherKey', () => {
 describe('formatThemeSwitcherKey', () => {
   it('uppercases single characters and keeps named keys', () => {
     expect(formatThemeSwitcherKey('d')).toBe('D')
-    expect(formatThemeSwitcherKey('f2')).toBe('f2')
+    expect(formatThemeSwitcherKey('F2')).toBe('F2')
+    expect(formatThemeSwitcherKey('ArrowUp')).toBe('ArrowUp')
   })
 })

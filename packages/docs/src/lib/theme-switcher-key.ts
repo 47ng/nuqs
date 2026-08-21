@@ -7,11 +7,14 @@ export type ThemeSwitcherSettings = {
   enabled: boolean
 }
 
+type ReadableStorage = Pick<Storage, 'getItem'>
+type WritableStorage = Pick<Storage, 'setItem' | 'removeItem'>
+
 export function resolveThemeSwitcherSettings(
   storedKey: string | null,
   storedDisabled: string | null
 ): ThemeSwitcherSettings {
-  const key = storedKey?.trim().toLowerCase() ?? ''
+  const key = storedKey?.trim() ?? ''
   return {
     key: key === '' ? DEFAULT_THEME_SWITCHER_KEY : key,
     enabled: storedDisabled?.trim() !== 'true'
@@ -19,9 +22,10 @@ export function resolveThemeSwitcherSettings(
 }
 
 export function readThemeSwitcherSettings(
-  storage: Pick<Storage, 'getItem'>
+  getStorage: () => ReadableStorage
 ): ThemeSwitcherSettings {
   try {
+    const storage = getStorage()
     return resolveThemeSwitcherSettings(
       storage.getItem(THEME_SWITCHER_KEY_STORAGE_KEY),
       storage.getItem(THEME_SWITCHER_DISABLED_STORAGE_KEY)
@@ -35,14 +39,15 @@ export function activeThemeSwitcherKey(settings: ThemeSwitcherSettings) {
   return settings.enabled ? settings.key : null
 }
 
-type WritableStorage = Pick<Storage, 'setItem' | 'removeItem'>
-
-export function writeThemeSwitcherKey(storage: WritableStorage, key: string) {
+export function writeThemeSwitcherKey(
+  getStorage: () => WritableStorage,
+  key: string
+) {
   try {
     if (key === DEFAULT_THEME_SWITCHER_KEY) {
-      storage.removeItem(THEME_SWITCHER_KEY_STORAGE_KEY)
+      getStorage().removeItem(THEME_SWITCHER_KEY_STORAGE_KEY)
     } else {
-      storage.setItem(THEME_SWITCHER_KEY_STORAGE_KEY, key)
+      getStorage().setItem(THEME_SWITCHER_KEY_STORAGE_KEY, key)
     }
   } catch {
     return
@@ -50,14 +55,14 @@ export function writeThemeSwitcherKey(storage: WritableStorage, key: string) {
 }
 
 export function writeThemeSwitcherEnabled(
-  storage: WritableStorage,
+  getStorage: () => WritableStorage,
   enabled: boolean
 ) {
   try {
     if (enabled) {
-      storage.removeItem(THEME_SWITCHER_DISABLED_STORAGE_KEY)
+      getStorage().removeItem(THEME_SWITCHER_DISABLED_STORAGE_KEY)
     } else {
-      storage.setItem(THEME_SWITCHER_DISABLED_STORAGE_KEY, 'true')
+      getStorage().setItem(THEME_SWITCHER_DISABLED_STORAGE_KEY, 'true')
     }
   } catch {
     return
@@ -91,7 +96,7 @@ export function isThemeSwitcherKeydown(
 ) {
   return (
     switcherKey !== null &&
-    event.key.toLowerCase() === switcherKey &&
+    event.key.toLowerCase() === switcherKey.toLowerCase() &&
     !event.defaultPrevented &&
     !event.repeat &&
     !event.isComposing &&
@@ -102,11 +107,19 @@ export function isThemeSwitcherKeydown(
   )
 }
 
-const MODIFIER_KEYS = new Set(['shift', 'control', 'alt', 'meta'])
+const UNASSIGNABLE_KEYS = new Set([
+  'shift',
+  'control',
+  'alt',
+  'meta',
+  'escape',
+  'tab',
+  'enter',
+  ' '
+])
 
 export function isAssignableThemeSwitcherKey(key: string) {
-  const value = key.toLowerCase()
-  return value !== 'escape' && !MODIFIER_KEYS.has(value)
+  return !UNASSIGNABLE_KEYS.has(key.toLowerCase())
 }
 
 export function formatThemeSwitcherKey(key: string) {
