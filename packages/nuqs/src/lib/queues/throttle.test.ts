@@ -433,6 +433,11 @@ describe('throttle: flush', () => {
     const first = queue.flush(adapter)
     vi.runAllTimers()
     await first
+    expect(adapter.updateUrl).toHaveBeenNthCalledWith(
+      1,
+      new URLSearchParams('?first=one'),
+      { history: 'push', scroll: true, shallow: false }
+    )
 
     queue.push({ key: 'second', query: 'two', options: {} })
     queue.push({ key: 'third', query: 'three', options: {} })

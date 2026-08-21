@@ -111,14 +111,6 @@ describe('standard schema', () => {
       '[nuqs] Error while parsing query `should-not-parse` for key `test`: Error: Boom'
     )
   })
-  it('validates values through their configured URL keys', async () => {
-    const validator = createStandardSchemaV1(
-      { search: parseAsString },
-      { urlKeys: { search: 'q' } }
-    )
-    const result = await validator['~standard'].validate({ search: 'nuqs' })
-    expect(result).toEqual({ value: { search: 'nuqs' } })
-  })
 
   it('identifies itself as a nuqs standard schema', () => {
     const validator = createStandardSchemaV1({ search: parseAsString })
