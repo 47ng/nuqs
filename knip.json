@@ -54,7 +54,8 @@
       ],
       "project": ["content/**/*.{ts,tsx}", "src/**/*.{ts,tsx}"],
       "paths": {
-        "@/*": ["./*"]
+        "@/*": ["./*"],
+        "collections/*": ["./.source/*"]
       },
       "next": true,
       "ignoreFiles": [
@@ -64,8 +65,8 @@
       "ignoreDependencies": [
         "@headlessui/tailwindcss",
         "@tailwindcss/container-queries",
-        "@types/mdx",
         "hast-util-to-jsx-runtime",
+        "tailwindcss",
         "tailwindcss-animate"
       ]
     },

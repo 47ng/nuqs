@@ -93,7 +93,11 @@ jobs:
           pnpm run lint:knip --workspace packages/e2e/remix
           pnpm run lint:knip --workspace packages/e2e/tanstack-router
       - name: Run Knip (docs)
-        run: pnpm run lint:knip --workspace packages/docs
+        # fumadocs-mdx must generate .source/ first (skipped by the
+        # --ignore-scripts install) so knip can resolve collections/*
+        run: |
+          pnpm run --filter docs postinstall
+          pnpm run lint:knip --workspace packages/docs
       - name: Run Knip (examples)
         run: |
           pnpm run --filter "examples-trpc" typegen

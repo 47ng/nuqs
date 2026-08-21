@@ -1,4 +1,6 @@
+import { docsPageClassName } from '@/src/components/shared-layout'
 import { useMDXComponents } from '@/mdx-components'
+import type { TOCItemType } from 'fumadocs-core/toc'
 import { AsideSponsors } from '@/src/app/(pages)/_landing/sponsors'
 import { source } from '@/src/app/source'
 import {
@@ -46,6 +48,8 @@ export default async function Page(props: PageProps<'/docs/[[...slug]]'>) {
 
   return (
     <DocsPage
+      className={docsPageClassName}
+      tableOfContentPopover={{ list: { thumbBox: false } }}
       toc={toc}
       tableOfContent={{
         footer: <AsideSponsors />

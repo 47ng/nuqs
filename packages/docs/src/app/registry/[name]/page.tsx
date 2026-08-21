@@ -1,3 +1,4 @@
+import { docsPageClassName } from '@/src/components/shared-layout'
 import { useMDXComponents } from '@/mdx-components'
 import { rehypeCodeOptions } from '@/rehype-code.config'
 import { CodeBlock } from '@/src/components/code-block'
@@ -8,7 +9,7 @@ import type {
   RegistryBuiltItem
 } from '@/src/registry/schemas'
 import { SiTypescript } from '@icons-pack/react-simple-icons'
-import { Markdown } from 'fumadocs-core/content'
+import { Markdown } from 'fumadocs-core/content/md'
 import { rehypeCode, remarkHeading } from 'fumadocs-core/mdx-plugins'
 import { Callout } from 'fumadocs-ui/components/callout'
 import { Tab, Tabs } from 'fumadocs-ui/components/tabs'
@@ -34,6 +35,8 @@ export default async function Page({ params }: PageProps<'/registry/[name]'>) {
   const usage = await readUsage(name)
   return (
     <DocsPage
+      className={docsPageClassName}
+      tableOfContentPopover={{ list: { thumbBox: false } }}
       toc={[
         {
           url: '#installation',

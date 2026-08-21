@@ -8,16 +8,6 @@ import defaultMdxComponents from 'fumadocs-ui/mdx'
 import type { MDXComponents } from 'mdx/types'
 import { Suspense } from 'react'
 
-declare module 'mdx/types.js' {
-  // Augment the MDX types to make it understand React.
-  namespace JSX {
-    type Element = React.JSX.Element
-    type ElementClass = React.JSX.ElementClass
-    type ElementType = React.JSX.ElementType
-    type IntrinsicElements = React.JSX.IntrinsicElements
-  }
-}
-
 const components = {
   ...defaultMdxComponents,
   Callout,

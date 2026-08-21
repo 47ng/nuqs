@@ -1,6 +1,6 @@
 'use client'
 
-import { ThemeToggle } from 'fumadocs-ui/components/layout/theme-toggle'
+import { ThemeSwitch } from 'fumadocs-ui/layouts/shared/slots/theme-switch'
 import { KeyboardIcon, KeyboardOffIcon, RotateCcwIcon } from 'lucide-react'
 import { useCallback, useEffect, useState, useSyncExternalStore } from 'react'
 
@@ -131,11 +131,11 @@ export function ThemeToggleMenu() {
         }
       }}
     >
-      <ContextMenuTrigger asChild>
-        <ThemeToggle
-          mode="light-dark"
-          aria-keyshortcuts={activeThemeSwitcherKey(settings) ?? undefined}
-        />
+      <ContextMenuTrigger
+        className="inline-flex"
+        aria-keyshortcuts={activeThemeSwitcherKey(settings) ?? undefined}
+      >
+        <ThemeSwitch mode="light-dark" />
       </ContextMenuTrigger>
       <ContextMenuContent className="w-fit">
         <ContextMenuLabel className="text-muted-foreground text-xs font-normal">
