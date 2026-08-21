@@ -19,7 +19,7 @@ import { GitHubActionsStatus } from './gha-status'
 export function FeaturesSection(props: React.ComponentProps<'section'>) {
   return (
     <section
-      className="container relative grid grid-cols-1 gap-x-12 gap-y-16 px-4 py-24 md:grid-cols-2 xl:grid-cols-3 xl:gap-y-24"
+      className="relative container grid grid-cols-1 gap-x-12 gap-y-16 px-4 py-24 md:grid-cols-2 xl:grid-cols-3 xl:gap-y-24"
       {...props}
     >
       <h2 className="sr-only">Features</h2>
@@ -110,12 +110,8 @@ export function FeaturesSection(props: React.ComponentProps<'section'>) {
       />
       <Feature
         icon={<TestTube2 size={32} />}
-        title={
-          <span className="flex items-center">
-            Tested & testable
-            <GitHubActionsStatus className="ml-4 inline-flex" />
-          </span>
-        }
+        title="Tested & testable"
+        titleAccessory={<GitHubActionsStatus className="ml-2" />}
         description="Tested against every Next.js release. Use the provided test adapter to test your components in isolation."
       />
     </section>
@@ -126,12 +122,19 @@ export function FeaturesSection(props: React.ComponentProps<'section'>) {
 
 type FeatureProps = {
   title: React.ReactNode
+  titleAccessory?: React.ReactNode
   description: React.ReactNode
   icon: React.ReactNode
   isNew?: boolean
 }
 
-export function Feature({ title, description, icon, isNew }: FeatureProps) {
+export function Feature({
+  title,
+  titleAccessory,
+  description,
+  icon,
+  isNew
+}: FeatureProps) {
   // https://v0.dev/t/xXdcvuFkW1d
   const DescriptionContainer = typeof description === 'string' ? 'p' : 'div'
   return (
@@ -145,17 +148,19 @@ export function Feature({ title, description, icon, isNew }: FeatureProps) {
           >
             {icon}
           </span>
-          <h3 className="text-2xl font-bold tracking-tighter dark:text-white md:text-3xl xl:text-4xl">
+          <h3 className="text-2xl font-bold tracking-tighter md:text-3xl xl:text-4xl dark:text-white">
             {title}
             {isNew && (
               <Sparkles
                 className="ml-2 inline-block -translate-y-3 text-amber-500 dark:text-amber-300"
+                role="img"
                 aria-label="New feature"
               />
             )}
           </h3>
+          {titleAccessory}
         </div>
-        <DescriptionContainer className="text-zinc-500 dark:text-zinc-300 md:text-lg/relaxed xl:text-xl/relaxed">
+        <DescriptionContainer className="text-zinc-500 md:text-lg/relaxed xl:text-xl/relaxed dark:text-zinc-300">
           {description}
         </DescriptionContainer>
       </div>

@@ -11,6 +11,7 @@ export function NextJS({ className, ...props }: IconProps) {
   const id = useId()
   return (
     <svg
+      role="img"
       aria-label="Next.js (app & pages routers)"
       width="1em"
       height="1em"

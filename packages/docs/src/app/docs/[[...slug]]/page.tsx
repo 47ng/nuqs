@@ -42,7 +42,9 @@ export default async function Page(props: PageProps<'/docs/[[...slug]]'>) {
   const gated = gatedHeadingIds(await page.data.getText('raw'), version =>
     isPublished(version, published)
   )
-  const toc = page.data.toc.filter(item => !gated.has(item.url.replace(/^#/, '')))
+  const toc = page.data.toc.filter(
+    item => !gated.has(item.url.replace(/^#/, ''))
+  )
 
   return (
     <DocsPage

@@ -2,45 +2,59 @@ import { cn } from '@/src/lib/utils'
 import React from 'react'
 import { z } from 'zod'
 
+const runDateFormat = new Intl.DateTimeFormat('en-GB', {
+  dateStyle: 'long',
+  timeZone: 'UTC'
+})
+
 export async function GitHubActionsStatus({
   className,
   ...props
-}: React.ComponentProps<'div'>) {
+}: React.ComponentProps<'ul'>) {
   const statuses = await getGitHubActionsStatus()
   if (statuses.length === 0) {
     return null
   }
   return (
-    <div
+    <ul
       className={cn(
         'flex items-center space-x-[-12px] md:space-x-[-14px]',
         className
       )}
-      aria-label="Last 5 GitHub Actions status"
+      aria-label={`Last ${statuses.length} GitHub Actions ${statuses.length === 1 ? 'status' : 'statuses'}`}
       {...props}
     >
-      {statuses.map(status => {
-        const color = {
-          SUCCESS: 'bg-green-500',
-          FAILURE: 'bg-red-500',
-          CANCELLED: 'bg-zinc-500',
-          TIMED_OUT: 'bg-zinc-500',
-          ACTION_REQUIRED: 'bg-purple-500',
-          NEUTRAL: 'bg-zinc-500'
+      {statuses.map((status, index) => {
+        const metadata = {
+          SUCCESS: { color: 'bg-green-500', label: 'success' },
+          FAILURE: { color: 'bg-red-500', label: 'failure' },
+          CANCELLED: { color: 'bg-zinc-500', label: 'cancelled' },
+          TIMED_OUT: { color: 'bg-zinc-500', label: 'timed out' },
+          ACTION_REQUIRED: {
+            color: 'bg-purple-500',
+            label: 'action required'
+          },
+          NEUTRAL: { color: 'bg-zinc-500', label: 'neutral' }
         }[status.checkSuite.conclusion]
         return (
-          <a key={status.id} href={status.url} className="rounded-full p-1">
-            <div
-              aria-label={status.checkSuite.conclusion}
-              className={cn(
-                'border-background h-4 w-4 rounded-full border-2 bg-current md:h-5 md:w-5',
-                color
-              )}
-            />
-          </a>
+          <li key={status.id}>
+            <a
+              href={status.url}
+              aria-label={`GitHub Actions run ${index + 1} of ${statuses.length}, most recent first, on ${runDateFormat.format(new Date(status.createdAt))}: ${metadata.label}`}
+              className="block rounded-full p-1"
+            >
+              <div
+                aria-hidden="true"
+                className={cn(
+                  'border-background h-4 w-4 rounded-full border-2 bg-current md:h-5 md:w-5',
+                  metadata.color
+                )}
+              />
+            </a>
+          </li>
         )
       })}
-    </div>
+    </ul>
   )
 }
 
