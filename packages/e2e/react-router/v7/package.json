@@ -32,7 +32,6 @@
     "e2e-shared": "workspace:*",
     "express": "^4.22.2",
     "typescript": "catalog:typescript",
-    "typescript-7": "catalog:typescript",
     "vite": "catalog:vite",
     "vite-tsconfig-paths": "^6.1.1"
   }

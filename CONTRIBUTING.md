@@ -5,7 +5,7 @@ First off, thanks for your help! 🙏
 ## Getting started
 
 1. Fork and clone the repository
-2. Install dependencies with `pnpm install`
+2. Set up the checkout with `node --run setup:worktree`
 3. Start the development environment with `pnpm dev --filter <package-name>...`
 
 ## Git hooks (optional)
@@ -22,12 +22,22 @@ clone, run once:
 node --run setup:hooks
 ```
 
+This also enables a fingerprinted `post-checkout` bootstrap for linked
+worktrees. If the current Node version cannot run package scripts yet, invoke
+the setup directly with `node packages/scripts/worktree-setup.mjs` after
+activating `.node-version`.
+
+The checkout hook only auto-installs dependencies for branches whose
+dependency manifests match `origin/HEAD`. When it skips, review the branch,
+then run `node --run setup:worktree` — explicit setup executes the branch's
+code.
+
 ## Project structure
 
 This monorepo contains:
 
 - The source code for the `nuqs` NPM package, in [`packages/nuqs`](./packages/nuqs).
-- A Next.js app under [`packages/docs`](./packages/docs) that serves the documentation and as a playground deployed at <https://nuqs.dev>. Copy [`packages/docs/.env.example`](./packages/docs/.env.example) to `.env.local` for the env vars local docs dev needs.
+- A Next.js app under [`packages/docs`](./packages/docs) that serves the documentation and as a playground deployed at <https://nuqs.dev>. Copy [`packages/docs/.env.example`](./packages/docs/.env.example) to `.env.local` for the optional env vars local docs dev can use.
 - Test benches for [end-to-end tests](./packages/e2e) for each supported framework, driven by Playwright
 - Examples of integration with other tools.
 
@@ -63,11 +73,13 @@ When proposing changes or fixing a bug, adding tests (unit or in the
 appropriate e2e test environment) can help tremendously to validate and
 understand the changes.
 
-For a fast inner loop, run:
+For a focused test run, filter the root Turbo command, for example:
 
-- `pnpm --filter nuqs build`
-- `pnpm --filter nuqs test:unit`
-- `pnpm --filter nuqs test:types`
+- `pnpm run test --filter nuqs`
+- `pnpm run test --filter e2e-next`
+
+Turbo builds each selected task's dependencies before testing them. Avoid
+calling package-level test scripts directly, as that bypasses the task graph.
 
 ## Opening issues
 

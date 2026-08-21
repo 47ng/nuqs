@@ -18,11 +18,11 @@ export function WorksWith({ className, ...props }: ComponentProps<'div'>) {
       <p className="sr-only">Works with</p>
       {/* <Vite /> */}
       <ReactSPA />
-      <ReactRouter />
       <NextJS />
+      <ReactRouter />
       <Remix />
-      <TanStackRouter />
       <Vitest />
+      <TanStackRouter />
     </div>
   )
 }

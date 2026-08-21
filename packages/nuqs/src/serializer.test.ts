@@ -253,6 +253,16 @@ describe('serializer', () => {
     const result = serialize({ multi: ['a', 'b', 'c'] })
     expect(result).toBe('?multi=a&multi=b&multi=c')
   })
+  it.each(['constructor', 'hasOwnProperty'])(
+    'ignores an omitted parser key named %s',
+    key => {
+      const serialize = createSerializer({
+        a: parseAsString,
+        [key]: parseAsString
+      })
+      expect(serialize({ a: 'acme' })).toBe('?a=acme')
+    }
+  )
   describe('supports processUrlSearchParams', () => {
     it('modifies search params in place', () => {
       const serialize = createSerializer(parsers, {

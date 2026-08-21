@@ -12,6 +12,7 @@
         "release-finalize.ts",
         "release-notes-automation.ts",
         "validate-changelog-dto.ts",
+        "verify-release/verify.production.ts",
         "verify-release/verify.staged.ts"
       ],
       "project": ["**/*.ts"]
@@ -36,7 +37,7 @@
         "src/adapters/testing.ts"
       ],
       "project": ["src/**/*.ts"],
-      "ignoreDependencies": ["@vitejs/plugin-react", "typescript-7"]
+      "ignoreDependencies": ["@vitejs/plugin-react"]
     },
     "packages/docs": {
       "entry": [
@@ -53,7 +54,8 @@
       ],
       "project": ["content/**/*.{ts,tsx}", "src/**/*.{ts,tsx}"],
       "paths": {
-        "@/*": ["./*"]
+        "@/*": ["./*"],
+        "collections/*": ["./.source/*"]
       },
       "next": true,
       "ignoreFiles": [
@@ -63,8 +65,8 @@
       "ignoreDependencies": [
         "@headlessui/tailwindcss",
         "@tailwindcss/container-queries",
-        "@types/mdx",
         "hast-util-to-jsx-runtime",
+        "tailwindcss",
         "tailwindcss-animate"
       ]
     },
@@ -95,11 +97,7 @@
       "project": ["**/*.{ts,tsx}"]
     },
     "packages/e2e/tanstack-router": {
-      "entry": [
-        "src/routes/**/*.tsx",
-        "src/routeTree.gen.ts",
-        "specs/**/*.ts"
-      ],
+      "entry": ["src/routes/**/*.tsx", "src/routeTree.gen.ts", "specs/**/*.ts"],
       "project": ["**/*.{ts,tsx}"]
     },
     "packages/e2e/react-router/v5": {

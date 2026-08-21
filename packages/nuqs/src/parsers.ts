@@ -1,5 +1,6 @@
 import type { StandardSchemaV1 } from '@standard-schema/spec'
 import type { Options } from './defs'
+import { compareArrays, isEqual } from './lib/compare'
 import { safeParse } from './lib/safe-parse'
 
 type Require<T, Keys extends keyof T> = Pick<Required<T>, Keys> & Omit<T, Keys>
@@ -153,19 +154,12 @@ export function createParser<T>(
     if (typeof value === 'undefined') {
       return null
     }
-    let str = ''
-    if (Array.isArray(value)) {
-      // Follow the spec:
-      // https://url.spec.whatwg.org/#dom-urlsearchparams-get
-      if (value[0] === undefined) {
-        return null
-      }
-      str = value[0]
+    const isArray = Array.isArray(value)
+    if (isArray && value[0] === undefined) {
+      return null
     }
-    if (typeof value === 'string') {
-      str = value
-    }
-    return safeParse(parser.parse, str)
+    value = isArray ? value[0]! : typeof value === 'string' ? value : ''
+    return safeParse(parser.parse, value)
   }
 
   return {
@@ -283,7 +277,7 @@ function compareDates(a: Date, b: Date) {
 export const parseAsTimestamp: SingleParserBuilder<Date> = createParser({
   parse: v => {
     const date = new Date(parseInt(v))
-    return date.valueOf() == date.valueOf() ? date : null // NaN check at low bundle size cost
+    return +date == +date ? date : null // NaN check at low bundle size cost
   },
   serialize: (v: Date) => '' + v.valueOf(),
   eq: compareDates
@@ -292,12 +286,18 @@ export const parseAsTimestamp: SingleParserBuilder<Date> = createParser({
 /**
  * Querystring encoded as an ISO-8601 string (UTC),
  * and returned as a Date object.
+ *
+ * The date part must be a valid `YYYY-MM-DD` calendar date:
+ * impossible dates like 2021-02-29 and reduced-precision
+ * or non-ISO forms parse to null.
  */
 export const parseAsIsoDateTime: SingleParserBuilder<Date> = createParser({
   parse: v => {
     const date = new Date(v)
-    // NaN check at low bundle size cost
-    return date.valueOf() == date.valueOf() ? date : null
+    // The NaN check rejects invalid time parts.
+    // parseAsIsoDate.parse rejects invalid calendar dates
+    // (reused to keep the bundle small).
+    return +date == +date && parseAsIsoDate.parse(v) ? date : null
   },
   serialize: (v: Date) => v.toISOString(),
   eq: compareDates
@@ -310,12 +310,20 @@ export const parseAsIsoDateTime: SingleParserBuilder<Date> = createParser({
  *
  * The Date is parsed without the time zone offset,
  * making it at 00:00:00 UTC.
+ *
+ * Only valid `YYYY-MM-DD` calendar dates are accepted:
+ * impossible dates like 2021-02-29 and reduced-precision
+ * or non-ISO forms parse to null.
  */
 export const parseAsIsoDate: SingleParserBuilder<Date> = createParser({
   parse: v => {
     const date = new Date(v.slice(0, 10))
-    // NaN check at low bundle size cost
-    return date.valueOf() == date.valueOf() ? date : null
+    // NaN check first: serialize throws on Invalid Date.
+    // new Date() turns 2021-02-29 into 2021-03-01 silently,
+    // so serialize back and compare with the input.
+    return +date == +date && parseAsIsoDate.serialize(date) === v.slice(0, 10)
+      ? date
+      : null
   },
   serialize: (v: Date) => v.toISOString().slice(0, 10),
   eq: compareDates
@@ -467,7 +475,7 @@ export function parseAsArrayOf<ItemType>(
   itemParser: SingleParser<ItemType>,
   separator = ','
 ): SingleParserBuilder<ItemType[]> {
-  const itemEq = itemParser.eq ?? ((a: ItemType, b: ItemType) => a === b)
+  const itemEq = itemParser.eq ?? isEqual
   const encodedSeparator = encodeURIComponent(separator)
   // todo: Handle default item values and make return type non-nullable
   return createParser({
@@ -497,28 +505,24 @@ export function parseAsArrayOf<ItemType>(
           return str.replaceAll(separator, encodedSeparator)
         })
         .join(separator),
-    eq(a, b) {
-      if (a === b) {
-        return true // Referentially stable
-      }
-      if (a.length !== b.length) {
-        return false
-      }
-      return a.every((value, index) => itemEq(value, b[index]!))
-    }
+    eq: (a, b) => compareArrays(a, b, itemEq)
   })
 }
 
 export function parseAsNativeArrayOf<ItemType>(
   itemParser: SingleParser<ItemType>
 ): ReturnType<MultiParserBuilder<ItemType[]>['withDefault']> {
-  const itemEq = itemParser.eq ?? ((a: ItemType, b: ItemType) => a === b)
+  const itemEq = itemParser.eq ?? isEqual
   return createMultiParser({
     parse: query => {
       const parsed = query
         .map((item, index) => safeParse(itemParser.parse, item, `[${index}]`))
         .filter(value => value !== null && value !== undefined) as ItemType[]
-      return parsed.length === 0 ? null : parsed
+      if (parsed.length > 0) {
+        return parsed
+      }
+      // Parse a single empty query value as an explicit empty array.
+      return query.length === 1 && query[0] === '' ? [] : null
     },
     serialize: values => {
       // defensive check because we potentially get a single value passed from a standard schema
@@ -528,15 +532,7 @@ export function parseAsNativeArrayOf<ItemType>(
         return typeof serialized === 'string' ? [serialized] : [...serialized]
       })
     },
-    eq(a, b) {
-      if (a === b) {
-        return true // Referentially stable
-      }
-      if (a.length !== b.length) {
-        return false
-      }
-      return a.every((value, index) => itemEq(value, b[index]!))
-    }
+    eq: (a, b) => compareArrays(a, b, itemEq)
   }).withDefault([])
 }
 

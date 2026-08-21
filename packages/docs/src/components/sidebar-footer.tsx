@@ -7,7 +7,6 @@ export async function SidebarFooter() {
       <a
         href={`https://npmjs.com/package/nuqs/v/${version}`}
         className="hover:underline"
-        tabIndex={-1}
       >
         <pre className="text-xs">nuqs@{version}</pre>
       </a>

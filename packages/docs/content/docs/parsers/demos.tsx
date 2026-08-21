@@ -3,7 +3,7 @@
 import { CodeBlock } from '@/src/components/code-block.client'
 import { QuerySpy } from '@/src/components/query-spy'
 import { ContainerQueryHelper } from '@/src/components/responsive-helpers'
-import { Button } from '@/src/components/ui/button'
+import { Button, buttonVariants } from '@/src/components/ui/button'
 import { Checkbox } from '@/src/components/ui/checkbox'
 import {
   Pagination,
@@ -77,18 +77,19 @@ function DemoContainer({
 }
 
 export function BasicUsageDemo() {
-  const [name, setName] = useQueryState('name', { defaultValue: '' })
+  const [name, setName] = useQueryState('name')
   return (
     <DemoContainer className="flex-col items-stretch" demoKey="name">
       <input
+        aria-label="Name"
         className="border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring h-10 flex-1 rounded-md border px-3 py-2 text-sm file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
-        value={name}
-        onChange={e => setName(e.target.value || null)}
+        value={name || ''}
+        onChange={e => setName(e.target.value)}
         placeholder="Enter your name..."
         autoComplete="off"
       />
       <div className="flex flex-1 items-center gap-2">
-        <span className="mr-auto ml-2 text-sm text-zinc-500">
+        <span className="mr-auto ml-2 text-sm text-zinc-600 dark:text-zinc-400">
           {`Hello, ${name || 'anonymous visitor'}!`}
         </span>
         <Button variant="secondary" onClick={() => setName(null)}>
@@ -104,9 +105,10 @@ export function StringParserDemo() {
   return (
     <DemoContainer demoKey="string">
       <input
+        aria-label="String value"
         className="border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring h-10 flex-1 rounded-md border px-3 py-2 text-sm file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
         value={value}
-        onChange={e => setValue(e.target.value || null)}
+        onChange={e => setValue(e.target.value)}
         placeholder="Type something here..."
         autoComplete="off"
       />
@@ -126,6 +128,7 @@ export function IntegerParserDemo() {
   return (
     <DemoContainer demoKey="int">
       <input
+        aria-label="Integer value"
         type="number"
         className="border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring flex h-10 flex-1 rounded-md border px-3 py-2 text-sm file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
         value={value ?? ''} // Handle empty input
@@ -158,6 +161,7 @@ export function FloatParserDemo() {
   return (
     <DemoContainer demoKey="float">
       <Slider
+        aria-label="Floating point value"
         value={[value]}
         onValueChange={([v]) => setValue(v).catch()}
         className="w-auto flex-1"
@@ -180,6 +184,8 @@ export function HexParserDemo() {
   return (
     <DemoContainer demoKey="hex">
       <Slider
+        aria-label="Hexadecimal value"
+        aria-valuetext={value.toString(16).padStart(2, '0')}
         value={[value]}
         onValueChange={([v]) => setValue(v).catch(console.error)}
         className="w-auto flex-1"
@@ -252,11 +258,13 @@ export function BooleanParserDemo() {
     <DemoContainer demoKey="bool">
       <Checkbox
         id="boolean-demo"
+        aria-labelledby="boolean-demo-label"
         checked={value ?? false}
         onCheckedChange={e => setValue(Boolean(e))}
         className="ml-3"
       />
       <label
+        id="boolean-demo-label"
         htmlFor="boolean-demo"
         className="text-sm leading-none font-medium select-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
       >
@@ -318,10 +326,12 @@ export function StringLiteralParserDemo() {
 }
 
 export function DateParserDemo({
+  label,
   queryKey,
   parser,
   type
 }: {
+  label: string
   queryKey: string
   parser: ParserBuilder<Date>
   type: 'date' | 'datetime-local'
@@ -333,6 +343,7 @@ export function DateParserDemo({
       <div className="flex w-full flex-col items-stretch gap-2 @md:flex-row">
         <div className="flex flex-1 items-center gap-2">
           <input
+            aria-label={label}
             type={type}
             className="border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring flex h-10 flex-[2] rounded-md border px-3 py-2 text-sm file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
             value={
@@ -349,7 +360,9 @@ export function DateParserDemo({
               }
             }}
           />
-          <span className="px-2 font-medium text-zinc-500">UTC</span>
+          <span className="px-2 font-medium text-zinc-600 dark:text-zinc-400">
+            UTC
+          </span>
         </div>
         <div className="flex flex-1 gap-2 @md:flex-initial">
           <Button
@@ -374,6 +387,7 @@ export function DateParserDemo({
 export function DatetimeISOParserDemo() {
   return (
     <DateParserDemo
+      label="ISO date and time"
       type="datetime-local"
       queryKey="iso"
       parser={parseAsIsoDateTime}
@@ -382,12 +396,20 @@ export function DatetimeISOParserDemo() {
 }
 
 export function DateISOParserDemo() {
-  return <DateParserDemo type="date" queryKey="date" parser={parseAsIsoDate} />
+  return (
+    <DateParserDemo
+      label="ISO date"
+      type="date"
+      queryKey="date"
+      parser={parseAsIsoDate}
+    />
+  )
 }
 
 export function DateTimestampParserDemo() {
   return (
     <DateParserDemo
+      label="Timestamp date and time"
       type="datetime-local"
       queryKey="ts"
       parser={parseAsTimestamp}
@@ -405,7 +427,7 @@ export function JsonParserDemo() {
   const [value, setValue] = useQueryState('json', parseAsJson(jsonParserSchema))
   return (
     <DemoContainer demoKey="json" className="items-start">
-      <pre className="bg-background flex-1 rounded-md border p-2 text-sm text-zinc-500">
+      <pre className="bg-background flex-1 rounded-md border p-2 text-sm text-zinc-600 dark:text-zinc-400">
         {JSON.stringify(value, null, 2)}
       </pre>
       <Button
@@ -455,15 +477,42 @@ const parseAsStarRating = createParser({
 
 export function CustomParserDemo() {
   const [value, setValue] = useQueryState('rating', parseAsStarRating)
+  const ratingName = React.useId()
   return (
     <DemoContainer demoKey="rating">
-      <div className="group">
-        <StarButton index={1} value={value} setValue={setValue} />
-        <StarButton index={2} value={value} setValue={setValue} />
-        <StarButton index={3} value={value} setValue={setValue} />
-        <StarButton index={4} value={value} setValue={setValue} />
-        <StarButton index={5} value={value} setValue={setValue} />
-      </div>
+      <fieldset>
+        <legend className="sr-only">Rating</legend>
+        <StarButton
+          name={ratingName}
+          index={1}
+          value={value}
+          setValue={setValue}
+        />
+        <StarButton
+          name={ratingName}
+          index={2}
+          value={value}
+          setValue={setValue}
+        />
+        <StarButton
+          name={ratingName}
+          index={3}
+          value={value}
+          setValue={setValue}
+        />
+        <StarButton
+          name={ratingName}
+          index={4}
+          value={value}
+          setValue={setValue}
+        />
+        <StarButton
+          name={ratingName}
+          index={5}
+          value={value}
+          setValue={setValue}
+        />
+      </fieldset>
       <Button
         variant="secondary"
         className="ml-auto"
@@ -582,10 +631,14 @@ export function CustomMultiParserDemo() {
   return (
     <DemoContainer demoKey="filters">
       <div>
-        <label className="text-sm leading-none font-medium select-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+        <label
+          htmlFor="filter-rating"
+          className="text-sm leading-none font-medium select-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+        >
           Rating:
         </label>
         <input
+          id="filter-rating"
           type="number"
           className="border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring flex h-10 flex-1 rounded-md border px-3 py-2 text-sm file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
           value={filters.rating?.eq ?? ''}
@@ -601,10 +654,14 @@ export function CustomMultiParserDemo() {
         />
       </div>
       <div>
-        <label className="text-sm leading-none font-medium select-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+        <label
+          htmlFor="filter-price-from"
+          className="text-sm leading-none font-medium select-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+        >
           Price From:
         </label>
         <input
+          id="filter-price-from"
           type="number"
           className="border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring flex h-10 flex-1 rounded-md border px-3 py-2 text-sm file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
           value={filters.price?.gte ?? 0}
@@ -623,10 +680,14 @@ export function CustomMultiParserDemo() {
         />
       </div>
       <div>
-        <label className="text-sm leading-none font-medium select-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+        <label
+          htmlFor="filter-price-to"
+          className="text-sm leading-none font-medium select-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+        >
           Price To:
         </label>
         <input
+          id="filter-price-to"
           type="number"
           className="border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring flex h-10 flex-1 rounded-md border px-3 py-2 text-sm file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
           value={filters.price?.lte ?? 0}
@@ -713,26 +774,39 @@ export function CustomMultiParserDemo() {
   )
 }
 
-type StarButtonProps = Omit<React.ComponentProps<typeof Button>, 'value'> & {
+type StarButtonProps = {
+  name: string
   index: Rating
   value: Rating | null
   setValue: (value: Rating | null) => void
 }
 
-function StarButton({ index, value, setValue, ...props }: StarButtonProps) {
+function StarButton({ name, index, value, setValue }: StarButtonProps) {
   return (
-    <Button
-      size="icon"
-      variant="ghost"
-      onClick={() => setValue(index)}
-      {...props}
-    >
-      <Star
-        className={cn(
-          'star',
-          value !== null && value >= index && 'fill-current'
-        )}
+    <label className="star-rating-option relative inline-flex">
+      <input
+        className="peer sr-only"
+        type="radio"
+        name={name}
+        value={index}
+        checked={value === index}
+        onChange={() => setValue(index)}
+        aria-label={`${index} out of 5 stars`}
       />
-    </Button>
+      <span
+        aria-hidden
+        className={cn(
+          buttonVariants({ size: 'icon', variant: 'ghost' }),
+          'peer-focus-visible:ring-ring cursor-pointer peer-focus-visible:ring-2 peer-focus-visible:ring-offset-2'
+        )}
+      >
+        <Star
+          className={cn(
+            'star',
+            value !== null && value >= index && 'fill-current'
+          )}
+        />
+      </span>
+    </label>
   )
 }

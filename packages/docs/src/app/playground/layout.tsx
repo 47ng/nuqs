@@ -27,7 +27,7 @@ export default function PlaygroundLayout({
         nav={{ ...shared.nav, mode: 'top' }}
         sidebar={{
           collapsible: false,
-          banner: SideBanner,
+          banner: <SideBanner />,
           footer: (
             <Suspense fallback={<DebugControlsSkeleton />}>
               <DebugControl />

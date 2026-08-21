@@ -1,6 +1,15 @@
 import { http, HttpResponse } from 'msw'
 import { setupServer } from 'msw/node'
-import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest'
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi
+} from 'vitest'
 import {
   fetchGitHubReleases,
   isBetaVersion,
@@ -73,7 +82,12 @@ describe('processReleases', () => {
 describe('fetchGitHubReleases', () => {
   const server = setupServer()
   beforeAll(() => server.listen({ onUnhandledRequest: 'error' }))
-  afterEach(() => server.resetHandlers())
+  beforeEach(() => vi.stubEnv('GITHUB_TOKEN', 'test-token'))
+  afterEach(() => {
+    server.resetHandlers()
+    vi.unstubAllEnvs()
+    vi.restoreAllMocks()
+  })
   afterAll(() => server.close())
 
   function release(i: number) {
@@ -85,7 +99,32 @@ describe('fetchGitHubReleases', () => {
       http.get(endpoint, () => HttpResponse.json([release(1), release(2)]))
     )
     const releases = await fetchGitHubReleases()
-    expect(releases.map(r => r.tag_name)).toEqual(['v1', 'v2'])
+    expect(releases?.map(r => r.tag_name)).toEqual(['v1', 'v2'])
+  })
+
+  it('sends the token as an Authorization header when set', async () => {
+    let auth: string | null = null
+    server.use(
+      http.get(endpoint, ({ request }) => {
+        auth = request.headers.get('authorization')
+        return HttpResponse.json([release(1)])
+      })
+    )
+    await fetchGitHubReleases()
+    expect(auth).toBe('Bearer test-token')
+  })
+
+  it('makes anonymous requests without a GitHub token', async () => {
+    vi.stubEnv('GITHUB_TOKEN', '')
+    let auth: string | null = 'unset'
+    server.use(
+      http.get(endpoint, ({ request }) => {
+        auth = request.headers.get('authorization')
+        return HttpResponse.json([release(1)])
+      })
+    )
+    await fetchGitHubReleases()
+    expect(auth).toBeNull()
   })
 
   it('concatenates across pages until a short page', async () => {
@@ -98,7 +137,7 @@ describe('fetchGitHubReleases', () => {
     )
     const releases = await fetchGitHubReleases()
     expect(releases).toHaveLength(101)
-    expect(releases.at(-1)?.tag_name).toBe('v999')
+    expect(releases?.at(-1)?.tag_name).toBe('v999')
   })
 
   it('stops paginating on an empty page', async () => {
@@ -111,6 +150,17 @@ describe('fetchGitHubReleases', () => {
     )
     const releases = await fetchGitHubReleases()
     expect(releases).toHaveLength(100)
+  })
+
+  it('returns null and warns when rate limited', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    server.use(http.get(endpoint, () => HttpResponse.json({}, { status: 403 })))
+    expect(await fetchGitHubReleases()).toBeNull()
+    expect(warn).toHaveBeenCalledWith(
+      expect.stringContaining('GitHub rate limit reached (403)')
+    )
+    server.use(http.get(endpoint, () => HttpResponse.json({}, { status: 429 })))
+    expect(await fetchGitHubReleases()).toBeNull()
   })
 
   it('throws on a non-ok response', async () => {
