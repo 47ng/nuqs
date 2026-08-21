@@ -428,8 +428,9 @@ Components that call `useQueryState{:ts}` or `useQueryStates{:ts}` must be
 client components (`'use client'{:ts}`).
 
 Shallow updates (the default) change the URL without a round-trip to the
-server. With `shallow: false{:ts}`, the Waku router refetches the page from
-the server, so dynamic pages see the new search params in their props.
+server. With `shallow: false{:ts}`, the Waku router refetches dynamic pages
+from the server, so they see the new search params in their props.
+Static pages never refetch.
 
 <Callout>
 
@@ -467,7 +468,7 @@ type ProductsSearch = inferParserType<typeof searchParams>
 export const productsSearchCodec = {
   id: 'products',
   parse: (query: string) => loadSearch(new URLSearchParams(query)),
-  // createSerializer prepends "?", the codec returns the query without it
+  // createSerializer returns a leading "?"; the codec must return the query without it
   serialize: (search: ProductsSearch) => serializeSearch(search).slice(1)
 } satisfies Unstable_SearchCodec<ProductsSearch>
 ```

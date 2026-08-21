@@ -4,7 +4,9 @@ import {
   useCallback,
   useContext,
   useEffect,
-  useMemo
+  useLayoutEffect,
+  useMemo,
+  useRef
 } from 'react'
 import {
   unstable_parseRoute as parseRoute,
@@ -18,17 +20,31 @@ import { createAdapterProvider, type AdapterProvider } from './lib/context'
 import type { AdapterInterface, UpdateUrlFunction } from './lib/defs'
 import { filterSearchParams } from './lib/key-isolation'
 
+// Waku commits navigations asynchronously (in a transition, or after an RSC
+// fetch), so `useRouter().query` lags behind updateUrl. Hooks read the
+// optimistic search until the router moves on from the query it was based on.
+type OptimisticSearch = {
+  search: URLSearchParams
+  baseQuery: string
+  targets: Set<string>
+}
+
+let optimistic: OptimisticSearch | null = null
+let lastRoute: string | null = null
+
 function useNuqsWakuAdapter(watchKeys: string[]): AdapterInterface {
   const { path, query, push, replace } = useRouter()
-  // useRouter throws outside of a Waku Router, so the context is set here.
+  // useRouter() above throws when RouterContext is null, so the assertion is safe.
   const { changeRoute } = useContext(RouterContext)!
-  // Key isolation: a change to an unwatched key keeps the same reference,
-  // so hooks watching other keys don't re-render.
-  const watchedQuery = filterSearchParams(
-    new URLSearchParams(query),
-    watchKeys,
-    false
-  ).toString()
+  const queryRef = useRef(query)
+  queryRef.current = query
+  const source =
+    optimistic !== null && optimistic.baseQuery === query
+      ? optimistic.search
+      : new URLSearchParams(query)
+  const watchedQuery = filterSearchParams(source, watchKeys, true).toString()
+  // Memoised on the filtered string: a change to an unwatched key keeps the
+  // same URLSearchParams reference, so hooks watching other keys don't re-render.
   const searchParams = useMemo(
     () => new URLSearchParams(watchedQuery),
     [watchedQuery]
@@ -39,19 +55,30 @@ function useNuqsWakuAdapter(watchKeys: string[]): AdapterInterface {
       const url = new URL(location.href)
       url.search = renderQueryString(search)
       debug(20, 'waku', url)
+      const target = url.searchParams.toString()
+      if (optimistic?.baseQuery === queryRef.current) {
+        optimistic.search = search
+        optimistic.targets.add(target)
+      } else {
+        optimistic = {
+          search,
+          baseQuery: queryRef.current,
+          targets: new Set([target])
+        }
+      }
       if (options.scroll) {
         window.scrollTo(0, 0)
       }
       if (options.shallow) {
-        // Commit the route change client-side only (no RSC refetch),
-        // so that `useRouter().query` stays in sync with the URL.
+        // Updates Waku's route state without an RSC fetch.
+        // A bare history.pushState would leave useRouter().query stale.
         startTransition(() => {
-          changeRoute(parseRoute(url), {
+          void changeRoute(parseRoute(url), {
             refetch: false,
             history: options.history,
             shouldScroll: false,
             url
-          }).catch(ignoreNavigationError)
+          })
         })
         return
       }
@@ -70,13 +97,40 @@ function useNuqsWakuAdapter(watchKeys: string[]): AdapterInterface {
   }
 }
 
-// Waku renders navigation errors through its own error boundary,
-// and the UpdateUrlFunction contract requires a non-rejecting Promise.
+// Waku already shows navigation errors in its error boundary,
+// and UpdateUrlFunction must not reject: drop the duplicate rejection.
 function ignoreNavigationError() {}
 
 const Provider = createAdapterProvider(useNuqsWakuAdapter)
 
-function QueueReset() {
+// Tracks committed route changes: settles the optimistic search when one of
+// nuqs' own navigations lands, and resets the update queues when anything else
+// moves the route (Link clicks, back/forward, redirects), so pending updates
+// don't flush onto the new location.
+function RouteSpy() {
+  const { path, query } = useRouter()
+  useLayoutEffect(() => {
+    const route = path + '?' + query
+    const isFirstRoute = lastRoute === null
+    const isOwnNavigation =
+      !isFirstRoute &&
+      lastRoute?.startsWith(path + '?') === true &&
+      optimistic?.targets.has(query) === true
+    lastRoute = route
+    if (isFirstRoute) {
+      return
+    }
+    if (isOwnNavigation && optimistic !== null) {
+      optimistic.targets.delete(query)
+      optimistic =
+        optimistic.targets.size === 0
+          ? null
+          : { ...optimistic, baseQuery: query }
+      return
+    }
+    optimistic = null
+    resetQueues()
+  }, [path, query])
   useEffect(() => {
     window.addEventListener('popstate', resetQueues)
     return () => window.removeEventListener('popstate', resetQueues)
@@ -88,7 +142,7 @@ export const NuqsAdapter: AdapterProvider = ({ children, ...adapterProps }) =>
   createElement(Provider, {
     ...adapterProps,
     children: [
-      createElement(QueueReset, { key: 'nuqs-adapter-queue-reset' }),
+      createElement(RouteSpy, { key: 'nuqs-adapter-route-spy' }),
       children
     ]
   }) as ReturnType<AdapterProvider>
