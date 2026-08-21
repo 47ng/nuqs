@@ -41,7 +41,7 @@ export async function GitHubActionsStatus({
             <a
               href={status.url}
               aria-label={`GitHub Actions run ${index + 1} of ${statuses.length}, most recent first, on ${runDateFormat.format(new Date(status.createdAt))}: ${metadata.label}`}
-              className="flex size-6 items-center justify-center rounded-full"
+              className="block rounded-full p-1"
             >
               <div
                 aria-hidden="true"
