@@ -12,6 +12,7 @@
         "release-finalize.ts",
         "release-notes-automation.ts",
         "validate-changelog-dto.ts",
+        "verify-release/verify.production.ts",
         "verify-release/verify.staged.ts"
       ],
       "project": ["**/*.ts"]
@@ -53,7 +54,8 @@
       ],
       "project": ["content/**/*.{ts,tsx}", "src/**/*.{ts,tsx}"],
       "paths": {
-        "@/*": ["./*"]
+        "@/*": ["./*"],
+        "collections/*": ["./.source/*"]
       },
       "next": true,
       "ignoreFiles": [
@@ -63,8 +65,8 @@
       "ignoreDependencies": [
         "@headlessui/tailwindcss",
         "@tailwindcss/container-queries",
-        "@types/mdx",
         "hast-util-to-jsx-runtime",
+        "tailwindcss",
         "tailwindcss-animate"
       ]
     },

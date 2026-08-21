@@ -260,7 +260,7 @@ export function SponsorsSection() {
               {sponsor.name ?? sponsor.handle}
             </a>
             {Boolean(sponsor.title) && (
-              <span className="mt-1 inline-block text-sm text-zinc-500">
+              <span className="mt-1 inline-block text-sm text-zinc-600 dark:text-zinc-400">
                 {sponsor.title}
               </span>
             )}

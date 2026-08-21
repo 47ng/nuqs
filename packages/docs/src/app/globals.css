@@ -6,6 +6,19 @@
 @plugin '@tailwindcss/container-queries';
 @plugin '@headlessui/tailwindcss';
 
+/*
+  fumadocs-ui's preset.css no longer ships the `container` utility
+  (moved upstream to preset-legacy.css in 16.2, which we don't import).
+  It centered content and capped it at 1400px on 2xl screens; the site
+  layouts rely on it, so keep providing it locally.
+*/
+@utility container {
+  margin-inline: auto;
+  padding-inline: 1rem;
+
+  @apply 2xl:max-w-[1400px];
+}
+
 :root {
   --fd-layout-width: 1600px;
 
@@ -56,7 +69,12 @@
 @layer base {
   html,
   body {
-    height: 100%;
+    /*
+      min-, not plain height: fumadocs-ui 16.11 positions the docs
+      sidebar and TOC with `sticky` inside a grid that must grow with
+      the page content; a viewport-capped body freezes them in place.
+    */
+    min-height: 100%;
   }
   body {
     display: flex;
@@ -76,14 +94,14 @@
 }
 
 @layer components {
-  button:hover .star,
-  button:focus .star {
+  .star-rating-option:hover .star,
+  .star-rating-option:has(.peer:focus-visible) .star {
     fill: currentColor;
   }
 
   /* Fill the left siblings of the hovered/focused star */
-  button:has(~ :hover) .star,
-  button:has(~ :focus) .star {
+  .star-rating-option:has(~ .star-rating-option:hover) .star,
+  .star-rating-option:has(~ .star-rating-option .peer:focus-visible) .star {
     fill: currentColor;
   }
 }

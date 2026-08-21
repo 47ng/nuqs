@@ -4,13 +4,14 @@ import {
   defineDocs,
   frontmatterSchema
 } from 'fumadocs-mdx/config'
+import lastModified from 'fumadocs-mdx/plugins/last-modified'
 import remarkSmartypants from 'remark-smartypants'
 import { z } from 'zod'
 import { rehypeCodeOptions } from './rehype-code.config'
 import { remarkAudience } from './src/lib/remark-audience'
 
 export default defineConfig({
-  lastModifiedTime: 'git',
+  plugins: [lastModified()],
   mdxOptions: {
     remarkPlugins: [remarkSmartypants, remarkAudience],
     rehypeCodeOptions,
@@ -27,7 +28,7 @@ export default defineConfig({
   }
 })
 
-export const { docs, meta } = defineDocs({
+export const docs = defineDocs({
   dir: 'content/docs',
   docs: {
     schema: frontmatterSchema.extend({

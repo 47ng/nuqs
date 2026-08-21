@@ -1,3 +1,4 @@
+import { fullBleedPageClassName } from '@/src/components/shared-layout'
 import { Card } from 'fumadocs-ui/components/card'
 import {
   DocsBody,
@@ -14,10 +15,16 @@ export const metadata = {
 
 export default function PlaygroundIndexPage() {
   return (
-    <DocsPage>
+    <DocsPage
+      className={fullBleedPageClassName}
+      footer={{ enabled: false }}
+      tableOfContent={{ enabled: false }}
+      tableOfContentPopover={{ enabled: false }}
+    >
       <DocsTitle>{metadata.title}</DocsTitle>
       <DocsDescription>{metadata.description}</DocsDescription>
       <DocsBody>
+        <h2 className="sr-only">Examples</h2>
         <ul className="not-prose my-8 space-y-2">
           {Object.entries(demos).map(([path, { title, description }]) => (
             <li key={path}>

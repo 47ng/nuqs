@@ -12,3 +12,5 @@ package-lock.json
 .vercel
 *.tsbuildinfo
 .worktrees/
+.pi/
+.pi-subagents/

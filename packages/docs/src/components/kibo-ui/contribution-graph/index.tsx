@@ -382,6 +382,7 @@ export const ContributionGraphCalendar = ({
       {...props}
     >
       <svg
+        aria-hidden
         className="block overflow-visible"
         height={height}
         viewBox={`0 0 ${width} ${height}`}
