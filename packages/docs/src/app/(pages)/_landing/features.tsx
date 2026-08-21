@@ -153,6 +153,7 @@ export function Feature({
             {isNew && (
               <Sparkles
                 className="ml-2 inline-block -translate-y-3 text-amber-500 dark:text-amber-300"
+                role="img"
                 aria-label="New feature"
               />
             )}
