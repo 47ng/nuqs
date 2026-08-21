@@ -17,7 +17,10 @@ export async function GitHubActionsStatus({
   }
   return (
     <ul
-      className={cn('flex items-center gap-1', className)}
+      className={cn(
+        'flex items-center space-x-[-12px] md:space-x-[-14px]',
+        className
+      )}
       aria-label={`Last ${statuses.length} GitHub Actions ${statuses.length === 1 ? 'status' : 'statuses'}`}
       {...props}
     >
