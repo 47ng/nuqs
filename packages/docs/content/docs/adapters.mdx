@@ -10,6 +10,7 @@ import {
   Remix,
   TanStackRouter,
   Vitest,
+  Waku,
 } from '@/src/components/frameworks'
 import { HumanContent, LLMContent } from '@/src/components/audience'
 
@@ -25,7 +26,7 @@ wrapping it with a `NuqsAdapter{:ts}` context provider:
 - <ReactRouter className='inline mr-1.5' aria-hidden /> [React Router v7](#react-router-v7)
 - <ReactRouter className='inline mr-1.5' aria-hidden /> [React Router v8](#react-router-v8)
 - <TanStackRouter className='inline mr-1.5 not-prose' aria-hidden /> [TanStack Router](#tanstack-router)
-- <SinceVersion v="2.11.0" disclaimer="inline"><span className='inline mr-1.5 not-prose' aria-hidden>⛩️</span> [Waku](#waku)</SinceVersion>
+- <SinceVersion v="2.11.0" disclaimer="inline"><Waku className='inline mr-1.5 not-prose' aria-hidden /> [Waku](#waku)</SinceVersion>
 </HumanContent>
 
 <LLMContent>
@@ -409,7 +410,7 @@ reasons.
 
 <SinceVersion v="2.11.0">
 
-## <HumanContent><span className='inline mr-2 not-prose' aria-hidden>⛩️</span></HumanContent>Waku [#waku]
+## <HumanContent><Waku className='inline mr-2 -mt-1 not-prose' aria-hidden /></HumanContent>Waku [#waku]
 
 Wrap your `{children}{:ts}` with the `NuqsAdapter{:ts}` component in your root layout:
 

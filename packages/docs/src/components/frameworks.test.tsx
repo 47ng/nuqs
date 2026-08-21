@@ -1,6 +1,6 @@
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
-import { ReactRouter, TanStackRouter } from './frameworks'
+import { ReactRouter, TanStackRouter, Waku } from './frameworks'
 
 describe('framework icons', () => {
   it('exposes informative icons as named images', () => {
@@ -10,6 +10,9 @@ describe('framework icons', () => {
     const tanstack = renderToStaticMarkup(<TanStackRouter />)
     expect(tanstack).toContain('role="img"')
     expect(tanstack).toContain('aria-label="TanStack Router"')
+    const waku = renderToStaticMarkup(<Waku />)
+    expect(waku).toContain('role="img"')
+    expect(waku).toContain('aria-label="Waku"')
   })
 
   it('lets callers hide decorative icons', () => {
