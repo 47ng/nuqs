@@ -247,9 +247,10 @@ adapter.
 as it can lead to unexpected behaviours. Setting this to 1 will enable rate
 limiting with the same factor as in production.
 
-- `resetUrlUpdateQueueOnMount{:ts}`: clear the URL update queue before running the test.
-This is `true{:ts}` by default to isolate tests, but you can set it to `false{:ts}` to keep the
-URL update queue between renders and match the production behaviour more closely.
+- `resetUrlUpdateQueueOnMount{:ts}`: clear the shared URL update queue once when
+this adapter mounts. This is `true{:ts}` by default to isolate tests. Set it to
+`false{:ts}` only when a test intentionally preserves queued updates created
+before mounting the adapter.
 
 </AnchoredDetails>
 </HumanContent>
@@ -258,7 +259,7 @@ URL update queue between renders and match the production behaviour more closely
 ### Internal/advanced options [#advanced-options]
 
 - `rateLimitFactor`: By default, rate limiting is disabled when testing, as it can lead to unexpected behaviours. Setting this to `1` enables rate limiting with the same factor as in production.
-- `resetUrlUpdateQueueOnMount`: clears the URL update queue before running the test. This is `true` by default to isolate tests, but you can set it to `false` to keep the URL update queue between renders and match production behaviour more closely.
+- `resetUrlUpdateQueueOnMount`: clears the shared URL update queue once when this adapter mounts. This is `true` by default to isolate tests. Set it to `false` only when a test intentionally preserves queued updates created before mounting the adapter.
 </LLMContent>
 
 
