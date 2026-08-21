@@ -14,7 +14,8 @@ const commonConfig = {
       '@remix-run/react',
       'react-router-dom',
       'react-router',
-      '@tanstack/react-router'
+      '@tanstack/react-router',
+      'waku'
     ]
   },
   outExtensions() {
@@ -48,6 +49,7 @@ const entrypoints = {
     'adapters/react-router/v7': 'src/adapters/react-router/v7.ts',
     'adapters/react-router/v8': 'src/adapters/react-router/v8.ts',
     'adapters/tanstack-router': 'src/adapters/tanstack-router.ts',
+    'adapters/waku': 'src/adapters/waku.ts',
     'adapters/custom': 'src/adapters/custom.ts',
     'adapters/testing': 'src/adapters/testing.ts'
   },
