@@ -61,11 +61,11 @@
 
 /*
   Reduce the vertical padding of highlighted inline code so two chips
-  on adjacent lines do not overlap. fumadocs-ui 16.14 renders them as
-  `code.shiki` instead of `span.shiki > code`; match both.
+  on adjacent lines do not overlap. fumadocs-core's rehype-code emits
+  them as `code.shiki`; the previous selector targeted a `span.shiki`
+  wrapper that no longer exists.
 */
-.shiki:not(.not-fumadocs-codeblock *):has(> code .line) code,
-code.shiki:not(pre *) {
+code.shiki:not(pre *, .not-fumadocs-codeblock *) {
   padding-block: 1.5px;
 }
 
@@ -92,16 +92,19 @@ header#nd-subnav.bg-fd-background\/80 {
 }
 
 /*
-  fumadocs-ui 16.14 restyled the notebook layout: the desktop navbar
-  shrank from 64px to 56px, sidebar rows gained a 2px gap, and the first
-  sidebar group label gained a top margin (its `first:mt-0` never applies
-  because hidden mobile nav links precede it). Restore the previous
-  vertical rhythm so content, sidebar and TOC sit where they used to.
+  The fumadocs-ui 16.11 notebook rewrite shrank the desktop navbar from
+  64px to 56px, added a 2px gap between sidebar rows, and gave the first
+  sidebar group label a top margin (its `first:mt-0` never applies because
+  the sidebar copies of the nav links, hidden at lg+, precede it).
+  Restore the previous vertical rhythm so content, sidebar and TOC sit
+  where they used to. Desktop only: the navbar was already 56px below md.
+  The layout grid and the sticky offsets read `--fd-header-height` from
+  the layout root; the visible bar reads its own height. Set both.
 */
 @media (width >= 48rem) {
-  #nd-notebook-layout > #nd-subnav {
+  #nd-notebook-layout {
     --fd-header-height: 4rem;
-    & > .h-14 {
+    & > #nd-subnav > [data-header-body] {
       height: 4rem;
     }
   }
@@ -115,7 +118,10 @@ header#nd-subnav.bg-fd-background\/80 {
   }
 }
 
-/* Code block copy button: 16.14 moved it from top-2 to top-3 */
+/*
+  fumadocs-ui places the code block copy button at top-3; keep it at
+  top-2 so it sits as far from the top edge as from the right one.
+*/
 @layer utilities {
   figure:has(pre) > div.absolute:has(> button) {
     @apply top-2;
