@@ -81,6 +81,17 @@ For a focused test run, filter the root Turbo command, for example:
 Turbo builds each selected task's dependencies before testing them. Avoid
 calling package-level test scripts directly, as that bypasses the task graph.
 
+Mutation testing for the unit-tested core is available separately because it is
+too slow for the regular test suite:
+
+```sh
+pnpm run mutation --filter nuqs
+```
+
+The HTML report is written to `packages/nuqs/reports/mutation/html/index.html`.
+Stryker stores incremental results under `packages/nuqs/reports/` to speed up
+subsequent runs.
+
 ## Opening issues
 
 Please follow the [issue template](.github/ISSUE_TEMPLATE/bug_report.md) when opening a new issue.
