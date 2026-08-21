@@ -1,10 +1,14 @@
 import {
+  activeThemeSwitcherKey,
   isThemeSwitcherKeydown,
-  readThemeSwitcherKey
+  readThemeSwitcherSettings
 } from '@/src/lib/theme-switcher-key'
 
 window.addEventListener('keydown', event => {
-  if (!isThemeSwitcherKeydown(event, readThemeSwitcherKey(localStorage))) {
+  const switcherKey = activeThemeSwitcherKey(
+    readThemeSwitcherSettings(localStorage)
+  )
+  if (!isThemeSwitcherKeydown(event, switcherKey)) {
     return
   }
 

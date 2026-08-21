@@ -1,11 +1,12 @@
 import { BrandAssetsMenu } from '@/src/components/brand-assets-menu'
 import { NuqsWordmark } from '@/src/components/logo'
+import { ThemeToggleMenu } from '@/src/components/theme-toggle-menu'
 import type { BaseLayoutProps } from 'fumadocs-ui/layouts/shared'
 
 export function getSharedLayoutProps(): BaseLayoutProps {
   return {
     githubUrl: 'https://github.com/47ng/nuqs',
-    themeSwitch: { mode: 'light-dark' },
+    themeSwitch: { mode: 'light-dark', component: <ThemeToggleMenu /> },
     nav: {
       title: (
         <BrandAssetsMenu>

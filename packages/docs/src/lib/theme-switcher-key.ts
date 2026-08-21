@@ -1,25 +1,66 @@
 export const THEME_SWITCHER_KEY_STORAGE_KEY = 'theme-switcher-key'
+export const THEME_SWITCHER_DISABLED_STORAGE_KEY = 'theme-switcher-key-disabled'
 export const DEFAULT_THEME_SWITCHER_KEY = 'd'
-const DISABLED = 'disabled'
 
-export function resolveThemeSwitcherKey(stored: string | null): string | null {
-  const value = stored?.trim().toLowerCase() ?? ''
-  if (value === '') {
-    return DEFAULT_THEME_SWITCHER_KEY
-  }
-  if (value === DISABLED) {
-    return null
-  }
-  return value
+export type ThemeSwitcherSettings = {
+  key: string
+  enabled: boolean
 }
 
-export function readThemeSwitcherKey(storage: Pick<Storage, 'getItem'>) {
+export function resolveThemeSwitcherSettings(
+  storedKey: string | null,
+  storedDisabled: string | null
+): ThemeSwitcherSettings {
+  const key = storedKey?.trim().toLowerCase() ?? ''
+  return {
+    key: key === '' ? DEFAULT_THEME_SWITCHER_KEY : key,
+    enabled: storedDisabled?.trim() !== 'true'
+  }
+}
+
+export function readThemeSwitcherSettings(
+  storage: Pick<Storage, 'getItem'>
+): ThemeSwitcherSettings {
   try {
-    return resolveThemeSwitcherKey(
-      storage.getItem(THEME_SWITCHER_KEY_STORAGE_KEY)
+    return resolveThemeSwitcherSettings(
+      storage.getItem(THEME_SWITCHER_KEY_STORAGE_KEY),
+      storage.getItem(THEME_SWITCHER_DISABLED_STORAGE_KEY)
     )
   } catch {
-    return DEFAULT_THEME_SWITCHER_KEY
+    return resolveThemeSwitcherSettings(null, null)
+  }
+}
+
+export function activeThemeSwitcherKey(settings: ThemeSwitcherSettings) {
+  return settings.enabled ? settings.key : null
+}
+
+type WritableStorage = Pick<Storage, 'setItem' | 'removeItem'>
+
+export function writeThemeSwitcherKey(storage: WritableStorage, key: string) {
+  try {
+    if (key === DEFAULT_THEME_SWITCHER_KEY) {
+      storage.removeItem(THEME_SWITCHER_KEY_STORAGE_KEY)
+    } else {
+      storage.setItem(THEME_SWITCHER_KEY_STORAGE_KEY, key)
+    }
+  } catch {
+    return
+  }
+}
+
+export function writeThemeSwitcherEnabled(
+  storage: WritableStorage,
+  enabled: boolean
+) {
+  try {
+    if (enabled) {
+      storage.removeItem(THEME_SWITCHER_DISABLED_STORAGE_KEY)
+    } else {
+      storage.setItem(THEME_SWITCHER_DISABLED_STORAGE_KEY, 'true')
+    }
+  } catch {
+    return
   }
 }
 
@@ -59,4 +100,15 @@ export function isThemeSwitcherKeydown(
     !event.altKey &&
     !isEditableTarget(event.target)
   )
+}
+
+const MODIFIER_KEYS = new Set(['shift', 'control', 'alt', 'meta'])
+
+export function isAssignableThemeSwitcherKey(key: string) {
+  const value = key.toLowerCase()
+  return value !== 'escape' && !MODIFIER_KEYS.has(value)
+}
+
+export function formatThemeSwitcherKey(key: string) {
+  return key.length === 1 ? key.toUpperCase() : key
 }
