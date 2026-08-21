@@ -7,9 +7,9 @@ describe('framework icons', () => {
     const html = renderToStaticMarkup(<ReactRouter />)
     expect(html).toContain('role="img"')
     expect(html).toContain('aria-label="React Router"')
-    expect(renderToStaticMarkup(<TanStackRouter />)).toContain(
-      'alt="TanStack Router"'
-    )
+    const tanstack = renderToStaticMarkup(<TanStackRouter />)
+    expect(tanstack).toContain('role="img"')
+    expect(tanstack).toContain('aria-label="TanStack Router"')
   })
 
   it('lets callers hide decorative icons', () => {
