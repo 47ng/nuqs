@@ -2,8 +2,6 @@ import { slug } from 'github-slugger'
 
 const OPEN_TAG = /^<SinceVersion\s+[^>]*?\bv=['"]([^'"]+)['"][^>]*>/
 const CLOSE_TAG = '</SinceVersion>'
-const LLM_OPEN_TAG = /^<LLMContent(?:\s[^>]*)?>/
-const LLM_CLOSE_TAG = '</LLMContent>'
 const HEADING = /^#{1,6}\s+(.*)$/
 const EXPLICIT_ID = /\[#([^\]]+)\]\s*$/
 
@@ -57,9 +55,9 @@ export function stripUnreleased(
 }
 
 /**
- * Collects heading ids that are absent from the rendered human page because
- * they live inside hidden `<SinceVersion>` or `<LLMContent>` blocks. Fumadocs
- * extracts the ToC from raw headings at build time, bypassing both runtime gates.
+ * Collects the heading ids that live inside hidden `<SinceVersion>` blocks, so
+ * the page can prune them from the table of contents — fumadocs extracts the ToC
+ * from the raw headings at build time, bypassing the `SinceVersion` runtime gate.
  *
  * Ids come from an explicit `[#id]` when present (matching the ToC anchors), and
  * otherwise from a slug of the heading text. Shares the fence/nesting-aware walk
@@ -73,7 +71,6 @@ export function gatedHeadingIds(
   let inFence = false
   let depth = 0
   let hiddenFrom = -1
-  let llmDepth = 0
 
   for (const line of markdown.split('\n')) {
     if (line.startsWith('```')) {
@@ -100,22 +97,7 @@ export function gatedHeadingIds(
       continue
     }
 
-    const trimmedLine = line.trimStart()
-    if (trimmedLine.match(LLM_OPEN_TAG)) {
-      if (
-        !trimmedLine.includes(LLM_CLOSE_TAG) &&
-        !trimmedLine.match(/\/\>\s*$/)
-      ) {
-        llmDepth++
-      }
-      continue
-    }
-    if (trimmedLine.startsWith(LLM_CLOSE_TAG)) {
-      llmDepth = Math.max(0, llmDepth - 1)
-      continue
-    }
-
-    if (hiddenFrom !== -1 || llmDepth > 0) {
+    if (hiddenFrom !== -1) {
       const heading = line.match(HEADING)
       if (heading) {
         ids.add(headingId(heading[1]!))

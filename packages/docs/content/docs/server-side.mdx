@@ -4,6 +4,7 @@ description: Type-safe search params on the server
 ---
 
 import { HumanContent, LLMContent } from '@/src/components/audience'
+import { AnchoredTabs } from '@/src/components/anchored-tabs'
 
 ## Loaders
 
@@ -31,9 +32,11 @@ Here, `loadSearchParams{:ts}` is a function that parses search params and return
 state variables to be consumed server-side (the same state type that [`useQueryStates{:ts}`](/docs/batching) returns).
 
 <HumanContent>
-<Tabs items={["Next.js (app router)", "Next.js (pages router)", "API routes", "Remix / React Router", "React / client-side"]}>
+<AnchoredTabs items={["Next.js (app router)", "Next.js (pages router)", "API routes", "Remix / React Router", "React / client-side"]}>
 
-```tsx tab="Next.js (app router)" title="app/page.tsx"
+<Tab value="Next.js (app router)" id="nextjs-app-router">
+
+```tsx title="app/page.tsx"
 // [!code word:loadSearchParams]
 import { loadSearchParams } from './search-params'
 import type { SearchParams } from 'nuqs/server'
@@ -57,7 +60,11 @@ export default async function Page({ searchParams }: PageProps) {
 }
 ```
 
-```ts tab="Next.js (pages router)" title="pages/index.tsx"
+</Tab>
+
+<Tab value="Next.js (pages router)" id="nextjs-pages-router">
+
+```ts title="pages/index.tsx"
 // [!code word:loadSearchParams]
 import type { GetServerSidePropsContext } from 'next'
 
@@ -70,7 +77,11 @@ export async function getServerSideProps({ query }: GetServerSidePropsContext) {
 }
 ```
 
-```tsx tab="Remix / React Router" title="app/routes/_index.tsx"
+</Tab>
+
+<Tab value="Remix / React Router" id="remix-react-router">
+
+```tsx title="app/routes/_index.tsx"
 // [!code word:loadSearchParams]
 export function loader({ request }: LoaderFunctionArgs) {
   const { latitude, longitude } = loadSearchParams(request) // request.url works too
@@ -79,7 +90,11 @@ export function loader({ request }: LoaderFunctionArgs) {
 }
 ```
 
-```tsx tab="React / client-side"
+</Tab>
+
+<Tab value="React / client-side" id="react-client-side">
+
+```tsx
 // Note: you can also use this client-side (or anywhere, really),
 // for a one-off parsing of non-reactive search params:
 
@@ -89,7 +104,11 @@ loadSearchParams(new URL(...))
 loadSearchParams(new URLSearchParams(...))
 ```
 
-```tsx tab="API routes"
+</Tab>
+
+<Tab value="API routes" id="api-routes">
+
+```tsx
 // App router, eg: app/api/location/route.ts
 export async function GET(request: Request) {
   const { latitude, longitude } = loadSearchParams(request)
@@ -106,7 +125,8 @@ export default function handler(
 }
 ```
 
-</Tabs>
+</Tab>
+</AnchoredTabs>
 </HumanContent>
 
 <LLMContent>
@@ -151,7 +171,7 @@ export async function getServerSideProps({ query }: GetServerSidePropsContext) {
 }
 ```
 
-### Remix / React Router
+### Remix / React Router [#remix-react-router]
 
 ```tsx title="app/routes/_index.tsx"
 // [!code word:loadSearchParams]
@@ -162,7 +182,7 @@ export function loader({ request }: LoaderFunctionArgs) {
 }
 ```
 
-### React / client-side
+### React / client-side [#react-client-side]
 
 ```tsx
 // Note: you can also use this client-side (or anywhere, really),

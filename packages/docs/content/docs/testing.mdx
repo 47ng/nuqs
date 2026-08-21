@@ -4,6 +4,8 @@ description: Some tips on testing components that use `nuqs`
 ---
 
 import { HumanContent, LLMContent } from '@/src/components/audience'
+import { AnchoredDetails } from '@/src/components/anchored-details'
+import { AnchoredTabs } from '@/src/components/anchored-tabs'
 
 Since nuqs 2, you can unit-test components that use `useQueryState(s){:ts}` hooks
 without needing to mock anything, by using a dedicated testing adapter that will
@@ -35,9 +37,10 @@ Here is an example for Vitest and Testing Library to test a button rendering
 a counter:
 
 <HumanContent>
-<Tabs items={['Vitest v1', 'Vitest v2']}>
+<AnchoredTabs items={['Vitest v1', 'Vitest v2']}>
+<Tab value="Vitest v1" id="vitest-v1">
 
-```tsx title="counter-button.test.tsx" tab="Vitest v1"
+```tsx title="counter-button.test.tsx"
 // [!code word:withNuqsTestingAdapter]
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
@@ -65,7 +68,10 @@ it('should increment the count when clicked', async () => {
 })
 ```
 
-```tsx title="counter-button.test.tsx" tab="Vitest v2"
+</Tab>
+<Tab value="Vitest v2" id="vitest-v2">
+
+```tsx title="counter-button.test.tsx"
 // [!code word:withNuqsTestingAdapter]
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
@@ -93,7 +99,8 @@ it('should increment the count when clicked', async () => {
 })
 ```
 
-</Tabs>
+</Tab>
+</AnchoredTabs>
 </HumanContent>
 
 <LLMContent>
@@ -233,7 +240,7 @@ and so is isolated between tests, but shared for components under the same
 adapter.
 
 <HumanContent>
-<details>
+<AnchoredDetails id="advanced-options">
 <summary className='cursor-pointer'>🧪 Internal/advanced options</summary>
 
 - `rateLimitFactor{:ts}`. By default, rate limiting is disabled when testing,
@@ -244,11 +251,11 @@ limiting with the same factor as in production.
 This is `true{:ts}` by default to isolate tests, but you can set it to `false{:ts}` to keep the
 URL update queue between renders and match the production behaviour more closely.
 
-</details>
+</AnchoredDetails>
 </HumanContent>
 
 <LLMContent>
-### Internal/advanced options
+### Internal/advanced options [#advanced-options]
 
 - `rateLimitFactor`: By default, rate limiting is disabled when testing, as it can lead to unexpected behaviours. Setting this to `1` enables rate limiting with the same factor as in production.
 - `resetUrlUpdateQueueOnMount`: clears the URL update queue before running the test. This is `true` by default to isolate tests, but you can set it to `false` to keep the URL update queue between renders and match production behaviour more closely.

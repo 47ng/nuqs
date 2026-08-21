@@ -146,16 +146,14 @@ describe('gatedHeadingIds', () => {
     expect(gatedHeadingIds(input, hideAll)).toEqual(new Set(['real']))
   })
 
-  it('collects headings from LLM-only blocks', () => {
+  it('keeps headings from LLM-only blocks, which the page anchors to', () => {
     const input = [
       '## Visible [#visible]',
       '<LLMContent>',
       '### Next.js app router [#nextjs-app-router]',
       '</LLMContent>'
     ].join('\n')
-    expect(gatedHeadingIds(input, showAll)).toEqual(
-      new Set(['nextjs-app-router'])
-    )
+    expect(gatedHeadingIds(input, showAll)).toEqual(new Set())
   })
 
   it('matches Fumadocs slugs for punctuation', () => {
