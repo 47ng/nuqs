@@ -100,7 +100,7 @@ function HotkeyStatus({ settings }: { settings: ThemeSwitcherSettings }) {
   }
   return (
     <>
-      Press <kbd>{formatThemeSwitcherKey(settings.key)}</kbd> to switch theme
+      Press <kbd>{formatThemeSwitcherKey(settings.key)}</kbd> to change themes
     </>
   )
 }
@@ -149,24 +149,23 @@ export function ThemeToggleMenu({ className }: { className?: string }) {
           }}
         >
           <KeyboardIcon />
-          {listening ? 'Press a key…' : 'Change theme hotkey'}
+          {listening ? 'Press a key…' : 'Change hotkey'}
         </ContextMenuItem>
         {settings.enabled ? (
           <ContextMenuItem onSelect={() => setEnabled(false)}>
             <KeyboardOffIcon />
-            Disable theme hotkey
+            Disable hotkey
           </ContextMenuItem>
         ) : (
           <ContextMenuItem onSelect={() => setEnabled(true)}>
             <KeyboardIcon />
-            Enable theme hotkey
+            Enable hotkey
           </ContextMenuItem>
         )}
         {settings.key !== DEFAULT_THEME_SWITCHER_KEY && (
           <ContextMenuItem onSelect={() => setKey(DEFAULT_THEME_SWITCHER_KEY)}>
             <RotateCcwIcon />
-            Reset theme hotkey (
-            {formatThemeSwitcherKey(DEFAULT_THEME_SWITCHER_KEY)})
+            Reset hotkey ({formatThemeSwitcherKey(DEFAULT_THEME_SWITCHER_KEY)})
           </ContextMenuItem>
         )}
       </ContextMenuContent>
