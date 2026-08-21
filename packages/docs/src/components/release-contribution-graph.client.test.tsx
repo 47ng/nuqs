@@ -32,7 +32,7 @@ describe('ReleaseContributionGraphClient accessibility', () => {
 
     expect(calendar).toBeDefined()
     expect(calendar).toContain('aria-hidden="true"')
-    expect(calendar).toContain('tabindex="-1"')
+    expect(calendar).not.toContain('tabindex')
   })
 
   it('exposes the highlight state on its controls', () => {

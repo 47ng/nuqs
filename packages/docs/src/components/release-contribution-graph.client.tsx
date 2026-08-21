@@ -60,7 +60,7 @@ export function ReleaseContributionGraphClient({
           totalCount: `${stableCount + betaCount} releases in {{year}}`
         }}
       >
-        <ContributionGraphCalendar aria-hidden tabIndex={-1}>
+        <ContributionGraphCalendar aria-hidden>
           {({ activity, dayIndex, weekIndex }) => {
             const versions = releasesByDate[activity.date]
             const block = (
