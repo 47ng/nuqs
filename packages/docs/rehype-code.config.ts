@@ -1,3 +1,9 @@
+import {
+  transformerNotationDiff,
+  transformerNotationFocus,
+  transformerNotationHighlight,
+  transformerNotationWordHighlight
+} from '@shikijs/transformers'
 import type { RehypeCodeOptions } from 'fumadocs-core/mdx-plugins'
 import type { ShikiTransformer } from 'shiki'
 
@@ -19,12 +25,18 @@ const withoutItalics: ShikiTransformer = {
   }
 }
 
-export const rehypeCodeOptions: RehypeCodeOptions = {
+export const rehypeCodeOptions = {
   themes: {
     light: 'catppuccin-latte',
     dark: 'catppuccin-mocha'
   },
   inline: 'tailing-curly-colon',
   defaultColor: false,
-  transformers: [withoutItalics]
-}
+  transformers: [
+    transformerNotationHighlight({ matchAlgorithm: 'v3' }),
+    transformerNotationWordHighlight({ matchAlgorithm: 'v3' }),
+    transformerNotationDiff({ matchAlgorithm: 'v3' }),
+    transformerNotationFocus({ matchAlgorithm: 'v3' }),
+    withoutItalics
+  ]
+} satisfies RehypeCodeOptions
