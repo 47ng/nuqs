@@ -16,7 +16,7 @@ export function PopstateQueueResetClient({
   // Debounced value update - used to test queue cancellation on popstate
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setControls(
-      { value: e.target.value || null },
+      { value: e.target.value },
       { limitUrlUpdates: debounce(debounceTime) }
     )
   }

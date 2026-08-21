@@ -1,20 +1,8 @@
-import { NuqsAdapter, enableHistorySync } from 'nuqs/adapters/react'
 import { createRoot } from 'react-dom/client'
-import { RootLayout } from './layout'
-import { Router } from './routes'
-
-enableHistorySync()
+import { App } from './app'
 
 createRoot(document.getElementById('root')!).render(
   // <StrictMode>
-  <NuqsAdapter
-    fullPageNavigationOnShallowFalseUpdates={
-      process.env.FULL_PAGE_NAV_ON_SHALLOW_FALSE === 'true'
-    }
-  >
-    <RootLayout>
-      <Router />
-    </RootLayout>
-  </NuqsAdapter>
+  <App />
   // </StrictMode>
 )

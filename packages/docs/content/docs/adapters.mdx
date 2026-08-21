@@ -144,6 +144,47 @@ createRoot(document.getElementById('root')!).render(
 This may be useful for servers not written in JavaScript, like Django (Python),
 Rails (Ruby), Laravel (PHP), Phoenix (Elixir) etc...
 
+### Server-rendered islands <HumanContent><br className='hidden in-[#nd-toc]:block'/></HumanContent>(Astro, Fastify, Hono etc.) [#server-rendered-islands]
+
+<FeatureSupportMatrix introducedInVersion='2.10.0' support={{
+  supported: true,
+  frameworks: ['React SPA']
+}}/>
+
+You may use the React SPA adapter in server-rendered frameworks like [Astro](https://astro.build/),
+or bespoke server-side rendered applications based on [Fastify](https://fastify.dev/),
+[Hono](https://hono.dev/), [Elysia](https://elysiajs.com/), etc.
+
+In those cases, you can pass the `serverSearch{:ts}` prop to let the SSR'd hooks know about the request URL,
+to avoid a flash of default values:
+
+```astro title="src/pages/search.astro"
+---
+import { SearchIsland } from '../islands/SearchIsland'
+---
+
+<SearchIsland client:load serverSearch={Astro.url.search} />
+```
+
+```tsx title="src/islands/SearchIsland.tsx"
+// [!code word:serverSearch]
+import { NuqsAdapter } from 'nuqs/adapters/react'
+
+export function SearchIsland({ serverSearch }: { serverSearch: string }) {
+  return (
+    <NuqsAdapter serverSearch={serverSearch}>
+      {/* useQueryState works here, on the server & the client */}
+    </NuqsAdapter>
+  )
+}
+```
+
+`serverSearch{:ts}` accepts a query string (with or without the leading
+`?{:ts}`) or a `URLSearchParams{:ts}` object. It is only read when
+server-side rendering and during hydration; afterwards, the adapter reads
+`location.search{:ts}` as usual. Multiple islands on the same page each get
+their own `NuqsAdapter{:ts}`, and stay in sync through the History API.
+
 ## <HumanContent><Remix className='inline mr-2 -mt-1' role="presentation"/></HumanContent>Remix [#remix]
 
 ```tsx title="app/root.tsx"

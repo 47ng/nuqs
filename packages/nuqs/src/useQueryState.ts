@@ -197,17 +197,23 @@ export function useQueryState<T = string>(
     defaultValue?: T
   } = {}
 ) {
-  const { parse, type, serialize, eq, defaultValue, ...hookOptions } = options
+  const {
+    parse = (x: any) => x as unknown as T,
+    type,
+    serialize,
+    eq,
+    defaultValue,
+    ...hookOptions
+  } = options
+  const parser = {
+    parse,
+    type,
+    serialize,
+    eq,
+    defaultValue
+  } as GenericParser<T>
   const [{ [key]: state }, setState] = useQueryStates(
-    {
-      [key]: {
-        parse: parse ?? ((x: any) => x as unknown as T),
-        type,
-        serialize,
-        eq,
-        defaultValue
-      } as GenericParser<T>
-    },
+    { [key]: parser },
     hookOptions
   )
   const update = useCallback(

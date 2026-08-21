@@ -12,6 +12,7 @@
         "release-finalize.ts",
         "release-notes-automation.ts",
         "validate-changelog-dto.ts",
+        "verify-release/verify.production.ts",
         "verify-release/verify.staged.ts"
       ],
       "project": ["**/*.ts"]

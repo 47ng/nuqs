@@ -1,5 +1,12 @@
 import { useLocation, useRouter, useRouterState } from '@tanstack/react-router'
-import { startTransition, useCallback, useEffect, useMemo, useRef } from 'react'
+import {
+  createElement,
+  startTransition,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef
+} from 'react'
 import { resetQueues } from '../lib/queues/reset'
 import { renderQueryString } from '../lib/url-encoding'
 import { createAdapterProvider, type AdapterProvider } from './lib/context'
@@ -41,21 +48,6 @@ function useNuqsTanstackRouterAdapter(watchKeys: string[]): AdapterInterface {
   })
   const router = useRouter()
   const { navigate } = router
-
-  useEffect(() => {
-    const unsubscribe = router.history.subscribe(
-      ({ action }: HistorySubscriberArgs) => {
-        if (
-          action.type === 'BACK' ||
-          action.type === 'FORWARD' ||
-          action.type === 'GO'
-        ) {
-          resetQueues()
-        }
-      }
-    )
-    return unsubscribe
-  }, [router.history])
 
   // Track which pathname this hook instance was mounted under to
   // keep its last stable search during cross-page transitions.
@@ -133,6 +125,31 @@ function useNuqsTanstackRouterAdapter(watchKeys: string[]): AdapterInterface {
   }
 }
 
-export const NuqsAdapter: AdapterProvider = createAdapterProvider(
-  useNuqsTanstackRouterAdapter
-)
+const Provider = createAdapterProvider(useNuqsTanstackRouterAdapter)
+
+function HistorySpy() {
+  const router = useRouter()
+
+  useEffect(() => {
+    return router.history.subscribe(({ action }: HistorySubscriberArgs) => {
+      if (
+        action.type === 'BACK' ||
+        action.type === 'FORWARD' ||
+        action.type === 'GO'
+      ) {
+        resetQueues()
+      }
+    })
+  }, [router.history])
+
+  return null
+}
+
+export const NuqsAdapter: AdapterProvider = ({ children, ...adapterProps }) =>
+  createElement(Provider, {
+    ...adapterProps,
+    children: [
+      createElement(HistorySpy, { key: 'nuqs-adapter-history-spy' }),
+      children
+    ]
+  }) as ReturnType<AdapterProvider>
