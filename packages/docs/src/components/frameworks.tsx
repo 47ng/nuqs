@@ -169,6 +169,7 @@ export function TanStackRouter({ className, ...props }: IconProps) {
     <svg
       viewBox="100 80 200 240"
       xmlns="http://www.w3.org/2000/svg"
+      role="img"
       aria-label="TanStack Router"
       className={cn('size-[1.2em] fill-black dark:fill-white', className)}
       {...props}
