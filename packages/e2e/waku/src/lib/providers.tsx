@@ -6,21 +6,22 @@ import { RouterProvider, type Router } from 'e2e-shared/components/router'
 import { useEffect, type ReactNode } from 'react'
 import { Link as WakuLink, useRouter } from 'waku'
 
-// Waku's generated route types reject the untyped URLs of the shared harness.
+// Waku's generated route types (src/pages.gen.ts) reject the untyped URLs
+// of the shared harness.
 const untyped = (href: string) => href as never
 
 function Link({ href, replace, ...props }: LinkProps) {
   return <WakuLink to={untyped(href)} {...props} />
 }
 
-// The navigation subscription lives in a null-rendering leaf component, and
-// the Router context value is a stable module-level object reading from a
-// ref: this keeps navigation updates from re-rendering the app shell (which
-// would pollute render-count tests).
 type Navigate = Pick<ReturnType<typeof useRouter>, 'push' | 'replace'>
 
 const navigateRef: { current: Navigate | null } = { current: null }
 
+// The navigation subscription lives in a null-rendering leaf component, and
+// the Router context value is a stable module-level object reading from a
+// ref: this keeps navigation updates from re-rendering the app shell (which
+// would break render-count tests).
 function RouterBinder() {
   const { push, replace } = useRouter()
   useEffect(() => {
