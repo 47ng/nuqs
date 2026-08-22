@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   compareMutationReports,
+  formatNewUndetectedMutants,
   summarizeMutationReport,
   type MutationReport
 } from './mutation-gate'
@@ -68,12 +69,31 @@ describe('mutation gate', () => {
   })
 
   it('fails when mutation debt increases', () => {
-    expect(
-      compareMutationReports(
-        report(['Killed', 'Survived']),
-        report(['Survived', 'NoCoverage'])
-      )
-    ).toMatchObject({ pass: false, delta: 1 })
+    const baseline = report(['Killed', 'Survived'])
+    const candidate = report(['Survived', 'NoCoverage'])
+    Object.assign(candidate.files['src/example.ts']!.mutants[0]!, {
+      mutatorName: 'ConditionalExpression',
+      replacement: 'false',
+      location: { start: { line: 12, column: 4 } }
+    })
+
+    const result = compareMutationReports(baseline, candidate)
+    expect(result).toMatchObject({ pass: false, delta: 1 })
+    expect(result.newUndetected).toStrictEqual([
+      {
+        file: 'src/example.ts',
+        id: '0',
+        location: { start: { line: 12, column: 4 } },
+        mutatorName: 'ConditionalExpression',
+        previousStatus: 'Killed',
+        replacement: 'false',
+        status: 'Survived'
+      }
+    ])
+    expect(formatNewUndetectedMutants(result.newUndetected)).toBe(
+      'New undetected mutants:\n' +
+        '- src/example.ts:12:4 [ConditionalExpression] Survived (was Killed): false\n'
+    )
   })
 
   it('fails closed on mutation errors', () => {

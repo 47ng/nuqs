@@ -37,7 +37,13 @@ export type MutationReport = {
   files: Record<
     string,
     {
-      mutants: Array<{ id: string; status: MutantStatus }>
+      mutants: Array<{
+        id: string
+        location?: { start: { line: number; column: number } }
+        mutatorName?: string
+        replacement?: string
+        status: MutantStatus
+      }>
     }
   >
   config: Record<string, unknown>
@@ -57,6 +63,16 @@ type MutationSummary = {
   timeout: number
   total: number
   undetected: number
+}
+
+export type NewUndetectedMutant = {
+  file: string
+  id: string
+  location?: { start: { line: number; column: number } }
+  mutatorName?: string
+  previousStatus?: MutantStatus
+  replacement?: string
+  status: MutantStatus
 }
 
 export function summarizeMutationReport(
@@ -143,6 +159,7 @@ export function compareMutationReports(
   baseline: MutationSummary
   candidate: MutationSummary
   delta: number
+  newUndetected: NewUndetectedMutant[]
   pass: boolean
 } {
   if (
@@ -176,12 +193,68 @@ export function compareMutationReports(
   }
 
   const delta = candidate.undetected - baseline.undetected
+  const baselineStatuses = new Map<string, MutantStatus>()
+  for (const [file, { mutants }] of Object.entries(baselineReport.files)) {
+    for (const mutant of mutants) {
+      baselineStatuses.set(`${file}\0${mutant.id}`, mutant.status)
+    }
+  }
+  const newUndetected = Object.entries(candidateReport.files)
+    .flatMap(([file, { mutants }]) =>
+      mutants.flatMap(mutant => {
+        const previousStatus = baselineStatuses.get(`${file}\0${mutant.id}`)
+        if (
+          !UNDETECTED_STATUSES.has(mutant.status) ||
+          (previousStatus && UNDETECTED_STATUSES.has(previousStatus))
+        ) {
+          return []
+        }
+        return [
+          {
+            file,
+            id: mutant.id,
+            location: mutant.location,
+            mutatorName: mutant.mutatorName,
+            previousStatus,
+            replacement: mutant.replacement,
+            status: mutant.status
+          }
+        ]
+      })
+    )
+    .sort(
+      (left, right) =>
+        left.file.localeCompare(right.file) ||
+        (left.location?.start.line ?? 0) - (right.location?.start.line ?? 0) ||
+        (left.location?.start.column ?? 0) -
+          (right.location?.start.column ?? 0) ||
+        left.id.localeCompare(right.id)
+    )
   return {
     baseline,
     candidate,
     delta,
+    newUndetected,
     pass: delta <= 0
   }
+}
+
+export function formatNewUndetectedMutants(
+  mutants: NewUndetectedMutant[]
+): string {
+  const lines = mutants.map(mutant => {
+    const location = mutant.location
+      ? `${mutant.file}:${mutant.location.start.line}:${mutant.location.start.column}`
+      : mutant.file
+    const previous = mutant.previousStatus
+      ? ` (was ${mutant.previousStatus})`
+      : ' (new)'
+    const replacement = mutant.replacement
+      ? `: ${mutant.replacement.replaceAll(/\s+/g, ' ').trim()}`
+      : ''
+    return `- ${location} [${mutant.mutatorName ?? 'Unknown'}] ${mutant.status}${previous}${replacement}`
+  })
+  return `New undetected mutants:\n${lines.join('\n')}\n`
 }
 
 async function readReport(path: string): Promise<MutationReport> {
@@ -208,6 +281,7 @@ async function main(): Promise<void> {
         `${result.baseline.undetected} → ${result.candidate.undetected} ` +
         `survived or uncovered mutants.\n`
     )
+    process.stderr.write(formatNewUndetectedMutants(result.newUndetected))
     process.exitCode = 1
   } else {
     process.stdout.write(
