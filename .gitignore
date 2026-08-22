@@ -3,7 +3,6 @@ dist/
 .tsup/
 coverage/
 /packages/nuqs/reports/
-/.stryker-tmp/
 .env
 yarn-error.log
 # Docker containers with persistance

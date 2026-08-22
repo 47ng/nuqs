@@ -6,7 +6,6 @@ on:
       - next
   pull_request:
     types: [opened, reopened, synchronize]
-  workflow_dispatch:
 
 permissions:
   contents: read
@@ -19,11 +18,12 @@ env:
   FORCE_COLOR: 3
 
 jobs:
-  mutation-pr:
-    name: Mutation debt
+  check-relevance:
+    name: Check for relevance
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-24.04-arm
-    timeout-minutes: 15
+    outputs:
+      relevant: ${{ steps.changes.outputs.relevant }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
@@ -41,7 +41,11 @@ jobs:
             'package.json' \
             'packages/nuqs/package.json' \
             'packages/nuqs/src' \
-            'packages/nuqs/stryker.config.mjs' \
+            'packages/nuqs/scripts/mutation.mjs' \
+            'packages/nuqs/stryker.browser.config.mjs' \
+            'packages/nuqs/stryker.node.config.mjs' \
+            'packages/nuqs/stryker.shared.config.mjs' \
+            'packages/nuqs/vitest.config.ts' \
             'packages/nuqs/vitest.mutation.config.ts' \
             'packages/scripts/mutation-gate.ts' \
             'packages/scripts/mutation-gate.test.ts' \
@@ -53,23 +57,31 @@ jobs:
           else
             echo 'relevant=true' >> "$GITHUB_OUTPUT"
           fi
+
+  mutation-pr:
+    name: Mutation debt
+    needs: check-relevance
+    if: needs.check-relevance.outputs.relevant == 'true'
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
       - uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
-        if: steps.changes.outputs.relevant == 'true'
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
-        if: steps.changes.outputs.relevant == 'true'
         with:
           node-version-file: .node-version
           cache: pnpm
       - name: Check out the exact base commit
-        if: steps.changes.outputs.relevant == 'true'
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
         run: git checkout --detach "$BASE_SHA"
       - name: Check whether the base supports mutation testing
-        if: steps.changes.outputs.relevant == 'true'
         id: baseline
         run: |
-          if test -f packages/nuqs/stryker.config.mjs
+          if test -f packages/nuqs/stryker.node.config.mjs
           then
             echo 'supported=true' >> "$GITHUB_OUTPUT"
           else
@@ -86,7 +98,11 @@ jobs:
             .node-version \
             package.json \
             packages/nuqs/package.json \
-            packages/nuqs/stryker.config.mjs \
+            packages/nuqs/scripts/mutation.mjs \
+            packages/nuqs/stryker.browser.config.mjs \
+            packages/nuqs/stryker.node.config.mjs \
+            packages/nuqs/stryker.shared.config.mjs \
+            packages/nuqs/vitest.config.ts \
             packages/nuqs/vitest.mutation.config.ts \
             packages/scripts/mutation-gate.ts \
             pnpm-lock.yaml \
@@ -95,25 +111,28 @@ jobs:
           do
             printf '%s  %s\n' "$(git hash-object "$file")" "$file"
           done > "$RUNNER_TEMP/mutation-inputs-baseline.sha256"
-          pnpm mutation -- --force
-          cp packages/nuqs/reports/stryker-incremental.json \
-            "$RUNNER_TEMP/mutation-baseline.json"
+          pnpm exec turbo run mutation -- --force
+          cp -R packages/nuqs/reports/mutation \
+            "$RUNNER_TEMP/mutation-baseline"
       - name: Check out the exact candidate commit
-        if: steps.changes.outputs.relevant == 'true'
         env:
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: git checkout --detach "$HEAD_SHA"
-      - name: Clear the baseline HTML report
-        if: steps.changes.outputs.relevant == 'true'
-        run: rm -rf packages/nuqs/reports/mutation/html
+      - name: Clear the baseline mutation report
+        run: rm -rf packages/nuqs/reports/mutation
       - name: Verify comparable mutation inputs
         if: steps.baseline.outputs.supported == 'true'
+        id: inputs
         run: |
           for file in \
             .node-version \
             package.json \
             packages/nuqs/package.json \
-            packages/nuqs/stryker.config.mjs \
+            packages/nuqs/scripts/mutation.mjs \
+            packages/nuqs/stryker.browser.config.mjs \
+            packages/nuqs/stryker.node.config.mjs \
+            packages/nuqs/stryker.shared.config.mjs \
+            packages/nuqs/vitest.config.ts \
             packages/nuqs/vitest.mutation.config.ts \
             packages/scripts/mutation-gate.ts \
             pnpm-lock.yaml \
@@ -126,46 +145,50 @@ jobs:
             "$RUNNER_TEMP/mutation-inputs-baseline.sha256" \
             "$RUNNER_TEMP/mutation-inputs-candidate.sha256"
           then
-            echo '::error::Mutation execution inputs changed; establish and review a new baseline explicitly.'
-            exit 1
+            echo 'comparable=false' >> "$GITHUB_OUTPUT"
+            echo '::notice::Mutation execution inputs changed; running the complete candidate suite for explicit baseline review.'
+          else
+            echo 'comparable=true' >> "$GITHUB_OUTPUT"
           fi
       - name: Install candidate dependencies
-        if: steps.changes.outputs.relevant == 'true'
         run: pnpm install --ignore-scripts --frozen-lockfile --filter nuqs...
       - name: Run incremental candidate mutation tests
-        if: steps.changes.outputs.relevant == 'true'
         run: |
-          mkdir -p packages/nuqs/reports
-          if test '${{ steps.baseline.outputs.supported }}' = 'true'
+          if test '${{ steps.baseline.outputs.supported }}' = 'true' && \
+            test '${{ steps.inputs.outputs.comparable }}' = 'true'
           then
-            cp "$RUNNER_TEMP/mutation-baseline.json" \
-              packages/nuqs/reports/stryker-incremental.json
+            mkdir -p packages/nuqs/reports
+            cp -R "$RUNNER_TEMP/mutation-baseline" \
+              packages/nuqs/reports/mutation
             pnpm mutation
           else
-            pnpm mutation -- --force
+            pnpm exec turbo run mutation -- --force
           fi
-          cp packages/nuqs/reports/stryker-incremental.json \
-            "$RUNNER_TEMP/mutation-candidate.json"
       - name: Enforce the mutation-debt ratchet
-        if: steps.baseline.outputs.supported == 'true'
+        if: steps.baseline.outputs.supported == 'true' && steps.inputs.outputs.comparable == 'true'
         run: >-
           node packages/scripts/mutation-gate.ts
-          "$RUNNER_TEMP/mutation-baseline.json"
-          "$RUNNER_TEMP/mutation-candidate.json"
+          "$RUNNER_TEMP/mutation-baseline/stryker-incremental.json"
+          "packages/nuqs/reports/mutation/stryker-incremental.json"
       - name: Upload candidate mutation report
-        if: always() && steps.changes.outputs.relevant == 'true'
+        if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
           name: mutation-report-${{ github.event.pull_request.number }}
-          path: packages/nuqs/reports/mutation/html/
+          path: packages/nuqs/reports/mutation/
           if-no-files-found: ignore
           retention-days: 14
+      - name: Require explicit approval for a new baseline
+        if: steps.baseline.outputs.supported == 'true' && steps.inputs.outputs.comparable != 'true'
+        run: |
+          echo '::error::Mutation execution inputs changed, so the relative gate is not meaningful. Review the uploaded full report, then merge with a required-check override to establish this candidate as the new baseline.'
+          exit 1
 
   mutation-full:
     name: Mutation suite (full)
     if: github.event_name != 'pull_request'
     runs-on: ubuntu-24.04-arm
-    timeout-minutes: 15
+    timeout-minutes: 35
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
@@ -178,12 +201,12 @@ jobs:
       - name: Install dependencies
         run: pnpm install --ignore-scripts --frozen-lockfile --filter nuqs...
       - name: Run the complete mutation suite
-        run: pnpm mutation -- --force
+        run: pnpm exec turbo run mutation -- --force
       - name: Upload mutation report
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
           name: mutation-report-${{ github.run_id }}
-          path: packages/nuqs/reports/mutation/html/
+          path: packages/nuqs/reports/mutation/
           if-no-files-found: ignore
           retention-days: 14

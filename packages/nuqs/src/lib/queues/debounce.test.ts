@@ -270,9 +270,9 @@ describe('debounce: DebounceController', () => {
     )
     vi.runAllTimers()
     await promise
-    subscriber.mockClear()
+    expect(subscriber).toHaveBeenCalledTimes(2)
     controller.abortAll()
-    expect(subscriber).not.toHaveBeenCalled()
+    expect(subscriber).toHaveBeenCalledTimes(2)
   })
   it('falls back to the throttle queue pending values if nothing is debounced', () => {
     const throttleQueue = new ThrottledQueue()

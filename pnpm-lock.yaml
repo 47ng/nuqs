@@ -69,6 +69,13 @@ catalogs:
     react-dom:
       specifier: ^19.2.7
       version: 19.2.7
+  stryker:
+    '@stryker-mutator/core':
+      specifier: 9.6.1
+      version: 9.6.1
+    '@stryker-mutator/vitest-runner':
+      specifier: 9.6.1
+      version: 9.6.1
   tanstack-router:
     '@tanstack/react-router':
       specifier: 1.170.15
@@ -854,10 +861,10 @@ importers:
         specifier: ^12.1.0
         version: 12.1.0(size-limit@12.1.0(jiti@2.7.0))
       '@stryker-mutator/core':
-        specifier: 9.6.1
+        specifier: catalog:stryker
         version: 9.6.1(@types/node@24.13.3)
       '@stryker-mutator/vitest-runner':
-        specifier: 9.6.1
+        specifier: catalog:stryker
         version: 9.6.1(@stryker-mutator/core@9.6.1(@types/node@24.13.3))(vitest@4.1.10)
       '@tanstack/react-router':
         specifier: catalog:tanstack-router

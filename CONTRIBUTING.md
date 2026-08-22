@@ -81,24 +81,15 @@ For a focused test run, filter the root Turbo command, for example:
 Turbo builds each selected task's dependencies before testing them. Avoid
 calling package-level test scripts directly, as that bypasses the task graph.
 
-Mutation testing for the unit-tested core is available separately because it is
-too slow for the regular test suite:
+Mutation testing is available separately because it is too slow for the regular
+test suite:
 
 ```sh
 pnpm run mutation --filter nuqs
 ```
 
-The HTML report is written to `packages/nuqs/reports/mutation/html/index.html`.
-Stryker stores incremental results under `packages/nuqs/reports/` to speed up
-subsequent runs.
-
-For mutation-relevant pull requests, CI runs the complete suite on the exact
-base commit and incrementally evaluates the candidate from that report. The
-change passes when its mutation debt does not increase. Debt includes survived,
-and uncovered mutants. Timeouts follow Stryker's detected-mutant semantics;
-their result-affecting configuration is part of the comparison guard. Pushes to
-`next` and manual dispatches run the complete suite without incremental result
-reuse.
+The report is written to `packages/nuqs/reports/mutation/`. CI rejects changes
+that increase the number of undetected mutants relative to their base.
 
 ## Opening issues
 
