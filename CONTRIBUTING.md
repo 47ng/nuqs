@@ -92,6 +92,14 @@ The HTML report is written to `packages/nuqs/reports/mutation/html/index.html`.
 Stryker stores incremental results under `packages/nuqs/reports/` to speed up
 subsequent runs.
 
+For mutation-relevant pull requests, CI runs the complete suite on the exact
+base commit and incrementally evaluates the candidate from that report. The
+change passes when its mutation debt does not increase. Debt includes survived,
+and uncovered mutants. Timeouts follow Stryker's detected-mutant semantics;
+their result-affecting configuration is part of the comparison guard. Pushes to
+`next` and manual dispatches run the complete suite without incremental result
+reuse.
+
 ## Opening issues
 
 Please follow the [issue template](.github/ISSUE_TEMPLATE/bug_report.md) when opening a new issue.
