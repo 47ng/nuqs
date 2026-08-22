@@ -111,7 +111,7 @@ jobs:
           do
             printf '%s  %s\n' "$(git hash-object "$file")" "$file"
           done > "$RUNNER_TEMP/mutation-inputs-baseline.sha256"
-          pnpm exec turbo run mutation -- --force
+          pnpm exec turbo run mutation --filter=nuqs -- --force
           cp -R packages/nuqs/reports/mutation \
             "$RUNNER_TEMP/mutation-baseline"
       - name: Check out the exact candidate commit
@@ -162,7 +162,7 @@ jobs:
               packages/nuqs/reports/mutation
             pnpm mutation
           else
-            pnpm exec turbo run mutation -- --force
+            pnpm exec turbo run mutation --filter=nuqs -- --force
           fi
       - name: Enforce the mutation-debt ratchet
         if: steps.baseline.outputs.supported == 'true' && steps.inputs.outputs.comparable == 'true'
@@ -201,7 +201,7 @@ jobs:
       - name: Install dependencies
         run: pnpm install --ignore-scripts --frozen-lockfile --filter nuqs...
       - name: Run the complete mutation suite
-        run: pnpm exec turbo run mutation -- --force
+        run: pnpm exec turbo run mutation --filter=nuqs -- --force
       - name: Upload mutation report
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
