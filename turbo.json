@@ -11,7 +11,8 @@
     },
     "test": {},
     "mutation": {
-      "cache": false
+      "cache": false,
+      "dependsOn": ["build"]
     }
   }
 }
