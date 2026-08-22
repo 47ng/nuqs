@@ -45,6 +45,7 @@ jobs:
             'packages/nuqs/stryker.browser.config.mjs' \
             'packages/nuqs/stryker.node.config.mjs' \
             'packages/nuqs/stryker.shared.config.mjs' \
+            'packages/nuqs/vitest.browser.mutation.config.ts' \
             'packages/nuqs/vitest.config.ts' \
             'packages/nuqs/vitest.mutation.config.ts' \
             'packages/scripts/mutation-gate.ts' \
@@ -107,6 +108,7 @@ jobs:
             packages/nuqs/stryker.browser.config.mjs \
             packages/nuqs/stryker.node.config.mjs \
             packages/nuqs/stryker.shared.config.mjs \
+            packages/nuqs/vitest.browser.mutation.config.ts \
             packages/nuqs/vitest.config.ts \
             packages/nuqs/vitest.mutation.config.ts \
             packages/scripts/mutation-gate.ts \
@@ -138,6 +140,7 @@ jobs:
             packages/nuqs/stryker.browser.config.mjs \
             packages/nuqs/stryker.node.config.mjs \
             packages/nuqs/stryker.shared.config.mjs \
+            packages/nuqs/vitest.browser.mutation.config.ts \
             packages/nuqs/vitest.config.ts \
             packages/nuqs/vitest.mutation.config.ts \
             packages/scripts/mutation-gate.ts \
@@ -176,6 +179,7 @@ jobs:
       - name: Enforce the mutation-debt ratchet
         if: steps.baseline.outputs.supported == 'true' && steps.inputs.outputs.comparable == 'true'
         env:
+          MUTATION_SOURCE_ROOT: packages/nuqs
           MUTATION_SOURCE_URL: ${{ github.server_url }}/${{ github.repository }}/blob/${{ github.event.pull_request.head.sha }}
         run: >-
           node packages/scripts/mutation-gate.ts

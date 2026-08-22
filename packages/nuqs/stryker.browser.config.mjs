@@ -8,7 +8,7 @@ const config = {
     'src/useQueryStates.browser.test.tsx'
   ],
   vitest: {
-    configFile: 'vitest.config.ts',
+    configFile: 'vitest.browser.mutation.config.ts',
     related: false
   },
   tempDirName: '../../node_modules/.cache/stryker-tmp/nuqs-browser-hooks',

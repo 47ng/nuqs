@@ -271,7 +271,8 @@ export function compareMutationReports(
 
 export function formatNewUndetectedMutants(
   mutants: NewUndetectedMutant[],
-  sourceBaseUrl?: string
+  sourceBaseUrl?: string,
+  sourceRoot?: string
 ): string {
   const lines = mutants.flatMap(mutant => {
     const line = mutant.location?.start.line
@@ -286,15 +287,16 @@ export function formatNewUndetectedMutants(
     const explanation = mutant.previousStatus
       ? `Newly ${mutant.status.toLowerCase()}; previously ${mutant.previousStatus.toLowerCase()}`
       : `New undetected mutant (${mutant.status.toLowerCase()})`
+    const repositoryPath = [sourceRoot, mutant.file].filter(Boolean).join('/')
     const source =
       sourceBaseUrl && line
-        ? `${sourceBaseUrl}/${mutant.file
+        ? `${sourceBaseUrl}/${repositoryPath
             .split('/')
             .map(encodeURIComponent)
             .join('/')}#L${line}`
         : undefined
     const annotation = line
-      ? `::error file=${escapeCommandProperty(mutant.file)},line=${line},col=${column},title=New undetected mutant::${escapeCommandData(`${mutator} ${transition}\nOriginal: ${original}\nMutated: ${replacement}`)}`
+      ? `::error file=${escapeCommandProperty(repositoryPath)},line=${line},col=${column},title=New undetected mutant::${escapeCommandData(`${mutator} ${transition}\nOriginal: ${original}\nMutated: ${replacement}`)}`
       : undefined
     return [
       annotation,
@@ -346,7 +348,8 @@ async function main(): Promise<void> {
     process.stderr.write(
       formatNewUndetectedMutants(
         result.newUndetected,
-        process.env.MUTATION_SOURCE_URL
+        process.env.MUTATION_SOURCE_URL,
+        process.env.MUTATION_SOURCE_ROOT
       )
     )
     process.exitCode = 1
