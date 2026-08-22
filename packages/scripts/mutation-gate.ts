@@ -354,8 +354,12 @@ async function main(): Promise<void> {
     )
     process.exitCode = 1
   } else {
+    const outcome =
+      result.delta === 0
+        ? 'stayed identical'
+        : `decreased by ${Math.abs(result.delta)}`
     process.stdout.write(
-      `Mutation debt stayed identical: ` +
+      `Mutation debt ${outcome}: ` +
         `${result.baseline.undetected} → ${result.candidate.undetected} ` +
         `survived or uncovered mutants.\n`
     )
