@@ -15,7 +15,8 @@ function report(
   return {
     files: {
       'src/example.ts': {
-        mutants: statuses.map((status, id) => ({ id: String(id), status }))
+        mutants: statuses.map((status, id) => ({ id: String(id), status })),
+        source: ''
       }
     },
     config,
@@ -74,8 +75,13 @@ describe('mutation gate', () => {
     Object.assign(candidate.files['src/example.ts']!.mutants[0]!, {
       mutatorName: 'ConditionalExpression',
       replacement: 'false',
-      location: { start: { line: 12, column: 4 } }
+      location: {
+        end: { line: 12, column: 14 },
+        start: { line: 12, column: 5 }
+      }
     })
+    candidate.files['src/example.ts']!.source =
+      '\n'.repeat(11) + '    value > 0\n'
 
     const result = compareMutationReports(baseline, candidate)
     expect(result).toMatchObject({ pass: false, delta: 1 })
@@ -83,8 +89,12 @@ describe('mutation gate', () => {
       {
         file: 'src/example.ts',
         id: '0',
-        location: { start: { line: 12, column: 4 } },
+        location: {
+          end: { line: 12, column: 14 },
+          start: { line: 12, column: 5 }
+        },
         mutatorName: 'ConditionalExpression',
+        original: 'value > 0',
         previousStatus: 'Killed',
         replacement: 'false',
         status: 'Survived'
@@ -92,7 +102,10 @@ describe('mutation gate', () => {
     ])
     expect(formatNewUndetectedMutants(result.newUndetected)).toBe(
       'New undetected mutants:\n' +
-        '- src/example.ts:12:4 [ConditionalExpression] Survived (was Killed): false\n'
+        '::error file=src/example.ts,line=12,col=5,title=New undetected mutant::ConditionalExpression Survived (was Killed)%0AOriginal: value > 0%0AMutated: false\n' +
+        '- src/example.ts:12:5 [ConditionalExpression] Newly survived; previously killed\n' +
+        '  Original: value > 0\n' +
+        '  Mutated: false\n'
     )
   })
 

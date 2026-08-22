@@ -37,9 +37,13 @@ export type MutationReport = {
   files: Record<
     string,
     {
+      source: string
       mutants: Array<{
         id: string
-        location?: { start: { line: number; column: number } }
+        location?: {
+          end: { line: number; column: number }
+          start: { line: number; column: number }
+        }
         mutatorName?: string
         replacement?: string
         status: MutantStatus
@@ -68,8 +72,12 @@ type MutationSummary = {
 export type NewUndetectedMutant = {
   file: string
   id: string
-  location?: { start: { line: number; column: number } }
+  location?: {
+    end: { line: number; column: number }
+    start: { line: number; column: number }
+  }
   mutatorName?: string
+  original?: string
   previousStatus?: MutantStatus
   replacement?: string
   status: MutantStatus
@@ -152,6 +160,27 @@ function stableStringify(value: unknown): string {
   return JSON.stringify(value)
 }
 
+function sourceAtLocation(
+  source: string,
+  location?: NewUndetectedMutant['location']
+): string | undefined {
+  if (!location) {
+    return undefined
+  }
+  const lines = source.split('\n')
+  const { start, end } = location
+  if (start.line === end.line) {
+    return lines[start.line - 1]?.slice(start.column - 1, end.column - 1)
+  }
+  return [
+    lines[start.line - 1]?.slice(start.column - 1),
+    ...lines.slice(start.line, end.line - 1),
+    lines[end.line - 1]?.slice(0, end.column - 1)
+  ]
+    .filter((line): line is string => line !== undefined)
+    .join('\n')
+}
+
 export function compareMutationReports(
   baselineReport: MutationReport,
   candidateReport: MutationReport
@@ -200,7 +229,7 @@ export function compareMutationReports(
     }
   }
   const newUndetected = Object.entries(candidateReport.files)
-    .flatMap(([file, { mutants }]) =>
+    .flatMap(([file, { mutants, source }]) =>
       mutants.flatMap(mutant => {
         const previousStatus = baselineStatuses.get(`${file}\0${mutant.id}`)
         if (
@@ -215,6 +244,7 @@ export function compareMutationReports(
             id: mutant.id,
             location: mutant.location,
             mutatorName: mutant.mutatorName,
+            original: sourceAtLocation(source, mutant.location),
             previousStatus,
             replacement: mutant.replacement,
             status: mutant.status
@@ -242,19 +272,43 @@ export function compareMutationReports(
 export function formatNewUndetectedMutants(
   mutants: NewUndetectedMutant[]
 ): string {
-  const lines = mutants.map(mutant => {
-    const location = mutant.location
-      ? `${mutant.file}:${mutant.location.start.line}:${mutant.location.start.column}`
-      : mutant.file
-    const previous = mutant.previousStatus
-      ? ` (was ${mutant.previousStatus})`
-      : ' (new)'
-    const replacement = mutant.replacement
-      ? `: ${mutant.replacement.replaceAll(/\s+/g, ' ').trim()}`
-      : ''
-    return `- ${location} [${mutant.mutatorName ?? 'Unknown'}] ${mutant.status}${previous}${replacement}`
+  const lines = mutants.flatMap(mutant => {
+    const line = mutant.location?.start.line
+    const column = mutant.location?.start.column
+    const location = line ? `${mutant.file}:${line}:${column}` : mutant.file
+    const mutator = mutant.mutatorName ?? 'Unknown mutation'
+    const original = oneLine(mutant.original) || '(source unavailable)'
+    const replacement = oneLine(mutant.replacement) || '(empty)'
+    const transition = mutant.previousStatus
+      ? `${mutant.status} (was ${mutant.previousStatus})`
+      : `${mutant.status} (new mutant)`
+    const explanation = mutant.previousStatus
+      ? `Newly ${mutant.status.toLowerCase()}; previously ${mutant.previousStatus.toLowerCase()}`
+      : `New undetected mutant (${mutant.status.toLowerCase()})`
+    const annotation = line
+      ? `::error file=${escapeCommandProperty(mutant.file)},line=${line},col=${column},title=New undetected mutant::${escapeCommandData(`${mutator} ${transition}\nOriginal: ${original}\nMutated: ${replacement}`)}`
+      : undefined
+    return [
+      annotation,
+      `- ${location} [${mutator}] ${explanation}\n  Original: ${original}\n  Mutated: ${replacement}`
+    ].filter((value): value is string => value !== undefined)
   })
   return `New undetected mutants:\n${lines.join('\n')}\n`
+}
+
+function oneLine(value?: string): string {
+  return value?.replaceAll(/\s+/g, ' ').trim() ?? ''
+}
+
+function escapeCommandData(value: string): string {
+  return value
+    .replaceAll('%', '%25')
+    .replaceAll('\r', '%0D')
+    .replaceAll('\n', '%0A')
+}
+
+function escapeCommandProperty(value: string): string {
+  return escapeCommandData(value).replaceAll(':', '%3A').replaceAll(',', '%2C')
 }
 
 async function readReport(path: string): Promise<MutationReport> {
