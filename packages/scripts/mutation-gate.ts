@@ -355,7 +355,7 @@ async function main(): Promise<void> {
     process.exitCode = 1
   } else {
     process.stdout.write(
-      `Mutation debt did not increase: ` +
+      `Mutation debt stayed identical: ` +
         `${result.baseline.undetected} → ${result.candidate.undetected} ` +
         `survived or uncovered mutants.\n`
     )
