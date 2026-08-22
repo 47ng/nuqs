@@ -1,8 +1,21 @@
 import { describe, expect, it } from 'vitest'
 import type { Query } from './search-params'
-import { compareQuery } from './compare'
+import { compareArrays, compareQuery } from './compare'
 
 describe('compare', () => {
+  it('short-circuits array comparison for the same reference', () => {
+    const values = ['a']
+    let comparisons = 0
+
+    expect(
+      compareArrays(values, values, () => {
+        comparisons++
+        return false
+      })
+    ).toBe(true)
+    expect(comparisons).toBe(0)
+  })
+
   describe('strings', () => {
     it('should return true for equal values', () => {
       expect(compareQuery('a', 'a')).toBe(true)
