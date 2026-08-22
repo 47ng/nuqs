@@ -41,6 +41,7 @@ jobs:
             'package.json' \
             'packages/nuqs/package.json' \
             'packages/nuqs/src' \
+            'packages/nuqs/tests' \
             'packages/nuqs/scripts/mutation.mjs' \
             'packages/nuqs/stryker.browser.config.mjs' \
             'packages/nuqs/stryker.node.config.mjs' \
@@ -48,6 +49,8 @@ jobs:
             'packages/nuqs/vitest.browser.mutation.config.ts' \
             'packages/nuqs/vitest.config.ts' \
             'packages/nuqs/vitest.mutation.config.ts' \
+            'packages/nuqs/vitest.browser.setup.ts' \
+            'packages/nuqs/vitest.setup.ts' \
             'packages/scripts/mutation-gate.ts' \
             'packages/scripts/mutation-gate.test.ts' \
             'pnpm-lock.yaml' \
@@ -78,7 +81,11 @@ jobs:
       - name: Check out the exact base commit
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
-        run: git checkout --detach "$BASE_SHA"
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          BASE_SHA="$(git merge-base "$BASE_SHA" "$HEAD_SHA")"
+          printf '%s\n' "$BASE_SHA" > "$RUNNER_TEMP/mutation-base-sha"
+          git checkout --detach "$BASE_SHA"
       - name: Check whether the base supports mutation testing
         id: baseline
         run: |
@@ -165,14 +172,31 @@ jobs:
         run: ./node_modules/.bin/playwright install chromium
         working-directory: packages/nuqs
       - name: Run incremental candidate mutation tests
+        env:
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
           if test '${{ steps.baseline.outputs.supported }}' = 'true' && \
             test '${{ steps.inputs.outputs.comparable }}' = 'true'
           then
-            mkdir -p packages/nuqs/reports
-            cp -R "$RUNNER_TEMP/mutation-baseline" \
-              packages/nuqs/reports/mutation
-            pnpm mutation
+            mkdir -p packages/nuqs/reports/mutation
+            cp -R "$RUNNER_TEMP/mutation-baseline/cache" \
+              packages/nuqs/reports/mutation/cache
+            BASE_SHA="$(cat "$RUNNER_TEMP/mutation-base-sha")"
+            if git diff --quiet "$BASE_SHA" "$HEAD_SHA" -- \
+              'packages/nuqs/src/adapters' \
+              'packages/nuqs/src/lib/sync.ts' \
+              'packages/nuqs/src/lib/url-encoding.ts' \
+              'packages/nuqs/src/lib/queues/rate-limiting.ts' \
+              'packages/nuqs/src/lib/queues/useSyncExternalStores.ts' \
+              'packages/nuqs/tests' \
+              'packages/nuqs/vitest.browser.setup.ts' \
+              'packages/nuqs/vitest.setup.ts'
+            then
+              pnpm mutation
+            else
+              echo '::notice::Mutation test dependencies changed; running the complete candidate suite.'
+              pnpm mutation -- --force
+            fi
           else
             pnpm exec turbo run mutation --filter=nuqs -- --force
           fi
@@ -192,6 +216,7 @@ jobs:
           name: mutation-report-${{ github.event.pull_request.number }}
           path: packages/nuqs/reports/mutation/
           if-no-files-found: ignore
+          overwrite: true
           retention-days: 14
       - name: Require explicit approval for a new baseline
         if: steps.baseline.outputs.supported == 'true' && steps.inputs.outputs.comparable != 'true'
@@ -227,4 +252,5 @@ jobs:
           name: mutation-report-${{ github.run_id }}
           path: packages/nuqs/reports/mutation/
           if-no-files-found: ignore
+          overwrite: true
           retention-days: 14

@@ -72,14 +72,16 @@ describe('mutation gate', () => {
   it('fails when mutation debt increases', () => {
     const baseline = report(['Killed', 'Survived'])
     const candidate = report(['Survived', 'NoCoverage'])
-    Object.assign(candidate.files['src/example.ts']!.mutants[0]!, {
+    const identity = {
       mutatorName: 'ConditionalExpression',
       replacement: 'false',
       location: {
         end: { line: 12, column: 14 },
         start: { line: 12, column: 5 }
       }
-    })
+    }
+    Object.assign(baseline.files['src/example.ts']!.mutants[0]!, identity)
+    Object.assign(candidate.files['src/example.ts']!.mutants[0]!, identity)
     candidate.files['src/example.ts']!.source =
       '\n'.repeat(11) + '    value > 0\n'
 
@@ -116,6 +118,33 @@ describe('mutation gate', () => {
     )
   })
 
+  it('matches mutants by source identity when Stryker renumbers them', () => {
+    const location = {
+      end: { line: 1, column: 10 },
+      start: { line: 1, column: 1 }
+    }
+    const baseline = report(['Killed'])
+    Object.assign(baseline.files['src/example.ts']!.mutants[0]!, {
+      id: '17',
+      location,
+      mutatorName: 'ConditionalExpression',
+      replacement: 'false'
+    })
+    const candidate = report(['Survived'])
+    Object.assign(candidate.files['src/example.ts']!.mutants[0]!, {
+      id: '42',
+      location,
+      mutatorName: 'ConditionalExpression',
+      replacement: 'false'
+    })
+
+    expect(
+      compareMutationReports(baseline, candidate).newUndetected
+    ).toMatchObject([
+      { id: '42', previousStatus: 'Killed', status: 'Survived' }
+    ])
+  })
+
   it('fails closed on mutation errors', () => {
     expect(() =>
       compareMutationReports(
@@ -123,6 +152,14 @@ describe('mutation gate', () => {
         report(['Killed', 'RuntimeError'])
       )
     ).toThrow('candidate report contains 1 mutation error')
+  })
+
+  it('fails closed when the candidate report loses all mutants', () => {
+    const candidate = report([])
+
+    expect(() => compareMutationReports(report(['Killed']), candidate)).toThrow(
+      'candidate report contains no mutants'
+    )
   })
 
   it('refuses to compare reports from different mutation configurations', () => {

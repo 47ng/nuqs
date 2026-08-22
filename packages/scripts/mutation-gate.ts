@@ -2,6 +2,7 @@
 
 import { readFile } from 'node:fs/promises'
 import { pathToFileURL } from 'node:url'
+import { z } from 'zod'
 
 const DETECTED_STATUSES = new Set(['Killed', 'Timeout'])
 const UNDETECTED_STATUSES = new Set(['Survived', 'NoCoverage'])
@@ -58,6 +59,35 @@ export type MutationReport = {
   }
 }
 
+const mutationReportSchema: z.ZodType<MutationReport> = z.object({
+  files: z.record(
+    z.string(),
+    z.object({
+      source: z.string(),
+      mutants: z.array(
+        z.object({
+          id: z.string(),
+          location: z
+            .object({
+              end: z.object({ line: z.number(), column: z.number() }),
+              start: z.object({ line: z.number(), column: z.number() })
+            })
+            .optional(),
+          mutatorName: z.string().optional(),
+          replacement: z.string().optional(),
+          status: z.string()
+        })
+      )
+    })
+  ),
+  config: z.record(z.string(), z.unknown()),
+  framework: z.object({
+    name: z.string(),
+    version: z.string(),
+    dependencies: z.record(z.string(), z.string()).optional()
+  })
+})
+
 type MutationSummary = {
   detected: number
   errors: number
@@ -81,6 +111,21 @@ export type NewUndetectedMutant = {
   previousStatus?: MutantStatus
   replacement?: string
   status: MutantStatus
+}
+
+type Mutant = MutationReport['files'][string]['mutants'][number]
+
+function mutantIdentity(file: string, mutant: Mutant): string {
+  const start = mutant.location?.start
+  if (!start || !mutant.mutatorName || mutant.replacement === undefined) {
+    return `${file}\0id:${mutant.id}`
+  }
+  return [
+    file,
+    mutant.mutatorName,
+    mutant.replacement,
+    `${start.line}:${start.column}`
+  ].join('\0')
 }
 
 export function summarizeMutationReport(
@@ -200,8 +245,8 @@ export function compareMutationReports(
     )
   }
   if (
-    JSON.stringify(baselineReport.framework) !==
-    JSON.stringify(candidateReport.framework)
+    stableStringify(baselineReport.framework) !==
+    stableStringify(candidateReport.framework)
   ) {
     throw new Error(
       'mutation toolchain changed; establish and review a new baseline explicitly'
@@ -210,6 +255,9 @@ export function compareMutationReports(
 
   const baseline = summarizeMutationReport(baselineReport)
   const candidate = summarizeMutationReport(candidateReport)
+  if (baseline.total > 0 && candidate.total === 0) {
+    throw new Error('candidate report contains no mutants')
+  }
   if (baseline.errors > 0) {
     throw new Error(
       `baseline report contains ${baseline.errors} mutation error(s)`
@@ -225,13 +273,15 @@ export function compareMutationReports(
   const baselineStatuses = new Map<string, MutantStatus>()
   for (const [file, { mutants }] of Object.entries(baselineReport.files)) {
     for (const mutant of mutants) {
-      baselineStatuses.set(`${file}\0${mutant.id}`, mutant.status)
+      baselineStatuses.set(mutantIdentity(file, mutant), mutant.status)
     }
   }
   const newUndetected = Object.entries(candidateReport.files)
     .flatMap(([file, { mutants, source }]) =>
       mutants.flatMap(mutant => {
-        const previousStatus = baselineStatuses.get(`${file}\0${mutant.id}`)
+        const previousStatus = baselineStatuses.get(
+          mutantIdentity(file, mutant)
+        )
         if (
           !UNDETECTED_STATUSES.has(mutant.status) ||
           (previousStatus && UNDETECTED_STATUSES.has(previousStatus))
@@ -322,7 +372,11 @@ function escapeCommandProperty(value: string): string {
 }
 
 async function readReport(path: string): Promise<MutationReport> {
-  return JSON.parse(await readFile(path, 'utf8')) as MutationReport
+  try {
+    return mutationReportSchema.parse(JSON.parse(await readFile(path, 'utf8')))
+  } catch (error) {
+    throw new Error(`invalid mutation report ${path}`, { cause: error })
+  }
 }
 
 async function main(): Promise<void> {

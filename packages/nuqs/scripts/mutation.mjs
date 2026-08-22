@@ -55,6 +55,7 @@ const report = mergeReports(nodeReport, browserReport)
 await writeFile(aggregatePath, JSON.stringify(report, null, 2) + '\n')
 await writeFile(htmlPath, await renderHtml(report))
 printSummary(report)
+assertNoMutationErrors(report)
 
 function runStryker(configFile) {
   return new Promise((resolve, reject) => {
@@ -207,4 +208,15 @@ function printSummary(report) {
       `(${killed} killed, ${timeout} timeout, ${survived} survived, ` +
       `${noCoverage} no coverage, ${total} total)\n`
   )
+}
+
+function assertNoMutationErrors(report) {
+  const errors = Object.values(report.files)
+    .flatMap(file => file.mutants)
+    .filter(mutant =>
+      ['CompileError', 'RuntimeError'].includes(mutant.status)
+    ).length
+  if (errors > 0) {
+    throw new Error(`mutation report contains ${errors} mutation error(s)`)
+  }
 }
