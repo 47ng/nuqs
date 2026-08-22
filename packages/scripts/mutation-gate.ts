@@ -270,7 +270,8 @@ export function compareMutationReports(
 }
 
 export function formatNewUndetectedMutants(
-  mutants: NewUndetectedMutant[]
+  mutants: NewUndetectedMutant[],
+  sourceBaseUrl?: string
 ): string {
   const lines = mutants.flatMap(mutant => {
     const line = mutant.location?.start.line
@@ -285,12 +286,19 @@ export function formatNewUndetectedMutants(
     const explanation = mutant.previousStatus
       ? `Newly ${mutant.status.toLowerCase()}; previously ${mutant.previousStatus.toLowerCase()}`
       : `New undetected mutant (${mutant.status.toLowerCase()})`
+    const source =
+      sourceBaseUrl && line
+        ? `${sourceBaseUrl}/${mutant.file
+            .split('/')
+            .map(encodeURIComponent)
+            .join('/')}#L${line}`
+        : undefined
     const annotation = line
       ? `::error file=${escapeCommandProperty(mutant.file)},line=${line},col=${column},title=New undetected mutant::${escapeCommandData(`${mutator} ${transition}\nOriginal: ${original}\nMutated: ${replacement}`)}`
       : undefined
     return [
       annotation,
-      `- ${location} [${mutator}] ${explanation}\n  Original: ${original}\n  Mutated: ${replacement}`
+      `- ${location} [${mutator}] ${explanation}${source ? `\n  Source: ${source}` : ''}\n  Original: ${original}\n  Mutated: ${replacement}`
     ].filter((value): value is string => value !== undefined)
   })
   return `New undetected mutants:\n${lines.join('\n')}\n`
@@ -335,7 +343,12 @@ async function main(): Promise<void> {
         `${result.baseline.undetected} → ${result.candidate.undetected} ` +
         `survived or uncovered mutants.\n`
     )
-    process.stderr.write(formatNewUndetectedMutants(result.newUndetected))
+    process.stderr.write(
+      formatNewUndetectedMutants(
+        result.newUndetected,
+        process.env.MUTATION_SOURCE_URL
+      )
+    )
     process.exitCode = 1
   } else {
     process.stdout.write(

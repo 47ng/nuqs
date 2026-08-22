@@ -100,10 +100,16 @@ describe('mutation gate', () => {
         status: 'Survived'
       }
     ])
-    expect(formatNewUndetectedMutants(result.newUndetected)).toBe(
+    expect(
+      formatNewUndetectedMutants(
+        result.newUndetected,
+        'https://github.com/47ng/nuqs/blob/deadbeef'
+      )
+    ).toBe(
       'New undetected mutants:\n' +
         '::error file=src/example.ts,line=12,col=5,title=New undetected mutant::ConditionalExpression Survived (was Killed)%0AOriginal: value > 0%0AMutated: false\n' +
         '- src/example.ts:12:5 [ConditionalExpression] Newly survived; previously killed\n' +
+        '  Source: https://github.com/47ng/nuqs/blob/deadbeef/src/example.ts#L12\n' +
         '  Original: value > 0\n' +
         '  Mutated: false\n'
     )

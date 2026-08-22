@@ -175,6 +175,8 @@ jobs:
           fi
       - name: Enforce the mutation-debt ratchet
         if: steps.baseline.outputs.supported == 'true' && steps.inputs.outputs.comparable == 'true'
+        env:
+          MUTATION_SOURCE_URL: ${{ github.server_url }}/${{ github.repository }}/blob/${{ github.event.pull_request.head.sha }}
         run: >-
           node packages/scripts/mutation-gate.ts
           "$RUNNER_TEMP/mutation-baseline/stryker-incremental.json"
