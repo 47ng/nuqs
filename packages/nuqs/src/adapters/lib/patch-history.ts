@@ -18,20 +18,40 @@ export function getHistorySyncEmitter(
 
 export const historyUpdateMarker = '__nuqs__'
 
+type PendingPush = {
+  href: string
+  poppedSince: boolean
+}
+
 const pendingPush = globalSingleton('pending-push', () => ({
-  active: false
+  current: null as PendingPush | null
 }))
 
-export function markPendingPush(): void {
-  pendingPush.active = true
+export function markPendingPush(url: URL): void {
+  pendingPush.current = { href: url.href, poppedSince: false }
 }
 
 export function hasPendingPush(): boolean {
-  return pendingPush.active
+  return pendingPush.current !== null
 }
 
 function clearPendingPush(): void {
-  pendingPush.active = false
+  pendingPush.current = null
+}
+
+function notePopSincePendingPush(): void {
+  if (pendingPush.current) {
+    pendingPush.current.poppedSince = true
+  }
+}
+
+function commitTakesOverPendingPush(url: string | URL): boolean {
+  const pending = pendingPush.current
+  if (!pending) {
+    return false
+  }
+  const href = new URL(url, location.href).href
+  return href === pending.href || !pending.poppedSince
 }
 
 declare global {
@@ -81,7 +101,7 @@ export function patchHistory(
 
   window.addEventListener('popstate', () => {
     lastSearchSeen = location.search
-    clearPendingPush()
+    notePopSincePendingPush()
     resetQueues()
   })
 
@@ -107,9 +127,11 @@ export function patchHistory(
       originalPushState.call(history, state, '', url)
       return
     }
-    // A router committing a navigation nuqs already pushed optimistically
-    // must not push a second entry (#1563).
-    const commit = hasPendingPush() ? originalReplaceState : originalPushState
+    // The router committing an optimistic deep push must not add
+    // a second entry (#1563).
+    const commit = commitTakesOverPendingPush(url)
+      ? originalReplaceState
+      : originalPushState
     clearPendingPush()
     commit.call(history, state, '', url)
     sync(url)

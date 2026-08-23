@@ -29,6 +29,8 @@ export const testRepro1563 = defineTest('repro-1563', ({ path }) => {
         url.searchParams.get('other') === 'pass'
     )
     await expect.poll(() => readHistoryIndex(page)).toBe(initialIndex + 1)
+    await expect(page.locator('#state')).toHaveText('pass')
+    await expect(page.locator('#navigation-type')).toHaveText('PUSH')
     await page.goBack()
     await expect(page.locator('#state')).toHaveText('init')
     expect(await readHistoryIndex(page)).toBe(initialIndex)

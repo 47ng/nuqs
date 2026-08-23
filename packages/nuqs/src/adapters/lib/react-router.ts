@@ -65,9 +65,10 @@ export function createReactRouterBasedAdapter({
         debug(20, adapter, url)
         // First, update the URL locally without triggering a network request,
         // this allows keeping a reactive URL if the network is slow.
-        // A deep push waits on the router to commit its optimistic entry.
-        // Until then, further deep updates take that entry over instead
-        // of stacking on it, and commit as a push (#1563).
+        //
+        // A deep push marks its optimistic entry pending until the router
+        // commits it. Until then, further deep updates take that entry over
+        // instead of stacking on it, and they commit as a push (#1563).
         const isDeep = options.shallow === false
         const takesOverPendingPush = isDeep && hasPendingPush()
         const commitsAsPush =
@@ -86,7 +87,7 @@ export function createReactRouterBasedAdapter({
         let navigationSettled: Promise<void> | undefined
         if (isDeep) {
           if (commitsAsPush) {
-            markPendingPush()
+            markPendingPush(url)
           }
           const maybePromise = navigate(
             {
