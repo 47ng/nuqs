@@ -80,6 +80,16 @@ describe('patchHistory: pending push', () => {
     expect(hasPendingPush()).toBe(false)
   })
 
+  it('repairs the index of a pending entry traversed back onto', () => {
+    history.replaceState({ idx: 4 }, '', '?')
+    history.pushState({ idx: 4 }, historyUpdateMarker, '?a=1')
+    markPendingPush(new URL('?a=1', location.href))
+    window.dispatchEvent(new PopStateEvent('popstate'))
+    expect(history.state).toEqual({ idx: 5 })
+    expect(hasPendingPush()).toBe(false)
+    history.back()
+  })
+
   it('keeps the pending push across marked nuqs updates', () => {
     markPendingPush(new URL('?a=1', location.href))
     history.pushState(null, historyUpdateMarker, '?a=1')

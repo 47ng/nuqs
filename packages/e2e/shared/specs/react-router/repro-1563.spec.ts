@@ -35,4 +35,22 @@ export const testRepro1563 = defineTest('repro-1563', ({ path }) => {
     await expect(page.locator('#state')).toHaveText('init')
     expect(await readHistoryIndex(page)).toBe(initialIndex)
   })
+
+  it('repairs the optimistic entry when Back runs before the commit', async ({
+    page
+  }) => {
+    await navigateTo(page, path, '?test=init&delay=1000')
+    const initialIndex = await readHistoryIndex(page)
+    await page.locator('#push').click()
+    await expect(page).toHaveURL(url => url.searchParams.get('test') === 'pass')
+    await page.goBack()
+    await expect(page.locator('#state')).toHaveText('init')
+    await page.goForward()
+    await expect(page.locator('#state')).toHaveText('pass')
+    await expect(page.locator('#navigation-type')).toHaveText('POP')
+    expect(await readHistoryIndex(page)).toBe(initialIndex + 1)
+    await page.goBack()
+    await expect(page.locator('#state')).toHaveText('init')
+    expect(await readHistoryIndex(page)).toBe(initialIndex)
+  })
 })

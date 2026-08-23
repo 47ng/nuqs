@@ -20,6 +20,7 @@ export const historyUpdateMarker = '__nuqs__'
 
 type PendingPush = {
   href: string
+  routerIndex: number | undefined
   poppedSince: boolean
 }
 
@@ -28,7 +29,11 @@ const pendingPush = globalSingleton('pending-push', () => ({
 }))
 
 export function markPendingPush(url: URL): void {
-  pendingPush.current = { href: url.href, poppedSince: false }
+  pendingPush.current = {
+    href: url.href,
+    routerIndex: history.state?.idx,
+    poppedSince: false
+  }
 }
 
 export function hasPendingPush(): boolean {
@@ -39,10 +44,26 @@ function clearPendingPush(): void {
   pendingPush.current = null
 }
 
-function notePopSincePendingPush(): void {
-  if (pendingPush.current) {
-    pendingPush.current.poppedSince = true
+// Traversing back onto an entry the router never committed leaves it
+// with the index nuqs cloned from its predecessor. Repair it before
+// the router reads it, so traversal deltas stay right (#1563).
+function repairOrNotePopOnPendingPush(): void {
+  const pending = pendingPush.current
+  if (!pending) {
+    return
   }
+  if (
+    location.href === pending.href &&
+    typeof pending.routerIndex === 'number'
+  ) {
+    history.replaceState(
+      { ...history.state, idx: pending.routerIndex + 1 },
+      historyUpdateMarker
+    )
+    pendingPush.current = null
+    return
+  }
+  pending.poppedSince = true
 }
 
 function commitTakesOverPendingPush(url: string | URL): boolean {
@@ -99,11 +120,15 @@ export function patchHistory(
     lastSearchSeen = searchString.length ? '?' + searchString : ''
   })
 
-  window.addEventListener('popstate', () => {
-    lastSearchSeen = location.search
-    notePopSincePendingPush()
-    resetQueues()
-  })
+  window.addEventListener(
+    'popstate',
+    () => {
+      lastSearchSeen = location.search
+      repairOrNotePopOnPendingPush()
+      resetQueues()
+    },
+    { capture: true }
+  )
 
   debug(21, version, adapter)
   function sync(url: URL | string) {
