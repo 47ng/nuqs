@@ -18,6 +18,22 @@ export function getHistorySyncEmitter(
 
 export const historyUpdateMarker = '__nuqs__'
 
+const pendingPush = globalSingleton('pending-push', () => ({
+  active: false
+}))
+
+export function markPendingPush(): void {
+  pendingPush.active = true
+}
+
+export function hasPendingPush(): boolean {
+  return pendingPush.active
+}
+
+function clearPendingPush(): void {
+  pendingPush.active = false
+}
+
 declare global {
   interface History {
     nuqs?: {
@@ -65,6 +81,7 @@ export function patchHistory(
 
   window.addEventListener('popstate', () => {
     lastSearchSeen = location.search
+    clearPendingPush()
     resetQueues()
   })
 
@@ -86,14 +103,21 @@ export function patchHistory(
   const originalPushState = history.pushState
   const originalReplaceState = history.replaceState
   history.pushState = function nuqs_pushState(state, marker, url) {
-    originalPushState.call(history, state, '', url)
-    if (url && marker !== historyUpdateMarker) {
-      sync(url)
+    if (marker === historyUpdateMarker || !url) {
+      originalPushState.call(history, state, '', url)
+      return
     }
+    // A router committing a navigation nuqs already pushed optimistically
+    // must not push a second entry (#1563).
+    const commit = hasPendingPush() ? originalReplaceState : originalPushState
+    clearPendingPush()
+    commit.call(history, state, '', url)
+    sync(url)
   }
   history.replaceState = function nuqs_replaceState(state, marker, url) {
     originalReplaceState.call(history, state, '', url)
     if (url && marker !== historyUpdateMarker) {
+      clearPendingPush()
       sync(url)
     }
   }

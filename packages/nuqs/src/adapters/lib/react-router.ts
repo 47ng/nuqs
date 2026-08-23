@@ -7,7 +7,9 @@ import type { AdapterInterface, AdapterOptions } from './defs'
 import { applyChange, filterSearchParams } from './key-isolation'
 import {
   getHistorySyncEmitter,
+  hasPendingPush,
   historyUpdateMarker,
+  markPendingPush,
   patchHistory as applyHistoryPatch
 } from './patch-history'
 
@@ -63,8 +65,17 @@ export function createReactRouterBasedAdapter({
         debug(20, adapter, url)
         // First, update the URL locally without triggering a network request,
         // this allows keeping a reactive URL if the network is slow.
+        // A deep push waits on the router to commit its optimistic entry.
+        // Until then, further deep updates take that entry over instead
+        // of stacking on it, and commit as a push (#1563).
+        const isDeep = options.shallow === false
+        const takesOverPendingPush = isDeep && hasPendingPush()
+        const commitsAsPush =
+          isDeep && (options.history === 'push' || takesOverPendingPush)
         const updateMethod =
-          options.history === 'push' ? history.pushState : history.replaceState
+          options.history === 'push' && !takesOverPendingPush
+            ? history.pushState
+            : history.replaceState
         setQueueResetMutex(options.shallow ? 1 : 2)
         updateMethod.call(
           history,
@@ -73,7 +84,10 @@ export function createReactRouterBasedAdapter({
           url
         )
         let navigationSettled: Promise<void> | undefined
-        if (options.shallow === false) {
+        if (isDeep) {
+          if (commitsAsPush) {
+            markPendingPush()
+          }
           const maybePromise = navigate(
             {
               // Somehow passing the full URL object here strips the search params
@@ -82,7 +96,7 @@ export function createReactRouterBasedAdapter({
               search: url.search
             },
             {
-              replace: true,
+              replace: !commitsAsPush,
               preventScrollReset: true,
               state: history.state?.usr
             }
