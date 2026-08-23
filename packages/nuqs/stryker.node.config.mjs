@@ -1,22 +1,16 @@
 import shared from './stryker.shared.config.mjs'
+import browser from './stryker.browser.config.mjs'
+
+const nodeMutate = [
+  'src/**/*.{ts,tsx}',
+  '!src/**/*.test.{ts,tsx}',
+  '!src/adapters/**',
+  ...browser.mutate.map(path => `!${path}`)
+]
 
 const config = {
   ...shared,
-  mutate: [
-    'src/**/*.ts',
-    '!src/**/*.test.ts',
-    '!src/**/*.browser.test.ts',
-    // Framework adapters are covered by the end-to-end test benches.
-    '!src/adapters/**',
-    // The React hooks are covered by the browser mutation run.
-    '!src/useQueryState.ts',
-    '!src/useQueryStates.ts',
-    // These browser-only helpers are outside the focused PR budget.
-    '!src/lib/sync.ts',
-    '!src/lib/url-encoding.ts',
-    '!src/lib/queues/rate-limiting.ts',
-    '!src/lib/queues/useSyncExternalStores.ts'
-  ],
+  mutate: nodeMutate,
   testFiles: [
     'src/!(api|*.browser).test.ts',
     'src/lib/**/!(*.browser).test.ts'

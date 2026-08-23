@@ -118,7 +118,7 @@ describe('mutation gate', () => {
     )
   })
 
-  it('matches mutants by source identity when Stryker renumbers them', () => {
+  it('does not reconcile renumbered mutants by mutable source metadata', () => {
     const location = {
       end: { line: 1, column: 10 },
       start: { line: 1, column: 1 }
@@ -141,7 +141,7 @@ describe('mutation gate', () => {
     expect(
       compareMutationReports(baseline, candidate).newUndetected
     ).toMatchObject([
-      { id: '42', previousStatus: 'Killed', status: 'Survived' }
+      { id: '42', previousStatus: undefined, status: 'Survived' }
     ])
   })
 

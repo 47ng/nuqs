@@ -1,18 +1,32 @@
 import shared from './stryker.shared.config.mjs'
+import { createMutationProjects } from './scripts/mutation-projects.mjs'
+
+export const browserProjects = [
+  {
+    mutate: 'src/useQueryState.ts',
+    testFiles: ['src/useQueryState.browser.test.tsx']
+  },
+  {
+    mutate: 'src/useQueryStates.ts',
+    testFiles: ['src/useQueryStates.browser.test.tsx']
+  }
+]
+
+const { browserMutate, browserTestFiles } = createMutationProjects(
+  import.meta.dirname,
+  browserProjects
+)
 
 const config = {
   ...shared,
-  mutate: ['src/useQueryState.ts', 'src/useQueryStates.ts'],
-  testFiles: [
-    'src/useQueryState.browser.test.tsx',
-    'src/useQueryStates.browser.test.tsx'
-  ],
+  mutate: browserMutate,
+  testFiles: browserTestFiles,
   vitest: {
     configFile: 'vitest.browser.mutation.config.ts',
     related: false
   },
-  tempDirName: '../../node_modules/.cache/stryker-tmp/nuqs-browser-hooks',
-  incrementalFile: 'reports/mutation/cache/browser-hooks.json'
+  tempDirName: '../../node_modules/.cache/stryker-tmp/nuqs-browser',
+  incrementalFile: 'reports/mutation/cache/browser.json'
 }
 
 export default config

@@ -5,7 +5,10 @@ const config: ViteUserConfig = defineConfig({
   ...baseConfig,
   test: {
     ...baseConfig.test,
-    reporters: ['default']
+    reporters: ['default'],
+    browser: {
+      headless: true
+    }
   }
 })
 

@@ -115,17 +115,8 @@ export type NewUndetectedMutant = {
 
 type Mutant = MutationReport['files'][string]['mutants'][number]
 
-function mutantIdentity(file: string, mutant: Mutant): string {
-  const start = mutant.location?.start
-  if (!start || !mutant.mutatorName || mutant.replacement === undefined) {
-    return `${file}\0id:${mutant.id}`
-  }
-  return [
-    file,
-    mutant.mutatorName,
-    mutant.replacement,
-    `${start.line}:${start.column}`
-  ].join('\0')
+function mutantId(file: string, mutant: Mutant): string {
+  return `${file}\0${mutant.id}`
 }
 
 export function summarizeMutationReport(
@@ -273,15 +264,13 @@ export function compareMutationReports(
   const baselineStatuses = new Map<string, MutantStatus>()
   for (const [file, { mutants }] of Object.entries(baselineReport.files)) {
     for (const mutant of mutants) {
-      baselineStatuses.set(mutantIdentity(file, mutant), mutant.status)
+      baselineStatuses.set(mutantId(file, mutant), mutant.status)
     }
   }
   const newUndetected = Object.entries(candidateReport.files)
     .flatMap(([file, { mutants, source }]) =>
       mutants.flatMap(mutant => {
-        const previousStatus = baselineStatuses.get(
-          mutantIdentity(file, mutant)
-        )
+        const previousStatus = baselineStatuses.get(mutantId(file, mutant))
         if (
           !UNDETECTED_STATUSES.has(mutant.status) ||
           (previousStatus && UNDETECTED_STATUSES.has(previousStatus))

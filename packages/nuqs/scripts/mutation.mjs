@@ -2,36 +2,7 @@ import { spawn } from 'node:child_process'
 import { createRequire } from 'node:module'
 import { readFile, writeFile, mkdir } from 'node:fs/promises'
 import { join } from 'node:path'
-import { z } from 'zod'
-
-const mutantSchema = z
-  .object({
-    status: z.enum([
-      'CompileError',
-      'Ignored',
-      'Killed',
-      'NoCoverage',
-      'Pending',
-      'RuntimeError',
-      'Survived',
-      'Timeout'
-    ])
-  })
-  .loose()
-const mutationFileSchema = z
-  .object({
-    mutants: z.array(mutantSchema)
-  })
-  .loose()
-const mutationReportSchema = z.object({
-  files: z.record(z.string(), mutationFileSchema),
-  schemaVersion: z.string(),
-  thresholds: z.record(z.string(), z.unknown()),
-  testFiles: z.record(z.string(), z.unknown()),
-  projectRoot: z.string(),
-  config: z.record(z.string(), z.unknown()),
-  framework: z.record(z.string(), z.unknown())
-})
+import { mergeMutationReports, readMutationReport } from './mutation-report.mjs'
 
 const reportDir = 'reports/mutation'
 const cacheDir = join(reportDir, 'cache')
@@ -48,9 +19,9 @@ await mkdir(cacheDir, { recursive: true })
 await runStryker('stryker.node.config.mjs')
 await runStryker('stryker.browser.config.mjs')
 
-const nodeReport = await readReport(join(cacheDir, 'node.json'))
-const browserReport = await readReport(join(cacheDir, 'browser-hooks.json'))
-const report = mergeReports(nodeReport, browserReport)
+const nodeReport = await readMutationReport(join(cacheDir, 'node.json'))
+const browserReport = await readMutationReport(join(cacheDir, 'browser.json'))
+const report = mergeMutationReports(nodeReport, browserReport)
 
 await writeFile(aggregatePath, JSON.stringify(report, null, 2) + '\n')
 await writeFile(htmlPath, await renderHtml(report))
@@ -77,91 +48,6 @@ function runStryker(configFile) {
       }
     })
   })
-}
-
-async function readReport(path) {
-  return mutationReportSchema.parse(JSON.parse(await readFile(path, 'utf8')))
-}
-
-function mergeReports(nodeReport, browserReport) {
-  const reports = [nodeReport, browserReport]
-  for (const report of reports.slice(1)) {
-    assertEqual(
-      'schema version',
-      nodeReport.schemaVersion,
-      report.schemaVersion
-    )
-    assertEqual('project root', nodeReport.projectRoot, report.projectRoot)
-    assertEqual('framework', nodeReport.framework, report.framework)
-  }
-  for (let left = 0; left < reports.length; left++) {
-    for (let right = left + 1; right < reports.length; right++) {
-      assertDisjoint('source file', reports[left].files, reports[right].files)
-      assertDisjoint(
-        'test file',
-        reports[left].testFiles,
-        reports[right].testFiles
-      )
-    }
-  }
-
-  return {
-    files: Object.assign({}, ...reports.map(activeFiles)),
-    schemaVersion: nodeReport.schemaVersion,
-    thresholds: nodeReport.thresholds,
-    testFiles: Object.assign({}, ...reports.map(report => report.testFiles)),
-    projectRoot: nodeReport.projectRoot,
-    config: {
-      node: comparableConfig(nodeReport.config),
-      browser: comparableConfig(browserReport.config)
-    },
-    framework: nodeReport.framework
-  }
-}
-
-function activeFiles(report) {
-  return Object.fromEntries(
-    Object.entries(report.files).flatMap(([path, file]) => {
-      const mutants = file.mutants.filter(mutant => mutant.status !== 'Ignored')
-      return mutants.length === 0 ? [] : [[path, { ...file, mutants }]]
-    })
-  )
-}
-
-function assertEqual(label, left, right) {
-  if (JSON.stringify(left) !== JSON.stringify(right)) {
-    throw new Error(`cannot combine reports with different ${label}`)
-  }
-}
-
-function assertDisjoint(label, left, right) {
-  const duplicate = Object.keys(left).find(key => key in right)
-  if (duplicate) {
-    throw new Error(`cannot combine duplicate ${label}: ${duplicate}`)
-  }
-}
-
-function comparableConfig(config) {
-  const ignored = new Set([
-    '$schema',
-    'allowConsoleColors',
-    'clearTextReporter',
-    'dashboard',
-    'eventReporter',
-    'fileLogLevel',
-    'force',
-    'htmlReporter',
-    'incremental',
-    'incrementalFile',
-    'jsonReporter',
-    'logLevel',
-    'reporters',
-    'tempDirName',
-    'warnings'
-  ])
-  return Object.fromEntries(
-    Object.entries(config).filter(([key]) => !ignored.has(key))
-  )
 }
 
 async function renderHtml(report) {

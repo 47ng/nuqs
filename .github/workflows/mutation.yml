@@ -43,6 +43,10 @@ jobs:
             'packages/nuqs/src' \
             'packages/nuqs/tests' \
             'packages/nuqs/scripts/mutation.mjs' \
+            'packages/nuqs/scripts/mutation-projects.mjs' \
+            'packages/nuqs/scripts/mutation-projects.node-test.mjs' \
+            'packages/nuqs/scripts/mutation-report.mjs' \
+            'packages/nuqs/scripts/mutation-report.node-test.mjs' \
             'packages/nuqs/stryker.browser.config.mjs' \
             'packages/nuqs/stryker.node.config.mjs' \
             'packages/nuqs/stryker.shared.config.mjs' \
@@ -113,9 +117,8 @@ jobs:
             package.json \
             packages/nuqs/package.json \
             packages/nuqs/scripts/mutation.mjs \
-            packages/nuqs/stryker.browser.config.mjs \
-            packages/nuqs/stryker.node.config.mjs \
-            packages/nuqs/stryker.shared.config.mjs \
+            packages/nuqs/scripts/mutation-projects.mjs \
+            packages/nuqs/scripts/mutation-report.mjs \
             packages/nuqs/vitest.browser.mutation.config.ts \
             packages/nuqs/vitest.config.ts \
             packages/nuqs/vitest.mutation.config.ts \
@@ -146,9 +149,8 @@ jobs:
             package.json \
             packages/nuqs/package.json \
             packages/nuqs/scripts/mutation.mjs \
-            packages/nuqs/stryker.browser.config.mjs \
-            packages/nuqs/stryker.node.config.mjs \
-            packages/nuqs/stryker.shared.config.mjs \
+            packages/nuqs/scripts/mutation-projects.mjs \
+            packages/nuqs/scripts/mutation-report.mjs \
             packages/nuqs/vitest.browser.mutation.config.ts \
             packages/nuqs/vitest.config.ts \
             packages/nuqs/vitest.mutation.config.ts \
