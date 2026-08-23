@@ -5,7 +5,8 @@ import {
   historyUpdateMarker,
   markPendingPush,
   patchHistory,
-  type SearchParamsSyncEmitterEvents
+  type SearchParamsSyncEmitterEvents,
+  updatePendingPushUrl
 } from './patch-history'
 
 const pushState = vi.spyOn(history, 'pushState')
@@ -170,6 +171,46 @@ describe('patchHistory: pending push', () => {
       '?b=1'
     )
     expect(history.state).toEqual({ usr: null, key: 'router', idx: 4 })
+    expect(hasPendingPush()).toBe(false)
+  })
+
+  it('keeps a shallow replacement when the router commits the pending push', () => {
+    history.replaceState({ idx: 0 }, historyUpdateMarker, '?a=1')
+    optimisticPush('?a=1')
+    updatePendingPushUrl(new URL('?a=1&shallow=pass', location.href))
+    history.replaceState(
+      history.state,
+      historyUpdateMarker,
+      '?a=1&shallow=pass'
+    )
+    replaceState.mockClear()
+    routerPush('?a=1')
+    expect(replaceState).toHaveBeenCalledExactlyOnceWith(
+      { idx: 1 },
+      '',
+      new URL('?a=1&shallow=pass', location.href)
+    )
+    expect(pushState).not.toHaveBeenCalled()
+  })
+
+  it('does not retarget a pending push from a shallow replace after Back', async () => {
+    history.replaceState({ idx: 0 }, historyUpdateMarker, '?a=1')
+    optimisticPush('?a=1')
+    await traverse(() => history.back())
+    updatePendingPushUrl(new URL('?a=1&shallow=pass', location.href))
+    history.replaceState(
+      history.state,
+      historyUpdateMarker,
+      '?a=1&shallow=pass'
+    )
+    await traverse(() => history.forward())
+    expect(history.state).toEqual({ idx: 1 })
+    expect(hasPendingPush()).toBe(false)
+  })
+
+  it('clears the pending push on a router replace', () => {
+    markPendingPush(new URL('?a=1', location.href))
+    routerReplace('?a=1')
     expect(hasPendingPush()).toBe(false)
   })
 })

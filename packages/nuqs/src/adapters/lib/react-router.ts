@@ -10,7 +10,8 @@ import {
   hasPendingPush,
   historyUpdateMarker,
   markPendingPush,
-  patchHistory as applyHistoryPatch
+  patchHistory as applyHistoryPatch,
+  updatePendingPushUrl
 } from './patch-history'
 
 // Abstract away the types for the useNavigate hook from react-router-based frameworks
@@ -78,6 +79,9 @@ export function createReactRouterBasedAdapter({
             ? history.pushState
             : history.replaceState
         setQueueResetMutex(options.shallow ? 1 : 2)
+        if (!isDeep && options.history !== 'push') {
+          updatePendingPushUrl(url)
+        }
         const historyState = commitsAsPush
           ? markPendingPush(url)
           : history.state
