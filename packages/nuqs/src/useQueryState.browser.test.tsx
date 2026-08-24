@@ -1,16 +1,28 @@
-import React, { useState } from 'react'
-import { describe, expect, it, vi } from 'vitest'
-import { render, renderHook } from 'vitest-browser-react'
+import React, {
+  startTransition,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useState
+} from 'react'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { cleanup, render, renderHook } from 'vitest-browser-react'
 import { page, userEvent } from 'vitest/browser'
 import {
   NullDetector,
   useFakeLoadingState
 } from '../tests/components/repro-1099'
 import {
+  unstable_createAdapterProvider,
+  type unstable_AdapterInterface
+} from './adapters/custom'
+import { NuqsAdapter as ReactAdapter } from './adapters/react'
+import {
   withNuqsTestingAdapter,
   type OnUrlUpdateFunction
 } from './adapters/testing'
 import { debounce, throttle } from './lib/queues/rate-limiting'
+import { resetQueues } from './lib/queues/reset'
 import {
   parseAsArrayOf,
   parseAsInteger,
@@ -588,4 +600,184 @@ describe('useQueryState: multi-parsers', () => {
     expect(onUrlUpdate).toHaveBeenCalledOnce()
     expect(onUrlUpdate.mock.calls[0]![0].queryString).toEqual('?test=')
   })
+})
+
+// --- SyncLane / transition-lane leak ----------------------------------------
+
+/**
+ * A URL write made inside `startTransition` lands on a transition lane, but a
+ * discrete event dispatched before that transition commits forces a SyncLane
+ * render, which skips that lane. nuqs hands the sync render the pending value
+ * anyway (it mutates `stateRef.current` outside the render that consumes it,
+ * then the "lag-sync" line feeds it back in), so the sync render sees 'B' while
+ * the component state still holds null. A layout effect that dispatches off
+ * that value then re-renders into the same sync commit, and the two values
+ * alternate instead of settling.
+ *
+ * The sandwich is deterministic, not raced:
+ *   1. `startTransition(() => setTime('B'))` — throttle(0) keeps the queue
+ *      flush synchronous, so nuqs's own commit happens inside the transition.
+ *   2. a click dispatched synchronously right after — discrete, so React
+ *      flushes it before the transition commits.
+ *   3. the probe records the value each render was handed.
+ *
+ * Both adapters are exercised: `lagging` models react-router (searchParams is
+ * React state written inside startTransition), `react` is the shipped adapter
+ * (searchParams comes from useSyncExternalStore, so it is lane-independent).
+ */
+
+// A react-router-shaped adapter, faithful to src/adapters/lib/react-router.ts:
+// both the emitter handler and the URL write are wrapped in startTransition.
+type Listener = (search: URLSearchParams) => void
+const listeners = new Set<Listener>()
+
+function useLaggingAdapter(): unstable_AdapterInterface {
+  const [searchParams, setSearchParams] = useState(
+    () => new URLSearchParams(location.search)
+  )
+  useEffect(() => {
+    const onUpdate: Listener = search => {
+      startTransition(() => setSearchParams(new URLSearchParams(search)))
+    }
+    listeners.add(onUpdate)
+    return () => void listeners.delete(onUpdate)
+  }, [])
+  const updateUrl = useCallback((search: URLSearchParams) => {
+    startTransition(() => listeners.forEach(l => l(search)))
+    const url = new URL(location.href)
+    url.search = search.toString()
+    history.replaceState(history.state, '', url)
+  }, [])
+  return { searchParams, updateUrl, autoResetQueueOnUpdate: false }
+}
+
+const adapters = {
+  lagging: unstable_createAdapterProvider(useLaggingAdapter),
+  react: ReactAdapter
+}
+
+/** Stops a genuine runaway from hanging the browser, so the test can report. */
+const RENDER_LIMIT = 60
+
+function Probe({
+  renders,
+  wrapped
+}: {
+  renders: Array<string | null>
+  wrapped: boolean
+}) {
+  const [time, setTime] = useQueryState(
+    'time',
+    // throttle(0) keeps the queue flush synchronous, so nuqs's own commit
+    // happens inside the transition rather than after it.
+    parseAsString.withOptions({ limitUrlUpdates: throttle(0) })
+  )
+  const [, setMeasured] = useState<string | null>(null)
+  // The tick lives in this component on purpose: a discrete click on a sibling
+  // marks only the sibling's fiber, and this component would never re-render.
+  const [, setTick] = useState(0)
+  renders.push(time)
+  // Virtuoso-ish: measure during the commit and dispatch synchronously.
+  // Convergent on its own — React bails out (Object.is) once `time` holds
+  // still, so an unbounded render count means the value alternated.
+  useLayoutEffect(() => {
+    if (renders.length < RENDER_LIMIT) {
+      setMeasured(time)
+    }
+  }, [time])
+  return (
+    <>
+      <button
+        data-testid="write"
+        onClick={() => {
+          if (wrapped) {
+            startTransition(() => {
+              setTime('B')
+            })
+          } else {
+            setTime('B')
+          }
+        }}
+      >
+        write
+      </button>
+      <button data-testid="tick" onClick={() => setTick(t => t + 1)}>
+        {String(time)}
+      </button>
+    </>
+  )
+}
+
+const sleep = (ms: number) => new Promise<void>(r => setTimeout(r, ms))
+
+/** Compresses the renders to the sequence of distinct values, in order. */
+function distinctValues(renders: Array<string | null>) {
+  return renders.filter((v, i, a) => i === 0 || !Object.is(v, a[i - 1]))
+}
+
+describe('useQueryState: SyncLane / transition-lane leak', () => {
+  // nuqs's queues and the adapter emitter are module-level singletons, and the
+  // react adapter writes to the real URL, so both need explicit teardown.
+  // Only drop our own key: the vitest runner keeps its sessionId/iframeId in
+  // this same URL, and clearing the whole search string breaks the run.
+  beforeEach(clearTimeParam)
+  afterEach(clearTimeParam)
+
+  function clearTimeParam() {
+    cleanup()
+    listeners.clear()
+    resetQueues()
+    const url = new URL(location.href)
+    url.searchParams.delete('time')
+    history.replaceState(history.state, '', url)
+  }
+
+  async function mount(adapter: keyof typeof adapters, wrapped: boolean) {
+    const Adapter = adapters[adapter]
+    const renders: Array<string | null> = []
+    await render(
+      <Adapter>
+        <Probe renders={renders} wrapped={wrapped} />
+      </Adapter>
+    )
+    await sleep(50)
+    // Keep the last mount render as the baseline, so the value sequence shows
+    // the move out of the pre-write value rather than starting after it.
+    renders.splice(0, renders.length - 1)
+    // Dispatched directly rather than through userEvent, which awaits between
+    // clicks and would let the transition commit before the tick lands.
+    const click = (testId: string) => () =>
+      page
+        .getByTestId(testId)
+        .element()
+        .dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    return { renders, write: click('write'), tick: click('tick') }
+  }
+
+  for (const adapter of ['lagging', 'react'] as const) {
+    it(`converges when a sync render interrupts a transition (${adapter} adapter)`, async () => {
+      const probe = await mount(adapter, true)
+      probe.write() // click handler starts the transition, as an app would
+      probe.tick() // discrete click -> SyncLane, before the transition commits
+      await sleep(300)
+
+      // The URL moved once, so the rendered value must move once: null -> 'B'.
+      expect(distinctValues(probe.renders)).toEqual([null, 'B'])
+      expect(probe.renders.length).toBeLessThan(12)
+    })
+
+    // Control. The write is discrete here (it happens in a click handler), so
+    // nuqs's setInternalState commits at the end of that click, before the tick
+    // renders — there is no pending lane for a sync render to skip. Renders go
+    // [null, 'B', 'B'] rather than alternating.
+    it(`converges when a sync render interrupts a plain update (${adapter} adapter)`, async () => {
+      const probe = await mount(adapter, false)
+      probe.write()
+      probe.tick()
+      await sleep(300)
+
+      expect(distinctValues(probe.renders)).toEqual([null, 'B'])
+      expect(probe.renders.length).toBeLessThan(12)
+    })
+  }
 })
