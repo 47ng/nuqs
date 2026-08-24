@@ -1,17 +1,31 @@
 import { Repro1563 } from 'e2e-shared/specs/react-router/repro-1563'
 import { loadDelay } from 'e2e-shared/specs/react-router/repro-1563.defs'
-import { useNavigationType, type LoaderFunctionArgs } from 'react-router-dom'
+import {
+  type LoaderFunctionArgs,
+  useLoaderData,
+  useNavigation,
+  useNavigationType
+} from 'react-router-dom'
 
 const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
+let loaderCall = 0
 
 export async function loader({ request }: LoaderFunctionArgs) {
+  const call = ++loaderCall
   const { delay } = loadDelay(request)
   if (delay) {
     await wait(delay)
   }
-  return null
+  return call
 }
 
 export default function Page() {
-  return <Repro1563 useNavigationType={useNavigationType} />
+  const loaderCall = useLoaderData() as Awaited<ReturnType<typeof loader>>
+  return (
+    <Repro1563
+      loaderCall={loaderCall}
+      useNavigation={useNavigation}
+      useNavigationType={useNavigationType}
+    />
+  )
 }

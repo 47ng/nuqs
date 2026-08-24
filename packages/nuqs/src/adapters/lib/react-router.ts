@@ -10,8 +10,9 @@ import {
   hasPendingPush,
   historyUpdateMarker,
   markPendingPush,
+  markPendingReplace,
   patchHistory as applyHistoryPatch,
-  updatePendingPushUrl
+  updatePendingNavigationUrl
 } from './patch-history'
 
 // Abstract away the types for the useNavigate hook from react-router-based frameworks
@@ -67,20 +68,28 @@ export function createReactRouterBasedAdapter({
         // First, update the URL locally without triggering a network request,
         // this allows keeping a reactive URL if the network is slow.
         //
-        // A deep push marks its optimistic entry pending until the router
-        // commits it. Until then, further deep updates take that entry over
-        // instead of stacking on it, and they commit as a push (#1563).
+        // While a deep push is pending, later writes must target the same top
+        // entry: shallow pushes fold as replaces and deep replaces keep push
+        // semantics. Otherwise the router commit would overwrite an entry
+        // stacked above its optimistic entry (#1563).
         const isDeep = options.shallow === false
         const takesOverPendingPush = isDeep && hasPendingPush()
+        const coalescesIntoPendingPush = !isDeep && hasPendingPush()
         const commitsAsPush =
           isDeep && (options.history === 'push' || takesOverPendingPush)
+        const navigates = isDeep
         const updateMethod =
-          options.history === 'push' && !takesOverPendingPush
+          options.history === 'push' &&
+          !takesOverPendingPush &&
+          !coalescesIntoPendingPush
             ? history.pushState
             : history.replaceState
-        setQueueResetMutex(options.shallow ? 1 : 2)
-        if (!isDeep && options.history !== 'push') {
-          updatePendingPushUrl(url)
+        setQueueResetMutex(navigates ? 2 : 1)
+        // Standalone shallow pushes bypass the router to avoid running loaders.
+        // They cannot advance its private index, so the first blocked traversal
+        // may compute a delta of zero.
+        if (!isDeep) {
+          updatePendingNavigationUrl(url)
         }
         const historyState = commitsAsPush
           ? markPendingPush(url)
@@ -92,7 +101,10 @@ export function createReactRouterBasedAdapter({
           url
         )
         let navigationSettled: Promise<void> | undefined
-        if (isDeep) {
+        if (navigates) {
+          if (!commitsAsPush) {
+            markPendingReplace(url)
+          }
           const maybePromise = navigate(
             {
               // Somehow passing the full URL object here strips the search params

@@ -1,7 +1,11 @@
-import { expect, test as it } from '@playwright/test'
+import { expect, test as it, type Page } from '@playwright/test'
 import { defineTest } from '../../define-test'
 import { readHistoryIndex } from '../../playwright/history'
 import { navigateTo } from '../../playwright/navigate'
+
+async function readLoaderCall(page: Page): Promise<number> {
+  return Number(await page.locator('#loader-call').textContent())
+}
 
 export const testRepro1563 = defineTest('repro-1563', ({ path }) => {
   it('advances the router history index on push with shallow: false', async ({
@@ -18,6 +22,19 @@ export const testRepro1563 = defineTest('repro-1563', ({ path }) => {
     await expect(page.locator('#state')).toHaveText('init')
     expect(await readHistoryIndex(page)).toBe(initialIndex)
   })
+
+  for (const history of ['replace', 'push'] as const) {
+    it(`does not run loaders for shallow ${history}`, async ({ page }) => {
+      await navigateTo(page, path, '?test=init')
+      const loaderCall = await page.locator('#loader-call').textContent()
+
+      await page.locator(`#shallow-${history}`).click()
+      await expect(page).toHaveURL(
+        url => url.searchParams.get('shallow') === 'pass'
+      )
+      await expect(page.locator('#loader-call')).toHaveText(loaderCall ?? '')
+    })
+  }
 
   it('lets a deep replace take over a pending deep push', async ({ page }) => {
     await navigateTo(page, path, '?test=init&delay=1000')
@@ -41,6 +58,7 @@ export const testRepro1563 = defineTest('repro-1563', ({ path }) => {
   }) => {
     await navigateTo(page, path, '?test=init&delay=1000')
     const initialIndex = await readHistoryIndex(page)
+    const initialLoaderCall = await readLoaderCall(page)
     await page.locator('#push-then-shallow-replace').click()
     await expect(page).toHaveURL(
       url =>
@@ -57,8 +75,116 @@ export const testRepro1563 = defineTest('repro-1563', ({ path }) => {
     await expect(page.locator('#state')).toHaveText('pass')
     await expect(page.locator('#shallow-state')).toHaveText('pass')
     await expect(page.locator('#navigation-type')).toHaveText('PUSH')
+    expect(await readLoaderCall(page)).toBe(initialLoaderCall + 1)
     await page.goBack()
     await expect(page.locator('#state')).toHaveText('init')
+    expect(await readHistoryIndex(page)).toBe(initialIndex)
+  })
+
+  it('keeps a shallow replace made while a deep replace is pending', async ({
+    page
+  }) => {
+    await navigateTo(page, path, '?test=init&delay=1000')
+    const initialIndex = await readHistoryIndex(page)
+    const initialLoaderCall = await readLoaderCall(page)
+    await page.locator('#deep-replace').click()
+    await expect(page.locator('#navigation-state')).toHaveText('loading')
+    await page.locator('#shallow-replace').click()
+    await expect(page).toHaveURL(
+      url =>
+        url.searchParams.get('test') === 'pass' &&
+        url.searchParams.get('shallow') === 'pass'
+    )
+    await expect(page.locator('#navigation-state')).toHaveText('idle')
+    await expect(page).toHaveURL(
+      url =>
+        url.searchParams.get('test') === 'pass' &&
+        url.searchParams.get('shallow') === 'pass'
+    )
+    expect(await readHistoryIndex(page)).toBe(initialIndex)
+    expect(await readLoaderCall(page)).toBe(initialLoaderCall + 1)
+  })
+
+  it('keeps a shallow push made while a deep push is pending', async ({
+    page
+  }) => {
+    await navigateTo(page, path, '?test=init&delay=1000')
+    const initialIndex = await readHistoryIndex(page)
+    const initialLoaderCall = await readLoaderCall(page)
+    await page.locator('#push').click()
+    await expect(page.locator('#navigation-state')).toHaveText('loading')
+    await page.locator('#shallow-push').click()
+    await expect(page).toHaveURL(
+      url =>
+        url.searchParams.get('test') === 'pass' &&
+        url.searchParams.get('shallow') === 'pass'
+    )
+    await expect(page.locator('#navigation-state')).toHaveText('idle')
+    await expect(page).toHaveURL(
+      url =>
+        url.searchParams.get('test') === 'pass' &&
+        url.searchParams.get('shallow') === 'pass'
+    )
+    expect(await readHistoryIndex(page)).toBe(initialIndex + 1)
+    expect(await readLoaderCall(page)).toBe(initialLoaderCall + 1)
+    await page.goBack()
+    await expect(page.locator('#state')).toHaveText('init')
+    expect(await readHistoryIndex(page)).toBe(initialIndex)
+  })
+
+  it('keeps a shallow push made while a deep replace is pending', async ({
+    page
+  }) => {
+    await navigateTo(page, path, '?test=init&delay=1000')
+    const initialLoaderCall = await readLoaderCall(page)
+    const initialHistoryLength = await page.evaluate(() => history.length)
+    await page.locator('#deep-replace').click()
+    await expect(page.locator('#navigation-state')).toHaveText('loading')
+    await page.locator('#shallow-push').click()
+    await expect(page).toHaveURL(
+      url =>
+        url.searchParams.get('test') === 'pass' &&
+        url.searchParams.get('shallow') === 'pass'
+    )
+    await expect(page.locator('#navigation-state')).toHaveText('idle')
+    await expect(page).toHaveURL(
+      url =>
+        url.searchParams.get('test') === 'pass' &&
+        url.searchParams.get('shallow') === 'pass'
+    )
+    expect(await readLoaderCall(page)).toBe(initialLoaderCall + 1)
+    expect(await page.evaluate(() => history.length)).toBe(
+      initialHistoryLength + 1
+    )
+  })
+
+  it('does not let a pending deep replace mutate history after Back', async ({
+    page
+  }) => {
+    await navigateTo(page, path, '?test=init&delay=1000')
+    const initialIndex = await readHistoryIndex(page)
+    await page.locator('#deep-replace').click()
+    await expect(page.locator('#navigation-state')).toHaveText('loading')
+    await page.locator('#shallow-push').click()
+    await expect(page).toHaveURL(
+      url =>
+        url.searchParams.get('test') === 'pass' &&
+        url.searchParams.get('shallow') === 'pass'
+    )
+    await page.goBack()
+    await expect(page.locator('#navigation-state')).toHaveText('idle')
+    await expect(page).toHaveURL(
+      url =>
+        url.searchParams.get('test') === 'pass' &&
+        !url.searchParams.has('shallow')
+    )
+    expect(await readHistoryIndex(page)).toBe(initialIndex)
+    await page.waitForTimeout(1100)
+    await expect(page).toHaveURL(
+      url =>
+        url.searchParams.get('test') === 'pass' &&
+        !url.searchParams.has('shallow')
+    )
     expect(await readHistoryIndex(page)).toBe(initialIndex)
   })
 

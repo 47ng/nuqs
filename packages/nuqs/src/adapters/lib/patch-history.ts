@@ -22,62 +22,85 @@ type PendingPushState = {
   [historyUpdateMarker]: number
 }
 
-type PendingPush = {
+type PendingNavigationBase = {
   href: string
-  id: number
   currentHref: string
   routerIndex: number | undefined
   poppedSince: boolean
 }
 
-const pendingPush = globalSingleton('pending-navigation', () => ({
-  current: null as PendingPush | null,
+type PendingNavigation = PendingNavigationBase &
+  ({ history: 'push'; id: number } | { history: 'replace' })
+
+const pendingNavigation = globalSingleton('pending-navigation', () => ({
+  current: null as PendingNavigation | null,
   // Identifies the exact optimistic entry that belongs to a pending push.
   nextId: 0
 }))
 
 export function markPendingPush(url: URL): PendingPushState {
-  const id = ++pendingPush.nextId
-  pendingPush.current = {
+  const id = ++pendingNavigation.nextId
+  pendingNavigation.current = {
+    history: 'push',
     href: url.href,
-    id,
     currentHref: url.href,
+    id,
     routerIndex: history.state?.idx,
     poppedSince: false
   }
   return { ...history.state, [historyUpdateMarker]: id }
 }
 
-function isOnPendingPushEntry(pending: PendingPush): boolean {
+export function markPendingReplace(url: URL): void {
+  pendingNavigation.current = {
+    history: 'replace',
+    href: url.href,
+    currentHref: url.href,
+    routerIndex: history.state?.idx,
+    poppedSince: false
+  }
+}
+
+function isOnPendingPushEntry(
+  pending: PendingNavigation & { history: 'push' }
+): boolean {
   return history.state?.[historyUpdateMarker] === pending.id
 }
 
-export function updatePendingPushUrl(url: URL): void {
-  const pending = pendingPush.current
+export function updatePendingNavigationUrl(url: URL): void {
+  const pending = pendingNavigation.current
   if (
     pending &&
     location.href === pending.currentHref &&
-    isOnPendingPushEntry(pending)
+    (pending.history === 'replace' || isOnPendingPushEntry(pending))
   ) {
     pending.currentHref = url.href
   }
 }
 
 export function hasPendingPush(): boolean {
-  const pending = pendingPush.current
-  return pending !== null && !pending.poppedSince
+  const pending = pendingNavigation.current
+  return pending?.history === 'push' && !pending.poppedSince
 }
 
-function clearPendingPush(): void {
-  pendingPush.current = null
+export function hasPendingReplace(): boolean {
+  return pendingNavigation.current?.history === 'replace'
+}
+
+function clearPendingNavigation(): void {
+  pendingNavigation.current = null
 }
 
 // Traversing forward onto an entry the router never committed leaves it
 // with the index nuqs cloned from its predecessor. Repair it before
 // the router reads it, so traversal deltas stay right (#1563).
-function repairOrNotePopOnPendingPush(): void {
-  const pending = pendingPush.current
+function handlePopOnPendingNavigation(): void {
+  const pending = pendingNavigation.current
   if (!pending) {
+    return
+  }
+  if (pending.history === 'replace') {
+    clearPendingNavigation()
     return
   }
   if (
@@ -90,15 +113,20 @@ function repairOrNotePopOnPendingPush(): void {
       { ...state, idx: pending.routerIndex + 1 },
       historyUpdateMarker
     )
-    pendingPush.current = null
+    pendingNavigation.current = null
     return
   }
   pending.poppedSince = true
 }
 
 function pendingPushCommitUrl(url: string | URL): string | URL | null {
-  const pending = pendingPush.current
-  if (!pending || pending.poppedSince || !isOnPendingPushEntry(pending)) {
+  const pending = pendingNavigation.current
+  if (
+    !pending ||
+    pending.history !== 'push' ||
+    pending.poppedSince ||
+    !isOnPendingPushEntry(pending)
+  ) {
     return null
   }
   const href = new URL(url, location.href).href
@@ -109,6 +137,16 @@ function pendingPushCommitUrl(url: string | URL): string | URL | null {
   }
   return url
 }
+function pendingReplaceCommit(url: string | URL): string | URL {
+  const pending = pendingNavigation.current
+  if (!pending || pending.history !== 'replace') {
+    return url
+  }
+  const href = new URL(url, location.href).href
+  return href === pending.href && pending.currentHref !== pending.href
+    ? new URL(pending.currentHref)
+    : url
+}
 
 // A router replace has already copied the optimistic entry's index into
 // private state. Repair the persisted entry here; the router catches up on
@@ -116,8 +154,8 @@ function pendingPushCommitUrl(url: string | URL): string | URL | null {
 function repairPendingPushReplaceState(
   state: History['state']
 ): History['state'] {
-  const pending = pendingPush.current
-  return pending &&
+  const pending = pendingNavigation.current
+  return pending?.history === 'push' &&
     !pending.poppedSince &&
     isOnPendingPushEntry(pending) &&
     typeof pending.routerIndex === 'number' &&
@@ -175,7 +213,7 @@ export function patchHistory(
     'popstate',
     () => {
       lastSearchSeen = location.search
-      repairOrNotePopOnPendingPush()
+      handlePopOnPendingNavigation()
       resetQueues()
     },
     { capture: true }
@@ -207,19 +245,20 @@ export function patchHistory(
     // a second entry (#1563).
     const commitUrl = pendingPushCommitUrl(url)
     const commit = commitUrl ? originalReplaceState : originalPushState
-    clearPendingPush()
+    clearPendingNavigation()
     commit.call(history, state, '', commitUrl ?? url)
     sync(commitUrl ?? url)
   }
   history.replaceState = function nuqs_replaceState(state, marker, url) {
-    const commitState =
-      url && marker !== historyUpdateMarker
-        ? repairPendingPushReplaceState(state)
-        : state
-    originalReplaceState.call(history, commitState, '', url)
+    const isRouterCommit = url && marker !== historyUpdateMarker
+    const commitUrl = isRouterCommit ? pendingReplaceCommit(url) : url
+    const commitState = isRouterCommit
+      ? repairPendingPushReplaceState(state)
+      : state
+    originalReplaceState.call(history, commitState, '', commitUrl)
     if (url && marker !== historyUpdateMarker) {
-      clearPendingPush()
-      sync(url)
+      clearPendingNavigation()
+      sync(commitUrl ?? url)
     }
   }
   markHistoryAsPatched(adapter)
