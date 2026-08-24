@@ -1,5 +1,8 @@
 import { Repro1563 } from 'e2e-shared/specs/react-router/repro-1563'
-import { loadDelay } from 'e2e-shared/specs/react-router/repro-1563.defs'
+import {
+  countLoaderCall,
+  loadDelay
+} from 'e2e-shared/specs/react-router/repro-1563.defs'
 import {
   type LoaderFunctionArgs,
   useLoaderData,
@@ -8,10 +11,9 @@ import {
 } from 'react-router-dom'
 
 const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
-let loaderCall = 0
 
 export async function loader({ request }: LoaderFunctionArgs) {
-  const call = ++loaderCall
+  const call = countLoaderCall(request)
   const { delay } = loadDelay(request)
   if (delay) {
     await wait(delay)

@@ -25,10 +25,6 @@ export function Repro1563({
     setState('pass')
     setOther('pass', { limitUrlUpdates: debounce(100) })
   }
-  const pushThenShallowReplace = () => {
-    setState('pass')
-    setShallow('pass', { limitUrlUpdates: debounce(100) })
-  }
 
   return (
     <>
@@ -37,9 +33,6 @@ export function Repro1563({
       </button>
       <button id="push-then-replace" onClick={pushThenReplace}>
         Push then replace
-      </button>
-      <button id="push-then-shallow-replace" onClick={pushThenShallowReplace}>
-        Push then shallow replace
       </button>
       <button
         id="deep-replace"
