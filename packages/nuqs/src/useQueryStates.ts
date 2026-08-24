@@ -1,12 +1,4 @@
-import {
-  useCallback,
-  useEffect,
-  useId,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-  useState
-} from 'react'
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react'
 import {
   useAdapter,
   useAdapterDefaultOptions,
@@ -171,13 +163,9 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
   const [internalState, setInternalState] = useState<V>(initial[0])
 
   const stateRef = useRef(internalState)
-  // Recovery may run during a higher-priority render that intentionally skips a
-  // pending state update. Only expose state that either came from the URL or
-  // reached the commit phase; speculative updater state must keep its lane.
-  const recoveryStateRef = useRef(internalState)
-  useLayoutEffect(() => {
-    recoveryStateRef.current = internalState
-  }, [internalState])
+  // Only URL-derived state is safe to recover across React lanes. Optimistic
+  // state stays in React's update queue until its own lane renders it.
+  const urlStateRef = useRef(internalState)
 
   // Identifies the current URL source (resolved search params + queued queries).
   // Mirrors the dependencies of the URL sync effect below so that render-time
@@ -203,7 +191,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
     if (hasChanged) {
       debug(1, hookId, stateKeys, state)
       stateRef.current = state
-      recoveryStateRef.current = state
+      urlStateRef.current = state
       setInternalState(state)
     }
     return hasChanged
@@ -249,12 +237,10 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
     if (
       !didReconcileState &&
       internalState !== stateRef.current &&
-      stateRef.current === recoveryStateRef.current
+      stateRef.current === urlStateRef.current
     ) {
-      // Recover state from an abandoned URL reconciliation or from a concurrent
-      // rebase after the optimistic value has already committed. If the latest
-      // state has not committed yet, it belongs to a pending React lane and must
-      // not be restored into this render.
+      // Recover URL-derived state from a render React abandoned. Optimistic
+      // state is excluded above because React must preserve its update lane.
       if (
         onCommittedPathname ||
         (adapter.pathname === undefined &&
