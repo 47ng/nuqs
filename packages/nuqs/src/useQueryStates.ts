@@ -1,4 +1,12 @@
-import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react'
+import {
+  useCallback,
+  useEffect,
+  useId,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState
+} from 'react'
 import {
   useAdapter,
   useAdapterDefaultOptions,
@@ -163,6 +171,13 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
   const [internalState, setInternalState] = useState<V>(initial[0])
 
   const stateRef = useRef(internalState)
+  // Recovery may run during a higher-priority render that intentionally skips a
+  // pending state update. Only expose state that either came from the URL or
+  // reached the commit phase; speculative updater state must keep its lane.
+  const recoveryStateRef = useRef(internalState)
+  useLayoutEffect(() => {
+    recoveryStateRef.current = internalState
+  }, [internalState])
 
   // Identifies the current URL source (resolved search params + queued queries).
   // Mirrors the dependencies of the URL sync effect below so that render-time
@@ -188,6 +203,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
     if (hasChanged) {
       debug(1, hookId, stateKeys, state)
       stateRef.current = state
+      recoveryStateRef.current = state
       setInternalState(state)
     }
     return hasChanged
@@ -230,9 +246,15 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
       lastSyncKeyRef.current = searchParamsSyncKey
       didReconcileState = reconcile()
     }
-    if (!didReconcileState && internalState !== stateRef.current) {
-      // Recover a render-phase state update lost with an abandoned render or a
-      // concurrent rebase whose URL source is already reflected in the cache.
+    if (
+      !didReconcileState &&
+      internalState !== stateRef.current &&
+      stateRef.current === recoveryStateRef.current
+    ) {
+      // Recover state from an abandoned URL reconciliation or from a concurrent
+      // rebase after the optimistic value has already committed. If the latest
+      // state has not committed yet, it belongs to a pending React lane and must
+      // not be restored into this render.
       if (
         onCommittedPathname ||
         (adapter.pathname === undefined &&
