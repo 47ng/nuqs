@@ -62,13 +62,12 @@ describe('patchHistory: pending push', () => {
     expect(pushState).not.toHaveBeenCalled()
   })
 
-  it('still folds the commit after a pop restored the pending entry', () => {
+  it('pushes a same-URL router commit after a pop left the pending entry', () => {
     markPendingPush(new URL('?a=1', location.href))
     window.dispatchEvent(new PopStateEvent('popstate'))
-    window.dispatchEvent(new PopStateEvent('popstate'))
     routerPush('?a=1')
-    expect(replaceState).toHaveBeenCalledExactlyOnceWith({ idx: 1 }, '', '?a=1')
-    expect(pushState).not.toHaveBeenCalled()
+    expect(pushState).toHaveBeenCalledExactlyOnceWith({ idx: 1 }, '', '?a=1')
+    expect(replaceState).not.toHaveBeenCalled()
   })
 
   it('pushes an unrelated commit after a pop left the pending entry', () => {
@@ -77,6 +76,12 @@ describe('patchHistory: pending push', () => {
     routerPush('?b=1')
     expect(pushState).toHaveBeenCalledExactlyOnceWith({ idx: 1 }, '', '?b=1')
     expect(replaceState).not.toHaveBeenCalled()
+    expect(hasPendingPush()).toBe(false)
+  })
+
+  it('stops reporting a pending push after a pop left its entry', () => {
+    markPendingPush(new URL('?a=1', location.href))
+    window.dispatchEvent(new PopStateEvent('popstate'))
     expect(hasPendingPush()).toBe(false)
   })
 

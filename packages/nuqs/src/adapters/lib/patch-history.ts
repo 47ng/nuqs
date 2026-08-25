@@ -37,7 +37,8 @@ export function markPendingPush(url: URL): void {
 }
 
 export function hasPendingPush(): boolean {
-  return pendingPush.current !== null
+  const pending = pendingPush.current
+  return pending !== null && !pending.poppedSince
 }
 
 function clearPendingPush(): void {
@@ -64,15 +65,6 @@ function repairOrNotePopOnPendingPush(): void {
     return
   }
   pending.poppedSince = true
-}
-
-function commitTakesOverPendingPush(url: string | URL): boolean {
-  const pending = pendingPush.current
-  if (!pending) {
-    return false
-  }
-  const href = new URL(url, location.href).href
-  return href === pending.href || !pending.poppedSince
 }
 
 declare global {
@@ -154,9 +146,7 @@ export function patchHistory(
     }
     // The router committing an optimistic deep push must not add
     // a second entry (#1563).
-    const commit = commitTakesOverPendingPush(url)
-      ? originalReplaceState
-      : originalPushState
+    const commit = hasPendingPush() ? originalReplaceState : originalPushState
     clearPendingPush()
     commit.call(history, state, '', url)
     sync(url)
