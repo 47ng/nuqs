@@ -10,15 +10,10 @@ export function LanePriority() {
   const [, setMeasured] = useState<string | null>(null)
   const [, setTick] = useState(0)
   const renderCount = useRef(0)
-  const renderedValues = useRef<Array<string | null>>([])
-
-  renderCount.current++
-  const previous = renderedValues.current[renderedValues.current.length - 1]
-  if (!Object.is(previous, value)) {
-    renderedValues.current.push(value)
-  }
+  const renderedValues = useRenderLog(value)
 
   useLayoutEffect(() => {
+    renderCount.current++
     if (renderCount.current < renderLimit) {
       setMeasured(value)
     }
@@ -45,9 +40,21 @@ export function LanePriority() {
       <p>
         Rendered values:{' '}
         <output aria-label="Rendered values">
-          {renderedValues.current.map(String).join(',')}
+          {renderedValues.map(String).join(',')}
         </output>
       </p>
     </main>
   )
+}
+
+function useRenderLog(value: string | null) {
+  'use no memo'
+  // Intentionally records render-phase values, including renders React abandons.
+  // Keep this side effect isolated from the compiled component.
+  const renderedValues = useRef<Array<string | null>>([])
+  const previous = renderedValues.current[renderedValues.current.length - 1]
+  if (!Object.is(previous, value)) {
+    renderedValues.current.push(value)
+  }
+  return [...renderedValues.current]
 }

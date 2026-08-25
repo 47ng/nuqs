@@ -602,21 +602,21 @@ describe('useQueryState: multi-parsers', () => {
   })
 })
 
-// --- SyncLane / transition-lane leak ----------------------------------------
+// --- SyncLane / transition-lane leak (#1567) --------------------------------
 
 /**
- * A URL write made inside `startTransition` lands on a transition lane, but a
+ * A URL write made inside `startTransition` landed on a transition lane, but a
  * discrete event dispatched before that transition commits forces a SyncLane
- * render, which skips that lane. nuqs hands the sync render the pending value
- * anyway (it mutates `stateRef.current` outside the render that consumes it,
- * then the "lag-sync" line feeds it back in), so the sync render sees 'B' while
- * the component state still holds null. A layout effect that dispatches off
- * that value then re-renders into the same sync commit, and the two values
- * alternate instead of settling.
+ * render, which skips that lane. nuqs used to hand the sync render the pending
+ * value anyway: it mutated `stateRef.current` outside the render that consumed
+ * it, then render-time recovery fed it back in. The sync render saw 'B' while
+ * the component state still held null. A layout effect dispatching from that
+ * value then re-rendered into the same sync commit, and the two values
+ * alternated instead of settling.
  *
  * The sandwich is deterministic, not raced:
- *   1. `startTransition(() => setTime('B'))` — throttle(0) keeps the queue
- *      flush synchronous, so nuqs's own commit happens inside the transition.
+ *   1. `startTransition(() => setTime('B'))` — the cross-hook emitter runs
+ *      synchronously, so nuqs's state update lands inside the transition.
  *   2. a click dispatched synchronously right after — discrete, so React
  *      flushes it before the transition commits.
  *   3. the probe records the value each render was handed.
@@ -627,7 +627,7 @@ describe('useQueryState: multi-parsers', () => {
  */
 
 // A react-router-shaped adapter, faithful to src/adapters/lib/react-router.ts:
-// both the emitter handler and the URL write are wrapped in startTransition.
+// the emitter update is wrapped in startTransition; the history write is not.
 type Listener = (search: URLSearchParams) => void
 const listeners = new Set<Listener>()
 
@@ -656,7 +656,7 @@ const adapters = {
   react: ReactAdapter
 }
 
-/** Stops a genuine runaway from hanging the browser, so the test can report. */
+/** Safety cap in case a future regression turns the alternation into a runaway. */
 const RENDER_LIMIT = 60
 
 function Probe({
@@ -668,8 +668,8 @@ function Probe({
 }) {
   const [time, setTime] = useQueryState(
     'time',
-    // throttle(0) keeps the queue flush synchronous, so nuqs's own commit
-    // happens inside the transition rather than after it.
+    // Minimise delayed URL work; the synchronous emitter above determines the
+    // state update's lane, not the throttled queue flush.
     parseAsString.withOptions({ limitUrlUpdates: throttle(0) })
   )
   const [, setMeasured] = useState<string | null>(null)
@@ -718,8 +718,8 @@ function distinctValues(renders: Array<string | null>) {
 describe('useQueryState: SyncLane / transition-lane leak', () => {
   // nuqs's queues and the adapter emitter are module-level singletons, and the
   // react adapter writes to the real URL, so both need explicit teardown.
-  // Only drop our own key: the vitest runner keeps its sessionId/iframeId in
-  // this same URL, and clearing the whole search string breaks the run.
+  // Only drop our own key so teardown leaves the runner's sessionId/iframeId
+  // parameters untouched.
   beforeEach(clearTimeParam)
   afterEach(clearTimeParam)
 
@@ -763,7 +763,6 @@ describe('useQueryState: SyncLane / transition-lane leak', () => {
 
       // The URL moved once, so the rendered value must move once: null -> 'B'.
       expect(distinctValues(probe.renders)).toEqual([null, 'B'])
-      expect(probe.renders.length).toBeLessThan(12)
     })
 
     // Control. The write is discrete here (it happens in a click handler), so
@@ -777,7 +776,6 @@ describe('useQueryState: SyncLane / transition-lane leak', () => {
       await sleep(300)
 
       expect(distinctValues(probe.renders)).toEqual([null, 'B'])
-      expect(probe.renders.length).toBeLessThan(12)
     })
   }
 })

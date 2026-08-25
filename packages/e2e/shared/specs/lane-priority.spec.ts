@@ -12,6 +12,8 @@ export const testLanePriority = defineTest('Lane priority', ({ path }) => {
     await expect(value).toHaveText('null')
     await expect(renderedValues).toHaveText('null')
 
+    // Keep both discrete events in one browser task. Awaiting separate clicks
+    // would let the transition commit before the urgent update can interrupt it.
     await page.evaluate(`
       document.querySelector('[data-testid="write"]').dispatchEvent(
         new MouseEvent('click', { bubbles: true })
