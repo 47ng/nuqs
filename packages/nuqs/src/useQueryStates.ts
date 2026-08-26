@@ -123,13 +123,11 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
       }
       const previousDefault = cachedKeyMap[key]?.defaultValue
       const currentDefault = parser.defaultValue
-      if (Object.is(previousDefault, currentDefault)) {
-        return true
-      }
       return (
-        previousDefault !== undefined &&
-        currentDefault !== undefined &&
-        parser.eq?.(previousDefault, currentDefault)
+        Object.is(previousDefault, currentDefault) ||
+        (previousDefault !== undefined &&
+          currentDefault !== undefined &&
+          parser.eq?.(previousDefault, currentDefault))
       )
     })
       ? cachedKeyMap
@@ -249,17 +247,19 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
   // different: the last reconciled source already matches the live browser
   // search, so restore the state React abandoned even though the pathname moved.
   const discardedSourceMatchesLocation =
-    adapter.pathname === undefined &&
-    committedPathnameRef.current !== null &&
+    !adapter.pathname &&
+    committedPathnameRef.current &&
     lastSyncRef.current[0] !== rawValues &&
     lastSyncRef.current[1] === location.search &&
     committedPathnameRef.current !== location.pathname
   if (
     (discardedSourceMatchesLocation ||
-      ((!detachedRef.current ||
-        committedPathnameRef.current ===
-          (adapter.pathname ?? location.pathname)) &&
-        (lastSyncRef.current[0] === rawValues || !reconcile()))) &&
+      !(
+        (detachedRef.current &&
+          committedPathnameRef.current !==
+            (adapter.pathname ?? location.pathname)) ||
+        (lastSyncRef.current[0] !== rawValues && reconcile())
+      )) &&
     internalState !== stateRef.current &&
     stateRef.current === urlStateRef.current
   ) {
@@ -289,13 +289,11 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
 
   const update = useCallback<SetValues<KeyMap>>(
     (stateUpdater, callOptions = {}) => {
-      const requestedState =
-        typeof stateUpdater === 'function'
-          ? stateUpdater(applyDefaultValues(stateRef.current, stableKeyMap))
-          : stateUpdater
       // `null` (or an updater returning `null`) clears every key of the map.
       const newState: Partial<Nullable<KeyMap>> =
-        requestedState ??
+        (typeof stateUpdater === 'function'
+          ? stateUpdater(applyDefaultValues(stateRef.current, stableKeyMap))
+          : stateUpdater) ??
         (Object.fromEntries(
           Object.keys(stableKeyMap).map(key => [key, null])
         ) as Nullable<KeyMap>)
@@ -317,7 +315,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
           (callOptions.clearOnDefault ??
             parser.clearOnDefault ??
             clearOnDefault) &&
-          value !== null &&
+          value != null &&
           parser.defaultValue !== undefined &&
           (parser.eq ?? isEqual)(value, parser.defaultValue)
         ) {
@@ -331,7 +329,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
         // overlay notification so hooks using the same parser adopt that
         // identity; hooks using another parser still re-parse the raw query.
         const nextValue = value ?? parser.defaultValue ?? null
-        if (value !== null) {
+        if (value != null) {
           parseWithCache(
             urlKey,
             parser.parse,
@@ -487,11 +485,11 @@ function parseMap<KeyMap extends UseQueryStatesKeysMap>(
   keyMap: KeyMap,
   resolvedUrlKeys: Record<string, string>,
   rawValues: Record<string, RawValue>,
-  cachedRawValues?: Record<string, RawValue> | null,
-  cachedState?: NullableValues<KeyMap>
+  cachedRawValues: Record<string, RawValue> = {},
+  cachedState: NullableValues<KeyMap> = {} as NullableValues<KeyMap>
 ): readonly [NullableValues<KeyMap>, boolean] {
   let hasChanged =
-    Object.keys(keyMap).length !== Object.keys(cachedState || {}).length
+    Object.keys(keyMap).length !== Object.keys(cachedState).length
   const state = {} as NullableValues<KeyMap>
   for (const [stateKey, parser] of Object.entries(keyMap)) {
     const urlKey = getOwn(resolvedUrlKeys, stateKey)!
@@ -499,8 +497,8 @@ function parseMap<KeyMap extends UseQueryStatesKeysMap>(
       parser.type === 'multi' ? [] : null
     ]
     const query = rawValue[0]
-    const cachedRawValue = cachedRawValues && getOwn(cachedRawValues, urlKey)
-    const cachedStateValue = cachedState && getOwn(cachedState, stateKey)
+    const cachedRawValue = getOwn(cachedRawValues, urlKey)
+    const cachedStateValue = getOwn(cachedState, stateKey)
     if (
       cachedRawValue &&
       cachedStateValue !== undefined &&
