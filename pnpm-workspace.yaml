@@ -21,7 +21,7 @@ catalogs:
     vite: ^8.1.5
 
   next:
-    next: 16.3.0
+    next: 16.3.3
 
   react-router7:
     react-router: ^7.18.1
