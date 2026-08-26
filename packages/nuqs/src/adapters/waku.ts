@@ -103,6 +103,30 @@ function ignoreNavigationError() {}
 
 const Provider = createAdapterProvider(useNuqsWakuAdapter)
 
+// Waku does not expose pending routes through useRouter(). Its Link starts the
+// asynchronous navigation before the click bubbles to document, giving us a
+// stable boundary where pending nuqs updates can be cancelled first.
+function resetQueuesOnLinkClick(event: MouseEvent) {
+  const isPlainLeftClick =
+    event.button === 0 &&
+    !event.altKey &&
+    !event.ctrlKey &&
+    !event.metaKey &&
+    !event.shiftKey
+  const followsLink = event
+    .composedPath()
+    .some(
+      target =>
+        target instanceof HTMLAnchorElement &&
+        (target.target === '' || target.target === '_self') &&
+        target.download === ''
+    )
+  if (isPlainLeftClick && followsLink) {
+    optimistic = null
+    resetQueues()
+  }
+}
+
 // Tracks committed route changes: settles the optimistic search when one of
 // nuqs' own navigations lands, and resets the update queues when anything else
 // moves the route (Link clicks, back/forward, redirects), so pending updates
@@ -132,8 +156,12 @@ function RouteSpy() {
     resetQueues()
   }, [path, query])
   useEffect(() => {
+    document.addEventListener('click', resetQueuesOnLinkClick)
     window.addEventListener('popstate', resetQueues)
-    return () => window.removeEventListener('popstate', resetQueues)
+    return () => {
+      document.removeEventListener('click', resetQueuesOnLinkClick)
+      window.removeEventListener('popstate', resetQueues)
+    }
   }, [])
   return null
 }
