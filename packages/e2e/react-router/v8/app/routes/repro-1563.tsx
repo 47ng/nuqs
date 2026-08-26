@@ -4,6 +4,7 @@ import {
   loadDelay
 } from 'e2e-shared/specs/react-router/repro-1563.defs'
 import {
+  useNavigate,
   useNavigation,
   useNavigationType,
   useLoaderData,
@@ -26,6 +27,7 @@ export default function Page() {
   return (
     <Repro1563
       loaderCall={loaderCall}
+      useNavigate={useNavigate}
       useNavigation={useNavigation}
       useNavigationType={useNavigationType}
     />

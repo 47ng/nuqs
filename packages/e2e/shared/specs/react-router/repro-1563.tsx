@@ -4,12 +4,17 @@ import { debounce, useQueryState } from 'nuqs'
 
 type Repro1563Props = {
   loaderCall: number
+  useNavigate: () => (
+    to: string,
+    options?: { replace?: boolean }
+  ) => void | Promise<void>
   useNavigation: () => { state: string }
   useNavigationType: () => string
 }
 
 export function Repro1563({
   loaderCall,
+  useNavigate,
   useNavigation,
   useNavigationType
 }: Repro1563Props) {
@@ -19,6 +24,7 @@ export function Repro1563({
   })
   const [, setOther] = useQueryState('other', { shallow: false })
   const [shallow, setShallow] = useQueryState('shallow')
+  const navigate = useNavigate()
   const navigation = useNavigation()
   const navigationType = useNavigationType()
   const pushThenReplace = () => {
@@ -30,6 +36,16 @@ export function Repro1563({
     <>
       <button id="push" onClick={() => setState('pass')}>
         Push
+      </button>
+      <button
+        id="router-replace"
+        onClick={() => {
+          const search = new URLSearchParams(location.search)
+          search.set('redirected', 'pass')
+          navigate(`${location.pathname}?${search}`, { replace: true })
+        }}
+      >
+        Router replace
       </button>
       <button id="push-then-replace" onClick={pushThenReplace}>
         Push then replace

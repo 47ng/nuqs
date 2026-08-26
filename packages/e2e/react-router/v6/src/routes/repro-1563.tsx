@@ -6,6 +6,7 @@ import {
 import {
   type LoaderFunctionArgs,
   useLoaderData,
+  useNavigate,
   useNavigation,
   useNavigationType
 } from 'react-router-dom'
@@ -26,6 +27,7 @@ export default function Page() {
   return (
     <Repro1563
       loaderCall={loaderCall}
+      useNavigate={useNavigate}
       useNavigation={useNavigation}
       useNavigationType={useNavigationType}
     />

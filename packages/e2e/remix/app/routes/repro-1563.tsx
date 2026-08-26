@@ -6,6 +6,7 @@ import {
 import type { LoaderFunctionArgs } from '@remix-run/node'
 import {
   useLoaderData,
+  useNavigate,
   useNavigation,
   useNavigationType
 } from '@remix-run/react'
@@ -26,6 +27,7 @@ export default function Page() {
   return (
     <Repro1563
       loaderCall={loaderCall}
+      useNavigate={useNavigate}
       useNavigation={useNavigation}
       useNavigationType={useNavigationType}
     />
