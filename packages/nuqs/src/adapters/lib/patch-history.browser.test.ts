@@ -22,6 +22,27 @@ function routerReplace(search: string) {
   history.replaceState({ idx: 1 }, '', search)
 }
 
+function optimisticPush(search: string) {
+  const url = new URL(search, location.href)
+  history.pushState(markPendingPush(url), historyUpdateMarker, url)
+  pushState.mockClear()
+}
+
+function traverse(action: () => void): Promise<void> {
+  return new Promise<void>((resolve, reject) => {
+    const timeout = setTimeout(() => {
+      window.removeEventListener('popstate', onPop)
+      reject(new Error('popstate did not fire within 2s'))
+    }, 2000)
+    function onPop() {
+      clearTimeout(timeout)
+      resolve()
+    }
+    window.addEventListener('popstate', onPop, { once: true })
+    action()
+  })
+}
+
 describe('patchHistory: pending push', () => {
   beforeAll(() => {
     patchHistory(emitter, 'test')
@@ -41,7 +62,7 @@ describe('patchHistory: pending push', () => {
   })
 
   it('turns the router commit of a pending push into a replace', () => {
-    markPendingPush(new URL('?a=1', location.href))
+    optimisticPush('?a=1')
     routerPush('?a=1')
     expect(replaceState).toHaveBeenCalledExactlyOnceWith({ idx: 1 }, '', '?a=1')
     expect(pushState).not.toHaveBeenCalled()
@@ -52,7 +73,7 @@ describe('patchHistory: pending push', () => {
   })
 
   it('replaces the pending entry with a redirected commit', () => {
-    markPendingPush(new URL('?a=1', location.href))
+    optimisticPush('?a=1')
     routerPush('?redirected=true')
     expect(replaceState).toHaveBeenCalledExactlyOnceWith(
       { idx: 1 },
@@ -60,6 +81,18 @@ describe('patchHistory: pending push', () => {
       '?redirected=true'
     )
     expect(pushState).not.toHaveBeenCalled()
+  })
+
+  it('does not fold a router commit over a state-less entry', () => {
+    optimisticPush('?a=1')
+    history.pushState(null, historyUpdateMarker, '#anchor')
+    pushState.mockClear()
+
+    routerPush('?a=1')
+
+    expect(pushState).toHaveBeenCalledExactlyOnceWith({ idx: 1 }, '', '?a=1')
+    expect(replaceState).not.toHaveBeenCalled()
+    expect(hasPendingPush()).toBe(false)
   })
 
   it('pushes a same-URL router commit after a pop left the pending entry', () => {
@@ -85,14 +118,33 @@ describe('patchHistory: pending push', () => {
     expect(hasPendingPush()).toBe(false)
   })
 
-  it('repairs the index of a pending entry traversed back onto', () => {
-    history.replaceState({ idx: 4 }, '', '?')
-    history.pushState({ idx: 4 }, historyUpdateMarker, '?a=1')
-    markPendingPush(new URL('?a=1', location.href))
-    window.dispatchEvent(new PopStateEvent('popstate'))
+  it('repairs the index of the pending entry traversed forward onto', async () => {
+    history.replaceState({ idx: 4 }, historyUpdateMarker, '?')
+    const pendingUrl = new URL('?a=1', location.href)
+    history.pushState(
+      markPendingPush(pendingUrl),
+      historyUpdateMarker,
+      pendingUrl
+    )
+    await traverse(() => history.back())
+    await traverse(() => history.forward())
     expect(history.state).toEqual({ idx: 5 })
     expect(hasPendingPush()).toBe(false)
-    history.back()
+  })
+
+  it('does not repair an older entry with the pending URL and index', async () => {
+    history.replaceState({ idx: 4 }, historyUpdateMarker, '?a=1')
+    history.pushState({ idx: 4 }, historyUpdateMarker, '?a=2')
+    const pendingUrl = new URL('?a=1', location.href)
+    history.pushState(
+      markPendingPush(pendingUrl),
+      historyUpdateMarker,
+      pendingUrl
+    )
+    await traverse(() => history.back())
+    await traverse(() => history.back())
+    expect(history.state).toEqual({ idx: 4 })
+    expect(hasPendingPush()).toBe(false)
   })
 
   it('keeps the pending push across marked nuqs updates', () => {
@@ -102,9 +154,22 @@ describe('patchHistory: pending push', () => {
     expect(hasPendingPush()).toBe(true)
   })
 
-  it('clears the pending push on a router replace', () => {
-    markPendingPush(new URL('?a=1', location.href))
-    routerReplace('?a=1')
+  it('repairs a pending push committed by a router replace', () => {
+    history.replaceState({ idx: 3 }, historyUpdateMarker, '?')
+    const pendingUrl = new URL('?a=1', location.href)
+    history.pushState(
+      markPendingPush(pendingUrl),
+      historyUpdateMarker,
+      pendingUrl
+    )
+    replaceState.mockClear()
+    history.replaceState({ usr: null, key: 'router', idx: 3 }, '', '?b=1')
+    expect(replaceState).toHaveBeenCalledExactlyOnceWith(
+      { usr: null, key: 'router', idx: 4 },
+      '',
+      '?b=1'
+    )
+    expect(history.state).toEqual({ usr: null, key: 'router', idx: 4 })
     expect(hasPendingPush()).toBe(false)
   })
 })

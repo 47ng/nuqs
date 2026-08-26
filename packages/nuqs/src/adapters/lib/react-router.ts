@@ -78,17 +78,17 @@ export function createReactRouterBasedAdapter({
             ? history.pushState
             : history.replaceState
         setQueueResetMutex(options.shallow ? 1 : 2)
+        const historyState = commitsAsPush
+          ? markPendingPush(url)
+          : history.state
         updateMethod.call(
           history,
-          history.state, // Maintain the history state
+          historyState, // Maintain the history state
           historyUpdateMarker,
           url
         )
         let navigationSettled: Promise<void> | undefined
         if (isDeep) {
-          if (commitsAsPush) {
-            markPendingPush(url)
-          }
           const maybePromise = navigate(
             {
               // Somehow passing the full URL object here strips the search params

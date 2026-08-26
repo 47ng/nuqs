@@ -18,22 +18,36 @@ export function getHistorySyncEmitter(
 
 export const historyUpdateMarker = '__nuqs__'
 
+type PendingPushState = {
+  [historyUpdateMarker]: number
+}
+
 type PendingPush = {
   href: string
+  id: number
   routerIndex: number | undefined
   poppedSince: boolean
 }
 
-const pendingPush = globalSingleton('pending-push', () => ({
-  current: null as PendingPush | null
+const pendingPush = globalSingleton('pending-navigation', () => ({
+  current: null as PendingPush | null,
+  // Identifies the exact optimistic entry that belongs to a pending push.
+  nextId: 0
 }))
 
-export function markPendingPush(url: URL): void {
+export function markPendingPush(url: URL): PendingPushState {
+  const id = ++pendingPush.nextId
   pendingPush.current = {
     href: url.href,
+    id,
     routerIndex: history.state?.idx,
     poppedSince: false
   }
+  return { ...history.state, [historyUpdateMarker]: id }
+}
+
+function isOnPendingPushEntry(pending: PendingPush): boolean {
+  return history.state?.[historyUpdateMarker] === pending.id
 }
 
 export function hasPendingPush(): boolean {
@@ -45,7 +59,7 @@ function clearPendingPush(): void {
   pendingPush.current = null
 }
 
-// Traversing back onto an entry the router never committed leaves it
+// Traversing forward onto an entry the router never committed leaves it
 // with the index nuqs cloned from its predecessor. Repair it before
 // the router reads it, so traversal deltas stay right (#1563).
 function repairOrNotePopOnPendingPush(): void {
@@ -55,16 +69,34 @@ function repairOrNotePopOnPendingPush(): void {
   }
   if (
     location.href === pending.href &&
+    isOnPendingPushEntry(pending) &&
     typeof pending.routerIndex === 'number'
   ) {
+    const { [historyUpdateMarker]: _, ...state } = history.state
     history.replaceState(
-      { ...history.state, idx: pending.routerIndex + 1 },
+      { ...state, idx: pending.routerIndex + 1 },
       historyUpdateMarker
     )
     pendingPush.current = null
     return
   }
   pending.poppedSince = true
+}
+
+// A router replace has already copied the optimistic entry's index into
+// private state. Repair the persisted entry here; the router catches up on
+// its next history mutation or traversal.
+function repairPendingPushReplaceState(
+  state: History['state']
+): History['state'] {
+  const pending = pendingPush.current
+  return pending &&
+    !pending.poppedSince &&
+    isOnPendingPushEntry(pending) &&
+    typeof pending.routerIndex === 'number' &&
+    state?.idx === pending.routerIndex
+    ? { ...state, idx: pending.routerIndex + 1 }
+    : state
 }
 
 declare global {
@@ -146,13 +178,21 @@ export function patchHistory(
     }
     // The router committing an optimistic deep push must not add
     // a second entry (#1563).
-    const commit = hasPendingPush() ? originalReplaceState : originalPushState
+    const pending = pendingPush.current
+    const commit =
+      hasPendingPush() && pending && isOnPendingPushEntry(pending)
+        ? originalReplaceState
+        : originalPushState
     clearPendingPush()
     commit.call(history, state, '', url)
     sync(url)
   }
   history.replaceState = function nuqs_replaceState(state, marker, url) {
-    originalReplaceState.call(history, state, '', url)
+    const commitState =
+      url && marker !== historyUpdateMarker
+        ? repairPendingPushReplaceState(state)
+        : state
+    originalReplaceState.call(history, commitState, '', url)
     if (url && marker !== historyUpdateMarker) {
       clearPendingPush()
       sync(url)
