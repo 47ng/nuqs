@@ -60,6 +60,26 @@ function ContextMenuItem({
   )
 }
 
+function ContextMenuLabel({
+  className,
+  inset,
+  ...props
+}: React.ComponentProps<typeof ContextMenuPrimitive.Label> & {
+  inset?: boolean
+}) {
+  return (
+    <ContextMenuPrimitive.Label
+      data-slot="context-menu-label"
+      data-inset={inset}
+      className={cn(
+        'text-foreground px-2 py-1.5 text-sm font-medium data-[inset=true]:pl-8',
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
 function ContextMenuSeparator({
   className,
   ...props
@@ -77,6 +97,7 @@ export {
   ContextMenu,
   ContextMenuContent,
   ContextMenuItem,
+  ContextMenuLabel,
   ContextMenuSeparator,
   ContextMenuTrigger
 }

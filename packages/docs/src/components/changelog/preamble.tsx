@@ -1,6 +1,6 @@
 import { useMDXComponents } from '@/mdx-components'
 import { rehypeCodeOptions } from '@/rehype-code.config'
-import { Markdown } from 'fumadocs-core/content'
+import { Markdown } from 'fumadocs-core/content/md'
 import { rehypeCode, remarkHeading } from 'fumadocs-core/mdx-plugins'
 import remarkSmartypants from 'remark-smartypants'
 

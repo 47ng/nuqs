@@ -17,14 +17,14 @@ Since version 2, you can now use nuqs in the following React frameworks, by
 wrapping it with a `NuqsAdapter{:ts}` context provider:
 
 <HumanContent>
-- <NextJS className='inline mr-1.5' role="presentation"/> [Next.js (app router)](#nextjs-app-router)
-- <NextJS className='inline mr-1.5' role="presentation"/> [Next.js (pages router)](#nextjs-pages-router)
-- <ReactSPA className='inline mr-1.5' role="presentation" /> [React SPA (eg: with Vite)](#react-spa)
-- <Remix className='inline mr-1.5' role="presentation" /> [Remix](#remix)
-- <ReactRouter className='inline mr-1.5' role="presentation" /> [React Router v6](#react-router-v6)
-- <ReactRouter className='inline mr-1.5' role="presentation" /> [React Router v7](#react-router-v7)
-- <ReactRouter className='inline mr-1.5' role="presentation" /> [React Router v8](#react-router-v8)
-- <TanStackRouter className='inline mr-1.5 not-prose' role="presentation"/> [TanStack Router](#tanstack-router)
+- <NextJS className='inline mr-1.5' aria-hidden /> [Next.js (app router)](#nextjs-app-router)
+- <NextJS className='inline mr-1.5' aria-hidden /> [Next.js (pages router)](#nextjs-pages-router)
+- <ReactSPA className='inline mr-1.5' aria-hidden /> [React SPA (eg: with Vite)](#react-spa)
+- <Remix className='inline mr-1.5' aria-hidden /> [Remix](#remix)
+- <ReactRouter className='inline mr-1.5' aria-hidden /> [React Router v6](#react-router-v6)
+- <ReactRouter className='inline mr-1.5' aria-hidden /> [React Router v7](#react-router-v7)
+- <ReactRouter className='inline mr-1.5' aria-hidden /> [React Router v8](#react-router-v8)
+- <TanStackRouter className='inline mr-1.5 not-prose' aria-hidden /> [TanStack Router](#tanstack-router)
 </HumanContent>
 
 <LLMContent>
@@ -38,7 +38,7 @@ wrapping it with a `NuqsAdapter{:ts}` context provider:
 - [TanStack Router](#tanstack-router)
 </LLMContent>
 
-## <HumanContent><NextJS className='inline mr-2 -mt-1' role="presentation" /></HumanContent>Next.js [#nextjs]
+## <HumanContent><NextJS className='inline mr-2 -mt-1' aria-hidden /></HumanContent>Next.js [#nextjs]
 
 ### App router [#nextjs-app-router]
 
@@ -98,7 +98,7 @@ import { NuqsAdapter } from 'nuqs/adapters/next'
 
 The main reason for adapters is to open up nuqs to other React frameworks:
 
-## <HumanContent><ReactSPA className='inline mr-2 -mt-1' role="presentation"/></HumanContent>React SPA [#react-spa]
+## <HumanContent><ReactSPA className='inline mr-2 -mt-1' aria-hidden /></HumanContent>React SPA [#react-spa]
 
 Example, with Vite:
 
@@ -144,25 +144,19 @@ createRoot(document.getElementById('root')!).render(
 This may be useful for servers not written in JavaScript, like Django (Python),
 Rails (Ruby), Laravel (PHP), Phoenix (Elixir) etc...
 
-<SinceVersion v="2.10.0">
-
-### Server-rendered islands <HumanContent><br className='hidden in-[#nd-toc]:block'/></HumanContent>(Astro, Inertia, etc.) [#server-rendered-islands]
+### Server-rendered islands <HumanContent><br className='hidden in-[#nd-toc]:block'/></HumanContent>(Astro, Fastify, Hono etc.) [#server-rendered-islands]
 
 <FeatureSupportMatrix introducedInVersion='2.10.0' support={{
   supported: true,
   frameworks: ['React SPA']
 }}/>
 
-When the React tree is server-rendered by a framework nuqs has no adapter for
-— an Astro island, an Inertia page component, a server rendering the tree with
-`renderToString{:ts}` (Fastify, Hono, Express) — there is no `location{:ts}`
-to read from on the server, so query states render their default values.
-On deep links, this causes a flash of default content before the client
-corrects it once hydrated.
+You may use the React SPA adapter in server-rendered frameworks like [Astro](https://astro.build/),
+or bespoke server-side rendered applications based on [Fastify](https://fastify.dev/),
+[Hono](https://hono.dev/), [Elysia](https://elysiajs.com/), etc.
 
-Passing the request's search string to the adapter fixes this, by seeding
-the initial query states with it on the server, and letting React hydrate
-from that same snapshot on the client:
+In those cases, you can pass the `serverSearch{:ts}` prop to let the SSR'd hooks know about the request URL,
+to avoid a flash of default values:
 
 ```astro title="src/pages/search.astro"
 ---
@@ -185,15 +179,13 @@ export function SearchIsland({ serverSearch }: { serverSearch: string }) {
 }
 ```
 
-`serverSearch{:ts}` accepts a search string (with or without the leading
+`serverSearch{:ts}` accepts a query string (with or without the leading
 `?{:ts}`) or a `URLSearchParams{:ts}` object. It is only read when
 server-side rendering and during hydration; afterwards, the adapter reads
 `location.search{:ts}` as usual. Multiple islands on the same page each get
 their own `NuqsAdapter{:ts}`, and stay in sync through the History API.
 
-</SinceVersion>
-
-## <HumanContent><Remix className='inline mr-2 -mt-1' role="presentation"/></HumanContent>Remix [#remix]
+## <HumanContent><Remix className='inline mr-2 -mt-1' aria-hidden /></HumanContent>Remix [#remix]
 
 ```tsx title="app/root.tsx"
 // [!code word:NuqsAdapter]
@@ -220,7 +212,7 @@ export default function App() {
 
 </Callout>
 
-## <HumanContent><ReactRouter className='inline mr-2 -mt-1' role="presentation"/></HumanContent>React Router v6 [#react-router-v6]
+## <HumanContent><ReactRouter className='inline mr-2 -mt-1' aria-hidden /></HumanContent>React Router v6 [#react-router-v6]
 
 ```tsx title="src/main.tsx"
 // [!code word:NuqsAdapter]
@@ -277,7 +269,7 @@ export function ReactRouter() {
 
 </Callout>
 
-## <HumanContent><ReactRouter className='inline mr-2 -mt-1' role="presentation"/></HumanContent>React Router v7 [#react-router-v7]
+## <HumanContent><ReactRouter className='inline mr-2 -mt-1' aria-hidden /></HumanContent>React Router v7 [#react-router-v7]
 
 ```tsx title="app/root.tsx"
 // [!code word:NuqsAdapter]
@@ -295,7 +287,7 @@ export default function App() {
 }
 ```
 
-## <HumanContent><ReactRouter className='inline mr-2 -mt-1' role="presentation"/></HumanContent>React Router v8 [#react-router-v8]
+## <HumanContent><ReactRouter className='inline mr-2 -mt-1' aria-hidden /></HumanContent>React Router v8 [#react-router-v8]
 
 ```tsx title="app/root.tsx"
 // [!code word:NuqsAdapter]
@@ -323,7 +315,7 @@ export default function App() {
 
 </Callout>
 
-## <HumanContent><TanStackRouter className='inline mr-2 -mt-1 not-prose' role="presentation"/></HumanContent>TanStack Router [#tanstack-router]
+## <HumanContent><TanStackRouter className='inline mr-2 -mt-1 not-prose' aria-hidden /></HumanContent>TanStack Router [#tanstack-router]
 
 ```tsx title="src/routes/__root.tsx"
 // [!code word:NuqsAdapter]
@@ -411,7 +403,7 @@ reasons.
 
 </Callout>
 
-## <HumanContent><Vitest className='inline mr-2 -mt-1' role="presentation"/></HumanContent>Testing
+## <HumanContent><Vitest className='inline mr-2 -mt-1' aria-hidden /></HumanContent>Testing
 
 <Callout>
   Documentation for the `NuqsTestingAdapter{:ts}` is on the [testing page](/docs/testing).

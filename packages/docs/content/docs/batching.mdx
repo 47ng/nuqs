@@ -4,6 +4,7 @@ description: How to read & update multiple search params at once
 ---
 
 import { HumanContent, LLMContent } from '@/src/components/audience'
+import { AnchoredDetails } from '@/src/components/anchored-details'
 
 ## Multiple updates (batching)
 
@@ -38,7 +39,7 @@ randomCoordinates().then((search: URLSearchParams) => {
 ```
 
 <HumanContent>
-<details>
+<AnchoredDetails id="promise-caching">
 <summary><em>Implementation details (Promise caching)</em></summary>
 
 The returned Promise is cached until the next flush to the URL occurs,
@@ -55,11 +56,11 @@ to keep UI responsive.
 
 ---
 
-</details>
+</AnchoredDetails>
 </HumanContent>
 
 <LLMContent>
-### Implementation details (Promise caching)
+### Implementation details (Promise caching) [#promise-caching]
 
 The returned Promise is cached until the next flush to the URL occurs,
 so all calls to a setState (of any hook) in the same event loop tick will

@@ -1326,9 +1326,6 @@ describe('useQueryStates: update sequencing', () => {
 
   it('flushes the throttled key and debounces the other in a single update', async () => {
     const onUrlUpdate = vi.fn<OnUrlUpdateFunction>()
-    // The adapter re-renders on each URL update when it has memory,
-    // so the queue reset must not run on render.
-    resetQueues()
     const { result, act } = await renderHook(
       () =>
         useQueryStates({
@@ -1339,8 +1336,7 @@ describe('useQueryStates: update sequencing', () => {
         wrapper: withNuqsTestingAdapter({
           onUrlUpdate,
           rateLimitFactor: 1,
-          hasMemory: true,
-          resetUrlUpdateQueueOnMount: false
+          hasMemory: true
         })
       }
     )
@@ -1716,7 +1712,6 @@ describe('useQueryStates: process url search params', () => {
           return search
         },
         rateLimitFactor: 1,
-        resetUrlUpdateQueueOnMount: false,
         children: [
           createElement('button', {
             key: 'btn',
@@ -1728,7 +1723,6 @@ describe('useQueryStates: process url search params', () => {
       })
     }
     try {
-      resetQueues()
       const { result, act } = await renderHook(
         () => useQueryStates({ test: parseAsString }),
         { wrapper: DynamicWrapper }

@@ -1,9 +1,9 @@
-import { blog as blogPosts, docs, meta } from '@/.source'
+import { blog as blogPosts, docs } from 'collections/server'
 import type { Item } from 'fumadocs-core/page-tree'
 import { type InferPageType, loader } from 'fumadocs-core/source'
-import { createMDXSource } from 'fumadocs-mdx/runtime/next'
+import { toFumadocsSource } from 'fumadocs-mdx/runtime/server'
 
-const mdxSource = createMDXSource(docs, meta)
+const mdxSource = docs.toFumadocsSource()
 
 export const source = loader({
   baseUrl: '/docs',
@@ -37,7 +37,7 @@ export const fullSource = loader({
 
 export const blog = loader({
   baseUrl: '/blog',
-  source: createMDXSource(blogPosts, [])
+  source: toFumadocsSource(blogPosts, [])
 })
 
 export type Page = InferPageType<typeof source>

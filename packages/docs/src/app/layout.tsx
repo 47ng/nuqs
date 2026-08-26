@@ -59,7 +59,7 @@ export default function Layout({ children }: { children: ReactNode }) {
       <Favicon />
       <body>
         <TopBanner />
-        <RootProvider>
+        <RootProvider theme={{ hotKey: false }}>
           <NuqsAdapter>{children}</NuqsAdapter>
         </RootProvider>
         {enableAnalytics && (
