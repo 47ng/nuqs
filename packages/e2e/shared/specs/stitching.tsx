@@ -31,18 +31,24 @@ function StitchingUseQueryState() {
   )
 
   const testOnSameTick = () => {
-    setA(x => x + 1)
+    const flushed = setA(x => x + 1)
     setB(x => x + 1, { limitUrlUpdates: debounce(250) })
     setC(x => x + 1, { limitUrlUpdates: debounce(500) })
+    return flushed
   }
-  const testStaggered = () => {
-    setC(x => x + 1, { limitUrlUpdates: debounce(500) })
-    setTimeout(() => {
-      setB(x => x + 1, { limitUrlUpdates: debounce(250) })
+  const testStaggered = () =>
+    new Promise<void>(resolve => {
+      setC(x => x + 1, { limitUrlUpdates: debounce(500) })
       setTimeout(() => {
-        setA(x => x + 1)
+        setB(x => x + 1, { limitUrlUpdates: debounce(250) })
+        setTimeout(() => {
+          void setA(x => x + 1).then(() => resolve())
+        }, 0)
       }, 0)
-    }, 0)
+    })
+  const testOverlap = async (test: () => Promise<unknown>) => {
+    await test()
+    void test()
   }
 
   return (
@@ -52,6 +58,15 @@ function StitchingUseQueryState() {
       </button>
       <button id="staggered" onClick={testStaggered}>
         Test staggered
+      </button>
+      <button
+        id="same-tick-overlap"
+        onClick={() => testOverlap(testOnSameTick)}
+      >
+        Test overlapping same-tick updates
+      </button>
+      <button id="staggered-overlap" onClick={() => testOverlap(testStaggered)}>
+        Test overlapping staggered updates
       </button>
       <Display environment="client" state={[a, b, c].join(',')} />
     </>
@@ -66,26 +81,32 @@ function StitchingUseQueryStates() {
   })
 
   const testOnSameTick = () => {
-    setSearchParams(old => ({ a: old.a + 1 }))
+    const flushed = setSearchParams(old => ({ a: old.a + 1 }))
     setSearchParams(old => ({ b: old.b + 1 }), {
       limitUrlUpdates: debounce(250)
     })
     setSearchParams(old => ({ c: old.c + 1 }), {
       limitUrlUpdates: debounce(500)
     })
+    return flushed
   }
-  const testStaggered = () => {
-    setSearchParams(old => ({ c: old.c + 1 }), {
-      limitUrlUpdates: debounce(500)
-    })
-    setTimeout(() => {
-      setSearchParams(old => ({ b: old.b + 1 }), {
-        limitUrlUpdates: debounce(250)
+  const testStaggered = () =>
+    new Promise<void>(resolve => {
+      setSearchParams(old => ({ c: old.c + 1 }), {
+        limitUrlUpdates: debounce(500)
       })
       setTimeout(() => {
-        setSearchParams(old => ({ a: old.a + 1 }))
+        setSearchParams(old => ({ b: old.b + 1 }), {
+          limitUrlUpdates: debounce(250)
+        })
+        setTimeout(() => {
+          void setSearchParams(old => ({ a: old.a + 1 })).then(() => resolve())
+        }, 0)
       }, 0)
-    }, 0)
+    })
+  const testOverlap = async (test: () => Promise<unknown>) => {
+    await test()
+    void test()
   }
 
   return (
@@ -95,6 +116,15 @@ function StitchingUseQueryStates() {
       </button>
       <button id="staggered" onClick={testStaggered}>
         Test staggered
+      </button>
+      <button
+        id="same-tick-overlap"
+        onClick={() => testOverlap(testOnSameTick)}
+      >
+        Test overlapping same-tick updates
+      </button>
+      <button id="staggered-overlap" onClick={() => testOverlap(testStaggered)}>
+        Test overlapping staggered updates
       </button>
       <Display environment="client" state={[a, b, c].join(',')} />
     </>

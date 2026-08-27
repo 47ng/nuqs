@@ -1820,6 +1820,7 @@ describe('useQueryStates: transition lane feedback', () => {
   const feedbackListeners = new Set<() => void>()
   let feedbackState: string | null | undefined
   let feedbackUpdates = 0
+  let feedbackUpdateLimit = 20
 
   function subscribeFeedback(listener: () => void) {
     feedbackListeners.add(listener)
@@ -1827,7 +1828,8 @@ describe('useQueryStates: transition lane feedback', () => {
   }
 
   function publishFeedback(value: string | null) {
-    if (feedbackState === value || feedbackUpdates >= 20) return
+    if (feedbackState === value || feedbackUpdates >= feedbackUpdateLimit)
+      return
     feedbackState = value
     feedbackUpdates++
     feedbackListeners.forEach(listener => listener())
@@ -1882,6 +1884,7 @@ describe('useQueryStates: transition lane feedback', () => {
     feedbackListeners.clear()
     feedbackState = undefined
     feedbackUpdates = 0
+    feedbackUpdateLimit = 20
     const url = new URL(location.href)
     url.searchParams.delete('value')
     history.replaceState(history.state, '', url)
@@ -1907,6 +1910,18 @@ describe('useQueryStates: transition lane feedback', () => {
     await sleep(100)
 
     expect(distinct(renders)).toEqual([null, 'B'])
+  })
+
+  it('does not overflow with uncapped external-store feedback (#1567)', async () => {
+    feedbackUpdateLimit = Infinity
+    const renders = await mount()
+    click('write')
+    await sleep(0)
+    click('tick')
+    await sleep(100)
+
+    expect(distinct(renders)).toEqual([null, 'B'])
+    expect(feedbackUpdates).toBeLessThanOrEqual(2)
   })
 
   it('promotes a repeated transition value to the sync lane', async () => {

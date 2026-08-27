@@ -1,8 +1,10 @@
 import { type Frame, type Page, expect } from '@playwright/test'
 
+type ExpectedSearch = Record<string, string | string[]>
+
 export type UrlSpy = {
   reset(): void
-  assertSearches(expected: Array<Record<string, string>>): Promise<void>
+  assertSearches(expected: ExpectedSearch[]): Promise<void>
   [Symbol.dispose]: () => void
 }
 
@@ -20,34 +22,28 @@ export function setupUrlSpy(page: Page): UrlSpy {
   }
   page.on('framenavigated', handler)
 
-  async function assertSearches(expected: Array<Record<string, string>>) {
+  async function assertSearches(expected: ExpectedSearch[]) {
     return expect
       .poll(
-        () => {
-          if (urls.length !== expected.length) {
-            console.debug(
-              `Expected ${expected.length} navigations, but got ${urls.length}:\n  ${urls.join('\n  ')}`
+        () =>
+          urls.map((url, index) => {
+            const searchParams = new URL(url).searchParams
+            return Object.fromEntries(
+              Object.entries(expected[index] ?? {}).map(([key, value]) => [
+                key,
+                Array.isArray(value)
+                  ? searchParams.getAll(key)
+                  : searchParams.get(key)
+              ])
             )
-            return false
-          }
-          return expected.every((expectedSearch, index) => {
-            const url = new URL(urls[index])
-            return Object.entries(expectedSearch).every(([key, value]) => {
-              const expected = value
-              const received = url.searchParams.get(key)
-              if (url.searchParams.get(key) !== value) {
-                console.debug(
-                  `Expected navigation ${index} (${url}) to have search param ${key}=${expected}, but got ${received} instead`
-                )
-                return false
-              }
-              return true
-            })
-          })
-        },
-        { intervals: Array.from({ length: 40 }, _ => 50), timeout: 2000 }
+          }),
+        {
+          intervals: Array.from({ length: 40 }, _ => 50),
+          timeout: 2000,
+          message: 'Expected recorded URL navigations to match'
+        }
       )
-      .toBe(true)
+      .toEqual(expected)
   }
 
   return {
