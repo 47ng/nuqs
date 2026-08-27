@@ -761,6 +761,8 @@ describe('useQueryState: SyncLane / transition-lane leak', () => {
       probe.tick() // discrete click -> SyncLane, before the transition commits
       await sleep(300)
 
+      // The sync render must not leak the pending transition value.
+      expect(probe.renders[1]).toBe(null)
       // The URL moved once, so the rendered value must move once: null -> 'B'.
       expect(distinctValues(probe.renders)).toEqual([null, 'B'])
     })

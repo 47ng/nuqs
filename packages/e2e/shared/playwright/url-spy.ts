@@ -10,15 +10,18 @@ export type UrlSpy = {
 
 export function setupUrlSpy(page: Page): UrlSpy {
   const urls: string[] = []
+  let lastSeenUrl: string | undefined
   const handler = (frame: Frame) => {
-    if (frame === page.mainFrame()) {
-      // ignore if the url is identical to the last record
-      if (urls.length > 0 && urls[urls.length - 1] === frame.url()) {
-        return
-      }
-      console.log('Navigated to', frame.url())
-      urls.push(frame.url())
+    if (frame !== page.mainFrame()) {
+      return
     }
+    const url = frame.url()
+    if (url === lastSeenUrl) {
+      return
+    }
+    lastSeenUrl = url
+    console.log('Navigated to', url)
+    urls.push(url)
   }
   page.on('framenavigated', handler)
 

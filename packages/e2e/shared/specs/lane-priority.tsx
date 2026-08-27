@@ -52,9 +52,6 @@ function useRenderLog(value: string | null) {
   // Intentionally records render-phase values, including renders React abandons.
   // Keep this side effect isolated from the compiled component.
   const renderedValues = useRef<Array<string | null>>([])
-  const previous = renderedValues.current[renderedValues.current.length - 1]
-  if (!Object.is(previous, value)) {
-    renderedValues.current.push(value)
-  }
+  renderedValues.current.push(value)
   return [...renderedValues.current]
 }

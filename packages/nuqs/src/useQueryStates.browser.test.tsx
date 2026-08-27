@@ -568,9 +568,12 @@ describe('useQueryStates: rendering & bail-out', () => {
     expect(onUrlUpdate).toHaveBeenCalledTimes(0)
 
     await user.click(page.getByRole('button', { name: 'Start' }))
-
     expect(renderCount).toBe(1) // same render count as before
     expect(onUrlUpdate).toHaveBeenCalledTimes(1) // url update is still called
+
+    await user.click(page.getByRole('button', { name: 'Start' }))
+    expect(renderCount).toBe(1)
+    expect(onUrlUpdate).toHaveBeenCalledTimes(2)
   })
 })
 
@@ -1905,10 +1908,10 @@ describe('useQueryStates: transition lane feedback', () => {
   it('converges when a later sync render feeds back through layout effects', async () => {
     const renders = await mount()
     click('write')
-    await sleep(0)
     click('tick')
     await sleep(100)
 
+    expect(renders[1]).toBe(null)
     expect(distinct(renders)).toEqual([null, 'B'])
   })
 
@@ -1916,10 +1919,10 @@ describe('useQueryStates: transition lane feedback', () => {
     feedbackUpdateLimit = Infinity
     const renders = await mount()
     click('write')
-    await sleep(0)
     click('tick')
     await sleep(100)
 
+    expect(renders[1]).toBe(null)
     expect(distinct(renders)).toEqual([null, 'B'])
     expect(feedbackUpdates).toBeLessThanOrEqual(2)
   })

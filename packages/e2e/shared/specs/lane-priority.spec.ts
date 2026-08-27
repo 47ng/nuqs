@@ -25,6 +25,9 @@ export const testLanePriority = defineTest('Lane priority', ({ path }) => {
 
     await expect(page).toHaveURL(/\?value=B$/)
     await expect(value).toHaveText('B')
-    await expect(renderedValues).toHaveText('null,B')
+    await expect(renderedValues).toContainText('B')
+    const renders = (await renderedValues.textContent())?.split(',')
+    expect(renders?.[1]).toBe('null')
+    expect(renders?.at(-1)).toBe('B')
   })
 })

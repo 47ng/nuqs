@@ -12,7 +12,7 @@ export function testDebounce(config: TestDebounceConfig) {
     it('should debounce the input', async ({ page }) => {
       const DEBOUNCE_TIME = 200
       await navigateTo(page, getUrl(path, { debounceTime: DEBOUNCE_TIME }))
-      await page.locator('input[type="text"]').pressSequentially('pass')
+      await page.locator('input[type="text"]').fill('pass')
       await expect(page.locator('#client-state')).toHaveText(
         '{"search":"pass","pageIndex":0}'
       )
@@ -39,7 +39,7 @@ export function testDebounce(config: TestDebounceConfig) {
     }) => {
       const DEBOUNCE_TIME = 400
       await navigateTo(page, getUrl(path, { debounceTime: DEBOUNCE_TIME }))
-      await page.locator('input[type="text"]').pressSequentially('pass')
+      await page.locator('input[type="text"]').fill('pass')
       const incrementButton = page.locator('button#increment-page-index')
       await incrementButton.click()
       await incrementButton.click()

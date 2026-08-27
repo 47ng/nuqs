@@ -163,8 +163,8 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
   const [internalState, setInternalState] = useState<V>(initial[0])
 
   const stateRef = useRef(internalState)
-  // Only URL-derived state is safe to recover across React lanes. Optimistic
-  // state stays in React's update queue until its own lane renders it.
+  // Tracks the latest state parsed from the URL. Matching identity marks the
+  // cache as URL-derived; optimistic state stays in React's update queue.
   const urlStateRef = useRef(internalState)
 
   // Identifies the current URL source (resolved search params + queued queries).
@@ -276,17 +276,23 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
       const handler = ({ state, query }: CrossHookSyncPayload) => {
         const previousState = stateRef.current
         const wasCached = Object.is(previousState[stateKey] ?? null, state)
+        const wasUrlState = previousState === urlStateRef.current
         // Update the cache before scheduling React state. A higher-priority
         // render may run before React evaluates the updater below; it must see
         // this optimistic value as cached state, not adopt it as URL state.
         queryRef.current[urlKey] = query
-        const nextCachedState = {
-          ...previousState,
-          [stateKey as keyof KeyMap]: state
-        }
+        const nextCachedState = wasCached
+          ? previousState
+          : {
+              ...previousState,
+              [stateKey as keyof KeyMap]: state
+            }
         stateRef.current = nextCachedState
         setInternalState(currentState => {
-          if (wasCached && currentState === previousState) {
+          if (
+            Object.is(currentState[stateKey] ?? null, state) &&
+            !(wasUrlState && currentState !== previousState)
+          ) {
             debug(
               2,
               hookId,
@@ -294,18 +300,18 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
               urlKey,
               state,
               keyMap[stateKey]?.defaultValue,
-              stateRef.current
+              currentState
             )
             // bail out by returning the current state
             return currentState
           }
-          // Note: cannot mutate in-place, the object ref must change
-          // for the subsequent setState to pick it up.
+          // Rebased updates need a new object reference.
           const nextState =
             currentState === previousState
               ? nextCachedState
               : {
                   ...currentState,
+                  ...(wasUrlState ? previousState : {}),
                   [stateKey as keyof KeyMap]: state
                 }
           debug(

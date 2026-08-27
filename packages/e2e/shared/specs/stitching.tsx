@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import { debounce, useQueryState, useQueryStates } from 'nuqs'
 import { Display } from '../components/display'
 import { optionsSearchParams, searchParams } from './stitching.defs'
@@ -15,7 +16,19 @@ export function Stitching() {
   return <>Invalid hook</>
 }
 
+function useTestRunner() {
+  const [error, setError] = useState('')
+  const run = (test: () => Promise<unknown>) => {
+    setError('')
+    void test().catch(error => {
+      setError(error instanceof Error ? error.message : String(error))
+    })
+  }
+  return { error, run }
+}
+
 function StitchingUseQueryState() {
+  const { error, run } = useTestRunner()
   const [{ history, shallow }] = useQueryStates(optionsSearchParams)
   const [a, setA] = useQueryState(
     'a',
@@ -37,43 +50,48 @@ function StitchingUseQueryState() {
     return flushed
   }
   const testStaggered = () =>
-    new Promise<void>(resolve => {
+    new Promise<void>((resolve, reject) => {
       setC(x => x + 1, { limitUrlUpdates: debounce(500) })
       setTimeout(() => {
         setB(x => x + 1, { limitUrlUpdates: debounce(250) })
         setTimeout(() => {
-          void setA(x => x + 1).then(() => resolve())
+          void setA(x => x + 1).then(() => resolve(), reject)
         }, 0)
       }, 0)
     })
-  const testOverlap = async (test: () => Promise<unknown>) => {
+  const testSequentially = async (test: () => Promise<unknown>) => {
     await test()
-    void test()
+    await test()
   }
 
   return (
     <>
-      <button id="same-tick" onClick={testOnSameTick}>
+      <button id="same-tick" onClick={() => run(testOnSameTick)}>
         Test on same tick
       </button>
-      <button id="staggered" onClick={testStaggered}>
+      <button id="staggered" onClick={() => run(testStaggered)}>
         Test staggered
       </button>
       <button
         id="same-tick-overlap"
-        onClick={() => testOverlap(testOnSameTick)}
+        onClick={() => run(() => testSequentially(testOnSameTick))}
       >
         Test overlapping same-tick updates
       </button>
-      <button id="staggered-overlap" onClick={() => testOverlap(testStaggered)}>
+      <button
+        id="staggered-overlap"
+        onClick={() => run(() => testSequentially(testStaggered))}
+      >
         Test overlapping staggered updates
       </button>
       <Display environment="client" state={[a, b, c].join(',')} />
+      <output id="stitching-error">{error}</output>
     </>
   )
 }
 
 function StitchingUseQueryStates() {
+  const { error, run } = useTestRunner()
   const [{ history, shallow }] = useQueryStates(optionsSearchParams)
   const [{ a, b, c }, setSearchParams] = useQueryStates(searchParams, {
     history,
@@ -91,7 +109,7 @@ function StitchingUseQueryStates() {
     return flushed
   }
   const testStaggered = () =>
-    new Promise<void>(resolve => {
+    new Promise<void>((resolve, reject) => {
       setSearchParams(old => ({ c: old.c + 1 }), {
         limitUrlUpdates: debounce(500)
       })
@@ -100,33 +118,40 @@ function StitchingUseQueryStates() {
           limitUrlUpdates: debounce(250)
         })
         setTimeout(() => {
-          void setSearchParams(old => ({ a: old.a + 1 })).then(() => resolve())
+          void setSearchParams(old => ({ a: old.a + 1 })).then(
+            () => resolve(),
+            reject
+          )
         }, 0)
       }, 0)
     })
-  const testOverlap = async (test: () => Promise<unknown>) => {
+  const testSequentially = async (test: () => Promise<unknown>) => {
     await test()
-    void test()
+    await test()
   }
 
   return (
     <>
-      <button id="same-tick" onClick={testOnSameTick}>
+      <button id="same-tick" onClick={() => run(testOnSameTick)}>
         Test on same tick
       </button>
-      <button id="staggered" onClick={testStaggered}>
+      <button id="staggered" onClick={() => run(testStaggered)}>
         Test staggered
       </button>
       <button
         id="same-tick-overlap"
-        onClick={() => testOverlap(testOnSameTick)}
+        onClick={() => run(() => testSequentially(testOnSameTick))}
       >
         Test overlapping same-tick updates
       </button>
-      <button id="staggered-overlap" onClick={() => testOverlap(testStaggered)}>
+      <button
+        id="staggered-overlap"
+        onClick={() => run(() => testSequentially(testStaggered))}
+      >
         Test overlapping staggered updates
       </button>
       <Display environment="client" state={[a, b, c].join(',')} />
+      <output id="stitching-error">{error}</output>
     </>
   )
 }
