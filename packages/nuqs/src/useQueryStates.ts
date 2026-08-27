@@ -163,6 +163,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
   const [internalState, setInternalState] = useState<V>(initial[0])
 
   const stateRef = useRef(internalState)
+  const committedStateRef = useRef(internalState)
   // Only URL-derived state is safe to recover across React lanes. Optimistic
   // state stays in React's update queue until its own lane renders it.
   const urlStateRef = useRef(internalState)
@@ -267,6 +268,10 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
     reconcile()
   }, [searchParamsSyncKey, adapter.pathname])
 
+  useEffect(() => {
+    committedStateRef.current = internalState
+  }, [internalState])
+
   // Sync all hooks together & with external URL changes
   useEffect(() => {
     const subscriptions: Array<
@@ -274,8 +279,23 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
     > = []
     for (const [stateKey, urlKey] of Object.entries(resolvedUrlKeys)) {
       const handler = ({ state, query }: CrossHookSyncPayload) => {
+        const wasCommitted = Object.is(
+          committedStateRef.current[stateKey] ?? null,
+          state
+        )
+        // Update the cache before scheduling React state. A higher-priority
+        // render may run before React evaluates the updater below; it must see
+        // this optimistic value as cached state, not adopt it as URL state.
+        queryRef.current[urlKey] = query
+        stateRef.current = {
+          ...stateRef.current,
+          [stateKey as keyof KeyMap]: state
+        }
         setInternalState(currentState => {
-          if (Object.is(currentState[stateKey] ?? null, state)) {
+          if (
+            wasCommitted &&
+            Object.is(currentState[stateKey] ?? null, state)
+          ) {
             debug(
               2,
               hookId,
@@ -290,11 +310,10 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
           }
           // Note: cannot mutate in-place, the object ref must change
           // for the subsequent setState to pick it up.
-          stateRef.current = {
-            ...stateRef.current,
+          const nextState = {
+            ...currentState,
             [stateKey as keyof KeyMap]: state
           }
-          queryRef.current[urlKey] = query
           debug(
             3,
             hookId,
@@ -302,9 +321,9 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
             urlKey,
             state,
             keyMap[stateKey]?.defaultValue,
-            stateRef.current
+            nextState
           )
-          return stateRef.current
+          return nextState
         })
       }
       debug(4, hookId, urlKey, stateKeys)
