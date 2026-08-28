@@ -109,8 +109,8 @@ catalogs:
       version: 4.1.10
   waku:
     waku:
-      specifier: ^1.0.0-beta.9
-      version: 1.0.0-beta.9
+      specifier: ^1.0.0-rc.0
+      version: 1.0.0-rc.0
 
 importers:
 
@@ -752,7 +752,7 @@ importers:
         version: 19.2.8(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(webpack@5.109.2(esbuild@0.28.2))
       waku:
         specifier: catalog:waku
-        version: 1.0.0-beta.9(@types/node@24.13.3)(babel-plugin-react-compiler@1.0.0)(esbuild@0.28.2)(jiti@2.7.0)(react-dom@19.2.7(react@19.2.7))(react-server-dom-webpack@19.2.8(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(webpack@5.109.2(esbuild@0.28.2)))(react@19.2.7)(terser@5.50.0)(yaml@2.9.0)
+        version: 1.0.0-rc.0(@types/node@24.13.3)(babel-plugin-react-compiler@1.0.0)(esbuild@0.28.2)(jiti@2.7.0)(react-dom@19.2.7(react@19.2.7))(react-server-dom-webpack@19.2.8(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(webpack@5.109.2(esbuild@0.28.2)))(react@19.2.7)(terser@5.50.0)(yaml@2.9.0)
     devDependencies:
       '@playwright/test':
         specifier: catalog:e2e
@@ -968,7 +968,7 @@ importers:
         version: 2.2.0(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(vitest@4.1.10)
       waku:
         specifier: catalog:waku
-        version: 1.0.0-beta.9(@types/node@24.13.3)(babel-plugin-react-compiler@1.0.0)(esbuild@0.28.2)(jiti@2.7.0)(react-dom@19.2.7(react@19.2.7))(react-server-dom-webpack@19.2.8(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(webpack@5.109.2(esbuild@0.28.2)))(react@19.2.7)(terser@5.50.0)(yaml@2.9.0)
+        version: 1.0.0-rc.0(@types/node@24.13.3)(babel-plugin-react-compiler@1.0.0)(esbuild@0.28.2)(jiti@2.7.0)(react-dom@19.2.7(react@19.2.7))(react-server-dom-webpack@19.2.8(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(webpack@5.109.2(esbuild@0.28.2)))(react@19.2.7)(terser@5.50.0)(yaml@2.9.0)
       zod:
         specifier: ^4.4.3
         version: 4.4.3
@@ -9610,8 +9610,8 @@ packages:
       jsdom:
         optional: true
 
-  waku@1.0.0-beta.9:
-    resolution: {integrity: sha512-XSFP07L2u5XoZf2Qt3k6AGv9q4Iogzdt9be6imJjpld/VUVZhTA5KzL3aBEdjuplYJNlNZLMZPdM9j1Kw62ZUA==}
+  waku@1.0.0-rc.0:
+    resolution: {integrity: sha512-UklVtmKow2hLDttNLjIzUTq1CXVB9TrUFdFstYlWWmPKko+GZ6fWboe8baSK93sdLqGTe1YnNABl/8Je8HkzoQ==}
     engines: {node: ^26.0.0 || ^24.0.0 || ^22.15.0}
     hasBin: true
     peerDependencies:
@@ -18864,7 +18864,7 @@ snapshots:
     transitivePeerDependencies:
       - msw
 
-  waku@1.0.0-beta.9(@types/node@24.13.3)(babel-plugin-react-compiler@1.0.0)(esbuild@0.28.2)(jiti@2.7.0)(react-dom@19.2.7(react@19.2.7))(react-server-dom-webpack@19.2.8(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(webpack@5.109.2(esbuild@0.28.2)))(react@19.2.7)(terser@5.50.0)(yaml@2.9.0):
+  waku@1.0.0-rc.0(@types/node@24.13.3)(babel-plugin-react-compiler@1.0.0)(esbuild@0.28.2)(jiti@2.7.0)(react-dom@19.2.7(react@19.2.7))(react-server-dom-webpack@19.2.8(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(webpack@5.109.2(esbuild@0.28.2)))(react@19.2.7)(terser@5.50.0)(yaml@2.9.0):
     dependencies:
       '@hono/node-server': 2.1.1(hono@4.12.30)
       '@vitejs/plugin-react': 6.0.3(babel-plugin-react-compiler@1.0.0)(vite@8.1.5(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.50.0)(yaml@2.9.0))

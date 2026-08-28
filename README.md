@@ -241,7 +241,7 @@ export const Route = createRootRoute({
 
 <details><summary>⛩️ Waku</summary>
 
-> Supported Waku versions: `waku@>=1.0.0-beta.9`
+> Supported Waku versions: `waku@>=1.0.0-rc.0`
 > Note: Waku support is experimental.
 
 ```tsx

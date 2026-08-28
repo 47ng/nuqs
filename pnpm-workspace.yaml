@@ -51,7 +51,7 @@ catalogs:
     '@tanstack/router-cli': 1.167.19
 
   waku:
-    waku: ^1.0.0-beta.9
+    waku: ^1.0.0-rc.0
 
   react19:
     '@types/react': ^19.2.17
