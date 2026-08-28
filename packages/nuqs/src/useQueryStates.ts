@@ -275,13 +275,15 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
     for (const [stateKey, urlKey] of Object.entries(resolvedUrlKeys)) {
       const handler = ({ state, query }: CrossHookSyncPayload) => {
         const previousState = stateRef.current
-        const wasCached = Object.is(previousState[stateKey] ?? null, state)
         const wasUrlState = previousState === urlStateRef.current
         // Update the cache before scheduling React state. A higher-priority
         // render may run before React evaluates the updater below; it must see
         // this optimistic value as cached state, not adopt it as URL state.
         queryRef.current[urlKey] = query
-        const nextCachedState = wasCached
+        const nextCachedState = Object.is(
+          previousState[stateKey] ?? null,
+          state
+        )
           ? previousState
           : {
               ...previousState,
@@ -291,7 +293,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
         setInternalState(currentState => {
           if (
             Object.is(currentState[stateKey] ?? null, state) &&
-            !(wasUrlState && currentState !== previousState)
+            (currentState === previousState || !wasUrlState)
           ) {
             debug(
               2,
@@ -311,7 +313,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
               ? nextCachedState
               : {
                   ...currentState,
-                  ...(wasUrlState ? previousState : {}),
+                  ...(wasUrlState && previousState),
                   [stateKey as keyof KeyMap]: state
                 }
           debug(
