@@ -207,6 +207,9 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
   const [internalState, setInternalState] = useState<V>(initial[0])
 
   const stateRef = useRef(internalState)
+  // Tracks the latest state adopted from a URL source. Optimistic updates only
+  // advance stateRef, so render-time recovery can preserve their React lane.
+  const urlStateRef = useRef(internalState)
   // Adopts the current URL value into the internal state when it has changed.
   // Used both during render (below) and from the effect backstop further down.
   const reconcile = () => {
@@ -220,6 +223,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
     if (hasChanged) {
       debug(1, hookId, stateKeys, state)
       stateRef.current = state
+      urlStateRef.current = state
       setInternalState(state)
     }
     lastSyncRef.current = [rawValues, location.search]
@@ -247,7 +251,8 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
         committedPathnameRef.current ===
           (adapter.pathname ?? location.pathname)) &&
         (lastSyncRef.current[0] === rawValues || !reconcile()))) &&
-    internalState !== stateRef.current
+    internalState !== stateRef.current &&
+    stateRef.current === urlStateRef.current
   ) {
     setInternalState(stateRef.current)
   }
@@ -317,10 +322,30 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
         // re-render via the overlay notification (from the queue pushes
         // below) and re-parse the raw query with their own parser.
         const nextValue = value ?? parser.defaultValue ?? null
+        const previousState = stateRef.current
+        const wasCached = Object.is(
+          previousState[stateKey] ?? parser.defaultValue ?? null,
+          nextValue
+        )
+        const wasUrlState = previousState === urlStateRef.current
+        // Update both caches before scheduling React state. A higher-priority
+        // render may run before React evaluates the updater below; it must see
+        // the optimistic query as cached state without adopting its React lane.
+        queryRef.current[urlKey] = query
+        const nextCachedState = wasCached
+          ? previousState
+          : {
+              ...previousState,
+              [stateKey as keyof KeyMap]: nextValue
+            }
+        stateRef.current = nextCachedState
         setInternalState(currentState => {
           const currentValue =
             currentState[stateKey] ?? parser.defaultValue ?? null
-          if (Object.is(currentValue, nextValue)) {
+          if (
+            Object.is(currentValue, nextValue) &&
+            !(wasUrlState && currentState !== previousState)
+          ) {
             debug(
               2,
               hookId,
@@ -328,18 +353,21 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
               urlKey,
               value,
               parser.defaultValue,
-              stateRef.current
+              currentState
             )
             // bail out by returning the current state
             return currentState
           }
-          // Note: cannot mutate in-place, the object ref must change
-          // for the subsequent setState to pick it up.
-          stateRef.current = {
-            ...stateRef.current,
-            [stateKey as keyof KeyMap]: nextValue
-          }
-          queryRef.current[urlKey] = query
+          // Rebase a write which interrupted URL reconciliation on the latest
+          // URL-derived siblings; otherwise preserve React's current lane.
+          const nextState =
+            currentState === previousState
+              ? nextCachedState
+              : {
+                  ...currentState,
+                  ...(wasUrlState ? previousState : {}),
+                  [stateKey as keyof KeyMap]: nextValue
+                }
           debug(
             3,
             hookId,
@@ -347,9 +375,9 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
             urlKey,
             value,
             parser.defaultValue,
-            stateRef.current
+            nextState
           )
-          return stateRef.current
+          return nextState
         })
         const update: UpdateQueuePushArgs = {
           key: urlKey,
