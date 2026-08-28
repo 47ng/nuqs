@@ -52,6 +52,7 @@ export function setupUrlSpy(page: Page): UrlSpy {
   return {
     reset() {
       urls.length = 0
+      lastSeenUrl = undefined
     },
     assertSearches,
     [Symbol.dispose]() {
