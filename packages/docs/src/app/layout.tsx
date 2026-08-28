@@ -7,6 +7,7 @@ import { NuqsAdapter } from 'nuqs/adapters/next/app'
 import { type ReactNode } from 'react'
 import { TopBanner } from './banners'
 import { Favicon } from '../components/favicon'
+import { NuqsDevtoolsShell } from '../components/nuqs-devtools'
 import { ResponsiveHelper } from '../components/responsive-helpers'
 import { getBaseUrl } from '../lib/url'
 import { cn } from '../lib/utils'
@@ -78,6 +79,7 @@ export default function Layout({ children }: { children: ReactNode }) {
           </>
         )}
         <ResponsiveHelper />
+        <NuqsDevtoolsShell />
       </body>
     </html>
   )

@@ -9,27 +9,37 @@ export type DebugSink = (
   isWarn?: boolean
 ) => void
 
-let sink: DebugSink | null = null
+const sinks = new Set<DebugSink>()
 
 /**
- * Install (or remove, with `null`) the function that renders debug logs.
+ * Register a function that renders debug logs. Returns a remover.
+ *
+ * Multiple sinks can be active at once: the console logger from `nuqs/debug`
+ * and the TanStack Devtools bridge from `nuqs/devtools` register independently.
  */
-export function setDebugSink(newSink: DebugSink | null): void {
-  sink = newSink
+export function addDebugSink(sink: DebugSink): () => void {
+  sinks.add(sink)
+  return () => {
+    sinks.delete(sink)
+  }
 }
 
 export function debug<Code extends DebugCode>(
   code: Code,
   ...args: DebugArgs<Code>
 ): void {
-  sink?.(code, args)
+  for (const sink of sinks) {
+    sink(code, args)
+  }
 }
 
 export function warn<Code extends DebugCode>(
   code: Code,
   ...args: DebugArgs<Code>
 ): void {
-  sink?.(code, args, true)
+  for (const sink of sinks) {
+    sink(code, args, true)
+  }
 }
 
 export function isDebugFlagSet(): boolean {

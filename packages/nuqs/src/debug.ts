@@ -1,4 +1,4 @@
-import { isDebugFlagSet, setDebugSink } from './lib/debug'
+import { addDebugSink, isDebugFlagSet } from './lib/debug'
 import { debugMessages, sprintf } from './lib/debug-messages'
 
 // Side-effect-only entry point (`nuqs/debug`): importing it opts client-side
@@ -17,8 +17,10 @@ import { debugMessages, sprintf } from './lib/debug-messages'
 // localStorage.debug = 'nuqs' // on the client
 // process.env.DEBUG  = 'nuqs' // on the server
 // ```
-function installDebugSink(): void {
-  setDebugSink((code, args, isWarn) => {
+// Respect the localStorage/DEBUG flag as soon as this entry loads, so
+// `import 'nuqs/debug'` is all that's needed to turn logging on.
+if (isDebugFlagSet()) {
+  addDebugSink((code, args, isWarn) => {
     const message = debugMessages[code]
     if (isWarn) {
       console.warn(message, ...args)
@@ -33,10 +35,4 @@ function installDebugSink(): void {
       console.log(formatted)
     }
   })
-}
-
-// Respect the localStorage/DEBUG flag as soon as this entry loads, so
-// `import 'nuqs/debug'` is all that's needed to turn logging on.
-if (isDebugFlagSet()) {
-  installDebugSink()
 }
