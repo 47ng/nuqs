@@ -163,6 +163,9 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
   const [internalState, setInternalState] = useState<V>(initial[0])
 
   const stateRef = useRef(internalState)
+  // Tracks the latest state parsed from the URL. Matching identity marks the
+  // cache as URL-derived; optimistic state stays in React's update queue.
+  const urlStateRef = useRef(internalState)
 
   // Identifies the current URL source (resolved search params + queued queries).
   // Mirrors the dependencies of the URL sync effect below so that render-time
@@ -188,6 +191,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
     if (hasChanged) {
       debug(1, hookId, stateKeys, state)
       stateRef.current = state
+      urlStateRef.current = state
       setInternalState(state)
     }
     return hasChanged
@@ -230,9 +234,13 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
       lastSyncKeyRef.current = searchParamsSyncKey
       didReconcileState = reconcile()
     }
-    if (!didReconcileState && internalState !== stateRef.current) {
-      // Recover a render-phase state update lost with an abandoned render or a
-      // concurrent rebase whose URL source is already reflected in the cache.
+    if (
+      !didReconcileState &&
+      internalState !== stateRef.current &&
+      stateRef.current === urlStateRef.current
+    ) {
+      // Recover URL-derived state from a render React abandoned. Optimistic
+      // state is excluded above because React must preserve its update lane.
       if (
         onCommittedPathname ||
         (adapter.pathname === undefined &&
@@ -266,8 +274,27 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
     > = []
     for (const [stateKey, urlKey] of Object.entries(resolvedUrlKeys)) {
       const handler = ({ state, query }: CrossHookSyncPayload) => {
+        const previousState = stateRef.current
+        const wasUrlState = previousState === urlStateRef.current
+        // Update the cache before scheduling React state. A higher-priority
+        // render may run before React evaluates the updater below; it must see
+        // this optimistic value as cached state, not adopt it as URL state.
+        queryRef.current[urlKey] = query
+        const nextCachedState = Object.is(
+          previousState[stateKey] ?? null,
+          state
+        )
+          ? previousState
+          : {
+              ...previousState,
+              [stateKey as keyof KeyMap]: state
+            }
+        stateRef.current = nextCachedState
         setInternalState(currentState => {
-          if (Object.is(currentState[stateKey] ?? null, state)) {
+          if (
+            Object.is(currentState[stateKey] ?? null, state) &&
+            (currentState === previousState || !wasUrlState)
+          ) {
             debug(
               2,
               hookId,
@@ -275,18 +302,20 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
               urlKey,
               state,
               keyMap[stateKey]?.defaultValue,
-              stateRef.current
+              currentState
             )
             // bail out by returning the current state
             return currentState
           }
-          // Note: cannot mutate in-place, the object ref must change
-          // for the subsequent setState to pick it up.
-          stateRef.current = {
-            ...stateRef.current,
-            [stateKey as keyof KeyMap]: state
-          }
-          queryRef.current[urlKey] = query
+          // Rebased updates need a new object reference.
+          const nextState =
+            currentState === previousState
+              ? nextCachedState
+              : {
+                  ...currentState,
+                  ...(wasUrlState && previousState),
+                  [stateKey as keyof KeyMap]: state
+                }
           debug(
             3,
             hookId,
@@ -294,9 +323,9 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
             urlKey,
             state,
             keyMap[stateKey]?.defaultValue,
-            stateRef.current
+            nextState
           )
-          return stateRef.current
+          return nextState
         })
       }
       debug(4, hookId, urlKey, stateKeys)

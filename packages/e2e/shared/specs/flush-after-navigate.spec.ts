@@ -7,6 +7,16 @@ async function expectPathname(page: Page, pathname: string) {
   await expect(page).toHaveURL(url => url.pathname.endsWith(pathname))
 }
 
+async function queueUpdateAndNavigate(page: Page) {
+  await page.locator('#test').click()
+  await page.locator('a').click()
+}
+
+async function installPausedClock(page: Page) {
+  await page.clock.install({ time: 0 })
+  await page.clock.pauseAt(1)
+}
+
 export function testFlushAfterNavigate(config: TestConfig) {
   const shallows = [true, false]
   const histories = ['push', 'replace'] as const
@@ -26,14 +36,14 @@ export function testFlushAfterNavigate(config: TestConfig) {
               page,
               getUrl(path + '/start', { shallow, history, debounce: timeMs })
             )
+            await installPausedClock(page)
             async function runTest() {
-              await page.locator('#test').click()
-              await page.locator('a').click()
+              await queueUpdateAndNavigate(page)
               await expectPathname(page, path + '/end')
               await expect(page.locator('#client-useQueryState')).toBeEmpty()
               await expect(page.locator('#client-useQueryStates')).toBeEmpty()
               await expect(page).toHaveURL(url => url.search === '')
-              await page.waitForTimeout(timeMs)
+              await page.clock.fastForward(timeMs)
               await expect(page.locator('#client-useQueryState')).toBeEmpty()
               await expect(page.locator('#client-useQueryStates')).toBeEmpty()
               await expect(page).toHaveURL(url => url.search === '')
@@ -54,9 +64,9 @@ export function testFlushAfterNavigate(config: TestConfig) {
                 linkState: 'nav'
               })
             )
+            await installPausedClock(page)
             async function runTest() {
-              await page.locator('#test').click()
-              await page.locator('a').click()
+              await queueUpdateAndNavigate(page)
               await expectPathname(page, path + '/end')
               await expect(page.locator('#client-useQueryState')).toHaveText(
                 'nav'
@@ -65,7 +75,7 @@ export function testFlushAfterNavigate(config: TestConfig) {
                 'nav'
               )
               await expect(page).toHaveURL(url => url.search === '?test=nav')
-              await page.waitForTimeout(timeMs)
+              await page.clock.fastForward(timeMs)
               await expect(page.locator('#client-useQueryState')).toHaveText(
                 'nav'
               )
@@ -91,13 +101,13 @@ export function testFlushAfterNavigate(config: TestConfig) {
                 linkState: 'nav'
               })
             )
+            await installPausedClock(page)
             async function runTest() {
-              await page.locator('#test').click()
-              await page.locator('a').click()
+              await queueUpdateAndNavigate(page)
               await expectPathname(page, path + '/start')
               await expect(page).toHaveURL(url => url.search === '?test=nav')
               await expect(page.locator('#client-state')).toHaveText('nav')
-              await page.waitForTimeout(timeMs)
+              await page.clock.fastForward(timeMs)
               await expect(page.locator('#client-state')).toHaveText('nav')
               await expect(page).toHaveURL(url => url.search === '?test=nav')
             }
@@ -112,15 +122,15 @@ export function testFlushAfterNavigate(config: TestConfig) {
               page,
               getUrl(path + '/start', { shallow, history, throttle: timeMs })
             )
+            await installPausedClock(page)
             async function runTest() {
               await page.locator('#preflush').click() // Trigger an immediate flush to enable the throttling queue
-              await page.locator('#test').click() // Queue the change
-              await page.locator('a').click() // Navigate
+              await queueUpdateAndNavigate(page)
               await expectPathname(page, path + '/end')
               await expect(page.locator('#client-useQueryState')).toBeEmpty()
               await expect(page.locator('#client-useQueryStates')).toBeEmpty()
               await expect(page).toHaveURL(url => url.search === '')
-              await page.waitForTimeout(timeMs)
+              await page.clock.fastForward(timeMs)
               await expect(page.locator('#client-useQueryState')).toBeEmpty()
               await expect(page.locator('#client-useQueryStates')).toBeEmpty()
               await expect(page).toHaveURL(url => url.search === '')
@@ -141,10 +151,10 @@ export function testFlushAfterNavigate(config: TestConfig) {
                 linkState: 'nav'
               })
             )
+            await installPausedClock(page)
             async function runTest() {
               await page.locator('#preflush').click() // Trigger an immediate flush to enable the throttling queue
-              await page.locator('#test').click() // Queue the change
-              await page.locator('a').click() // Navigate
+              await queueUpdateAndNavigate(page)
               await expectPathname(page, path + '/end')
               await expect(page.locator('#client-useQueryState')).toHaveText(
                 'nav'
@@ -153,7 +163,7 @@ export function testFlushAfterNavigate(config: TestConfig) {
                 'nav'
               )
               await expect(page).toHaveURL(url => url.search === '?test=nav')
-              await page.waitForTimeout(timeMs)
+              await page.clock.fastForward(timeMs)
               await expect(page.locator('#client-useQueryState')).toHaveText(
                 'nav'
               )
@@ -179,14 +189,14 @@ export function testFlushAfterNavigate(config: TestConfig) {
                 linkState: 'nav'
               })
             )
+            await installPausedClock(page)
             async function runTest() {
               await page.locator('#preflush').click() // Trigger an immediate flush to enable the throttling queue
-              await page.locator('#test').click() // Queue the change
-              await page.locator('a').click() // Navigate
+              await queueUpdateAndNavigate(page)
               await expectPathname(page, path + '/start')
               await expect(page.locator('#client-state')).toHaveText('nav')
               await expect(page).toHaveURL(url => url.search === '?test=nav')
-              await page.waitForTimeout(timeMs)
+              await page.clock.fastForward(timeMs)
               await expect(page.locator('#client-state')).toHaveText('nav')
               await expect(page).toHaveURL(url => url.search === '?test=nav')
             }
