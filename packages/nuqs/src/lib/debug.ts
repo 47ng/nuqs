@@ -3,11 +3,7 @@
 // the core bundle (they only ship via the opt-in `nuqs/debug` entry).
 import type { DebugArgs, DebugCode } from './debug-messages'
 
-export type DebugSink = (
-  code: DebugCode,
-  args: unknown[],
-  isWarn?: boolean
-) => void
+export type DebugSink = (code: DebugCode, args: unknown[]) => void
 
 let sink: DebugSink | null = null
 
@@ -25,11 +21,11 @@ export function debug<Code extends DebugCode>(
   sink?.(code, args)
 }
 
-export function warn<Code extends DebugCode>(
+export function warn<Code extends 24 | 25>(
   code: Code,
   ...args: DebugArgs<Code>
 ): void {
-  sink?.(code, args, true)
+  debug(code, ...args)
 }
 
 export function isDebugFlagSet(): boolean {

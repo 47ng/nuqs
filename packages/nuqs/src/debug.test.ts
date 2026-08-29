@@ -40,7 +40,19 @@ describe('nuqs/debug opt-in', () => {
     expect(log).toHaveBeenCalledExactlyOnceWith(debugMessages[6], ...args)
   })
 
-  it('routes warn through console.warn with the catalog message', async () => {
+  it('routes warning codes through console.warn', async () => {
+    const { debug } = await loadDebugEntry({ flag: true })
+    const wrn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const cause = new Error('boom')
+    debug(24, 'value', cause)
+    expect(wrn).toHaveBeenCalledExactlyOnceWith(
+      debugMessages[24],
+      'value',
+      cause
+    )
+  })
+
+  it('keeps the warn helper working', async () => {
     const { warn } = await loadDebugEntry({ flag: true })
     const wrn = vi.spyOn(console, 'warn').mockImplementation(() => {})
     const cause = new Error('boom')

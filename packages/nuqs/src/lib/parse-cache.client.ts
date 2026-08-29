@@ -1,5 +1,5 @@
 import { compareQuery } from './compare'
-import { warn } from './debug'
+import { debug } from './debug'
 import type { Query } from './search-params'
 
 type ParseFunction = (query: string & Array<string>) => unknown
@@ -72,7 +72,7 @@ export function parseWithClientCache<T>(
   }
   if (cached?.[0] === parse && compareQuery(cached[1], query)) {
     if (cached[3] !== undefined) {
-      warn(25, query, cached[3], urlKey)
+      debug(25, query, cached[3], urlKey)
     }
     return cached[2] as T | null
   }
@@ -80,7 +80,7 @@ export function parseWithClientCache<T>(
   try {
     entry[2] = parse(query)
   } catch (error) {
-    warn(25, query, error, urlKey)
+    debug(25, query, error, urlKey)
     entry[3] = error
   }
   getParseCacheBucket(urlKey).e = entry

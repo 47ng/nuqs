@@ -1,4 +1,4 @@
-import { warn } from './debug'
+import { debug } from './debug'
 
 export function safeParse<I extends { toString(): string }, R>(
   parser: (arg: I) => R,
@@ -11,9 +11,9 @@ export function safeParse<I extends { toString(): string }, R>(
     // Split per code so each call matches its message's arity exactly (a single
     // `key ? 25 : 24` would widen the argument tuple to a union).
     if (key) {
-      warn(25, value, error, key)
+      debug(25, value, error, key)
     } else {
-      warn(24, value, error)
+      debug(24, value, error)
     }
     return null
   }

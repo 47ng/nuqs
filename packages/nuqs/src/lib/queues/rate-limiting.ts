@@ -4,11 +4,9 @@ import type { LimitUrlUpdates } from '../../defs'
 // Safari remains annoying with at most 100 calls in 30 seconds.
 // edit: Safari 17 now allows 100 calls per 10 seconds, a bit better.
 function getDefaultThrottle() {
-  if (typeof window === 'undefined') return 50
   // https://stackoverflow.com/questions/7944460/detect-safari-browser
   // @ts-expect-error
-  const isSafari = Boolean(window.GestureEvent)
-  if (!isSafari) {
+  if (typeof window === 'undefined' || !window.GestureEvent) {
     return 50
   }
   try {
@@ -27,4 +25,7 @@ export function debounce(timeMs: number): LimitUrlUpdates {
   return { method: 'debounce', timeMs }
 }
 
-export const defaultRateLimit: LimitUrlUpdates = throttle(getDefaultThrottle())
+export const defaultRateLimit: LimitUrlUpdates = {
+  method: 'throttle',
+  timeMs: getDefaultThrottle()
+}

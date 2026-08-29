@@ -1,4 +1,4 @@
-import { error } from './errors'
+import { error414 } from './errors'
 
 export function renderQueryString(search: URLSearchParams): string {
   if (search.size === 0) {
@@ -8,13 +8,14 @@ export function renderQueryString(search: URLSearchParams): string {
   for (const [key, value] of search.entries()) {
     // Replace disallowed characters in keys,
     // see https://github.com/47ng/nuqs/issues/599
-    const safeKey = key
-      .replace(/#/g, '%23')
-      .replace(/&/g, '%26')
-      .replace(/\+/g, '%2B')
-      .replace(/=/g, '%3D')
-      .replace(/\?/g, '%3F')
-    query.push(`${safeKey}=${encodeQueryValue(value)}`)
+    query.push(
+      `${key
+        .replace(/#/g, '%23')
+        .replace(/&/g, '%26')
+        .replace(/\+/g, '%2B')
+        .replace(/=/g, '%3D')
+        .replace(/\?/g, '%3F')}=${encodeQueryValue(value)}`
+    )
   }
   const queryString = '?' + query.join('&')
   warnIfURLIsTooLong(queryString)
@@ -60,6 +61,6 @@ function warnIfURLIsTooLong(queryString: string): void {
   const url = new URL(location.href)
   url.search = queryString
   if (url.href.length > URL_MAX_LENGTH) {
-    console.warn(error(414))
+    console.warn(error414)
   }
 }

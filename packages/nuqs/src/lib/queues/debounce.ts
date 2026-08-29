@@ -14,7 +14,7 @@ import {
 export class DebouncedPromiseQueue<ValueType, OutputType> {
   resolvers: Resolvers<OutputType> = withResolvers<OutputType>()
   controller: AbortController = new AbortController()
-  queuedValue: ValueType | undefined = undefined
+  queuedValue: ValueType | undefined
 
   abort(): void {
     this.controller.abort()
@@ -42,8 +42,8 @@ export class DebouncedPromiseQueue<ValueType, OutputType> {
           this.queuedValue = undefined
           this.resolvers = withResolvers<OutputType>()
           callbackPromise
-            .then(output => outputResolvers.resolve(output))
-            .catch(error => outputResolvers.reject(error))
+            .then(outputResolvers.resolve)
+            .catch(outputResolvers.reject)
         } catch (error) {
           this.queuedValue = undefined
           outputResolvers.reject(error)
@@ -78,9 +78,11 @@ export class DebounceController {
     processUrlSearchParams?: (search: URLSearchParams) => URLSearchParams
   ): Promise<URLSearchParams> {
     if (!Number.isFinite(timeMs)) {
-      const getSnapshot =
-        adapter.getSearchParamsSnapshot ?? getSearchParamsSnapshotFromLocation
-      return Promise.resolve(getSnapshot())
+      return Promise.resolve(
+        (
+          adapter.getSearchParamsSnapshot ?? getSearchParamsSnapshotFromLocation
+        )()
+      )
     }
     const key = update.key
     let queue = this.queues.get(key)
@@ -109,26 +111,20 @@ export class DebounceController {
     return promise
   }
 
-  abort(
-    key: string
-  ): (promise: Promise<URLSearchParams>) => Promise<URLSearchParams> {
+  abort(key: string): Resolvers<URLSearchParams> | undefined {
     const queue = this.queues.get(key)
     if (!queue) {
-      return passThrough => passThrough
+      return
     }
     debug(18, key, queue.queuedValue?.query)
     this.queues.delete(key)
     queue.abort() // Don't run to completion
     this.throttleQueue.sync.emit(key)
-    return promise => {
-      promise.then(queue.resolvers.resolve, queue.resolvers.reject)
-      // Don't chain: keep reference equality
-      return promise
-    }
+    return queue.resolvers
   }
 
   abortAll(): void {
-    for (const [key, queue] of this.queues.entries()) {
+    for (const [key, queue] of this.queues) {
       debug(18, key, queue.queuedValue?.query)
       queue.abort()
       // todo: Better abort handling
@@ -139,14 +135,11 @@ export class DebounceController {
   }
 
   getQueuedQuery(key: string): Query | null | undefined {
-    // The debounced queued values are more likely to be up-to-date
-    // than any updates pending in the throttle queue, which comes last
-    // in the update chain.
-    const debouncedQueued = this.queues.get(key)?.queuedValue?.query
-    if (debouncedQueued !== undefined) {
-      return debouncedQueued
-    }
-    return this.throttleQueue.getQueuedQuery(key)
+    // Debounced values are newer than pending throttle values.
+    const debounced = this.queues.get(key)?.queuedValue?.query
+    return debounced !== undefined
+      ? debounced
+      : this.throttleQueue.getQueuedQuery(key)
   }
 }
 

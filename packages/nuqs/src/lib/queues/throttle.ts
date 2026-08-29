@@ -1,9 +1,9 @@
 import type { AdapterInterface, AdapterOptions } from '../../adapters/lib/defs'
 import type { Options } from '../../defs'
-import { compose } from '../compose'
+
 import { debug } from '../debug'
 import { createEmitter, type Emitter } from '../emitter'
-import { error } from '../errors'
+import { error429, error502 } from '../errors'
 import { globalSingleton } from '../global-singleton'
 import { write, type Query } from '../search-params'
 import { timeout } from '../timeout'
@@ -149,11 +149,9 @@ export class ThrottledQueue {
     const flushNow = () => {
       this.lastFlushedAt = performance.now()
       const [search, error] = this.applyPendingUpdates(
-        {
-          ...adapter,
-          autoResetQueueOnUpdate: adapter.autoResetQueueOnUpdate ?? true,
-          getSearchParamsSnapshot
-        },
+        adapter.updateUrl,
+        getSearchParamsSnapshot,
+        adapter.autoResetQueueOnUpdate ?? true,
         processUrlSearchParams
       )
       if (error === null) {
@@ -224,17 +222,20 @@ export class ThrottledQueue {
   }
 
   applyPendingUpdates(
-    adapter: Required<Omit<UpdateQueueAdapterContext, 'rateLimitFactor'>>,
+    updateUrl: UpdateQueueAdapterContext['updateUrl'],
+    getSearchParamsSnapshot: NonNullable<
+      UpdateQueueAdapterContext['getSearchParamsSnapshot']
+    >,
+    autoResetQueueOnUpdate: boolean,
     processUrlSearchParams?: (search: URLSearchParams) => URLSearchParams
   ): [URLSearchParams, null | unknown] {
-    const { updateUrl, getSearchParamsSnapshot } = adapter
     let search = getSearchParamsSnapshot()
     debug(11, this.updateMap.size, search.toString())
     if (this.updateMap.size === 0) {
       return [search, null]
     }
     // Work on a copy and clear the queue immediately
-    const items = Array.from(this.updateMap.entries())
+    const items = Array.from(this.updateMap)
     const options = { ...this.options }
     const transitions = Array.from(this.transitions)
     // Let the adapters choose whether to reset, as it depends on how they
@@ -244,7 +245,7 @@ export class ThrottledQueue {
     // Notifying would revert optimistic state on adapters whose committed
     // view lags the URL update (next/pages) or never reflects it
     // (memory-less testing adapter). The error path below compensates.
-    if (adapter.autoResetQueueOnUpdate) {
+    if (autoResetQueueOnUpdate) {
       this.reset({ notify: false })
     }
     debug(12, items, options)
@@ -259,7 +260,7 @@ export class ThrottledQueue {
       try {
         search = processUrlSearchParams(search)
       } catch (err) {
-        console.error(error(502), items.map(([key]) => key).join(), err)
+        console.error(error502, items.map(([key]) => key).join(), err)
         // Some adapters keep the queue available during concurrent renders,
         // so discard this failed batch only when the next update starts.
         this.resetQueueOnNextPush = true
@@ -267,17 +268,23 @@ export class ThrottledQueue {
       }
     }
     try {
-      compose(transitions, () => updateUrl(search, options))
+      let runUpdate = () => updateUrl(search, options)
+      for (let i = transitions.length - 1; i >= 0; i--) {
+        const transition = transitions[i]!
+        const next = runUpdate
+        runUpdate = () => transition(next)
+      }
+      runUpdate()
       return [search, null]
     } catch (err) {
       // This may fail due to rate-limiting of history methods,
       // for example Safari only allows 100 updates in a 30s window.
-      console.error(error(429), items.map(([key]) => key).join(), err)
+      console.error(error429, items.map(([key]) => key).join(), err)
       // The URL never changed: clear the failed overlay values if the adapter
       // deferred the normal reset, then notify so every hook converges back to
       // the committed search params instead of keeping optimistic values that
       // will never land.
-      if (!adapter.autoResetQueueOnUpdate) {
+      if (!autoResetQueueOnUpdate) {
         this.reset({ notify: false })
       }
       for (const [key] of items) {

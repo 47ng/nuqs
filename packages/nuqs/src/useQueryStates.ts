@@ -1,9 +1,5 @@
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react'
-import {
-  useAdapter,
-  useAdapterDefaultOptions,
-  useAdapterProcessUrlSearchParams
-} from './adapters/lib/context'
+import { useAdapterContext } from './adapters/lib/context'
 import type { Nullable, Options, UrlKeys } from './defs'
 import { compareQuery, isEqual } from './lib/compare'
 import { debug } from './lib/debug'
@@ -19,7 +15,7 @@ import {
   type UpdateQueuePushArgs
 } from './lib/queues/throttle'
 import { useSyncExternalStores } from './lib/queues/useSyncExternalStores'
-import { isAbsentFromUrl, type Query } from './lib/search-params'
+import type { Query } from './lib/search-params'
 import { getOwn, getUrlKey } from './lib/url-keys'
 import { type GenericParser } from './parsers'
 
@@ -96,8 +92,8 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
   options: Partial<UseQueryStatesOptions<KeyMap>> = {}
 ): UseQueryStatesReturn<KeyMap> {
   const hookId = useId()
-  const defaultOptions = useAdapterDefaultOptions()
-  const processUrlSearchParams = useAdapterProcessUrlSearchParams()
+  const { useAdapter, defaultOptions, processUrlSearchParams } =
+    useAdapterContext()
 
   const {
     history = defaultOptions?.history ?? 'replace',
@@ -112,12 +108,13 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
 
   type V = NullableValues<KeyMap>
   const stateKeys = Object.keys(keyMap).join(',')
+  const keyMapEntries = Object.entries(keyMap)
   const cachedKeyMapRef = useRef(keyMap)
   const cachedKeyMap = cachedKeyMapRef.current
   const stableKeyMap =
     JSON.stringify(Object.entries(cachedKeyMap), omitDefaultValue) ===
-      JSON.stringify(Object.entries(keyMap), omitDefaultValue) &&
-    Object.entries(keyMap).every(([key, parser]) => {
+      JSON.stringify(keyMapEntries, omitDefaultValue) &&
+    keyMapEntries.every(([key, parser]) => {
       if (cachedKeyMap[key]?.startTransition !== parser.startTransition) {
         return false
       }
@@ -218,19 +215,17 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
   const urlStateRef = useRef(internalState)
   // Adopts the current URL value into the internal state when it has changed.
   // Used both during render (below) and from the effect backstop further down.
-  const reconcile = (cachedRawValues = lastSyncRef.current[0]) => {
+  const reconcile = () => {
     let [state, hasChanged] = parseMap(
       stableKeyMap,
       resolvedUrlKeys,
       rawValues,
-      cachedRawValues,
+      lastSyncRef.current[0],
       stateRef.current
     )
-    hasChanged ||= stableKeyMap !== cachedKeyMap
-    if (hasChanged) {
+    if ((hasChanged ||= stableKeyMap !== cachedKeyMap)) {
       debug(1, hookId, stateKeys, state)
-      stateRef.current = state
-      urlStateRef.current = state
+      stateRef.current = urlStateRef.current = state
       setInternalState(state)
     }
     lastSyncRef.current = [rawValues, location.search]
@@ -302,9 +297,8 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
       let maxDebounceTime = 0
       // One abort per key sent to the throttle queue, so a non-empty list
       // also means the queue has something to flush.
-      const debounceAborts: Array<
-        (p: Promise<URLSearchParams>) => Promise<URLSearchParams>
-      > = []
+      const debounceAborts: Array<ReturnType<typeof debounceController.abort>> =
+        []
       for (let [stateKey, value] of Object.entries(newState)) {
         const parser = getOwn(stableKeyMap, stateKey)
         const urlKey = getOwn(resolvedUrlKeys, stateKey)
@@ -357,34 +351,22 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
         setInternalState(currentState => {
           const currentValue =
             currentState[stateKey] ?? parser.defaultValue ?? null
-          if (
-            Object.is(currentValue, nextValue) &&
-            !(wasUrlState && currentState !== previousState)
-          ) {
-            debug(
-              2,
-              hookId,
-              stateKeys,
-              urlKey,
-              value,
-              parser.defaultValue,
-              currentState
-            )
-            // bail out by returning the current state
-            return currentState
-          }
+          const shouldUpdate =
+            !Object.is(currentValue, nextValue) ||
+            (wasUrlState && currentState !== previousState)
           // Rebase a write which interrupted URL reconciliation on the latest
           // URL-derived siblings; otherwise preserve React's current lane.
-          const nextState =
-            currentState === previousState
+          const nextState = shouldUpdate
+            ? currentState === previousState
               ? nextCachedState
               : {
                   ...currentState,
                   ...(wasUrlState ? previousState : {}),
                   [stateKey as keyof KeyMap]: nextValue
                 }
+            : currentState
           debug(
-            3,
+            shouldUpdate ? 3 : 2,
             hookId,
             stateKeys,
             urlKey,
@@ -413,13 +395,15 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
           callOptions.limitUrlUpdates ??
           parser.limitUrlUpdates ??
           limitUrlUpdates
-        const isDebounce = resolvedLimitUrlUpdates?.method === 'debounce'
         const debounceTimeMs =
           resolvedLimitUrlUpdates?.timeMs ?? defaultRateLimit.timeMs
         // debounce(Infinity) takes the throttle path: it lands in the pending
         // updates overlay (visible to other hooks on the key, including ones
         // mounting later) and defers the flush like throttle(Infinity) does.
-        if (isDebounce && Number.isFinite(debounceTimeMs)) {
+        if (
+          resolvedLimitUrlUpdates?.method === 'debounce' &&
+          Number.isFinite(debounceTimeMs)
+        ) {
           const debouncedPromise = debounceController.push(
             update,
             debounceTimeMs,
@@ -444,11 +428,11 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
       }
       // We need to flush the throttle queue, but we may have a pending
       // debounced update that will resolve afterwards.
-      let globalPromise = debounceAborts.length
+      const globalPromise = debounceAborts.length
         ? globalThrottleQueue.flush(adapter, processUrlSearchParams)
         : globalThrottleQueue.getPendingPromise(adapter)
-      for (const abort of debounceAborts) {
-        globalPromise = abort(globalPromise)
+      for (const aborted of debounceAborts) {
+        aborted && globalPromise.then(aborted.resolve, aborted.reject)
       }
       return returnedPromise || globalPromise
     },
@@ -508,10 +492,11 @@ function parseMap<KeyMap extends UseQueryStatesKeysMap>(
       state[stateKey as keyof KeyMap] = cachedStateValue
       continue
     }
-    const value = isAbsentFromUrl(query)
-      ? null
-      : // we have properly narrowed `query` here, but TS doesn't keep track of that
-        parseWithCache(urlKey, parser.parse, query as string & Array<string>)
+    const value =
+      query === null || (Array.isArray(query) && !query.length)
+        ? null
+        : // we have properly narrowed `query` here, but TS doesn't keep track of that
+          parseWithCache(urlKey, parser.parse, query as string & Array<string>)
 
     hasChanged =
       !Object.is(
@@ -529,7 +514,7 @@ function applyDefaultValues<KeyMap extends UseQueryStatesKeysMap>(
   return Object.fromEntries(
     Object.keys(state).map(key => [
       key,
-      getOwn(state, key) ?? getOwn(keyMap, key)?.defaultValue ?? null
+      state[key] ?? getOwn(keyMap, key)?.defaultValue ?? null
     ])
   ) as Values<KeyMap>
 }

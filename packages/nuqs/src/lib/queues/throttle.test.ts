@@ -176,6 +176,17 @@ describe('throttle: ThrottleQueue option combination logic', () => {
     queue.push({ key: 'c', query: null, options: {} }, 300)
     expect(queue.timeMs).toEqual(300)
   })
+  it('reads the default timeMs lazily', () => {
+    const originalTimeMs = defaultRateLimit.timeMs
+    try {
+      defaultRateLimit.timeMs = 100
+      const queue = new ThrottledQueue()
+      queue.push({ key: 'a', query: null, options: {} })
+      expect(queue.timeMs).toEqual(100)
+    } finally {
+      defaultRateLimit.timeMs = originalTimeMs
+    }
+  })
   it('clamps the minimum value for timeMs to the default rate limit', () => {
     expect(defaultRateLimit.timeMs).toBeGreaterThan(10) // precondition
     const queue = new ThrottledQueue()

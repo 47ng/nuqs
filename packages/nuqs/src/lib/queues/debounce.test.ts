@@ -455,14 +455,12 @@ describe('debounce: DebounceController', () => {
       100,
       fakeAdapter
     )
-    const attach = controller.abort('key')
-    expect(attach).toBeInstanceOf(Function)
+    const aborted = controller.abort('key')!
     vi.runAllTimers()
     const resolvedPromise = Promise.resolve(
       new URLSearchParams('?key=override')
     )
-    const attachedPromise = attach(resolvedPromise)
-    expect(attachedPromise).toBe(resolvedPromise) // Referential equality
+    resolvedPromise.then(aborted.resolve, aborted.reject)
     await expect(debouncedPromise).resolves.toEqual(
       new URLSearchParams('?key=override')
     )
