@@ -5,7 +5,7 @@ import type { LimitUrlUpdates } from '../../defs'
 // edit: Safari 17 now allows 100 calls per 10 seconds, a bit better.
 function getDefaultThrottle() {
   // https://stackoverflow.com/questions/7944460/detect-safari-browser
-  // @ts-expect-error
+  // @ts-expect-error -- GestureEvent is a Safari-only Window property.
   if (typeof window === 'undefined' || !window.GestureEvent) {
     return 50
   }

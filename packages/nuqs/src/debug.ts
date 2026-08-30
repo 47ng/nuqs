@@ -18,11 +18,9 @@ import { debugMessages, sprintf } from './lib/debug-messages'
 // process.env.DEBUG  = 'nuqs' // on the server
 // ```
 function installDebugSink(): void {
-  setDebugSink((code, args) => {
+  setDebugSink((code, args, isWarn) => {
     const message = debugMessages[code]
-    // Warning codes call the shared dispatcher directly, so core bundles only
-    // retain one logging function while the opt-in entry preserves severity.
-    if (code === 24 || code === 25) {
+    if (isWarn) {
       console.warn(message, ...args)
       return
     }

@@ -3,7 +3,11 @@
 // the core bundle (they only ship via the opt-in `nuqs/debug` entry).
 import type { DebugArgs, DebugCode } from './debug-messages'
 
-export type DebugSink = (code: DebugCode, args: unknown[]) => void
+export type DebugSink = (
+  code: DebugCode,
+  args: unknown[],
+  isWarn?: boolean
+) => void
 
 let sink: DebugSink | null = null
 
@@ -25,7 +29,7 @@ export function warn<Code extends 24 | 25>(
   code: Code,
   ...args: DebugArgs<Code>
 ): void {
-  debug(code, ...args)
+  sink?.(code, args, true)
 }
 
 export function isDebugFlagSet(): boolean {
@@ -39,15 +43,11 @@ export function isDebugFlagSet(): boolean {
     )
   }
 
-  // Check if localStorage is available.
-  // It may be unavailable in some environments,
-  // like Safari in private browsing mode.
+  // Accessing or writing to localStorage may throw, notably in Safari private
+  // browsing mode, so keep the complete availability check inside this try.
   // See https://github.com/47ng/nuqs/pull/588
   try {
     const test = 'nuqs-localStorage-test'
-    if (typeof localStorage === 'undefined') {
-      return false
-    }
     localStorage.setItem(test, test)
     const isStorageAvailable = localStorage.getItem(test) === test
     localStorage.removeItem(test)

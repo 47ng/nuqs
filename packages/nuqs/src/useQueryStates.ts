@@ -15,7 +15,7 @@ import {
   type UpdateQueuePushArgs
 } from './lib/queues/throttle'
 import { useSyncExternalStores } from './lib/queues/useSyncExternalStores'
-import type { Query } from './lib/search-params'
+import { isAbsentFromUrl, type Query } from './lib/search-params'
 import { getOwn, getUrlKey } from './lib/url-keys'
 import { type GenericParser } from './parsers'
 
@@ -492,11 +492,10 @@ function parseMap<KeyMap extends UseQueryStatesKeysMap>(
       state[stateKey as keyof KeyMap] = cachedStateValue
       continue
     }
-    const value =
-      query === null || (Array.isArray(query) && !query.length)
-        ? null
-        : // we have properly narrowed `query` here, but TS doesn't keep track of that
-          parseWithCache(urlKey, parser.parse, query as string & Array<string>)
+    const value = isAbsentFromUrl(query)
+      ? null
+      : // we have properly narrowed `query` here, but TS doesn't keep track of that
+        parseWithCache(urlKey, parser.parse, query as string & Array<string>)
 
     hasChanged =
       !Object.is(

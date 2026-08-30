@@ -402,8 +402,9 @@ describe('duplicate library copies', () => {
     await page.getByTestId('b').click()
     await expect.element(page.getByTestId('a')).toHaveTextContent('typed')
     expect(onUrlUpdate).not.toHaveBeenCalled()
-    await new Promise(resolve => setTimeout(resolve, 200))
-    expect(onUrlUpdate).toHaveBeenCalledTimes(1)
+    await vi.waitFor(() => expect(onUrlUpdate).toHaveBeenCalledTimes(1), {
+      timeout: 200
+    })
     const [event] = onUrlUpdate.mock.calls.at(-1)!
     expect(event.searchParams.get('q')).toBe('typed')
   })
