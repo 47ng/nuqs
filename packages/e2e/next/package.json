@@ -28,7 +28,7 @@
     "@types/node": "^24.13.3",
     "@types/react": "catalog:react19",
     "@types/react-dom": "catalog:react19",
-    "babel-plugin-react-compiler": "1.0.0",
+    "babel-plugin-react-compiler": "catalog:react-compiler",
     "e2e-shared": "workspace:*",
     "typescript": "catalog:typescript6"
   }

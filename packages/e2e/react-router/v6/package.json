@@ -22,8 +22,9 @@
     "@types/node": "^24.13.3",
     "@types/react": "catalog:react19",
     "@types/react-dom": "catalog:react19",
-    "@vitejs/plugin-react": "^6.0.3",
+    "@vitejs/plugin-react": "catalog:react-compiler",
     "e2e-shared": "workspace:*",
+    "oxc-transform-react": "catalog:react-compiler",
     "typescript": "catalog:typescript",
     "vite": "catalog:vite"
   }

@@ -230,30 +230,30 @@ jobs:
         next-version:
           # Only keep versions where there were relevant changes in the app router core,
           # and the previous one to use as a baseline.
-          - "14.2.0"
+          - '14.2.0'
           # - '14.2.3' # before vercel/next.js#66755
-          - "14.2.4" # after vercel/next.js#66755
+          - '14.2.4' # after vercel/next.js#66755
           # - '14.2.7' # before vercel/next.js#69509
-          - "14.2.8" # after vercel/next.js#69509
-          - "15.0.0"
-          - "15.1.0"
-          - "15.2.0"
+          - '14.2.8' # after vercel/next.js#69509
+          - '15.0.0'
+          - '15.1.0'
+          - '15.2.0'
           - latest
         include:
-          - next-version: "14.2.0"
-            base-path: "/base"
-          - next-version: "15.0.0"
-            base-path: "/base"
-          - next-version: "latest"
-            base-path: "/base"
-          - next-version: "latest"
+          - next-version: '14.2.0'
+            base-path: '/base'
+          - next-version: '15.0.0'
+            base-path: '/base'
+          - next-version: 'latest'
+            base-path: '/base'
+          - next-version: 'latest'
             react-compiler: true
-          - next-version: "latest"
-            base-path: "/base"
+          - next-version: 'latest'
+            base-path: '/base'
             react-compiler: true
-          - next-version: "latest"
+          - next-version: 'latest'
             cache-components: true
-          - next-version: "latest"
+          - next-version: 'latest'
             cache-components: true
             react-compiler: true
     steps:
@@ -304,13 +304,17 @@ jobs:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
   e2e-react:
-    name: E2E (react-fpn-${{ matrix.full-page-nav-on-shallow-false }})
+    name: E2E (react-fpn-${{ matrix.full-page-nav-on-shallow-false }}${{ matrix.react-compiler && ' ⚛️' || '' }})
     runs-on: ubuntu-24.04-arm
     needs: [ci-core]
     strategy:
       fail-fast: false
       matrix:
         full-page-nav-on-shallow-false: [false, true]
+        react-compiler: [false]
+        include:
+          - full-page-nav-on-shallow-false: false
+            react-compiler: true
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
@@ -329,33 +333,35 @@ jobs:
           TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
           E2E_NO_CACHE_ON_RERUN: ${{ github.run_attempt }}
           FULL_PAGE_NAV_ON_SHALLOW_FALSE: ${{ matrix.full-page-nav-on-shallow-false }}
+          REACT_COMPILER: ${{ matrix.react-compiler }}
       - name: Save Playwright report
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         if: failure()
         with:
           path: packages/e2e/react/.playwright/*
-          name: playwright-react-fpn-${{ matrix.full-page-nav-on-shallow-false }}
+          name: playwright-react-fpn-${{ matrix.full-page-nav-on-shallow-false }}${{ matrix.react-compiler && '-react-compiler' || '' }}
           include-hidden-files: true
       - uses: 47ng/actions-slack-notify@df42545060c07ca99a040d0a520ab8457ce3c222
         name: Notify on Slack
         if: failure()
         with:
           status: ${{ job.status }}
-          jobName: react-fpn-${{ matrix.full-page-nav-on-shallow-false }}
+          jobName: react-fpn-${{ matrix.full-page-nav-on-shallow-false }}${{ matrix.react-compiler && ' react-compiler' || '' }}
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
   e2e-react-router:
-    name: E2E (react-router ${{ matrix.react-router-version }})
+    name: E2E (react-router ${{ matrix.react-router-version }}${{ matrix.react-compiler && ' ⚛️' || '' }})
     runs-on: ubuntu-24.04-arm
     needs: [ci-core]
     strategy:
       fail-fast: false
       matrix:
         react-router-version:
-          - "v6"
-          - "v7"
-          - "v8"
+          - 'v6'
+          - 'v7'
+          - 'v8'
+        react-compiler: [false, true]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
@@ -373,19 +379,20 @@ jobs:
           TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
           TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
           E2E_NO_CACHE_ON_RERUN: ${{ github.run_attempt }}
+          REACT_COMPILER: ${{ matrix.react-compiler }}
       - name: Save Playwright report
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         if: failure()
         with:
           path: packages/e2e/react-router/${{ matrix.react-router-version }}/.playwright/*
-          name: playwright-react-router-${{ matrix.react-router-version }}
+          name: playwright-react-router-${{ matrix.react-router-version }}${{ matrix.react-compiler && '-react-compiler' || '' }}
           include-hidden-files: true
       - uses: 47ng/actions-slack-notify@df42545060c07ca99a040d0a520ab8457ce3c222
         name: Notify on Slack
         if: failure()
         with:
           status: ${{ job.status }}
-          jobName: react-router-${{ matrix.react-router-version }}
+          jobName: react-router-${{ matrix.react-router-version }}${{ matrix.react-compiler && ' react-compiler' || '' }}
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
@@ -427,9 +434,13 @@ jobs:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
   e2e-tanstack-router:
-    name: E2E (tanstack-router)
+    name: E2E (tanstack-router${{ matrix.react-compiler && ' ⚛️' || '' }})
     runs-on: ubuntu-22.04-arm
     needs: [ci-core]
+    strategy:
+      fail-fast: false
+      matrix:
+        react-compiler: [false, true]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
@@ -447,19 +458,20 @@ jobs:
           TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
           TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
           E2E_NO_CACHE_ON_RERUN: ${{ github.run_attempt }}
+          REACT_COMPILER: ${{ matrix.react-compiler }}
       - name: Save Playwright report
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         if: failure()
         with:
           path: packages/e2e/tanstack-router/.playwright/*
-          name: playwright-tanstack-router
+          name: playwright-tanstack-router${{ matrix.react-compiler && '-react-compiler' || '' }}
           include-hidden-files: true
       - uses: 47ng/actions-slack-notify@df42545060c07ca99a040d0a520ab8457ce3c222
         name: Notify on Slack
         if: failure()
         with:
           status: ${{ job.status }}
-          jobName: tanstack-router
+          jobName: tanstack-router${{ matrix.react-compiler && ' react-compiler' || '' }}
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
