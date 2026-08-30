@@ -1,7 +1,7 @@
 import React from 'react'
 import { describe, expect, it, vi } from 'vitest'
 import { page } from 'vitest/browser'
-import { render } from 'vitest-browser-react'
+import { render, renderHook } from 'vitest-browser-react'
 import * as nextPagesAdapterA from './adapters/next/pages'
 import * as reactAdapterA from './adapters/react'
 import * as adapterA from './adapters/testing'
@@ -164,6 +164,32 @@ describe('duplicate library copies', () => {
     await page.getByTestId('b').click()
     await expect.element(page.getByTestId('b')).toHaveTextContent('world')
     await expect.element(page.getByTestId('a')).toHaveTextContent('world')
+  })
+
+  it('shares same-query value identity across copies', async () => {
+    const parser = nuqsA.parseAsJson<{ v: number }>(x => x as { v: number })
+    const { result, act } = await renderHook(
+      () => ({
+        a: nuqsA.useQueryState('q', parser),
+        b: nuqsB.useQueryState('q', parser)
+      }),
+      {
+        wrapper: adapterA.withNuqsTestingAdapter({
+          searchParams: '?q={"v":1}'
+        })
+      }
+    )
+    const written = { v: 1 }
+
+    await act(async () => {
+      void result.current.b[1](written, {
+        limitUrlUpdates: nuqsB.throttle(Infinity)
+      })
+      await Promise.resolve()
+    })
+
+    expect(result.current.b[0]).toBe(written)
+    expect(result.current.a[0]).toBe(written)
   })
 
   it("does not abort another copy's Pages Router update", async () => {

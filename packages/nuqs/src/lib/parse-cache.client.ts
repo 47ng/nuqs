@@ -1,5 +1,6 @@
 import { compareQuery } from './compare'
 import { warn } from './debug'
+import { globalSingleton } from './global-singleton'
 import type { Query } from './search-params'
 
 type ParseFunction = (query: string & Array<string>) => unknown
@@ -18,7 +19,10 @@ type ParseCacheBucket = {
   r: number
 }
 
-const parseCache = new Map<string, ParseCacheBucket>()
+const parseCache = globalSingleton(
+  'parse-cache',
+  () => new Map<string, ParseCacheBucket>()
+)
 
 function getParseCacheBucket(urlKey: string): ParseCacheBucket {
   let bucket = parseCache.get(urlKey)
