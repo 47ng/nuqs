@@ -12,6 +12,7 @@ export default [
     route('/form/useQueryStates',                       './routes/form.useQueryStates.tsx'),
     route('/hash-preservation',                         './routes/hash-preservation.tsx'),
     route('/history-sync',                              './routes/history-sync.tsx'),
+    route('/lane-priority',                             './routes/lane-priority.tsx'),
     route('/json',                                      './routes/json.tsx'),
     route('/life-and-death',                            './routes/life-and-death.tsx'),
     route('/linking/useQueryState',                     './routes/linking.useQueryState.tsx'),

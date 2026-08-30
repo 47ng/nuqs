@@ -11,6 +11,7 @@ import { testPrettyUrls } from './specs/pretty-urls.spec'
 import { testReferentialStability } from './specs/referential-stability.spec'
 import { testRouting } from './specs/routing.spec'
 import { testHistorySync } from './specs/history-sync.spec'
+import { testLanePriority } from './specs/lane-priority.spec'
 import { testScroll } from './specs/scroll.spec'
 
 export function runSharedTests(
@@ -132,6 +133,13 @@ export function runSharedTests(
 
   testHistorySync({
     path: `${pathPrefix}/history-sync`,
+    ...config
+  })
+
+  // --
+
+  testLanePriority({
+    path: `${pathPrefix}/lane-priority`,
     ...config
   })
 

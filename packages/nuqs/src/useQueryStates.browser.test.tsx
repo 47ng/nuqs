@@ -1,12 +1,15 @@
 import React, {
   createElement,
+  startTransition,
   Suspense,
   useEffect,
+  useLayoutEffect,
   useState,
+  useSyncExternalStore,
   type ReactNode
 } from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { render, renderHook } from 'vitest-browser-react'
+import { cleanup, render, renderHook } from 'vitest-browser-react'
 import { page, userEvent } from 'vitest/browser'
 import { createReactRouterBasedAdapter } from './adapters/lib/react-router'
 import {
@@ -20,6 +23,7 @@ import {
 } from './adapters/testing'
 import { debounce, throttle } from './lib/queues/rate-limiting'
 import { resetQueues } from './lib/queues/reset'
+import { globalThrottleQueue } from './lib/queues/throttle'
 import {
   createParser,
   parseAsArrayOf,
@@ -564,9 +568,12 @@ describe('useQueryStates: rendering & bail-out', () => {
     expect(onUrlUpdate).toHaveBeenCalledTimes(0)
 
     await user.click(page.getByRole('button', { name: 'Start' }))
-
     expect(renderCount).toBe(1) // same render count as before
     expect(onUrlUpdate).toHaveBeenCalledTimes(1) // url update is still called
+
+    await user.click(page.getByRole('button', { name: 'Start' }))
+    expect(renderCount).toBe(1)
+    expect(onUrlUpdate).toHaveBeenCalledTimes(2)
   })
 })
 
@@ -1804,5 +1811,129 @@ describe('useQueryStates: discarded renders', () => {
     await expect
       .element(page.getByTestId('value'))
       .toHaveTextContent('incoming')
+  })
+})
+
+describe('useQueryStates: transition lane feedback', () => {
+  const { NuqsAdapter } = createReactRouterBasedAdapter({
+    adapter: 'test-transition-lane-feedback',
+    useNavigate: () => () => {},
+    useSearchParams: initial => [initial, {}]
+  })
+  const feedbackListeners = new Set<() => void>()
+  let feedbackState: string | null | undefined
+  let feedbackUpdates = 0
+  let feedbackUpdateLimit = 20
+
+  function subscribeFeedback(listener: () => void) {
+    feedbackListeners.add(listener)
+    return () => feedbackListeners.delete(listener)
+  }
+
+  function publishFeedback(value: string | null) {
+    if (feedbackState === value || feedbackUpdates >= feedbackUpdateLimit)
+      return
+    feedbackState = value
+    feedbackUpdates++
+    feedbackListeners.forEach(listener => listener())
+  }
+
+  function Probe({ renders }: { renders: Array<string | null> }) {
+    const [{ value }, setState] = useQueryStates({
+      value: parseAsString.withOptions({
+        history: 'replace',
+        limitUrlUpdates: throttle(500)
+      })
+    })
+    useSyncExternalStore(
+      subscribeFeedback,
+      () => feedbackState,
+      () => feedbackState
+    )
+    const [, setTick] = useState(0)
+    renders.push(value)
+
+    useLayoutEffect(() => publishFeedback(value), [value])
+
+    return (
+      <>
+        <button
+          data-testid="write"
+          onClick={() => {
+            startTransition(() => void setState({ value: 'B' }))
+          }}
+        />
+        <button
+          data-testid="sync-write"
+          onClick={() => void setState({ value: 'B' })}
+        />
+        <button data-testid="tick" onClick={() => setTick(tick => tick + 1)} />
+      </>
+    )
+  }
+
+  const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
+  const distinct = (values: Array<string | null>) =>
+    values.filter((value, index) => index === 0 || value !== values[index - 1])
+  const click = (testId: string) =>
+    page
+      .getByTestId(testId)
+      .element()
+      .dispatchEvent(new MouseEvent('click', { bubbles: true }))
+
+  afterEach(() => {
+    cleanup()
+    resetQueues()
+    feedbackListeners.clear()
+    feedbackState = undefined
+    feedbackUpdates = 0
+    feedbackUpdateLimit = 20
+    const url = new URL(location.href)
+    url.searchParams.delete('value')
+    history.replaceState(history.state, '', url)
+  })
+
+  async function mount() {
+    globalThrottleQueue.lastFlushedAt = performance.now()
+    const renders: Array<string | null> = []
+    await render(
+      <NuqsAdapter>
+        <Probe renders={renders} />
+      </NuqsAdapter>
+    )
+    renders.splice(0, renders.length - 1)
+    return renders
+  }
+
+  it('converges when a later sync render feeds back through layout effects', async () => {
+    const renders = await mount()
+    click('write')
+    click('tick')
+    await sleep(100)
+
+    expect(renders[1]).toBe(null)
+    expect(distinct(renders)).toEqual([null, 'B'])
+  })
+
+  it('does not overflow with uncapped external-store feedback (#1567)', async () => {
+    feedbackUpdateLimit = Infinity
+    const renders = await mount()
+    click('write')
+    click('tick')
+    await sleep(100)
+
+    expect(renders[1]).toBe(null)
+    expect(distinct(renders)).toEqual([null, 'B'])
+    expect(feedbackUpdates).toBeLessThanOrEqual(2)
+  })
+
+  it('promotes a repeated transition value to the sync lane', async () => {
+    const renders = await mount()
+    click('write')
+    click('sync-write')
+    click('tick')
+    await sleep(100)
+
+    expect(renders[1]).toBe('B')
   })
 })
