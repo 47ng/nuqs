@@ -130,12 +130,21 @@ describe('throttle: ThrottleQueue option combination logic', () => {
     })
   })
   it('should compose transitions', async () => {
-    const mockStartTransition = (callback: () => void) => {
-      callback()
-    }
+    const calls: string[] = []
     const mockAdapter = createMockAdapter()
-    const startTransitionA = vi.fn().mockImplementation(mockStartTransition)
-    const startTransitionB = vi.fn().mockImplementation(mockStartTransition)
+    vi.mocked(mockAdapter.updateUrl).mockImplementation(() => {
+      calls.push('update')
+    })
+    const startTransitionA = vi.fn().mockImplementation(callback => {
+      calls.push('a:start')
+      callback()
+      calls.push('a:end')
+    })
+    const startTransitionB = vi.fn().mockImplementation(callback => {
+      calls.push('b:start')
+      callback()
+      calls.push('b:end')
+    })
     const queue = new ThrottledQueue()
     queue.push({
       key: 'a',
@@ -150,7 +159,8 @@ describe('throttle: ThrottleQueue option combination logic', () => {
     await queue.flush(mockAdapter)
     expect(startTransitionA).toHaveBeenCalledOnce()
     expect(startTransitionB).toHaveBeenCalledOnce()
-    expect(startTransitionA).toHaveBeenCalledBefore(startTransitionB)
+    expect(mockAdapter.updateUrl).toHaveBeenCalledOnce()
+    expect(calls).toEqual(['a:start', 'b:start', 'update', 'b:end', 'a:end'])
   })
   it('passes the updateUrl result to the transition, so a Promise makes it an async action', async () => {
     const navigationSettled = Promise.resolve()
@@ -176,13 +186,17 @@ describe('throttle: ThrottleQueue option combination logic', () => {
     queue.push({ key: 'c', query: null, options: {} }, 300)
     expect(queue.timeMs).toEqual(300)
   })
-  it('reads the default timeMs lazily', () => {
+  it('reads the mutable default timeMs when pushing and resetting', () => {
     const originalTimeMs = defaultRateLimit.timeMs
+    const queue = new ThrottledQueue()
     try {
-      defaultRateLimit.timeMs = 100
-      const queue = new ThrottledQueue()
+      defaultRateLimit.timeMs = originalTimeMs + 1
       queue.push({ key: 'a', query: null, options: {} })
-      expect(queue.timeMs).toEqual(100)
+      expect(queue.timeMs).toEqual(originalTimeMs + 1)
+
+      defaultRateLimit.timeMs = originalTimeMs + 2
+      queue.reset()
+      expect(queue.timeMs).toEqual(originalTimeMs + 2)
     } finally {
       defaultRateLimit.timeMs = originalTimeMs
     }

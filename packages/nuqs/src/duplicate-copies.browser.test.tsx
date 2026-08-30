@@ -374,6 +374,7 @@ describe('duplicate library copies', () => {
   })
 
   it('shows pending debounced state from the other copy', async () => {
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] })
     const onUrlUpdate = vi.fn<adapterA.OnUrlUpdateFunction>()
     function DemoA() {
       const [q] = nuqsA.useQueryState('q')
@@ -390,22 +391,27 @@ describe('duplicate library copies', () => {
         />
       )
     }
-    render(
-      <>
-        <DemoA />
-        <DemoB />
-      </>,
-      {
-        wrapper: adapterA.withNuqsTestingAdapter({ onUrlUpdate })
-      }
-    )
-    await page.getByTestId('b').click()
-    await expect.element(page.getByTestId('a')).toHaveTextContent('typed')
-    expect(onUrlUpdate).not.toHaveBeenCalled()
-    await vi.waitFor(() => expect(onUrlUpdate).toHaveBeenCalledTimes(1), {
-      timeout: 200
-    })
-    const [event] = onUrlUpdate.mock.calls.at(-1)!
-    expect(event.searchParams.get('q')).toBe('typed')
+    try {
+      await render(
+        <>
+          <DemoA />
+          <DemoB />
+        </>,
+        {
+          wrapper: adapterA.withNuqsTestingAdapter({ onUrlUpdate })
+        }
+      )
+      await page.getByTestId('b').click()
+      await expect.element(page.getByTestId('a')).toHaveTextContent('typed')
+      expect(onUrlUpdate).not.toHaveBeenCalled()
+
+      await vi.advanceTimersByTimeAsync(200)
+
+      expect(onUrlUpdate).toHaveBeenCalledTimes(1)
+      const [event] = onUrlUpdate.mock.calls.at(-1)!
+      expect(event.searchParams.get('q')).toBe('typed')
+    } finally {
+      vi.useRealTimers()
+    }
   })
 })
