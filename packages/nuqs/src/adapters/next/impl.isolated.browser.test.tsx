@@ -1,4 +1,3 @@
-import { act } from 'react'
 import { describe, expect, it } from 'vitest'
 import { renderHook } from 'vitest-browser-react'
 import {
@@ -11,21 +10,21 @@ describe('impl.isolated: useIsolatedSearchParams', () => {
   it('keeps the snapshot identity when unwatched keys change', async () => {
     const store = createBridgeStore()
     publish(store, new URLSearchParams('?a=1&b=2'))
-    const { result } = await renderHook(() =>
+    const { result, act } = await renderHook(() =>
       useIsolatedSearchParams(store, ['a'], {})
     )
     const first = result.current
     expect(first.toString()).toBe('a=1')
-    act(() => publish(store, new URLSearchParams('?a=1&b=changed')))
+    await act(() => publish(store, new URLSearchParams('?a=1&b=changed')))
     expect(result.current).toBe(first)
   })
   it('re-renders with a new snapshot when a watched key changes', async () => {
     const store = createBridgeStore()
     publish(store, new URLSearchParams('?a=1&b=2'))
-    const { result } = await renderHook(() =>
+    const { result, act } = await renderHook(() =>
       useIsolatedSearchParams(store, ['a'], {})
     )
-    act(() => publish(store, new URLSearchParams('?a=changed&b=2')))
+    await act(() => publish(store, new URLSearchParams('?a=changed&b=2')))
     expect(result.current.toString()).toBe('a=changed')
   })
   it('re-checks a watched key removed before the first publish', async () => {
@@ -34,11 +33,11 @@ describe('impl.isolated: useIsolatedSearchParams', () => {
     // location fallback (no committed params yet).
     history.replaceState(null, '', '?a=stale')
     try {
-      const { result } = await renderHook(() =>
+      const { result, act } = await renderHook(() =>
         useIsolatedSearchParams(store, ['a'], {})
       )
       expect(result.current.toString()).toBe('a=stale')
-      act(() => publish(store, new URLSearchParams('')))
+      await act(() => publish(store, new URLSearchParams('')))
       expect(result.current.toString()).toBe('')
     } finally {
       history.replaceState(null, '', location.pathname)
@@ -89,9 +88,9 @@ describe('impl.isolated: useIsolatedSearchParams', () => {
     const a = await renderHook(() => useIsolatedSearchParams(store, ['x'], {}))
     const b = await renderHook(() => useIsolatedSearchParams(store, ['x'], {}))
     expect(store.watched.get('x')).toBe(2)
-    a.unmount()
+    await a.unmount()
     expect(store.watched.get('x')).toBe(1)
-    b.unmount()
+    await b.unmount()
     expect(store.watched.has('x')).toBe(false)
   })
 })
