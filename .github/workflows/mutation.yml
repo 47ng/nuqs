@@ -99,7 +99,7 @@ jobs:
             echo 'supported=true' >> "$GITHUB_OUTPUT"
           else
             echo 'supported=false' >> "$GITHUB_OUTPUT"
-            echo '::notice::No base mutation report exists; this run establishes the initial baseline.'
+            echo '::notice::The base commit has no mutation setup; skipping the relative gate and running the full candidate suite.'
           fi
       - name: Install baseline dependencies
         if: steps.baseline.outputs.supported == 'true'
@@ -119,9 +119,14 @@ jobs:
             packages/nuqs/scripts/mutation.mjs \
             packages/nuqs/scripts/mutation-projects.mjs \
             packages/nuqs/scripts/mutation-report.mjs \
+            packages/nuqs/stryker.browser.config.mjs \
+            packages/nuqs/stryker.node.config.mjs \
+            packages/nuqs/stryker.shared.config.mjs \
             packages/nuqs/vitest.browser.mutation.config.ts \
+            packages/nuqs/vitest.browser.setup.ts \
             packages/nuqs/vitest.config.ts \
             packages/nuqs/vitest.mutation.config.ts \
+            packages/nuqs/vitest.setup.ts \
             packages/scripts/package.json \
             packages/scripts/mutation-gate.ts \
             pnpm-lock.yaml \
@@ -151,9 +156,14 @@ jobs:
             packages/nuqs/scripts/mutation.mjs \
             packages/nuqs/scripts/mutation-projects.mjs \
             packages/nuqs/scripts/mutation-report.mjs \
+            packages/nuqs/stryker.browser.config.mjs \
+            packages/nuqs/stryker.node.config.mjs \
+            packages/nuqs/stryker.shared.config.mjs \
             packages/nuqs/vitest.browser.mutation.config.ts \
+            packages/nuqs/vitest.browser.setup.ts \
             packages/nuqs/vitest.config.ts \
             packages/nuqs/vitest.mutation.config.ts \
+            packages/nuqs/vitest.setup.ts \
             packages/scripts/package.json \
             packages/scripts/mutation-gate.ts \
             pnpm-lock.yaml \
@@ -189,10 +199,17 @@ jobs:
             BASE_SHA="$(cat "$RUNNER_TEMP/mutation-base-sha")"
             if git diff --quiet "$BASE_SHA" "$HEAD_SHA" -- \
               'packages/nuqs/src/adapters' \
+              'packages/nuqs/src/lib/compare.ts' \
+              'packages/nuqs/src/lib/debug.ts' \
+              'packages/nuqs/src/lib/queues/debounce.ts' \
+              'packages/nuqs/src/lib/queues/rate-limiting.ts' \
+              'packages/nuqs/src/lib/queues/throttle.ts' \
+              'packages/nuqs/src/lib/queues/useSyncExternalStores.ts' \
+              'packages/nuqs/src/lib/safe-parse.ts' \
+              'packages/nuqs/src/lib/search-params.ts' \
               'packages/nuqs/src/lib/sync.ts' \
               'packages/nuqs/src/lib/url-encoding.ts' \
-              'packages/nuqs/src/lib/queues/rate-limiting.ts' \
-              'packages/nuqs/src/lib/queues/useSyncExternalStores.ts' \
+              'packages/nuqs/src/lib/url-keys.ts' \
               'packages/nuqs/tests' \
               'packages/nuqs/vitest.browser.setup.ts' \
               'packages/nuqs/vitest.setup.ts'
@@ -226,7 +243,7 @@ jobs:
       - name: Require explicit approval for a new baseline
         if: steps.baseline.outputs.supported == 'true' && steps.inputs.outputs.comparable != 'true'
         run: |
-          echo '::error::Mutation execution inputs changed, so the relative gate is not meaningful. Review the uploaded full report, then merge with a required-check override to establish this candidate as the new baseline.'
+          echo '::error::Mutation execution inputs changed, so the relative gate is not meaningful. Review the uploaded full report before merging; later PRs will compare against the merged setup.'
           exit 1
 
   mutation-full:
