@@ -8,7 +8,11 @@ export const browserProjects = [
   },
   {
     mutate: 'src/useQueryStates.ts',
-    testFiles: ['src/useQueryStates.browser.test.tsx']
+    testFiles: [
+      'src/useQueryStates.browser.test.tsx',
+      'src/useQueryStates.mutation.browser.test.tsx',
+      'src/useQueryStates.discarded-reconcile.browser.test.tsx'
+    ]
   }
 ]
 

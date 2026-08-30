@@ -3,6 +3,7 @@ import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, describe, it } from 'node:test'
+import { browserProjects } from '../stryker.browser.config.mjs'
 import {
   comparableMutationConfig,
   createMutationProjects
@@ -14,6 +15,20 @@ afterEach(async () => {
   await Promise.all(
     temporaryDirectories.splice(0).map(path => rm(path, { recursive: true }))
   )
+})
+
+describe('browser mutation projects', () => {
+  it('includes every useQueryStates browser regression test', () => {
+    const project = browserProjects.find(
+      project => project.mutate === 'src/useQueryStates.ts'
+    )
+
+    assert.deepEqual(project?.testFiles, [
+      'src/useQueryStates.browser.test.tsx',
+      'src/useQueryStates.mutation.browser.test.tsx',
+      'src/useQueryStates.discarded-reconcile.browser.test.tsx'
+    ])
+  })
 })
 
 describe('createMutationProjects', () => {
