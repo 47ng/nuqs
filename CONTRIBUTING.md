@@ -85,11 +85,13 @@ Mutation testing is available separately because it is too slow for the regular
 test suite:
 
 ```sh
-pnpm run mutation --filter nuqs
+pnpm mutation
 ```
 
-The report is written to `packages/nuqs/reports/mutation/`. CI rejects changes
-that increase the number of undetected mutants relative to their base.
+The report is written to `packages/nuqs/reports/mutation/`. The `Mutation debt`
+check fails when a change increases the number of undetected mutants relative to
+its base. Changes to the mutation setup require reviewing a fresh full report
+before merging.
 
 ## Opening issues
 
