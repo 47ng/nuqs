@@ -13,6 +13,7 @@ type ParseCacheEntry = [
 
 type ParseCacheBucket = {
   e?: ParseCacheEntry
+  p?: ParseCacheEntry
   v?: number
   r: number
 }
@@ -36,7 +37,9 @@ function getParseCacheBucket(urlKey: string): ParseCacheBucket {
 }
 
 export function clearParseCache(): void {
-  parseCache.forEach(bucket => (bucket.e = undefined))
+  parseCache.forEach(bucket => {
+    bucket.e = bucket.p = undefined
+  })
 }
 
 export function retainParseCache(urlKey: string, delta: 1 | -1): void {
@@ -56,7 +59,9 @@ export function parseWithClientCache<T>(
   query: string & Array<string>,
   value?: T
 ): T | null {
-  const cached = parseCache.get(urlKey)?.e
+  const bucket = getParseCacheBucket(urlKey)
+  const cached = bucket.e
+  const published = bucket.p
   if (value !== undefined) {
     if (
       cached?.[0] === parse &&
@@ -65,10 +70,16 @@ export function parseWithClientCache<T>(
     ) {
       return value
     }
-    const bucket = getParseCacheBucket(urlKey)
-    bucket.e = [parse, query, value]
+    bucket.e = bucket.p = [parse, query, value]
     bucket.v = (bucket.v ?? -1) + 1
     return value
+  }
+  if (published) {
+    if (!compareQuery(published[1], query)) {
+      bucket.p = undefined
+    } else if (published[0] === parse) {
+      return published[2] as T | null
+    }
   }
   if (cached?.[0] === parse && compareQuery(cached[1], query)) {
     if (cached[3] !== undefined) {
@@ -83,6 +94,6 @@ export function parseWithClientCache<T>(
     warn(25, query, error, urlKey)
     entry[3] = error
   }
-  getParseCacheBucket(urlKey).e = entry
+  bucket.e = entry
   return entry[2] as T | null
 }
