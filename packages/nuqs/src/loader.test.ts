@@ -219,7 +219,12 @@ describe('loader', () => {
       })
       await expect(
         load(Promise.resolve('?count=invalid'), { strict: true })
-      ).rejects.toThrow()
+      ).rejects.toThrow(
+        '[nuqs] Failed to parse query `invalid` for key `count` (got null)'
+      )
+      await expect(
+        load(Promise.resolve('?count=1'), { strict: true })
+      ).resolves.toEqual({ count: 1 })
     })
     it('parses a URL object', () => {
       const load = createLoader({

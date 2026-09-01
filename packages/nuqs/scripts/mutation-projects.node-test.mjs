@@ -87,13 +87,18 @@ describe('createMutationProjects', () => {
       'src/cache.ts': '',
       'src/cache.browser.test.ts': ''
     })
-    const project = {
-      mutate: 'src/cache.ts',
-      testFiles: ['src/cache.browser.test.ts']
-    }
-
     assert.throws(
-      () => createMutationProjects(root, [project, project]),
+      () =>
+        createMutationProjects(root, [
+          {
+            mutate: 'src/cache.ts',
+            testFiles: ['src/cache.browser.test.ts']
+          },
+          {
+            mutate: 'src/cache.ts',
+            testFiles: ['src/cache.browser.test.ts']
+          }
+        ]),
       /duplicate browser mutation source: src\/cache\.ts/
     )
   })
@@ -116,23 +121,32 @@ describe('createMutationProjects', () => {
       }
     ])
 
+    assert.deepEqual(projects.browserMutate, ['src/first.ts', 'src/second.ts'])
     assert.deepEqual(projects.browserTestFiles, ['src/shared.browser.test.ts'])
   })
 
   it('compares strategy and runtime settings, not project file lists', () => {
     const config = comparableMutationConfig(
-      { mutate: ['src/a.ts'], testFiles: ['src/a.test.ts'], timeoutMS: 1 },
+      {
+        mutate: ['src/a.ts'],
+        testFiles: ['src/a.test.ts'],
+        timeoutMS: 1,
+        concurrency: 2,
+        vitest: { related: false }
+      },
       {
         mutate: ['src/b.ts'],
         testFiles: ['src/b.browser.test.ts'],
-        timeoutMS: 2
+        timeoutMS: 2,
+        concurrency: 3,
+        vitest: { related: true }
       }
     )
 
     assert.deepEqual(config, {
       strategy: 'runtime-ownership-v1',
-      node: { timeoutMS: 1 },
-      browser: { timeoutMS: 2 }
+      node: { timeoutMS: 1, concurrency: 2, vitest: { related: false } },
+      browser: { timeoutMS: 2, concurrency: 3, vitest: { related: true } }
     })
   })
 })

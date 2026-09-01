@@ -1,12 +1,5 @@
 import shared from './stryker.shared.config.mjs'
-import browser from './stryker.browser.config.mjs'
-
-const nodeMutate = [
-  'src/**/*.{ts,tsx}',
-  '!src/**/*.test.{ts,tsx}',
-  '!src/adapters/**',
-  ...browser.mutate.map(path => `!${path}`)
-]
+import { nodeMutate } from './stryker.browser.config.mjs'
 
 const config = {
   ...shared,

@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { createMultiParser, createParser } from './parsers'
 import {
   isParserBijective,
@@ -102,7 +102,7 @@ describe('parser testing helpers', () => {
       )
     })
 
-    it('rejects values that do not round trip according to parser equality', () => {
+    it('rejects values changed by lossy serialization', () => {
       const lossy = createParser({
         parse: Number,
         serialize: value => String(Math.round(value))
@@ -154,8 +154,24 @@ describe('parser testing helpers', () => {
     })
 
     it('rejects input queries with the wrong shape', () => {
-      expect(() => testParseThenSerialize(single, ['value'] as never)).toThrow()
-      expect(() => testParseThenSerialize(multi, 'value' as never)).toThrow()
+      const parseSingle = vi.fn(() => 'value')
+      const parseMulti = vi.fn(() => 'value')
+      const tolerantSingle = createParser({
+        parse: parseSingle,
+        serialize: String
+      })
+      const tolerantMulti = createMultiParser({
+        parse: parseMulti,
+        serialize: value => [value]
+      })
+      expect(() =>
+        testParseThenSerialize(tolerantSingle, ['value'] as never)
+      ).toThrow(/parsed value is null/)
+      expect(() =>
+        testParseThenSerialize(tolerantMulti, 'value' as never)
+      ).toThrow(/parsed value is null/)
+      expect(parseSingle).not.toHaveBeenCalled()
+      expect(parseMulti).not.toHaveBeenCalled()
     })
   })
 })
