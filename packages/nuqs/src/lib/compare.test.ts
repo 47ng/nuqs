@@ -35,6 +35,8 @@ describe('compare', () => {
       expect(compareQuery('a', null)).toBe(false)
       expect(compareQuery(null, ['a'])).toBe(false)
       expect(compareQuery(['a'], null)).toBe(false)
+      expect(compareQuery(null, [])).toBe(false)
+      expect(compareQuery([], null)).toBe(false)
     })
   })
   describe('arrays', () => {

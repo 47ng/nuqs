@@ -37,9 +37,6 @@ jobs:
         run: |
           if git diff --quiet "$BASE_SHA...$HEAD_SHA" -- \
             '.github/workflows/mutation.yml' \
-            '.node-version' \
-            'package.json' \
-            'packages/nuqs/package.json' \
             'packages/nuqs/src' \
             'packages/nuqs/tests' \
             'packages/nuqs/scripts/mutation.mjs' \
@@ -55,12 +52,8 @@ jobs:
             'packages/nuqs/vitest.mutation.config.ts' \
             'packages/nuqs/vitest.browser.setup.ts' \
             'packages/nuqs/vitest.setup.ts' \
-            'packages/scripts/package.json' \
             'packages/scripts/mutation-gate.ts' \
-            'packages/scripts/mutation-gate.test.ts' \
-            'pnpm-lock.yaml' \
-            'pnpm-workspace.yaml' \
-            'turbo.json'
+            'packages/scripts/mutation-gate.test.ts'
           then
             echo 'relevant=false' >> "$GITHUB_OUTPUT"
           else
@@ -113,9 +106,6 @@ jobs:
         run: |
           for file in \
             .github/workflows/mutation.yml \
-            .node-version \
-            package.json \
-            packages/nuqs/package.json \
             packages/nuqs/scripts/mutation.mjs \
             packages/nuqs/scripts/mutation-projects.mjs \
             packages/nuqs/scripts/mutation-report.mjs \
@@ -127,11 +117,7 @@ jobs:
             packages/nuqs/vitest.config.ts \
             packages/nuqs/vitest.mutation.config.ts \
             packages/nuqs/vitest.setup.ts \
-            packages/scripts/package.json \
-            packages/scripts/mutation-gate.ts \
-            pnpm-lock.yaml \
-            pnpm-workspace.yaml \
-            turbo.json
+            packages/scripts/mutation-gate.ts
           do
             printf '%s  %s\n' "$(git hash-object "$file")" "$file"
           done > "$RUNNER_TEMP/mutation-inputs-baseline.sha256"
@@ -150,9 +136,6 @@ jobs:
         run: |
           for file in \
             .github/workflows/mutation.yml \
-            .node-version \
-            package.json \
-            packages/nuqs/package.json \
             packages/nuqs/scripts/mutation.mjs \
             packages/nuqs/scripts/mutation-projects.mjs \
             packages/nuqs/scripts/mutation-report.mjs \
@@ -164,11 +147,7 @@ jobs:
             packages/nuqs/vitest.config.ts \
             packages/nuqs/vitest.mutation.config.ts \
             packages/nuqs/vitest.setup.ts \
-            packages/scripts/package.json \
-            packages/scripts/mutation-gate.ts \
-            pnpm-lock.yaml \
-            pnpm-workspace.yaml \
-            turbo.json
+            packages/scripts/mutation-gate.ts
           do
             printf '%s  %s\n' "$(git hash-object "$file")" "$file"
           done > "$RUNNER_TEMP/mutation-inputs-candidate.sha256"

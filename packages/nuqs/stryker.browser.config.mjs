@@ -16,10 +16,8 @@ export const browserProjects = [
   }
 ]
 
-const { browserMutate, browserTestFiles } = createMutationProjects(
-  import.meta.dirname,
-  browserProjects
-)
+export const { browserMutate, browserTestFiles, nodeMutate } =
+  createMutationProjects(import.meta.dirname, browserProjects)
 
 const config = {
   ...shared,

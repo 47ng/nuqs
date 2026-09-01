@@ -15,9 +15,14 @@ afterEach(async () => {
 
 describe('mutation report aggregation', () => {
   it('rejects source and test overlap', () => {
+    const nodeWithSharedSource = report('src/shared.ts')
+    const browserWithSharedSource = report('src/shared.ts')
+    browserWithSharedSource.testFiles = {
+      'src/browser.test.ts':
+        browserWithSharedSource.testFiles['src/shared.test.ts']
+    }
     assert.throws(
-      () =>
-        mergeMutationReports(report('src/shared.ts'), report('src/shared.ts')),
+      () => mergeMutationReports(nodeWithSharedSource, browserWithSharedSource),
       /cannot combine duplicate source file: src\/shared\.ts/
     )
     const node = report('src/node.ts')
@@ -42,31 +47,38 @@ describe('mutation report aggregation', () => {
     })
   })
 
-  it('namespaces colliding runtime ids and their references', () => {
+  it('namespaces runtime ids and their references', () => {
     const node = report('src/node.ts')
     const browser = report('src/browser.ts')
-    node.files['src/node.ts'].mutants[0].coveredBy = ['0']
-    node.files['src/node.ts'].mutants[0].killedBy = ['0']
-    browser.files['src/browser.ts'].mutants[0].coveredBy = ['0']
-    browser.files['src/browser.ts'].mutants[0].killedBy = ['0']
+    node.files['src/node.ts'].mutants[0].id = '7'
+    node.testFiles['src/node.test.ts'].tests[0].id = '23'
+    browser.files['src/browser.ts'].mutants[0].id = '11'
+    browser.testFiles['src/browser.test.ts'].tests[0].id = '29'
+    node.files['src/node.ts'].mutants[0].coveredBy = ['23']
+    node.files['src/node.ts'].mutants[0].killedBy = ['23']
+    browser.files['src/browser.ts'].mutants[0].coveredBy = ['29']
+    browser.files['src/browser.ts'].mutants[0].killedBy = ['29']
 
     const merged = mergeMutationReports(node, browser)
 
-    assert.equal(merged.files['src/node.ts'].mutants[0].id, 'node:0')
+    assert.equal(merged.files['src/node.ts'].mutants[0].id, 'node:7')
     assert.deepEqual(merged.files['src/node.ts'].mutants[0].coveredBy, [
-      'node:0'
+      'node:23'
     ])
     assert.deepEqual(merged.files['src/node.ts'].mutants[0].killedBy, [
-      'node:0'
+      'node:23'
     ])
-    assert.equal(merged.testFiles['src/node.test.ts'].tests[0].id, 'node:0')
-    assert.equal(merged.files['src/browser.ts'].mutants[0].id, 'browser:0')
+    assert.equal(merged.testFiles['src/node.test.ts'].tests[0].id, 'node:23')
+    assert.equal(merged.files['src/browser.ts'].mutants[0].id, 'browser:11')
     assert.deepEqual(merged.files['src/browser.ts'].mutants[0].coveredBy, [
-      'browser:0'
+      'browser:29'
+    ])
+    assert.deepEqual(merged.files['src/browser.ts'].mutants[0].killedBy, [
+      'browser:29'
     ])
     assert.equal(
       merged.testFiles['src/browser.test.ts'].tests[0].id,
-      'browser:0'
+      'browser:29'
     )
   })
 

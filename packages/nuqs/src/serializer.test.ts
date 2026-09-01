@@ -129,14 +129,26 @@ describe('serializer', () => {
     const result = serialize('?str=foo', { str: undefined })
     expect(result).toBe('?str=foo')
   })
-  it('runs the search-parameter processor when clearing all managed values', () => {
+  it('accepts an immutable search-parameter processor when clearing all managed values', () => {
     const serialize = createSerializer(parsers, {
+      urlKeys: { str: 's' },
+      processUrlSearchParams(search) {
+        return new URLSearchParams([...search.entries(), ['processed', 'true']])
+      }
+    })
+    expect(serialize('?s=foo&external=kept', null)).toBe(
+      '?external=kept&processed=true'
+    )
+  })
+  it('accepts a mutating search-parameter processor when clearing all managed values', () => {
+    const serialize = createSerializer(parsers, {
+      urlKeys: { str: 's' },
       processUrlSearchParams(search) {
         search.set('processed', 'true')
         return search
       }
     })
-    expect(serialize('?str=foo&external=kept', null)).toBe(
+    expect(serialize('?s=foo&external=kept', null)).toBe(
       '?external=kept&processed=true'
     )
   })

@@ -121,6 +121,7 @@ describe('standard schema', () => {
   it('allows for partial outputs', async () => {
     const schema = {
       foo: parseAsString,
+      missing: parseAsString,
       bar: parseAsInteger.withDefault(0),
       egg: parseAsBoolean.withDefault(false)
     }

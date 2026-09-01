@@ -32,7 +32,9 @@ describe('emitter', () => {
   it('ignores removing a handler from an event with no subscribers', () => {
     const emitter = createEmitter<Events>()
     const handler = vi.fn()
-    expect(() => emitter.off('test', handler)).not.toThrow()
+    emitter.off('test', handler)
+    emitter.emit('test', 'pass')
+    expect(handler).not.toHaveBeenCalled()
   })
   it('removes only the requested handler', () => {
     const emitter = createEmitter<Events>()

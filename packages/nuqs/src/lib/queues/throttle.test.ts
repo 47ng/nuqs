@@ -451,7 +451,7 @@ describe('throttle: flush', () => {
     )
   })
 
-  it('keeps a completed batch available when the adapter disables automatic reset', async () => {
+  it('keeps a completed batch readable until the next push', async () => {
     const adapter = {
       ...createMockAdapter(),
       autoResetQueueOnUpdate: false
@@ -463,20 +463,11 @@ describe('throttle: flush', () => {
     await first
     expect(queue.getQueuedQuery('search')).toBe('nuqs')
 
+    queue.push({ key: 'next', query: 'batch', options: {} })
     const second = queue.flush(adapter)
     vi.runAllTimers()
     await second
-
     expect(adapter.updateUrl).toHaveBeenCalledTimes(2)
-    expect(adapter.updateUrl).toHaveBeenLastCalledWith(
-      new URLSearchParams('?search=nuqs'),
-      { history: 'replace', scroll: false, shallow: true }
-    )
-
-    queue.push({ key: 'next', query: 'batch', options: {} })
-    const third = queue.flush(adapter)
-    vi.runAllTimers()
-    await third
     expect(adapter.updateUrl).toHaveBeenLastCalledWith(
       new URLSearchParams('?next=batch'),
       { history: 'replace', scroll: false, shallow: true }

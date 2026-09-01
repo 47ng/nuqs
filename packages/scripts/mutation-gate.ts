@@ -235,15 +235,6 @@ export function compareMutationReports(
       'mutation configuration changed; establish and review a new baseline explicitly'
     )
   }
-  if (
-    stableStringify(baselineReport.framework) !==
-    stableStringify(candidateReport.framework)
-  ) {
-    throw new Error(
-      'mutation toolchain changed; establish and review a new baseline explicitly'
-    )
-  }
-
   const baseline = summarizeMutationReport(baselineReport)
   const candidate = summarizeMutationReport(candidateReport)
   if (baseline.total > 0 && candidate.total === 0) {

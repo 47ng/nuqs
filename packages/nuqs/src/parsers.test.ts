@@ -462,7 +462,7 @@ describe('parsers', () => {
 })
 
 describe('parsers/equality', () => {
-  it('parseAsJson compares values structurally', () => {
+  it('parseAsJson compares JSON-serialized values', () => {
     const eq = parseAsJson(value => value).eq!
     const value = { nested: { count: 1 } }
     expect(eq(value, value)).toBe(true)

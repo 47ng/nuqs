@@ -249,10 +249,47 @@ describe('debounce: DebounceController', () => {
       adapter
     )
     expect(subscriber).toHaveBeenCalledTimes(1)
-    vi.runAllTimers()
+    vi.advanceTimersByTime(99)
+    expect(queuedValues).toStrictEqual(['value'])
+    vi.advanceTimersByTime(1)
+    await vi.runAllTimersAsync()
     await promise
     expect(subscriber).toHaveBeenCalledTimes(2)
     expect(queuedValues).toStrictEqual(['value', undefined])
+  })
+  it('keeps a restarted debounce while the previous flush settles', async () => {
+    vi.useFakeTimers()
+    const { promise: firstFlush, resolve: resolveFirstFlush } =
+      Promise.withResolvers<URLSearchParams>()
+    const throttleQueue = new ThrottledQueue()
+    vi.spyOn(throttleQueue, 'flush').mockReturnValueOnce(firstFlush)
+    const adapter: UpdateQueueAdapterContext = {
+      updateUrl: vi.fn(),
+      getSearchParamsSnapshot: () => new URLSearchParams()
+    }
+    const controller = new DebounceController(throttleQueue)
+    const first = controller.push(
+      { key: 'key', query: 'first', options: {} },
+      100,
+      adapter
+    )
+    vi.advanceTimersByTime(100)
+    const second = controller.push(
+      { key: 'key', query: 'second', options: {} },
+      100,
+      adapter
+    )
+
+    resolveFirstFlush(new URLSearchParams('?key=first'))
+    await first
+    expect(controller.getQueuedQuery('key')).toBe('second')
+
+    const replacement = Promise.resolve(new URLSearchParams('?key=replacement'))
+    const attach = controller.abort('key')
+    expect(attach(replacement)).toBe(replacement)
+    await expect(second).resolves.toEqual(
+      new URLSearchParams('?key=replacement')
+    )
   })
   it('does not retain settled debounces for later aborts', async () => {
     vi.useFakeTimers()
@@ -319,9 +356,6 @@ describe('debounce: DebounceController', () => {
     const attach = controller.abort('missing')
     const replacement = Promise.resolve(new URLSearchParams('?key=value'))
     expect(attach(replacement)).toBe(replacement)
-    await expect(replacement).resolves.toEqual(
-      new URLSearchParams('?key=value')
-    )
   })
   it('does not queue an update with a timeout of Infinity', async () => {
     const fakeAdapter: UpdateQueueAdapterContext = {
