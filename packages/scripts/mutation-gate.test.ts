@@ -1,4 +1,9 @@
-import { describe, expect, it } from 'vitest'
+import { spawnSync } from 'node:child_process'
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+import { fileURLToPath } from 'node:url'
+import { afterEach, describe, expect, it } from 'vitest'
 import {
   compareMutationReports,
   formatNewUndetectedMutants,
@@ -10,7 +15,7 @@ function report(
   statuses: Array<
     'Killed' | 'Timeout' | 'Survived' | 'NoCoverage' | 'RuntimeError'
   >,
-  config: MutationReport['config'] = comparableConfig
+  config: MutationReport['config'] = structuredClone(comparableConfig)
 ): MutationReport {
   return {
     files: {
@@ -33,6 +38,40 @@ const comparableConfig = {
   testRunner: 'vitest',
   timeoutMS: 5000,
   vitest: { related: true }
+}
+
+const temporaryDirectories: string[] = []
+
+afterEach(() => {
+  for (const directory of temporaryDirectories.splice(0)) {
+    rmSync(directory, { force: true, recursive: true })
+  }
+})
+
+function runGate(
+  baseline: unknown,
+  candidate: unknown,
+  env: Record<string, string> = {}
+) {
+  const directory = mkdtempSync(join(tmpdir(), 'nuqs-mutation-gate-'))
+  temporaryDirectories.push(directory)
+  const baselinePath = join(directory, 'baseline.json')
+  const candidatePath = join(directory, 'candidate.json')
+  writeFileSync(baselinePath, JSON.stringify(baseline))
+  writeFileSync(candidatePath, JSON.stringify(candidate))
+  return spawnSync(
+    process.execPath,
+    [
+      fileURLToPath(new URL('./mutation-gate.ts', import.meta.url)),
+      baselinePath,
+      candidatePath
+    ],
+    {
+      encoding: 'utf8',
+      env: { ...process.env, ...env },
+      timeout: 10_000
+    }
+  )
 }
 
 describe('mutation gate', () => {
@@ -102,20 +141,22 @@ describe('mutation gate', () => {
         status: 'Survived'
       }
     ])
-    expect(
-      formatNewUndetectedMutants(
-        result.newUndetected,
-        'https://github.com/47ng/nuqs/blob/deadbeef',
-        'packages/nuqs'
-      )
-    ).toBe(
-      'New undetected mutants:\n' +
-        '::error file=packages/nuqs/src/example.ts,line=12,col=5,title=New undetected mutant::ConditionalExpression Survived (was Killed)%0AOriginal: value > 0%0AMutated: false\n' +
-        '- src/example.ts:12:5 [ConditionalExpression] Newly survived; previously killed\n' +
-        '  Source: https://github.com/47ng/nuqs/blob/deadbeef/packages/nuqs/src/example.ts#L12\n' +
-        '  Original: value > 0\n' +
-        '  Mutated: false\n'
+    const formatted = formatNewUndetectedMutants(
+      result.newUndetected,
+      'https://github.com/47ng/nuqs/blob/deadbeef',
+      'packages/nuqs'
     )
+    expect(formatted).toContain(
+      '::error file=packages/nuqs/src/example.ts,line=12,col=5,title=New undetected mutant::ConditionalExpression Survived (was Killed)%0AOriginal: value > 0%0AMutated: false'
+    )
+    expect(formatted).toContain(
+      'https://github.com/47ng/nuqs/blob/deadbeef/packages/nuqs/src/example.ts#L12'
+    )
+    expect(formatted).toContain(
+      '- src/example.ts:12:5 [ConditionalExpression] Newly survived; previously killed'
+    )
+    expect(formatted).toContain('Original: value > 0')
+    expect(formatted).toContain('Mutated: false')
   })
 
   it('does not reconcile renumbered mutants by mutable source metadata', () => {
@@ -145,6 +186,17 @@ describe('mutation gate', () => {
     ])
   })
 
+  it('includes the source file in mutant identity', () => {
+    const baseline = report(['Killed'])
+    baseline.files = { 'src/a.ts': baseline.files['src/example.ts']! }
+    const candidate = report(['Survived'])
+    candidate.files = { 'src/b.ts': candidate.files['src/example.ts']! }
+
+    expect(
+      compareMutationReports(baseline, candidate).newUndetected
+    ).toMatchObject([{ file: 'src/b.ts', id: '0', previousStatus: undefined }])
+  })
+
   it('fails closed on mutation errors', () => {
     expect(() =>
       compareMutationReports(
@@ -152,6 +204,12 @@ describe('mutation gate', () => {
         report(['Killed', 'RuntimeError'])
       )
     ).toThrow('candidate report contains 1 mutation error')
+    expect(() =>
+      compareMutationReports(
+        report(['Killed', 'RuntimeError']),
+        report(['Killed'])
+      )
+    ).toThrow('baseline report contains 1 mutation error')
   })
 
   it('fails closed when the candidate report loses all mutants', () => {
@@ -171,6 +229,27 @@ describe('mutation gate', () => {
     ).toThrow('mutation configuration changed')
   })
 
+  it('accepts equivalent configurations and ignores operational settings', () => {
+    const baseline = report(['Killed'], {
+      ...structuredClone(comparableConfig),
+      force: true,
+      reporters: ['json']
+    })
+    const candidate = report(['Killed'], {
+      vitest: { related: true },
+      timeoutMS: 5000,
+      testRunner: 'vitest',
+      mutate: ['src/**/*.ts'],
+      force: false,
+      reporters: ['progress']
+    })
+
+    expect(compareMutationReports(baseline, candidate)).toMatchObject({
+      pass: true,
+      delta: 0
+    })
+  })
+
   it('treats timeout configuration as result-affecting', () => {
     expect(() =>
       compareMutationReports(
@@ -180,12 +259,15 @@ describe('mutation gate', () => {
     ).toThrow('mutation configuration changed')
   })
 
-  it('refuses to compare reports from different mutation toolchains', () => {
+  it('compares mutation debt across toolchain changes', () => {
     const candidate = report(['Killed'])
     candidate.framework.version = '10.0.0'
 
-    expect(() => compareMutationReports(report(['Killed']), candidate)).toThrow(
-      'mutation toolchain changed'
+    expect(compareMutationReports(report(['Killed']), candidate)).toMatchObject(
+      {
+        pass: true,
+        delta: 0
+      }
     )
   })
 
@@ -196,5 +278,44 @@ describe('mutation gate', () => {
     expect(() => summarizeMutationReport(candidate)).toThrow(
       'unknown mutant status: Pending'
     )
+  })
+
+  it('exits successfully when mutation debt does not increase', () => {
+    const result = runGate(report(['Killed']), report(['Killed']))
+    expect(result.error, result.stderr).toBeUndefined()
+    expect(result.status).toBe(0)
+    expect(result.stdout).toContain('Mutation debt stayed identical')
+  })
+
+  it('exits with failure and forwards source-link settings for new debt', () => {
+    const baseline = report(['Killed'])
+    const candidate = report(['Survived'])
+    Object.assign(candidate.files['src/example.ts']!.mutants[0]!, {
+      location: {
+        start: { line: 1, column: 1 },
+        end: { line: 1, column: 5 }
+      },
+      mutatorName: 'BooleanLiteral',
+      replacement: 'false'
+    })
+    candidate.files['src/example.ts']!.source = 'true'
+    const result = runGate(baseline, candidate, {
+      MUTATION_SOURCE_URL: 'https://github.com/47ng/nuqs/blob/deadbeef',
+      MUTATION_SOURCE_ROOT: 'packages/nuqs'
+    })
+
+    expect(result.error, result.stderr).toBeUndefined()
+    expect(result.status).toBe(1)
+    expect(result.stderr).toContain('Mutation debt increased by 1')
+    expect(result.stderr).toContain(
+      'https://github.com/47ng/nuqs/blob/deadbeef/packages/nuqs/src/example.ts#L1'
+    )
+  })
+
+  it('exits with an error for malformed reports', () => {
+    const result = runGate({}, report(['Killed']))
+    expect(result.error, result.stderr).toBeUndefined()
+    expect(result.status).toBe(2)
+    expect(result.stderr).toContain('invalid mutation report')
   })
 })
