@@ -200,15 +200,28 @@ function sourceAtLocation(
   }
   const lines = source.split('\n')
   const { start, end } = location
+  const startLine = lines[start.line - 1]
+  const endLine = lines[end.line - 1]
+  if (
+    startLine === undefined ||
+    endLine === undefined ||
+    start.line > end.line ||
+    start.column < 1 ||
+    end.column < 1 ||
+    start.column > startLine.length + 1 ||
+    end.column > endLine.length + 1 ||
+    (start.line === end.line && start.column > end.column)
+  ) {
+    return undefined
+  }
   if (start.line === end.line) {
-    return lines[start.line - 1]?.slice(start.column - 1, end.column - 1)
+    return startLine.slice(start.column - 1, end.column - 1)
   }
   return [
-    lines[start.line - 1]?.slice(start.column - 1),
+    startLine.slice(start.column - 1),
     ...lines.slice(start.line, end.line - 1),
-    lines[end.line - 1]?.slice(0, end.column - 1)
+    endLine.slice(0, end.column - 1)
   ]
-    .filter((line): line is string => line !== undefined)
     .join('\n')
 }
 
@@ -243,23 +256,92 @@ function mutantFingerprint(
   ])
 }
 
-function mutantFingerprintCounts(
-  report: MutationReport,
-  statuses: ReadonlySet<string>
-): Map<string, number> {
-  const counts = new Map<string, number>()
+type FingerprintedMutant = {
+  fingerprint: string
+  identity: string
+  status: MutantStatus
+}
+
+function fingerprintedMutants(
+  report: MutationReport
+): FingerprintedMutant[] | undefined {
+  const records: FingerprintedMutant[] = []
+  const identities = new Set<string>()
   for (const [file, { mutants, source }] of Object.entries(report.files)) {
     for (const mutant of mutants) {
-      if (!statuses.has(mutant.status)) {
-        continue
-      }
       const fingerprint = mutantFingerprint(file, source, mutant)
-      if (fingerprint !== undefined) {
-        counts.set(fingerprint, (counts.get(fingerprint) ?? 0) + 1)
+      const identity = `${file}\0${mutant.id}`
+      if (fingerprint === undefined || identities.has(identity)) {
+        return undefined
       }
+      identities.add(identity)
+      records.push({ fingerprint, identity, status: mutant.status })
     }
   }
-  return counts
+  return records
+}
+
+function timeoutVarianceCredit(
+  baselineReport: MutationReport,
+  candidateReport: MutationReport
+): number {
+  const baseline = fingerprintedMutants(baselineReport)
+  const candidate = fingerprintedMutants(candidateReport)
+  if (!baseline || !candidate) {
+    return 0
+  }
+
+  const candidateByIdentity = new Map(
+    candidate.map(mutant => [mutant.identity, mutant])
+  )
+  const matchedCandidateIdentities = new Set<string>()
+  const unmatchedBaseline: FingerprintedMutant[] = []
+  let credit = 0
+
+  for (const baselineMutant of baseline) {
+    const candidateMutant = candidateByIdentity.get(baselineMutant.identity)
+    if (
+      candidateMutant &&
+      candidateMutant.fingerprint === baselineMutant.fingerprint
+    ) {
+      matchedCandidateIdentities.add(candidateMutant.identity)
+      if (
+        baselineMutant.status === 'Timeout' &&
+        UNDETECTED_STATUSES.has(candidateMutant.status)
+      ) {
+        credit++
+      }
+    } else {
+      unmatchedBaseline.push(baselineMutant)
+    }
+  }
+
+  const unmatchedCandidate = candidate.filter(
+    mutant => !matchedCandidateIdentities.has(mutant.identity)
+  )
+  const groupByFingerprint = (mutants: FingerprintedMutant[]) => {
+    const groups = new Map<string, FingerprintedMutant[]>()
+    for (const mutant of mutants) {
+      const group = groups.get(mutant.fingerprint) ?? []
+      group.push(mutant)
+      groups.set(mutant.fingerprint, group)
+    }
+    return groups
+  }
+  const baselineGroups = groupByFingerprint(unmatchedBaseline)
+  const candidateGroups = groupByFingerprint(unmatchedCandidate)
+  for (const [fingerprint, baselineGroup] of baselineGroups) {
+    const candidateGroup = candidateGroups.get(fingerprint)
+    if (
+      baselineGroup.length === 1 &&
+      candidateGroup?.length === 1 &&
+      baselineGroup[0]!.status === 'Timeout' &&
+      UNDETECTED_STATUSES.has(candidateGroup[0]!.status)
+    ) {
+      credit++
+    }
+  }
+  return credit
 }
 
 function scopeSettings(scope: MutationScope): unknown {
@@ -393,37 +475,9 @@ export function compareMutationReports(
           (right.location?.start.column ?? 0) ||
         left.id.localeCompare(right.id)
     )
-  const baselineTimeouts = mutantFingerprintCounts(
+  const toleratedTimeoutVariance = timeoutVarianceCredit(
     baselineReport,
-    new Set(['Timeout'])
-  )
-  const candidateTimeouts = mutantFingerprintCounts(
-    candidateReport,
-    new Set(['Timeout'])
-  )
-  const baselineUndetected = mutantFingerprintCounts(
-    baselineReport,
-    UNDETECTED_STATUSES
-  )
-  const candidateUndetectedCounts = mutantFingerprintCounts(
-    candidateReport,
-    UNDETECTED_STATUSES
-  )
-  const toleratedTimeoutVariance = [...candidateUndetectedCounts].reduce(
-    (credit, [fingerprint, candidateCount]) =>
-      credit +
-      Math.min(
-        Math.max(
-          0,
-          (baselineTimeouts.get(fingerprint) ?? 0) -
-            (candidateTimeouts.get(fingerprint) ?? 0)
-        ),
-        Math.max(
-          0,
-          candidateCount - (baselineUndetected.get(fingerprint) ?? 0)
-        )
-      ),
-    0
+    candidateReport
   )
   const delta = candidate.debt - baseline.debt - toleratedTimeoutVariance
   return {

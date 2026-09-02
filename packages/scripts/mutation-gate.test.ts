@@ -170,23 +170,38 @@ describe('mutation gate', () => {
     ).toMatchObject({ pass: false, delta: 1 })
   })
 
-  it('does not reuse timeout credit already covered by baseline debt', () => {
-    const baseline = identifyMutants(report(['Timeout', 'Survived']))
+  it('does not reuse timeout credit across duplicate fingerprints', () => {
+    const cases = [
+      {
+        baseline: ['Timeout', 'Survived'],
+        candidate: ['Timeout', 'Survived', 'Survived']
+      },
+      {
+        baseline: ['Timeout', 'Survived'],
+        candidate: ['Survived', 'Survived', 'Survived']
+      },
+      {
+        baseline: ['Timeout', 'Ignored'],
+        candidate: ['Ignored', 'Survived']
+      },
+      {
+        baseline: ['Timeout', 'Killed'],
+        candidate: ['Killed', 'Survived']
+      }
+    ] as const
+    for (const { baseline, candidate } of cases) {
+      expect(
+        compareMutationReports(
+          identifyMutants(report([...baseline])),
+          identifyMutants(report([...candidate]))
+        ),
+        `${baseline.join(',')} -> ${candidate.join(',')}`
+      ).toMatchObject({ pass: false, delta: 1 })
+    }
+
     expect(
       compareMutationReports(
-        baseline,
-        identifyMutants(report(['Timeout', 'Survived', 'Survived']))
-      )
-    ).toMatchObject({ pass: false, delta: 1 })
-    expect(
-      compareMutationReports(
-        baseline,
-        identifyMutants(report(['Survived', 'Survived', 'Survived']))
-      )
-    ).toMatchObject({ pass: false, delta: 1 })
-    expect(
-      compareMutationReports(
-        baseline,
+        identifyMutants(report(['Timeout', 'Survived'])),
         identifyMutants(report(['Survived', 'Survived']))
       )
     ).toMatchObject({ pass: true, delta: 0 })
@@ -211,6 +226,30 @@ describe('mutation gate', () => {
         ).toMatchObject({ pass: false, delta: 1 })
       }
     }
+
+    const baseline = identifyMutants(report(['Timeout']))
+    const candidate = identifyMutants(report(['Timeout', 'Survived']))
+    delete candidate.files['src/example.ts']!.mutants[0]!.location
+    expect(compareMutationReports(baseline, candidate)).toMatchObject({
+      pass: false,
+      delta: 1
+    })
+  })
+
+  it('does not fingerprint out-of-range source locations', () => {
+    const baseline = identifyMutants(report(['Timeout']))
+    const candidate = identifyMutants(report(['Survived']))
+    for (const current of [baseline, candidate]) {
+      current.files['src/example.ts']!.mutants[0]!.location = {
+        start: { line: 2, column: 1 },
+        end: { line: 2, column: 5 }
+      }
+    }
+
+    expect(compareMutationReports(baseline, candidate)).toMatchObject({
+      pass: false,
+      delta: 1
+    })
   })
 
   it('passes when mutation debt is stable or decreases', () => {
