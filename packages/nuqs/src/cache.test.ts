@@ -30,6 +30,11 @@ describe('cache', () => {
       }
     )
 
+    it('throws when reading all values before parsing', () => {
+      const cache = createSearchParamsCache({ q: parseAsString })
+      expect(() => cache.all()).toThrow()
+    })
+
     it('allows parsing the same object multiple times in a request', () => {
       const cache = createSearchParamsCache({
         string: parseAsString

@@ -16,6 +16,8 @@
     "dev": "turbo run dev",
     "build": "turbo run build",
     "test": "turbo run test --log-order=stream",
+    "mutation": "turbo run mutation --filter=nuqs",
+    "mutation:config-test": "pnpm --filter nuqs mutation:config-test",
     "verify": "packages/scripts/verify-release/verify.production.ts",
     "// setup:worktree": "Prepare a linked worktree: validate tools, own dependencies, and install the lockfile",
     "setup:worktree": "node packages/scripts/worktree-setup.mjs",
