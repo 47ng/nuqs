@@ -1,0 +1,411 @@
+#!/usr/bin/env -S node --no-warnings
+
+import { readFile } from 'node:fs/promises'
+import { pathToFileURL } from 'node:url'
+import { z } from 'zod'
+
+const DETECTED_STATUSES = new Set(['Killed', 'Timeout'])
+const UNDETECTED_STATUSES = new Set(['Survived', 'NoCoverage'])
+const ERROR_STATUSES = new Set(['CompileError', 'RuntimeError'])
+const NON_RESULT_CONFIG_KEYS = new Set([
+  '$schema',
+  'allowConsoleColors',
+  'clearTextReporter',
+  'dashboard',
+  'eventReporter',
+  'fileLogLevel',
+  'force',
+  'htmlReporter',
+  'incremental',
+  'incrementalFile',
+  'jsonReporter',
+  'logLevel',
+  'reporters',
+  'tempDirName',
+  'warnings'
+])
+
+export type MutantStatus =
+  | 'Killed'
+  | 'Timeout'
+  | 'Survived'
+  | 'NoCoverage'
+  | 'CompileError'
+  | 'RuntimeError'
+  | string
+
+export type MutationReport = {
+  files: Record<
+    string,
+    {
+      source: string
+      mutants: Array<{
+        id: string
+        location?: {
+          end: { line: number; column: number }
+          start: { line: number; column: number }
+        }
+        mutatorName?: string
+        replacement?: string
+        status: MutantStatus
+      }>
+    }
+  >
+  config: Record<string, unknown>
+  framework: {
+    name: string
+    version: string
+    dependencies?: Record<string, string>
+  }
+}
+
+const mutationReportSchema: z.ZodType<MutationReport> = z.object({
+  files: z.record(
+    z.string(),
+    z.object({
+      source: z.string(),
+      mutants: z.array(
+        z.object({
+          id: z.string(),
+          location: z
+            .object({
+              end: z.object({ line: z.number(), column: z.number() }),
+              start: z.object({ line: z.number(), column: z.number() })
+            })
+            .optional(),
+          mutatorName: z.string().optional(),
+          replacement: z.string().optional(),
+          status: z.string()
+        })
+      )
+    })
+  ),
+  config: z.record(z.string(), z.unknown()),
+  framework: z.object({
+    name: z.string(),
+    version: z.string(),
+    dependencies: z.record(z.string(), z.string()).optional()
+  })
+})
+
+type MutationSummary = {
+  detected: number
+  errors: number
+  killed: number
+  noCoverage: number
+  survived: number
+  timeout: number
+  total: number
+  undetected: number
+}
+
+export type NewUndetectedMutant = {
+  file: string
+  id: string
+  location?: {
+    end: { line: number; column: number }
+    start: { line: number; column: number }
+  }
+  mutatorName?: string
+  original?: string
+  previousStatus?: MutantStatus
+  replacement?: string
+  status: MutantStatus
+}
+
+type Mutant = MutationReport['files'][string]['mutants'][number]
+
+function mutantId(file: string, mutant: Mutant): string {
+  return `${file}\0${mutant.id}`
+}
+
+export function summarizeMutationReport(
+  report: MutationReport
+): MutationSummary {
+  const summary: MutationSummary = {
+    detected: 0,
+    errors: 0,
+    killed: 0,
+    noCoverage: 0,
+    survived: 0,
+    timeout: 0,
+    total: 0,
+    undetected: 0
+  }
+
+  if (!report.files || typeof report.files !== 'object') {
+    throw new Error('invalid mutation report: missing files')
+  }
+
+  for (const file of Object.values(report.files)) {
+    if (!Array.isArray(file.mutants)) {
+      throw new Error('invalid mutation report: missing mutants')
+    }
+    for (const mutant of file.mutants) {
+      summary.total++
+      if (DETECTED_STATUSES.has(mutant.status)) {
+        summary.detected++
+      } else if (UNDETECTED_STATUSES.has(mutant.status)) {
+        summary.undetected++
+      } else if (ERROR_STATUSES.has(mutant.status)) {
+        summary.errors++
+      } else {
+        throw new Error(`unknown mutant status: ${mutant.status}`)
+      }
+
+      switch (mutant.status) {
+        case 'Killed':
+          summary.killed++
+          break
+        case 'Timeout':
+          summary.timeout++
+          break
+        case 'Survived':
+          summary.survived++
+          break
+        case 'NoCoverage':
+          summary.noCoverage++
+          break
+      }
+    }
+  }
+
+  return summary
+}
+
+function comparableConfig(config: Record<string, unknown>): string {
+  return stableStringify(
+    Object.fromEntries(
+      Object.entries(config).filter(([key]) => !NON_RESULT_CONFIG_KEYS.has(key))
+    )
+  )
+}
+
+function stableStringify(value: unknown): string {
+  if (Array.isArray(value)) {
+    return `[${value.map(stableStringify).join(',')}]`
+  }
+  if (value && typeof value === 'object') {
+    const entries = Object.entries(value as Record<string, unknown>).sort(
+      ([left], [right]) => left.localeCompare(right)
+    )
+    return `{${entries
+      .map(([key, child]) => `${JSON.stringify(key)}:${stableStringify(child)}`)
+      .join(',')}}`
+  }
+  return JSON.stringify(value)
+}
+
+function sourceAtLocation(
+  source: string,
+  location?: NewUndetectedMutant['location']
+): string | undefined {
+  if (!location) {
+    return undefined
+  }
+  const lines = source.split('\n')
+  const { start, end } = location
+  if (start.line === end.line) {
+    return lines[start.line - 1]?.slice(start.column - 1, end.column - 1)
+  }
+  return [
+    lines[start.line - 1]?.slice(start.column - 1),
+    ...lines.slice(start.line, end.line - 1),
+    lines[end.line - 1]?.slice(0, end.column - 1)
+  ]
+    .filter((line): line is string => line !== undefined)
+    .join('\n')
+}
+
+export function compareMutationReports(
+  baselineReport: MutationReport,
+  candidateReport: MutationReport
+): {
+  baseline: MutationSummary
+  candidate: MutationSummary
+  delta: number
+  newUndetected: NewUndetectedMutant[]
+  pass: boolean
+} {
+  if (
+    comparableConfig(baselineReport.config) !==
+    comparableConfig(candidateReport.config)
+  ) {
+    throw new Error(
+      'mutation configuration changed; establish and review a new baseline explicitly'
+    )
+  }
+  const baseline = summarizeMutationReport(baselineReport)
+  const candidate = summarizeMutationReport(candidateReport)
+  if (baseline.total > 0 && candidate.total === 0) {
+    throw new Error('candidate report contains no mutants')
+  }
+  if (baseline.errors > 0) {
+    throw new Error(
+      `baseline report contains ${baseline.errors} mutation error(s)`
+    )
+  }
+  if (candidate.errors > 0) {
+    throw new Error(
+      `candidate report contains ${candidate.errors} mutation error(s)`
+    )
+  }
+
+  const delta = candidate.undetected - baseline.undetected
+  const baselineStatuses = new Map<string, MutantStatus>()
+  for (const [file, { mutants }] of Object.entries(baselineReport.files)) {
+    for (const mutant of mutants) {
+      baselineStatuses.set(mutantId(file, mutant), mutant.status)
+    }
+  }
+  const newUndetected = Object.entries(candidateReport.files)
+    .flatMap(([file, { mutants, source }]) =>
+      mutants.flatMap(mutant => {
+        const previousStatus = baselineStatuses.get(mutantId(file, mutant))
+        if (
+          !UNDETECTED_STATUSES.has(mutant.status) ||
+          (previousStatus && UNDETECTED_STATUSES.has(previousStatus))
+        ) {
+          return []
+        }
+        return [
+          {
+            file,
+            id: mutant.id,
+            location: mutant.location,
+            mutatorName: mutant.mutatorName,
+            original: sourceAtLocation(source, mutant.location),
+            previousStatus,
+            replacement: mutant.replacement,
+            status: mutant.status
+          }
+        ]
+      })
+    )
+    .sort(
+      (left, right) =>
+        left.file.localeCompare(right.file) ||
+        (left.location?.start.line ?? 0) - (right.location?.start.line ?? 0) ||
+        (left.location?.start.column ?? 0) -
+          (right.location?.start.column ?? 0) ||
+        left.id.localeCompare(right.id)
+    )
+  return {
+    baseline,
+    candidate,
+    delta,
+    newUndetected,
+    pass: delta <= 0
+  }
+}
+
+export function formatNewUndetectedMutants(
+  mutants: NewUndetectedMutant[],
+  sourceBaseUrl?: string,
+  sourceRoot?: string
+): string {
+  const lines = mutants.flatMap(mutant => {
+    const line = mutant.location?.start.line
+    const column = mutant.location?.start.column
+    const location = line ? `${mutant.file}:${line}:${column}` : mutant.file
+    const mutator = mutant.mutatorName ?? 'Unknown mutation'
+    const original = oneLine(mutant.original) || '(source unavailable)'
+    const replacement = oneLine(mutant.replacement) || '(empty)'
+    const transition = mutant.previousStatus
+      ? `${mutant.status} (was ${mutant.previousStatus})`
+      : `${mutant.status} (new mutant)`
+    const explanation = mutant.previousStatus
+      ? `Newly ${mutant.status.toLowerCase()}; previously ${mutant.previousStatus.toLowerCase()}`
+      : `New undetected mutant (${mutant.status.toLowerCase()})`
+    const repositoryPath = [sourceRoot, mutant.file].filter(Boolean).join('/')
+    const source =
+      sourceBaseUrl && line
+        ? `${sourceBaseUrl}/${repositoryPath
+            .split('/')
+            .map(encodeURIComponent)
+            .join('/')}#L${line}`
+        : undefined
+    const annotation = line
+      ? `::error file=${escapeCommandProperty(repositoryPath)},line=${line},col=${column},title=New undetected mutant::${escapeCommandData(`${mutator} ${transition}\nOriginal: ${original}\nMutated: ${replacement}`)}`
+      : undefined
+    return [
+      annotation,
+      `- ${location} [${mutator}] ${explanation}${source ? `\n  Source: ${source}` : ''}\n  Original: ${original}\n  Mutated: ${replacement}`
+    ].filter((value): value is string => value !== undefined)
+  })
+  return `New undetected mutants:\n${lines.join('\n')}\n`
+}
+
+function oneLine(value?: string): string {
+  return value?.replaceAll(/\s+/g, ' ').trim() ?? ''
+}
+
+function escapeCommandData(value: string): string {
+  return value
+    .replaceAll('%', '%25')
+    .replaceAll('\r', '%0D')
+    .replaceAll('\n', '%0A')
+}
+
+function escapeCommandProperty(value: string): string {
+  return escapeCommandData(value).replaceAll(':', '%3A').replaceAll(',', '%2C')
+}
+
+async function readReport(path: string): Promise<MutationReport> {
+  try {
+    return mutationReportSchema.parse(JSON.parse(await readFile(path, 'utf8')))
+  } catch (error) {
+    throw new Error(`invalid mutation report ${path}`, { cause: error })
+  }
+}
+
+async function main(): Promise<void> {
+  const [baselinePath, candidatePath, ...extra] = process.argv.slice(2)
+  if (!baselinePath || !candidatePath || extra.length > 0) {
+    throw new Error(
+      'usage: mutation-gate.ts <baseline-report.json> <candidate-report.json>'
+    )
+  }
+
+  const result = compareMutationReports(
+    await readReport(baselinePath),
+    await readReport(candidatePath)
+  )
+  process.stdout.write(JSON.stringify(result, null, 2) + '\n')
+
+  if (!result.pass) {
+    process.stderr.write(
+      `Mutation debt increased by ${result.delta}: ` +
+        `${result.baseline.undetected} → ${result.candidate.undetected} ` +
+        `survived or uncovered mutants.\n`
+    )
+    process.stderr.write(
+      formatNewUndetectedMutants(
+        result.newUndetected,
+        process.env.MUTATION_SOURCE_URL,
+        process.env.MUTATION_SOURCE_ROOT
+      )
+    )
+    process.exitCode = 1
+  } else {
+    const outcome =
+      result.delta === 0
+        ? 'stayed identical'
+        : `decreased by ${Math.abs(result.delta)}`
+    process.stdout.write(
+      `Mutation debt ${outcome}: ` +
+        `${result.baseline.undetected} → ${result.candidate.undetected} ` +
+        `survived or uncovered mutants.\n`
+    )
+  }
+}
+
+if (
+  process.argv[1] &&
+  import.meta.url === pathToFileURL(process.argv[1]).href
+) {
+  main().catch(error => {
+    process.stderr.write(`${(error as Error).message}\n`)
+    process.exitCode = 2
+  })
+}

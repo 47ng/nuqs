@@ -296,6 +296,89 @@ describe('debounce: DebounceController', () => {
     throttleQueue.reset()
     expect(controller.getQueuedQuery('key')).toBeUndefined()
   })
+  it('notifies when a queued query appears and when it settles', async () => {
+    vi.useFakeTimers()
+    const adapter: UpdateQueueAdapterContext = {
+      updateUrl: vi.fn<UpdateUrlFunction>(),
+      getSearchParamsSnapshot: () => new URLSearchParams()
+    }
+    const controller = new DebounceController()
+    const queuedValues: Array<ReturnType<typeof controller.getQueuedQuery>> = []
+    const subscriber = vi.fn(() => {
+      queuedValues.push(controller.getQueuedQuery('key'))
+    })
+    controller.queuedQuerySync.on('key', subscriber)
+    const promise = controller.push(
+      { key: 'key', query: 'value', options: {} },
+      100,
+      adapter
+    )
+    expect(subscriber).toHaveBeenCalledTimes(1)
+    vi.advanceTimersByTime(99)
+    expect(queuedValues).toStrictEqual(['value'])
+    vi.advanceTimersByTime(1)
+    await vi.runAllTimersAsync()
+    await promise
+    expect(subscriber).toHaveBeenCalledTimes(2)
+    expect(queuedValues).toStrictEqual(['value', undefined])
+  })
+  it('keeps a restarted debounce while the previous flush settles', async () => {
+    vi.useFakeTimers()
+    const { promise: pendingFirstFlush, resolve: completeFirstFlush } =
+      Promise.withResolvers<URLSearchParams>()
+    const throttleQueue = new ThrottledQueue()
+    vi.spyOn(throttleQueue, 'flush').mockReturnValueOnce(pendingFirstFlush)
+    const adapter: UpdateQueueAdapterContext = {
+      updateUrl: vi.fn(),
+      getSearchParamsSnapshot: () => new URLSearchParams()
+    }
+    const controller = new DebounceController(throttleQueue)
+    const first = controller.push(
+      { key: 'key', query: 'first', options: {} },
+      100,
+      adapter
+    )
+    // Start the first flush, but keep it pending while the same key is queued again.
+    vi.advanceTimersByTime(100)
+    const second = controller.push(
+      { key: 'key', query: 'second', options: {} },
+      100,
+      adapter
+    )
+
+    // Settling the old flush must not remove the replacement debounce.
+    completeFirstFlush(new URLSearchParams('?key=first'))
+    await first
+    expect(controller.getQueuedQuery('key')).toBe('second')
+
+    // Aborting the replacement still redirects its result to the next update.
+    const replacement = Promise.resolve(new URLSearchParams('?key=replacement'))
+    const attach = controller.abort('key')
+    expect(attach(replacement)).toBe(replacement)
+    await expect(second).resolves.toEqual(
+      new URLSearchParams('?key=replacement')
+    )
+  })
+  it('does not retain settled debounces for later aborts', async () => {
+    vi.useFakeTimers()
+    const adapter: UpdateQueueAdapterContext = {
+      updateUrl: vi.fn<UpdateUrlFunction>(),
+      getSearchParamsSnapshot: () => new URLSearchParams()
+    }
+    const controller = new DebounceController()
+    const subscriber = vi.fn()
+    controller.queuedQuerySync.on('key', subscriber)
+    const promise = controller.push(
+      { key: 'key', query: 'value', options: {} },
+      100,
+      adapter
+    )
+    vi.runAllTimers()
+    await promise
+    expect(subscriber).toHaveBeenCalledTimes(2)
+    controller.abortAll()
+    expect(subscriber).toHaveBeenCalledTimes(2)
+  })
   it('falls back to the throttle queue pending values if nothing is debounced', () => {
     const throttleQueue = new ThrottledQueue()
     throttleQueue.push({
@@ -335,6 +418,12 @@ describe('debounce: DebounceController', () => {
     await expect(debouncedPromise).resolves.toEqual(
       new URLSearchParams('?key=override')
     )
+  })
+  it('passes a replacement promise through when aborting an unknown key', async () => {
+    const controller = new DebounceController()
+    const attach = controller.abort('missing')
+    const replacement = Promise.resolve(new URLSearchParams('?key=value'))
+    expect(attach(replacement)).toBe(replacement)
   })
   it('does not queue an update with a timeout of Infinity', async () => {
     const fakeAdapter: UpdateQueueAdapterContext = {

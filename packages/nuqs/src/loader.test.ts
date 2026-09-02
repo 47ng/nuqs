@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { createLoader } from './loader'
 import {
+  createMultiParser,
   createParser,
   parseAsInteger,
   parseAsNativeArrayOf,
@@ -93,6 +94,30 @@ describe('loader', () => {
         b: 2
       })
     })
+    it('preserves repeated values from record inputs', () => {
+      const load = createLoader({
+        a: parseAsNativeArrayOf(parseAsInteger)
+      })
+      expect(load({ a: ['1', '2'] })).toStrictEqual({ a: [1, 2] })
+    })
+    it('distinguishes absent and present native-array values', () => {
+      const load = createLoader({
+        a: createMultiParser({
+          parse: values => (values.length === 0 ? ['parsed-empty'] : values),
+          serialize: values => [...values]
+        }).withDefault(['fallback'])
+      })
+
+      expect(load({ a: [] })).toStrictEqual({ a: ['fallback'] })
+      expect(load({ a: [''] })).toStrictEqual({ a: [''] })
+      expect(load({ a: ['one', 'two'] })).toStrictEqual({ a: ['one', 'two'] })
+    })
+    it('treats undefined record values as absent', () => {
+      const load = createLoader({
+        q: parseAsString.withDefault('fallback')
+      })
+      expect(load({ q: undefined })).toEqual({ q: 'fallback' })
+    })
     it('parses a URL string', () => {
       const load = createLoader({
         a: parseAsInteger,
@@ -174,9 +199,33 @@ describe('loader', () => {
         '[nuqs] Error while parsing query `will-throw` for key `test`: Error: Boom'
       )
     })
+    it('falls back to the default when a parser throws outside strict mode', () => {
+      const parser = createParser({
+        parse: () => {
+          throw new Error('Boom')
+        },
+        serialize: String
+      }).withDefault('fallback')
+      expect(createLoader({ value: parser })('?value=x')).toEqual({
+        value: 'fallback'
+      })
+    })
   })
 
   describe('async', () => {
+    it('preserves strict mode for promised inputs', async () => {
+      const load = createLoader({
+        count: parseAsInteger.withDefault(0)
+      })
+      await expect(
+        load(Promise.resolve('?count=invalid'), { strict: true })
+      ).rejects.toThrow(
+        '[nuqs] Failed to parse query `invalid` for key `count` (got null)'
+      )
+      await expect(
+        load(Promise.resolve('?count=1'), { strict: true })
+      ).resolves.toEqual({ count: 1 })
+    })
     it('parses a URL object', () => {
       const load = createLoader({
         a: parseAsInteger,
