@@ -47,14 +47,15 @@ const defaultConfig = {
   scope: {
     strategy: 'runtime-ownership-v1',
     command: 'node scripts/mutation.mjs',
+    sourceFiles: ['src/browser.ts', 'src/example.ts'],
     node: {
-      mutate: ['src/**/*.ts'],
+      mutationFiles: ['src/example.ts'],
       excludedMutations: [],
       ignorePatterns: [],
       executedTests: ['src/example.test.ts\0test']
     },
     browser: {
-      mutate: ['src/browser.ts'],
+      mutationFiles: ['src/browser.ts'],
       excludedMutations: [],
       ignorePatterns: [],
       executedTests: ['src/browser.test.ts\0test']
@@ -207,7 +208,7 @@ describe('mutation gate', () => {
 
   it('rejects mutation scope changes', () => {
     const candidateConfig = structuredClone(defaultConfig)
-    candidateConfig.scope.node.mutate = ['src/cache.ts']
+    candidateConfig.scope.command = 'node scripts/other-mutation.mjs'
 
     expect(() =>
       compareMutationReports(

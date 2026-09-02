@@ -1,6 +1,5 @@
-import { readFile, writeFile } from 'node:fs/promises'
-import { dirname, resolve } from 'node:path'
-import { pathToFileURL } from 'node:url'
+import { readFile, readdir, writeFile } from 'node:fs/promises'
+import { dirname, extname, relative, resolve } from 'node:path'
 
 const [root, reportPath] = process.argv.slice(2)
 if (!root || !reportPath) {
@@ -8,10 +7,6 @@ if (!root || !reportPath) {
 }
 
 const loadJson = async path => JSON.parse(await readFile(path, 'utf8'))
-const loadConfig = async name =>
-  (await import(pathToFileURL(resolve(root, name)).href)).default
-const nodeConfig = await loadConfig('stryker.node.config.mjs')
-const browserConfig = await loadConfig('stryker.browser.config.mjs')
 const report = await loadJson(reportPath)
 const cache = resolve(dirname(reportPath), 'cache')
 const nodeReport = await loadJson(resolve(cache, 'node.json'))
@@ -29,8 +24,9 @@ report.files = mergeRuntimeFiles(nodeReport, browserReport)
 report.config.scope = {
   strategy: report.config.strategy,
   command: packageJson.scripts.mutation,
-  node: selectScope(nodeConfig, nodeReport),
-  browser: selectScope(browserConfig, browserReport)
+  sourceFiles: await listSourceFiles(resolve(root, 'src')),
+  node: selectScope(nodeReport),
+  browser: selectScope(browserReport)
 }
 
 await writeFile(reportPath, JSON.stringify(report, null, 2) + '\n')
@@ -62,16 +58,29 @@ function mergeRuntimeFiles(nodeReport, browserReport) {
   return files
 }
 
-function selectScope(declared, effectiveReport) {
-  const effective = effectiveReport.config
+function selectScope(runtimeReport) {
+  const effective = runtimeReport.config
   return {
-    mutate: declared.mutate,
+    mutationFiles: Object.keys(runtimeReport.files).sort(),
     excludedMutations: [...effective.mutator.excludedMutations].sort(),
     ignorePatterns: effective.ignorePatterns,
-    executedTests: Object.entries(effectiveReport.testFiles)
+    executedTests: Object.entries(runtimeReport.testFiles)
       .flatMap(([file, { tests }]) =>
         tests.map(test => `${file}\0${test.name}`)
       )
       .sort()
   }
+}
+
+async function listSourceFiles(directory) {
+  const files = []
+  for (const entry of await readdir(directory, { withFileTypes: true })) {
+    const path = resolve(directory, entry.name)
+    if (entry.isDirectory()) {
+      files.push(...(await listSourceFiles(path)))
+    } else if (['.ts', '.tsx'].includes(extname(entry.name))) {
+      files.push(relative(root, path))
+    }
+  }
+  return files.sort()
 }

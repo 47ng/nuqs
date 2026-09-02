@@ -18,7 +18,7 @@ export type MutantStatus =
   | string
 
 type RuntimeMutationScope = {
-  mutate: string[]
+  mutationFiles: string[]
   excludedMutations: string[]
   ignorePatterns: string[]
   executedTests: string[]
@@ -27,6 +27,7 @@ type RuntimeMutationScope = {
 type MutationScope = {
   strategy: string
   command: string
+  sourceFiles: string[]
   node: RuntimeMutationScope
   browser: RuntimeMutationScope
 }
@@ -58,7 +59,7 @@ export type MutationReport = {
 }
 
 const runtimeMutationScopeSchema = z.object({
-  mutate: z.array(z.string()),
+  mutationFiles: z.array(z.string()),
   excludedMutations: z.array(z.string()),
   ignorePatterns: z.array(z.string()),
   executedTests: z.array(z.string())
@@ -67,6 +68,7 @@ const runtimeMutationScopeSchema = z.object({
 const mutationScopeSchema = z.object({
   strategy: z.string(),
   command: z.string(),
+  sourceFiles: z.array(z.string()),
   node: runtimeMutationScopeSchema,
   browser: runtimeMutationScopeSchema
 })
@@ -212,7 +214,7 @@ function sourceAtLocation(
 
 function scopeSettings(scope: MutationScope): unknown {
   const withoutExecutedTests = (runtime: RuntimeMutationScope) => {
-    const { executedTests: _, ...settings } = runtime
+    const { executedTests: _, mutationFiles: __, ...settings } = runtime
     return settings
   }
   return {
@@ -260,6 +262,15 @@ export function compareMutationReports(
     throw new Error('mutation scope changed')
   }
   for (const runtime of ['node', 'browser'] as const) {
+    const missingMutationFiles = difference(
+      baselineReport.config.scope[runtime].mutationFiles,
+      candidateReport.config.scope[runtime].mutationFiles
+    ).filter(file => candidateReport.config.scope.sourceFiles.includes(file))
+    if (missingMutationFiles.length > 0) {
+      throw new Error(
+        `${runtime} mutation scope lost ${missingMutationFiles.length} existing source file(s)`
+      )
+    }
     const missingTests = difference(
       baselineReport.config.scope[runtime].executedTests,
       candidateReport.config.scope[runtime].executedTests
