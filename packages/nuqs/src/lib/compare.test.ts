@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import type { Query } from './search-params'
 import { compareQuery } from './compare'
 
 describe('compare', () => {
@@ -8,6 +9,21 @@ describe('compare', () => {
     })
     it('should return false for different strings', () => {
       expect(compareQuery('a', 'b')).toBe(false)
+    })
+    it('should return false when compared with an array', () => {
+      expect(compareQuery<Query>('a', ['a'])).toBe(false)
+      expect(compareQuery<Query>(['a'], 'a')).toBe(false)
+    })
+  })
+  describe('nullable queries', () => {
+    it('should compare null only with null', () => {
+      expect(compareQuery(null, null)).toBe(true)
+      expect(compareQuery(null, 'a')).toBe(false)
+      expect(compareQuery('a', null)).toBe(false)
+      expect(compareQuery(null, ['a'])).toBe(false)
+      expect(compareQuery(['a'], null)).toBe(false)
+      expect(compareQuery(null, [])).toBe(false)
+      expect(compareQuery([], null)).toBe(false)
     })
   })
   describe('arrays', () => {

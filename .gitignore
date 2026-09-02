@@ -2,6 +2,7 @@ node_modules/
 dist/
 .tsup/
 coverage/
+/packages/nuqs/reports/
 .env
 yarn-error.log
 # Docker containers with persistance

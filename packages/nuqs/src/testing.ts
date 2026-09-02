@@ -109,12 +109,14 @@ export function testSerializeThenParse<T>(
   input: T
 ): boolean {
   const serialized = parser.serialize(input)
+  // Stryker disable ConditionalExpression,LogicalOperator: TypeScript guarantees matching parser and serialized shapes.
   const parsed =
     parser.type == 'multi' && Array.isArray(serialized)
       ? parser.parse(serialized)
       : parser.type !== 'multi' && typeof serialized === 'string'
         ? parser.parse(serialized)
         : null
+  // Stryker restore ConditionalExpression,LogicalOperator
   if (parsed === null) {
     throw new Error(
       `[nuqs] testSerializeThenParse: parsed value is null (when parsing ${serialized} serialized from ${input})`

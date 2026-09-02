@@ -81,6 +81,18 @@ For a focused test run, filter the root Turbo command, for example:
 Turbo builds each selected task's dependencies before testing them. Avoid
 calling package-level test scripts directly, as that bypasses the task graph.
 
+Mutation testing is available separately because it is too slow for the regular
+test suite:
+
+```sh
+pnpm mutation
+```
+
+The report is written to `packages/nuqs/reports/mutation/`. The `Mutation debt`
+check fails when a change increases the number of undetected mutants relative to
+its base. Changes to the mutation setup require reviewing a fresh full report
+before merging.
+
 ## Opening issues
 
 Please follow the [issue template](.github/ISSUE_TEMPLATE/bug_report.md) when opening a new issue.
