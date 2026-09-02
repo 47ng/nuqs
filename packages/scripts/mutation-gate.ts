@@ -225,6 +225,17 @@ function scopeSettings(scope: MutationScope): unknown {
   }
 }
 
+function executedTestFiles(tests: string[]): string[] {
+  return [
+    ...new Set(
+      tests.map(test => {
+        const separator = test.indexOf('\0')
+        return separator === -1 ? test : test.slice(0, separator)
+      })
+    )
+  ].sort()
+}
+
 function difference(baseline: string[], candidate: string[]): string[] {
   const remaining = new Map<string, number>()
   for (const value of candidate) {
@@ -271,13 +282,13 @@ export function compareMutationReports(
         `${runtime} mutation scope lost ${missingMutationFiles.length} existing source file(s)`
       )
     }
-    const missingTests = difference(
-      baselineReport.config.scope[runtime].executedTests,
-      candidateReport.config.scope[runtime].executedTests
-    )
-    if (missingTests.length > 0) {
+    const missingTestFiles = difference(
+      executedTestFiles(baselineReport.config.scope[runtime].executedTests),
+      executedTestFiles(candidateReport.config.scope[runtime].executedTests)
+    ).filter(file => candidateReport.config.scope.sourceFiles.includes(file))
+    if (missingTestFiles.length > 0) {
       throw new Error(
-        `${runtime} mutation scope lost ${missingTests.length} executed test(s)`
+        `${runtime} mutation scope lost ${missingTestFiles.length} executed test file(s)`
       )
     }
   }
