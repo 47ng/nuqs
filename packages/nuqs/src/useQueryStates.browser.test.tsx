@@ -328,6 +328,28 @@ describe('useQueryStates: referential equality', () => {
     })
   }
 
+  it('adopts a newly defined default even when parser equality returns true', async () => {
+    const parser = createParser({
+      parse: value => value,
+      serialize: value => value,
+      eq: () => true
+    })
+    const useTestHook = (
+      { withDefault }: { withDefault: boolean } = { withDefault: false }
+    ) =>
+      useQueryStates({
+        value: withDefault ? parser.withDefault('default') : parser
+      })
+    const { result, rerender } = await renderHook(useTestHook, {
+      initialProps: { withDefault: false },
+      wrapper: withNuqsTestingAdapter()
+    })
+
+    expect(result.current[0].value).toBeNull()
+    await rerender({ withDefault: true })
+    expect(result.current[0].value).toBe('default')
+  })
+
   it('should have referential equality on default values', async () => {
     const { result } = await renderHook(useTestHookWithDefaults, {
       wrapper: withNuqsTestingAdapter()
@@ -1543,6 +1565,20 @@ describe('useQueryStates: adapter defaults', () => {
     await act(() => result.current[1]({ test: 'update' }))
     expect(onUrlUpdate).toHaveBeenCalledOnce()
     expect(onUrlUpdate.mock.calls[0]![0].options.shallow).toBe(false)
+  })
+  it('should let call-level `shallow` override parser options', async () => {
+    const onUrlUpdate = vi.fn<OnUrlUpdateFunction>()
+    const useTestHook = () =>
+      useQueryStates({
+        test: parseAsString.withOptions({ shallow: false })
+      })
+    const { result, act } = await renderHook(useTestHook, {
+      wrapper: withNuqsTestingAdapter({ onUrlUpdate })
+    })
+
+    await act(() => result.current[1]({ test: 'update' }, { shallow: true }))
+    expect(onUrlUpdate).toHaveBeenCalledOnce()
+    expect(onUrlUpdate.mock.calls[0]![0].options.shallow).toBe(true)
   })
   it('should use adapter default value for `scroll` when provided', async () => {
     const onUrlUpdate = vi.fn<OnUrlUpdateFunction>()

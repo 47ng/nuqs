@@ -1,4 +1,5 @@
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+import { setDebugSink } from './debug'
 import { parseWithCache } from './parse-cache'
 
 type AnyQuery = string & Array<string>
@@ -6,6 +7,7 @@ type AnyQuery = string & Array<string>
 const asQuery = (query: string | string[]) => query as AnyQuery
 
 describe('parseWithCache', () => {
+  afterEach(() => setDebugSink(null))
   it('returns a referentially stable value for the same parser and query', () => {
     const parse = (query: string) => ({ value: query })
     const a = parseWithCache('parse-cache-stable', parse, asQuery('foo'))
@@ -38,9 +40,8 @@ describe('parseWithCache', () => {
     expect(c).toEqual([{ query: 'a' }, { query: 'c' }])
   })
   it('caches parse failures as null', () => {
-    const consoleWarnSpy = vi
-      .spyOn(console, 'warn')
-      .mockImplementation(() => {})
+    const debugSink = vi.fn()
+    setDebugSink(debugSink)
     const parse = vi.fn(() => {
       throw new Error('parse error')
     })
@@ -49,7 +50,21 @@ describe('parseWithCache', () => {
     expect(a).toBeNull()
     expect(b).toBeNull()
     expect(parse).toHaveBeenCalledOnce()
-    consoleWarnSpy.mockRestore()
+    expect(debugSink).toHaveBeenCalledTimes(2)
+    expect(debugSink).toHaveBeenNthCalledWith(
+      2,
+      25,
+      ['foo', expect.any(Error), 'parse-cache-failure'],
+      true
+    )
+  })
+  it('does not warn when reusing a successful parse', () => {
+    const debugSink = vi.fn()
+    setDebugSink(debugSink)
+    const parse = (query: string) => query
+    parseWithCache('parse-cache-success-warning', parse, asQuery('foo'))
+    parseWithCache('parse-cache-success-warning', parse, asQuery('foo'))
+    expect(debugSink).not.toHaveBeenCalled()
   })
   it('evicts the oldest entry when the cache is full', () => {
     const parse = vi.fn((query: string) => query)

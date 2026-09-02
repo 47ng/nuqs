@@ -12,7 +12,36 @@ function createMockAdapter(): UpdateQueueAdapterContext {
   }
 }
 
+describe('throttle: shared rate-limit budget', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
+  it('shares the last flush time through the history slot', () => {
+    vi.stubGlobal('history', {})
+    const first = new ThrottledQueue()
+    const second = new ThrottledQueue()
+
+    first.lastFlushedAt = 12_345
+
+    expect(history.nuqs).toEqual({ adapters: [], lastFlushedAt: 12_345 })
+    expect(second.lastFlushedAt).toBe(12_345)
+  })
+})
+
 describe('throttle: ThrottleQueue value queueing', () => {
+  it('returns the current snapshot when no flush is pending', async () => {
+    const queue = new ThrottledQueue()
+    const adapter = createMockAdapter()
+    const snapshot = new URLSearchParams('?committed=value')
+    adapter.getSearchParamsSnapshot = vi.fn(() => snapshot)
+
+    const pending = queue.getPendingPromise(adapter)
+
+    expect(pending).toBeInstanceOf(Promise)
+    await expect(pending).resolves.toBe(snapshot)
+  })
+
   it('should enqueue key & values', () => {
     const queue = new ThrottledQueue()
     queue.push({ key: 'key', query: 'value', options: {} })

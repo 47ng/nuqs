@@ -359,6 +359,54 @@ describe('debounce: DebounceController', () => {
       new URLSearchParams('?key=replacement')
     )
   })
+  it('can abort a debounce after its flush starts', async () => {
+    vi.useFakeTimers()
+    const { promise: pendingFlush, resolve: completeFlush } =
+      Promise.withResolvers<URLSearchParams>()
+    const throttleQueue = new ThrottledQueue()
+    vi.spyOn(throttleQueue, 'flush').mockReturnValueOnce(pendingFlush)
+    const adapter: UpdateQueueAdapterContext = {
+      updateUrl: vi.fn(),
+      getSearchParamsSnapshot: () => new URLSearchParams()
+    }
+    const controller = new DebounceController(throttleQueue)
+    const promise = controller.push(
+      { key: 'key', query: 'value', options: {} },
+      100,
+      adapter
+    )
+
+    vi.advanceTimersByTime(100)
+    expect(controller.getQueuedQuery('key')).toBe('value')
+    expect(() => controller.abort('key')).not.toThrow()
+
+    completeFlush(new URLSearchParams('?key=value'))
+    await expect(promise).resolves.toEqual(new URLSearchParams('?key=value'))
+  })
+  it('can abort all debounces while a flush is pending', async () => {
+    vi.useFakeTimers()
+    const { promise: pendingFlush, resolve: completeFlush } =
+      Promise.withResolvers<URLSearchParams>()
+    const throttleQueue = new ThrottledQueue()
+    vi.spyOn(throttleQueue, 'flush').mockReturnValueOnce(pendingFlush)
+    const adapter: UpdateQueueAdapterContext = {
+      updateUrl: vi.fn(),
+      getSearchParamsSnapshot: () => new URLSearchParams()
+    }
+    const controller = new DebounceController(throttleQueue)
+    const promise = controller.push(
+      { key: 'key', query: 'value', options: {} },
+      100,
+      adapter
+    )
+
+    vi.advanceTimersByTime(100)
+    expect(() => controller.abortAll()).not.toThrow()
+    expect(controller.queues.has('key')).toBe(false)
+
+    completeFlush(new URLSearchParams('?key=value'))
+    await expect(promise).resolves.toEqual(new URLSearchParams('?key=value'))
+  })
   it('does not retain settled debounces for later aborts', async () => {
     vi.useFakeTimers()
     const adapter: UpdateQueueAdapterContext = {
