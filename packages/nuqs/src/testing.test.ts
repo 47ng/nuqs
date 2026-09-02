@@ -121,6 +121,29 @@ describe('parser testing helpers', () => {
         /parser is not bijective/
       )
     })
+
+    it('formats scalar values in bijectivity errors', () => {
+      const parser = createParser({
+        parse: () => 'received',
+        serialize: String
+      })
+      expect(() => testSerializeThenParse(parser, 'expected')).toThrow(
+        /Expected value:\s+expected\n\s+Received parsed value:\s+received/
+      )
+    })
+
+    it('formats object values in bijectivity errors', () => {
+      const parser = createParser({
+        parse: () => ({ value: 'received' }),
+        serialize: value => JSON.stringify(value),
+        eq: (a, b) => a.value === b.value
+      })
+      expect(() =>
+        testSerializeThenParse(parser, { value: 'expected' })
+      ).toThrow(
+        /Expected value:\s+\{"value":"expected"\}\n\s+Received parsed value:\s+\{"value":"received"\}/
+      )
+    })
   })
 
   describe('testParseThenSerialize', () => {
