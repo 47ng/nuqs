@@ -220,18 +220,46 @@ function mutantFingerprint(
     mutatorName?: string
     replacement?: string
   }
-): string {
+): string | undefined {
   const location = mutant.location
+  const original = sourceAtLocation(source, location)
+  if (
+    !location ||
+    mutant.mutatorName === undefined ||
+    mutant.replacement === undefined ||
+    original === undefined
+  ) {
+    return undefined
+  }
   return JSON.stringify([
     file,
-    location?.start.line,
-    location?.start.column,
-    location?.end.line,
-    location?.end.column,
+    location.start.line,
+    location.start.column,
+    location.end.line,
+    location.end.column,
     mutant.mutatorName,
-    sourceAtLocation(source, location),
+    original,
     mutant.replacement
   ])
+}
+
+function mutantFingerprintCounts(
+  report: MutationReport,
+  statuses: ReadonlySet<string>
+): Map<string, number> {
+  const counts = new Map<string, number>()
+  for (const [file, { mutants, source }] of Object.entries(report.files)) {
+    for (const mutant of mutants) {
+      if (!statuses.has(mutant.status)) {
+        continue
+      }
+      const fingerprint = mutantFingerprint(file, source, mutant)
+      if (fingerprint !== undefined) {
+        counts.set(fingerprint, (counts.get(fingerprint) ?? 0) + 1)
+      }
+    }
+  }
+  return counts
 }
 
 function scopeSettings(scope: MutationScope): unknown {
@@ -365,22 +393,38 @@ export function compareMutationReports(
           (right.location?.start.column ?? 0) ||
         left.id.localeCompare(right.id)
     )
-  const baselineTimeouts = Object.entries(baselineReport.files).flatMap(
-    ([file, { mutants, source }]) =>
-      mutants
-        .filter(mutant => mutant.status === 'Timeout')
-        .map(mutant => mutantFingerprint(file, source, mutant))
+  const baselineTimeouts = mutantFingerprintCounts(
+    baselineReport,
+    new Set(['Timeout'])
   )
-  const candidateUndetectedFingerprints = candidateUndetected.map(mutant =>
-    mutantFingerprint(
-      mutant.file,
-      candidateReport.files[mutant.file]!.source,
-      mutant
-    )
+  const candidateTimeouts = mutantFingerprintCounts(
+    candidateReport,
+    new Set(['Timeout'])
   )
-  const toleratedTimeoutVariance =
-    candidateUndetectedFingerprints.length -
-    difference(candidateUndetectedFingerprints, baselineTimeouts).length
+  const baselineUndetected = mutantFingerprintCounts(
+    baselineReport,
+    UNDETECTED_STATUSES
+  )
+  const candidateUndetectedCounts = mutantFingerprintCounts(
+    candidateReport,
+    UNDETECTED_STATUSES
+  )
+  const toleratedTimeoutVariance = [...candidateUndetectedCounts].reduce(
+    (credit, [fingerprint, candidateCount]) =>
+      credit +
+      Math.min(
+        Math.max(
+          0,
+          (baselineTimeouts.get(fingerprint) ?? 0) -
+            (candidateTimeouts.get(fingerprint) ?? 0)
+        ),
+        Math.max(
+          0,
+          candidateCount - (baselineUndetected.get(fingerprint) ?? 0)
+        )
+      ),
+    0
+  )
   const delta = candidate.debt - baseline.debt - toleratedTimeoutVariance
   return {
     baseline,

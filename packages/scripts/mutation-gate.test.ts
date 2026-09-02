@@ -39,6 +39,21 @@ function report(
   }
 }
 
+function identifyMutants(report: MutationReport): MutationReport {
+  report.files['src/example.ts']!.source = 'true'
+  for (const mutant of report.files['src/example.ts']!.mutants) {
+    Object.assign(mutant, {
+      location: {
+        start: { line: 1, column: 1 },
+        end: { line: 1, column: 5 }
+      },
+      mutatorName: 'BooleanLiteral',
+      replacement: 'false'
+    })
+  }
+  return report
+}
+
 const defaultConfig = {
   mutate: ['src/**/*.ts'],
   testRunner: 'vitest',
@@ -124,26 +139,78 @@ describe('mutation gate', () => {
 
   it('tolerates a baseline timeout surviving for the same mutant', () => {
     expect(
-      compareMutationReports(report(['Timeout']), report(['Survived']))
+      compareMutationReports(
+        identifyMutants(report(['Timeout'])),
+        identifyMutants(report(['Survived']))
+      )
     ).toMatchObject({ pass: true, delta: 0 })
     expect(
       compareMutationReports(report(['Survived']), report(['Timeout']))
     ).toMatchObject({ pass: true, delta: -1 })
 
-    const renumberedMutant = report(['Survived'])
+    const renumberedMutant = identifyMutants(report(['Survived']))
     renumberedMutant.files['src/example.ts']!.mutants[0]!.id = 'other'
     expect(
-      compareMutationReports(report(['Timeout']), renumberedMutant)
+      compareMutationReports(
+        identifyMutants(report(['Timeout'])),
+        renumberedMutant
+      )
     ).toMatchObject({ pass: true, delta: 0 })
 
-    const differentMutant = report(['Survived'])
+    const differentMutant = identifyMutants(report(['Survived']))
     differentMutant.files['src/example.ts']!.mutants[0]!.location = {
       start: { line: 2, column: 1 },
       end: { line: 2, column: 5 }
     }
     expect(
-      compareMutationReports(report(['Timeout']), differentMutant)
+      compareMutationReports(
+        identifyMutants(report(['Timeout'])),
+        differentMutant
+      )
     ).toMatchObject({ pass: false, delta: 1 })
+  })
+
+  it('does not reuse timeout credit already covered by baseline debt', () => {
+    const baseline = identifyMutants(report(['Timeout', 'Survived']))
+    expect(
+      compareMutationReports(
+        baseline,
+        identifyMutants(report(['Timeout', 'Survived', 'Survived']))
+      )
+    ).toMatchObject({ pass: false, delta: 1 })
+    expect(
+      compareMutationReports(
+        baseline,
+        identifyMutants(report(['Survived', 'Survived', 'Survived']))
+      )
+    ).toMatchObject({ pass: false, delta: 1 })
+    expect(
+      compareMutationReports(
+        baseline,
+        identifyMutants(report(['Survived', 'Survived']))
+      )
+    ).toMatchObject({ pass: true, delta: 0 })
+  })
+
+  it('does not match timeouts without a complete mutant fingerprint', () => {
+    for (const side of ['baseline', 'candidate'] as const) {
+      for (const field of [
+        'location',
+        'mutatorName',
+        'replacement'
+      ] as const) {
+        const baseline = identifyMutants(report(['Timeout']))
+        const candidate = identifyMutants(report(['Survived']))
+        delete (side === 'baseline'
+          ? baseline.files['src/example.ts']!.mutants[0]!
+          : candidate.files['src/example.ts']!.mutants[0]!)[field]
+
+        expect(
+          compareMutationReports(baseline, candidate),
+          `${side} ${field}`
+        ).toMatchObject({ pass: false, delta: 1 })
+      }
+    }
   })
 
   it('passes when mutation debt is stable or decreases', () => {
