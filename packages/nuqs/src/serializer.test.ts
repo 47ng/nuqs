@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import type { Options } from './defs'
 import {
   createMultiParser,
@@ -152,15 +152,17 @@ describe('serializer', () => {
       '?external=kept&processed=true'
     )
   })
-  it('keeps values from parsers without a default even when their equality function is permissive', () => {
+  it('does not compare a value against an absent default', () => {
+    const eq = vi.fn(() => true)
     const serialize = createSerializer({
       str: createParser({
         parse: String,
         serialize: String,
-        eq: () => true
+        eq
       })
     })
     expect(serialize({ str: 'value' })).toBe('?str=value')
+    expect(eq).not.toHaveBeenCalled()
   })
   it('clears a multi-parser default using its default equality', () => {
     const parser = createMultiParser({
