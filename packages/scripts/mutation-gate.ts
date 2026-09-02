@@ -7,23 +7,6 @@ import { z } from 'zod'
 const DETECTED_STATUSES = new Set(['Killed', 'Timeout'])
 const UNDETECTED_STATUSES = new Set(['Survived', 'NoCoverage'])
 const ERROR_STATUSES = new Set(['CompileError', 'RuntimeError'])
-const NON_RESULT_CONFIG_KEYS = new Set([
-  '$schema',
-  'allowConsoleColors',
-  'clearTextReporter',
-  'dashboard',
-  'eventReporter',
-  'fileLogLevel',
-  'force',
-  'htmlReporter',
-  'incremental',
-  'incrementalFile',
-  'jsonReporter',
-  'logLevel',
-  'reporters',
-  'tempDirName',
-  'warnings'
-])
 
 export type MutantStatus =
   | 'Killed'
@@ -33,6 +16,21 @@ export type MutantStatus =
   | 'CompileError'
   | 'RuntimeError'
   | string
+
+type RuntimeMutationScope = {
+  mutationFiles: string[]
+  excludedMutations: string[]
+  ignorePatterns: string[]
+  executedTests: string[]
+}
+
+type MutationScope = {
+  strategy: string
+  command: string
+  sourceFiles: string[]
+  node: RuntimeMutationScope
+  browser: RuntimeMutationScope
+}
 
 export type MutationReport = {
   files: Record<
@@ -51,13 +49,29 @@ export type MutationReport = {
       }>
     }
   >
-  config: Record<string, unknown>
+  config: Record<string, unknown> & { scope: MutationScope }
   framework: {
     name: string
     version: string
     dependencies?: Record<string, string>
   }
+  schemaVersion: string
 }
+
+const runtimeMutationScopeSchema = z.object({
+  mutationFiles: z.array(z.string()),
+  excludedMutations: z.array(z.string()),
+  ignorePatterns: z.array(z.string()),
+  executedTests: z.array(z.string())
+})
+
+const mutationScopeSchema = z.object({
+  strategy: z.string(),
+  command: z.string(),
+  sourceFiles: z.array(z.string()),
+  node: runtimeMutationScopeSchema,
+  browser: runtimeMutationScopeSchema
+})
 
 const mutationReportSchema: z.ZodType<MutationReport> = z.object({
   files: z.record(
@@ -80,17 +94,22 @@ const mutationReportSchema: z.ZodType<MutationReport> = z.object({
       )
     })
   ),
-  config: z.record(z.string(), z.unknown()),
+  config: z
+    .record(z.string(), z.unknown())
+    .and(z.object({ scope: mutationScopeSchema })),
   framework: z.object({
     name: z.string(),
     version: z.string(),
     dependencies: z.record(z.string(), z.string()).optional()
-  })
+  }),
+  schemaVersion: z.string()
 })
 
 type MutationSummary = {
+  debt: number
   detected: number
   errors: number
+  ignored: number
   killed: number
   noCoverage: number
   survived: number
@@ -99,7 +118,7 @@ type MutationSummary = {
   undetected: number
 }
 
-export type NewUndetectedMutant = {
+export type UndetectedMutant = {
   file: string
   id: string
   location?: {
@@ -108,23 +127,18 @@ export type NewUndetectedMutant = {
   }
   mutatorName?: string
   original?: string
-  previousStatus?: MutantStatus
   replacement?: string
   status: MutantStatus
-}
-
-type Mutant = MutationReport['files'][string]['mutants'][number]
-
-function mutantId(file: string, mutant: Mutant): string {
-  return `${file}\0${mutant.id}`
 }
 
 export function summarizeMutationReport(
   report: MutationReport
 ): MutationSummary {
   const summary: MutationSummary = {
+    debt: 0,
     detected: 0,
     errors: 0,
+    ignored: 0,
     killed: 0,
     noCoverage: 0,
     survived: 0,
@@ -149,6 +163,8 @@ export function summarizeMutationReport(
         summary.undetected++
       } else if (ERROR_STATUSES.has(mutant.status)) {
         summary.errors++
+      } else if (mutant.status === 'Ignored') {
+        summary.ignored++
       } else {
         throw new Error(`unknown mutant status: ${mutant.status}`)
       }
@@ -170,35 +186,14 @@ export function summarizeMutationReport(
     }
   }
 
+  summary.debt = summary.undetected + summary.ignored
+
   return summary
-}
-
-function comparableConfig(config: Record<string, unknown>): string {
-  return stableStringify(
-    Object.fromEntries(
-      Object.entries(config).filter(([key]) => !NON_RESULT_CONFIG_KEYS.has(key))
-    )
-  )
-}
-
-function stableStringify(value: unknown): string {
-  if (Array.isArray(value)) {
-    return `[${value.map(stableStringify).join(',')}]`
-  }
-  if (value && typeof value === 'object') {
-    const entries = Object.entries(value as Record<string, unknown>).sort(
-      ([left], [right]) => left.localeCompare(right)
-    )
-    return `{${entries
-      .map(([key, child]) => `${JSON.stringify(key)}:${stableStringify(child)}`)
-      .join(',')}}`
-  }
-  return JSON.stringify(value)
 }
 
 function sourceAtLocation(
   source: string,
-  location?: NewUndetectedMutant['location']
+  location?: UndetectedMutant['location']
 ): string | undefined {
   if (!location) {
     return undefined
@@ -217,6 +212,34 @@ function sourceAtLocation(
     .join('\n')
 }
 
+function scopeSettings(scope: MutationScope): unknown {
+  const withoutExecutedTests = (runtime: RuntimeMutationScope) => {
+    const { executedTests: _, mutationFiles: __, ...settings } = runtime
+    return settings
+  }
+  return {
+    strategy: scope.strategy,
+    command: scope.command,
+    node: withoutExecutedTests(scope.node),
+    browser: withoutExecutedTests(scope.browser)
+  }
+}
+
+function difference(baseline: string[], candidate: string[]): string[] {
+  const remaining = new Map<string, number>()
+  for (const value of candidate) {
+    remaining.set(value, (remaining.get(value) ?? 0) + 1)
+  }
+  return baseline.filter(value => {
+    const count = remaining.get(value) ?? 0
+    if (count === 0) {
+      return true
+    }
+    remaining.set(value, count - 1)
+    return false
+  })
+}
+
 export function compareMutationReports(
   baselineReport: MutationReport,
   candidateReport: MutationReport
@@ -224,20 +247,44 @@ export function compareMutationReports(
   baseline: MutationSummary
   candidate: MutationSummary
   delta: number
-  newUndetected: NewUndetectedMutant[]
+  candidateUndetected: UndetectedMutant[]
   pass: boolean
 } {
-  if (
-    comparableConfig(baselineReport.config) !==
-    comparableConfig(candidateReport.config)
-  ) {
-    throw new Error(
-      'mutation configuration changed; establish and review a new baseline explicitly'
-    )
-  }
   const baseline = summarizeMutationReport(baselineReport)
   const candidate = summarizeMutationReport(candidateReport)
-  if (baseline.total > 0 && candidate.total === 0) {
+  if (baselineReport.schemaVersion !== candidateReport.schemaVersion) {
+    throw new Error('mutation report schema changed')
+  }
+  if (
+    JSON.stringify(scopeSettings(baselineReport.config.scope)) !==
+    JSON.stringify(scopeSettings(candidateReport.config.scope))
+  ) {
+    throw new Error('mutation scope changed')
+  }
+  for (const runtime of ['node', 'browser'] as const) {
+    const missingMutationFiles = difference(
+      baselineReport.config.scope[runtime].mutationFiles,
+      candidateReport.config.scope[runtime].mutationFiles
+    ).filter(file => candidateReport.config.scope.sourceFiles.includes(file))
+    if (missingMutationFiles.length > 0) {
+      throw new Error(
+        `${runtime} mutation scope lost ${missingMutationFiles.length} existing source file(s)`
+      )
+    }
+    const missingTests = difference(
+      baselineReport.config.scope[runtime].executedTests,
+      candidateReport.config.scope[runtime].executedTests
+    )
+    if (missingTests.length > 0) {
+      throw new Error(
+        `${runtime} mutation scope lost ${missingTests.length} executed test(s)`
+      )
+    }
+  }
+  if (baseline.total === 0) {
+    throw new Error('baseline report contains no mutants')
+  }
+  if (candidate.total === 0) {
     throw new Error('candidate report contains no mutants')
   }
   if (baseline.errors > 0) {
@@ -251,36 +298,20 @@ export function compareMutationReports(
     )
   }
 
-  const delta = candidate.undetected - baseline.undetected
-  const baselineStatuses = new Map<string, MutantStatus>()
-  for (const [file, { mutants }] of Object.entries(baselineReport.files)) {
-    for (const mutant of mutants) {
-      baselineStatuses.set(mutantId(file, mutant), mutant.status)
-    }
-  }
-  const newUndetected = Object.entries(candidateReport.files)
+  const delta = candidate.debt - baseline.debt
+  const candidateUndetected = Object.entries(candidateReport.files)
     .flatMap(([file, { mutants, source }]) =>
-      mutants.flatMap(mutant => {
-        const previousStatus = baselineStatuses.get(mutantId(file, mutant))
-        if (
-          !UNDETECTED_STATUSES.has(mutant.status) ||
-          (previousStatus && UNDETECTED_STATUSES.has(previousStatus))
-        ) {
-          return []
-        }
-        return [
-          {
-            file,
-            id: mutant.id,
-            location: mutant.location,
-            mutatorName: mutant.mutatorName,
-            original: sourceAtLocation(source, mutant.location),
-            previousStatus,
-            replacement: mutant.replacement,
-            status: mutant.status
-          }
-        ]
-      })
+      mutants
+        .filter(mutant => UNDETECTED_STATUSES.has(mutant.status))
+        .map(mutant => ({
+          file,
+          id: mutant.id,
+          location: mutant.location,
+          mutatorName: mutant.mutatorName,
+          original: sourceAtLocation(source, mutant.location),
+          replacement: mutant.replacement,
+          status: mutant.status
+        }))
     )
     .sort(
       (left, right) =>
@@ -293,14 +324,14 @@ export function compareMutationReports(
   return {
     baseline,
     candidate,
+    candidateUndetected,
     delta,
-    newUndetected,
     pass: delta <= 0
   }
 }
 
-export function formatNewUndetectedMutants(
-  mutants: NewUndetectedMutant[],
+export function formatUndetectedMutants(
+  mutants: UndetectedMutant[],
   sourceBaseUrl?: string,
   sourceRoot?: string
 ): string {
@@ -311,12 +342,7 @@ export function formatNewUndetectedMutants(
     const mutator = mutant.mutatorName ?? 'Unknown mutation'
     const original = oneLine(mutant.original) || '(source unavailable)'
     const replacement = oneLine(mutant.replacement) || '(empty)'
-    const transition = mutant.previousStatus
-      ? `${mutant.status} (was ${mutant.previousStatus})`
-      : `${mutant.status} (new mutant)`
-    const explanation = mutant.previousStatus
-      ? `Newly ${mutant.status.toLowerCase()}; previously ${mutant.previousStatus.toLowerCase()}`
-      : `New undetected mutant (${mutant.status.toLowerCase()})`
+    const explanation = `Undetected mutant (${mutant.status.toLowerCase()})`
     const repositoryPath = [sourceRoot, mutant.file].filter(Boolean).join('/')
     const source =
       sourceBaseUrl && line
@@ -326,14 +352,14 @@ export function formatNewUndetectedMutants(
             .join('/')}#L${line}`
         : undefined
     const annotation = line
-      ? `::error file=${escapeCommandProperty(repositoryPath)},line=${line},col=${column},title=New undetected mutant::${escapeCommandData(`${mutator} ${transition}\nOriginal: ${original}\nMutated: ${replacement}`)}`
+      ? `::error file=${escapeCommandProperty(repositoryPath)},line=${line},col=${column},title=Undetected mutant::${escapeCommandData(`${mutator} ${mutant.status}\nOriginal: ${original}\nMutated: ${replacement}`)}`
       : undefined
     return [
       annotation,
       `- ${location} [${mutator}] ${explanation}${source ? `\n  Source: ${source}` : ''}\n  Original: ${original}\n  Mutated: ${replacement}`
     ].filter((value): value is string => value !== undefined)
   })
-  return `New undetected mutants:\n${lines.join('\n')}\n`
+  return `Candidate undetected mutants:\n${lines.join('\n')}\n`
 }
 
 function oneLine(value?: string): string {
@@ -376,16 +402,21 @@ async function main(): Promise<void> {
   if (!result.pass) {
     process.stderr.write(
       `Mutation debt increased by ${result.delta}: ` +
-        `${result.baseline.undetected} → ${result.candidate.undetected} ` +
-        `survived or uncovered mutants.\n`
+        `${result.baseline.debt} → ${result.candidate.debt} ` +
+        `survived, uncovered, or ignored mutants.\n`
     )
     process.stderr.write(
-      formatNewUndetectedMutants(
-        result.newUndetected,
-        process.env.MUTATION_SOURCE_URL,
-        process.env.MUTATION_SOURCE_ROOT
-      )
+      `Ignored mutants: ${result.baseline.ignored} → ${result.candidate.ignored}.\n`
     )
+    if (result.candidateUndetected.length > 0) {
+      process.stderr.write(
+        formatUndetectedMutants(
+          result.candidateUndetected,
+          process.env.MUTATION_SOURCE_URL,
+          process.env.MUTATION_SOURCE_ROOT
+        )
+      )
+    }
     process.exitCode = 1
   } else {
     const outcome =
@@ -394,8 +425,8 @@ async function main(): Promise<void> {
         : `decreased by ${Math.abs(result.delta)}`
     process.stdout.write(
       `Mutation debt ${outcome}: ` +
-        `${result.baseline.undetected} → ${result.candidate.undetected} ` +
-        `survived or uncovered mutants.\n`
+        `${result.baseline.debt} → ${result.candidate.debt} ` +
+        `survived, uncovered, or ignored mutants.\n`
     )
   }
 }
