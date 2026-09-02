@@ -49,19 +49,13 @@ const defaultConfig = {
     command: 'node scripts/mutation.mjs',
     node: {
       mutate: ['src/**/*.ts'],
-      testPatterns: ['src/**/*.test.ts'],
       excludedMutations: [],
-      ignoreStatic: true,
-      ignorers: [],
       ignorePatterns: [],
       executedTests: ['src/example.test.ts\0test']
     },
     browser: {
       mutate: ['src/browser.ts'],
-      testPatterns: ['src/browser.test.ts'],
       excludedMutations: [],
-      ignoreStatic: true,
-      ignorers: [],
       ignorePatterns: [],
       executedTests: ['src/browser.test.ts\0test']
     }

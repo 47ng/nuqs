@@ -66,10 +66,7 @@ function selectScope(declared, effectiveReport) {
   const effective = effectiveReport.config
   return {
     mutate: declared.mutate,
-    testPatterns: [...declared.testFiles].sort(),
     excludedMutations: [...effective.mutator.excludedMutations].sort(),
-    ignoreStatic: effective.ignoreStatic,
-    ignorers: [...effective.ignorers].sort(),
     ignorePatterns: effective.ignorePatterns,
     executedTests: Object.entries(effectiveReport.testFiles)
       .flatMap(([file, { tests }]) =>

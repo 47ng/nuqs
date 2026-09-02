@@ -102,10 +102,8 @@ jobs:
         working-directory: packages/nuqs
       - name: Establish mutation baseline
         if: steps.baseline.outputs.supported == 'true'
-        run: pnpm exec turbo run mutation --filter=nuqs -- --force
-      - name: Record baseline mutation scope
-        if: steps.baseline.outputs.supported == 'true'
         run: |
+          pnpm exec turbo run mutation --filter=nuqs -- --force
           node "$RUNNER_TEMP/mutation-scope.mjs" \
             packages/nuqs \
             packages/nuqs/reports/mutation/stryker-incremental.json

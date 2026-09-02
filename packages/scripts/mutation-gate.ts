@@ -19,10 +19,7 @@ export type MutantStatus =
 
 type RuntimeMutationScope = {
   mutate: string[]
-  testPatterns: string[]
   excludedMutations: string[]
-  ignoreStatic: boolean
-  ignorers: string[]
   ignorePatterns: string[]
   executedTests: string[]
 }
@@ -62,10 +59,7 @@ export type MutationReport = {
 
 const runtimeMutationScopeSchema = z.object({
   mutate: z.array(z.string()),
-  testPatterns: z.array(z.string()),
   excludedMutations: z.array(z.string()),
-  ignoreStatic: z.boolean(),
-  ignorers: z.array(z.string()),
   ignorePatterns: z.array(z.string()),
   executedTests: z.array(z.string())
 })
@@ -401,12 +395,17 @@ async function main(): Promise<void> {
         `survived, uncovered, or ignored mutants.\n`
     )
     process.stderr.write(
-      formatUndetectedMutants(
-        result.candidateUndetected,
-        process.env.MUTATION_SOURCE_URL,
-        process.env.MUTATION_SOURCE_ROOT
-      )
+      `Ignored mutants: ${result.baseline.ignored} → ${result.candidate.ignored}.\n`
     )
+    if (result.candidateUndetected.length > 0) {
+      process.stderr.write(
+        formatUndetectedMutants(
+          result.candidateUndetected,
+          process.env.MUTATION_SOURCE_URL,
+          process.env.MUTATION_SOURCE_ROOT
+        )
+      )
+    }
     process.exitCode = 1
   } else {
     const outcome =
