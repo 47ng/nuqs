@@ -3,6 +3,8 @@ import * as v from 'valibot'
 import { describe, expect, it } from 'vitest'
 import { z } from 'zod'
 import {
+  createMultiParser,
+  createParser,
   parseAsArrayOf,
   parseAsBoolean,
   parseAsFloat,
@@ -26,7 +28,21 @@ import {
 } from './testing'
 
 describe('parsers', () => {
+  it('uses referential equality by default for multi parsers', () => {
+    const parser = createMultiParser<string[]>({
+      parse: values => [...values],
+      serialize: values => values
+    })
+    const value = ['nuqs']
+    expect(parser.type).toBe('multi')
+    expect(parser.eq(value, value)).toBe(true)
+    expect(parser.eq(value, ['nuqs'])).toBe(false)
+  })
+
   it('parseAsString', () => {
+    expect(parseAsString.type).toBe('single')
+    expect(parseAsString.eq('same', 'same')).toBe(true)
+    expect(parseAsString.eq('same', 'different')).toBe(false)
     expect(parseAsString.parse('')).toBe('')
     expect(parseAsString.parse('foo')).toBe('foo')
     expect(isParserBijective(parseAsString, 'foo', 'foo')).toBe(true)
@@ -107,6 +123,8 @@ describe('parsers', () => {
     expect(parseAsTimestamp.parse('')).toBeNull()
     expect(parseAsTimestamp.parse('8640000000000001')).toBeNull()
     expect(parseAsTimestamp.parse('0')).toStrictEqual(new Date(0))
+    expect(parseAsTimestamp.eq(new Date(0), new Date(0))).toBe(true)
+    expect(parseAsTimestamp.eq(new Date(0), new Date(1))).toBe(false)
     expect(testParseThenSerialize(parseAsTimestamp, '0')).toBe(true)
     expect(testSerializeThenParse(parseAsTimestamp, new Date(1234567890))).toBe(
       true
@@ -119,6 +137,7 @@ describe('parsers', () => {
   it('parseAsIsoDateTime', () => {
     expect(parseAsIsoDateTime.parse('')).toBeNull()
     expect(parseAsIsoDateTime.parse('not-a-date')).toBeNull()
+    expect(parseAsIsoDateTime.parse('2020-01-01Tnot-a-time')).toBeNull()
     expect(parseAsIsoDateTime.parse('2021-02-29T10:00:00Z')).toBeNull()
     expect(parseAsIsoDateTime.parse('March 1, 2021')).toBeNull()
     expect(parseAsIsoDateTime.parse('2020-02-29T10:00:00Z')).toStrictEqual(
@@ -316,8 +335,20 @@ describe('parsers', () => {
     ).toBe(true)
   })
 
+  it('rejects asynchronous Standard Schema validators', () => {
+    const parser = parseAsJson({
+      '~standard': {
+        version: 1,
+        vendor: 'async-test',
+        validate: async (value: unknown) => ({ value })
+      }
+    })
+    expect(parser.parse('{"value":42}')).toBeNull()
+  })
+
   it('parseAsArrayOf', () => {
     const parser = parseAsArrayOf(parseAsString)
+    expect(parser.parse('')).toStrictEqual([])
     expect(parser.serialize([])).toBe('')
     // It encodes its separator
     expect(parser.serialize(['a', ',', 'b'])).toBe('a,%2C,b')
@@ -338,7 +369,44 @@ describe('parsers', () => {
     it('parses', () => {
       const parser = parseAsNativeArrayOf(parseAsInteger)
       expect(parser.parse([])).toStrictEqual(null)
+      expect(parser.parse([''])).toStrictEqual([])
+      expect(parser.parse(['', ''])).toStrictEqual(null)
+      expect(parser.parse(['not-a-number'])).toStrictEqual(null)
       expect(parser.parse(['1', '2'])).toStrictEqual([1, 2])
+    })
+    it('uses the item parser equality function', () => {
+      const parser = parseAsNativeArrayOf(
+        createParser({
+          parse: value => value,
+          serialize: String,
+          eq: (a, b) => a.toLowerCase() === b.toLowerCase()
+        })
+      )
+      expect(parser.eq(['NUQS'], ['nuqs'])).toBe(true)
+      expect(parser.eq(['nuqs'], ['other'])).toBe(false)
+    })
+    it('serializes items without a custom serializer', () => {
+      const parser = parseAsNativeArrayOf({ parse: Number })
+      expect(parser.serialize([1, 2])).toStrictEqual(['1', '2'])
+    })
+    it('preserves custom item serialization', () => {
+      const item = createParser({
+        parse: value => (value.startsWith('id:') ? value.slice(3) : null),
+        serialize: value => `id:${value}`
+      })
+      expect(parseAsNativeArrayOf(item).serialize(['nuqs'])).toStrictEqual([
+        'id:nuqs'
+      ])
+    })
+    // parseServerSide is deprecated and only retained as an internal utility.
+    // This mutation test can go away if the utility is removed.
+    it('uses an empty array as its server-side default', () => {
+      const parser = parseAsNativeArrayOf(parseAsInteger)
+      expect(parser.type).toBe('multi')
+      expect(parser.defaultValue).toStrictEqual([])
+      expect(parser.parseServerSide(undefined)).toStrictEqual([])
+      expect(parser.parseServerSide('1')).toStrictEqual([1])
+      expect(parser.parseServerSide(['1', '2'])).toStrictEqual([1, 2])
     })
     it('defaults to null', () => {
       const parser = parseAsNativeArrayOf(parseAsInteger)
@@ -361,6 +429,8 @@ describe('parsers', () => {
     expect(p.parseServerSide(searchParams.undef)).toBe('default')
     expect(p.parseServerSide(searchParams.string)).toBe('foo')
     expect(p.parseServerSide(searchParams.stringArray)).toBe('bar')
+    expect(parseAsString.parseServerSide([])).toBeNull()
+    expect(p.parseServerSide([])).toBe('default')
     // @ts-expect-error - Implicitly undefined
     expect(p.parseServerSide(searchParams.nope)).toBe('default')
   })
@@ -394,6 +464,30 @@ describe('parsers', () => {
 })
 
 describe('parsers/equality', () => {
+  it('parseAsJson compares JSON-serialized values', () => {
+    const eq = parseAsJson(value => value).eq!
+    const value = { nested: { count: 1 } }
+    expect(eq(value, value)).toBe(true)
+    expect(eq(value, { nested: { count: 1 } })).toBe(true)
+    expect(eq(value, { nested: { count: 2 } })).toBe(false)
+
+    const cyclic: { self?: unknown } = {}
+    cyclic.self = cyclic
+    expect(eq(cyclic, cyclic)).toBe(true)
+  })
+
+  it('parseAsArrayOf uses the item parser equality function', () => {
+    const parser = parseAsArrayOf(
+      createParser({
+        parse: value => value,
+        serialize: String,
+        eq: (a, b) => a.toLowerCase() === b.toLowerCase()
+      })
+    )
+    expect(parser.eq(['NUQS'], ['nuqs'])).toBe(true)
+    expect(parser.eq(['nuqs'], ['other'])).toBe(false)
+  })
+
   it('parseAsArrayOf', () => {
     const eq = parseAsArrayOf(parseAsString).eq!
     expect(eq([], [])).toBe(true)

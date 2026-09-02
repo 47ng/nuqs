@@ -38,7 +38,10 @@
         "src/adapters/testing.ts"
       ],
       "project": ["src/**/*.ts"],
-      "ignoreDependencies": ["@vitejs/plugin-react"]
+      "ignoreDependencies": [
+        "@stryker-mutator/vitest-runner",
+        "@vitejs/plugin-react"
+      ]
     },
     "packages/docs": {
       "entry": [

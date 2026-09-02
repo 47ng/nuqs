@@ -9,6 +9,10 @@
     "build": {
       "dependsOn": ["^build"]
     },
-    "test": {}
+    "test": {},
+    "mutation": {
+      "cache": false,
+      "dependsOn": ["build"]
+    }
   }
 }
