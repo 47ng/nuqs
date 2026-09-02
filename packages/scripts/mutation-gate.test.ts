@@ -130,8 +130,17 @@ describe('mutation gate', () => {
       compareMutationReports(report(['Survived']), report(['Timeout']))
     ).toMatchObject({ pass: true, delta: -1 })
 
+    const renumberedMutant = report(['Survived'])
+    renumberedMutant.files['src/example.ts']!.mutants[0]!.id = 'other'
+    expect(
+      compareMutationReports(report(['Timeout']), renumberedMutant)
+    ).toMatchObject({ pass: true, delta: 0 })
+
     const differentMutant = report(['Survived'])
-    differentMutant.files['src/example.ts']!.mutants[0]!.id = 'other'
+    differentMutant.files['src/example.ts']!.mutants[0]!.location = {
+      start: { line: 2, column: 1 },
+      end: { line: 2, column: 5 }
+    }
     expect(
       compareMutationReports(report(['Timeout']), differentMutant)
     ).toMatchObject({ pass: false, delta: 1 })

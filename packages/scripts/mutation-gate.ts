@@ -212,6 +212,28 @@ function sourceAtLocation(
     .join('\n')
 }
 
+function mutantFingerprint(
+  file: string,
+  source: string,
+  mutant: {
+    location?: UndetectedMutant['location']
+    mutatorName?: string
+    replacement?: string
+  }
+): string {
+  const location = mutant.location
+  return JSON.stringify([
+    file,
+    location?.start.line,
+    location?.start.column,
+    location?.end.line,
+    location?.end.column,
+    mutant.mutatorName,
+    sourceAtLocation(source, location),
+    mutant.replacement
+  ])
+}
+
 function scopeSettings(scope: MutationScope): unknown {
   const withoutExecutedTests = (runtime: RuntimeMutationScope) => {
     const { executedTests: _, mutationFiles: __, ...settings } = runtime
@@ -343,16 +365,22 @@ export function compareMutationReports(
           (right.location?.start.column ?? 0) ||
         left.id.localeCompare(right.id)
     )
-  const baselineTimeouts = new Set(
-    Object.entries(baselineReport.files).flatMap(([file, { mutants }]) =>
+  const baselineTimeouts = Object.entries(baselineReport.files).flatMap(
+    ([file, { mutants, source }]) =>
       mutants
         .filter(mutant => mutant.status === 'Timeout')
-        .map(mutant => `${file}\0${mutant.id}`)
+        .map(mutant => mutantFingerprint(file, source, mutant))
+  )
+  const candidateUndetectedFingerprints = candidateUndetected.map(mutant =>
+    mutantFingerprint(
+      mutant.file,
+      candidateReport.files[mutant.file]!.source,
+      mutant
     )
   )
-  const toleratedTimeoutVariance = candidateUndetected.filter(mutant =>
-    baselineTimeouts.has(`${mutant.file}\0${mutant.id}`)
-  ).length
+  const toleratedTimeoutVariance =
+    candidateUndetectedFingerprints.length -
+    difference(candidateUndetectedFingerprints, baselineTimeouts).length
   const delta = candidate.debt - baseline.debt - toleratedTimeoutVariance
   return {
     baseline,
