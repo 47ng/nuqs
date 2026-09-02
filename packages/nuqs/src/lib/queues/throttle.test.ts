@@ -514,7 +514,14 @@ describe('throttle: flush', () => {
     await first
     expect(adapter.updateUrl).toHaveBeenCalledTimes(1)
 
-    // Move 50 ms into the 100 ms window. With rateLimitFactor 2, 100 ms remain.
+    // performance.now() timeline:
+    //
+    // previous flush       current time        normal window end
+    // t=100                t=150               t=200
+    //   |--------------------|--------------------|
+    //        50 ms elapsed          50 ms left
+    //
+    // rateLimitFactor 2 doubles the remaining wait to 100 ms.
     now = 150
     queue.push({ key: 'second', query: 'two', options: {} }, 100)
     const second = queue.flush(adapter)
