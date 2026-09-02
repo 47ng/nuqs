@@ -90,8 +90,10 @@ pnpm mutation
 
 The report is written to `packages/nuqs/reports/mutation/`. The `Mutation debt`
 check fails when a change increases the number of undetected mutants relative to
-its base. When mutation inputs change, CI runs the complete candidate suite and
-compares its aggregate debt with a fresh report from the exact base commit.
+its base. CI compares complete reports from the pull request's merge base and
+candidate commit. It rejects the comparison when the mutation command, source or
+test selection, runtime ownership, ignored static code, custom ignorers, source
+exclusion directives, or excluded mutations change.
 
 ## Opening issues
 

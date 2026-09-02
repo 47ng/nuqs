@@ -17,6 +17,26 @@ export type MutantStatus =
   | 'RuntimeError'
   | string
 
+type RuntimeMutationScope = {
+  mutate: string[]
+  testFiles: string[]
+  excludedMutations: string[]
+  ignoreStatic: boolean
+  ignorers: string[]
+}
+
+type MutationScope = {
+  strategy: string
+  command: string
+  sourceDirectives: Array<{
+    file: string
+    line: number
+    directive: string
+  }>
+  node: RuntimeMutationScope
+  browser: RuntimeMutationScope
+}
+
 export type MutationReport = {
   files: Record<
     string,
@@ -34,7 +54,7 @@ export type MutationReport = {
       }>
     }
   >
-  config: Record<string, unknown>
+  config: Record<string, unknown> & { scope: MutationScope }
   framework: {
     name: string
     version: string
@@ -42,6 +62,28 @@ export type MutationReport = {
   }
   schemaVersion: string
 }
+
+const runtimeMutationScopeSchema = z.object({
+  mutate: z.array(z.string()),
+  testFiles: z.array(z.string()),
+  excludedMutations: z.array(z.string()),
+  ignoreStatic: z.boolean(),
+  ignorers: z.array(z.string())
+})
+
+const mutationScopeSchema = z.object({
+  strategy: z.string(),
+  command: z.string(),
+  sourceDirectives: z.array(
+    z.object({
+      file: z.string(),
+      line: z.number(),
+      directive: z.string()
+    })
+  ),
+  node: runtimeMutationScopeSchema,
+  browser: runtimeMutationScopeSchema
+})
 
 const mutationReportSchema: z.ZodType<MutationReport> = z.object({
   files: z.record(
@@ -64,7 +106,9 @@ const mutationReportSchema: z.ZodType<MutationReport> = z.object({
       )
     })
   ),
-  config: z.record(z.string(), z.unknown()),
+  config: z
+    .record(z.string(), z.unknown())
+    .and(z.object({ scope: mutationScopeSchema })),
   framework: z.object({
     name: z.string(),
     version: z.string(),
@@ -186,6 +230,12 @@ export function compareMutationReports(
   const candidate = summarizeMutationReport(candidateReport)
   if (baselineReport.schemaVersion !== candidateReport.schemaVersion) {
     throw new Error('mutation report schema changed')
+  }
+  if (
+    JSON.stringify(baselineReport.config.scope) !==
+    JSON.stringify(candidateReport.config.scope)
+  ) {
+    throw new Error('mutation scope changed')
   }
   if (baseline.total === 0) {
     throw new Error('baseline report contains no mutants')

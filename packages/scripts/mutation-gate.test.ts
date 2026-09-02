@@ -38,7 +38,26 @@ const defaultConfig = {
   mutate: ['src/**/*.ts'],
   testRunner: 'vitest',
   timeoutMS: 5000,
-  vitest: { related: true }
+  vitest: { related: true },
+  scope: {
+    strategy: 'runtime-ownership-v1',
+    command: 'node scripts/mutation.mjs',
+    sourceDirectives: [],
+    node: {
+      mutate: ['src/**/*.ts'],
+      testFiles: ['src/**/*.test.ts'],
+      excludedMutations: [],
+      ignoreStatic: true,
+      ignorers: []
+    },
+    browser: {
+      mutate: ['src/browser.ts'],
+      testFiles: ['src/browser.test.ts'],
+      excludedMutations: [],
+      ignoreStatic: true,
+      ignorers: []
+    }
+  }
 }
 
 const temporaryDirectories: string[] = []
@@ -182,17 +201,16 @@ describe('mutation gate', () => {
     )
   })
 
-  it('compares aggregate debt across mutation configuration changes', () => {
-    expect(
+  it('rejects mutation scope changes', () => {
+    const candidateConfig = structuredClone(defaultConfig)
+    candidateConfig.scope.node.mutate = ['src/cache.ts']
+
+    expect(() =>
       compareMutationReports(
         report(['Killed']),
-        report(['Survived'], {
-          ...defaultConfig,
-          mutate: ['src/cache.ts'],
-          timeoutMS: 1
-        })
+        report(['Survived'], candidateConfig)
       )
-    ).toMatchObject({ pass: false, delta: 1 })
+    ).toThrow('mutation scope changed')
   })
 
   it('compares mutation debt across toolchain changes', () => {
