@@ -278,9 +278,27 @@ describe('mutation gate', () => {
     ).toThrow('node mutation scope lost 1 executed test')
   })
 
-  it('rejects malformed executed test identifiers', () => {
+  it('rejects moving a test to another file without reducing the total', () => {
     const candidateConfig = structuredClone(defaultConfig)
-    candidateConfig.scope.node.executedTests = ['src/example.test.ts']
+    candidateConfig.scope.node.executedTests = [
+      'src/browser.test.ts\0moved test'
+    ]
+
+    expect(() =>
+      compareMutationReports(
+        report(['Killed']),
+        report(['Killed'], candidateConfig)
+      )
+    ).toThrow('node mutation scope lost 1 executed test')
+  })
+
+  it.each([
+    'src/example.test.ts',
+    '\0test',
+    'src/example.test.ts\0'
+  ])('rejects malformed executed test identifier %j', executedTest => {
+    const candidateConfig = structuredClone(defaultConfig)
+    candidateConfig.scope.node.executedTests = [executedTest]
 
     expect(() =>
       compareMutationReports(
