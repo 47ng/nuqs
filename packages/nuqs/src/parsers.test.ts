@@ -398,6 +398,8 @@ describe('parsers', () => {
         'id:nuqs'
       ])
     })
+    // parseServerSide is deprecated and only retained as an internal utility.
+    // This mutation test can go away if the utility is removed.
     it('uses an empty array as its server-side default', () => {
       const parser = parseAsNativeArrayOf(parseAsInteger)
       expect(parser.type).toBe('multi')

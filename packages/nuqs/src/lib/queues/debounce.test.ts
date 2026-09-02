@@ -259,10 +259,10 @@ describe('debounce: DebounceController', () => {
   })
   it('keeps a restarted debounce while the previous flush settles', async () => {
     vi.useFakeTimers()
-    const { promise: firstFlush, resolve: resolveFirstFlush } =
+    const { promise: pendingFirstFlush, resolve: completeFirstFlush } =
       Promise.withResolvers<URLSearchParams>()
     const throttleQueue = new ThrottledQueue()
-    vi.spyOn(throttleQueue, 'flush').mockReturnValueOnce(firstFlush)
+    vi.spyOn(throttleQueue, 'flush').mockReturnValueOnce(pendingFirstFlush)
     const adapter: UpdateQueueAdapterContext = {
       updateUrl: vi.fn(),
       getSearchParamsSnapshot: () => new URLSearchParams()
@@ -273,6 +273,7 @@ describe('debounce: DebounceController', () => {
       100,
       adapter
     )
+    // Start the first flush, but keep it pending while the same key is queued again.
     vi.advanceTimersByTime(100)
     const second = controller.push(
       { key: 'key', query: 'second', options: {} },
@@ -280,10 +281,12 @@ describe('debounce: DebounceController', () => {
       adapter
     )
 
-    resolveFirstFlush(new URLSearchParams('?key=first'))
+    // Settling the old flush must not remove the replacement debounce.
+    completeFirstFlush(new URLSearchParams('?key=first'))
     await first
     expect(controller.getQueuedQuery('key')).toBe('second')
 
+    // Aborting the replacement still redirects its result to the next update.
     const replacement = Promise.resolve(new URLSearchParams('?key=replacement'))
     const attach = controller.abort('key')
     expect(attach(replacement)).toBe(replacement)

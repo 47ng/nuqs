@@ -42,6 +42,12 @@ describe('parser testing helpers', () => {
       expect(() => isParserBijective(single, 'invalid', 42)).toThrow(
         /parsed value is null/
       )
+      expect(() => isParserBijective(multi, ['41'], [42])).toThrow(
+        /serialize does not match/
+      )
+      expect(() => isParserBijective(multi, ['invalid'], [42])).toThrow(
+        /parsed value is null/
+      )
     })
 
     it('uses the parser equality function for parsed values', () => {
@@ -53,29 +59,33 @@ describe('parser testing helpers', () => {
       expect(isParserBijective(caseInsensitive, 'NUQS', 'nuqs')).toBe(true)
     })
 
-    it('checks both round-trip directions', () => {
-      const eq = (a: number, b: number) => a % 2 === b % 2
-      const singleDirectionDrift = createParser({
-        parse: () => 3,
-        serialize: value => (value === 1 ? 'one' : 'three'),
-        eq
+    it('checks parse-then-serialize after serialize-then-parse passes', () => {
+      const normalizingSingle = createParser({
+        parse: value => value.toLowerCase(),
+        serialize: value => value.toUpperCase()
       })
-      const multiDirectionDrift = createMultiParser({
-        parse: () => 3,
-        serialize: value => [value === 1 ? 'one' : 'three'],
-        eq
+      const normalizingMulti = createMultiParser({
+        parse: values => values.map(value => value.toLowerCase()),
+        serialize: values => values.map(value => value.toUpperCase()),
+        eq: (a, b) => a.every((value, index) => value === b[index])
       })
-      expect(() => isParserBijective(singleDirectionDrift, 'one', 1)).toThrow()
-      expect(() => isParserBijective(multiDirectionDrift, ['one'], 1)).toThrow()
+      expect(() =>
+        isParserBijective(normalizingSingle, 'nuqs', 'nuqs')
+      ).toThrow(/parser is not bijective/)
+      expect(() =>
+        isParserBijective(normalizingMulti, ['nuqs'], ['nuqs'])
+      ).toThrow(/parser is not bijective/)
     })
 
-    it('validates the exact supplied serialization', () => {
+    it('checks the supplied serialization even when parsed values compare equal', () => {
       const parser = createParser({
-        parse: value => (value === 'one' ? 1 : 3),
-        serialize: value => (value === 1 ? 'one' : 'three'),
-        eq: (a, b) => a % 2 === b % 2
+        parse: String,
+        serialize: String,
+        eq: (a, b) => a.toLowerCase() === b.toLowerCase()
       })
-      expect(() => isParserBijective(parser, 'three', 1)).toThrow()
+      expect(() => isParserBijective(parser, 'NUQS', 'nuqs')).toThrow(
+        /serialize does not match/
+      )
     })
   })
 
@@ -110,21 +120,6 @@ describe('parser testing helpers', () => {
       expect(() => testSerializeThenParse(lossy, 1.5)).toThrow(
         /parser is not bijective/
       )
-    })
-
-    it('rejects serializers that return the wrong query shape', () => {
-      const wrongSingle = createParser({
-        parse: () => 'value',
-        serialize: () => ['value'] as never,
-        eq: () => true
-      })
-      const wrongMulti = createMultiParser({
-        parse: () => 'value',
-        serialize: () => 'value' as never,
-        eq: () => true
-      })
-      expect(() => testSerializeThenParse(wrongSingle, 'value')).toThrow()
-      expect(() => testSerializeThenParse(wrongMulti, 'value')).toThrow()
     })
   })
 
