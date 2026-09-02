@@ -261,7 +261,33 @@ describe('mutation gate', () => {
         report(['Killed']),
         report(['Killed'], candidateConfig)
       )
-    ).toThrow('node mutation scope lost 1 executed test file')
+    ).toThrow('node mutation scope lost 1 executed test')
+  })
+
+  it('rejects losing one of several tests in an existing file', () => {
+    const baselineConfig = structuredClone(defaultConfig)
+    baselineConfig.scope.node.executedTests.push(
+      'src/example.test.ts\0second test'
+    )
+
+    expect(() =>
+      compareMutationReports(
+        report(['Killed'], baselineConfig),
+        report(['Killed'])
+      )
+    ).toThrow('node mutation scope lost 1 executed test')
+  })
+
+  it('rejects malformed executed test identifiers', () => {
+    const candidateConfig = structuredClone(defaultConfig)
+    candidateConfig.scope.node.executedTests = ['src/example.test.ts']
+
+    expect(() =>
+      compareMutationReports(
+        report(['Killed']),
+        report(['Killed'], candidateConfig)
+      )
+    ).toThrow('invalid executed test identifier')
   })
 
   it('compares mutation debt across toolchain changes', () => {

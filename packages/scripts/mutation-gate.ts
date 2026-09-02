@@ -225,15 +225,17 @@ function scopeSettings(scope: MutationScope): unknown {
   }
 }
 
-function executedTestFiles(tests: string[]): string[] {
-  return [
-    ...new Set(
-      tests.map(test => {
-        const separator = test.indexOf('\0')
-        return separator === -1 ? test : test.slice(0, separator)
-      })
-    )
-  ].sort()
+function executedTestCounts(tests: string[]): Map<string, number> {
+  const counts = new Map<string, number>()
+  for (const test of tests) {
+    const separator = test.indexOf('\0')
+    if (separator <= 0 || separator === test.length - 1) {
+      throw new Error(`invalid executed test identifier: ${JSON.stringify(test)}`)
+    }
+    const file = test.slice(0, separator)
+    counts.set(file, (counts.get(file) ?? 0) + 1)
+  }
+  return counts
 }
 
 function difference(baseline: string[], candidate: string[]): string[] {
@@ -282,13 +284,23 @@ export function compareMutationReports(
         `${runtime} mutation scope lost ${missingMutationFiles.length} existing source file(s)`
       )
     }
-    const missingTestFiles = difference(
-      executedTestFiles(baselineReport.config.scope[runtime].executedTests),
-      executedTestFiles(candidateReport.config.scope[runtime].executedTests)
-    ).filter(file => candidateReport.config.scope.sourceFiles.includes(file))
-    if (missingTestFiles.length > 0) {
+    const baselineTestCounts = executedTestCounts(
+      baselineReport.config.scope[runtime].executedTests
+    )
+    const candidateTestCounts = executedTestCounts(
+      candidateReport.config.scope[runtime].executedTests
+    )
+    const missingTests = [...baselineTestCounts].reduce(
+      (count, [file, baselineCount]) =>
+        candidateReport.config.scope.sourceFiles.includes(file)
+          ? count +
+            Math.max(0, baselineCount - (candidateTestCounts.get(file) ?? 0))
+          : count,
+      0
+    )
+    if (missingTests > 0) {
       throw new Error(
-        `${runtime} mutation scope lost ${missingTestFiles.length} executed test file(s)`
+        `${runtime} mutation scope lost ${missingTests} executed test(s)`
       )
     }
   }
