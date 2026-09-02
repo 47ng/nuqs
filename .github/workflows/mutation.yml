@@ -40,12 +40,7 @@ jobs:
             'packages/nuqs/src' \
             'packages/nuqs/tests' \
             'packages/nuqs/package.json' \
-            'packages/nuqs/scripts/mutation.mjs' \
-            'packages/nuqs/scripts/mutation-projects.mjs' \
-            'packages/nuqs/scripts/mutation-projects.node-test.mjs' \
-            'packages/nuqs/scripts/mutation-report.mjs' \
-            'packages/nuqs/scripts/mutation-report.node-test.mjs' \
-            'packages/nuqs/scripts/mutation-scope.mjs' \
+            'packages/nuqs/scripts' \
             'packages/nuqs/stryker.browser.config.mjs' \
             'packages/nuqs/stryker.node.config.mjs' \
             'packages/nuqs/stryker.shared.config.mjs' \
@@ -73,6 +68,7 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
+          ref: ${{ github.event.pull_request.head.sha }}
       - uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
         with:
@@ -106,8 +102,10 @@ jobs:
         working-directory: packages/nuqs
       - name: Establish mutation baseline
         if: steps.baseline.outputs.supported == 'true'
+        run: pnpm exec turbo run mutation --filter=nuqs -- --force
+      - name: Record baseline mutation scope
+        if: steps.baseline.outputs.supported == 'true'
         run: |
-          pnpm exec turbo run mutation --filter=nuqs -- --force
           node "$RUNNER_TEMP/mutation-scope.mjs" \
             packages/nuqs \
             packages/nuqs/reports/mutation/stryker-incremental.json
@@ -126,11 +124,14 @@ jobs:
         run: ./node_modules/.bin/playwright install chromium
         working-directory: packages/nuqs
       - name: Run candidate mutation tests
-        run: |
-          pnpm exec turbo run mutation --filter=nuqs -- --force
-          node "$RUNNER_TEMP/mutation-scope.mjs" \
-            packages/nuqs \
-            packages/nuqs/reports/mutation/stryker-incremental.json
+        run: pnpm exec turbo run mutation --filter=nuqs -- --force
+      - name: Record candidate mutation scope
+        id: candidate_scope
+        if: always() && steps.candidate_report_reset.outcome == 'success'
+        run: >-
+          node "$RUNNER_TEMP/mutation-scope.mjs"
+          packages/nuqs
+          packages/nuqs/reports/mutation/stryker-incremental.json
       - name: Enforce the mutation-debt ratchet
         if: steps.baseline.outputs.supported == 'true'
         env:
@@ -141,7 +142,7 @@ jobs:
           "$RUNNER_TEMP/mutation-baseline/stryker-incremental.json"
           "packages/nuqs/reports/mutation/stryker-incremental.json"
       - name: Upload candidate mutation report
-        if: always() && steps.candidate_report_reset.outcome == 'success'
+        if: always() && steps.candidate_scope.outcome == 'success'
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
           name: mutation-report-${{ github.event.pull_request.number }}-${{ github.run_attempt }}

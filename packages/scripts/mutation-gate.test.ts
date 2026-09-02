@@ -13,7 +13,12 @@ import {
 
 function report(
   statuses: Array<
-    'Killed' | 'Timeout' | 'Survived' | 'NoCoverage' | 'RuntimeError'
+    | 'Killed'
+    | 'Timeout'
+    | 'Survived'
+    | 'NoCoverage'
+    | 'Ignored'
+    | 'RuntimeError'
   >,
   config: MutationReport['config'] = structuredClone(defaultConfig)
 ): MutationReport {
@@ -42,20 +47,23 @@ const defaultConfig = {
   scope: {
     strategy: 'runtime-ownership-v1',
     command: 'node scripts/mutation.mjs',
-    sourceDirectives: [],
     node: {
       mutate: ['src/**/*.ts'],
-      testFiles: ['src/**/*.test.ts'],
+      testPatterns: ['src/**/*.test.ts'],
       excludedMutations: [],
       ignoreStatic: true,
-      ignorers: []
+      ignorers: [],
+      ignorePatterns: [],
+      executedTests: ['src/example.test.ts\0test']
     },
     browser: {
       mutate: ['src/browser.ts'],
-      testFiles: ['src/browser.test.ts'],
+      testPatterns: ['src/browser.test.ts'],
       excludedMutations: [],
       ignoreStatic: true,
-      ignorers: []
+      ignorers: [],
+      ignorePatterns: [],
+      executedTests: ['src/browser.test.ts\0test']
     }
   }
 }
@@ -98,16 +106,18 @@ describe('mutation gate', () => {
   it('classifies killed and timed-out mutants as detected', () => {
     expect(
       summarizeMutationReport(
-        report(['Killed', 'Timeout', 'Survived', 'NoCoverage'])
+        report(['Killed', 'Timeout', 'Survived', 'NoCoverage', 'Ignored'])
       )
     ).toStrictEqual({
+      debt: 3,
       detected: 2,
       errors: 0,
+      ignored: 1,
       killed: 1,
       noCoverage: 1,
       survived: 1,
       timeout: 1,
-      total: 4,
+      total: 5,
       undetected: 2
     })
   })

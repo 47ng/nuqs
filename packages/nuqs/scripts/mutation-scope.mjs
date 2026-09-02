@@ -1,5 +1,5 @@
-import { readFile, readdir, writeFile } from 'node:fs/promises'
-import { extname, relative, resolve } from 'node:path'
+import { readFile, writeFile } from 'node:fs/promises'
+import { dirname, resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
 
 const [root, reportPath] = process.argv.slice(2)
@@ -7,14 +7,16 @@ if (!root || !reportPath) {
   throw new Error('usage: mutation-scope.mjs <nuqs-root> <report>')
 }
 
+const loadJson = async path => JSON.parse(await readFile(path, 'utf8'))
 const loadConfig = async name =>
   (await import(pathToFileURL(resolve(root, name)).href)).default
-const node = await loadConfig('stryker.node.config.mjs')
-const browser = await loadConfig('stryker.browser.config.mjs')
-const report = JSON.parse(await readFile(reportPath, 'utf8'))
-const packageJson = JSON.parse(
-  await readFile(resolve(root, 'package.json'), 'utf8')
-)
+const nodeConfig = await loadConfig('stryker.node.config.mjs')
+const browserConfig = await loadConfig('stryker.browser.config.mjs')
+const report = await loadJson(reportPath)
+const cache = resolve(dirname(reportPath), 'cache')
+const nodeReport = await loadJson(resolve(cache, 'node.json'))
+const browserReport = await loadJson(resolve(cache, 'browser.json'))
+const packageJson = await loadJson(resolve(root, 'package.json'))
 
 if (typeof report.config?.strategy !== 'string') {
   throw new Error('mutation report is missing its runtime ownership strategy')
@@ -23,47 +25,56 @@ if (typeof packageJson.scripts?.mutation !== 'string') {
   throw new Error('package is missing its mutation command')
 }
 
+report.files = mergeRuntimeFiles(nodeReport, browserReport)
 report.config.scope = {
   strategy: report.config.strategy,
   command: packageJson.scripts.mutation,
-  sourceDirectives: await findSourceDirectives(resolve(root, 'src')),
-  node: selectScope(node),
-  browser: selectScope(browser)
+  node: selectScope(nodeConfig, nodeReport),
+  browser: selectScope(browserConfig, browserReport)
 }
 
 await writeFile(reportPath, JSON.stringify(report, null, 2) + '\n')
 
-function selectScope(config) {
-  return {
-    mutate: config.mutate,
-    testFiles: [...config.testFiles].sort(),
-    excludedMutations: [...(config.mutator?.excludedMutations ?? [])].sort(),
-    ignoreStatic: config.ignoreStatic,
-    ignorers: [...(config.ignorers ?? [])].sort()
-  }
-}
-
-async function findSourceDirectives(directory) {
-  const directives = []
-  for (const entry of await readdir(directory, { withFileTypes: true })) {
-    const path = resolve(directory, entry.name)
-    if (entry.isDirectory()) {
-      directives.push(...(await findSourceDirectives(path)))
-    } else if (['.ts', '.tsx'].includes(extname(entry.name))) {
-      const lines = (await readFile(path, 'utf8')).split('\n')
-      for (const [index, line] of lines.entries()) {
-        if (/Stryker (disable|restore)/.test(line)) {
-          directives.push({
-            file: relative(resolve(root, 'src'), path),
-            line: index + 1,
-            directive: line.trim()
-          })
-        }
+function mergeRuntimeFiles(nodeReport, browserReport) {
+  const files = {}
+  for (const [runtime, runtimeReport] of [
+    ['node', nodeReport],
+    ['browser', browserReport]
+  ]) {
+    for (const [path, file] of Object.entries(runtimeReport.files)) {
+      if (path in files) {
+        throw new Error(`duplicate mutation source: ${path}`)
+      }
+      const testId = id => `${runtime}:${id}`
+      files[path] = {
+        ...file,
+        mutants: file.mutants.map(mutant => ({
+          ...mutant,
+          id: testId(mutant.id),
+          ...(mutant.coveredBy && {
+            coveredBy: mutant.coveredBy.map(testId)
+          }),
+          ...(mutant.killedBy && { killedBy: mutant.killedBy.map(testId) })
+        }))
       }
     }
   }
-  return directives.sort(
-    (left, right) =>
-      left.file.localeCompare(right.file) || left.line - right.line
-  )
+  return files
+}
+
+function selectScope(declared, effectiveReport) {
+  const effective = effectiveReport.config
+  return {
+    mutate: declared.mutate,
+    testPatterns: [...declared.testFiles].sort(),
+    excludedMutations: [...effective.mutator.excludedMutations].sort(),
+    ignoreStatic: effective.ignoreStatic,
+    ignorers: [...effective.ignorers].sort(),
+    ignorePatterns: effective.ignorePatterns,
+    executedTests: Object.entries(effectiveReport.testFiles)
+      .flatMap(([file, { tests }]) =>
+        tests.map(test => `${file}\0${test.name}`)
+      )
+      .sort()
+  }
 }

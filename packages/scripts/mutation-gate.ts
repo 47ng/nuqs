@@ -19,20 +19,17 @@ export type MutantStatus =
 
 type RuntimeMutationScope = {
   mutate: string[]
-  testFiles: string[]
+  testPatterns: string[]
   excludedMutations: string[]
   ignoreStatic: boolean
   ignorers: string[]
+  ignorePatterns: string[]
+  executedTests: string[]
 }
 
 type MutationScope = {
   strategy: string
   command: string
-  sourceDirectives: Array<{
-    file: string
-    line: number
-    directive: string
-  }>
   node: RuntimeMutationScope
   browser: RuntimeMutationScope
 }
@@ -65,22 +62,17 @@ export type MutationReport = {
 
 const runtimeMutationScopeSchema = z.object({
   mutate: z.array(z.string()),
-  testFiles: z.array(z.string()),
+  testPatterns: z.array(z.string()),
   excludedMutations: z.array(z.string()),
   ignoreStatic: z.boolean(),
-  ignorers: z.array(z.string())
+  ignorers: z.array(z.string()),
+  ignorePatterns: z.array(z.string()),
+  executedTests: z.array(z.string())
 })
 
 const mutationScopeSchema = z.object({
   strategy: z.string(),
   command: z.string(),
-  sourceDirectives: z.array(
-    z.object({
-      file: z.string(),
-      line: z.number(),
-      directive: z.string()
-    })
-  ),
   node: runtimeMutationScopeSchema,
   browser: runtimeMutationScopeSchema
 })
@@ -118,8 +110,10 @@ const mutationReportSchema: z.ZodType<MutationReport> = z.object({
 })
 
 type MutationSummary = {
+  debt: number
   detected: number
   errors: number
+  ignored: number
   killed: number
   noCoverage: number
   survived: number
@@ -145,8 +139,10 @@ export function summarizeMutationReport(
   report: MutationReport
 ): MutationSummary {
   const summary: MutationSummary = {
+    debt: 0,
     detected: 0,
     errors: 0,
+    ignored: 0,
     killed: 0,
     noCoverage: 0,
     survived: 0,
@@ -171,6 +167,8 @@ export function summarizeMutationReport(
         summary.undetected++
       } else if (ERROR_STATUSES.has(mutant.status)) {
         summary.errors++
+      } else if (mutant.status === 'Ignored') {
+        summary.ignored++
       } else {
         throw new Error(`unknown mutant status: ${mutant.status}`)
       }
@@ -191,6 +189,8 @@ export function summarizeMutationReport(
       }
     }
   }
+
+  summary.debt = summary.undetected + summary.ignored
 
   return summary
 }
@@ -216,6 +216,34 @@ function sourceAtLocation(
     .join('\n')
 }
 
+function scopeSettings(scope: MutationScope): unknown {
+  const withoutExecutedTests = (runtime: RuntimeMutationScope) => {
+    const { executedTests: _, ...settings } = runtime
+    return settings
+  }
+  return {
+    strategy: scope.strategy,
+    command: scope.command,
+    node: withoutExecutedTests(scope.node),
+    browser: withoutExecutedTests(scope.browser)
+  }
+}
+
+function difference(baseline: string[], candidate: string[]): string[] {
+  const remaining = new Map<string, number>()
+  for (const value of candidate) {
+    remaining.set(value, (remaining.get(value) ?? 0) + 1)
+  }
+  return baseline.filter(value => {
+    const count = remaining.get(value) ?? 0
+    if (count === 0) {
+      return true
+    }
+    remaining.set(value, count - 1)
+    return false
+  })
+}
+
 export function compareMutationReports(
   baselineReport: MutationReport,
   candidateReport: MutationReport
@@ -232,10 +260,21 @@ export function compareMutationReports(
     throw new Error('mutation report schema changed')
   }
   if (
-    JSON.stringify(baselineReport.config.scope) !==
-    JSON.stringify(candidateReport.config.scope)
+    JSON.stringify(scopeSettings(baselineReport.config.scope)) !==
+    JSON.stringify(scopeSettings(candidateReport.config.scope))
   ) {
     throw new Error('mutation scope changed')
+  }
+  for (const runtime of ['node', 'browser'] as const) {
+    const missingTests = difference(
+      baselineReport.config.scope[runtime].executedTests,
+      candidateReport.config.scope[runtime].executedTests
+    )
+    if (missingTests.length > 0) {
+      throw new Error(
+        `${runtime} mutation scope lost ${missingTests.length} executed test(s)`
+      )
+    }
   }
   if (baseline.total === 0) {
     throw new Error('baseline report contains no mutants')
@@ -254,7 +293,7 @@ export function compareMutationReports(
     )
   }
 
-  const delta = candidate.undetected - baseline.undetected
+  const delta = candidate.debt - baseline.debt
   const candidateUndetected = Object.entries(candidateReport.files)
     .flatMap(([file, { mutants, source }]) =>
       mutants
@@ -358,8 +397,8 @@ async function main(): Promise<void> {
   if (!result.pass) {
     process.stderr.write(
       `Mutation debt increased by ${result.delta}: ` +
-        `${result.baseline.undetected} → ${result.candidate.undetected} ` +
-        `survived or uncovered mutants.\n`
+        `${result.baseline.debt} → ${result.candidate.debt} ` +
+        `survived, uncovered, or ignored mutants.\n`
     )
     process.stderr.write(
       formatUndetectedMutants(
@@ -376,8 +415,8 @@ async function main(): Promise<void> {
         : `decreased by ${Math.abs(result.delta)}`
     process.stdout.write(
       `Mutation debt ${outcome}: ` +
-        `${result.baseline.undetected} → ${result.candidate.undetected} ` +
-        `survived or uncovered mutants.\n`
+        `${result.baseline.debt} → ${result.candidate.debt} ` +
+        `survived, uncovered, or ignored mutants.\n`
     )
   }
 }

@@ -86,13 +86,14 @@ function printSummary(report) {
   const timeout = count('Timeout')
   const survived = count('Survived')
   const noCoverage = count('NoCoverage')
-  const total = statuses.length
-  const score = total === 0 ? 100 : ((killed + timeout) / total) * 100
+  const ignored = count('Ignored')
+  const active = statuses.filter(status => status !== 'Ignored').length
+  const score = active === 0 ? 100 : ((killed + timeout) / active) * 100
 
   process.stdout.write(
     `Combined mutation score: ${score.toFixed(2)}% ` +
       `(${killed} killed, ${timeout} timeout, ${survived} survived, ` +
-      `${noCoverage} no coverage, ${total} total)\n`
+      `${noCoverage} no coverage, ${ignored} ignored, ${active} active)\n`
   )
 }
 
@@ -109,7 +110,9 @@ function assertValidMutationReport(report) {
   }
   const incomplete = mutants.filter(
     mutant =>
-      !['Killed', 'Timeout', 'Survived', 'NoCoverage'].includes(mutant.status)
+      !['Killed', 'Timeout', 'Survived', 'NoCoverage', 'Ignored'].includes(
+        mutant.status
+      )
   ).length
   if (incomplete > 0) {
     throw new Error(
