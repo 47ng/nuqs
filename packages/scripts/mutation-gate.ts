@@ -322,7 +322,7 @@ function timeoutVarianceCredit(
       matchedCandidateIdentities.add(candidateMutant.identity)
       if (
         baselineMutant.status === 'Timeout' &&
-        UNDETECTED_STATUSES.has(candidateMutant.status) &&
+        candidateMutant.status === 'Survived' &&
         baselineByFingerprint.get(baselineMutant.fingerprint)?.length === 1 &&
         candidateByFingerprint.get(candidateMutant.fingerprint)?.length === 1
       ) {
@@ -346,7 +346,7 @@ function timeoutVarianceCredit(
       baselineByFingerprint.get(fingerprint)?.length === 1 &&
       candidateByFingerprint.get(fingerprint)?.length === 1 &&
       baselineGroup[0]!.status === 'Timeout' &&
-      UNDETECTED_STATUSES.has(candidateGroup[0]!.status)
+      candidateGroup[0]!.status === 'Survived'
     ) {
       credit++
     }

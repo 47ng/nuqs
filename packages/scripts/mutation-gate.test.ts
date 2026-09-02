@@ -145,6 +145,12 @@ describe('mutation gate', () => {
       )
     ).toMatchObject({ pass: true, delta: 0 })
     expect(
+      compareMutationReports(
+        identifyMutants(report(['Timeout'])),
+        identifyMutants(report(['NoCoverage']))
+      )
+    ).toMatchObject({ pass: false, delta: 1 })
+    expect(
       compareMutationReports(report(['Survived']), report(['Timeout']))
     ).toMatchObject({ pass: true, delta: -1 })
 
