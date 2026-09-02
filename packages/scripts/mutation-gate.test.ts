@@ -109,7 +109,7 @@ describe('mutation gate', () => {
         report(['Killed', 'Timeout', 'Survived', 'NoCoverage', 'Ignored'])
       )
     ).toStrictEqual({
-      debt: 4,
+      debt: 3,
       detected: 2,
       errors: 0,
       ignored: 1,
@@ -122,13 +122,19 @@ describe('mutation gate', () => {
     })
   })
 
-  it('does not let timeout variance change mutation debt', () => {
+  it('tolerates a baseline timeout surviving for the same mutant', () => {
     expect(
       compareMutationReports(report(['Timeout']), report(['Survived']))
     ).toMatchObject({ pass: true, delta: 0 })
     expect(
       compareMutationReports(report(['Survived']), report(['Timeout']))
-    ).toMatchObject({ pass: true, delta: 0 })
+    ).toMatchObject({ pass: true, delta: -1 })
+
+    const differentMutant = report(['Survived'])
+    differentMutant.files['src/example.ts']!.mutants[0]!.id = 'other'
+    expect(
+      compareMutationReports(report(['Timeout']), differentMutant)
+    ).toMatchObject({ pass: false, delta: 1 })
   })
 
   it('passes when mutation debt is stable or decreases', () => {

@@ -186,7 +186,7 @@ export function summarizeMutationReport(
     }
   }
 
-  summary.debt = summary.undetected + summary.ignored + summary.timeout
+  summary.debt = summary.undetected + summary.ignored
 
   return summary
 }
@@ -321,7 +321,6 @@ export function compareMutationReports(
     )
   }
 
-  const delta = candidate.debt - baseline.debt
   const candidateUndetected = Object.entries(candidateReport.files)
     .flatMap(([file, { mutants, source }]) =>
       mutants
@@ -344,6 +343,17 @@ export function compareMutationReports(
           (right.location?.start.column ?? 0) ||
         left.id.localeCompare(right.id)
     )
+  const baselineTimeouts = new Set(
+    Object.entries(baselineReport.files).flatMap(([file, { mutants }]) =>
+      mutants
+        .filter(mutant => mutant.status === 'Timeout')
+        .map(mutant => `${file}\0${mutant.id}`)
+    )
+  )
+  const toleratedTimeoutVariance = candidateUndetected.filter(mutant =>
+    baselineTimeouts.has(`${mutant.file}\0${mutant.id}`)
+  ).length
+  const delta = candidate.debt - baseline.debt - toleratedTimeoutVariance
   return {
     baseline,
     candidate,
@@ -426,7 +436,7 @@ async function main(): Promise<void> {
     process.stderr.write(
       `Mutation debt increased by ${result.delta}: ` +
         `${result.baseline.debt} → ${result.candidate.debt} ` +
-        `survived, uncovered, ignored, or timed-out mutants.\n`
+        `survived, uncovered, or ignored mutants.\n`
     )
     process.stderr.write(
       `Ignored mutants: ${result.baseline.ignored} → ${result.candidate.ignored}.\n`
@@ -449,7 +459,7 @@ async function main(): Promise<void> {
     process.stdout.write(
       `Mutation debt ${outcome}: ` +
         `${result.baseline.debt} → ${result.candidate.debt} ` +
-        `survived, uncovered, ignored, or timed-out mutants.\n`
+        `survived, uncovered, or ignored mutants.\n`
     )
   }
 }
