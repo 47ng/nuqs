@@ -205,6 +205,10 @@ function sourceAtLocation(
   if (
     startLine === undefined ||
     endLine === undefined ||
+    !Number.isInteger(start.line) ||
+    !Number.isInteger(start.column) ||
+    !Number.isInteger(end.line) ||
+    !Number.isInteger(end.column) ||
     start.line > end.line ||
     start.column < 1 ||
     end.column < 1 ||

@@ -251,14 +251,20 @@ describe('mutation gate', () => {
     })
   })
 
-  it('does not fingerprint out-of-range source locations', () => {
+  it.each([
+    {
+      start: { line: 2, column: 1 },
+      end: { line: 2, column: 5 }
+    },
+    {
+      start: { line: 1, column: 1.5 },
+      end: { line: 1, column: 5 }
+    }
+  ])('does not fingerprint invalid source location %#', location => {
     const baseline = identifyMutants(report(['Timeout']))
     const candidate = identifyMutants(report(['Survived']))
     for (const current of [baseline, candidate]) {
-      current.files['src/example.ts']!.mutants[0]!.location = {
-        start: { line: 2, column: 1 },
-        end: { line: 2, column: 5 }
-      }
+      current.files['src/example.ts']!.mutants[0]!.location = location
     }
 
     expect(compareMutationReports(baseline, candidate)).toMatchObject({
