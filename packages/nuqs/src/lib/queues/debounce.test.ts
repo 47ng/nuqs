@@ -307,7 +307,7 @@ describe('debounce: DebounceController', () => {
     const subscriber = vi.fn(() => {
       queuedValues.push(controller.getQueuedQuery('key'))
     })
-    controller.queuedQuerySync.on('key', subscriber)
+    controller.throttleQueue.sync.on('key', subscriber)
     const promise = controller.push(
       { key: 'key', query: 'value', options: {} },
       100,
@@ -319,8 +319,8 @@ describe('debounce: DebounceController', () => {
     vi.advanceTimersByTime(1)
     await vi.runAllTimersAsync()
     await promise
-    expect(subscriber).toHaveBeenCalledTimes(2)
-    expect(queuedValues).toStrictEqual(['value', undefined])
+    expect(subscriber).toHaveBeenCalledTimes(3)
+    expect(queuedValues).toStrictEqual(['value', 'value', undefined])
   })
   it('keeps a restarted debounce while the previous flush settles', async () => {
     vi.useFakeTimers()
@@ -367,7 +367,7 @@ describe('debounce: DebounceController', () => {
     }
     const controller = new DebounceController()
     const subscriber = vi.fn()
-    controller.queuedQuerySync.on('key', subscriber)
+    controller.throttleQueue.sync.on('key', subscriber)
     const promise = controller.push(
       { key: 'key', query: 'value', options: {} },
       100,
@@ -375,9 +375,9 @@ describe('debounce: DebounceController', () => {
     )
     vi.runAllTimers()
     await promise
-    expect(subscriber).toHaveBeenCalledTimes(2)
+    expect(subscriber).toHaveBeenCalledTimes(3)
     controller.abortAll()
-    expect(subscriber).toHaveBeenCalledTimes(2)
+    expect(subscriber).toHaveBeenCalledTimes(3)
   })
   it('falls back to the throttle queue pending values if nothing is debounced', () => {
     const throttleQueue = new ThrottledQueue()
