@@ -186,7 +186,7 @@ export function summarizeMutationReport(
     }
   }
 
-  summary.debt = summary.undetected + summary.ignored
+  summary.debt = summary.undetected + summary.ignored + summary.timeout
 
   return summary
 }
@@ -426,7 +426,7 @@ async function main(): Promise<void> {
     process.stderr.write(
       `Mutation debt increased by ${result.delta}: ` +
         `${result.baseline.debt} → ${result.candidate.debt} ` +
-        `survived, uncovered, or ignored mutants.\n`
+        `survived, uncovered, ignored, or timed-out mutants.\n`
     )
     process.stderr.write(
       `Ignored mutants: ${result.baseline.ignored} → ${result.candidate.ignored}.\n`
@@ -449,7 +449,7 @@ async function main(): Promise<void> {
     process.stdout.write(
       `Mutation debt ${outcome}: ` +
         `${result.baseline.debt} → ${result.candidate.debt} ` +
-        `survived, uncovered, or ignored mutants.\n`
+        `survived, uncovered, ignored, or timed-out mutants.\n`
     )
   }
 }
