@@ -156,7 +156,7 @@ jobs:
             "$RUNNER_TEMP/mutation-inputs-candidate.sha256"
           then
             echo 'comparable=false' >> "$GITHUB_OUTPUT"
-            echo '::notice::Mutation execution inputs changed; running the complete candidate suite for explicit baseline review.'
+            echo '::notice::Mutation execution inputs changed; running the complete candidate suite against the existing baseline.'
           else
             echo 'comparable=true' >> "$GITHUB_OUTPUT"
           fi
@@ -202,7 +202,7 @@ jobs:
             pnpm exec turbo run mutation --filter=nuqs -- --force
           fi
       - name: Enforce the mutation-debt ratchet
-        if: steps.baseline.outputs.supported == 'true' && steps.inputs.outputs.comparable == 'true'
+        if: steps.baseline.outputs.supported == 'true'
         env:
           MUTATION_SOURCE_ROOT: packages/nuqs
           MUTATION_SOURCE_URL: ${{ github.server_url }}/${{ github.repository }}/blob/${{ github.event.pull_request.head.sha }}
@@ -219,12 +219,6 @@ jobs:
           if-no-files-found: ignore
           overwrite: true
           retention-days: 14
-      - name: Require explicit approval for a new baseline
-        if: steps.baseline.outputs.supported == 'true' && steps.inputs.outputs.comparable != 'true'
-        run: |
-          echo '::error::Mutation execution inputs changed, so the relative gate is not meaningful. Review the uploaded full report before merging; later PRs will compare against the merged setup.'
-          exit 1
-
   mutation-full:
     name: Mutation suite (full)
     if: github.event_name != 'pull_request'

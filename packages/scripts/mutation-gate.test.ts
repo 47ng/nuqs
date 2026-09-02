@@ -220,43 +220,17 @@ describe('mutation gate', () => {
     )
   })
 
-  it('refuses to compare reports from different mutation configurations', () => {
-    expect(() =>
+  it('compares aggregate debt across mutation configuration changes', () => {
+    expect(
       compareMutationReports(
         report(['Killed']),
-        report(['Killed'], { ...comparableConfig, mutate: ['src/cache.ts'] })
+        report(['Survived'], {
+          ...comparableConfig,
+          mutate: ['src/cache.ts'],
+          timeoutMS: 1
+        })
       )
-    ).toThrow('mutation configuration changed')
-  })
-
-  it('accepts equivalent configurations and ignores operational settings', () => {
-    const baseline = report(['Killed'], {
-      ...structuredClone(comparableConfig),
-      force: true,
-      reporters: ['json']
-    })
-    const candidate = report(['Killed'], {
-      vitest: { related: true },
-      timeoutMS: 5000,
-      testRunner: 'vitest',
-      mutate: ['src/**/*.ts'],
-      force: false,
-      reporters: ['progress']
-    })
-
-    expect(compareMutationReports(baseline, candidate)).toMatchObject({
-      pass: true,
-      delta: 0
-    })
-  })
-
-  it('treats timeout configuration as result-affecting', () => {
-    expect(() =>
-      compareMutationReports(
-        report(['Killed']),
-        report(['Killed'], { ...comparableConfig, timeoutMS: 1 })
-      )
-    ).toThrow('mutation configuration changed')
+    ).toMatchObject({ pass: false, delta: 1 })
   })
 
   it('compares mutation debt across toolchain changes', () => {

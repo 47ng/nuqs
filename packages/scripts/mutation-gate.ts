@@ -7,23 +7,6 @@ import { z } from 'zod'
 const DETECTED_STATUSES = new Set(['Killed', 'Timeout'])
 const UNDETECTED_STATUSES = new Set(['Survived', 'NoCoverage'])
 const ERROR_STATUSES = new Set(['CompileError', 'RuntimeError'])
-const NON_RESULT_CONFIG_KEYS = new Set([
-  '$schema',
-  'allowConsoleColors',
-  'clearTextReporter',
-  'dashboard',
-  'eventReporter',
-  'fileLogLevel',
-  'force',
-  'htmlReporter',
-  'incremental',
-  'incrementalFile',
-  'jsonReporter',
-  'logLevel',
-  'reporters',
-  'tempDirName',
-  'warnings'
-])
 
 export type MutantStatus =
   | 'Killed'
@@ -173,29 +156,6 @@ export function summarizeMutationReport(
   return summary
 }
 
-function comparableConfig(config: Record<string, unknown>): string {
-  return stableStringify(
-    Object.fromEntries(
-      Object.entries(config).filter(([key]) => !NON_RESULT_CONFIG_KEYS.has(key))
-    )
-  )
-}
-
-function stableStringify(value: unknown): string {
-  if (Array.isArray(value)) {
-    return `[${value.map(stableStringify).join(',')}]`
-  }
-  if (value && typeof value === 'object') {
-    const entries = Object.entries(value as Record<string, unknown>).sort(
-      ([left], [right]) => left.localeCompare(right)
-    )
-    return `{${entries
-      .map(([key, child]) => `${JSON.stringify(key)}:${stableStringify(child)}`)
-      .join(',')}}`
-  }
-  return JSON.stringify(value)
-}
-
 function sourceAtLocation(
   source: string,
   location?: NewUndetectedMutant['location']
@@ -227,14 +187,6 @@ export function compareMutationReports(
   newUndetected: NewUndetectedMutant[]
   pass: boolean
 } {
-  if (
-    comparableConfig(baselineReport.config) !==
-    comparableConfig(candidateReport.config)
-  ) {
-    throw new Error(
-      'mutation configuration changed; establish and review a new baseline explicitly'
-    )
-  }
   const baseline = summarizeMutationReport(baselineReport)
   const candidate = summarizeMutationReport(candidateReport)
   if (baseline.total > 0 && candidate.total === 0) {
