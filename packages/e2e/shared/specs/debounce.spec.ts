@@ -38,22 +38,25 @@ export function testDebounce(config: TestDebounceConfig) {
       page
     }) => {
       const DEBOUNCE_TIME = 400
+      await page.clock.install({ time: 0 })
       await navigateTo(page, getUrl(path, { debounceTime: DEBOUNCE_TIME }))
+      await page.clock.pauseAt(60_000)
       await page.locator('input[type="text"]').fill('pass')
       const incrementButton = page.locator('button#increment-page-index')
-      await incrementButton.click()
-      await incrementButton.click()
-      await incrementButton.click()
+      await incrementButton.click({ force: true })
+      await incrementButton.click({ force: true })
+      await incrementButton.click({ force: true })
       await expect(page.locator('#client-state')).toHaveText(
         '{"search":"pass","pageIndex":3}'
       )
+      await page.clock.runFor(0)
       await expect(page).toHaveURL(
         url => url.search === `?debounceTime=${DEBOUNCE_TIME}&page=3`
       )
       await expect(page.locator('#server-state')).toHaveText(
         '{"search":"","pageIndex":3}'
       )
-      await page.waitForTimeout(DEBOUNCE_TIME)
+      await page.clock.runFor(DEBOUNCE_TIME + 1)
       await expect(page).toHaveURL(
         url => url.search === `?debounceTime=${DEBOUNCE_TIME}&page=3&q=pass`
       )
