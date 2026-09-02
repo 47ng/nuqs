@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url'
 import { afterEach, describe, expect, it } from 'vitest'
 import {
   compareMutationReports,
-  formatNewUndetectedMutants,
+  formatUndetectedMutants,
   summarizeMutationReport,
   type MutationReport
 } from './mutation-gate'
@@ -15,7 +15,7 @@ function report(
   statuses: Array<
     'Killed' | 'Timeout' | 'Survived' | 'NoCoverage' | 'RuntimeError'
   >,
-  config: MutationReport['config'] = structuredClone(comparableConfig)
+  config: MutationReport['config'] = structuredClone(defaultConfig)
 ): MutationReport {
   return {
     files: {
@@ -29,11 +29,12 @@ function report(
       name: 'StrykerJS',
       version: '9.6.1',
       dependencies: { typescript: '7.0.2' }
-    }
+    },
+    schemaVersion: '2'
   }
 }
 
-const comparableConfig = {
+const defaultConfig = {
   mutate: ['src/**/*.ts'],
   testRunner: 'vitest',
   timeoutMS: 5000,
@@ -126,75 +127,36 @@ describe('mutation gate', () => {
 
     const result = compareMutationReports(baseline, candidate)
     expect(result).toMatchObject({ pass: false, delta: 1 })
-    expect(result.newUndetected).toStrictEqual([
-      {
-        file: 'src/example.ts',
-        id: '0',
-        location: {
-          end: { line: 12, column: 14 },
-          start: { line: 12, column: 5 }
-        },
-        mutatorName: 'ConditionalExpression',
-        original: 'value > 0',
-        previousStatus: 'Killed',
-        replacement: 'false',
-        status: 'Survived'
-      }
-    ])
-    const formatted = formatNewUndetectedMutants(
-      result.newUndetected,
+    expect(
+      result.candidateUndetected.find(mutant => mutant.id === '0')
+    ).toStrictEqual({
+      file: 'src/example.ts',
+      id: '0',
+      location: {
+        end: { line: 12, column: 14 },
+        start: { line: 12, column: 5 }
+      },
+      mutatorName: 'ConditionalExpression',
+      original: 'value > 0',
+      replacement: 'false',
+      status: 'Survived'
+    })
+    const formatted = formatUndetectedMutants(
+      result.candidateUndetected,
       'https://github.com/47ng/nuqs/blob/deadbeef',
       'packages/nuqs'
     )
     expect(formatted).toContain(
-      '::error file=packages/nuqs/src/example.ts,line=12,col=5,title=New undetected mutant::ConditionalExpression Survived (was Killed)%0AOriginal: value > 0%0AMutated: false'
+      '::error file=packages/nuqs/src/example.ts,line=12,col=5,title=Undetected mutant::ConditionalExpression Survived%0AOriginal: value > 0%0AMutated: false'
     )
     expect(formatted).toContain(
       'https://github.com/47ng/nuqs/blob/deadbeef/packages/nuqs/src/example.ts#L12'
     )
     expect(formatted).toContain(
-      '- src/example.ts:12:5 [ConditionalExpression] Newly survived; previously killed'
+      '- src/example.ts:12:5 [ConditionalExpression] Undetected mutant (survived)'
     )
     expect(formatted).toContain('Original: value > 0')
     expect(formatted).toContain('Mutated: false')
-  })
-
-  it('does not reconcile renumbered mutants by mutable source metadata', () => {
-    const location = {
-      end: { line: 1, column: 10 },
-      start: { line: 1, column: 1 }
-    }
-    const baseline = report(['Killed'])
-    Object.assign(baseline.files['src/example.ts']!.mutants[0]!, {
-      id: '17',
-      location,
-      mutatorName: 'ConditionalExpression',
-      replacement: 'false'
-    })
-    const candidate = report(['Survived'])
-    Object.assign(candidate.files['src/example.ts']!.mutants[0]!, {
-      id: '42',
-      location,
-      mutatorName: 'ConditionalExpression',
-      replacement: 'false'
-    })
-
-    expect(
-      compareMutationReports(baseline, candidate).newUndetected
-    ).toMatchObject([
-      { id: '42', previousStatus: undefined, status: 'Survived' }
-    ])
-  })
-
-  it('includes the source file in mutant identity', () => {
-    const baseline = report(['Killed'])
-    baseline.files = { 'src/a.ts': baseline.files['src/example.ts']! }
-    const candidate = report(['Survived'])
-    candidate.files = { 'src/b.ts': candidate.files['src/example.ts']! }
-
-    expect(
-      compareMutationReports(baseline, candidate).newUndetected
-    ).toMatchObject([{ file: 'src/b.ts', id: '0', previousStatus: undefined }])
   })
 
   it('fails closed on mutation errors', () => {
@@ -225,7 +187,7 @@ describe('mutation gate', () => {
       compareMutationReports(
         report(['Killed']),
         report(['Survived'], {
-          ...comparableConfig,
+          ...defaultConfig,
           mutate: ['src/cache.ts'],
           timeoutMS: 1
         })

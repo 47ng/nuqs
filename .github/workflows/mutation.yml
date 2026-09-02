@@ -104,6 +104,14 @@ jobs:
       - name: Establish mutation baseline
         if: steps.baseline.outputs.supported == 'true'
         run: |
+          hash_input() {
+            if test -f "$1"
+            then
+              git hash-object "$1"
+            else
+              printf 'missing'
+            fi
+          }
           for file in \
             .github/workflows/mutation.yml \
             packages/nuqs/scripts/mutation.mjs \
@@ -119,7 +127,7 @@ jobs:
             packages/nuqs/vitest.setup.ts \
             packages/scripts/mutation-gate.ts
           do
-            printf '%s  %s\n' "$(git hash-object "$file")" "$file"
+            printf '%s  %s\n' "$(hash_input "$file")" "$file"
           done > "$RUNNER_TEMP/mutation-inputs-baseline.sha256"
           pnpm exec turbo run mutation --filter=nuqs -- --force
           cp -R packages/nuqs/reports/mutation \
@@ -130,10 +138,18 @@ jobs:
         run: git checkout --detach "$HEAD_SHA"
       - name: Clear the baseline mutation report
         run: rm -rf packages/nuqs/reports/mutation
-      - name: Verify comparable mutation inputs
+      - name: Check whether mutation results can be reused
         if: steps.baseline.outputs.supported == 'true'
         id: inputs
         run: |
+          hash_input() {
+            if test -f "$1"
+            then
+              git hash-object "$1"
+            else
+              printf 'missing'
+            fi
+          }
           for file in \
             .github/workflows/mutation.yml \
             packages/nuqs/scripts/mutation.mjs \
@@ -149,28 +165,28 @@ jobs:
             packages/nuqs/vitest.setup.ts \
             packages/scripts/mutation-gate.ts
           do
-            printf '%s  %s\n' "$(git hash-object "$file")" "$file"
+            printf '%s  %s\n' "$(hash_input "$file")" "$file"
           done > "$RUNNER_TEMP/mutation-inputs-candidate.sha256"
           if ! diff -u \
             "$RUNNER_TEMP/mutation-inputs-baseline.sha256" \
             "$RUNNER_TEMP/mutation-inputs-candidate.sha256"
           then
-            echo 'comparable=false' >> "$GITHUB_OUTPUT"
+            echo 'reusable=false' >> "$GITHUB_OUTPUT"
             echo '::notice::Mutation execution inputs changed; running the complete candidate suite against the existing baseline.'
           else
-            echo 'comparable=true' >> "$GITHUB_OUTPUT"
+            echo 'reusable=true' >> "$GITHUB_OUTPUT"
           fi
       - name: Install candidate dependencies
         run: pnpm install --ignore-scripts --frozen-lockfile --filter nuqs... --filter scripts
       - name: Install candidate Playwright Chromium
         run: ./node_modules/.bin/playwright install chromium
         working-directory: packages/nuqs
-      - name: Run incremental candidate mutation tests
+      - name: Run candidate mutation tests
         env:
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
           if test '${{ steps.baseline.outputs.supported }}' = 'true' && \
-            test '${{ steps.inputs.outputs.comparable }}' = 'true'
+            test '${{ steps.inputs.outputs.reusable }}' = 'true'
           then
             mkdir -p packages/nuqs/reports/mutation
             cp -R "$RUNNER_TEMP/mutation-baseline/cache" \

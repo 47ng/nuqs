@@ -25,8 +25,8 @@ const report = mergeMutationReports(nodeReport, browserReport)
 
 await writeFile(aggregatePath, JSON.stringify(report, null, 2) + '\n')
 await writeFile(htmlPath, await renderHtml(report))
+assertValidMutationReport(report)
 printSummary(report)
-assertNoMutationErrors(report)
 
 function runStryker(configFile) {
   return new Promise((resolve, reject) => {
@@ -96,13 +96,24 @@ function printSummary(report) {
   )
 }
 
-function assertNoMutationErrors(report) {
-  const errors = Object.values(report.files)
-    .flatMap(file => file.mutants)
-    .filter(mutant =>
-      ['CompileError', 'RuntimeError'].includes(mutant.status)
-    ).length
+function assertValidMutationReport(report) {
+  const mutants = Object.values(report.files).flatMap(file => file.mutants)
+  if (mutants.length === 0) {
+    throw new Error('mutation report contains no mutants')
+  }
+  const errors = mutants.filter(mutant =>
+    ['CompileError', 'RuntimeError'].includes(mutant.status)
+  ).length
   if (errors > 0) {
     throw new Error(`mutation report contains ${errors} mutation error(s)`)
+  }
+  const incomplete = mutants.filter(
+    mutant =>
+      !['Killed', 'Timeout', 'Survived', 'NoCoverage'].includes(mutant.status)
+  ).length
+  if (incomplete > 0) {
+    throw new Error(
+      `mutation report contains ${incomplete} incomplete mutant(s)`
+    )
   }
 }
