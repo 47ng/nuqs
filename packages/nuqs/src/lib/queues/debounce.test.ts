@@ -353,8 +353,8 @@ describe('debounce: DebounceController', () => {
 
     // Aborting the replacement still redirects its result to the next update.
     const replacement = Promise.resolve(new URLSearchParams('?key=replacement'))
-    const attach = controller.abort('key')
-    expect(attach(replacement)).toBe(replacement)
+    const aborted = controller.abort('key')!
+    replacement.then(aborted.resolve, aborted.reject)
     await expect(second).resolves.toEqual(
       new URLSearchParams('?key=replacement')
     )
@@ -465,11 +465,9 @@ describe('debounce: DebounceController', () => {
       new URLSearchParams('?key=override')
     )
   })
-  it('passes a replacement promise through when aborting an unknown key', async () => {
+  it('returns no deferred resolvers when aborting an unknown key', () => {
     const controller = new DebounceController()
-    const attach = controller.abort('missing')
-    const replacement = Promise.resolve(new URLSearchParams('?key=value'))
-    expect(attach(replacement)).toBe(replacement)
+    expect(controller.abort('missing')).toBeUndefined()
   })
   it('does not queue an update with a timeout of Infinity', async () => {
     const fakeAdapter: UpdateQueueAdapterContext = {
