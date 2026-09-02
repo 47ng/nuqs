@@ -209,6 +209,17 @@ describe('mutation gate', () => {
         identifyMutants(report(['Survived', 'Survived']))
       )
     ).toMatchObject({ pass: false, delta: 1 })
+
+    const renumberedDuplicate = identifyMutants(
+      report(['Killed', 'Survived'])
+    )
+    renumberedDuplicate.files['src/example.ts']!.mutants[1]!.id = 'renumbered'
+    expect(
+      compareMutationReports(
+        identifyMutants(report(['Killed', 'Timeout'])),
+        renumberedDuplicate
+      )
+    ).toMatchObject({ pass: false, delta: 1 })
   })
 
   it('does not match timeouts without a complete mutant fingerprint', () => {

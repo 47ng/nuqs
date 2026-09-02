@@ -339,6 +339,8 @@ function timeoutVarianceCredit(
     if (
       baselineGroup.length === 1 &&
       candidateGroup?.length === 1 &&
+      baselineByFingerprint.get(fingerprint)?.length === 1 &&
+      candidateByFingerprint.get(fingerprint)?.length === 1 &&
       baselineGroup[0]!.status === 'Timeout' &&
       UNDETECTED_STATUSES.has(candidateGroup[0]!.status)
     ) {
