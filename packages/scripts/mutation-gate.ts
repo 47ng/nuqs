@@ -291,6 +291,17 @@ function timeoutVarianceCredit(
     return 0
   }
 
+  const groupByFingerprint = (mutants: FingerprintedMutant[]) => {
+    const groups = new Map<string, FingerprintedMutant[]>()
+    for (const mutant of mutants) {
+      const group = groups.get(mutant.fingerprint) ?? []
+      group.push(mutant)
+      groups.set(mutant.fingerprint, group)
+    }
+    return groups
+  }
+  const baselineByFingerprint = groupByFingerprint(baseline)
+  const candidateByFingerprint = groupByFingerprint(candidate)
   const candidateByIdentity = new Map(
     candidate.map(mutant => [mutant.identity, mutant])
   )
@@ -307,7 +318,9 @@ function timeoutVarianceCredit(
       matchedCandidateIdentities.add(candidateMutant.identity)
       if (
         baselineMutant.status === 'Timeout' &&
-        UNDETECTED_STATUSES.has(candidateMutant.status)
+        UNDETECTED_STATUSES.has(candidateMutant.status) &&
+        baselineByFingerprint.get(baselineMutant.fingerprint)?.length === 1 &&
+        candidateByFingerprint.get(candidateMutant.fingerprint)?.length === 1
       ) {
         credit++
       }
@@ -319,15 +332,6 @@ function timeoutVarianceCredit(
   const unmatchedCandidate = candidate.filter(
     mutant => !matchedCandidateIdentities.has(mutant.identity)
   )
-  const groupByFingerprint = (mutants: FingerprintedMutant[]) => {
-    const groups = new Map<string, FingerprintedMutant[]>()
-    for (const mutant of mutants) {
-      const group = groups.get(mutant.fingerprint) ?? []
-      group.push(mutant)
-      groups.set(mutant.fingerprint, group)
-    }
-    return groups
-  }
   const baselineGroups = groupByFingerprint(unmatchedBaseline)
   const candidateGroups = groupByFingerprint(unmatchedCandidate)
   for (const [fingerprint, baselineGroup] of baselineGroups) {

@@ -174,29 +174,33 @@ describe('mutation gate', () => {
     const cases = [
       {
         baseline: ['Timeout', 'Survived'],
-        candidate: ['Timeout', 'Survived', 'Survived']
+        candidate: ['Timeout', 'Survived', 'Survived'],
+        delta: 1
       },
       {
         baseline: ['Timeout', 'Survived'],
-        candidate: ['Survived', 'Survived', 'Survived']
+        candidate: ['Survived', 'Survived', 'Survived'],
+        delta: 2
       },
       {
         baseline: ['Timeout', 'Ignored'],
-        candidate: ['Ignored', 'Survived']
+        candidate: ['Ignored', 'Survived'],
+        delta: 1
       },
       {
         baseline: ['Timeout', 'Killed'],
-        candidate: ['Killed', 'Survived']
+        candidate: ['Killed', 'Survived'],
+        delta: 1
       }
     ] as const
-    for (const { baseline, candidate } of cases) {
+    for (const { baseline, candidate, delta } of cases) {
       expect(
         compareMutationReports(
           identifyMutants(report([...baseline])),
           identifyMutants(report([...candidate]))
         ),
         `${baseline.join(',')} -> ${candidate.join(',')}`
-      ).toMatchObject({ pass: false, delta: 1 })
+      ).toMatchObject({ pass: false, delta })
     }
 
     expect(
@@ -204,7 +208,7 @@ describe('mutation gate', () => {
         identifyMutants(report(['Timeout', 'Survived'])),
         identifyMutants(report(['Survived', 'Survived']))
       )
-    ).toMatchObject({ pass: true, delta: 0 })
+    ).toMatchObject({ pass: false, delta: 1 })
   })
 
   it('does not match timeouts without a complete mutant fingerprint', () => {
