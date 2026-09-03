@@ -1,17 +1,14 @@
 # Multiple copies of the library are loaded
 
-This error occurs if two copies of `nuqs` with **different versions** are
-loaded in the same application.
+This error occurs if two different versions of `nuqs` are loaded in the
+same application.
 
 This may happen if you are using a package that embeds `nuqs` and
 you are also using `nuqs` directly.
 
-Copies of the same version share their internal state, so they behave as
-one. Copies of different versions do not: each keeps its own pending
-updates overlay, so hooks from one copy do not see the values written by
-the other. Copies older than the change linked below also keep their own
-URL update budget, and compete for the browser's single History API rate
-limit.
+Copies of the same version share an internal state (island architecture).
+Different copies will use different queues and don't know about each other,
+so they risk racing on the History API rate limits.
 
 ## Possible Solutions
 
