@@ -2,6 +2,7 @@ import {
   createContext,
   createElement,
   useContext,
+  useMemo,
   type Context,
   type ProviderProps,
   type ReactElement,
@@ -78,15 +79,16 @@ export type AdapterProvider = (
 export function createAdapterProvider(
   useAdapter: UseAdapterHook
 ): AdapterProvider {
-  return ({ children, defaultOptions, processUrlSearchParams, ...props }) =>
-    createElement(
-      context.Provider,
-      {
-        ...props,
-        value: { useAdapter, defaultOptions, processUrlSearchParams }
-      },
-      children
+  return ({ children, defaultOptions, processUrlSearchParams, ...props }) => {
+    // Stable context value: under React 19's lazy context propagation, a
+    // fresh value on every provider render invalidates all consumers, even
+    // through a nested provider of the same context that should shadow them.
+    const value = useMemo(
+      () => ({ useAdapter, defaultOptions, processUrlSearchParams }),
+      [defaultOptions, processUrlSearchParams]
     )
+    return createElement(context.Provider, { ...props, value }, children)
+  }
 }
 
 export function useAdapterContext(): AdapterContext {

@@ -51,7 +51,9 @@ export function testShallow({
     }
   })
   if (supportsSSR) {
-    options.description = 'SSR'
+    options.description = [options.description, 'SSR']
+      .filter(Boolean)
+      .join(', ')
   }
   return factory(options)
 }
