@@ -257,32 +257,20 @@ export class ThrottledQueue {
         search = write(search, key, value)
       }
     }
-    if (processUrlSearchParams) {
-      try {
-        search = processUrlSearchParams(search)
-      } catch (err) {
-        const keys = items.map(([key]) => key)
-        console.error(error(502), keys.join(), err)
-        if (!adapter.autoResetQueueOnUpdate) {
-          this.reset({ notify: false })
-        }
-        for (const key of keys) {
-          this.sync.emit(key)
-        }
-        return [search, err]
-      }
-    }
+    let failureCode: 429 | 502 = 502
     try {
+      if (processUrlSearchParams) {
+        search = processUrlSearchParams(search)
+      }
+      failureCode = 429
+      // This may fail due to rate-limiting of history methods,
+      // for example Safari only allows 100 updates in a 30s window.
       compose(transitions, () => updateUrl(search, options))
       return [search, null]
     } catch (err) {
-      // This may fail due to rate-limiting of history methods,
-      // for example Safari only allows 100 updates in a 30s window.
       const keys = items.map(([key]) => key)
-      console.error(error(429), keys.join(), err)
-      if (!adapter.autoResetQueueOnUpdate) {
-        this.reset({ notify: false })
-      }
+      console.error(error(failureCode), keys.join(), err)
+      this.reset({ notify: false })
       for (const key of keys) {
         this.sync.emit(key)
       }
