@@ -7,15 +7,19 @@ import {
   bumpForType,
   parseCommit
 } from './lib/conventional-commits.ts'
-import { git, readAllTags } from './lib/git.ts'
+import {
+  readReleaseHistory,
+  tagExists,
+  type ReleaseHistoryEntry
+} from './lib/git.ts'
 import {
   bumpGA,
+  type Channel,
   greatestGATag,
-  greatestTag,
-  highestBetaNumber
+  highestBetaNumber,
+  resolveRange
 } from './lib/version.ts'
 
-export type Channel = 'stable' | 'beta'
 export type ReleasePlan = {
   version: string
   tag: string
@@ -35,7 +39,7 @@ export function selectLastReleaseTag(
   channel: Channel,
   tags: string[]
 ): string | null {
-  return channel === 'beta' ? greatestTag(tags) : greatestGATag(tags)
+  return resolveRange({ channel, currentRef: 'HEAD', tags }).from
 }
 
 function highestBump(commits: string[]): Bump | null {
@@ -52,41 +56,49 @@ function highestBump(commits: string[]): Bump | null {
 
 export function computeVersion(args: {
   channel: Channel
-  lastGATag: string | null
-  commits: {
-    // The cumulative GA range determines the target version. The incremental
-    // release range decides whether there is anything new to publish.
-    sinceLastGA: string[]
-    sinceLastRelease: string[]
-  }
-  tags: string[]
+  history: ReleaseHistoryEntry[]
 }): ReleasePlan | null {
-  const bump = highestBump(args.commits.sinceLastGA)
-  if (!bump || !highestBump(args.commits.sinceLastRelease)) return null
-  const lastGA = args.lastGATag?.replace(/^v/, '') ?? '0.0.0'
+  const tags = args.history.flatMap(commit => commit.tags)
+  const lastGATag = selectLastGATag(tags)
+  const lastReleaseTag = selectLastReleaseTag(args.channel, tags)
+  const commitsSince = (tag: string | null): string[] => {
+    if (tag === null) {
+      return args.history.map(commit => commit.message)
+    }
+
+    const taggedCommit = args.history.find(commit => commit.tags.includes(tag))
+    if (!taggedCommit)
+      throw new Error(`Release tag ${tag} is missing from history`)
+
+    const commitsByHash = new Map(
+      args.history.map(commit => [commit.hash, commit])
+    )
+    const releasedCommits = new Set<string>()
+    const pending = [taggedCommit.hash]
+    while (pending.length > 0) {
+      const hash = pending.pop()
+      if (!hash || releasedCommits.has(hash)) continue
+      releasedCommits.add(hash)
+      pending.push(...(commitsByHash.get(hash)?.parents ?? []))
+    }
+
+    return args.history
+      .filter(commit => !releasedCommits.has(commit.hash))
+      .map(commit => commit.message)
+  }
+
+  const bump = highestBump(commitsSince(lastGATag))
+  if (!bump || !highestBump(commitsSince(lastReleaseTag))) return null
+  const lastGA = lastGATag?.replace(/^v/, '') ?? '0.0.0'
   const targetGA = bumpGA(lastGA, bump)
 
   if (args.channel === 'stable') {
     return { version: targetGA, tag: `v${targetGA}`, distTag: 'latest', bump }
   }
 
-  const next = highestBetaNumber(args.tags, targetGA) + 1
+  const next = highestBetaNumber(tags, targetGA) + 1
   const version = `${targetGA}-beta.${next}`
   return { version, tag: `v${version}`, distTag: 'beta', bump }
-}
-
-// --- IO layer (untested by design: the pure core above is the unit) -------
-
-// Commit messages reach the parser only through git's stdout — never a shell —
-// so a crafted message cannot inject commands. Each record is a full message
-// (subject + body, %B) split on \x1e, which cannot occur in a message: the body
-// is needed so a `BREAKING CHANGE:` footer triggers a major bump per the spec.
-function readCommitsSince(lastGATag: string | null): string[] {
-  const range = lastGATag ? `${lastGATag}..HEAD` : 'HEAD'
-  return git(['log', range, '--format=%B%x1e'])
-    .split('\x1e')
-    .map(record => record.trim())
-    .filter(Boolean)
 }
 
 function main(): void {
@@ -96,27 +108,27 @@ function main(): void {
     runtimeEnv: process.env
   })
 
-  const tags = readAllTags()
+  const history = readReleaseHistory()
+  const tags = history.flatMap(commit => commit.tags)
   const lastGATag = selectLastGATag(tags)
   const lastReleaseTag = selectLastReleaseTag(env.CHANNEL, tags)
   const plan = computeVersion({
     channel: env.CHANNEL,
-    lastGATag,
-    commits: {
-      sinceLastGA: readCommitsSince(lastGATag),
-      sinceLastRelease: readCommitsSince(lastReleaseTag)
-    },
-    tags
+    history
   })
 
   if (plan === null) {
     // Not a failure: signal "no release" so the workflow stops cleanly
-    // (the ci/stage jobs gate on release=true) instead of going red.
+    // (the jobs gate on needsReleasing=true) instead of going red.
     console.error(
       `No version-bumping commits since ${lastReleaseTag ?? 'the beginning'}. Nothing to release.`
     )
     process.stdout.write('needsReleasing=false\n')
     return
+  }
+
+  if (tagExists(plan.tag)) {
+    throw new Error(`Refusing to reuse existing release tag ${plan.tag}`)
   }
 
   // Human-readable trace on stderr; the caller routes stdout where it wants
