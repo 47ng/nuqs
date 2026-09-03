@@ -19,7 +19,13 @@ type ParseCacheBucket = {
   r: number
 }
 
-const parseCache = globalSingleton(
+type ParseCacheMap = Map<string, ParseCacheBucket> & {
+  // The shared map tracks the latest version issued, not each evictable bucket.
+  // It never reuses one after recreation, so detached consumers see new publications.
+  v?: number
+}
+
+const parseCache = globalSingleton<ParseCacheMap>(
   'parse-cache',
   () => new Map<string, ParseCacheBucket>()
 )
@@ -38,6 +44,19 @@ function getParseCacheBucket(urlKey: string): ParseCacheBucket {
     parseCache.set(urlKey, (bucket = { r: 0 }))
   }
   return bucket
+}
+
+function holdsValue(
+  entry: ParseCacheEntry | undefined,
+  parse: ParseFunction,
+  query: Query,
+  value: unknown
+): boolean {
+  return (
+    entry?.[0] === parse &&
+    compareQuery(entry[1], query) &&
+    Object.is(entry[2], value)
+  )
 }
 
 function clearBucket(bucket: ParseCacheBucket): void {
@@ -76,15 +95,17 @@ export function parseWithClientCache<T>(
   const cached = bucket.e
   const published = bucket.p
   if (value !== undefined) {
+    // `e` holds the latest parse result from any parser.
+    // Another parser's read can replace `e`, leaving `p` as our last published write.
+    // We check both so writing that value again does not bump the version.
     if (
-      cached?.[0] === parse &&
-      compareQuery(cached[1], query) &&
-      Object.is(cached[2], value)
+      holdsValue(cached, parse, query, value) ||
+      holdsValue(published, parse, query, value)
     ) {
       return value
     }
     bucket.e = bucket.p = [parse, query, value]
-    bucket.v = (bucket.v ?? -1) + 1
+    bucket.v = parseCache.v = (parseCache.v ?? 0) + 1
     return value
   }
   if (published) {
