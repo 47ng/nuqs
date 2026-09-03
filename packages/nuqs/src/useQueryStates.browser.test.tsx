@@ -682,6 +682,26 @@ describe('useQueryStates: optimistic adoption', () => {
     })
     expect(renders).toBe(rendersBeforeUpdate)
   })
+  it('releases a publication after its last subscriber unmounts', async () => {
+    const parse = vi.fn((query: string) => query)
+    const parser = createParser({ parse, serialize: String })
+    const { unmount } = await renderHook(
+      () => useQueryStates({ released: parser }),
+      { wrapper: withNuqsTestingAdapter({ searchParams: '?released=x' }) }
+    )
+    expect(parse).toHaveBeenCalledOnce()
+    unmount()
+    const identity = (query: string) => query
+    for (let i = 0; i < 1000; i++) {
+      parseWithCache(
+        `release-filler-${i}`,
+        identity,
+        'x' as string & Array<string>
+      )
+    }
+    parseWithCache('released', parse, 'x' as string & Array<string>)
+    expect(parse).toHaveBeenCalledTimes(2)
+  })
   it('keeps the exact value identity for the writer (non-identity parse round-trip)', async () => {
     const objParser = parseAsJson<{ v: number }>(x => x as { v: number })
     const { result, act } = await renderHook(
