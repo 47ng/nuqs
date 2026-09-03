@@ -72,18 +72,14 @@ export function createReactRouterBasedAdapter({
         // semantics. Otherwise the router commit would overwrite an entry
         // stacked above its optimistic entry (#1563).
         const isDeep = options.shallow === false
-        const takesOverPendingPush = isDeep && hasPendingPush()
-        const coalescesIntoPendingPush = !isDeep && hasPendingPush()
+        const pendingPush = hasPendingPush()
         const commitsAsPush =
-          isDeep && (options.history === 'push' || takesOverPendingPush)
-        const navigates = isDeep
+          isDeep && (options.history === 'push' || pendingPush)
         const updateMethod =
-          options.history === 'push' &&
-          !takesOverPendingPush &&
-          !coalescesIntoPendingPush
+          options.history === 'push' && !pendingPush
             ? history.pushState
             : history.replaceState
-        setQueueResetMutex(navigates ? 2 : 1)
+        setQueueResetMutex(isDeep ? 2 : 1)
         const historyState = commitsAsPush
           ? markPendingPush(url)
           : history.state
@@ -94,10 +90,11 @@ export function createReactRouterBasedAdapter({
           url
         )
         let navigationSettled: Promise<void> | undefined
-        // Standalone shallow pushes bypass the router to avoid running loaders.
-        // They cannot advance its private index, so the first blocked traversal
-        // may compute a delta of zero.
-        if (navigates) {
+        // A shallow push with no deep navigation skips the router and its loaders.
+        // It cannot advance the router's private history index.
+        // On the first blocked traversal, React Router computes a zero delta.
+        // It calls history.go(0), which reloads the page.
+        if (isDeep) {
           if (!commitsAsPush) {
             markPendingReplace(url)
           }
