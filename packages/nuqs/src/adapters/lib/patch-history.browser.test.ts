@@ -4,6 +4,7 @@ import {
   hasPendingPush,
   historyUpdateMarker,
   markPendingPush,
+  markPendingReplace,
   patchHistory,
   type SearchParamsSyncEmitterEvents
 } from './patch-history'
@@ -45,7 +46,7 @@ function traverse(action: () => void): Promise<void> {
   })
 }
 
-describe('patchHistory: pending push', () => {
+describe('patchHistory: pending navigation', () => {
   beforeAll(() => {
     patchHistory(emitter, 'test')
     window.addEventListener('popstate', () =>
@@ -157,6 +158,18 @@ describe('patchHistory: pending push', () => {
     optimisticPush('?a=1')
     await traverse(() => history.back())
     history.replaceState({ idx: 4, usr: 'unrelated' }, '', '?')
+    await traverse(() => history.forward())
+    expect(history.state).toEqual({ idx: 5 })
+    expect(hasPendingPush()).toBe(false)
+  })
+
+  it('repairs the pending entry after a deep replace on its predecessor', async () => {
+    history.replaceState({ idx: 4 }, historyUpdateMarker, '?')
+    optimisticPush('?a=1')
+    await traverse(() => history.back())
+    markPendingReplace(new URL('?b=1', location.href))
+    history.replaceState(history.state, historyUpdateMarker, '?b=1')
+    history.replaceState({ idx: 4 }, '', '?b=1')
     await traverse(() => history.forward())
     expect(history.state).toEqual({ idx: 5 })
     expect(hasPendingPush()).toBe(false)
@@ -434,5 +447,57 @@ describe('patchHistory: pending push', () => {
     markPendingPush(new URL('?a=1', location.href))
     routerReplace('?a=1')
     expect(hasPendingPush()).toBe(false)
+  })
+
+  it('keeps a shallow replacement when a pending replace commits', () => {
+    history.replaceState({ idx: 0 }, historyUpdateMarker, '?a=1')
+    markPendingReplace(new URL('?a=1', location.href))
+    history.replaceState({ idx: 0 }, historyUpdateMarker, '?a=1&shallow=pass')
+    replaceState.mockClear()
+    routerReplace('?a=1')
+    expect(replaceState).toHaveBeenCalledExactlyOnceWith(
+      { idx: 1 },
+      '',
+      new URL('?a=1&shallow=pass', location.href).href
+    )
+  })
+
+  it('keeps a shallow push when a pending replace commits', () => {
+    history.replaceState({ idx: 0 }, historyUpdateMarker, '?a=1')
+    markPendingReplace(new URL('?a=1', location.href))
+    history.pushState({ idx: 0 }, historyUpdateMarker, '?a=1&shallow=pass')
+    replaceState.mockClear()
+    routerReplace('?a=1')
+    expect(replaceState).toHaveBeenCalledExactlyOnceWith(
+      { idx: 1 },
+      '',
+      new URL('?a=1&shallow=pass', location.href).href
+    )
+  })
+
+  it('preserves an unrelated replacement while a replace is pending', () => {
+    history.replaceState({ idx: 0 }, historyUpdateMarker, '?a=1')
+    markPendingReplace(new URL('?a=1', location.href))
+    history.replaceState({ idx: 0 }, historyUpdateMarker, '?a=1&shallow=pass')
+    replaceState.mockClear()
+    history.replaceState({ custom: true }, '', '?third-party=pass')
+    expect(replaceState).toHaveBeenCalledExactlyOnceWith(
+      { custom: true },
+      '',
+      new URL('?third-party=pass', location.href).href
+    )
+    replaceState.mockClear()
+    routerReplace('?a=1')
+    expect(replaceState).toHaveBeenCalledExactlyOnceWith({ idx: 1 }, '', '?a=1')
+  })
+
+  it('clears a pending replace when a pop supersedes it', () => {
+    history.replaceState({ idx: 4 }, historyUpdateMarker, '?a=1')
+    markPendingReplace(new URL('?a=1', location.href))
+    history.pushState({ idx: 5 }, historyUpdateMarker, '?a=1&b=1')
+    window.dispatchEvent(new PopStateEvent('popstate'))
+    replaceState.mockClear()
+    routerReplace('?a=1')
+    expect(replaceState).toHaveBeenCalledExactlyOnceWith({ idx: 1 }, '', '?a=1')
   })
 })
