@@ -8,7 +8,12 @@ import {
   parseCommit
 } from './lib/conventional-commits.ts'
 import { git, readAllTags } from './lib/git.ts'
-import { bumpGA, greatestGATag, highestBetaNumber } from './lib/version.ts'
+import {
+  bumpGA,
+  greatestGATag,
+  greatestTag,
+  highestBetaNumber
+} from './lib/version.ts'
 
 export type Channel = 'stable' | 'beta'
 export type ReleasePlan = {
@@ -23,6 +28,15 @@ const RANKS: Record<Bump, number> = { major: 3, minor: 2, patch: 1 }
 // The highest GA tag (e.g. "v2.10.0"), ignoring -beta.* tags, or null when
 // there are none — the previous stable checkpoint.
 export const selectLastGATag = greatestGATag
+
+// Beta releases announce only changes since the latest published version,
+// while stable releases remain cumulative from the latest GA.
+export function selectLastReleaseTag(
+  channel: Channel,
+  tags: string[]
+): string | null {
+  return channel === 'beta' ? greatestTag(tags) : greatestGATag(tags)
+}
 
 function highestBump(commits: string[]): Bump | null {
   let highest: Bump | null = null
@@ -39,11 +53,14 @@ function highestBump(commits: string[]): Bump | null {
 export function computeVersion(args: {
   channel: Channel
   lastGATag: string | null
+  // The cumulative GA range determines the target version. The incremental
+  // release range decides whether there is anything new to publish.
   commits: string[]
+  newCommits: string[]
   tags: string[]
 }): ReleasePlan | null {
   const bump = highestBump(args.commits)
-  if (!bump) return null
+  if (!bump || !highestBump(args.newCommits)) return null
   const lastGA = args.lastGATag?.replace(/^v/, '') ?? '0.0.0'
   const targetGA = bumpGA(lastGA, bump)
 
@@ -79,11 +96,14 @@ function main(): void {
 
   const tags = readAllTags()
   const lastGATag = selectLastGATag(tags)
+  const lastReleaseTag = selectLastReleaseTag(env.CHANNEL, tags)
   const commits = readCommitsSince(lastGATag)
+  const newCommits = readCommitsSince(lastReleaseTag)
   const plan = computeVersion({
     channel: env.CHANNEL,
     lastGATag,
     commits,
+    newCommits,
     tags
   })
 
@@ -91,7 +111,7 @@ function main(): void {
     // Not a failure: signal "no release" so the workflow stops cleanly
     // (the ci/stage jobs gate on release=true) instead of going red.
     console.error(
-      `No version-bumping commits since ${lastGATag ?? 'the beginning'}. Nothing to release.`
+      `No version-bumping commits since ${lastReleaseTag ?? 'the beginning'}. Nothing to release.`
     )
     process.stdout.write('needsReleasing=false\n')
     return

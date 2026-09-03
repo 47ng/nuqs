@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest'
-import { computeVersion, selectLastGATag } from './compute-version'
+import {
+  computeVersion,
+  selectLastGATag,
+  selectLastReleaseTag
+} from './compute-version'
 
 describe('selectLastGATag', () => {
   it('returns the highest GA tag, ignoring betas', () => {
@@ -25,12 +29,27 @@ describe('selectLastGATag', () => {
   })
 })
 
+describe('selectLastReleaseTag', () => {
+  it('selects the greatest published tag for a beta', () => {
+    expect(
+      selectLastReleaseTag('beta', ['v1.2.3', 'v1.2.4-beta.1', 'v1.2.4-beta.2'])
+    ).toBe('v1.2.4-beta.2')
+  })
+
+  it('selects the greatest GA tag for a stable release', () => {
+    expect(selectLastReleaseTag('stable', ['v1.2.3', 'v1.2.4-beta.1'])).toBe(
+      'v1.2.3'
+    )
+  })
+})
+
 describe('computeVersion', () => {
   it('bumps a patch for a fix commit on the stable channel', () => {
     const plan = computeVersion({
       channel: 'stable',
       lastGATag: 'v1.2.3',
       commits: ['fix: a bug'],
+      newCommits: ['fix: a bug'],
       tags: ['v1.2.3']
     })
     expect(plan).toEqual({
@@ -46,6 +65,7 @@ describe('computeVersion', () => {
       channel: 'stable',
       lastGATag: 'v1.2.3',
       commits: ['feat: a feature'],
+      newCommits: ['feat: a feature'],
       tags: ['v1.2.3']
     })
     expect(plan).toMatchObject({ version: '1.3.0', bump: 'minor' })
@@ -56,6 +76,7 @@ describe('computeVersion', () => {
       channel: 'stable',
       lastGATag: 'v1.2.3',
       commits: ['feat(scope)!: a breaking feature'],
+      newCommits: ['feat(scope)!: a breaking feature'],
       tags: ['v1.2.3']
     })
     expect(plan).toMatchObject({ version: '2.0.0', bump: 'major' })
@@ -66,6 +87,7 @@ describe('computeVersion', () => {
       channel: 'beta',
       lastGATag: 'v1.2.3',
       commits: ['feat: a feature'],
+      newCommits: ['feat: a feature'],
       tags: ['v1.2.3']
     })
     expect(plan).toEqual({
@@ -76,14 +98,26 @@ describe('computeVersion', () => {
     })
   })
 
-  it('increments the beta counter past existing betas for the same target', () => {
+  it('increments the beta counter when a lower bump lands after it', () => {
     const plan = computeVersion({
       channel: 'beta',
       lastGATag: 'v1.2.3',
-      commits: ['feat: a feature'],
+      commits: ['feat: a feature', 'fix: a later bug'],
+      newCommits: ['fix: a later bug'],
       tags: ['v1.2.3', 'v1.3.0-beta.1', 'v1.3.0-beta.2']
     })
     expect(plan).toMatchObject({ version: '1.3.0-beta.3' })
+  })
+
+  it('does not increment a beta for non-bumping commits after it', () => {
+    const plan = computeVersion({
+      channel: 'beta',
+      lastGATag: 'v1.2.3',
+      commits: ['fix: a bug', 'chore: housekeeping'],
+      newCommits: ['chore: housekeeping'],
+      tags: ['v1.2.3', 'v1.2.4-beta.1']
+    })
+    expect(plan).toBeNull()
   })
 
   it('resets the beta counter when the target recomputes higher', () => {
@@ -93,6 +127,7 @@ describe('computeVersion', () => {
       channel: 'beta',
       lastGATag: 'v1.2.3',
       commits: ['feat: a feature'],
+      newCommits: ['feat: a feature'],
       tags: ['v1.2.3', 'v1.2.4-beta.1']
     })
     expect(plan).toMatchObject({ version: '1.3.0-beta.1' })
@@ -103,6 +138,7 @@ describe('computeVersion', () => {
       channel: 'stable',
       lastGATag: 'v1.2.3',
       commits: ['fix: a fix', 'feat: a feature', 'chore: housekeeping'],
+      newCommits: ['fix: a fix', 'feat: a feature', 'chore: housekeeping'],
       tags: ['v1.2.3']
     })
     expect(plan).toMatchObject({ version: '1.3.0', bump: 'minor' })
@@ -113,6 +149,7 @@ describe('computeVersion', () => {
       channel: 'stable',
       lastGATag: 'v1.2.3',
       commits: ['chore: deps', 'doc: typo'],
+      newCommits: ['chore: deps', 'doc: typo'],
       tags: ['v1.2.3']
     })
     expect(plan).toBeNull()
@@ -126,6 +163,7 @@ describe('computeVersion', () => {
       channel: 'stable',
       lastGATag: 'v1.2.3',
       commits: ['feat:'],
+      newCommits: ['feat:'],
       tags: ['v1.2.3']
     })
     expect(plan).toBeNull()
@@ -139,6 +177,7 @@ describe('computeVersion', () => {
       channel: 'stable',
       lastGATag: 'v1.2.3',
       commits: ['fix: a fix\n\nBREAKING CHANGE: removed an API'],
+      newCommits: ['fix: a fix\n\nBREAKING CHANGE: removed an API'],
       tags: ['v1.2.3']
     })
     expect(plan).toMatchObject({ version: '2.0.0', bump: 'major' })
@@ -149,6 +188,7 @@ describe('computeVersion', () => {
       channel: 'stable',
       lastGATag: null,
       commits: ['feat: first feature'],
+      newCommits: ['feat: first feature'],
       tags: []
     })
     expect(plan).toMatchObject({ version: '0.1.0', bump: 'minor' })
@@ -159,6 +199,7 @@ describe('computeVersion', () => {
       channel: 'beta',
       lastGATag: null,
       commits: ['feat: first feature'],
+      newCommits: ['feat: first feature'],
       tags: []
     })
     expect(plan).toEqual({
