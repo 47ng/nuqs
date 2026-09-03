@@ -146,7 +146,7 @@
     "build:size-json": "size-limit --json > size.json",
     "test": "pnpm run --stream '/^test:/'",
     "test:unit": "vitest run --project unit",
-    "mutation:config-test": "node --test scripts/mutation-projects.node-test.mjs scripts/mutation-report.node-test.mjs",
+    "mutation:config-test": "node --test scripts/mutation-projects.node-test.mjs scripts/mutation-report.node-test.mjs scripts/mutation-scope.node-test.mjs",
     "mutation": "node scripts/mutation.mjs",
     "test:browser": "vitest run --project browser --browser.headless",
     "test:types": "vitest run --project types",

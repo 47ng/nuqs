@@ -225,6 +225,18 @@ function scopeSettings(scope: MutationScope): unknown {
   }
 }
 
+function executedTestFiles(tests: string[]): string[] {
+  return tests.map(test => {
+    const separator = test.indexOf('\0')
+    if (separator <= 0) {
+      throw new Error(
+        `invalid executed test identifier: ${JSON.stringify(test)}`
+      )
+    }
+    return test.slice(0, separator)
+  })
+}
+
 function difference(baseline: string[], candidate: string[]): string[] {
   const remaining = new Map<string, number>()
   for (const value of candidate) {
@@ -272,9 +284,9 @@ export function compareMutationReports(
       )
     }
     const missingTests = difference(
-      baselineReport.config.scope[runtime].executedTests,
-      candidateReport.config.scope[runtime].executedTests
-    )
+      executedTestFiles(baselineReport.config.scope[runtime].executedTests),
+      executedTestFiles(candidateReport.config.scope[runtime].executedTests)
+    ).filter(file => candidateReport.config.scope.sourceFiles.includes(file))
     if (missingTests.length > 0) {
       throw new Error(
         `${runtime} mutation scope lost ${missingTests.length} executed test(s)`
