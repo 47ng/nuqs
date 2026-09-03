@@ -90,9 +90,9 @@ pnpm mutation
 ```
 
 The report is written to `packages/nuqs/reports/mutation/`. The `Mutation debt`
-check fails when a change increases the number of undetected mutants relative to
-its base. Changes to the mutation setup require reviewing a fresh full report
-before merging.
+check compares fresh, complete reports and fails when a change increases debt
+relative to its base. It also rejects incompatible mutation setups. Ignored
+mutants count as debt.
 
 ## Opening issues
 
