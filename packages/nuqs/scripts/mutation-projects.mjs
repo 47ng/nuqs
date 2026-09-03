@@ -1,34 +1,6 @@
 import { existsSync } from 'node:fs'
 import { join } from 'node:path'
 
-const operationalConfigKeys = new Set([
-  '$schema',
-  'allowConsoleColors',
-  'clearTextReporter',
-  'dashboard',
-  'eventReporter',
-  'fileLogLevel',
-  'force',
-  'htmlReporter',
-  'incremental',
-  'incrementalFile',
-  'jsonReporter',
-  'logLevel',
-  'mutate',
-  'reporters',
-  'tempDirName',
-  'testFiles',
-  'warnings'
-])
-
-export function comparableMutationConfig(node, browser) {
-  return {
-    strategy: 'runtime-ownership-v1',
-    node: comparableConfig(node),
-    browser: comparableConfig(browser)
-  }
-}
-
 export function createMutationProjects(root, browserProjects) {
   const browserMutate = []
   const browserTestFiles = []
@@ -67,10 +39,4 @@ function assertFileExists(root, path, kind) {
   if (!existsSync(join(root, path))) {
     throw new Error(`${kind} does not exist: ${path}`)
   }
-}
-
-function comparableConfig(config) {
-  return Object.fromEntries(
-    Object.entries(config).filter(([key]) => !operationalConfigKeys.has(key))
-  )
 }
