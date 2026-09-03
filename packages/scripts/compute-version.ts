@@ -53,14 +53,16 @@ function highestBump(commits: string[]): Bump | null {
 export function computeVersion(args: {
   channel: Channel
   lastGATag: string | null
-  // The cumulative GA range determines the target version. The incremental
-  // release range decides whether there is anything new to publish.
-  commits: string[]
-  newCommits: string[]
+  commits: {
+    // The cumulative GA range determines the target version. The incremental
+    // release range decides whether there is anything new to publish.
+    sinceLastGA: string[]
+    sinceLastRelease: string[]
+  }
   tags: string[]
 }): ReleasePlan | null {
-  const bump = highestBump(args.commits)
-  if (!bump || !highestBump(args.newCommits)) return null
+  const bump = highestBump(args.commits.sinceLastGA)
+  if (!bump || !highestBump(args.commits.sinceLastRelease)) return null
   const lastGA = args.lastGATag?.replace(/^v/, '') ?? '0.0.0'
   const targetGA = bumpGA(lastGA, bump)
 
@@ -97,13 +99,13 @@ function main(): void {
   const tags = readAllTags()
   const lastGATag = selectLastGATag(tags)
   const lastReleaseTag = selectLastReleaseTag(env.CHANNEL, tags)
-  const commits = readCommitsSince(lastGATag)
-  const newCommits = readCommitsSince(lastReleaseTag)
   const plan = computeVersion({
     channel: env.CHANNEL,
     lastGATag,
-    commits,
-    newCommits,
+    commits: {
+      sinceLastGA: readCommitsSince(lastGATag),
+      sinceLastRelease: readCommitsSince(lastReleaseTag)
+    },
     tags
   })
 

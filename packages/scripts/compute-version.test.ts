@@ -48,8 +48,10 @@ describe('computeVersion', () => {
     const plan = computeVersion({
       channel: 'stable',
       lastGATag: 'v1.2.3',
-      commits: ['fix: a bug'],
-      newCommits: ['fix: a bug'],
+      commits: {
+        sinceLastGA: ['fix: a bug'],
+        sinceLastRelease: ['fix: a bug']
+      },
       tags: ['v1.2.3']
     })
     expect(plan).toEqual({
@@ -64,8 +66,10 @@ describe('computeVersion', () => {
     const plan = computeVersion({
       channel: 'stable',
       lastGATag: 'v1.2.3',
-      commits: ['feat: a feature'],
-      newCommits: ['feat: a feature'],
+      commits: {
+        sinceLastGA: ['feat: a feature'],
+        sinceLastRelease: ['feat: a feature']
+      },
       tags: ['v1.2.3']
     })
     expect(plan).toMatchObject({ version: '1.3.0', bump: 'minor' })
@@ -75,8 +79,10 @@ describe('computeVersion', () => {
     const plan = computeVersion({
       channel: 'stable',
       lastGATag: 'v1.2.3',
-      commits: ['feat(scope)!: a breaking feature'],
-      newCommits: ['feat(scope)!: a breaking feature'],
+      commits: {
+        sinceLastGA: ['feat(scope)!: a breaking feature'],
+        sinceLastRelease: ['feat(scope)!: a breaking feature']
+      },
       tags: ['v1.2.3']
     })
     expect(plan).toMatchObject({ version: '2.0.0', bump: 'major' })
@@ -86,8 +92,10 @@ describe('computeVersion', () => {
     const plan = computeVersion({
       channel: 'beta',
       lastGATag: 'v1.2.3',
-      commits: ['feat: a feature'],
-      newCommits: ['feat: a feature'],
+      commits: {
+        sinceLastGA: ['feat: a feature'],
+        sinceLastRelease: ['feat: a feature']
+      },
       tags: ['v1.2.3']
     })
     expect(plan).toEqual({
@@ -102,8 +110,10 @@ describe('computeVersion', () => {
     const plan = computeVersion({
       channel: 'beta',
       lastGATag: 'v1.2.3',
-      commits: ['feat: a feature', 'fix: a later bug'],
-      newCommits: ['fix: a later bug'],
+      commits: {
+        sinceLastGA: ['feat: a feature', 'fix: a later bug'],
+        sinceLastRelease: ['fix: a later bug']
+      },
       tags: ['v1.2.3', 'v1.3.0-beta.1', 'v1.3.0-beta.2']
     })
     expect(plan).toMatchObject({ version: '1.3.0-beta.3' })
@@ -113,8 +123,10 @@ describe('computeVersion', () => {
     const plan = computeVersion({
       channel: 'beta',
       lastGATag: 'v1.2.3',
-      commits: ['fix: a bug', 'chore: housekeeping'],
-      newCommits: ['chore: housekeeping'],
+      commits: {
+        sinceLastGA: ['fix: a bug', 'chore: housekeeping'],
+        sinceLastRelease: ['chore: housekeeping']
+      },
       tags: ['v1.2.3', 'v1.2.4-beta.1']
     })
     expect(plan).toBeNull()
@@ -126,8 +138,10 @@ describe('computeVersion', () => {
     const plan = computeVersion({
       channel: 'beta',
       lastGATag: 'v1.2.3',
-      commits: ['feat: a feature'],
-      newCommits: ['feat: a feature'],
+      commits: {
+        sinceLastGA: ['feat: a feature'],
+        sinceLastRelease: ['feat: a feature']
+      },
       tags: ['v1.2.3', 'v1.2.4-beta.1']
     })
     expect(plan).toMatchObject({ version: '1.3.0-beta.1' })
@@ -137,8 +151,14 @@ describe('computeVersion', () => {
     const plan = computeVersion({
       channel: 'stable',
       lastGATag: 'v1.2.3',
-      commits: ['fix: a fix', 'feat: a feature', 'chore: housekeeping'],
-      newCommits: ['fix: a fix', 'feat: a feature', 'chore: housekeeping'],
+      commits: {
+        sinceLastGA: ['fix: a fix', 'feat: a feature', 'chore: housekeeping'],
+        sinceLastRelease: [
+          'fix: a fix',
+          'feat: a feature',
+          'chore: housekeeping'
+        ]
+      },
       tags: ['v1.2.3']
     })
     expect(plan).toMatchObject({ version: '1.3.0', bump: 'minor' })
@@ -148,8 +168,10 @@ describe('computeVersion', () => {
     const plan = computeVersion({
       channel: 'stable',
       lastGATag: 'v1.2.3',
-      commits: ['chore: deps', 'doc: typo'],
-      newCommits: ['chore: deps', 'doc: typo'],
+      commits: {
+        sinceLastGA: ['chore: deps', 'doc: typo'],
+        sinceLastRelease: ['chore: deps', 'doc: typo']
+      },
       tags: ['v1.2.3']
     })
     expect(plan).toBeNull()
@@ -162,8 +184,7 @@ describe('computeVersion', () => {
     const plan = computeVersion({
       channel: 'stable',
       lastGATag: 'v1.2.3',
-      commits: ['feat:'],
-      newCommits: ['feat:'],
+      commits: { sinceLastGA: ['feat:'], sinceLastRelease: ['feat:'] },
       tags: ['v1.2.3']
     })
     expect(plan).toBeNull()
@@ -176,8 +197,10 @@ describe('computeVersion', () => {
     const plan = computeVersion({
       channel: 'stable',
       lastGATag: 'v1.2.3',
-      commits: ['fix: a fix\n\nBREAKING CHANGE: removed an API'],
-      newCommits: ['fix: a fix\n\nBREAKING CHANGE: removed an API'],
+      commits: {
+        sinceLastGA: ['fix: a fix\n\nBREAKING CHANGE: removed an API'],
+        sinceLastRelease: ['fix: a fix\n\nBREAKING CHANGE: removed an API']
+      },
       tags: ['v1.2.3']
     })
     expect(plan).toMatchObject({ version: '2.0.0', bump: 'major' })
@@ -187,8 +210,10 @@ describe('computeVersion', () => {
     const plan = computeVersion({
       channel: 'stable',
       lastGATag: null,
-      commits: ['feat: first feature'],
-      newCommits: ['feat: first feature'],
+      commits: {
+        sinceLastGA: ['feat: first feature'],
+        sinceLastRelease: ['feat: first feature']
+      },
       tags: []
     })
     expect(plan).toMatchObject({ version: '0.1.0', bump: 'minor' })
@@ -198,8 +223,10 @@ describe('computeVersion', () => {
     const plan = computeVersion({
       channel: 'beta',
       lastGATag: null,
-      commits: ['feat: first feature'],
-      newCommits: ['feat: first feature'],
+      commits: {
+        sinceLastGA: ['feat: first feature'],
+        sinceLastRelease: ['feat: first feature']
+      },
       tags: []
     })
     expect(plan).toEqual({
