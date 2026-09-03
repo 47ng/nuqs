@@ -33,6 +33,7 @@
         "src/adapters/react-router/v7.ts",
         "src/adapters/react-router/v8.ts",
         "src/adapters/tanstack-router.ts",
+        "src/adapters/waku.ts",
         "src/adapters/custom.ts",
         "src/adapters/testing.ts"
       ],
@@ -101,6 +102,10 @@
     },
     "packages/e2e/tanstack-router": {
       "entry": ["src/routes/**/*.tsx", "src/routeTree.gen.ts", "specs/**/*.ts"],
+      "project": ["**/*.{ts,tsx}"]
+    },
+    "packages/e2e/waku": {
+      "entry": ["src/pages/**/*.tsx", "specs/**/*.ts"],
       "project": ["**/*.{ts,tsx}"]
     },
     "packages/e2e/react-router/v5": {

@@ -1,4 +1,8 @@
-[Waku](https://waku.gg/) is supported as a community-contributed adapter.
+[Waku](https://waku.gg/) has a built-in adapter since `nuqs@2.11.0`: import `NuqsAdapter` from `nuqs/adapters/waku`
+(see the [adapters documentation](/docs/adapters#waku)).
+
+For older versions of nuqs, use this community-contributed adapter.
+The notes below apply to the community adapter only.
 
 Install the adapter using the CLI or copy/paste above,
 then integrate the adapter into a \_layout.tsx or \_root.tsx file,

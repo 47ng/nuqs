@@ -10,6 +10,7 @@ import {
   Remix,
   TanStackRouter,
   Vitest,
+  Waku,
 } from '@/src/components/frameworks'
 import { HumanContent, LLMContent } from '@/src/components/audience'
 
@@ -25,6 +26,7 @@ wrapping it with a `NuqsAdapter{:ts}` context provider:
 - <ReactRouter className='inline mr-1.5' aria-hidden /> [React Router v7](#react-router-v7)
 - <ReactRouter className='inline mr-1.5' aria-hidden /> [React Router v8](#react-router-v8)
 - <TanStackRouter className='inline mr-1.5 not-prose' aria-hidden /> [TanStack Router](#tanstack-router)
+- <SinceVersion v="2.11.0" disclaimer="inline"><Waku className='inline mr-1.5 not-prose' aria-hidden /> [Waku](#waku)</SinceVersion>
 </HumanContent>
 
 <LLMContent>
@@ -36,6 +38,9 @@ wrapping it with a `NuqsAdapter{:ts}` context provider:
 - [React Router v7](#react-router-v7)
 - [React Router v8](#react-router-v8)
 - [TanStack Router](#tanstack-router)
+<SinceVersion v="2.11.0" disclaimer="inline">
+- [Waku](#waku)
+</SinceVersion>
 </LLMContent>
 
 ## <HumanContent><NextJS className='inline mr-2 -mt-1' aria-hidden /></HumanContent>Next.js [#nextjs]
@@ -402,6 +407,73 @@ The `urlKeys` feature to provide shorthand key names is also not supported for s
 reasons.
 
 </Callout>
+
+<SinceVersion v="2.11.0">
+
+## <HumanContent><Waku className='inline mr-2 -mt-1 not-prose' aria-hidden /></HumanContent>Waku [#waku]
+
+Wrap your `{children}{:ts}` with the `NuqsAdapter{:ts}` component in your root layout:
+
+```tsx title="src/pages/_layout.tsx"
+// [!code word:NuqsAdapter]
+import { NuqsAdapter } from 'nuqs/adapters/waku'
+import type { ReactNode } from 'react'
+
+export default function RootLayout({ children }: { children: ReactNode }) {
+  return <NuqsAdapter>{children}</NuqsAdapter>
+}
+```
+
+Components that call `useQueryState{:ts}` or `useQueryStates{:ts}` must be
+client components (`'use client'{:ts}`).
+
+Shallow updates (the default) change the URL without a round-trip to the
+server. With `shallow: false{:ts}`, the Waku router refetches dynamic pages
+from the server, so they see the new search params in their props.
+Static pages never refetch.
+
+<Callout>
+
+Waku support is experimental and requires `waku@>=1.0.0-rc.0`.
+
+</Callout>
+
+### Typed search params via search codecs
+
+Waku types search params per route with a [search codec](https://waku.gg/guides/typed-routes#search-params).
+You can build one from your nuqs parsers with `createLoader{:ts}` and
+`createSerializer{:ts}` from `nuqs/server`, so that `PageProps['search']{:ts}`,
+`useSearch{:ts}` and `Link{:ts}` share the definitions of your `useQueryStates{:ts}` calls:
+
+```ts title="src/lib/search.ts"
+import {
+  createLoader,
+  createSerializer,
+  parseAsInteger,
+  parseAsString,
+  type inferParserType
+} from 'nuqs/server'
+import type { Unstable_SearchCodec } from 'waku/router'
+
+export const searchParams = {
+  q: parseAsString.withDefault(''),
+  page: parseAsInteger.withDefault(1)
+}
+
+const loadSearch = createLoader(searchParams)
+const serializeSearch = createSerializer(searchParams)
+
+type ProductsSearch = inferParserType<typeof searchParams>
+
+export const productsSearchCodec = {
+  id: 'products',
+  parse: (query: string) => loadSearch(new URLSearchParams(query)),
+  // createSerializer returns a leading "?"; the codec must return the query without it
+  serialize: (search: ProductsSearch) => serializeSearch(search).slice(1)
+} satisfies Unstable_SearchCodec<ProductsSearch>
+```
+
+</SinceVersion>
 
 ## <HumanContent><Vitest className='inline mr-2 -mt-1' aria-hidden /></HumanContent>Testing
 

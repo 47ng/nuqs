@@ -20,7 +20,7 @@ Type-safe search params state manager for React frameworks. Like `useState`, but
 
 ## Features
 
-- 🔀 **new:** Supports Next.js (`app` and `pages` routers), plain React (SPA), Remix, React Router, TanStack Router, and custom routers via [adapters](#adapters)
+- 🔀 **new:** Supports Next.js (`app` and `pages` routers), plain React (SPA), Remix, React Router, TanStack Router, Waku, and custom routers via [adapters](#adapters)
 - 🧘‍♀️ Simple: the URL is the source of truth
 - 🕰 Replace history or [append](#history) to use the Back button to navigate state updates
 - ⚡️ Built-in [parsers](#parsing) for common state types (integer, float, boolean, Date, and more). Create your own parsers for custom types & pretty URLs
@@ -235,6 +235,23 @@ export const Route = createRootRoute({
     </>
   )
 })
+```
+
+</details>
+
+<details><summary>⛩️ Waku</summary>
+
+> Supported Waku versions: `waku@>=1.0.0-rc.0`
+> Note: Waku support is experimental.
+
+```tsx
+// src/pages/_layout.tsx
+import { NuqsAdapter } from 'nuqs/adapters/waku'
+import type { ReactNode } from 'react'
+
+export default function RootLayout({ children }: { children: ReactNode }) {
+  return <NuqsAdapter>{children}</NuqsAdapter>
+}
 ```
 
 </details>

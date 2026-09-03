@@ -1,0 +1,9 @@
+node_modules
+dist
+.env*
+*.tsbuildinfo
+.cache
+.DS_Store
+*.pem
+.playwright/
+src/pages.gen.ts

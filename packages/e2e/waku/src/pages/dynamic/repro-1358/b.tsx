@@ -1,0 +1,11 @@
+import { Repro1358RouteB } from 'e2e-shared/specs/repro-1358'
+
+export default function Page() {
+  return <Repro1358RouteB otherPageHref="/dynamic/repro-1358/a" />
+}
+
+export const getConfig = async () => {
+  return {
+    render: 'dynamic'
+  } as const
+}

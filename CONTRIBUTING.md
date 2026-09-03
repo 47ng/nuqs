@@ -54,6 +54,7 @@ When running `pnpm dev`, this will:
   - http://localhost:3006 - [React Router v6](./packages/e2e/react-router/v6)
   - http://localhost:3007 - [React Router v7](./packages/e2e/react-router/v7)
   - http://localhost:3008 - [React Router v8](./packages/e2e/react-router/v8)
+  - http://localhost:3009 - [Waku](./packages/e2e/waku)
 - Start the examples:
   - http://localhost:4000 - [tRPC](./packages/examples/trpc)
   - http://localhost:4001 - [Next.js - App router](./packages/examples/next-app)
