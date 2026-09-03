@@ -4,8 +4,10 @@ import {
   startTransition,
   useCallback,
   useEffect,
+  useInsertionEffect,
   useMemo,
-  useRef
+  useRef,
+  useState
 } from 'react'
 import { resetQueues } from '../lib/queues/reset'
 import { renderQueryString } from '../lib/url-encoding'
@@ -17,6 +19,9 @@ import type { AdapterInterface, UpdateUrlFunction } from './lib/defs'
 type SearchRecord = Record<string, string | string[]>
 
 type HistorySubscriberArgs = {
+  location: {
+    search: string
+  }
   action: {
     type: 'PUSH' | 'REPLACE' | 'BACK' | 'FORWARD' | 'GO'
   }
@@ -48,6 +53,39 @@ function useNuqsTanstackRouterAdapter(watchKeys: string[]): AdapterInterface {
   })
   const router = useRouter()
   const { navigate } = router
+  const [, forceUpdate] = useState(0)
+  const getWatchedSearchKey = (search: string) => {
+    const searchParams = new URLSearchParams(search)
+    return JSON.stringify(watchKeys.map(key => searchParams.getAll(key)))
+  }
+  const watchedSearchKeyRef = useRef(
+    getWatchedSearchKey(router.history.location.search)
+  )
+  // useRouterState provides key isolation above, but its external-store
+  // subscription is disconnected by Activity. Track whether it is connected so
+  // this retained history fallback only enqueues hidden updates and does not add
+  // a duplicate visible render.
+  const effectsConnectedRef = useRef(false)
+  useEffect(() => {
+    effectsConnectedRef.current = true
+    return () => {
+      effectsConnectedRef.current = false
+    }
+  }, [])
+  useInsertionEffect(() => {
+    watchedSearchKeyRef.current = getWatchedSearchKey(
+      router.history.location.search
+    )
+    return router.history.subscribe(({ location }: HistorySubscriberArgs) => {
+      const nextKey = getWatchedSearchKey(location.search)
+      if (nextKey !== watchedSearchKeyRef.current) {
+        watchedSearchKeyRef.current = nextKey
+        if (!effectsConnectedRef.current) {
+          forceUpdate(version => version + 1)
+        }
+      }
+    })
+  }, [router.history, JSON.stringify(watchKeys)])
 
   // Track which pathname this hook instance was mounted under to
   // keep its last stable search during cross-page transitions.
