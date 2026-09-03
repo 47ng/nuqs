@@ -13,12 +13,12 @@ import {
   type AdapterProps
 } from '../lib/context'
 import { NavigationSpy, useNuqsNextAppRouterAdapter } from './impl.app'
+import { useWarnOnFlagToggle } from './impl.isolated'
 import {
   AppBridge,
-  createBridgeStore,
-  useNuqsNextAppRouterIsolatedAdapter,
-  useWarnOnFlagToggle
-} from './impl.isolated'
+  useAppBridgeStore,
+  useNuqsNextAppRouterIsolatedAdapter
+} from './impl.isolated.app'
 
 const Provider = createAdapterProvider(useNuqsNextAppRouterAdapter)
 
@@ -64,7 +64,7 @@ function IsolatedAppProvider({
 }: AdapterProps & {
   children: ReactNode
 }): ReactElement {
-  const [store] = useState(createBridgeStore)
+  const store = useAppBridgeStore()
   const value = useMemo<AdapterContext>(
     () => ({
       useAdapter: (watchKeys: string[]) =>

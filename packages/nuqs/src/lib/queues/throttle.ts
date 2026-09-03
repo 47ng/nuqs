@@ -108,7 +108,9 @@ export class ThrottledQueue {
     if (options.startTransition) {
       this.transitions.add(options.startTransition)
     }
-    // Keep the maximum throttle value (Infinity wins and defers the flush)
+    // Keep the longest throttle value, except after an Infinity push: that one
+    // defers the flush, and the next push (finite or not) replaces it, which
+    // lets the deferred entries flush with the new value.
     if (!Number.isFinite(this.timeMs) || timeMs > this.timeMs) {
       this.timeMs = timeMs
     }
@@ -253,18 +255,14 @@ export class ThrottledQueue {
         search = write(search, key, value)
       }
     }
-    if (processUrlSearchParams) {
-      try {
-        search = processUrlSearchParams(search)
-      } catch (err) {
-        console.error(error502, items.map(([key]) => key).join(), err)
-        // Some adapters keep the queue available during concurrent renders,
-        // so discard this failed batch only when the next update starts.
-        this.resetQueueOnNextPush = true
-        return [search, err]
-      }
-    }
+    let failure = error502
     try {
+      if (processUrlSearchParams) {
+        search = processUrlSearchParams(search)
+      }
+      failure = error429
+      // This may fail due to rate-limiting of history methods,
+      // for example Safari only allows 100 updates in a 30s window.
       let runUpdate = () => updateUrl(search, options)
       for (let i = transitions.length - 1; i >= 0; i--) {
         const transition = transitions[i]!
@@ -274,17 +272,10 @@ export class ThrottledQueue {
       runUpdate()
       return [search, null]
     } catch (err) {
-      // This may fail due to rate-limiting of history methods,
-      // for example Safari only allows 100 updates in a 30s window.
-      console.error(error429, items.map(([key]) => key).join(), err)
-      // The URL never changed: clear the failed overlay values if the adapter
-      // deferred the normal reset, then notify so every hook converges back to
-      // the committed search params instead of keeping optimistic values that
-      // will never land.
-      if (!autoResetQueueOnUpdate) {
-        this.reset({ notify: false })
-      }
-      for (const [key] of items) {
+      const keys = items.map(([key]) => key)
+      console.error(failure, keys.join(), err)
+      this.reset({ notify: false })
+      for (const key of keys) {
         this.sync.emit(key)
       }
       return [search, err]
