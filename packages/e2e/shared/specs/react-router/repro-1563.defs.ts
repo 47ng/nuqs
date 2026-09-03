@@ -1,5 +1,3 @@
-import { createLoader, parseAsInteger } from 'nuqs/server'
-
 const loaderCalls = new Map<string, number>()
 
 export function countLoaderCall(request: Request): number {
@@ -8,7 +6,3 @@ export function countLoaderCall(request: Request): number {
   loaderCalls.set(loaderId, call)
   return call
 }
-
-export const loadDelay = createLoader({
-  delay: parseAsInteger.withDefault(0)
-})
