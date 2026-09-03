@@ -5,8 +5,7 @@ import {
   historyUpdateMarker,
   markPendingPush,
   patchHistory,
-  type SearchParamsSyncEmitterEvents,
-  updatePendingPushUrl
+  type SearchParamsSyncEmitterEvents
 } from './patch-history'
 
 const pushState = vi.spyOn(history, 'pushState')
@@ -291,7 +290,6 @@ describe('patchHistory: pending push', () => {
   it('keeps a shallow replacement when the router commits the pending push', () => {
     history.replaceState({ idx: 0 }, historyUpdateMarker, '?a=1')
     optimisticPush('?a=1')
-    updatePendingPushUrl(new URL('?a=1&shallow=pass', location.href))
     history.replaceState(
       history.state,
       historyUpdateMarker,
@@ -311,7 +309,6 @@ describe('patchHistory: pending push', () => {
     history.replaceState({ idx: 0 }, historyUpdateMarker, '?a=1')
     optimisticPush('?a=1')
     await traverse(() => history.back())
-    updatePendingPushUrl(new URL('?a=1&shallow=pass', location.href))
     history.replaceState(
       history.state,
       historyUpdateMarker,
