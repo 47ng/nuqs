@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   computeVersion,
+  formatReleaseTrace,
   selectLastGATag,
   selectLastReleaseTag
 } from './compute-version'
@@ -92,6 +93,24 @@ describe('selectLastReleaseTag', () => {
     expect(selectLastReleaseTag('stable', ['v1.2.3', 'v1.2.4-beta.1'])).toBe(
       'v1.2.3'
     )
+  })
+})
+
+describe('release trace', () => {
+  it('shows the published release checkpoint used by a beta run', () => {
+    const trace = formatReleaseTrace({
+      channel: 'beta',
+      lastGATag: 'v1.2.3',
+      lastReleaseTag: 'v1.2.4-beta.1',
+      plan: {
+        version: '1.2.4-beta.2',
+        tag: 'v1.2.4-beta.2',
+        distTag: 'beta',
+        bump: 'patch'
+      }
+    })
+
+    expect(trace).toContain('Last release: v1.2.4-beta.1')
   })
 })
 

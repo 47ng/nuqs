@@ -42,6 +42,23 @@ export function selectLastReleaseTag(
   return resolveRange({ channel, currentRef: 'HEAD', tags }).from
 }
 
+export function formatReleaseTrace(args: {
+  channel: Channel
+  lastGATag: string | null
+  lastReleaseTag: string | null
+  plan: ReleasePlan
+}): string {
+  return [
+    `Channel:      ${args.channel}`,
+    `Last GA:      ${args.lastGATag ?? '(none)'}`,
+    `Last release: ${args.lastReleaseTag ?? '(none)'}`,
+    `Bump:         ${args.plan.bump}`,
+    `Version:      ${args.plan.version}`,
+    `Tag:          ${args.plan.tag}`,
+    `Dist-tag:     ${args.plan.distTag}`
+  ].join('\n')
+}
+
 function highestBump(commits: string[]): Bump | null {
   let highest: Bump | null = null
   for (const commit of commits) {
@@ -134,14 +151,12 @@ function main(): void {
   // Human-readable trace on stderr; the caller routes stdout where it wants
   // (the workflow appends it to $GITHUB_OUTPUT).
   console.error(
-    [
-      `Channel:  ${env.CHANNEL}`,
-      `Last GA:  ${lastGATag ?? '(none)'}`,
-      `Bump:     ${plan.bump}`,
-      `Version:  ${plan.version}`,
-      `Tag:      ${plan.tag}`,
-      `Dist-tag: ${plan.distTag}`
-    ].join('\n')
+    formatReleaseTrace({
+      channel: env.CHANNEL,
+      lastGATag,
+      lastReleaseTag,
+      plan
+    })
   )
 
   // Machine-readable `key=value` lines on stdout (only what the workflow
