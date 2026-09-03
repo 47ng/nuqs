@@ -2033,9 +2033,6 @@ describe('useQueryStates: discarded renders', () => {
       .toHaveTextContent('incoming')
   })
 
-  // The stale-source branch is off while any watched key holds an overlay
-  // write. An external navigation resets the queues first, so the overlay is
-  // already gone by the discarded render and recovery still runs.
   it('recovers after an external navigation clears a pending overlay write', async () => {
     const hold = new Promise<never>(() => {})
 
