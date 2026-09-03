@@ -41,11 +41,7 @@ export const testRepro1563 = defineTest('repro-1563', ({ path }) => {
     await expect(page.locator('#navigation-state')).toHaveText('loading')
     await page.locator('#router-replace').click()
     await expect(page.locator('#navigation-state')).toHaveText('idle')
-    await expect(page).toHaveURL(
-      url =>
-        url.searchParams.get('test') === 'pass' &&
-        url.searchParams.get('redirected') === 'pass'
-    )
+    await expectSearch(page, { test: 'pass', redirected: 'pass' })
 
     expect(await readHistoryIndex(page)).toBe(initialIndex + 1)
     expect(await page.evaluate(() => history.length)).toBe(
@@ -56,24 +52,24 @@ export const testRepro1563 = defineTest('repro-1563', ({ path }) => {
     await expect(page.locator('#state')).toHaveText('init')
     expect(await readHistoryIndex(page)).toBe(initialIndex)
     await page.goForward()
-    await expect(page).toHaveURL(
-      url =>
-        url.searchParams.get('test') === 'pass' &&
-        url.searchParams.get('redirected') === 'pass'
-    )
+    await expectSearch(page, { test: 'pass', redirected: 'pass' })
     expect(await readHistoryIndex(page)).toBe(initialIndex + 1)
   })
 
   for (const history of ['replace', 'push'] as const) {
     it(`does not run loaders for shallow ${history}`, async ({ page }) => {
-      await navigateToRepro(page, path, '?test=init')
-      const loaderCall = await page.locator('#loader-call').textContent()
+      await navigateToRepro(page, path, '?test=init&delay=1000')
+      const initialLoaderCall = await readLoaderCall(page)
 
       await page.locator(`#shallow-${history}`).click()
-      await expect(page).toHaveURL(
-        url => url.searchParams.get('shallow') === 'pass'
-      )
-      await expect(page.locator('#loader-call')).toHaveText(loaderCall ?? '')
+      await expectSearch(page, { test: 'init', shallow: 'pass' })
+      expect(await readLoaderCall(page)).toBe(initialLoaderCall)
+
+      await page.locator('#push').click()
+      await expect(page.locator('#navigation-state')).toHaveText('loading')
+      await expect(page.locator('#navigation-state')).toHaveText('idle')
+      await expectSearch(page, { test: 'pass', shallow: 'pass' })
+      expect(await readLoaderCall(page)).toBe(initialLoaderCall + 1)
     })
   }
 
@@ -90,15 +86,42 @@ export const testRepro1563 = defineTest('repro-1563', ({ path }) => {
     expect(page.url()).not.toContain(path)
   })
 
+  it('adds an entry when a deep push takes over a pending deep replace', async ({
+    page
+  }) => {
+    await navigateToRepro(page, path, '?test=init&delay=1000')
+    const initialIndex = await readHistoryIndex(page)
+    const initialHistoryLength = await page.evaluate(() => history.length)
+    await page.locator('#deep-replace').click()
+    await expect(page.locator('#navigation-state')).toHaveText('loading')
+    await page.locator('#push-other').click()
+    await expect(page.locator('#navigation-state')).toHaveText('idle')
+    await expectSearch(page, { test: 'pass', other: 'pass' })
+    await expect(page.locator('#navigation-type')).toHaveText('PUSH')
+    await expect.poll(() => readHistoryIndex(page)).toBe(initialIndex + 1)
+    expect(await page.evaluate(() => history.length)).toBe(
+      initialHistoryLength + 1
+    )
+    await page.goBack()
+    await expect(page).toHaveURL(
+      url =>
+        url.searchParams.get('test') === 'pass' &&
+        !url.searchParams.has('other')
+    )
+    expect(await readHistoryIndex(page)).toBe(initialIndex)
+    expect(await page.evaluate(() => history.length)).toBe(
+      initialHistoryLength + 1
+    )
+    await page.goForward()
+    await expectSearch(page, { test: 'pass', other: 'pass' })
+    expect(await readHistoryIndex(page)).toBe(initialIndex + 1)
+  })
+
   it('lets a deep replace take over a pending deep push', async ({ page }) => {
     await navigateToRepro(page, path, '?test=init&delay=1000')
     const initialIndex = await readHistoryIndex(page)
     await page.locator('#push-then-replace').click()
-    await expect(page).toHaveURL(
-      url =>
-        url.searchParams.get('test') === 'pass' &&
-        url.searchParams.get('other') === 'pass'
-    )
+    await expectSearch(page, { test: 'pass', other: 'pass' })
     await expect.poll(() => readHistoryIndex(page)).toBe(initialIndex + 1)
     await expect(page.locator('#state')).toHaveText('pass')
     await expect(page.locator('#navigation-type')).toHaveText('PUSH')
@@ -116,18 +139,10 @@ export const testRepro1563 = defineTest('repro-1563', ({ path }) => {
     await page.locator('#push').click()
     await expect(page.locator('#navigation-state')).toHaveText('loading')
     await page.locator('#shallow-replace').click()
-    await expect(page).toHaveURL(
-      url =>
-        url.searchParams.get('test') === 'pass' &&
-        url.searchParams.get('shallow') === 'pass'
-    )
+    await expectSearch(page, { test: 'pass', shallow: 'pass' })
     await expect(page.locator('#shallow-state')).toHaveText('pass')
     await expect.poll(() => readHistoryIndex(page)).toBe(initialIndex + 1)
-    await expect(page).toHaveURL(
-      url =>
-        url.searchParams.get('test') === 'pass' &&
-        url.searchParams.get('shallow') === 'pass'
-    )
+    await expectSearch(page, { test: 'pass', shallow: 'pass' })
     await expect(page.locator('#state')).toHaveText('pass')
     await expect(page.locator('#shallow-state')).toHaveText('pass')
     await expect(page.locator('#navigation-type')).toHaveText('PUSH')
@@ -147,17 +162,9 @@ export const testRepro1563 = defineTest('repro-1563', ({ path }) => {
     await page.locator('#deep-replace').click()
     await expect(page.locator('#navigation-state')).toHaveText('loading')
     await page.locator('#shallow-replace').click()
-    await expect(page).toHaveURL(
-      url =>
-        url.searchParams.get('test') === 'pass' &&
-        url.searchParams.get('shallow') === 'pass'
-    )
+    await expectSearch(page, { test: 'pass', shallow: 'pass' })
     await expect(page.locator('#navigation-state')).toHaveText('idle')
-    await expect(page).toHaveURL(
-      url =>
-        url.searchParams.get('test') === 'pass' &&
-        url.searchParams.get('shallow') === 'pass'
-    )
+    await expectSearch(page, { test: 'pass', shallow: 'pass' })
     expect(await readHistoryIndex(page)).toBe(initialIndex)
     expect(await readLoaderCall(page)).toBe(initialLoaderCall + 1)
   })
@@ -171,17 +178,9 @@ export const testRepro1563 = defineTest('repro-1563', ({ path }) => {
     await page.locator('#push').click()
     await expect(page.locator('#navigation-state')).toHaveText('loading')
     await page.locator('#shallow-push').click()
-    await expect(page).toHaveURL(
-      url =>
-        url.searchParams.get('test') === 'pass' &&
-        url.searchParams.get('shallow') === 'pass'
-    )
+    await expectSearch(page, { test: 'pass', shallow: 'pass' })
     await expect(page.locator('#navigation-state')).toHaveText('idle')
-    await expect(page).toHaveURL(
-      url =>
-        url.searchParams.get('test') === 'pass' &&
-        url.searchParams.get('shallow') === 'pass'
-    )
+    await expectSearch(page, { test: 'pass', shallow: 'pass' })
     expect(await readHistoryIndex(page)).toBe(initialIndex + 1)
     expect(await readLoaderCall(page)).toBe(initialLoaderCall + 1)
     await page.goBack()
@@ -198,17 +197,9 @@ export const testRepro1563 = defineTest('repro-1563', ({ path }) => {
     await page.locator('#deep-replace').click()
     await expect(page.locator('#navigation-state')).toHaveText('loading')
     await page.locator('#shallow-push').click()
-    await expect(page).toHaveURL(
-      url =>
-        url.searchParams.get('test') === 'pass' &&
-        url.searchParams.get('shallow') === 'pass'
-    )
+    await expectSearch(page, { test: 'pass', shallow: 'pass' })
     await expect(page.locator('#navigation-state')).toHaveText('idle')
-    await expect(page).toHaveURL(
-      url =>
-        url.searchParams.get('test') === 'pass' &&
-        url.searchParams.get('shallow') === 'pass'
-    )
+    await expectSearch(page, { test: 'pass', shallow: 'pass' })
     expect(await readLoaderCall(page)).toBe(initialLoaderCall + 1)
     expect(await page.evaluate(() => history.length)).toBe(
       initialHistoryLength + 1
@@ -220,23 +211,16 @@ export const testRepro1563 = defineTest('repro-1563', ({ path }) => {
   }) => {
     await navigateToRepro(page, path, '?test=init&delay=1000')
     const initialIndex = await readHistoryIndex(page)
+    const initialLoaderCall = await readLoaderCall(page)
     await page.locator('#deep-replace').click()
     await expect(page.locator('#navigation-state')).toHaveText('loading')
     await page.locator('#shallow-push').click()
-    await expect(page).toHaveURL(
-      url =>
-        url.searchParams.get('test') === 'pass' &&
-        url.searchParams.get('shallow') === 'pass'
-    )
+    await expectSearch(page, { test: 'pass', shallow: 'pass' })
     await page.goBack()
+    await expect
+      .poll(() => readLoaderCall(page))
+      .toBeGreaterThan(initialLoaderCall)
     await expect(page.locator('#navigation-state')).toHaveText('idle')
-    await expect(page).toHaveURL(
-      url =>
-        url.searchParams.get('test') === 'pass' &&
-        !url.searchParams.has('shallow')
-    )
-    expect(await readHistoryIndex(page)).toBe(initialIndex)
-    await page.waitForTimeout(1100)
     await expect(page).toHaveURL(
       url =>
         url.searchParams.get('test') === 'pass' &&
