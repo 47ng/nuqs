@@ -22,6 +22,7 @@ TanStack Table stores pagination under two pieces of state:
 You will likely want the URL to follow your UI and be one-based for the page index:
 
 import { TanStackTablePagination } from './tanstack-table.generator'
+import { TanStackTableMultiplePagination } from './tanstack-table-multiple.generator'
 
 <HumanContent>
 <Suspense>
@@ -34,6 +35,15 @@ Interactive pagination example omitted. The key idea is to map TanStack Table's 
 </LLMContent>
 
 <HumanContent>
+
+___________
+
+If you’d prefer to handle multiple pagination's under a single URL or view,
+a custom array parser could be really helpful (URL keys should be unique in this case):
+
+<Suspense>
+  <TanStackTableMultiplePagination />
+</Suspense>
 
 ## Filtering
 
