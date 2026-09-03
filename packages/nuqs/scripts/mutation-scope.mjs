@@ -1,6 +1,17 @@
 import { readFile, readdir, writeFile } from 'node:fs/promises'
 import { dirname, extname, relative, resolve } from 'node:path'
 
+const sourceExtensions = new Set([
+  '.cjs',
+  '.cts',
+  '.js',
+  '.jsx',
+  '.mjs',
+  '.mts',
+  '.ts',
+  '.tsx'
+])
+
 const [root, reportPath] = process.argv.slice(2)
 if (!root || !reportPath) {
   throw new Error('usage: mutation-scope.mjs <nuqs-root> <report>')
@@ -78,7 +89,7 @@ async function listSourceFiles(directory) {
     const path = resolve(directory, entry.name)
     if (entry.isDirectory()) {
       files.push(...(await listSourceFiles(path)))
-    } else if (['.ts', '.tsx'].includes(extname(entry.name))) {
+    } else if (sourceExtensions.has(extname(entry.name))) {
       files.push(relative(root, path))
     }
   }
