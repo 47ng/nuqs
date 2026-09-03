@@ -43,4 +43,33 @@ it.describe('app router - shared-layout hook stays in sync across navigation', (
     )
     await expect(page.locator('#filter')).toHaveText('q: 2')
   })
+
+  // The persistent hook renders during the cross-route transition, before its
+  // effect has recorded the new route: it must still adopt the destination
+  // search in that render, or the first commit on /b shows the /a value.
+  it('does not commit a stale value on a direct cross-route navigation with a different search', async ({
+    page
+  }) => {
+    using logSpy = setupLogSpy(page)
+    await navigateTo(page, '/app/shared-layout-sync/a', '?q=1')
+    await expect(page.locator('#filter')).toHaveText('q: 1')
+
+    // Direct cross-route navigation with a new search: /a?q=1 -> /b?q=2
+    logSpy.logs.length = 0
+    await page.getByRole('link', { name: 'B2' }).click()
+    await expectUrl(
+      page,
+      url => url.pathname.endsWith('/b') && url.searchParams.get('q') === '2'
+    )
+    await expect
+      .poll(() => logSpy.logs.filter(l => l === 'commit: 2').length)
+      .toBeGreaterThan(0)
+    await assertLogCount(
+      logSpy,
+      'commit: 1',
+      0,
+      'Expected no stale committed value on the destination route'
+    )
+    await expect(page.locator('#filter')).toHaveText('q: 2')
+  })
 })

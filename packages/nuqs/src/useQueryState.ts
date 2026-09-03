@@ -205,15 +205,10 @@ export function useQueryState<T = string>(
     defaultValue,
     ...hookOptions
   } = options
-  const parser = {
-    parse,
-    type,
-    serialize,
-    eq,
-    defaultValue
-  } as GenericParser<T>
   const [{ [key]: state }, setState] = useQueryStates(
-    { [key]: parser },
+    {
+      [key]: { parse, type, serialize, eq, defaultValue } as GenericParser<T>
+    },
     hookOptions
   )
   const update = useCallback(

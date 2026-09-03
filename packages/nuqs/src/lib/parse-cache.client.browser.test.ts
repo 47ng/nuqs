@@ -1,6 +1,11 @@
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, onTestFinished, vi } from 'vitest'
 import { setDebugSink } from './debug'
-import { parseWithCache } from './parse-cache'
+import {
+  clearParseCacheKey,
+  getParseCacheVersion,
+  parseWithCache,
+  retainParseCache
+} from './parse-cache'
 
 type AnyQuery = string & Array<string>
 
@@ -22,13 +27,16 @@ describe('parseWithCache', () => {
     expect(a).toEqual({ value: 'foo' })
     expect(b).toEqual({ value: 'bar' })
   })
-  it('misses gracefully when another parser is bound to the same key', () => {
-    const parseA = (query: string) => ({ a: query })
+  it('keeps only the latest parser binding for a key', () => {
+    const parseA = vi.fn((query: string) => ({ a: query }))
     const parseB = (query: string) => ({ b: query })
     const a = parseWithCache('parse-cache-double-bind', parseA, asQuery('x'))
     const b = parseWithCache('parse-cache-double-bind', parseB, asQuery('x'))
+    const a2 = parseWithCache('parse-cache-double-bind', parseA, asQuery('x'))
     expect(a).toEqual({ a: 'x' })
     expect(b).toEqual({ b: 'x' })
+    expect(a2).not.toBe(a)
+    expect(parseA).toHaveBeenCalledTimes(2)
   })
   it('compares array queries by value', () => {
     const parse = (queries: string[]) => queries.map(query => ({ query }))
@@ -82,5 +90,68 @@ describe('parseWithCache', () => {
     parseWithCache('evict-500', parse, asQuery('refreshed'))
     parseWithCache('evict-2', parse, asQuery('x'))
     expect(parse).toHaveBeenCalledTimes(1003)
+  })
+  it('contracts after retained keys are released', () => {
+    const releases = Array.from({ length: 1001 }, (_, i) => {
+      retainParseCache(`retained-${i}`, 1)
+      return () => retainParseCache(`retained-${i}`, -1)
+    })
+    releases.forEach(release => release())
+    const parse = vi.fn((query: string) => query)
+    parseWithCache('retained-sentinel', parse, asQuery('x'))
+    for (let i = 0; i < 1000; i++) {
+      parseWithCache(`retained-filler-${i}`, parse, asQuery('x'))
+    }
+    parseWithCache('retained-sentinel', parse, asQuery('x'))
+    expect(parse).toHaveBeenCalledTimes(1002)
+  })
+  it('keeps the publication version when re-publishing the same value', () => {
+    const key = 'parse-cache-republish'
+    const parseP = (query: string) => ({ p: query })
+    const parseQ = (query: string) => ({ q: query })
+    const published = { p: 'x' }
+    parseWithCache(key, parseP, asQuery('x'), published)
+    const version = getParseCacheVersion(key)
+    expect(version).toBeTypeOf('number')
+    parseWithCache(key, parseP, asQuery('x'), published)
+    expect(getParseCacheVersion(key)).toBe(version)
+    const q = parseWithCache(key, parseQ, asQuery('x'))
+    parseWithCache(key, parseP, asQuery('x'), published)
+    expect(getParseCacheVersion(key)).toBe(version)
+    expect(parseWithCache(key, parseQ, asQuery('x'))).toBe(q)
+    parseWithCache(key, parseP, asQuery('x'), { p: 'x' })
+    expect(getParseCacheVersion(key)).toBeGreaterThan(version!)
+  })
+  it('re-parses a cleared key and drops its publication version', () => {
+    const key = 'parse-cache-cleared'
+    const parse = (query: string) => ({ query })
+    const published = { query: 'a' }
+    parseWithCache(key, parse, asQuery('a'), published)
+    expect(getParseCacheVersion(key)).toBeTypeOf('number')
+    clearParseCacheKey(key)
+    expect(getParseCacheVersion(key)).toBeUndefined()
+    expect(parseWithCache(key, parse, asQuery('a'))).not.toBe(published)
+  })
+  it('ignores a key the cache never saw', () => {
+    expect(() => clearParseCacheKey('parse-cache-unknown')).not.toThrow()
+  })
+  it('does not reuse a publication version after eviction', () => {
+    const key = 'parse-cache-evicted-version'
+    const parse = (query: string) => ({ query })
+    const releases = Array.from({ length: 1001 }, (_, i) => {
+      retainParseCache(`version-filler-${i}`, 1)
+      return () => retainParseCache(`version-filler-${i}`, -1)
+    })
+    onTestFinished(() => releases.forEach(release => release()))
+    parseWithCache(key, parse, asQuery('a'), { query: 'a' })
+    const evictedVersion = getParseCacheVersion(key)
+    retainParseCache(key, 1)
+    retainParseCache(key, -1)
+    const versionAfterEviction = getParseCacheVersion(key)
+    parseWithCache(key, parse, asQuery('a'), { query: 'a' })
+    const reissuedVersion = getParseCacheVersion(key)
+    expect(evictedVersion).toBeTypeOf('number')
+    expect(versionAfterEviction).toBeUndefined()
+    expect(reissuedVersion).toBeGreaterThan(evictedVersion!)
   })
 })

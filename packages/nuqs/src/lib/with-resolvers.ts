@@ -6,15 +6,15 @@ export type Resolvers<T> = {
 
 export function withResolvers<T>(): Resolvers<T> {
   const P = Promise<T>
-  if (Promise.hasOwnProperty('withResolvers')) {
-    return Promise.withResolvers<T>()
+  if (Object.hasOwn(P, 'withResolvers')) {
+    return P.withResolvers<T>()
   }
   // todo: Remove this once Promise.withResolvers is Baseline GA (September 2026)
-  let resolve: (value: T | PromiseLike<T>) => void = () => {}
-  let reject: () => void = () => {}
+  let resolve: (value: T | PromiseLike<T>) => void
+  let reject: () => void
   const promise = new P((res, rej) => {
     resolve = res
     reject = rej
   })
-  return { promise, resolve, reject }
+  return { promise, resolve: resolve!, reject: reject! }
 }

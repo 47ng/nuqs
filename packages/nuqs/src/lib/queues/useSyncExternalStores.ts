@@ -19,18 +19,17 @@ export function useSyncExternalStores<T>(
   subscribeKey: (key: string, callback: () => void) => () => void,
   getKeySnapshot: (key: string) => T
 ): Record<string, T> {
-  const snapshot = useCallback((): [string, Record<string, T>] => {
+  const cacheRef = useRef<null | [string, Record<string, T>]>(null)
+  const snapshot = useCallback((): Record<string, T> => {
     const record = Object.fromEntries(
       keys.map(key => [key, getKeySnapshot(key)])
     )
     const cacheKey = JSON.stringify(record)
-    return [cacheKey, record]
+    if (cacheRef.current?.[0] !== cacheKey) {
+      cacheRef.current = [cacheKey, record]
+    }
+    return cacheRef.current[1]
   }, [keys.join(','), getKeySnapshot])
-  const cacheRef = useRef<null | [string, Record<string, T>]>(null)
-  // Initialize the cache with the initial snapshot
-  if (cacheRef.current === null) {
-    cacheRef.current = snapshot()
-  }
   const subscribe = useCallback(
     (callback: () => void) => {
       const off = keys.map(key => subscribeKey(key, callback))
@@ -38,16 +37,5 @@ export function useSyncExternalStores<T>(
     },
     [keys.join(','), subscribeKey]
   )
-  return useSyncExternalStore<Record<string, T>>(
-    subscribe,
-    () => {
-      const [cacheKey, record] = snapshot()
-      if (cacheRef.current![0] === cacheKey) {
-        return cacheRef.current![1]!
-      }
-      cacheRef.current = [cacheKey, record]
-      return record
-    },
-    () => cacheRef.current![1]!
-  )
+  return useSyncExternalStore<Record<string, T>>(subscribe, snapshot, snapshot)
 }

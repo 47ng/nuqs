@@ -1,4 +1,7 @@
-import { error } from './errors'
+import { error414 } from './errors'
+
+const encodeChar = (character: string): string =>
+  character === "'" ? '%27' : encodeURIComponent(character)
 
 export function renderQueryString(search: URLSearchParams): string {
   if (search.size === 0) {
@@ -8,12 +11,7 @@ export function renderQueryString(search: URLSearchParams): string {
   for (const [key, value] of search.entries()) {
     // Replace disallowed characters in keys,
     // see https://github.com/47ng/nuqs/issues/599
-    const safeKey = key
-      .replace(/#/g, '%23')
-      .replace(/&/g, '%26')
-      .replace(/\+/g, '%2B')
-      .replace(/=/g, '%3D')
-      .replace(/\?/g, '%3F')
+    const safeKey = key.replace(/[#&+=?]/g, encodeChar)
     query.push(`${safeKey}=${encodeQueryValue(value)}`)
   }
   const queryString = '?' + query.join('&')
@@ -22,29 +20,10 @@ export function renderQueryString(search: URLSearchParams): string {
 }
 
 export function encodeQueryValue(input: string): string {
-  return (
-    input
-      // Encode existing % signs first to avoid appearing
-      // as an incomplete escape sequence:
-      .replace(/%/g, '%25')
-      // Note: spaces are encoded as + in RFC 3986,
-      // so we pre-encode existing + signs to avoid confusion
-      // before converting spaces to + signs.
-      .replace(/\+/g, '%2B')
-      .replace(/ /g, '+')
-      // Encode other URI-reserved characters
-      .replace(/#/g, '%23')
-      .replace(/&/g, '%26')
-      // Encode characters that break URL detection on some platforms
-      // and would drop the tail end of the querystring:
-      .replace(/"/g, '%22')
-      .replace(/'/g, '%27')
-      .replace(/`/g, '%60')
-      .replace(/</g, '%3C')
-      .replace(/>/g, '%3E')
-      // Encode invisible ASCII control characters
-      .replace(/[\x00-\x1F]/g, char => encodeURIComponent(char))
-  )
+  // replace() scans the input once and does not scan the encoded replacements.
+  // It therefore escapes existing % and + characters without touching the %xx
+  // sequences it creates. The second pass can then turn only input spaces into +.
+  return input.replace(/[%+#&"'`<>\x00-\x1F]/g, encodeChar).replace(/ /g, '+')
 }
 
 // Note: change error documentation (NUQS-414) when changing this value.
@@ -60,6 +39,6 @@ function warnIfURLIsTooLong(queryString: string): void {
   const url = new URL(location.href)
   url.search = queryString
   if (url.href.length > URL_MAX_LENGTH) {
-    console.warn(error(414))
+    console.warn(error414)
   }
 }

@@ -16,10 +16,10 @@ const fallbackRegistry: GlobalRegistry = {}
 export function globalSingleton<T>(scope: string, create: () => T): T {
   const key = Symbol.for(`nuqs.${version}.${scope}`)
   const registry = globalThis as GlobalRegistry
-  if (registry[key] != null) {
-    return registry[key] as T
-  }
-  const target = Object.isExtensible(registry) ? registry : fallbackRegistry
+  const target =
+    registry[key] != null || Object.isExtensible(registry)
+      ? registry
+      : fallbackRegistry
   return (target[key] ??= create()) as T
 }
 

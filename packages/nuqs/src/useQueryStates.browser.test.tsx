@@ -1,7 +1,10 @@
 import React, {
+  Activity,
+  createContext,
   createElement,
   startTransition,
   Suspense,
+  useContext,
   useEffect,
   useLayoutEffect,
   useState,
@@ -16,11 +19,13 @@ import {
   NullDetector,
   useFakeLoadingState
 } from '../tests/components/repro-1099'
+import { unstable_createAdapterProvider } from './adapters/custom'
 import {
   NuqsTestingAdapter,
   withNuqsTestingAdapter,
   type OnUrlUpdateFunction
 } from './adapters/testing'
+import { clearParseCache, parseWithCache } from './lib/parse-cache'
 import { debounce, throttle } from './lib/queues/rate-limiting'
 import { resetQueues } from './lib/queues/reset'
 import { globalThrottleQueue } from './lib/queues/throttle'
@@ -582,6 +587,123 @@ describe('useQueryStates: shared parse cache', () => {
 })
 
 describe('useQueryStates: optimistic adoption', () => {
+  it('shares the exact written value with hooks using the same parser', async () => {
+    const objParser = parseAsJson<{ v: number }>(x => x as { v: number })
+    const { result, act } = await renderHook(
+      () => ({
+        a: useQueryStates({ obj: objParser }),
+        b: useQueryStates({ obj: objParser })
+      }),
+      { wrapper: withNuqsTestingAdapter() }
+    )
+    const written = { v: 42 }
+    await act(() => result.current.a[1]({ obj: written }))
+    expect(result.current.a[0].obj).toBe(written)
+    expect(result.current.b[0].obj).toBe(written)
+  })
+  it('shares a written value when its serialized query is unchanged', async () => {
+    const objParser = parseAsJson<{ v: number }>(x => x as { v: number })
+    const { result, act } = await renderHook(
+      () => ({
+        a: useQueryStates({ obj: objParser }),
+        b: useQueryStates({ obj: objParser })
+      }),
+      {
+        wrapper: withNuqsTestingAdapter({
+          searchParams: '?obj={"v":1}'
+        })
+      }
+    )
+    const previous = result.current.a[0].obj
+    const written = { v: 1 }
+    expect(result.current.b[0].obj).toBe(previous)
+    await act(() => result.current.a[1]({ obj: written }))
+    expect(result.current.a[0].obj).toBe(written)
+    expect(result.current.b[0].obj).toBe(written)
+  })
+
+  it('keeps the written identity with an inline parser factory', async () => {
+    let referenceCount = 0
+    const { result, act } = await renderHook(
+      () => {
+        const state = useQueryStates({
+          items: parseAsArrayOf(parseAsString)
+        })
+        useEffect(() => {
+          referenceCount++
+        }, [state[0].items])
+        return state
+      },
+      {
+        wrapper: withNuqsTestingAdapter({
+          searchParams: '?items=a,b'
+        })
+      }
+    )
+    const written = ['a', 'b']
+
+    await act(() => result.current[1]({ items: written }))
+    expect(result.current[0].items).toBe(written)
+    expect(referenceCount).toBe(2)
+
+    await act(() => result.current[1](value => value))
+    expect(referenceCount).toBe(2)
+  })
+
+  it('keeps a publication until mounted siblings adopt it', async () => {
+    const objParser = parseAsJson<{ v: number }>(x => x as { v: number })
+    const { result, act } = await renderHook(
+      () => ({
+        a: useQueryStates({ obj: objParser }),
+        b: useQueryStates({ obj: objParser })
+      }),
+      { wrapper: withNuqsTestingAdapter() }
+    )
+    const written = { v: 42 }
+    // The testing adapter clears parsed values while hooks remain subscribed.
+    clearParseCache()
+    await act(async () => {
+      result.current.a[1](
+        { obj: written },
+        { limitUrlUpdates: throttle(Infinity) }
+      )
+      const identity = (query: string) => query
+      for (let i = 0; i < 1000; i++) {
+        parseWithCache(
+          `publication-filler-${i}`,
+          identity,
+          'x' as string & Array<string>
+        )
+      }
+      await Promise.resolve()
+    })
+    expect(result.current.a[0].obj).toBe(written)
+    expect(result.current.b[0].obj).toBe(written)
+  })
+  it('does not rerender an equal primitive write under cache pressure', async () => {
+    let renders = 0
+    const { result, act } = await renderHook(
+      () => {
+        renders++
+        return useQueryStates({ n: parseAsInteger })
+      },
+      { wrapper: withNuqsTestingAdapter({ searchParams: '?n=1' }) }
+    )
+    const rendersBeforeUpdate = renders
+    const identity = (query: string) => query
+    for (let i = 0; i < 1000; i++) {
+      parseWithCache(
+        `primitive-filler-${i}`,
+        identity,
+        'x' as string & Array<string>
+      )
+    }
+    await act(async () => {
+      result.current[1]({ n: 1 }, { limitUrlUpdates: throttle(Infinity) })
+      await Promise.resolve()
+    })
+    expect(renders).toBe(rendersBeforeUpdate)
+  })
   it('keeps the exact value identity for the writer (non-identity parse round-trip)', async () => {
     const objParser = parseAsJson<{ v: number }>(x => x as { v: number })
     const { result, act } = await renderHook(
@@ -742,11 +864,9 @@ describe('useQueryStates: rendering & bail-out', () => {
   it('should bail out of rendering the same component when setting to the same value', async () => {
     let renderCount = 0
     function TestComponent() {
+      renderCount++
       const [{ test }, setSearchParams] = useQueryStates({
         test: parseAsString
-      })
-      useEffect(() => {
-        renderCount++
       })
       return (
         <>
@@ -1960,6 +2080,100 @@ describe('useQueryStates: edge cases & repros', () => {
     await expect
       .element(page.getByTestId('null-detector'))
       .toHaveTextContent('pass')
+  })
+})
+
+describe('useQueryStates: cross-route renders', () => {
+  // Models an app router: pathname and search params change together in one
+  // render (context providers above the whole tree), and the outgoing page
+  // stays mounted but hidden under <Activity>, like the back/forward cache
+  // under Next.js cacheComponents. A hook in the shared layout survives the
+  // navigation; a hook in the page is route-local.
+  it('lets a persistent hook adopt the destination search while a hidden route-local hook keeps its own route (#1293)', async () => {
+    type Route = { pathname: string; searchParams: URLSearchParams }
+    const RouterContext = createContext<Route>({
+      pathname: '/a',
+      searchParams: new URLSearchParams()
+    })
+    const updateUrl = vi.fn()
+    const Adapter = unstable_createAdapterProvider(() => {
+      const { pathname, searchParams } = useContext(RouterContext)
+      return { pathname, searchParams, updateUrl }
+    })
+    const params = { q: parseAsInteger.withDefault(0) }
+    const pageRenders: number[] = []
+    const pageCommits: number[] = []
+    const layoutCommits: number[] = []
+    function Page() {
+      const [{ q }] = useQueryStates(params)
+      pageRenders.push(q)
+      useEffect(() => {
+        pageCommits.push(q)
+      })
+      return <span data-testid="page">{q}</span>
+    }
+    function Layout() {
+      const [{ q }] = useQueryStates(params)
+      useEffect(() => {
+        layoutCommits.push(q)
+      })
+      return <span data-testid="layout">{q}</span>
+    }
+    function App() {
+      const [route, setRoute] = useState<Route>({
+        pathname: '/a',
+        searchParams: new URLSearchParams('?q=1')
+      })
+      const navigate = (pathname: string, search: string) =>
+        setRoute({ pathname, searchParams: new URLSearchParams(search) })
+      return (
+        <RouterContext.Provider value={route}>
+          <Adapter>
+            <Layout />
+            <Activity mode={route.pathname === '/a' ? 'visible' : 'hidden'}>
+              <Page />
+            </Activity>
+            <button onClick={() => navigate('/b', '?q=2')}>go to B</button>
+            <button onClick={() => navigate('/a', '?q=3')}>back to A</button>
+          </Adapter>
+        </RouterContext.Provider>
+      )
+    }
+    const user = userEvent.setup()
+    render(<App />)
+    await expect.element(page.getByTestId('page')).toHaveTextContent('1')
+    await expect.element(page.getByTestId('layout')).toHaveTextContent('1')
+
+    // /a?q=1 -> /b?q=2: the layout hook must commit 2 directly (no stale 1),
+    // the hidden page hook must keep rendering its own route's value.
+    let layoutCommitsBefore = layoutCommits.length
+    let pageRendersBefore = pageRenders.length
+    const pageCommitsBefore = pageCommits.length
+    await user.click(page.getByRole('button', { name: 'go to B' }))
+    await expect.element(page.getByTestId('layout')).toHaveTextContent('2')
+    await expect
+      .poll(() => layoutCommits.slice(layoutCommitsBefore))
+      .toEqual([2])
+    // The hidden page still renders (React prerenders hidden subtrees on
+    // context changes), against the other route's URL.
+    await expect
+      .poll(() => pageRenders.length)
+      .toBeGreaterThan(pageRendersBefore)
+    expect(pageRenders.slice(pageRendersBefore)).not.toContain(2)
+    expect(pageCommits.length).toBe(pageCommitsBefore)
+
+    // /b?q=2 -> /a?q=3: the revealed page adopts its route's new search in the
+    // reveal render (no stale 1, never the other route's 2); the layout follows.
+    layoutCommitsBefore = layoutCommits.length
+    pageRendersBefore = pageRenders.length
+    await user.click(page.getByRole('button', { name: 'back to A' }))
+    await expect.element(page.getByTestId('page')).toHaveTextContent('3')
+    await expect.element(page.getByTestId('layout')).toHaveTextContent('3')
+    await expect.poll(() => pageCommits.slice(pageCommitsBefore)).toEqual([3])
+    await expect
+      .poll(() => layoutCommits.slice(layoutCommitsBefore))
+      .toEqual([3])
+    expect(pageRenders).not.toContain(2)
   })
 })
 
