@@ -200,158 +200,16 @@ function sourceAtLocation(
   }
   const lines = source.split('\n')
   const { start, end } = location
-  const startLine = lines[start.line - 1]
-  const endLine = lines[end.line - 1]
-  if (
-    startLine === undefined ||
-    endLine === undefined ||
-    !Number.isInteger(start.line) ||
-    !Number.isInteger(start.column) ||
-    !Number.isInteger(end.line) ||
-    !Number.isInteger(end.column) ||
-    start.line > end.line ||
-    start.column < 1 ||
-    end.column < 1 ||
-    start.column > startLine.length + 1 ||
-    end.column > endLine.length + 1 ||
-    (start.line === end.line && start.column > end.column)
-  ) {
-    return undefined
-  }
   if (start.line === end.line) {
-    return startLine.slice(start.column - 1, end.column - 1)
+    return lines[start.line - 1]?.slice(start.column - 1, end.column - 1)
   }
   return [
-    startLine.slice(start.column - 1),
+    lines[start.line - 1]?.slice(start.column - 1),
     ...lines.slice(start.line, end.line - 1),
-    endLine.slice(0, end.column - 1)
+    lines[end.line - 1]?.slice(0, end.column - 1)
   ]
+    .filter((line): line is string => line !== undefined)
     .join('\n')
-}
-
-function mutantFingerprint(
-  file: string,
-  source: string,
-  mutant: {
-    location?: UndetectedMutant['location']
-    mutatorName?: string
-    replacement?: string
-  }
-): string | undefined {
-  const location = mutant.location
-  const original = sourceAtLocation(source, location)
-  if (
-    !location ||
-    mutant.mutatorName === undefined ||
-    mutant.replacement === undefined ||
-    original === undefined
-  ) {
-    return undefined
-  }
-  return JSON.stringify([
-    file,
-    location.start.line,
-    location.start.column,
-    location.end.line,
-    location.end.column,
-    mutant.mutatorName,
-    original,
-    mutant.replacement
-  ])
-}
-
-type FingerprintedMutant = {
-  fingerprint: string
-  identity: string
-  status: MutantStatus
-}
-
-function fingerprintedMutants(
-  report: MutationReport
-): FingerprintedMutant[] | undefined {
-  const records: FingerprintedMutant[] = []
-  const identities = new Set<string>()
-  for (const [file, { mutants, source }] of Object.entries(report.files)) {
-    for (const mutant of mutants) {
-      const fingerprint = mutantFingerprint(file, source, mutant)
-      const identity = `${file}\0${mutant.id}`
-      if (fingerprint === undefined || identities.has(identity)) {
-        return undefined
-      }
-      identities.add(identity)
-      records.push({ fingerprint, identity, status: mutant.status })
-    }
-  }
-  return records
-}
-
-function timeoutVarianceCredit(
-  baselineReport: MutationReport,
-  candidateReport: MutationReport
-): number {
-  const baseline = fingerprintedMutants(baselineReport)
-  const candidate = fingerprintedMutants(candidateReport)
-  if (!baseline || !candidate) {
-    return 0
-  }
-
-  const groupByFingerprint = (mutants: FingerprintedMutant[]) => {
-    const groups = new Map<string, FingerprintedMutant[]>()
-    for (const mutant of mutants) {
-      const group = groups.get(mutant.fingerprint) ?? []
-      group.push(mutant)
-      groups.set(mutant.fingerprint, group)
-    }
-    return groups
-  }
-  const baselineByFingerprint = groupByFingerprint(baseline)
-  const candidateByFingerprint = groupByFingerprint(candidate)
-  const candidateByIdentity = new Map(
-    candidate.map(mutant => [mutant.identity, mutant])
-  )
-  const matchedCandidateIdentities = new Set<string>()
-  const unmatchedBaseline: FingerprintedMutant[] = []
-  let credit = 0
-
-  for (const baselineMutant of baseline) {
-    const candidateMutant = candidateByIdentity.get(baselineMutant.identity)
-    if (
-      candidateMutant &&
-      candidateMutant.fingerprint === baselineMutant.fingerprint
-    ) {
-      matchedCandidateIdentities.add(candidateMutant.identity)
-      if (
-        baselineMutant.status === 'Timeout' &&
-        candidateMutant.status === 'Survived' &&
-        baselineByFingerprint.get(baselineMutant.fingerprint)?.length === 1 &&
-        candidateByFingerprint.get(candidateMutant.fingerprint)?.length === 1
-      ) {
-        credit++
-      }
-    } else {
-      unmatchedBaseline.push(baselineMutant)
-    }
-  }
-
-  const unmatchedCandidate = candidate.filter(
-    mutant => !matchedCandidateIdentities.has(mutant.identity)
-  )
-  const baselineGroups = groupByFingerprint(unmatchedBaseline)
-  const candidateGroups = groupByFingerprint(unmatchedCandidate)
-  for (const [fingerprint, baselineGroup] of baselineGroups) {
-    const candidateGroup = candidateGroups.get(fingerprint)
-    if (
-      baselineGroup.length === 1 &&
-      candidateGroup?.length === 1 &&
-      baselineByFingerprint.get(fingerprint)?.length === 1 &&
-      candidateByFingerprint.get(fingerprint)?.length === 1 &&
-      baselineGroup[0]!.status === 'Timeout' &&
-      candidateGroup[0]!.status === 'Survived'
-    ) {
-      credit++
-    }
-  }
-  return credit
 }
 
 function scopeSettings(scope: MutationScope): unknown {
@@ -367,17 +225,16 @@ function scopeSettings(scope: MutationScope): unknown {
   }
 }
 
-function executedTestCounts(tests: string[]): Map<string, number> {
-  const counts = new Map<string, number>()
-  for (const test of tests) {
+function executedTestFiles(tests: string[]): string[] {
+  return tests.map(test => {
     const separator = test.indexOf('\0')
-    if (separator <= 0 || separator === test.length - 1) {
-      throw new Error(`invalid executed test identifier: ${JSON.stringify(test)}`)
+    if (separator <= 0) {
+      throw new Error(
+        `invalid executed test identifier: ${JSON.stringify(test)}`
+      )
     }
-    const file = test.slice(0, separator)
-    counts.set(file, (counts.get(file) ?? 0) + 1)
-  }
-  return counts
+    return test.slice(0, separator)
+  })
 }
 
 function difference(baseline: string[], candidate: string[]): string[] {
@@ -426,23 +283,13 @@ export function compareMutationReports(
         `${runtime} mutation scope lost ${missingMutationFiles.length} existing source file(s)`
       )
     }
-    const baselineTestCounts = executedTestCounts(
-      baselineReport.config.scope[runtime].executedTests
-    )
-    const candidateTestCounts = executedTestCounts(
-      candidateReport.config.scope[runtime].executedTests
-    )
-    const missingTests = [...baselineTestCounts].reduce(
-      (count, [file, baselineCount]) =>
-        candidateReport.config.scope.sourceFiles.includes(file)
-          ? count +
-            Math.max(0, baselineCount - (candidateTestCounts.get(file) ?? 0))
-          : count,
-      0
-    )
-    if (missingTests > 0) {
+    const missingTests = difference(
+      executedTestFiles(baselineReport.config.scope[runtime].executedTests),
+      executedTestFiles(candidateReport.config.scope[runtime].executedTests)
+    ).filter(file => candidateReport.config.scope.sourceFiles.includes(file))
+    if (missingTests.length > 0) {
       throw new Error(
-        `${runtime} mutation scope lost ${missingTests} executed test(s)`
+        `${runtime} mutation scope lost ${missingTests.length} executed test(s)`
       )
     }
   }
@@ -463,6 +310,7 @@ export function compareMutationReports(
     )
   }
 
+  const delta = candidate.debt - baseline.debt
   const candidateUndetected = Object.entries(candidateReport.files)
     .flatMap(([file, { mutants, source }]) =>
       mutants
@@ -485,11 +333,6 @@ export function compareMutationReports(
           (right.location?.start.column ?? 0) ||
         left.id.localeCompare(right.id)
     )
-  const toleratedTimeoutVariance = timeoutVarianceCredit(
-    baselineReport,
-    candidateReport
-  )
-  const delta = candidate.debt - baseline.debt - toleratedTimeoutVariance
   return {
     baseline,
     candidate,

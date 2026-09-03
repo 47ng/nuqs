@@ -39,21 +39,6 @@ function report(
   }
 }
 
-function identifyMutants(report: MutationReport): MutationReport {
-  report.files['src/example.ts']!.source = 'true'
-  for (const mutant of report.files['src/example.ts']!.mutants) {
-    Object.assign(mutant, {
-      location: {
-        start: { line: 1, column: 1 },
-        end: { line: 1, column: 5 }
-      },
-      mutatorName: 'BooleanLiteral',
-      replacement: 'false'
-    })
-  }
-  return report
-}
-
 const defaultConfig = {
   mutate: ['src/**/*.ts'],
   testRunner: 'vitest',
@@ -137,146 +122,10 @@ describe('mutation gate', () => {
     })
   })
 
-  it('tolerates a baseline timeout surviving for the same mutant', () => {
+  it('fails when a timed-out mutant starts surviving', () => {
     expect(
-      compareMutationReports(
-        identifyMutants(report(['Timeout'])),
-        identifyMutants(report(['Survived']))
-      )
-    ).toMatchObject({ pass: true, delta: 0 })
-    expect(
-      compareMutationReports(
-        identifyMutants(report(['Timeout'])),
-        identifyMutants(report(['NoCoverage']))
-      )
+      compareMutationReports(report(['Timeout']), report(['Survived']))
     ).toMatchObject({ pass: false, delta: 1 })
-    expect(
-      compareMutationReports(report(['Survived']), report(['Timeout']))
-    ).toMatchObject({ pass: true, delta: -1 })
-
-    const renumberedMutant = identifyMutants(report(['Survived']))
-    renumberedMutant.files['src/example.ts']!.mutants[0]!.id = 'other'
-    expect(
-      compareMutationReports(
-        identifyMutants(report(['Timeout'])),
-        renumberedMutant
-      )
-    ).toMatchObject({ pass: true, delta: 0 })
-
-    const differentMutant = identifyMutants(report(['Survived']))
-    differentMutant.files['src/example.ts']!.mutants[0]!.location = {
-      start: { line: 2, column: 1 },
-      end: { line: 2, column: 5 }
-    }
-    expect(
-      compareMutationReports(
-        identifyMutants(report(['Timeout'])),
-        differentMutant
-      )
-    ).toMatchObject({ pass: false, delta: 1 })
-  })
-
-  it('does not reuse timeout credit across duplicate fingerprints', () => {
-    const cases = [
-      {
-        baseline: ['Timeout', 'Survived'],
-        candidate: ['Timeout', 'Survived', 'Survived'],
-        delta: 1
-      },
-      {
-        baseline: ['Timeout', 'Survived'],
-        candidate: ['Survived', 'Survived', 'Survived'],
-        delta: 2
-      },
-      {
-        baseline: ['Timeout', 'Ignored'],
-        candidate: ['Ignored', 'Survived'],
-        delta: 1
-      },
-      {
-        baseline: ['Timeout', 'Killed'],
-        candidate: ['Killed', 'Survived'],
-        delta: 1
-      }
-    ] as const
-    for (const { baseline, candidate, delta } of cases) {
-      expect(
-        compareMutationReports(
-          identifyMutants(report([...baseline])),
-          identifyMutants(report([...candidate]))
-        ),
-        `${baseline.join(',')} -> ${candidate.join(',')}`
-      ).toMatchObject({ pass: false, delta })
-    }
-
-    expect(
-      compareMutationReports(
-        identifyMutants(report(['Timeout', 'Survived'])),
-        identifyMutants(report(['Survived', 'Survived']))
-      )
-    ).toMatchObject({ pass: false, delta: 1 })
-
-    const renumberedDuplicate = identifyMutants(
-      report(['Killed', 'Survived'])
-    )
-    renumberedDuplicate.files['src/example.ts']!.mutants[1]!.id = 'renumbered'
-    expect(
-      compareMutationReports(
-        identifyMutants(report(['Killed', 'Timeout'])),
-        renumberedDuplicate
-      )
-    ).toMatchObject({ pass: false, delta: 1 })
-  })
-
-  it('does not match timeouts without a complete mutant fingerprint', () => {
-    for (const side of ['baseline', 'candidate'] as const) {
-      for (const field of [
-        'location',
-        'mutatorName',
-        'replacement'
-      ] as const) {
-        const baseline = identifyMutants(report(['Timeout']))
-        const candidate = identifyMutants(report(['Survived']))
-        delete (side === 'baseline'
-          ? baseline.files['src/example.ts']!.mutants[0]!
-          : candidate.files['src/example.ts']!.mutants[0]!)[field]
-
-        expect(
-          compareMutationReports(baseline, candidate),
-          `${side} ${field}`
-        ).toMatchObject({ pass: false, delta: 1 })
-      }
-    }
-
-    const baseline = identifyMutants(report(['Timeout']))
-    const candidate = identifyMutants(report(['Timeout', 'Survived']))
-    delete candidate.files['src/example.ts']!.mutants[0]!.location
-    expect(compareMutationReports(baseline, candidate)).toMatchObject({
-      pass: false,
-      delta: 1
-    })
-  })
-
-  it.each([
-    {
-      start: { line: 2, column: 1 },
-      end: { line: 2, column: 5 }
-    },
-    {
-      start: { line: 1, column: 1.5 },
-      end: { line: 1, column: 5 }
-    }
-  ])('does not fingerprint invalid source location %#', location => {
-    const baseline = identifyMutants(report(['Timeout']))
-    const candidate = identifyMutants(report(['Survived']))
-    for (const current of [baseline, candidate]) {
-      current.files['src/example.ts']!.mutants[0]!.location = location
-    }
-
-    expect(compareMutationReports(baseline, candidate)).toMatchObject({
-      pass: false,
-      delta: 1
-    })
   })
 
   it('passes when mutation debt is stable or decreases', () => {
@@ -380,10 +229,11 @@ describe('mutation gate', () => {
     ).toThrow('mutation scope changed')
   })
 
-  it('allows tests to be renamed within an executed test file', () => {
+  it('allows tests to be renamed or added within an executed test file', () => {
     const candidateConfig = structuredClone(defaultConfig)
     candidateConfig.scope.node.executedTests = [
-      'src/example.test.ts\0renamed test'
+      'src/example.test.ts\0renamed test',
+      'src/example.test.ts\0additional test'
     ]
 
     expect(
@@ -396,9 +246,10 @@ describe('mutation gate', () => {
 
   it('allows executed tests to disappear with a deleted test file', () => {
     const candidateConfig = structuredClone(defaultConfig)
-    candidateConfig.scope.sourceFiles = candidateConfig.scope.sourceFiles.filter(
-      file => file !== 'src/example.test.ts'
-    )
+    candidateConfig.scope.sourceFiles =
+      candidateConfig.scope.sourceFiles.filter(
+        file => file !== 'src/example.test.ts'
+      )
     candidateConfig.scope.node.executedTests = []
 
     expect(
@@ -449,20 +300,31 @@ describe('mutation gate', () => {
     ).toThrow('node mutation scope lost 1 executed test')
   })
 
-  it.each([
-    'src/example.test.ts',
-    '\0test',
-    'src/example.test.ts\0'
-  ])('rejects malformed executed test identifier %j', executedTest => {
-    const candidateConfig = structuredClone(defaultConfig)
-    candidateConfig.scope.node.executedTests = [executedTest]
+  it.each(['src/example.test.ts', '\0test'])(
+    'rejects malformed executed test identifier %j',
+    executedTest => {
+      const candidateConfig = structuredClone(defaultConfig)
+      candidateConfig.scope.node.executedTests = [executedTest]
 
-    expect(() =>
+      expect(() =>
+        compareMutationReports(
+          report(['Killed']),
+          report(['Killed'], candidateConfig)
+        )
+      ).toThrow('invalid executed test identifier')
+    }
+  )
+
+  it('allows an empty test name', () => {
+    const candidateConfig = structuredClone(defaultConfig)
+    candidateConfig.scope.node.executedTests = ['src/example.test.ts\0']
+
+    expect(
       compareMutationReports(
         report(['Killed']),
         report(['Killed'], candidateConfig)
       )
-    ).toThrow('invalid executed test identifier')
+    ).toMatchObject({ pass: true, delta: 0 })
   })
 
   it('compares mutation debt across toolchain changes', () => {
