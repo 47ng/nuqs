@@ -25,12 +25,18 @@ type PendingPushState = {
 type PendingNavigationBase = {
   href: string
   currentHref: string
-  routerIndex: number | undefined
-  poppedSince: boolean
 }
 
 type PendingNavigation = PendingNavigationBase &
-  ({ history: 'push'; id: number } | { history: 'replace' })
+  (
+    | {
+        history: 'push'
+        id: number
+        routerIndex: number | undefined
+        poppedSince: boolean
+      }
+    | { history: 'replace' }
+  )
 
 const pendingNavigation = globalSingleton('pending-navigation', () => ({
   current: null as PendingNavigation | null,
@@ -58,9 +64,7 @@ export function markPendingReplace(url: URL): void {
   pendingNavigation.current = {
     history: 'replace',
     href: url.href,
-    currentHref: url.href,
-    routerIndex: history.state?.idx,
-    poppedSince: false
+    currentHref: url.href
   }
 }
 
@@ -92,10 +96,6 @@ export function hasPendingPush(): boolean {
   return pending?.history === 'push' && !pending.poppedSince
 }
 
-export function hasPendingReplace(): boolean {
-  return pendingNavigation.current?.history === 'replace'
-}
-
 function clearPendingNavigation(): void {
   pendingNavigation.current = null
 }
@@ -124,6 +124,16 @@ function handlePopOnPendingNavigation(): void {
   pending.poppedSince = true
 }
 
+function retargetPendingCommit(
+  pending: PendingNavigationBase,
+  url: string | URL
+): string {
+  const href = new URL(url, location.href).href
+  return withoutEmptyFragment(href) === withoutEmptyFragment(pending.href)
+    ? pending.currentHref
+    : href
+}
+
 function pendingPushCommitUrl(url: string | URL): string | null {
   const pending = pendingNavigation.current
   if (
@@ -133,19 +143,14 @@ function pendingPushCommitUrl(url: string | URL): string | null {
   ) {
     return null
   }
-  const href = new URL(url, location.href).href
-  return withoutEmptyFragment(href) === withoutEmptyFragment(pending.href)
-    ? pending.currentHref
-    : href
+  return retargetPendingCommit(pending, url)
 }
 
 function pendingReplaceCommit(url: string | URL): string | URL {
   const pending = pendingNavigation.current
-  if (pending?.history !== 'replace') {
-    return url
-  }
-  const href = new URL(url, location.href).href
-  return href === pending.href ? pending.currentHref : url
+  return pending?.history === 'replace'
+    ? retargetPendingCommit(pending, url)
+    : url
 }
 
 // React Router reads the optimistic entry's idx into its private index before

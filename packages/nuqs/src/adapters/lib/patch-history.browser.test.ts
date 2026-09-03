@@ -2,7 +2,6 @@ import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createEmitter } from '../../lib/emitter'
 import {
   hasPendingPush,
-  hasPendingReplace,
   historyUpdateMarker,
   markPendingPush,
   markPendingReplace,
@@ -500,7 +499,6 @@ describe('patchHistory: pending navigation', () => {
       '',
       new URL('?a=1&shallow=pass', location.href).href
     )
-    expect(hasPendingReplace()).toBe(false)
   })
 
   it('keeps a shallow push when a pending replace commits', () => {
@@ -514,7 +512,6 @@ describe('patchHistory: pending navigation', () => {
       '',
       new URL('?a=1&shallow=pass', location.href).href
     )
-    expect(hasPendingReplace()).toBe(false)
   })
 
   it('preserves an unrelated replacement while a replace is pending', () => {
@@ -526,9 +523,11 @@ describe('patchHistory: pending navigation', () => {
     expect(replaceState).toHaveBeenCalledExactlyOnceWith(
       { custom: true },
       '',
-      '?third-party=pass'
+      new URL('?third-party=pass', location.href).href
     )
-    expect(hasPendingReplace()).toBe(false)
+    replaceState.mockClear()
+    routerReplace('?a=1')
+    expect(replaceState).toHaveBeenCalledExactlyOnceWith({ idx: 1 }, '', '?a=1')
   })
 
   it('clears a pending replace when a pop supersedes it', () => {
@@ -536,13 +535,8 @@ describe('patchHistory: pending navigation', () => {
     markPendingReplace(new URL('?a=1', location.href))
     history.pushState({ idx: 5 }, historyUpdateMarker, '?a=1&b=1')
     window.dispatchEvent(new PopStateEvent('popstate'))
-    expect(hasPendingReplace()).toBe(false)
     replaceState.mockClear()
-    routerReplace('?next=1')
-    expect(replaceState).toHaveBeenCalledExactlyOnceWith(
-      { idx: 1 },
-      '',
-      '?next=1'
-    )
+    routerReplace('?a=1')
+    expect(replaceState).toHaveBeenCalledExactlyOnceWith({ idx: 1 }, '', '?a=1')
   })
 })
