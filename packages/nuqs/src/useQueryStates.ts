@@ -1,20 +1,27 @@
-import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react'
+import {
+  useCallback,
+  useEffect,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore
+} from 'react'
 import { useAdapterContext } from './adapters/lib/context'
 import type { Nullable, Options, UrlKeys } from './defs'
 import { compareQuery, isEqual } from './lib/compare'
 import { debug } from './lib/debug'
+import { parseWithCache } from './lib/parse-cache'
 import {
   getParseCacheVersion,
-  parseWithCache,
   retainParseCache
-} from './lib/parse-cache'
+} from './lib/parse-cache.client'
 import { debounceController } from './lib/queues/debounce'
 import { defaultRateLimit } from './lib/queues/rate-limiting'
 import {
   globalThrottleQueue,
   type UpdateQueuePushArgs
 } from './lib/queues/throttle'
-import { useSyncExternalStores } from './lib/queues/useSyncExternalStores'
 import { isAbsentFromUrl, type Query } from './lib/search-params'
 import { getOwn, getUrlKey } from './lib/url-keys'
 import { type GenericParser } from './parsers'
@@ -64,20 +71,6 @@ const defaultUrlKeys = {}
 // Defaults may not be JSON-serializable and are compared with parser eq below.
 const omitDefaultValue = (key: string, value: unknown) =>
   key === 'defaultValue' ? undefined : value
-
-// Hoisted for referential stability: subscriptions only churn when the
-// watched keys change, not on every render.
-const subscribeToOverlay = (
-  key: string,
-  callback: () => void
-): (() => void) => {
-  retainParseCache(key, 1)
-  const unsubscribe = debounceController.throttleQueue.sync.on(key, callback)
-  return () => {
-    retainParseCache(key, -1)
-    unsubscribe()
-  }
-}
 
 /**
  * Synchronise multiple query string arguments to React state in Next.js
@@ -157,16 +150,9 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
   // the same pathname, so it still reconciles.
   const committedPathnameRef = useRef<string | null>(null)
   const detachedRef = useRef(false)
-  const isMultiUrlKey = useMemo(
-    () =>
-      Object.fromEntries(
-        Object.entries(resolvedUrlKeys).map(([stateKey, urlKey]) => [
-          urlKey,
-          keyMap[stateKey]?.type === 'multi'
-        ])
-      ),
-    [resolvedUrlKeys]
-  )
+  // The cache stores the last record and the string used to build it.
+  // Equal raw values return the same record object.
+  const rawValuesRef = useRef<null | [string, Record<string, RawValue>]>(null)
   // The raw optimistic value and parse-cache version for a url key. The query
   // comes from the global pending updates overlay (throttle & debounce queues),
   // falling back to the adapter's committed search params. Reading the committed
@@ -175,28 +161,51 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
   // its effects — and thus the overlay subscription — were detached while hidden
   // and missed updates (#1444). The cache version makes a same-query write with
   // a new value identity observable to sibling hooks.
-  const getRawValue = useCallback(
-    (urlKey: string): RawValue => {
+  const readRawValues = useCallback((): Record<string, RawValue> => {
+    const rawValues: Record<string, RawValue> = {}
+    for (const [stateKey, urlKey] of Object.entries(resolvedUrlKeys)) {
       const queued = debounceController.getQueuedQuery(urlKey)
-      const query =
+      rawValues[urlKey] = [
         queued !== undefined
           ? queued
-          : getOwn(isMultiUrlKey, urlKey)
+          : getOwn(stableKeyMap, stateKey)?.type === 'multi'
             ? initialSearchParams.getAll(urlKey)
-            : initialSearchParams.get(urlKey)
-      return [query, getParseCacheVersion(urlKey)]
+            : initialSearchParams.get(urlKey),
+        getParseCacheVersion(urlKey)
+      ]
+    }
+    const cacheKey = JSON.stringify(rawValues)
+    if (rawValuesRef.current?.[0] !== cacheKey) {
+      rawValuesRef.current = [cacheKey, rawValues]
+    }
+    return rawValuesRef.current[1]
+  }, [resolvedUrlKeys, stableKeyMap, initialSearchParams])
+  const subscribeToOverlay = useCallback(
+    (callback: () => void) => {
+      const unsubscribes = urlKeyList.map(urlKey => {
+        retainParseCache(urlKey, 1)
+        const unsubscribe = debounceController.throttleQueue.sync.on(
+          urlKey,
+          callback
+        )
+        return () => {
+          retainParseCache(urlKey, -1)
+          unsubscribe()
+        }
+      })
+      return () => unsubscribes.forEach(unsubscribe => unsubscribe())
     },
-    [initialSearchParams, isMultiUrlKey]
+    [urlKeyList.join(',')]
   )
   // Referentially stable while the raw queries and cache versions of the watched
   // keys are unchanged, so identity comparison detects URL source changes and
   // same-query identity publications. Internal (optimistic) updates also change
   // this identity, but the writer records the tuple in queryRef before the
   // notification renders, so it cache-hits and keeps the exact written value.
-  const rawValues = useSyncExternalStores(
-    urlKeyList,
+  const rawValues = useSyncExternalStore(
     subscribeToOverlay,
-    getRawValue
+    readRawValues,
+    readRawValues
   )
   const [internalState, setInternalState] = useState<V>(
     () => parseMap(keyMap, resolvedUrlKeys, rawValues)[0]
