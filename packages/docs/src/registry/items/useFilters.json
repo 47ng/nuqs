@@ -1,0 +1,14 @@
+{
+  "type": "registry:item",
+  "name": "useFilters",
+  "title": "Filters Hook",
+  "description": "Type-safe multi-filter state management with URL synchronization. Uses nuqs parsers for strong typing and validation.",
+  "dependencies": ["nuqs"],
+  "files": [
+    {
+      "type": "registry:file",
+      "path": "https://raw.githubusercontent.com/iHiteshAgrawal/nuqs-presets/a230a749daab2327dae9907f845b445a0653dc04/registry/default/useFilters.ts",
+      "target": "~/hooks/nuqs-presets/useFilters.ts"
+    }
+  ]
+}
