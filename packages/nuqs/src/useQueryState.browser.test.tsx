@@ -615,8 +615,9 @@ describe('useQueryState: multi-parsers', () => {
  * alternated instead of settling.
  *
  * The sandwich is deterministic, not raced:
- *   1. `startTransition(() => setTime('B'))` — the cross-hook emitter runs
- *      synchronously, so nuqs's state update lands inside the transition.
+ *   1. `startTransition(() => setTime('B'))` — the setter calls
+ *      `setInternalState` synchronously, so nuqs's state update lands inside
+ *      the transition.
  *   2. a click dispatched synchronously right after — discrete, so React
  *      flushes it before the transition commits.
  *   3. the probe records the value each render was handed.
@@ -668,8 +669,8 @@ function Probe({
 }) {
   const [time, setTime] = useQueryState(
     'time',
-    // Minimise delayed URL work; the synchronous emitter above determines the
-    // state update's lane, not the throttled queue flush.
+    // Minimise delayed URL work; the setter's synchronous `setInternalState`
+    // determines the state update's lane, not the throttled queue flush.
     parseAsString.withOptions({ limitUrlUpdates: throttle(0) })
   )
   const [, setMeasured] = useState<string | null>(null)

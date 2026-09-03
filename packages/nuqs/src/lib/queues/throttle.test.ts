@@ -12,7 +12,36 @@ function createMockAdapter(): UpdateQueueAdapterContext {
   }
 }
 
+describe('throttle: shared rate-limit budget', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
+  it('shares the last flush time through the history slot', () => {
+    vi.stubGlobal('history', {})
+    const first = new ThrottledQueue()
+    const second = new ThrottledQueue()
+
+    first.lastFlushedAt = 12_345
+
+    expect(history.nuqs).toEqual({ adapters: [], lastFlushedAt: 12_345 })
+    expect(second.lastFlushedAt).toBe(12_345)
+  })
+})
+
 describe('throttle: ThrottleQueue value queueing', () => {
+  it('returns the current snapshot when no flush is pending', async () => {
+    const queue = new ThrottledQueue()
+    const adapter = createMockAdapter()
+    const snapshot = new URLSearchParams('?committed=value')
+    adapter.getSearchParamsSnapshot = vi.fn(() => snapshot)
+
+    const pending = queue.getPendingPromise(adapter)
+
+    expect(pending).toBeInstanceOf(Promise)
+    await expect(pending).resolves.toBe(snapshot)
+  })
+
   it('should enqueue key & values', () => {
     const queue = new ThrottledQueue()
     queue.push({ key: 'key', query: 'value', options: {} })
@@ -231,6 +260,165 @@ describe('throttle: Abort & reset logic', () => {
     vi.runAllTimers()
     await promise
     expect(queue.abort()).toEqual([])
+  })
+})
+
+describe('throttle: overlay sync notifications', () => {
+  beforeEach(() => {
+    vi.useFakeTimers()
+  })
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+  it('notifies subscribers when pushing an update', () => {
+    const queue = new ThrottledQueue()
+    const spy = vi.fn()
+    queue.sync.on('key', spy)
+    queue.push({ key: 'key', query: 'value', options: {} })
+    expect(spy).toHaveBeenCalledOnce()
+  })
+  it('notifies subscribers of each cleared key when resetting', () => {
+    const queue = new ThrottledQueue()
+    const spyA = vi.fn()
+    const spyB = vi.fn()
+    queue.push({ key: 'a', query: 'a', options: {} })
+    queue.push({ key: 'b', query: 'b', options: {} })
+    queue.sync.on('a', spyA)
+    queue.sync.on('b', spyB)
+    queue.reset()
+    expect(spyA).toHaveBeenCalledOnce()
+    expect(spyB).toHaveBeenCalledOnce()
+  })
+  it('does not notify when resetting with notify: false', () => {
+    const queue = new ThrottledQueue()
+    const spy = vi.fn()
+    queue.push({ key: 'a', query: 'a', options: {} })
+    queue.sync.on('a', spy)
+    queue.reset({ notify: false })
+    expect(spy).not.toHaveBeenCalled()
+  })
+  it('notifies subscribers of cleared keys when aborting', () => {
+    const queue = new ThrottledQueue()
+    const spy = vi.fn()
+    queue.push({ key: 'a', query: 'a', options: {} })
+    queue.sync.on('a', spy)
+    queue.abort()
+    expect(spy).toHaveBeenCalledOnce()
+  })
+  it('does not notify when clearing the queue after a flush', async () => {
+    const queue = new ThrottledQueue()
+    const mockAdapter = createMockAdapter()
+    queue.push({ key: 'a', query: 'a', options: {} })
+    const spy = vi.fn()
+    queue.sync.on('a', spy)
+    const promise = queue.flush(mockAdapter)
+    vi.runAllTimers()
+    await promise
+    expect(queue.updateMap.size).toBe(0)
+    expect(spy).not.toHaveBeenCalled()
+  })
+  it('notifies the failed keys when the URL update throws', async () => {
+    const consoleErrorSpy = vi
+      .spyOn(console, 'error')
+      .mockImplementation(() => {})
+    const queue = new ThrottledQueue()
+    queue.push({ key: 'a', query: 'a', options: {} })
+    const spy = vi.fn()
+    queue.sync.on('a', spy)
+    const promise = queue.flush({
+      getSearchParamsSnapshot() {
+        return new URLSearchParams()
+      },
+      updateUrl: vi.fn().mockImplementation(() => {
+        throw new Error('rate limited')
+      })
+    })
+    vi.runAllTimers()
+    await expect(promise).rejects.toEqual(new URLSearchParams('?a=a'))
+    // The overlay was cleared but the URL never changed: subscribers must
+    // be notified to converge back to the committed search params.
+    expect(spy).toHaveBeenCalledOnce()
+    expect(consoleErrorSpy).toHaveBeenCalledOnce()
+  })
+  it('clears failed overlay values when the adapter defers normal reset', async () => {
+    const consoleErrorSpy = vi
+      .spyOn(console, 'error')
+      .mockImplementation(() => {})
+    const queue = new ThrottledQueue()
+    queue.push({ key: 'a', query: 'a', options: {} })
+    const spy = vi.fn()
+    queue.sync.on('a', spy)
+    const promise = queue.flush({
+      autoResetQueueOnUpdate: false,
+      getSearchParamsSnapshot() {
+        return new URLSearchParams()
+      },
+      updateUrl: vi.fn().mockImplementation(() => {
+        throw new Error('rate limited')
+      })
+    })
+    vi.runAllTimers()
+    await expect(promise).rejects.toEqual(new URLSearchParams('?a=a'))
+    expect(queue.getQueuedQuery('a')).toBeUndefined()
+    expect(spy).toHaveBeenCalledOnce()
+    expect(consoleErrorSpy).toHaveBeenCalledOnce()
+  })
+  it('notifies the failed keys when processUrlSearchParams throws', async () => {
+    const consoleErrorSpy = vi
+      .spyOn(console, 'error')
+      .mockImplementation(() => {})
+    const queue = new ThrottledQueue()
+    queue.push({ key: 'a', query: 'a', options: {} })
+    const spy = vi.fn()
+    queue.sync.on('a', spy)
+    const promise = queue.flush(createMockAdapter(), () => {
+      throw new Error('middleware error')
+    })
+    vi.runAllTimers()
+    await expect(promise).rejects.toEqual(new URLSearchParams('?a=a'))
+    expect(queue.getQueuedQuery('a')).toBeUndefined()
+    expect(spy).toHaveBeenCalledOnce()
+    expect(consoleErrorSpy).toHaveBeenCalledOnce()
+  })
+  it('clears the failed overlay values when processUrlSearchParams throws and the adapter defers normal reset', async () => {
+    const consoleErrorSpy = vi
+      .spyOn(console, 'error')
+      .mockImplementation(() => {})
+    const queue = new ThrottledQueue()
+    queue.push({ key: 'a', query: 'a', options: {} })
+    const spy = vi.fn()
+    queue.sync.on('a', spy)
+    const promise = queue.flush(
+      { ...createMockAdapter(), autoResetQueueOnUpdate: false },
+      () => {
+        throw new Error('middleware error')
+      }
+    )
+    vi.runAllTimers()
+    await expect(promise).rejects.toEqual(new URLSearchParams('?a=a'))
+    expect(queue.getQueuedQuery('a')).toBeUndefined()
+    expect(spy).toHaveBeenCalledOnce()
+    expect(consoleErrorSpy).toHaveBeenCalledOnce()
+  })
+  it('does not notify previously-flushed keys when resetting on the next push', async () => {
+    const queue = new ThrottledQueue()
+    const mockAdapter: UpdateQueueAdapterContext = {
+      ...createMockAdapter(),
+      autoResetQueueOnUpdate: false
+    }
+    queue.push({ key: 'a', query: 'a', options: {} })
+    const promise = queue.flush(mockAdapter)
+    vi.runAllTimers()
+    await promise
+    // 'a' survived the flush (committed view may lag behind)
+    expect(queue.updateMap.size).toBe(1)
+    const spyA = vi.fn()
+    const spyB = vi.fn()
+    queue.sync.on('a', spyA)
+    queue.sync.on('b', spyB)
+    queue.push({ key: 'b', query: 'b', options: {} })
+    expect(spyA).not.toHaveBeenCalled()
+    expect(spyB).toHaveBeenCalledOnce()
   })
 })
 

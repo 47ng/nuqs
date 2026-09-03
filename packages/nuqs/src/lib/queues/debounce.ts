@@ -1,5 +1,4 @@
 import { debug } from '../debug'
-import { createEmitter, type Emitter } from '../emitter'
 import { globalSingleton } from '../global-singleton'
 import type { Query } from '../search-params'
 import { timeout } from '../timeout'
@@ -11,7 +10,6 @@ import {
   type UpdateQueueAdapterContext,
   type UpdateQueuePushArgs
 } from './throttle'
-import { useSyncExternalStores } from './useSyncExternalStores'
 
 export class DebouncedPromiseQueue<ValueType, OutputType> {
   resolvers: Resolvers<OutputType> = withResolvers<OutputType>()
@@ -68,7 +66,6 @@ type DebouncedUpdateQueue = DebouncedPromiseQueue<
 export class DebounceController {
   throttleQueue: ThrottledQueue
   queues: Map<string, DebouncedUpdateQueue> = new Map()
-  queuedQuerySync: Emitter<Record<string, undefined>> = createEmitter()
 
   constructor(throttleQueue: ThrottledQueue = new ThrottledQueue()) {
     this.throttleQueue = throttleQueue
@@ -104,11 +101,11 @@ export class DebounceController {
             debug(16, key)
             this.queues.delete(key)
           }
-          this.queuedQuerySync.emit(key)
+          this.throttleQueue.sync.emit(key)
         })
     }
     const promise = queue.push(update, timeMs, flush)
-    this.queuedQuerySync.emit(key)
+    this.throttleQueue.sync.emit(key)
     return promise
   }
 
@@ -122,7 +119,7 @@ export class DebounceController {
     debug(18, key, queue.queuedValue?.query)
     this.queues.delete(key)
     queue.abort() // Don't run to completion
-    this.queuedQuerySync.emit(key)
+    this.throttleQueue.sync.emit(key)
     return promise => {
       promise.then(queue.resolvers.resolve, queue.resolvers.reject)
       // Don't chain: keep reference equality
@@ -136,7 +133,7 @@ export class DebounceController {
       queue.abort()
       // todo: Better abort handling
       queue.resolvers.resolve(new URLSearchParams()) // Don't leave the Promise pending
-      this.queuedQuerySync.emit(key)
+      this.throttleQueue.sync.emit(key)
     }
     this.queues.clear()
   }
@@ -157,16 +154,3 @@ export const debounceController: DebounceController = globalSingleton(
   'debounce-controller',
   () => new DebounceController(globalThrottleQueue)
 )
-
-// Module-scoped rather than a DebounceController method: the controller is
-// shared across duplicate library copies, and each copy must compose the
-// shared data with hooks from its own React instance.
-export function useQueuedQueries(
-  keys: string[]
-): Record<string, Query | null | undefined> {
-  return useSyncExternalStores(
-    keys,
-    (key, callback) => debounceController.queuedQuerySync.on(key, callback),
-    (key: string) => debounceController.getQueuedQuery(key)
-  )
-}

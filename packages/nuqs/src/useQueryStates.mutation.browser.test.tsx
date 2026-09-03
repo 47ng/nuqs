@@ -13,9 +13,8 @@ import { cleanup, render } from 'vitest-browser-react'
 import { page } from 'vitest/browser'
 import { context } from './adapters/lib/context'
 import type { AdapterInterface } from './adapters/lib/defs'
-import { NuqsTestingAdapter } from './adapters/testing'
+import { throttle } from './lib/queues/rate-limiting'
 import { resetQueues } from './lib/queues/reset'
-import { emitter } from './lib/sync'
 import { parseAsString } from './parsers'
 import { useQueryStates } from './useQueryStates'
 
@@ -158,9 +157,9 @@ describe('useQueryStates: mutation qualification', () => {
     }
 
     function Probe() {
-      const [state] = useQueryStates({
-        a: parseAsString,
-        b: parseAsString
+      const [state, setState] = useQueryStates({
+        a: parseAsString.withOptions({ limitUrlUpdates: throttle(Infinity) }),
+        b: parseAsString.withOptions({ limitUrlUpdates: throttle(Infinity) })
       })
       useLayoutEffect(() => {
         commits.push(state)
@@ -169,19 +168,15 @@ describe('useQueryStates: mutation qualification', () => {
         <>
           <button
             data-testid="transition-a"
-            onClick={() =>
-              startTransition(() =>
-                emitter.emit('a', { state: '2', query: '2' })
-              )
-            }
+            onClick={() => startTransition(() => void setState({ a: '2' }))}
           />
           <button
             data-testid="same-b"
-            onClick={() => emitter.emit('b', { state: '1', query: '1' })}
+            onClick={() => void setState({ b: '1' })}
           />
           <button
             data-testid="change-b"
-            onClick={() => emitter.emit('b', { state: '2', query: '2' })}
+            onClick={() => void setState({ b: '2' })}
           />
           <output data-testid="state">{`${state.a},${state.b}`}</output>
           <Suspense fallback={null}>
@@ -192,9 +187,9 @@ describe('useQueryStates: mutation qualification', () => {
     }
 
     await render(
-      <NuqsTestingAdapter searchParams="?a=1&b=1">
+      <ControlledAdapter pathname={undefined} search="?a=1&b=1">
         <Probe />
-      </NuqsTestingAdapter>
+      </ControlledAdapter>
     )
     const initialState = commits.at(-1)
     expect(initialState).toEqual({ a: '1', b: '1' })

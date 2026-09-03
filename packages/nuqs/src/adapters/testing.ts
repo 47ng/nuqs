@@ -7,6 +7,7 @@ import {
   type ReactElement,
   type ReactNode
 } from 'react'
+import { clearParseCache } from '../lib/parse-cache'
 import { resetQueues } from '../lib/queues/reset'
 import { renderQueryString } from './custom'
 import { context, type AdapterProps } from './lib/context'
@@ -40,10 +41,11 @@ type TestingAdapterProps = Pick<AdapterInterface, 'autoResetQueueOnUpdate'> & {
   rateLimitFactor?: number
 
   /**
-   * Internal: Whether to reset the url update queue on mount.
+   * Internal: Whether to reset the url update queue and the shared
+   * parse cache on mount.
    *
-   * Since the update queue is a shared global, each test clears
-   * it on mount to avoid interference between tests.
+   * Since both are shared globals, each test clears them
+   * on mount to avoid interference between tests.
    *
    * @default true
    */
@@ -101,6 +103,7 @@ export function NuqsTestingAdapter({
     isFirstRender.current = false
     if (resetUrlUpdateQueueOnMount) {
       resetQueues()
+      clearParseCache()
     }
   }
   const [searchParams, setSearchParams] = useState(

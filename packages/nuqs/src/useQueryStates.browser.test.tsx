@@ -28,6 +28,7 @@ import {
   createParser,
   parseAsArrayOf,
   parseAsInteger,
+  parseAsIsoDateTime,
   parseAsJson,
   parseAsNativeArrayOf,
   parseAsString
@@ -327,6 +328,28 @@ describe('useQueryStates: referential equality', () => {
     })
   }
 
+  it('adopts a newly defined default even when parser equality returns true', async () => {
+    const parser = createParser({
+      parse: value => value,
+      serialize: value => value,
+      eq: () => true
+    })
+    const useTestHook = (
+      { withDefault }: { withDefault: boolean } = { withDefault: false }
+    ) =>
+      useQueryStates({
+        value: withDefault ? parser.withDefault('default') : parser
+      })
+    const { result, rerender } = await renderHook(useTestHook, {
+      initialProps: { withDefault: false },
+      wrapper: withNuqsTestingAdapter()
+    })
+
+    expect(result.current[0].value).toBeNull()
+    await rerender({ withDefault: true })
+    expect(result.current[0].value).toBe('default')
+  })
+
   it('should have referential equality on default values', async () => {
     const { result } = await renderHook(useTestHookWithDefaults, {
       wrapper: withNuqsTestingAdapter()
@@ -516,6 +539,189 @@ describe('useQueryStates: referential equality', () => {
     await rerender({ defaultValue: 'latest' })
     expect(result.current.withDefault[0].test).toBe('latest')
   })
+
+  it('should use the latest default when the same hook clears the value', async () => {
+    const useTestHook = (
+      { defaultValue }: { defaultValue: string } = {
+        defaultValue: 'initial'
+      }
+    ) =>
+      useQueryStates({
+        test: parseAsString.withDefault(defaultValue)
+      })
+    const { result, rerender, act } = await renderHook(useTestHook, {
+      initialProps: { defaultValue: 'initial' },
+      wrapper: withNuqsTestingAdapter()
+    })
+
+    await act(() => result.current[1]({ test: 'value' }))
+    expect(result.current[0].test).toBe('value')
+    await act(() => result.current[1]({ test: null }))
+    expect(result.current[0].test).toBe('initial')
+
+    await rerender({ defaultValue: 'latest' })
+    expect(result.current[0].test).toBe('latest')
+  })
+})
+
+describe('useQueryStates: shared parse cache', () => {
+  it('shares parsed values between hooks bound to the same key and parser', async () => {
+    const objParser = parseAsJson<{ v: number }>(x => x as { v: number })
+    const { result } = await renderHook(
+      () => ({
+        a: useQueryStates({ obj: objParser }),
+        b: useQueryStates({ obj: objParser })
+      }),
+      {
+        wrapper: withNuqsTestingAdapter({ searchParams: '?obj={"v":1}' })
+      }
+    )
+    expect(result.current.a[0].obj).toEqual({ v: 1 })
+    expect(result.current.b[0].obj).toBe(result.current.a[0].obj)
+  })
+})
+
+describe('useQueryStates: optimistic adoption', () => {
+  it('keeps the exact value identity for the writer (non-identity parse round-trip)', async () => {
+    const objParser = parseAsJson<{ v: number }>(x => x as { v: number })
+    const { result, act } = await renderHook(
+      () => useQueryStates({ obj: objParser }),
+      { wrapper: withNuqsTestingAdapter() }
+    )
+    const written = { v: 42 }
+    await act(() => result.current[1]({ obj: written }))
+    expect(result.current[0].obj).toBe(written)
+  })
+  it("re-parses the raw query with each hook's own parser (no typed-value adoption)", async () => {
+    const { result, act } = await renderHook(
+      () => ({
+        str: useQueryStates({ id: parseAsString }),
+        num: useQueryStates({ id: parseAsInteger })
+      }),
+      { wrapper: withNuqsTestingAdapter() }
+    )
+    await act(() => result.current.str[1]({ id: '42' }))
+    expect(result.current.str[0].id).toBe('42')
+    expect(result.current.num[0].id).toBe(42)
+  })
+})
+
+describe('useQueryStates: debounce(Infinity)', () => {
+  it('syncs the value to other hooks on the key and defers the URL update', async () => {
+    const onUrlUpdate = vi.fn<OnUrlUpdateFunction>()
+    const { result, act } = await renderHook(
+      () => ({
+        a: useQueryStates({ test: parseAsString }),
+        b: useQueryStates({ test: parseAsString })
+      }),
+      { wrapper: withNuqsTestingAdapter({ onUrlUpdate }) }
+    )
+    await act(async () => {
+      result.current.a[1](
+        { test: 'deferred' },
+        { limitUrlUpdates: debounce(Infinity) }
+      )
+      await waitForNextTick()
+    })
+    expect(result.current.a[0].test).toBe('deferred')
+    expect(result.current.b[0].test).toBe('deferred')
+    expect(onUrlUpdate).not.toHaveBeenCalled()
+  })
+
+  it('lets a hook mounted after a write use a deferred value', async () => {
+    const onUrlUpdate = vi.fn<OnUrlUpdateFunction>()
+    function LateHook() {
+      const [{ test }] = useQueryStates({ test: parseAsString })
+      return <output data-testid="late">{test}</output>
+    }
+    function TestComponent() {
+      const [mounted, setMounted] = useState(false)
+      const [, setValues] = useQueryStates({
+        test: parseAsString,
+        other: parseAsString
+      })
+      return (
+        <>
+          <button
+            onClick={() =>
+              void setValues(
+                { test: 'deferred' },
+                { limitUrlUpdates: debounce(Infinity) }
+              )
+            }
+          >
+            Defer
+          </button>
+          <button onClick={() => setMounted(true)}>Mount</button>
+          <button onClick={() => void setValues({ other: 'flush' })}>
+            Flush
+          </button>
+          {mounted && <LateHook />}
+        </>
+      )
+    }
+
+    const user = userEvent.setup()
+    render(
+      <NuqsTestingAdapter onUrlUpdate={onUrlUpdate}>
+        <TestComponent />
+      </NuqsTestingAdapter>
+    )
+    await user.click(page.getByRole('button', { name: 'Defer' }))
+    await user.click(page.getByRole('button', { name: 'Mount' }))
+
+    await expect.element(page.getByTestId('late')).toHaveTextContent('deferred')
+    expect(onUrlUpdate).not.toHaveBeenCalled()
+
+    await user.click(page.getByRole('button', { name: 'Flush' }))
+
+    expect(onUrlUpdate).toHaveBeenCalledOnce()
+    expect(onUrlUpdate.mock.calls[0]![0].queryString).toBe(
+      '?test=deferred&other=flush'
+    )
+    await expect.element(page.getByTestId('late')).toHaveTextContent('deferred')
+  })
+})
+
+describe('useQueryStates: failed URL updates', () => {
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
+  it.each([true, false])(
+    'converges every hook back to the committed query when the URL update throws (autoResetQueueOnUpdate: %s)',
+    async autoResetQueueOnUpdate => {
+      const consoleErrorSpy = vi
+        .spyOn(console, 'error')
+        .mockImplementation(() => {})
+      const { result, act } = await renderHook(
+        () => ({
+          a: useQueryStates({ test: parseAsString }),
+          b: useQueryStates({ test: parseAsString })
+        }),
+        {
+          wrapper: withNuqsTestingAdapter({
+            searchParams: '?test=committed',
+            autoResetQueueOnUpdate,
+            onUrlUpdate() {
+              throw new Error('rate limited')
+            }
+          })
+        }
+      )
+      expect(result.current.a[0].test).toBe('committed')
+
+      await act(async () => {
+        await expect(
+          result.current.a[1]({ test: 'optimistic' })
+        ).rejects.toBeInstanceOf(URLSearchParams)
+      })
+
+      expect(result.current.a[0].test).toBe('committed')
+      expect(result.current.b[0].test).toBe('committed')
+      expect(consoleErrorSpy).toHaveBeenCalledOnce()
+    }
+  )
 })
 
 describe('useQueryStates: rendering & bail-out', () => {
@@ -1478,6 +1684,20 @@ describe('useQueryStates: adapter defaults', () => {
     expect(onUrlUpdate).toHaveBeenCalledOnce()
     expect(onUrlUpdate.mock.calls[0]![0].options.shallow).toBe(false)
   })
+  it('should let call-level `shallow` override parser options', async () => {
+    const onUrlUpdate = vi.fn<OnUrlUpdateFunction>()
+    const useTestHook = () =>
+      useQueryStates({
+        test: parseAsString.withOptions({ shallow: false })
+      })
+    const { result, act } = await renderHook(useTestHook, {
+      wrapper: withNuqsTestingAdapter({ onUrlUpdate })
+    })
+
+    await act(() => result.current[1]({ test: 'update' }, { shallow: true }))
+    expect(onUrlUpdate).toHaveBeenCalledOnce()
+    expect(onUrlUpdate.mock.calls[0]![0].options.shallow).toBe(true)
+  })
   it('should use adapter default value for `scroll` when provided', async () => {
     const onUrlUpdate = vi.fn<OnUrlUpdateFunction>()
     const useTestHook = () => useQueryStates({ test: parseAsString })
@@ -1811,6 +2031,79 @@ describe('useQueryStates: discarded renders', () => {
     await expect
       .element(page.getByTestId('value'))
       .toHaveTextContent('incoming')
+  })
+
+  it('recovers after an external navigation clears a pending overlay write', async () => {
+    const hold = new Promise<never>(() => {})
+
+    function Value() {
+      const [{ test, deferred }, setValues] = useQueryStates({
+        test: parseAsString,
+        deferred: parseAsString
+      })
+      return (
+        <>
+          <button
+            onClick={() =>
+              void setValues(
+                { deferred: 'pending' },
+                { limitUrlUpdates: debounce(Infinity) }
+              )
+            }
+          >
+            Defer
+          </button>
+          <div data-testid="value">{String(test)}</div>
+          <div data-testid="deferred">{String(deferred)}</div>
+        </>
+      )
+    }
+
+    function SuspendOnIncomingParams() {
+      const searchParams = useOptimisticSearchParams()
+      if (searchParams.get('test') === 'incoming') {
+        throw hold
+      }
+      return null
+    }
+
+    function App() {
+      const [count, setCount] = useState(0)
+      return (
+        <NuqsAdapter>
+          <button onClick={() => setCount(count => count + 1)}>
+            Count ({count})
+          </button>
+          <Value />
+          <Suspense fallback={null}>
+            <SuspendOnIncomingParams />
+          </Suspense>
+        </NuqsAdapter>
+      )
+    }
+
+    history.replaceState(null, '', '/page?test=old')
+    render(<App />)
+    await expect.element(page.getByTestId('value')).toHaveTextContent('old')
+
+    const user = userEvent.setup()
+    await user.click(page.getByRole('button', { name: 'Defer' }))
+    await expect
+      .element(page.getByTestId('deferred'))
+      .toHaveTextContent('pending')
+
+    history.pushState(null, '', '/page?test=incoming')
+    await new Promise(resolve => setTimeout(resolve, 100))
+    history.pushState(null, '', '/elsewhere?test=incoming')
+
+    const count = page.getByRole('button', { name: /Count/ })
+    await user.click(count)
+    await expect.element(count).toHaveTextContent('Count (1)')
+
+    await expect
+      .element(page.getByTestId('value'), { timeout: 2000 })
+      .toHaveTextContent('incoming')
+    await expect.element(page.getByTestId('deferred')).toHaveTextContent('null')
   })
 })
 

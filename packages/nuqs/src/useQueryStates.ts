@@ -7,15 +7,15 @@ import {
 import type { Nullable, Options, UrlKeys } from './defs'
 import { compareQuery, isEqual } from './lib/compare'
 import { debug } from './lib/debug'
-import { debounceController, useQueuedQueries } from './lib/queues/debounce'
+import { parseWithCache } from './lib/parse-cache'
+import { debounceController } from './lib/queues/debounce'
 import { defaultRateLimit } from './lib/queues/rate-limiting'
 import {
   globalThrottleQueue,
   type UpdateQueuePushArgs
 } from './lib/queues/throttle'
-import { safeParse } from './lib/safe-parse'
+import { useSyncExternalStores } from './lib/queues/useSyncExternalStores'
 import { isAbsentFromUrl, type Query } from './lib/search-params'
-import { emitter, type CrossHookSyncPayload } from './lib/sync'
 import { getOwn, getUrlKey } from './lib/url-keys'
 import { type GenericParser } from './parsers'
 
@@ -63,6 +63,11 @@ const defaultUrlKeys = {}
 // Defaults may not be JSON-serializable and are compared with parser eq below.
 const omitDefaultValue = (key: string, value: unknown) =>
   key === 'defaultValue' ? undefined : value
+
+// Hoisted for referential stability: subscriptions only churn when the
+// watched keys change, not on every render.
+const subscribeToOverlay = (key: string, callback: () => void): (() => void) =>
+  debounceController.throttleQueue.sync.on(key, callback)
 
 /**
  * Synchronise multiple query string arguments to React state in Next.js
@@ -123,12 +128,12 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
       ),
     [stateKeys, JSON.stringify(urlKeys)]
   )
-  const urlKeyList = Object.values(resolvedUrlKeys)
+  const urlKeyList = useMemo(
+    () => Object.values(resolvedUrlKeys),
+    [resolvedUrlKeys]
+  )
   const adapter = useAdapter(urlKeyList)
   const initialSearchParams = adapter.searchParams
-  // Tracks the URL source (search params + queued queries) the internal state
-  // was last reconciled against during render. See the reconciliation block below.
-  const lastSyncKeyRef = useRef<string | null>(null)
   // The pathname this hook last reconciled against from a committed render
   // (set by the effect backstop below). The render-time reconcile is skipped when
   // the current pathname no longer matches it: that means the component is
@@ -142,49 +147,77 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
   // render and skip the reconcile (#1273). A genuine `<Activity>` reveal keeps
   // the same pathname, so it still reconciles.
   const committedPathnameRef = useRef<string | null>(null)
-  const queuedQueries = useQueuedQueries(urlKeyList)
-  // Seed the query cache from the same parse as the state, so the first
-  // render-time reconcile below hits the cache instead of setting state
-  // during render (one extra render on mount when the URL holds a value).
+  const detachedRef = useRef(false)
+  const isMultiUrlKey = useMemo(
+    () =>
+      Object.fromEntries(
+        Object.entries(resolvedUrlKeys).map(([stateKey, urlKey]) => [
+          urlKey,
+          getOwn(stableKeyMap, stateKey)?.type === 'multi'
+        ])
+      ),
+    [resolvedUrlKeys, stableKeyMap]
+  )
+  // The raw optimistic value for a url key: the global pending updates overlay
+  // (throttle & debounce queues) merged over the adapter's committed search
+  // params. Reading the committed value live in the snapshot (rather than from
+  // state synced by an effect) keeps the value fresh even on the first render
+  // after an `<Activity>` subtree is revealed: its effects — and thus the
+  // overlay subscription — were detached while hidden and missed updates (#1444).
+  const getRawValue = useCallback(
+    (urlKey: string): Query | null => {
+      const queued = debounceController.getQueuedQuery(urlKey)
+      if (queued !== undefined) {
+        return queued
+      }
+      return getOwn(isMultiUrlKey, urlKey)
+        ? initialSearchParams.getAll(urlKey)
+        : initialSearchParams.get(urlKey)
+    },
+    [initialSearchParams, isMultiUrlKey]
+  )
+  // Referentially stable while the raw values of the watched keys are
+  // unchanged, so identity comparison detects any URL source change,
+  // committed or overlay. Internal (optimistic) updates also change this
+  // identity, but the resulting reconcile is a no-op: the setter records the
+  // query in queryRef before the notification renders, so parseMap
+  // cache-hits and nothing is reverted.
+  const rawValues = useSyncExternalStores(
+    urlKeyList,
+    subscribeToOverlay,
+    getRawValue
+  )
+  // Seed the query cache from the same parse as the state, so the effect
+  // backstop below cache-hits instead of setting state after the first render.
   // The initializer returns the cache rather than writing it to a ref:
   // initializers must stay pure (for StrictMode compatibility).
   const [initial] = useState(() => {
     const cachedQuery: Record<string, Query | null> = {}
-    const [, state] = parseMap(
-      keyMap,
-      resolvedUrlKeys,
-      initialSearchParams,
-      queuedQueries,
-      cachedQuery
-    )
+    const [, state] = parseMap(keyMap, resolvedUrlKeys, rawValues, cachedQuery)
     return [state, cachedQuery] as const
   })
   const queryRef = useRef(initial[1])
+  // `lastSyncRef` stores the source that built the current state and the last
+  // reconciled `location.search`. The search starts empty because SSR cannot
+  // read `location`. The discarded-render branch below waits for an effect to
+  // record a pathname, so it never reads the empty seed.
+  const lastSyncRef = useRef<[Record<string, Query | null>, string]>([
+    rawValues,
+    ''
+  ])
   const [internalState, setInternalState] = useState<V>(initial[0])
 
   const stateRef = useRef(internalState)
-  // Tracks the latest state parsed from the URL. Matching identity marks the
-  // cache as URL-derived; optimistic state stays in React's update queue.
+  // Tracks the latest state adopted from a URL source. Optimistic updates only
+  // advance stateRef, so render-time recovery can preserve their React lane.
   const urlStateRef = useRef(internalState)
-
-  // Identifies the current URL source (resolved search params + queued queries).
-  // Mirrors the dependencies of the URL sync effect below so that render-time
-  // reconciliation reacts to the same external changes, and never to internal
-  // (optimistic) updates which don't immediately alter the URL source.
-  const getSearchParamsSyncKey = (searchParams: URLSearchParams) =>
-    JSON.stringify([
-      urlKeyList.map(key => [key, searchParams.getAll(key)]),
-      queuedQueries
-    ])
-  const searchParamsSyncKey = getSearchParamsSyncKey(initialSearchParams)
   // Adopts the current URL value into the internal state when it has changed.
   // Used both during render (below) and from the effect backstop further down.
   const reconcile = () => {
     const [hasChanged, state] = parseMap(
       keyMap,
       resolvedUrlKeys,
-      initialSearchParams,
-      queuedQueries,
+      rawValues,
       queryRef.current,
       stateRef.current
     )
@@ -194,151 +227,71 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
       urlStateRef.current = state
       setInternalState(state)
     }
-    return hasChanged
+    lastSyncRef.current = [rawValues, location.search]
   }
   // Reconcile during render, both on key-set changes (initialisation) and when
   // the URL source changes. The effect below does the same, but effects are
   // detached while a subtree is hidden under `<Activity>` and only re-run after
   // the first commit on reveal, so without this, that first render would paint
-  // the value captured while hidden (#1444). Gating on `searchParamsSyncKey`
-  // means we only adopt the URL when its source actually changed, never
-  // reverting an optimistic update not yet propagated to the adapter's params.
+  // the value captured while hidden (#1444). Gating on the `rawValues` identity
+  // means we only adopt the URL when its source actually changed.
   //
-  // The URL-change branch is further gated to renders happening on the pathname
-  // the hook last committed against: during a route transition the router can
-  // render an outgoing/incoming page against the other route's in-flight URL,
-  // and adopting it there produces cross-page renders React discards (#1293).
-  const keysChanged =
-    Object.keys(queryRef.current).join('&') !== urlKeyList.join('&')
-  // `committedPathnameRef` is only ever assigned from the client,
-  // so a null value covers both SSR and the first client render.
-  const onCommittedPathname =
-    committedPathnameRef.current === null ||
-    committedPathnameRef.current === (adapter.pathname ?? location.pathname)
-  if (keysChanged) {
-    lastSyncKeyRef.current = searchParamsSyncKey
-    reconcile()
-    queryRef.current = Object.fromEntries(
-      Object.entries(resolvedUrlKeys).map(([key, urlKey]) => [
-        urlKey,
-        keyMap[key]?.type === 'multi'
-          ? initialSearchParams.getAll(urlKey)
-          : initialSearchParams.get(urlKey)
-      ])
+  // Detached cross-route renders do nothing. A discarded render differs.
+  // The browser search still matches the last source we reconciled, so the
+  // render receives a stale source. We ignore it and restore the state React
+  // dropped.
+  // A pending overlay write is never stale. It intentionally runs ahead of the
+  // URL. Without this check, a hook that stays mounted across a path-only
+  // navigation would freeze. It changes neither the search nor the recorded
+  // pathname, so the effect below never runs.
+  const sourceChanged = lastSyncRef.current[0] !== rawValues
+  const isDetachedCrossRouteRender =
+    detachedRef.current &&
+    committedPathnameRef.current !== (adapter.pathname ?? location.pathname)
+  const isStaleSourceAfterDiscardedRender =
+    adapter.pathname === undefined &&
+    committedPathnameRef.current !== null &&
+    sourceChanged &&
+    lastSyncRef.current[1] === location.search &&
+    committedPathnameRef.current !== location.pathname &&
+    urlKeyList.every(
+      urlKey => debounceController.getQueuedQuery(urlKey) === undefined
     )
-  } else {
-    // Skipped on key-set changes: `stateRef` may still describe the previous
-    // key map, so restoring from it would bring back removed keys.
-    let didReconcileState = false
-    if (onCommittedPathname && lastSyncKeyRef.current !== searchParamsSyncKey) {
-      lastSyncKeyRef.current = searchParamsSyncKey
-      didReconcileState = reconcile()
-    }
-    if (
-      !didReconcileState &&
-      internalState !== stateRef.current &&
-      stateRef.current === urlStateRef.current
-    ) {
-      // Recover URL-derived state from a render React abandoned. Optimistic
-      // state is excluded above because React must preserve its update lane.
-      if (
-        onCommittedPathname ||
-        (adapter.pathname === undefined &&
-          lastSyncKeyRef.current ===
-            getSearchParamsSyncKey(new URLSearchParams(location.search)))
-      ) {
-        setInternalState(stateRef.current)
-      }
-    }
+  if (
+    !isStaleSourceAfterDiscardedRender &&
+    !isDetachedCrossRouteRender &&
+    sourceChanged
+  ) {
+    reconcile()
+  }
+  if (
+    (!isDetachedCrossRouteRender || isStaleSourceAfterDiscardedRender) &&
+    internalState !== stateRef.current &&
+    stateRef.current === urlStateRef.current
+  ) {
+    setInternalState(stateRef.current)
   }
 
   // Backstop for the render-time reconciliation above: covers external changes
   // landing in renders React discards before commit (e.g. interrupted
-  // transitions). Shares the `searchParamsSyncKey` dependency, so they can't
-  // drift. Also records the pathname of this committed reconciliation, which
+  // transitions). Shares the `rawValues` dependency, so they can't drift.
+  // Also records the pathname of this committed reconciliation, which
   // gates the render-time branch above (effects don't run while detached, so
   // this freezes at the pathname the hook was last attached on).
   // `adapter.pathname` is a dependency too: a same-search cross-route navigation
-  // leaves `searchParamsSyncKey` unchanged, so without it the recorded pathname
+  // leaves `rawValues` unchanged, so without it the recorded pathname
   // would stay frozen on the previous route and wrongly gate off the next
   // render-time reconcile there (a stale frame until the next URL change, #1273).
   useEffect(() => {
-    committedPathnameRef.current = adapter.pathname ?? location.pathname
-    reconcile()
-  }, [searchParamsSyncKey, adapter.pathname])
-
-  // Sync all hooks together & with external URL changes
-  useEffect(() => {
-    const subscriptions: Array<
-      readonly [string, (payload: CrossHookSyncPayload) => void]
-    > = []
-    for (const [stateKey, urlKey] of Object.entries(resolvedUrlKeys)) {
-      const handler = ({ state, query }: CrossHookSyncPayload) => {
-        const previousState = stateRef.current
-        const wasUrlState = previousState === urlStateRef.current
-        // Update the cache before scheduling React state. A higher-priority
-        // render may run before React evaluates the updater below; it must see
-        // this optimistic value as cached state, not adopt it as URL state.
-        queryRef.current[urlKey] = query
-        const nextCachedState = Object.is(
-          previousState[stateKey] ?? null,
-          state
-        )
-          ? previousState
-          : {
-              ...previousState,
-              [stateKey as keyof KeyMap]: state
-            }
-        stateRef.current = nextCachedState
-        setInternalState(currentState => {
-          if (
-            Object.is(currentState[stateKey] ?? null, state) &&
-            (currentState === previousState || !wasUrlState)
-          ) {
-            debug(
-              2,
-              hookId,
-              stateKeys,
-              urlKey,
-              state,
-              keyMap[stateKey]?.defaultValue,
-              currentState
-            )
-            // bail out by returning the current state
-            return currentState
-          }
-          // Rebased updates need a new object reference.
-          const nextState =
-            currentState === previousState
-              ? nextCachedState
-              : {
-                  ...currentState,
-                  ...(wasUrlState && previousState),
-                  [stateKey as keyof KeyMap]: state
-                }
-          debug(
-            3,
-            hookId,
-            stateKeys,
-            urlKey,
-            state,
-            keyMap[stateKey]?.defaultValue,
-            nextState
-          )
-          return nextState
-        })
-      }
-      debug(4, hookId, urlKey, stateKeys)
-      emitter.on(urlKey, handler)
-      subscriptions.push([urlKey, handler] as const)
+    detachedRef.current = false
+    if (!isStaleSourceAfterDiscardedRender) {
+      committedPathnameRef.current = adapter.pathname ?? location.pathname
+      reconcile()
     }
     return () => {
-      for (const [urlKey, handler] of subscriptions) {
-        debug(5, hookId, urlKey, stateKeys)
-        emitter.off(urlKey, handler)
-      }
+      detachedRef.current = true
     }
-  }, [stateKeys, resolvedUrlKeys])
+  }, [rawValues, adapter.pathname])
 
   const update = useCallback<SetValues<KeyMap>>(
     (stateUpdater, callOptions = {}) => {
@@ -362,7 +315,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
       > = []
       for (let [stateKey, value] of Object.entries(newState)) {
         const parser = getOwn(stableKeyMap, stateKey)
-        const urlKey = resolvedUrlKeys[stateKey]!
+        const urlKey = getOwn(resolvedUrlKeys, stateKey)
         if (!parser || urlKey === undefined || value === undefined) {
           continue
         }
@@ -378,7 +331,72 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
         }
         const query =
           value === null ? null : (parser.serialize ?? String)(value)
-        emitter.emit(urlKey, { state: value, query })
+        // Optimistic local adoption: the writer keeps the exact value
+        // identity it was given (===), unless clearOnDefault rewrote it to
+        // null above. Other hooks watching this key re-render via the overlay
+        // notification (from the queue pushes below) and re-parse the raw
+        // query with their own parser.
+        // A cleared key stores null. `applyDefaultValues` then reads the
+        // current default. The comparisons below apply that default to both
+        // sides.
+        const resolvedValue = value ?? parser.defaultValue ?? null
+        const previousState = stateRef.current
+        const wasCached = Object.is(
+          previousState[stateKey] ?? parser.defaultValue ?? null,
+          resolvedValue
+        )
+        const wasUrlState = previousState === urlStateRef.current
+        // Update both caches before scheduling React state. A higher-priority
+        // render may run before React evaluates the updater below; it must see
+        // the optimistic query as cached state without adopting its React lane.
+        queryRef.current[urlKey] = query
+        const nextCachedState = wasCached
+          ? previousState
+          : {
+              ...previousState,
+              [stateKey as keyof KeyMap]: value
+            }
+        stateRef.current = nextCachedState
+        setInternalState(currentState => {
+          // A bail-out keeps the current state. Otherwise, the write
+          // rebases on the latest URL-derived siblings if it interrupted URL
+          // reconciliation. If not, it keeps React's current lane.
+          const currentValue =
+            currentState[stateKey] ?? parser.defaultValue ?? null
+          if (
+            Object.is(currentValue, resolvedValue) &&
+            !(wasUrlState && currentState !== previousState)
+          ) {
+            debug(
+              2,
+              hookId,
+              stateKeys,
+              urlKey,
+              value,
+              parser.defaultValue,
+              currentState
+            )
+            return currentState
+          }
+          const nextState =
+            currentState === previousState
+              ? nextCachedState
+              : {
+                  ...currentState,
+                  ...(wasUrlState ? previousState : {}),
+                  [stateKey as keyof KeyMap]: value
+                }
+          debug(
+            3,
+            hookId,
+            stateKeys,
+            urlKey,
+            value,
+            parser.defaultValue,
+            nextState
+          )
+          return nextState
+        })
         const update: UpdateQueuePushArgs = {
           key: urlKey,
           query,
@@ -398,20 +416,24 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
           callOptions.limitUrlUpdates ??
           parser.limitUrlUpdates ??
           limitUrlUpdates
-        if (resolvedLimitUrlUpdates?.method === 'debounce') {
-          const timeMs =
-            resolvedLimitUrlUpdates.timeMs ?? defaultRateLimit.timeMs
+        const isDebounce = resolvedLimitUrlUpdates?.method === 'debounce'
+        const debounceTimeMs =
+          resolvedLimitUrlUpdates?.timeMs ?? defaultRateLimit.timeMs
+        // debounce(Infinity) takes the throttle path: it lands in the pending
+        // updates overlay (visible to other hooks on the key, including ones
+        // mounting later) and defers the flush like throttle(Infinity) does.
+        if (isDebounce && Number.isFinite(debounceTimeMs)) {
           const debouncedPromise = debounceController.push(
             update,
-            timeMs,
+            debounceTimeMs,
             adapter,
             processUrlSearchParams
           )
-          if (maxDebounceTime < timeMs) {
+          if (maxDebounceTime < debounceTimeMs) {
             // The largest debounce is likely to be the last URL update,
             // so we keep that Promise to return it.
             returnedPromise = debouncedPromise
-            maxDebounceTime = timeMs
+            maxDebounceTime = debounceTimeMs
           }
         } else {
           const timeMs =
@@ -464,24 +486,15 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
 function parseMap<KeyMap extends UseQueryStatesKeysMap>(
   keyMap: KeyMap,
   resolvedUrlKeys: Record<string, string>,
-  searchParams: URLSearchParams,
-  queuedQueries: Record<string, Query | null | undefined>,
+  rawValues: Record<string, Query | null>,
   cachedQuery: Record<string, Query | null> = {},
   cachedState: Partial<NullableValues<KeyMap>> = {}
 ): [hasChanged: boolean, state: NullableValues<KeyMap>] {
   let hasChanged = false
   const state = Object.entries(keyMap).reduce((out, [stateKey, parser]) => {
-    const urlKey = resolvedUrlKeys[stateKey]!
-    const queuedQuery = getOwn(queuedQueries, urlKey)
-    // `getAll` returns an empty array and `get` returns null when the key is
-    // absent, so URL reads need no fallback; the cached query does (below).
+    const urlKey = getOwn(resolvedUrlKeys, stateKey)!
     const fallbackValue = parser.type === 'multi' ? [] : null
-    const query =
-      queuedQuery === undefined
-        ? parser.type === 'multi'
-          ? searchParams.getAll(urlKey)
-          : searchParams.get(urlKey)
-        : queuedQuery
+    const query = getOwn(rawValues, urlKey) ?? fallbackValue
     const cachedStateValue = getOwn(cachedState, stateKey)
     if (
       cachedStateValue !== undefined &&
@@ -496,7 +509,7 @@ function parseMap<KeyMap extends UseQueryStatesKeysMap>(
     const value = isAbsentFromUrl(query)
       ? null
       : // we have properly narrowed `query` here, but TS doesn't keep track of that
-        safeParse(parser.parse, query as string & Array<string>, urlKey)
+        parseWithCache(urlKey, parser.parse, query as string & Array<string>)
 
     out[stateKey as keyof KeyMap] = value ?? null
     cachedQuery[urlKey] = query
@@ -518,7 +531,7 @@ function applyDefaultValues<KeyMap extends UseQueryStatesKeysMap>(
   return Object.fromEntries(
     Object.keys(state).map(key => [
       key,
-      state[key] ?? keyMap[key]?.defaultValue ?? null
+      getOwn(state, key) ?? getOwn(keyMap, key)?.defaultValue ?? null
     ])
   ) as Values<KeyMap>
 }
