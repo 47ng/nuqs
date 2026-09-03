@@ -228,7 +228,6 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
       setInternalState(state)
     }
     lastSyncRef.current = [rawValues, location.search]
-    return hasChanged
   }
   // Reconcile during render, both on key-set changes (initialisation) and when
   // the URL source changes. The effect below does the same, but effects are
@@ -258,14 +257,15 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
     urlKeyList.every(
       urlKey => debounceController.getQueuedQuery(urlKey) === undefined
     )
-  const didReconcile =
+  if (
     !isStaleSourceAfterDiscardedRender &&
     !isDetachedCrossRouteRender &&
-    sourceChanged &&
+    sourceChanged
+  ) {
     reconcile()
+  }
   if (
     (!isDetachedCrossRouteRender || isStaleSourceAfterDiscardedRender) &&
-    !didReconcile &&
     internalState !== stateRef.current &&
     stateRef.current === urlStateRef.current
   ) {
