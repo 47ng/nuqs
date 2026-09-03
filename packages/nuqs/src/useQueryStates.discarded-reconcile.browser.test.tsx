@@ -249,8 +249,6 @@ describe('useQueryStates: path-only navigation', () => {
   })
 
   it('adopts a sibling overlay write made after a path-only navigation', async () => {
-    // Two keys, one written: the reader must reconcile as long as any watched
-    // key carries an overlay write, not only when every one of them does.
     function Reader() {
       const [{ q }] = useQueryStates({ q: parseAsString, r: parseAsString })
       return <output data-testid="reader">{q}</output>
