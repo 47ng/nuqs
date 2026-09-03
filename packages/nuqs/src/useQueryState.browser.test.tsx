@@ -150,10 +150,6 @@ describe('useQueryState: referential equality', () => {
     expect(setState1).toBe(setState3)
   })
 
-  // Parsers that return an object (Date) do not keep referential equality
-  // for a value read from the URL, unlike the parseAsJson cases above:
-  // `parse` runs again and mints a new object even though neither the
-  // query string nor the instant it encodes has changed.
   it('should keep referential equality for a Date parsed from the URL', async () => {
     const searchParams = { date: '2024-01-01T00:00:00.000Z' }
     const seen: (Date | null)[] = []
@@ -167,7 +163,6 @@ describe('useQueryState: referential equality', () => {
     )
     await rerender()
     await rerender()
-    // The instant never changes, only the identity does.
     expect(new Set(seen.map(date => date?.valueOf())).size).toBe(1)
     expect(new Set(seen).size).toBe(1)
   })
@@ -198,10 +193,6 @@ describe('useQueryState: referential equality', () => {
     expect(new Set(seen).size).toBe(1)
   })
 
-  // Consequence: a remounted subscriber re-parses and reports a new object
-  // upward, which changes the parent's state identity, which re-keys the
-  // subscriber. Nothing writes to the URL and the instant never changes,
-  // but the pair never settles.
   it('should not re-render indefinitely when a Date is reported upward', async () => {
     const searchParams = { date: '2024-01-01T00:00:00.000Z' }
     let renders = 0
