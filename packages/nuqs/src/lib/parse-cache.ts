@@ -1,12 +1,18 @@
 import {
   clearParseCache,
+  clearParseCacheKey,
   getParseCacheVersion,
   parseWithClientCache,
   retainParseCache
 } from './parse-cache.client'
 import { safeParse } from './safe-parse'
 
-export { clearParseCache, getParseCacheVersion, retainParseCache }
+export {
+  clearParseCache,
+  clearParseCacheKey,
+  getParseCacheVersion,
+  retainParseCache
+}
 
 export function parseWithCache<T>(
   urlKey: string,

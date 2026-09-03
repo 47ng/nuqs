@@ -40,10 +40,12 @@ function getParseCacheBucket(urlKey: string): ParseCacheBucket {
   return bucket
 }
 
+function clearBucket(bucket: ParseCacheBucket): void {
+  bucket.e = bucket.p = bucket.v = undefined
+}
+
 export function clearParseCache(): void {
-  parseCache.forEach(bucket => {
-    bucket.e = bucket.p = undefined
-  })
+  parseCache.forEach(clearBucket)
 }
 
 export function retainParseCache(urlKey: string, delta: 1 | -1): void {
@@ -55,6 +57,13 @@ export function retainParseCache(urlKey: string, delta: 1 | -1): void {
 
 export function getParseCacheVersion(urlKey: string): number | undefined {
   return parseCache.get(urlKey)?.v
+}
+
+export function clearParseCacheKey(urlKey: string): void {
+  const bucket = parseCache.get(urlKey)
+  if (bucket) {
+    clearBucket(bucket)
+  }
 }
 
 export function parseWithClientCache<T>(

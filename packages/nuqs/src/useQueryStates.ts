@@ -4,6 +4,7 @@ import type { Nullable, Options, UrlKeys } from './defs'
 import { compareQuery, isEqual } from './lib/compare'
 import { debug } from './lib/debug'
 import {
+  clearParseCacheKey,
   getParseCacheVersion,
   parseWithCache,
   retainParseCache
@@ -498,6 +499,10 @@ function parseMap<KeyMap extends UseQueryStatesKeysMap>(
       parser.type === 'multi' ? [] : null
     ]
     const query = rawValue[0]
+    const isAbsent = isAbsentFromUrl(query)
+    if (isAbsent) {
+      clearParseCacheKey(urlKey)
+    }
     const cachedRawValue = getOwn(cachedRawValues, urlKey)
     const cachedStateValue = getOwn(cachedState, stateKey)
     if (
@@ -509,7 +514,7 @@ function parseMap<KeyMap extends UseQueryStatesKeysMap>(
       state[stateKey as keyof KeyMap] = cachedStateValue
       continue
     }
-    const value = isAbsentFromUrl(query)
+    const value = isAbsent
       ? null
       : // we have properly narrowed `query` here, but TS doesn't keep track of that
         parseWithCache(urlKey, parser.parse, query as string & Array<string>)

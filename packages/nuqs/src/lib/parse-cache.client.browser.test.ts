@@ -1,6 +1,11 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { setDebugSink } from './debug'
-import { parseWithCache, retainParseCache } from './parse-cache'
+import {
+  clearParseCacheKey,
+  getParseCacheVersion,
+  parseWithCache,
+  retainParseCache
+} from './parse-cache'
 
 type AnyQuery = string & Array<string>
 
@@ -99,5 +104,18 @@ describe('parseWithCache', () => {
     }
     parseWithCache('retained-sentinel', parse, asQuery('x'))
     expect(parse).toHaveBeenCalledTimes(1002)
+  })
+  it('re-parses a cleared key and drops its publication version', () => {
+    const key = 'parse-cache-cleared'
+    const parse = (query: string) => ({ query })
+    const published = { query: 'a' }
+    parseWithCache(key, parse, asQuery('a'), published)
+    expect(getParseCacheVersion(key)).toBeTypeOf('number')
+    clearParseCacheKey(key)
+    expect(getParseCacheVersion(key)).toBeUndefined()
+    expect(parseWithCache(key, parse, asQuery('a'))).not.toBe(published)
+  })
+  it('ignores a key the cache never saw', () => {
+    expect(() => clearParseCacheKey('parse-cache-unknown')).not.toThrow()
   })
 })
