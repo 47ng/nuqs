@@ -80,6 +80,9 @@ export function Repro1563({
       >
         Shallow push
       </button>
+      <button id="replace" onClick={() => setOther('pass')}>
+        Replace
+      </button>
       <pre id="state">{state}</pre>
       <pre id="shallow-state">{shallow}</pre>
       <pre id="loader-call">{loaderCall}</pre>

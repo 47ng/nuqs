@@ -11,8 +11,7 @@ import {
   historyUpdateMarker,
   markPendingPush,
   markPendingReplace,
-  patchHistory as applyHistoryPatch,
-  updatePendingNavigationUrl
+  patchHistory as applyHistoryPatch
 } from './patch-history'
 
 // Abstract away the types for the useNavigate hook from react-router-based frameworks
@@ -85,12 +84,6 @@ export function createReactRouterBasedAdapter({
             ? history.pushState
             : history.replaceState
         setQueueResetMutex(navigates ? 2 : 1)
-        // Standalone shallow pushes bypass the router to avoid running loaders.
-        // They cannot advance its private index, so the first blocked traversal
-        // may compute a delta of zero.
-        if (!isDeep) {
-          updatePendingNavigationUrl(url)
-        }
         const historyState = commitsAsPush
           ? markPendingPush(url)
           : history.state
@@ -101,6 +94,9 @@ export function createReactRouterBasedAdapter({
           url
         )
         let navigationSettled: Promise<void> | undefined
+        // Standalone shallow pushes bypass the router to avoid running loaders.
+        // They cannot advance its private index, so the first blocked traversal
+        // may compute a delta of zero.
         if (navigates) {
           if (!commitsAsPush) {
             markPendingReplace(url)

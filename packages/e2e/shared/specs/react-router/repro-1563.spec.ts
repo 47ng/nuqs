@@ -1,5 +1,6 @@
 import { expect, test as it, type Page } from '@playwright/test'
 import { defineTest } from '../../define-test'
+import { expectSearch } from '../../playwright/expect-url'
 import { readHistoryIndex } from '../../playwright/history'
 import { navigateTo } from '../../playwright/navigate'
 
@@ -75,6 +76,19 @@ export const testRepro1563 = defineTest('repro-1563', ({ path }) => {
       await expect(page.locator('#loader-call')).toHaveText(loaderCall ?? '')
     })
   }
+
+  it('keeps the history index on an idle deep replace', async ({ page }) => {
+    await navigateToRepro(page, path, '?test=init')
+    const initialIndex = await readHistoryIndex(page)
+    await page.locator('#replace').click()
+    await expect(page).toHaveURL(
+      url => url.searchParams.get('other') === 'pass'
+    )
+    await expect(page.locator('#navigation-type')).toHaveText('REPLACE')
+    expect(await readHistoryIndex(page)).toBe(initialIndex)
+    await page.goBack()
+    expect(page.url()).not.toContain(path)
+  })
 
   it('lets a deep replace take over a pending deep push', async ({ page }) => {
     await navigateToRepro(page, path, '?test=init&delay=1000')
@@ -238,6 +252,7 @@ export const testRepro1563 = defineTest('repro-1563', ({ path }) => {
     const initialIndex = await readHistoryIndex(page)
     await page.locator('#push').click()
     await expect(page).toHaveURL(url => url.searchParams.get('test') === 'pass')
+    expect(await readHistoryIndex(page)).toBe(initialIndex)
     await page.goBack()
     await expect(page.locator('#state')).toHaveText('init')
     await page.goForward()
@@ -249,13 +264,50 @@ export const testRepro1563 = defineTest('repro-1563', ({ path }) => {
     expect(await readHistoryIndex(page)).toBe(initialIndex)
   })
 
-  it('pushes again after Back cancelled a pending deep push', async ({
+  it('repairs the optimistic entry after a replace on the entry behind it', async ({
     page
   }) => {
-    await navigateTo(page, path, '?test=init&delay=1000')
+    await navigateToRepro(page, path, '?test=init&delay=1000')
     const initialIndex = await readHistoryIndex(page)
     await page.locator('#push').click()
     await expect(page).toHaveURL(url => url.searchParams.get('test') === 'pass')
+    expect(await readHistoryIndex(page)).toBe(initialIndex)
+    await page.goBack()
+    await expect(page.locator('#state')).toHaveText('init')
+    await page.locator('#replace').click()
+    await expect(page.locator('#navigation-type')).toHaveText('REPLACE')
+    expect(await readHistoryIndex(page)).toBe(initialIndex)
+    await page.goForward()
+    await expect(page.locator('#state')).toHaveText('pass')
+    expect(await readHistoryIndex(page)).toBe(initialIndex + 1)
+  })
+
+  it('repairs the optimistic entry after a shallow update moved its URL', async ({
+    page
+  }) => {
+    await navigateToRepro(page, path, '?test=init&delay=1000')
+    const initialIndex = await readHistoryIndex(page)
+    await page.locator('#push').click()
+    await expect(page).toHaveURL(url => url.searchParams.get('test') === 'pass')
+    expect(await readHistoryIndex(page)).toBe(initialIndex)
+    await page.locator('#shallow-replace').click()
+    await expectSearch(page, { test: 'pass', shallow: 'pass' })
+    await page.goBack()
+    await expect(page.locator('#state')).toHaveText('init')
+    await page.goForward()
+    await expect(page.locator('#state')).toHaveText('pass')
+    await expectSearch(page, { test: 'pass', shallow: 'pass' })
+    expect(await readHistoryIndex(page)).toBe(initialIndex + 1)
+  })
+
+  it('pushes again after Back cancelled a pending deep push', async ({
+    page
+  }) => {
+    await navigateToRepro(page, path, '?test=init&delay=1000')
+    const initialIndex = await readHistoryIndex(page)
+    await page.locator('#push').click()
+    await expect(page).toHaveURL(url => url.searchParams.get('test') === 'pass')
+    expect(await readHistoryIndex(page)).toBe(initialIndex)
     await page.goBack()
     await expect(page.locator('#state')).toHaveText('init')
     await page.locator('#push').click()
