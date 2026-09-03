@@ -228,6 +228,16 @@
       "name": "Server",
       "path": "dist/server.js",
       "limit": "3.8 kB"
+    },
+    {
+      "name": "Next.js app router adapter",
+      "path": "dist/adapters/next/app.js",
+      "limit": "4.1 kB"
+    },
+    {
+      "name": "Next.js pages router adapter",
+      "path": "dist/adapters/next/pages.js",
+      "limit": "4.1 kB"
     }
   ]
 }

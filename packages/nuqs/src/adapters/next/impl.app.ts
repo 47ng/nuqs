@@ -14,12 +14,18 @@ import {
 } from '../../lib/queues/reset'
 import { globalThrottleQueue } from '../../lib/queues/throttle'
 import { renderQueryString } from '../../lib/url-encoding'
-import type { AdapterInterface, UpdateUrlFunction } from '../lib/defs'
+import type {
+  AdapterInterface,
+  AdapterOptions,
+  UpdateUrlFunction
+} from '../lib/defs'
 import {
   historyUpdateMarker,
   markHistoryAsPatched,
   shouldPatchHistory
 } from '../lib/patch-history'
+
+export type AppRouterReplace = ReturnType<typeof useRouter>['replace']
 
 // See: https://github.com/47ng/nuqs/issues/603#issuecomment-2317057128
 // and https://github.com/47ng/nuqs/discussions/960#discussioncomment-12699171
@@ -133,34 +139,7 @@ export function useNuqsNextAppRouterAdapter(): AdapterInterface {
       if (!options.shallow) {
         setOptimisticSearchParams(search)
       }
-      const url = renderURL(search)
-      debug(20, 'next/app', url)
-      // First, update the URL locally without triggering a network request,
-      // this allows keeping a reactive URL if the network is slow.
-      const updateMethod =
-        options.history === 'push' ? history.pushState : history.replaceState
-      // Since replaceState calls are not monitored (see patchHistory above),
-      // the mutex is not needed to absorb cascade calls — they go undetected.
-      // Set to 0 so that the next external pushState immediately resets.
-      setQueueResetMutex(0)
-      updateMethod.call(
-        history,
-        // In next@14.1.0, useSearchParams becomes reactive to shallow updates,
-        // but only if passing `null` as the history state.
-        null,
-        historyUpdateMarker,
-        url
-      )
-      if (options.scroll) {
-        window.scrollTo(0, 0)
-      }
-      if (!options.shallow) {
-        // Call the Next.js router to perform a network request
-        // and re-render server components.
-        router.replace(url, {
-          scroll: false
-        })
-      }
+      commitAppUrl(search, options, router.replace)
     })
   }, [])
   return {
@@ -172,7 +151,42 @@ export function useNuqsNextAppRouterAdapter(): AdapterInterface {
   }
 }
 
-export function renderURL(search: URLSearchParams): string {
+function renderURL(search: URLSearchParams): string {
   const { origin, pathname, hash } = location
   return origin + pathname + renderQueryString(search) + hash
+}
+
+export function commitAppUrl(
+  search: URLSearchParams,
+  options: Required<AdapterOptions>,
+  replace: AppRouterReplace
+): void {
+  const url = renderURL(search)
+  debug(20, 'next/app', url)
+  // First, update the URL locally without triggering a network request,
+  // this allows keeping a reactive URL if the network is slow.
+  const updateMethod =
+    options.history === 'push' ? history.pushState : history.replaceState
+  // Since replaceState calls are not monitored (see patchHistory above),
+  // the mutex is not needed to absorb cascade calls — they go undetected.
+  // Set to 0 so that the next external pushState immediately resets.
+  setQueueResetMutex(0)
+  updateMethod.call(
+    history,
+    // In next@14.1.0, useSearchParams becomes reactive to shallow updates,
+    // but only if passing `null` as the history state.
+    null,
+    historyUpdateMarker,
+    url
+  )
+  if (options.scroll) {
+    window.scrollTo(0, 0)
+  }
+  if (!options.shallow) {
+    // Call the Next.js router to perform a network request
+    // and re-render server components.
+    replace(url, {
+      scroll: false
+    })
+  }
 }

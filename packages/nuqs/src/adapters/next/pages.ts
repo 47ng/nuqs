@@ -11,12 +11,11 @@ import {
   type AdapterContext,
   type AdapterProps
 } from '../lib/context'
+import { createBridgeStore, useWarnOnFlagToggle } from './impl.isolated'
 import {
-  createBridgeStore,
   PagesBridge,
-  useNuqsNextPagesRouterIsolatedAdapter,
-  useWarnOnFlagToggle
-} from './impl.isolated'
+  useNuqsNextPagesRouterIsolatedAdapter
+} from './impl.isolated.pages'
 import { NavigationSpy, useNuqsNextPagesRouterAdapter } from './impl.pages'
 
 const Provider = createAdapterProvider(useNuqsNextPagesRouterAdapter)

@@ -1,27 +1,13 @@
-import { useRouter as usePagesRouter } from 'next/compat/router.js'
-import { usePathname, useRouter, useSearchParams } from 'next/navigation.js'
 import {
-  startTransition,
   useCallback,
   useEffect,
   useLayoutEffect,
-  useMemo,
   useRef,
   useSyncExternalStore
 } from 'react'
 import { compareQuery } from '../../lib/compare'
-import { debug } from '../../lib/debug'
 import { createEmitter, type Emitter } from '../../lib/emitter'
-import { setQueueResetMutex } from '../../lib/queues/reset'
-import type { AdapterInterface, UpdateUrlFunction } from '../lib/defs'
 import { filterSearchParams } from '../lib/key-isolation'
-import { historyUpdateMarker } from '../lib/patch-history'
-import { NUM_HISTORY_CALLS_PER_UPDATE, renderURL } from './impl.app'
-import {
-  onIsolatedNavigation,
-  searchParamsFromQuery,
-  updatePagesUrl
-} from './impl.pages'
 
 // Experimental per-key isolation (behind `experimental_keyIsolation`).
 //
@@ -31,6 +17,7 @@ import {
 // consumer of those contexts, and publishes the committed search params into
 // this store; hooks subscribe per watched key and read filtered,
 // identity-cached snapshots.
+
 export type BridgeStore = {
   committed: URLSearchParams | null
   // Render-phase view from the Bridge: the transition-aware destination
@@ -41,7 +28,6 @@ export type BridgeStore = {
   // Reference counts of watched keys, so the first publish can notify
   // subscribers of keys absent from the published params.
   watched: Map<string, number>
-  replace: ReturnType<typeof useRouter>['replace'] | null
 }
 
 export function createBridgeStore(): BridgeStore {
@@ -49,8 +35,7 @@ export function createBridgeStore(): BridgeStore {
     committed: null,
     latest: null,
     emitter: createEmitter(),
-    watched: new Map(),
-    replace: null
+    watched: new Map()
   }
 }
 
@@ -86,7 +71,7 @@ export function publish(store: BridgeStore, next: URLSearchParams): void {
   }
 }
 
-const emptySearchParams = new URLSearchParams()
+export const emptySearchParams: URLSearchParams = new URLSearchParams()
 
 export function useWarnOnFlagToggle(
   latched: boolean,
@@ -106,14 +91,7 @@ export function useWarnOnFlagToggle(
   }
 }
 
-// Env-constant aliases: the server and client fibers never share hook lists,
-// so conditioning on the environment (not on renders) is hook-order-safe.
-const useServerSearchParams: () => URLSearchParams | null =
-  typeof window === 'undefined'
-    ? (useSearchParams as unknown as () => URLSearchParams | null)
-    : () => null
-
-const useIsoLayoutEffect =
+export const useIsoLayoutEffect: typeof useLayoutEffect =
   typeof window === 'undefined' ? () => {} : useLayoutEffect
 
 type IsolatedSearchParamsOptions = {
@@ -196,111 +174,4 @@ export function useIsolatedSearchParams(
               new URLSearchParams(location.search))
       )
   )
-}
-
-export function AppBridge({ store }: { store: BridgeStore }): null {
-  const router = useRouter()
-  store.replace = router.replace
-  // The sole SearchParamsContext consumer under the flag. The `??` handles
-  // the nullable compat overload for apps with a pages/ directory.
-  const searchParams = (useSearchParams() ??
-    emptySearchParams) as URLSearchParams
-  const pathname = usePathname()
-  // Render-phase ref write only — no listeners are called, so no other
-  // component gets scheduled mid-render (same class as NavigationSpy's
-  // render-phase queue reset).
-  store.latest = { pathname, searchParams }
-  useIsoLayoutEffect(() => {
-    publish(store, searchParams)
-  })
-  return null
-}
-
-export function PagesBridge({ store }: { store: BridgeStore }): null {
-  // The sole RouterContext consumer under the flag. Note: isolation on the
-  // pages router additionally requires the flagged subtree to be a
-  // render-stable element (see the NuqsAdapter prop docs) because Next
-  // re-renders the page tree top-down on every route state change.
-  const router = usePagesRouter()
-  const searchParams = useMemo(
-    () => searchParamsFromQuery(router?.query),
-    [JSON.stringify(router?.query)]
-  )
-  if (store.committed === null) {
-    // One-time render-phase seed: the pages router renders in tree order
-    // (Bridge before children, single-pass hydration), so SSR and hydration
-    // reads are seeded before any hook takes its first snapshot.
-    store.committed = searchParams
-  }
-  useEffect(() => {
-    router?.events.on('routeChangeStart', onIsolatedNavigation)
-    router?.events.on('beforeHistoryChange', onIsolatedNavigation)
-    return () => {
-      router?.events.off('routeChangeStart', onIsolatedNavigation)
-      router?.events.off('beforeHistoryChange', onIsolatedNavigation)
-    }
-  }, [])
-  useIsoLayoutEffect(() => {
-    publish(store, searchParams)
-  })
-  return null
-}
-
-export function useNuqsNextAppRouterIsolatedAdapter(
-  store: BridgeStore,
-  watchKeys: string[]
-): AdapterInterface {
-  // Kept per-hook: PathnameContext only changes on pathname changes, and the
-  // render-time reconcile gate (#1293/#1273) needs the transition-aware
-  // destination pathname.
-  const pathname = usePathname()
-  const serverSearchParams = useServerSearchParams()
-  const searchParams = useIsolatedSearchParams(store, watchKeys, {
-    pathname,
-    serverSearchParams
-  })
-  // Same update path as the non-isolated adapter, minus useOptimistic:
-  // during shallow: false RSC round-trips, hooks stay stable through the
-  // pending updates overlay (autoResetQueueOnUpdate: false keeps flushed
-  // entries), so the optimistic mirror is not needed here.
-  const updateUrl: UpdateUrlFunction = useCallback((search, options) => {
-    startTransition(() => {
-      const url = renderURL(search)
-      debug(20, 'next/app', url)
-      const updateMethod =
-        options.history === 'push' ? history.pushState : history.replaceState
-      setQueueResetMutex(0)
-      updateMethod.call(history, null, historyUpdateMarker, url)
-      if (options.scroll) {
-        window.scrollTo(0, 0)
-      }
-      if (!options.shallow) {
-        store.replace!(url, {
-          scroll: false
-        })
-      }
-    })
-  }, [])
-  return {
-    searchParams,
-    pathname,
-    updateUrl,
-    rateLimitFactor: NUM_HISTORY_CALLS_PER_UPDATE,
-    autoResetQueueOnUpdate: false
-  }
-}
-
-export function useNuqsNextPagesRouterIsolatedAdapter(
-  store: BridgeStore,
-  watchKeys: string[]
-): AdapterInterface {
-  // No useRouter here (the Bridge is the sole consumer) and no pathname:
-  // parity with the non-isolated pages adapter, where the reconcile gate
-  // falls back to location.pathname.
-  const searchParams = useIsolatedSearchParams(store, watchKeys, {})
-  return {
-    searchParams,
-    updateUrl: updatePagesUrl,
-    autoResetQueueOnUpdate: false
-  }
 }
