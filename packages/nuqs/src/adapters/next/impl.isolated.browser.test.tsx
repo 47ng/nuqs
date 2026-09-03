@@ -132,6 +132,15 @@ describe('impl.isolated: useIsolatedSearchParams', () => {
     })
     expect(values[0]).toBe('a=committed')
   })
+  it('returns a copy when no keys are watched', async () => {
+    const store = createBridgeStore()
+    publish(store, new URLSearchParams('?a=1'))
+    const { result } = await renderHook(() =>
+      useIsolatedSearchParams(store, [], {})
+    )
+    expect(result.current.toString()).toBe('a=1')
+    expect(result.current).not.toBe(store.committed)
+  })
   it('tracks watched key subscriptions with reference counts', async () => {
     const store = createBridgeStore()
     publish(store, new URLSearchParams(''))

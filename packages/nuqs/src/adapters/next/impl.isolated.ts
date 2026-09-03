@@ -18,13 +18,20 @@ import { filterSearchParams } from '../lib/key-isolation'
 // this store; hooks subscribe per watched key and read filtered,
 // identity-cached snapshots.
 
+/** The router owns these params. Next.js useSearchParams() returns
+ * ReadonlyURLSearchParams. Its mutation methods throw. */
+export type ReadonlySearchParams = Omit<
+  URLSearchParams,
+  'append' | 'delete' | 'set' | 'sort'
+>
+
 export type BridgeStore = {
-  committed: URLSearchParams | null
+  committed: ReadonlySearchParams | null
   committedPathname: string | null
   // latest is the Bridge's render-phase view.
   // Hooks read it only before commit when they mount before the Bridge.
   // pathname is app's transition target; pages has none, so stores null.
-  latest: { pathname: string | null; searchParams: URLSearchParams } | null
+  latest: { pathname: string | null; searchParams: ReadonlySearchParams } | null
   emitter: Emitter<Record<string, undefined>>
   // Reference counts of watched keys, so the first publish can notify
   // subscribers of keys absent from the published params.
@@ -45,7 +52,7 @@ export function createBridgeStore(): BridgeStore {
 // Publish never writes discarded render params to store.committed.
 // This keeps the pathname gate (#1293/#1273) correct.
 // Committed params and pathname both lag to the same commit.
-export function publish(store: BridgeStore, next: URLSearchParams): void {
+export function publish(store: BridgeStore, next: ReadonlySearchParams): void {
   // The render-phase holder is only trustworthy within the render pass that
   // wrote it: every Bridge commit invalidates it.
   store.latest = null
@@ -110,10 +117,14 @@ export function useIsolatedSearchParams(
   // unchanged: required by useSyncExternalStore (Object.is bail-out), and it
   // preserves key isolation (a change to an unwatched key keeps the same ref).
   const cache = useRef<{ key: string; search: URLSearchParams } | null>(null)
-  const select = (source: URLSearchParams): URLSearchParams => {
-    // copy: true is required: the source may be Next's ReadonlyURLSearchParams
-    // (which throws on delete), or the shared store value.
-    const filtered = filterSearchParams(source, watchKeys, true)
+  const select = (source: ReadonlySearchParams): URLSearchParams => {
+    // We copy first. The source may be Next's ReadonlyURLSearchParams.
+    // It throws on delete. The store may share the value we must preserve.
+    const filtered = filterSearchParams(
+      new URLSearchParams(Array.from(source.entries())),
+      watchKeys,
+      false
+    )
     const key = filtered.toString()
     if (cache.current?.key === key) {
       return cache.current.search
