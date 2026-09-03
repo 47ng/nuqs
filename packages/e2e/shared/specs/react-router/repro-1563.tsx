@@ -57,6 +57,12 @@ export function Repro1563({
         Deep replace
       </button>
       <button
+        id="push-other"
+        onClick={() => setOther('pass', { history: 'push' })}
+      >
+        Push other
+      </button>
+      <button
         id="shallow-replace"
         onClick={() =>
           setShallow('pass', {
