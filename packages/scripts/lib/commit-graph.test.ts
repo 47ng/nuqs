@@ -31,9 +31,9 @@ import {
   type PRClosingIssues,
   readCommits,
   type ReleaseGraphReader,
-  resolveChannel,
-  resolveRange
+  resolveChannel
 } from './commit-graph'
+import { resolveRange } from './version'
 
 // Build CommitRecord[] from raw messages, with placeholder SHA/author (PR-
 // sourced tests don't read them). For direct-commit assertions, construct
@@ -240,9 +240,9 @@ describe('extractTargetReferences', () => {
   })
 
   it('deduplicates and sorts ascending', () => {
-    expect(
-      extractTargetReferences('Closes #5\nFixes #2\nResolves #5')
-    ).toEqual([2, 5])
+    expect(extractTargetReferences('Closes #5\nFixes #2\nResolves #5')).toEqual(
+      [2, 5]
+    )
   })
 
   it('ignores a cross-repo owner/repo#N reference (this repo only)', () => {
