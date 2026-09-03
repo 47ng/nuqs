@@ -6,16 +6,21 @@ import { fileURLToPath } from 'node:url'
 import { afterEach, describe, expect, it } from 'vitest'
 import {
   compareMutationReports,
-  formatNewUndetectedMutants,
+  formatUndetectedMutants,
   summarizeMutationReport,
   type MutationReport
 } from './mutation-gate'
 
 function report(
   statuses: Array<
-    'Killed' | 'Timeout' | 'Survived' | 'NoCoverage' | 'RuntimeError'
+    | 'Killed'
+    | 'Timeout'
+    | 'Survived'
+    | 'NoCoverage'
+    | 'Ignored'
+    | 'RuntimeError'
   >,
-  config: MutationReport['config'] = structuredClone(comparableConfig)
+  config: MutationReport['config'] = structuredClone(defaultConfig)
 ): MutationReport {
   return {
     files: {
@@ -29,15 +34,38 @@ function report(
       name: 'StrykerJS',
       version: '9.6.1',
       dependencies: { typescript: '7.0.2' }
-    }
+    },
+    schemaVersion: '2'
   }
 }
 
-const comparableConfig = {
+const defaultConfig = {
   mutate: ['src/**/*.ts'],
   testRunner: 'vitest',
   timeoutMS: 5000,
-  vitest: { related: true }
+  vitest: { related: true },
+  scope: {
+    strategy: 'runtime-ownership-v1',
+    command: 'node scripts/mutation.mjs',
+    sourceFiles: [
+      'src/browser.test.ts',
+      'src/browser.ts',
+      'src/example.test.ts',
+      'src/example.ts'
+    ],
+    node: {
+      mutationFiles: ['src/example.ts'],
+      excludedMutations: [],
+      ignorePatterns: [],
+      executedTests: ['src/example.test.ts\0test']
+    },
+    browser: {
+      mutationFiles: ['src/browser.ts'],
+      excludedMutations: [],
+      ignorePatterns: [],
+      executedTests: ['src/browser.test.ts\0test']
+    }
+  }
 }
 
 const temporaryDirectories: string[] = []
@@ -78,17 +106,41 @@ describe('mutation gate', () => {
   it('classifies killed and timed-out mutants as detected', () => {
     expect(
       summarizeMutationReport(
-        report(['Killed', 'Timeout', 'Survived', 'NoCoverage'])
+        report(['Killed', 'Timeout', 'Survived', 'NoCoverage', 'Ignored'])
       )
     ).toStrictEqual({
+      debt: 3,
       detected: 2,
       errors: 0,
+      ignored: 1,
       killed: 1,
       noCoverage: 1,
       survived: 1,
       timeout: 1,
-      total: 4,
+      total: 5,
       undetected: 2
+    })
+  })
+
+  it('fails when a timed-out mutant starts surviving', () => {
+    const baseline = report(['Timeout'])
+    const candidate = report(['Survived'])
+    const identity = {
+      mutatorName: 'ConditionalExpression',
+      replacement: 'false',
+      location: {
+        end: { line: 1, column: 4 },
+        start: { line: 1, column: 0 }
+      }
+    }
+    baseline.files['src/example.ts']!.source = 'true'
+    candidate.files['src/example.ts']!.source = 'true'
+    Object.assign(baseline.files['src/example.ts']!.mutants[0]!, identity)
+    Object.assign(candidate.files['src/example.ts']!.mutants[0]!, identity)
+
+    expect(compareMutationReports(baseline, candidate)).toMatchObject({
+      pass: false,
+      delta: 1
     })
   })
 
@@ -126,75 +178,36 @@ describe('mutation gate', () => {
 
     const result = compareMutationReports(baseline, candidate)
     expect(result).toMatchObject({ pass: false, delta: 1 })
-    expect(result.newUndetected).toStrictEqual([
-      {
-        file: 'src/example.ts',
-        id: '0',
-        location: {
-          end: { line: 12, column: 14 },
-          start: { line: 12, column: 5 }
-        },
-        mutatorName: 'ConditionalExpression',
-        original: 'value > 0',
-        previousStatus: 'Killed',
-        replacement: 'false',
-        status: 'Survived'
-      }
-    ])
-    const formatted = formatNewUndetectedMutants(
-      result.newUndetected,
+    expect(
+      result.candidateUndetected.find(mutant => mutant.id === '0')
+    ).toStrictEqual({
+      file: 'src/example.ts',
+      id: '0',
+      location: {
+        end: { line: 12, column: 14 },
+        start: { line: 12, column: 5 }
+      },
+      mutatorName: 'ConditionalExpression',
+      original: 'value > 0',
+      replacement: 'false',
+      status: 'Survived'
+    })
+    const formatted = formatUndetectedMutants(
+      result.candidateUndetected,
       'https://github.com/47ng/nuqs/blob/deadbeef',
       'packages/nuqs'
     )
     expect(formatted).toContain(
-      '::error file=packages/nuqs/src/example.ts,line=12,col=5,title=New undetected mutant::ConditionalExpression Survived (was Killed)%0AOriginal: value > 0%0AMutated: false'
+      '::error file=packages/nuqs/src/example.ts,line=12,col=5,title=Undetected mutant::ConditionalExpression Survived%0AOriginal: value > 0%0AMutated: false'
     )
     expect(formatted).toContain(
       'https://github.com/47ng/nuqs/blob/deadbeef/packages/nuqs/src/example.ts#L12'
     )
     expect(formatted).toContain(
-      '- src/example.ts:12:5 [ConditionalExpression] Newly survived; previously killed'
+      '- src/example.ts:12:5 [ConditionalExpression] Undetected mutant (survived)'
     )
     expect(formatted).toContain('Original: value > 0')
     expect(formatted).toContain('Mutated: false')
-  })
-
-  it('does not reconcile renumbered mutants by mutable source metadata', () => {
-    const location = {
-      end: { line: 1, column: 10 },
-      start: { line: 1, column: 1 }
-    }
-    const baseline = report(['Killed'])
-    Object.assign(baseline.files['src/example.ts']!.mutants[0]!, {
-      id: '17',
-      location,
-      mutatorName: 'ConditionalExpression',
-      replacement: 'false'
-    })
-    const candidate = report(['Survived'])
-    Object.assign(candidate.files['src/example.ts']!.mutants[0]!, {
-      id: '42',
-      location,
-      mutatorName: 'ConditionalExpression',
-      replacement: 'false'
-    })
-
-    expect(
-      compareMutationReports(baseline, candidate).newUndetected
-    ).toMatchObject([
-      { id: '42', previousStatus: undefined, status: 'Survived' }
-    ])
-  })
-
-  it('includes the source file in mutant identity', () => {
-    const baseline = report(['Killed'])
-    baseline.files = { 'src/a.ts': baseline.files['src/example.ts']! }
-    const candidate = report(['Survived'])
-    candidate.files = { 'src/b.ts': candidate.files['src/example.ts']! }
-
-    expect(
-      compareMutationReports(baseline, candidate).newUndetected
-    ).toMatchObject([{ file: 'src/b.ts', id: '0', previousStatus: undefined }])
   })
 
   it('fails closed on mutation errors', () => {
@@ -220,43 +233,126 @@ describe('mutation gate', () => {
     )
   })
 
-  it('refuses to compare reports from different mutation configurations', () => {
+  it('rejects mutation scope changes', () => {
+    const candidateConfig = structuredClone(defaultConfig)
+    candidateConfig.scope.command = 'node scripts/other-mutation.mjs'
+
     expect(() =>
       compareMutationReports(
         report(['Killed']),
-        report(['Killed'], { ...comparableConfig, mutate: ['src/cache.ts'] })
+        report(['Survived'], candidateConfig)
       )
-    ).toThrow('mutation configuration changed')
+    ).toThrow('mutation scope changed')
   })
 
-  it('accepts equivalent configurations and ignores operational settings', () => {
-    const baseline = report(['Killed'], {
-      ...structuredClone(comparableConfig),
-      force: true,
-      reporters: ['json']
-    })
-    const candidate = report(['Killed'], {
-      vitest: { related: true },
-      timeoutMS: 5000,
-      testRunner: 'vitest',
-      mutate: ['src/**/*.ts'],
-      force: false,
-      reporters: ['progress']
-    })
+  it('allows tests to be renamed or added within an executed test file', () => {
+    const candidateConfig = structuredClone(defaultConfig)
+    candidateConfig.scope.node.executedTests = [
+      'src/example.test.ts\0renamed test',
+      'src/example.test.ts\0additional test'
+    ]
 
-    expect(compareMutationReports(baseline, candidate)).toMatchObject({
-      pass: true,
-      delta: 0
-    })
+    expect(
+      compareMutationReports(
+        report(['Killed']),
+        report(['Killed'], candidateConfig)
+      )
+    ).toMatchObject({ pass: true, delta: 0 })
   })
 
-  it('treats timeout configuration as result-affecting', () => {
+  it('allows executed tests to disappear with a deleted test file', () => {
+    const candidateConfig = structuredClone(defaultConfig)
+    candidateConfig.scope.sourceFiles =
+      candidateConfig.scope.sourceFiles.filter(
+        file => file !== 'src/example.test.ts'
+      )
+    candidateConfig.scope.node.executedTests = []
+
+    expect(
+      compareMutationReports(
+        report(['Killed']),
+        report(['Killed'], candidateConfig)
+      )
+    ).toMatchObject({ pass: true, delta: 0 })
+  })
+
+  it('rejects losing an executed test file that still exists', () => {
+    const candidateConfig = structuredClone(defaultConfig)
+    candidateConfig.scope.node.executedTests = []
+
     expect(() =>
       compareMutationReports(
         report(['Killed']),
-        report(['Killed'], { ...comparableConfig, timeoutMS: 1 })
+        report(['Killed'], candidateConfig)
       )
-    ).toThrow('mutation configuration changed')
+    ).toThrow('node mutation scope lost 1 executed test')
+  })
+
+  it('checks executed test loss for the browser runtime', () => {
+    const candidateConfig = structuredClone(defaultConfig)
+    candidateConfig.scope.browser.executedTests = []
+
+    expect(() =>
+      compareMutationReports(
+        report(['Killed']),
+        report(['Killed'], candidateConfig)
+      )
+    ).toThrow('browser mutation scope lost 1 executed test')
+  })
+
+  it('rejects losing one of several tests in an existing file', () => {
+    const baselineConfig = structuredClone(defaultConfig)
+    baselineConfig.scope.node.executedTests.push(
+      'src/example.test.ts\0second test'
+    )
+
+    expect(() =>
+      compareMutationReports(
+        report(['Killed'], baselineConfig),
+        report(['Killed'])
+      )
+    ).toThrow('node mutation scope lost 1 executed test')
+  })
+
+  it('rejects moving a test to another file without reducing the total', () => {
+    const candidateConfig = structuredClone(defaultConfig)
+    candidateConfig.scope.node.executedTests = [
+      'src/browser.test.ts\0moved test'
+    ]
+
+    expect(() =>
+      compareMutationReports(
+        report(['Killed']),
+        report(['Killed'], candidateConfig)
+      )
+    ).toThrow('node mutation scope lost 1 executed test')
+  })
+
+  it.each(['src/example.test.ts', '\0test'])(
+    'rejects malformed executed test identifier %j',
+    executedTest => {
+      const candidateConfig = structuredClone(defaultConfig)
+      candidateConfig.scope.node.executedTests = [executedTest]
+
+      expect(() =>
+        compareMutationReports(
+          report(['Killed']),
+          report(['Killed'], candidateConfig)
+        )
+      ).toThrow('invalid executed test identifier')
+    }
+  )
+
+  it('allows an empty test name', () => {
+    const candidateConfig = structuredClone(defaultConfig)
+    candidateConfig.scope.node.executedTests = ['src/example.test.ts\0']
+
+    expect(
+      compareMutationReports(
+        report(['Killed']),
+        report(['Killed'], candidateConfig)
+      )
+    ).toMatchObject({ pass: true, delta: 0 })
   })
 
   it('compares mutation debt across toolchain changes', () => {

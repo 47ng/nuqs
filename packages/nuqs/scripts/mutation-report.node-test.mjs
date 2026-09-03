@@ -34,7 +34,7 @@ describe('mutation report aggregation', () => {
     )
   })
 
-  it('records strategy and distinct runtime settings', () => {
+  it('records strategy and complete runtime settings', () => {
     const node = report('src/node.ts')
     const browser = report('src/browser.ts')
     node.config.timeoutMS = 1

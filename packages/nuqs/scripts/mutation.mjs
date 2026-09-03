@@ -25,8 +25,8 @@ const report = mergeMutationReports(nodeReport, browserReport)
 
 await writeFile(aggregatePath, JSON.stringify(report, null, 2) + '\n')
 await writeFile(htmlPath, await renderHtml(report))
+assertValidMutationReport(report)
 printSummary(report)
-assertNoMutationErrors(report)
 
 function runStryker(configFile) {
   return new Promise((resolve, reject) => {
@@ -86,23 +86,37 @@ function printSummary(report) {
   const timeout = count('Timeout')
   const survived = count('Survived')
   const noCoverage = count('NoCoverage')
-  const total = statuses.length
-  const score = total === 0 ? 100 : ((killed + timeout) / total) * 100
+  const ignored = count('Ignored')
+  const active = statuses.filter(status => status !== 'Ignored').length
+  const score = active === 0 ? 100 : ((killed + timeout) / active) * 100
 
   process.stdout.write(
     `Combined mutation score: ${score.toFixed(2)}% ` +
       `(${killed} killed, ${timeout} timeout, ${survived} survived, ` +
-      `${noCoverage} no coverage, ${total} total)\n`
+      `${noCoverage} no coverage, ${ignored} ignored, ${active} active)\n`
   )
 }
 
-function assertNoMutationErrors(report) {
-  const errors = Object.values(report.files)
-    .flatMap(file => file.mutants)
-    .filter(mutant =>
-      ['CompileError', 'RuntimeError'].includes(mutant.status)
-    ).length
+function assertValidMutationReport(report) {
+  const mutants = Object.values(report.files).flatMap(file => file.mutants)
+  if (mutants.length === 0) {
+    throw new Error('mutation report contains no mutants')
+  }
+  const errors = mutants.filter(mutant =>
+    ['CompileError', 'RuntimeError'].includes(mutant.status)
+  ).length
   if (errors > 0) {
     throw new Error(`mutation report contains ${errors} mutation error(s)`)
+  }
+  const incomplete = mutants.filter(
+    mutant =>
+      !['Killed', 'Timeout', 'Survived', 'NoCoverage', 'Ignored'].includes(
+        mutant.status
+      )
+  ).length
+  if (incomplete > 0) {
+    throw new Error(
+      `mutation report contains ${incomplete} incomplete mutant(s)`
+    )
   }
 }

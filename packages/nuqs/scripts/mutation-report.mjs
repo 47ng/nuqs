@@ -1,6 +1,5 @@
 import { readFile } from 'node:fs/promises'
 import { z } from 'zod'
-import { comparableMutationConfig } from './mutation-projects.mjs'
 
 const mutantSchema = z
   .object({
@@ -88,7 +87,7 @@ export function mergeMutationReports(nodeReport, browserReport) {
   )
 
   return {
-    files: Object.assign({}, ...namespacedReports.map(activeFiles)),
+    files: Object.assign({}, ...namespacedReports.map(report => report.files)),
     schemaVersion: nodeReport.schemaVersion,
     thresholds: nodeReport.thresholds,
     testFiles: Object.assign(
@@ -96,7 +95,11 @@ export function mergeMutationReports(nodeReport, browserReport) {
       ...namespacedReports.map(report => report.testFiles)
     ),
     projectRoot: nodeReport.projectRoot,
-    config: comparableMutationConfig(nodeReport.config, browserReport.config),
+    config: {
+      strategy: 'runtime-ownership-v1',
+      node: nodeReport.config,
+      browser: browserReport.config
+    },
     framework: nodeReport.framework
   }
 }
@@ -131,15 +134,6 @@ function namespaceReport(report, runtime) {
       ])
     )
   }
-}
-
-function activeFiles(report) {
-  return Object.fromEntries(
-    Object.entries(report.files).flatMap(([path, file]) => {
-      const mutants = file.mutants.filter(mutant => mutant.status !== 'Ignored')
-      return mutants.length === 0 ? [] : [[path, { ...file, mutants }]]
-    })
-  )
 }
 
 function assertEqual(label, left, right) {
