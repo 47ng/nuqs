@@ -628,7 +628,7 @@ describe('useQueryStates: debounce(Infinity)', () => {
     expect(onUrlUpdate).not.toHaveBeenCalled()
   })
 
-  it('syncs the deferred value to a hook mounting after the write', async () => {
+  it('lets a hook mounted after a write use a deferred value', async () => {
     const onUrlUpdate = vi.fn<OnUrlUpdateFunction>()
     function LateHook() {
       const [{ test }] = useQueryStates({ test: parseAsString })
