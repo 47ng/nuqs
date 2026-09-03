@@ -65,6 +65,24 @@ describe('impl.isolated: useIsolatedSearchParams', () => {
     // subscription-time consistency check reverts to the committed params.
     expect(result.current.toString()).toBe('a=committed')
   })
+  it('ignores the render-phase holder left over by a discarded render', async () => {
+    const store = createBridgeStore()
+    publish(store, new URLSearchParams('?a=committed'))
+    store.committedPathname = '/destination'
+    store.latest = {
+      pathname: '/destination',
+      searchParams: new URLSearchParams('?a=dropped')
+    }
+    const values: string[] = []
+    await renderHook(() => {
+      const searchParams = useIsolatedSearchParams(store, ['a'], {
+        pathname: '/destination'
+      })
+      values.push(searchParams.toString())
+      return searchParams
+    })
+    expect(values[0]).toBe('a=committed')
+  })
   it('ignores the render-phase holder when pathnames differ', async () => {
     const store = createBridgeStore()
     publish(store, new URLSearchParams('?a=committed'))
@@ -76,6 +94,38 @@ describe('impl.isolated: useIsolatedSearchParams', () => {
     await renderHook(() => {
       const searchParams = useIsolatedSearchParams(store, ['a'], {
         pathname: '/destination'
+      })
+      values.push(searchParams.toString())
+      return searchParams
+    })
+    expect(values[0]).toBe('a=committed')
+  })
+  it('reads a pathname-less render-phase holder before commit', async () => {
+    const store = createBridgeStore()
+    publish(store, new URLSearchParams('?a=committed'))
+    store.latest = {
+      pathname: null,
+      searchParams: new URLSearchParams('?a=current')
+    }
+    const values: string[] = []
+    await renderHook(() => {
+      const searchParams = useIsolatedSearchParams(store, ['a'], {})
+      values.push(searchParams.toString())
+      return searchParams
+    })
+    expect(values[0]).toBe('a=current')
+  })
+  it('ignores a pathname-less holder when the hook has a pathname', async () => {
+    const store = createBridgeStore()
+    publish(store, new URLSearchParams('?a=committed'))
+    store.latest = {
+      pathname: null,
+      searchParams: new URLSearchParams('?a=dropped')
+    }
+    const values: string[] = []
+    await renderHook(() => {
+      const searchParams = useIsolatedSearchParams(store, ['a'], {
+        pathname: null
       })
       values.push(searchParams.toString())
       return searchParams

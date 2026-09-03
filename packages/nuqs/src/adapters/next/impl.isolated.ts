@@ -20,10 +20,11 @@ import { filterSearchParams } from '../lib/key-isolation'
 
 export type BridgeStore = {
   committed: URLSearchParams | null
-  // Render-phase view from the Bridge: the transition-aware destination
-  // pathname and its search params. Consulted only for a hook's pre-commit
-  // snapshots (mounted mid-transition, before the Bridge commits).
-  latest: { pathname: string; searchParams: URLSearchParams } | null
+  committedPathname: string | null
+  // latest is the Bridge's render-phase view.
+  // Hooks read it only before commit when they mount before the Bridge.
+  // pathname is app's transition target; pages has none, so stores null.
+  latest: { pathname: string | null; searchParams: URLSearchParams } | null
   emitter: Emitter<Record<string, undefined>>
   // Reference counts of watched keys, so the first publish can notify
   // subscribers of keys absent from the published params.
@@ -33,16 +34,17 @@ export type BridgeStore = {
 export function createBridgeStore(): BridgeStore {
   return {
     committed: null,
+    committedPathname: null,
     latest: null,
     emitter: createEmitter(),
     watched: new Map()
   }
 }
 
-// Called from layout effects only (commit time): the store never exposes
-// values from renders React may discard, which is what keeps the pathname
-// gate (#1293/#1273) semantics intact — committed params and pathname both
-// lag to the same commit.
+// Callers call publish only from layout effects at commit time.
+// Publish never writes discarded render params to store.committed.
+// This keeps the pathname gate (#1293/#1273) correct.
+// Committed params and pathname both lag to the same commit.
 export function publish(store: BridgeStore, next: URLSearchParams): void {
   // The render-phase holder is only trustworthy within the render pass that
   // wrote it: every Bridge commit invalidates it.
@@ -150,16 +152,21 @@ export function useIsolatedSearchParams(
   return useSyncExternalStore(
     subscribe,
     () => {
+      const latest = store.latest
+      // The Bridge's render view beats committed params until the store commits them.
+      // In the Pages router, no pathname exists, so the view always wins.
+      // The Bridge renders before hooks in one top-down pass.
+      // In the App router, the view wins only across a pathname change.
+      // On the committed path, it may come from a discarded render.
+      // The pathname cannot distinguish that from a same-route transition.
+      // Committed wins there; the hook catches up when the Bridge publishes.
       const source =
         !hasCommitted.current &&
-        pathname != null &&
-        store.latest !== null &&
-        store.latest.pathname === pathname
-          ? // Pre-commit snapshot of a hook mounted mid-transition: the
-            // Bridge's render-phase view is destination-consistent when
-            // pathnames match, while `committed` may still hold the
-            // previous route.
-            store.latest.searchParams
+        latest !== null &&
+        (pathname === undefined ||
+          (latest.pathname === pathname &&
+            store.committedPathname !== pathname))
+          ? latest.searchParams
           : (store.committed ?? new URLSearchParams(location.search))
       return select(source)
     },

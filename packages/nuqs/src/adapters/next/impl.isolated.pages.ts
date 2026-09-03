@@ -29,6 +29,10 @@ export function PagesBridge({ store }: { store: BridgeStore }): null {
     // reads are seeded before any hook takes its first snapshot.
     store.committed = searchParams
   }
+  // This sets the render-phase view for hooks that mount later in this pass.
+  // The ready router may reveal such a subtree, for example.
+  // Those hooks would read the previous commit without it.
+  store.latest = { pathname: null, searchParams }
   useEffect(() => {
     router?.events.on('routeChangeStart', onIsolatedNavigation)
     router?.events.on('beforeHistoryChange', onIsolatedNavigation)

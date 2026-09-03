@@ -51,6 +51,7 @@ export function AppBridge({ store }: { store: BridgeStore }): null {
   // render-phase queue reset).
   store.latest = { pathname, searchParams }
   useIsoLayoutEffect(() => {
+    store.committedPathname = pathname
     publish(store, searchParams)
   })
   return null

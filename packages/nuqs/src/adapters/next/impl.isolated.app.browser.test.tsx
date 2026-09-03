@@ -41,6 +41,7 @@ describe('Next App Router isolated Bridge', () => {
     )
     expect(seen[0]).toBe('/route?a=1')
     expect(store.committed?.toString()).toBe('a=1')
+    expect(store.committedPathname).toBe('/route')
     expect(store.latest).toBeNull()
   })
 })
