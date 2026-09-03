@@ -1,6 +1,6 @@
 import { expect, test as it } from '@playwright/test'
 import { defineTest } from '../../define-test'
-import { expectSearch } from '../../playwright/expect-url'
+import { expectSearch, expectUrl } from '../../playwright/expect-url'
 import { readHistoryIndex } from '../../playwright/history'
 import { navigateTo } from '../../playwright/navigate'
 import { getUrl } from '../stitching.defs'
@@ -25,6 +25,14 @@ export const testStitchingSlowLoader = defineTest(
         await expect.poll(() => readHistoryIndex(page)).toBe(initialIndex + 1)
         await expect(page.locator('#client-state')).toHaveText('1,1,1')
         await expectSearch(page, { a: '1', b: '1', c: '1' })
+        await page.goBack()
+        await expect(page.locator('#client-state')).toHaveText('0,0,0')
+        await expectUrl(page, url => !url.searchParams.has('a'))
+        expect(await readHistoryIndex(page)).toBe(initialIndex)
+        await page.goForward()
+        await expect(page.locator('#client-state')).toHaveText('1,1,1')
+        await expectSearch(page, { a: '1', b: '1', c: '1' })
+        expect(await readHistoryIndex(page)).toBe(initialIndex + 1)
       })
     }
   }

@@ -13,6 +13,7 @@ export function Repro1563({ useNavigationType }: Repro1563Props) {
   })
   const [, setOther] = useQueryState('other', { shallow: false })
   const [shallow, setShallow] = useQueryState('shallow')
+  const [, setNote] = useQueryState('note')
   const navigationType = useNavigationType()
   const pushThenReplace = () => {
     setState('pass')
@@ -34,7 +35,12 @@ export function Repro1563({ useNavigationType }: Repro1563Props) {
       <button id="push-then-shallow-replace" onClick={pushThenShallowReplace}>
         Push then shallow replace
       </button>
-
+      <button id="replace" onClick={() => setOther('pass')}>
+        Replace
+      </button>
+      <button id="shallow-replace" onClick={() => setNote('pass')}>
+        Shallow replace
+      </button>
       <pre id="state">{state}</pre>
       <pre id="shallow-state">{shallow}</pre>
       <pre id="navigation-type">{navigationType}</pre>

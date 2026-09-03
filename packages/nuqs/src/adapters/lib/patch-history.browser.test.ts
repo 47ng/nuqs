@@ -15,6 +15,8 @@ const emitter = createEmitter<SearchParamsSyncEmitterEvents>()
 const onUpdate = vi.fn()
 emitter.on('update', onUpdate)
 
+const indexSeenOnPop = vi.fn<(idx: number | undefined) => void>()
+
 function routerPush(search: string) {
   history.pushState({ idx: 1 }, '', search)
 }
@@ -47,13 +49,18 @@ function traverse(action: () => void): Promise<void> {
 describe('patchHistory: pending push', () => {
   beforeAll(() => {
     patchHistory(emitter, 'test')
+    window.addEventListener('popstate', () =>
+      indexSeenOnPop(history.state?.idx)
+    )
   })
   beforeEach(() => {
     routerReplace('?')
+    routerPush('?')
     expect(hasPendingPush()).toBe(false)
     pushState.mockClear()
     replaceState.mockClear()
     onUpdate.mockClear()
+    indexSeenOnPop.mockClear()
   })
 
   it('lets a router push add an entry when nothing is pending', () => {
@@ -133,6 +140,114 @@ describe('patchHistory: pending push', () => {
     expect(hasPendingPush()).toBe(false)
   })
 
+  it('repairs the pending index before later popstate listeners read it', async () => {
+    history.replaceState({ idx: 4 }, historyUpdateMarker, '?')
+    optimisticPush('?a=1')
+    await traverse(() => history.back())
+    await traverse(() => history.forward())
+    expect(indexSeenOnPop).toHaveBeenNthCalledWith(1, 4)
+    expect(indexSeenOnPop).toHaveBeenNthCalledWith(2, 5)
+  })
+
+  it('repairs the pending entry after a replace on its predecessor', async () => {
+    history.replaceState({ idx: 4 }, historyUpdateMarker, '?')
+    optimisticPush('?a=1')
+    await traverse(() => history.back())
+    history.replaceState({ idx: 4, usr: 'unrelated' }, '', '?')
+    await traverse(() => history.forward())
+    expect(history.state).toEqual({ idx: 5 })
+    expect(hasPendingPush()).toBe(false)
+  })
+
+  it('repairs the pending entry after a marked replace changed its URL', async () => {
+    history.replaceState({ idx: 4 }, historyUpdateMarker, '?')
+    optimisticPush('?a=1')
+    history.replaceState(history.state, historyUpdateMarker, '?a=1&b=2')
+    await traverse(() => history.back())
+    await traverse(() => history.forward())
+    expect(history.state).toEqual({ idx: 5 })
+    expect(hasPendingPush()).toBe(false)
+  })
+
+  it('leaves the router one index behind on the first Back after a replace commit', async () => {
+    history.replaceState({ idx: 4 }, historyUpdateMarker, '?')
+    optimisticPush('?a=1')
+    const indexReadByTheRouter = history.state.idx
+    history.replaceState({ idx: indexReadByTheRouter }, '', '?a=1')
+    expect(history.state).toEqual({ idx: 5 })
+    await traverse(() => history.back())
+    expect(history.state).toEqual({ idx: 4 })
+    expect(history.state.idx - indexReadByTheRouter).toBe(0)
+    await traverse(() => history.forward())
+    expect(history.state).toEqual({ idx: 5 })
+  })
+
+  it('repairs the pending entry when a marked update copied its marker', async () => {
+    history.replaceState({ idx: 4 }, historyUpdateMarker, '?')
+    optimisticPush('?a=1')
+    history.pushState(history.state, historyUpdateMarker, '?a=1&shallow=1')
+    history.replaceState(history.state, historyUpdateMarker, '?a=1&shallow=2')
+    await traverse(() => history.back())
+    expect(history.state).toEqual({ idx: 5 })
+    expect(hasPendingPush()).toBe(false)
+  })
+
+  it('does not repair an entry that only shares the pending marker', async () => {
+    history.replaceState({ idx: 4 }, historyUpdateMarker, '?')
+    optimisticPush('?a=1')
+    history.pushState(history.state, historyUpdateMarker, '?a=1&shallow=1')
+    history.pushState(history.state, historyUpdateMarker, '?a=1&shallow=2')
+    await traverse(() => history.back())
+    expect(history.state.idx).toBe(4)
+    expect(history.state[historyUpdateMarker]).toBeDefined()
+  })
+
+  it('clears a pending push when a replace lands elsewhere without a pop', () => {
+    optimisticPush('?a=1')
+    history.pushState(null, historyUpdateMarker, '#anchor')
+    routerReplace('#anchor')
+    expect(hasPendingPush()).toBe(false)
+  })
+
+  it('syncs a router replace that is not a pending push commit', async () => {
+    history.replaceState({ idx: 4 }, historyUpdateMarker, '?')
+    optimisticPush('?a=1')
+    await traverse(() => history.back())
+    onUpdate.mockClear()
+    history.replaceState({ idx: 4 }, '', '?other=1')
+    expect(onUpdate).toHaveBeenCalledExactlyOnceWith(
+      new URLSearchParams('?other=1')
+    )
+  })
+
+  it('leaves a router replace that does not carry the cloned index alone', () => {
+    history.replaceState({ idx: 3 }, historyUpdateMarker, '?')
+    optimisticPush('?a=1')
+    history.replaceState({ idx: 9, key: 'router' }, '', '?b=1')
+    expect(history.state).toEqual({ idx: 9, key: 'router' })
+  })
+
+  it('leaves a router replace alone on an entry with no cloned index', () => {
+    history.replaceState(undefined, historyUpdateMarker, '?')
+    optimisticPush('?a=1')
+    history.replaceState({ key: 'router' }, '', '?a=1')
+    expect(history.state).toEqual({ key: 'router' })
+  })
+
+  it('pushes a router commit onto an abandoned entry with no cloned index', async () => {
+    history.replaceState(undefined, historyUpdateMarker, '?')
+    optimisticPush('?a=1')
+    await traverse(() => history.back())
+    await traverse(() => history.forward())
+    expect(history.state).toEqual({ [historyUpdateMarker]: expect.any(Number) })
+    expect(hasPendingPush()).toBe(false)
+    pushState.mockClear()
+    replaceState.mockClear()
+    routerPush('?a=1')
+    expect(pushState).toHaveBeenCalledExactlyOnceWith({ idx: 1 }, '', '?a=1')
+    expect(replaceState).not.toHaveBeenCalled()
+  })
+
   it('does not repair an older entry with the pending URL and index', async () => {
     history.replaceState({ idx: 4 }, historyUpdateMarker, '?a=1')
     history.pushState({ idx: 4 }, historyUpdateMarker, '?a=2')
@@ -149,9 +264,8 @@ describe('patchHistory: pending push', () => {
   })
 
   it('keeps the pending push across marked nuqs updates', () => {
-    markPendingPush(new URL('?a=1', location.href))
-    history.pushState(null, historyUpdateMarker, '?a=1')
-    history.replaceState(null, historyUpdateMarker, '?a=2')
+    optimisticPush('?a=1')
+    history.replaceState(history.state, historyUpdateMarker, '?a=2')
     expect(hasPendingPush()).toBe(true)
   })
 
