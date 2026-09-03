@@ -1,5 +1,4 @@
 import {
-  createLoader,
   createSerializer,
   parseAsBoolean,
   parseAsInteger,
@@ -15,18 +14,13 @@ export const searchParams = {
 }
 
 export const optionsSearchParams = {
-  hook: parseAsStringLiteral([
-    'useQueryState',
-    'useQueryStates'
-  ]).withDefault('useQueryState'),
-  shallow: parseAsBoolean.withDefault(true),
-  history: parseAsStringLiteral(['push', 'replace']).withDefault(
-    'replace'
+  hook: parseAsStringLiteral(['useQueryState', 'useQueryStates']).withDefault(
+    'useQueryState'
   ),
+  shallow: parseAsBoolean.withDefault(true),
+  history: parseAsStringLiteral(['push', 'replace']).withDefault('replace'),
   delay: parseAsInteger.withDefault(0)
 }
-
-export const loadOptions = createLoader(optionsSearchParams)
 
 export const getUrl = createSerializer(optionsSearchParams, {
   clearOnDefault: false
