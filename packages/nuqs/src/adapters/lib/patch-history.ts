@@ -65,13 +65,6 @@ function movePendingPushHref(): void {
   }
 }
 
-export function updatePendingPushUrl(url: URL): void {
-  const pending = pendingPush.current
-  if (pending && isOnPendingPushEntry()) {
-    pending.currentHref = url.href
-  }
-}
-
 export function hasPendingPush(): boolean {
   const pending = pendingPush.current
   return pending !== null && !pending.poppedSince
