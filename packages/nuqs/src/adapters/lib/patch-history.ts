@@ -25,6 +25,7 @@ type PendingPushState = {
 type PendingPush = {
   href: string
   id: number
+  currentHref: string
   routerIndex: number | undefined
   poppedSince: boolean
 }
@@ -34,11 +35,16 @@ const pendingPush = globalSingleton('pending-navigation', () => ({
   nextId: 0
 }))
 
+function withoutEmptyFragment(href: string): string {
+  return href.endsWith('#') ? href.slice(0, -1) : href
+}
+
 export function markPendingPush(url: URL): PendingPushState {
   const id = ++pendingPush.nextId
   pendingPush.current = {
     href: url.href,
     id,
+    currentHref: url.href,
     routerIndex: history.state?.idx,
     poppedSince: false
   }
@@ -52,14 +58,14 @@ function isOnPendingPushEntry(): boolean {
     history.state?.[historyUpdateMarker] === pending.id &&
     // Shallow updates pass the starting state to pushState or replaceState.
     // The URL distinguishes the pending entry from the resulting marker copies.
-    location.href === pending.href
+    location.href === pending.currentHref
   )
 }
 
 function movePendingPushHref(): void {
   const pending = pendingPush.current
   if (pending) {
-    pending.href = location.href
+    pending.currentHref = location.href
   }
 }
 
@@ -90,6 +96,17 @@ function repairOrNotePopOnPendingPush(): void {
     return
   }
   pending.poppedSince = true
+}
+
+function pendingPushCommitUrl(url: string | URL): string | null {
+  const pending = pendingPush.current
+  if (!pending || pending.poppedSince || !isOnPendingPushEntry()) {
+    return null
+  }
+  const href = new URL(url, location.href).href
+  return withoutEmptyFragment(href) === withoutEmptyFragment(pending.href)
+    ? pending.currentHref
+    : href
 }
 
 // React Router reads the optimistic entry's idx into its private index before
@@ -190,13 +207,11 @@ export function patchHistory(
     }
     // The router committing an optimistic deep push must not add
     // a second entry (#1563).
-    const commit =
-      hasPendingPush() && isOnPendingPushEntry()
-        ? originalReplaceState
-        : originalPushState
+    const commitUrl = pendingPushCommitUrl(url)
+    const commit = commitUrl ? originalReplaceState : originalPushState
     clearPendingPush()
-    commit.call(history, state, '', url)
-    sync(url)
+    commit.call(history, state, '', commitUrl ?? url)
+    sync(commitUrl ?? url)
   }
   history.replaceState = function nuqs_replaceState(state, marker, url) {
     const onPendingPushEntry = isOnPendingPushEntry()
