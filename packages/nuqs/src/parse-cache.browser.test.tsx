@@ -1,7 +1,8 @@
+import React, { useState, type ReactNode } from 'react'
 import { describe, expect, it } from 'vitest'
 import { renderHook } from 'vitest-browser-react'
-import { withNuqsTestingAdapter } from './adapters/testing'
-import { createParser } from './parsers'
+import { NuqsTestingAdapter, withNuqsTestingAdapter } from './adapters/testing'
+import { createParser, parseAsInteger } from './parsers'
 import { useQueryState } from './useQueryState'
 
 const parserP = createParser({
@@ -37,5 +38,32 @@ describe('useQueryState: publication identity', () => {
       parsedBy: 'Q'
     })
     expect(result.current.sameParserReader[0]).toBe(exact)
+  })
+})
+
+describe('useQueryState: publication lifecycle', () => {
+  it('re-parses a restored query after the key left the URL', async () => {
+    let restoreUrl = () => {}
+    function ExternalUrl({ children }: { children: ReactNode }) {
+      const [search, setSearch] = useState('')
+      restoreUrl = () => setSearch('n=1')
+      return (
+        <NuqsTestingAdapter searchParams={search} hasMemory>
+          {children}
+        </NuqsTestingAdapter>
+      )
+    }
+    const { result, act } = await renderHook(
+      () => useQueryState('n', parseAsInteger),
+      { wrapper: ExternalUrl }
+    )
+
+    await act(() => result.current[1](1.4))
+    expect(result.current[0]).toBe(1.4)
+    await act(() => result.current[1](null))
+    expect(result.current[0]).toBeNull()
+    await act(() => restoreUrl())
+
+    expect(result.current[0]).toBe(1)
   })
 })
