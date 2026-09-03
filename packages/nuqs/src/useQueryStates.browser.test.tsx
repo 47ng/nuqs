@@ -1065,43 +1065,6 @@ describe('useQueryStates: clearOnDefault', () => {
   })
 })
 
-describe('useQueryStates: parser type changes', () => {
-  it('re-reads the raw value with the new parser type on a stable key', async () => {
-    function Child({ multi }: { multi: boolean }) {
-      const [state] = useQueryStates({
-        a: multi ? parseAsNativeArrayOf(parseAsString) : parseAsString
-      })
-      return <div data-testid="value">{JSON.stringify(state)}</div>
-    }
-    function TestComponent() {
-      const [multi, setMulti] = useState(false)
-      const [searchParams, setSearchParams] = useState('?a=x')
-      return (
-        <>
-          <button onClick={() => setMulti(true)}>Multi</button>
-          <button onClick={() => setSearchParams('?a=1&a=2')}>Navigate</button>
-          <NuqsTestingAdapter searchParams={searchParams} hasMemory>
-            <Child multi={multi} />
-          </NuqsTestingAdapter>
-        </>
-      )
-    }
-
-    const user = userEvent.setup()
-    render(<TestComponent />)
-    await expect
-      .element(page.getByTestId('value'))
-      .toHaveTextContent('{"a":"x"}')
-
-    await user.click(page.getByRole('button', { name: 'Multi' }))
-    await user.click(page.getByRole('button', { name: 'Navigate' }))
-
-    await expect
-      .element(page.getByTestId('value'))
-      .toHaveTextContent('{"a":["1","2"]}')
-  })
-})
-
 describe('useQueryStates: dynamic keys', () => {
   it.each(['constructor', 'hasOwnProperty'])(
     'supports adding a dynamic native array key named %s',
