@@ -123,9 +123,25 @@ describe('mutation gate', () => {
   })
 
   it('fails when a timed-out mutant starts surviving', () => {
-    expect(
-      compareMutationReports(report(['Timeout']), report(['Survived']))
-    ).toMatchObject({ pass: false, delta: 1 })
+    const baseline = report(['Timeout'])
+    const candidate = report(['Survived'])
+    const identity = {
+      mutatorName: 'ConditionalExpression',
+      replacement: 'false',
+      location: {
+        end: { line: 1, column: 4 },
+        start: { line: 1, column: 0 }
+      }
+    }
+    baseline.files['src/example.ts']!.source = 'true'
+    candidate.files['src/example.ts']!.source = 'true'
+    Object.assign(baseline.files['src/example.ts']!.mutants[0]!, identity)
+    Object.assign(candidate.files['src/example.ts']!.mutants[0]!, identity)
+
+    expect(compareMutationReports(baseline, candidate)).toMatchObject({
+      pass: false,
+      delta: 1
+    })
   })
 
   it('passes when mutation debt is stable or decreases', () => {
@@ -270,6 +286,18 @@ describe('mutation gate', () => {
         report(['Killed'], candidateConfig)
       )
     ).toThrow('node mutation scope lost 1 executed test')
+  })
+
+  it('checks executed test loss for the browser runtime', () => {
+    const candidateConfig = structuredClone(defaultConfig)
+    candidateConfig.scope.browser.executedTests = []
+
+    expect(() =>
+      compareMutationReports(
+        report(['Killed']),
+        report(['Killed'], candidateConfig)
+      )
+    ).toThrow('browser mutation scope lost 1 executed test')
   })
 
   it('rejects losing one of several tests in an existing file', () => {
