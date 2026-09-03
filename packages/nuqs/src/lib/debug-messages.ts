@@ -4,8 +4,7 @@
 // (`src/debug.ts`) and the server entry (`src/index.server.ts`) import these
 // values, so the format strings never reach the client `index.js` unless logging
 // is opted into via `import 'nuqs/debug'`. The server bundle pulls them in
-// eagerly (it has more headroom). Call sites in the core pass the code only —
-// mirroring the `errors.ts` code-catalog pattern.
+// eagerly (it has more headroom). Call sites in the core pass the code only.
 export const debugMessages = {
   // useQueryStates
   1: '[nuq+ %s `%s`] State changed: %O',
@@ -44,10 +43,12 @@ export const debugMessages = {
  * The set of valid debug codes — the keys of {@link debugMessages}.
  *
  * This makes the catalog the single source of truth for which codes exist:
- * `debug`/`warn` only accept a `DebugCode`, so an out-of-range code is a type
+ * `debug` only accepts a `DebugCode`, so an out-of-range code is a type
  * error at the call site.
  */
 export type DebugCode = keyof typeof debugMessages
+
+export type WarnCode = Extract<DebugCode, 24 | 25>
 
 // The type of a `%s` argument. `sprintf` (and the browser console) coerce with
 // `String(arg)`, so anything with a `toString` — `URL`, `URLSearchParams`,
