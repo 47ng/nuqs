@@ -3,11 +3,15 @@ import { dirname, extname, relative, resolve } from 'node:path'
 
 const sourceExtensions = new Set([
   '.cjs',
+  '.cjsx',
   '.cts',
+  '.ctsx',
   '.js',
   '.jsx',
   '.mjs',
+  '.mjsx',
   '.mts',
+  '.mtsx',
   '.ts',
   '.tsx'
 ])

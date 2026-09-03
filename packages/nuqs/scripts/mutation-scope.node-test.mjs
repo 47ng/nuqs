@@ -25,7 +25,20 @@ it('records JavaScript and TypeScript source files', async () => {
   await mkdir(sourceDirectory, { recursive: true })
   await mkdir(cacheDirectory, { recursive: true })
 
-  const extensions = ['cjs', 'cts', 'js', 'jsx', 'mjs', 'mts', 'ts', 'tsx']
+  const extensions = [
+    'cjs',
+    'cjsx',
+    'cts',
+    'ctsx',
+    'js',
+    'jsx',
+    'mjs',
+    'mjsx',
+    'mts',
+    'mtsx',
+    'ts',
+    'tsx'
+  ]
   await Promise.all(
     extensions.map(extension =>
       writeFile(join(sourceDirectory, `example.${extension}`), '')
