@@ -115,19 +115,18 @@ export function parseWithClientCache<T>(
       return published[2] as T | null
     }
   }
-  if (cached?.[0] === parse && compareQuery(cached[1], query)) {
-    if (cached[3] !== undefined) {
-      warn(25, query, cached[3], urlKey)
+  let entry = cached
+  if (entry?.[0] !== parse || !compareQuery(entry[1], query)) {
+    entry = [parse, query, null]
+    try {
+      entry[2] = parse(query)
+    } catch (error) {
+      entry[3] = error
     }
-    return cached[2] as T | null
+    bucket.e = entry
   }
-  const entry: ParseCacheEntry = [parse, query, null]
-  try {
-    entry[2] = parse(query)
-  } catch (error) {
-    warn(25, query, error, urlKey)
-    entry[3] = error
+  if (entry[3] !== undefined) {
+    warn(25, query, entry[3], urlKey)
   }
-  bucket.e = entry
   return entry[2] as T | null
 }

@@ -25,7 +25,8 @@ import {
   withNuqsTestingAdapter,
   type OnUrlUpdateFunction
 } from './adapters/testing'
-import { clearParseCache, parseWithCache } from './lib/parse-cache'
+import { parseWithCache } from './lib/parse-cache'
+import { clearParseCache } from './lib/parse-cache.client'
 import { debounce, throttle } from './lib/queues/rate-limiting'
 import { resetQueues } from './lib/queues/reset'
 import { globalThrottleQueue } from './lib/queues/throttle'
@@ -703,6 +704,26 @@ describe('useQueryStates: optimistic adoption', () => {
       await Promise.resolve()
     })
     expect(renders).toBe(rendersBeforeUpdate)
+  })
+  it('releases a publication after its last subscriber unmounts', async () => {
+    const parse = vi.fn((query: string) => query)
+    const parser = createParser({ parse, serialize: String })
+    const { unmount } = await renderHook(
+      () => useQueryStates({ released: parser }),
+      { wrapper: withNuqsTestingAdapter({ searchParams: '?released=x' }) }
+    )
+    expect(parse).toHaveBeenCalledOnce()
+    unmount()
+    const identity = (query: string) => query
+    for (let i = 0; i < 1000; i++) {
+      parseWithCache(
+        `release-filler-${i}`,
+        identity,
+        'x' as string & Array<string>
+      )
+    }
+    parseWithCache('released', parse, 'x' as string & Array<string>)
+    expect(parse).toHaveBeenCalledTimes(2)
   })
   it('keeps the exact value identity for the writer (non-identity parse round-trip)', async () => {
     const objParser = parseAsJson<{ v: number }>(x => x as { v: number })
