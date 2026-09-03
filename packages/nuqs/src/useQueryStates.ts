@@ -197,11 +197,10 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
     return [state, cachedQuery] as const
   })
   const queryRef = useRef(initial[1])
-  // Starts at the source used by the state initializer, paired with the
-  // `location.search` each reconcile ran against. The seed is empty because
-  // `location` must not be read during SSR; the discarded-render branch below
-  // also requires a committed pathname, which only an effect can record, so it
-  // never reads that seed.
+  // `lastSyncRef` stores the source that built the current state and the last
+  // reconciled `location.search`. The search starts empty because SSR cannot
+  // read `location`. The discarded-render branch below waits for an effect to
+  // record a pathname, so it never reads the empty seed.
   const lastSyncRef = useRef<[Record<string, Query | null>, string]>([
     rawValues,
     ''
@@ -238,15 +237,14 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
   // the value captured while hidden (#1444). Gating on the `rawValues` identity
   // means we only adopt the URL when its source actually changed.
   //
-  // Detached cross-route renders neither adopt nor recover. A discarded render
-  // is different: the last reconciled source still matches the live browser
-  // search, so the source handed to this render is stale. Ignore it and restore
-  // the state React abandoned, even though the pathname moved.
-  // A pending overlay write is never stale: it is ahead of the browser URL on
-  // purpose. Treating it as stale would freeze a hook that stayed mounted
-  // across a path-only navigation: that navigation changes neither the search
-  // nor the recorded pathname, so the effect below does not run to refresh
-  // them.
+  // Detached cross-route renders do nothing. A discarded render differs.
+  // The browser search still matches the last source we reconciled, so the
+  // render receives a stale source. We ignore it and restore the state React
+  // dropped.
+  // A pending overlay write is never stale. It intentionally runs ahead of the
+  // URL. Without this check, a hook that stays mounted across a path-only
+  // navigation would freeze. It changes neither the search nor the recorded
+  // pathname, so the effect below never runs.
   const sourceChanged = lastSyncRef.current[0] !== rawValues
   const isDetachedCrossRouteRender =
     detachedRef.current &&
@@ -338,8 +336,9 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
         // null above. Other hooks watching this key re-render via the overlay
         // notification (from the queue pushes below) and re-parse the raw
         // query with their own parser.
-        // A cleared key stores null, so `applyDefaultValues` keeps reading the
-        // parser's current default. The resolved value serves comparisons only.
+        // A cleared key stores null. `applyDefaultValues` then reads the
+        // current default. The comparisons below apply that default to both
+        // sides.
         const resolvedValue = value ?? parser.defaultValue ?? null
         const previousState = stateRef.current
         const wasCached = Object.is(
@@ -359,6 +358,9 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
             }
         stateRef.current = nextCachedState
         setInternalState(currentState => {
+          // A bail-out keeps the current state. Otherwise, the write
+          // rebases on the latest URL-derived siblings if it interrupted URL
+          // reconciliation. If not, it keeps React's current lane.
           const currentValue =
             currentState[stateKey] ?? parser.defaultValue ?? null
           if (
@@ -374,11 +376,8 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
               parser.defaultValue,
               currentState
             )
-            // bail out by returning the current state
             return currentState
           }
-          // Rebase a write which interrupted URL reconciliation on the latest
-          // URL-derived siblings; otherwise preserve React's current lane.
           const nextState =
             currentState === previousState
               ? nextCachedState
