@@ -1,4 +1,4 @@
-import React, { Activity, act, useState } from 'react'
+import React, { Activity, act, memo, useEffect, useState } from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { render, renderHook } from 'vitest-browser-react'
 import { createBridgeStore, type BridgeStore } from './impl.isolated'
@@ -70,6 +70,44 @@ describe('Next App Router isolated adapter', () => {
     }
   })
 
+  it('reveals a memoized hidden page with its updated search params', async () => {
+    const commits: string[] = []
+    let setSearch = (_search: string) => {}
+    let setVisible = (_visible: boolean) => {}
+    const Page = memo(function Page({ store }: { store: AppBridgeStore }) {
+      const { searchParams } = useNuqsNextAppRouterIsolatedAdapter(store, ['a'])
+      const value = searchParams.toString()
+      useEffect(() => {
+        commits.push(value)
+      })
+      return null
+    })
+    function App() {
+      const store = useAppBridgeStore()
+      const [visible, setVisibleState] = useState(true)
+      const [, rerender] = useState(0)
+      setVisible = setVisibleState
+      setSearch = search => {
+        route.search = search
+        rerender(n => n + 1)
+      }
+      return (
+        <>
+          <AppBridge store={store} />
+          <Activity mode={visible ? 'visible' : 'hidden'}>
+            <Page store={store} />
+          </Activity>
+        </>
+      )
+    }
+    await render(<App />)
+    expect(commits).toEqual(['a=1'])
+    await act(() => setVisible(false))
+    await act(() => setSearch('a=2'))
+    commits.length = 0
+    await act(() => setVisible(true))
+    expect(commits[0]).toBe('a=2')
+  })
   it('reads the destination params when a hidden page is revealed', async () => {
     const seen: string[] = []
     let navigate = (_pathname: string, _search: string) => {}

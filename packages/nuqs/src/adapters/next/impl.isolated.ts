@@ -1,8 +1,10 @@
 import {
   useCallback,
   useEffect,
+  useInsertionEffect,
   useLayoutEffect,
   useRef,
+  useState,
   useSyncExternalStore
 } from 'react'
 import { compareQuery } from '../../lib/compare'
@@ -157,15 +159,34 @@ export function useIsolatedSearchParams(
   // render, discarded then replayed transitions), preserving getSnapshot
   // consistency between consecutive calls.
   const hasCommitted = useRef(false)
+  const detached = useRef(false)
   useEffect(() => {
     hasCommitted.current = true
+    detached.current = false
     // Activity drops hidden subtree effects; reveal renders before they rerun.
     // Cleanup resets this flag, so reveal reads the Bridge's render-phase view,
     // not params the store committed for another route.
     return () => {
       hasCommitted.current = false
+      detached.current = true
     }
   }, [])
+  const [, forceUpdate] = useState(0)
+  useInsertionEffect(() => {
+    const off = watchKeys.map(key =>
+      store.emitter.on(key, () => {
+        const previous = cache.current?.search
+        if (
+          detached.current &&
+          store.committed &&
+          select(store.committed) !== previous
+        ) {
+          forceUpdate(version => version + 1)
+        }
+      })
+    )
+    return () => off.forEach(unsubscribe => unsubscribe())
+  }, [watchKeys, store])
   return useSyncExternalStore(
     subscribe,
     () => {

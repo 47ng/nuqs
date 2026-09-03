@@ -232,12 +232,12 @@
     {
       "name": "Next.js app router adapter",
       "path": "dist/adapters/next/app.js",
-      "limit": "4.1 kB"
+      "limit": "4.2 kB"
     },
     {
       "name": "Next.js pages router adapter",
       "path": "dist/adapters/next/pages.js",
-      "limit": "4.1 kB"
+      "limit": "4.2 kB"
     }
   ]
 }
