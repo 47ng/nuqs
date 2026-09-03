@@ -1,24 +1,28 @@
-import React from 'react'
+import React, { Activity, act, useState } from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { render, renderHook } from 'vitest-browser-react'
 import { createBridgeStore, type BridgeStore } from './impl.isolated'
 import {
   AppBridge,
   useAppBridgeStore,
-  useNuqsNextAppRouterIsolatedAdapter
+  useNuqsNextAppRouterIsolatedAdapter,
+  type AppBridgeStore
 } from './impl.isolated.app'
 
 const replace = vi.fn()
+const route = vi.hoisted(() => ({ pathname: '/route', search: 'a=1' }))
 
 vi.mock('next/navigation.js', () => ({
   default: {},
   useRouter: () => ({ replace }),
-  usePathname: () => '/route',
-  useSearchParams: () => new URLSearchParams('a=1')
+  usePathname: () => route.pathname,
+  useSearchParams: () => new URLSearchParams(route.search)
 }))
 
 beforeEach(() => {
   replace.mockClear()
+  route.pathname = '/route'
+  route.search = 'a=1'
 })
 
 function readLatest(store: BridgeStore): string | null {
@@ -64,6 +68,39 @@ describe('Next App Router isolated adapter', () => {
     } finally {
       history.replaceState(null, '', location.pathname)
     }
+  })
+
+  it('reads the destination params when a hidden page is revealed', async () => {
+    const seen: string[] = []
+    let navigate = (_pathname: string, _search: string) => {}
+    function Page({ store }: { store: AppBridgeStore }) {
+      const { searchParams } = useNuqsNextAppRouterIsolatedAdapter(store, ['a'])
+      seen.push(searchParams.toString())
+      return null
+    }
+    function App() {
+      const store = useAppBridgeStore()
+      const [, rerender] = useState(0)
+      navigate = (pathname, search) => {
+        route.pathname = pathname
+        route.search = search
+        rerender(n => n + 1)
+      }
+      return (
+        <>
+          <AppBridge store={store} />
+          <Activity mode={route.pathname === '/route' ? 'visible' : 'hidden'}>
+            <Page store={store} />
+          </Activity>
+        </>
+      )
+    }
+    await render(<App />)
+    expect(seen.at(-1)).toBe('a=1')
+    await act(() => navigate('/elsewhere', 'a=2'))
+    seen.length = 0
+    await act(() => navigate('/route', 'a=3'))
+    expect(seen[0]).toBe('a=3')
   })
 
   it('leaves the router alone for shallow updates', async () => {

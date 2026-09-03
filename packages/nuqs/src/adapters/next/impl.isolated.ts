@@ -159,6 +159,12 @@ export function useIsolatedSearchParams(
   const hasCommitted = useRef(false)
   useEffect(() => {
     hasCommitted.current = true
+    // Activity drops hidden subtree effects; reveal renders before they rerun.
+    // Cleanup resets this flag, so reveal reads the Bridge's render-phase view,
+    // not params the store committed for another route.
+    return () => {
+      hasCommitted.current = false
+    }
   }, [])
   return useSyncExternalStore(
     subscribe,
