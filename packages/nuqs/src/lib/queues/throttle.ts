@@ -111,7 +111,9 @@ export class ThrottledQueue {
     if (options.startTransition) {
       this.transitions.add(options.startTransition)
     }
-    // Keep the maximum throttle value (Infinity wins and defers the flush)
+    // Keep the longest throttle value, except after an Infinity push: that one
+    // defers the flush, and the next push (finite or not) replaces it, which
+    // lets the deferred entries flush with the new value.
     if (!Number.isFinite(this.timeMs) || timeMs > this.timeMs) {
       this.timeMs = timeMs
     }
@@ -259,10 +261,7 @@ export class ThrottledQueue {
       try {
         search = processUrlSearchParams(search)
       } catch (err) {
-        console.error(error(502), items.map(([key]) => key).join(), err)
-        // Some adapters keep the queue available during concurrent renders,
-        // so discard this failed batch only when the next update starts.
-        this.resetQueueOnNextPush = true
+        this.reportFailedBatch(502, adapter.autoResetQueueOnUpdate, items, err)
         return [search, err]
       }
     }
@@ -272,18 +271,28 @@ export class ThrottledQueue {
     } catch (err) {
       // This may fail due to rate-limiting of history methods,
       // for example Safari only allows 100 updates in a 30s window.
-      console.error(error(429), items.map(([key]) => key).join(), err)
-      // The URL never changed: clear the failed overlay values if the adapter
-      // deferred the normal reset, then notify so every hook converges back to
-      // the committed search params instead of keeping optimistic values that
-      // will never land.
-      if (!adapter.autoResetQueueOnUpdate) {
-        this.reset({ notify: false })
-      }
-      for (const [key] of items) {
-        this.sync.emit(key)
-      }
+      this.reportFailedBatch(429, adapter.autoResetQueueOnUpdate, items, err)
       return [search, err]
+    }
+  }
+
+  // The URL never changed: clear the failed overlay values if the adapter
+  // deferred the normal reset, then notify so every hook converges back to
+  // the committed search params instead of keeping optimistic values that
+  // will never land.
+  private reportFailedBatch(
+    code: 429 | 502,
+    autoResetQueueOnUpdate: boolean,
+    items: Array<[string, Query | null]>,
+    err: unknown
+  ): void {
+    const keys = items.map(([key]) => key)
+    console.error(error(code), keys.join(), err)
+    if (!autoResetQueueOnUpdate) {
+      this.reset({ notify: false })
+    }
+    for (const key of keys) {
+      this.sync.emit(key)
     }
   }
 }

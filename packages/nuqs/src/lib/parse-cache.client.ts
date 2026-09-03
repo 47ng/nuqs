@@ -25,7 +25,7 @@ export function parseWithClientCache<T>(
 ): T | null {
   const cached = parseCache.get(urlKey)
   if (cached && cached.parse === parse && compareQuery(cached.query, query)) {
-    if (cached.error !== undefined) {
+    if ('error' in cached) {
       warn(25, query, cached.error, urlKey)
     }
     return cached.value as T | null

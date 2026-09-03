@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it } from 'vitest'
 import { cleanup, render } from 'vitest-browser-react'
 import { page } from 'vitest/browser'
 import { NuqsAdapter } from './adapters/react'
+import { throttle } from './lib/queues/rate-limiting'
 import { resetQueues } from './lib/queues/reset'
 import { parseAsString } from './parsers'
 import { useQueryStates } from './useQueryStates'
@@ -235,5 +236,53 @@ describe('useQueryStates: discarded URL reconciliation', () => {
       b: '0',
       c: '0'
     })
+  })
+})
+
+describe('useQueryStates: path-only navigation', () => {
+  const originalUrl = location.href
+
+  afterEach(async () => {
+    await cleanup()
+    resetQueues()
+    history.replaceState(history.state, '', originalUrl)
+  })
+
+  it('adopts a sibling overlay write made after a path-only navigation', async () => {
+    // Two keys, one written: the reader must reconcile as long as any watched
+    // key carries an overlay write, not only when every one of them does.
+    function Reader() {
+      const [{ q }] = useQueryStates({ q: parseAsString, r: parseAsString })
+      return <output data-testid="reader">{q}</output>
+    }
+    function Writer() {
+      const [{ q }, setValues] = useQueryStates({
+        q: parseAsString.withOptions({ limitUrlUpdates: throttle(Infinity) })
+      })
+      return (
+        <>
+          <button
+            data-testid="write"
+            onClick={() => void setValues({ q: '2' })}
+          />
+          <output data-testid="writer">{q}</output>
+        </>
+      )
+    }
+
+    history.replaceState(history.state, '', '/a?q=1')
+    await render(
+      <NuqsAdapter>
+        <Reader />
+        <Writer />
+      </NuqsAdapter>
+    )
+    await expect.element(page.getByTestId('reader')).toHaveTextContent('1')
+
+    history.replaceState(history.state, '', '/b?q=1')
+    click('write')
+
+    await expect.element(page.getByTestId('writer')).toHaveTextContent('2')
+    await expect.element(page.getByTestId('reader')).toHaveTextContent('2')
   })
 })

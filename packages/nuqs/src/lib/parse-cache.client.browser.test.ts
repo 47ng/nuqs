@@ -58,6 +58,33 @@ describe('parseWithCache', () => {
       true
     )
   })
+  it('re-surfaces a cached failure that threw undefined', () => {
+    const debugSink = vi.fn()
+    setDebugSink(debugSink)
+    const parse = vi.fn(() => {
+      throw undefined
+    })
+    const a = parseWithCache(
+      'parse-cache-throw-undefined',
+      parse,
+      asQuery('foo')
+    )
+    const b = parseWithCache(
+      'parse-cache-throw-undefined',
+      parse,
+      asQuery('foo')
+    )
+    expect(a).toBeNull()
+    expect(b).toBeNull()
+    expect(parse).toHaveBeenCalledOnce()
+    expect(debugSink).toHaveBeenCalledTimes(2)
+    expect(debugSink).toHaveBeenNthCalledWith(
+      2,
+      25,
+      ['foo', undefined, 'parse-cache-throw-undefined'],
+      true
+    )
+  })
   it('does not warn when reusing a successful parse', () => {
     const debugSink = vi.fn()
     setDebugSink(debugSink)

@@ -363,6 +363,43 @@ describe('throttle: overlay sync notifications', () => {
     expect(spy).toHaveBeenCalledOnce()
     expect(consoleErrorSpy).toHaveBeenCalledOnce()
   })
+  it('notifies the failed keys when processUrlSearchParams throws', async () => {
+    const consoleErrorSpy = vi
+      .spyOn(console, 'error')
+      .mockImplementation(() => {})
+    const queue = new ThrottledQueue()
+    queue.push({ key: 'a', query: 'a', options: {} })
+    const spy = vi.fn()
+    queue.sync.on('a', spy)
+    const promise = queue.flush(createMockAdapter(), () => {
+      throw new Error('middleware error')
+    })
+    vi.runAllTimers()
+    await expect(promise).rejects.toEqual(new URLSearchParams('?a=a'))
+    expect(queue.getQueuedQuery('a')).toBeUndefined()
+    expect(spy).toHaveBeenCalledOnce()
+    expect(consoleErrorSpy).toHaveBeenCalledOnce()
+  })
+  it('clears the failed overlay values when processUrlSearchParams throws and the adapter defers normal reset', async () => {
+    const consoleErrorSpy = vi
+      .spyOn(console, 'error')
+      .mockImplementation(() => {})
+    const queue = new ThrottledQueue()
+    queue.push({ key: 'a', query: 'a', options: {} })
+    const spy = vi.fn()
+    queue.sync.on('a', spy)
+    const promise = queue.flush(
+      { ...createMockAdapter(), autoResetQueueOnUpdate: false },
+      () => {
+        throw new Error('middleware error')
+      }
+    )
+    vi.runAllTimers()
+    await expect(promise).rejects.toEqual(new URLSearchParams('?a=a'))
+    expect(queue.getQueuedQuery('a')).toBeUndefined()
+    expect(spy).toHaveBeenCalledOnce()
+    expect(consoleErrorSpy).toHaveBeenCalledOnce()
+  })
   it('does not notify previously-flushed keys when resetting on the next push', async () => {
     const queue = new ThrottledQueue()
     const mockAdapter: UpdateQueueAdapterContext = {
