@@ -25,7 +25,8 @@ import {
   withNuqsTestingAdapter,
   type OnUrlUpdateFunction
 } from './adapters/testing'
-import { clearParseCache, parseWithCache } from './lib/parse-cache'
+import { parseWithCache } from './lib/parse-cache'
+import { clearParseCache } from './lib/parse-cache.client'
 import { debounce, throttle } from './lib/queues/rate-limiting'
 import { resetQueues } from './lib/queues/reset'
 import { globalThrottleQueue } from './lib/queues/throttle'

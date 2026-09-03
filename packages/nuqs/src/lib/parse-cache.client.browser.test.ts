@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { setDebugSink } from './debug'
-import { parseWithCache, retainParseCache } from './parse-cache'
+import { parseWithCache } from './parse-cache'
+import { retainParseCache } from './parse-cache.client'
 
 type AnyQuery = string & Array<string>
 
