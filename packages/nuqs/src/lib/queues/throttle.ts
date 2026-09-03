@@ -261,7 +261,14 @@ export class ThrottledQueue {
       try {
         search = processUrlSearchParams(search)
       } catch (err) {
-        this.reportFailedBatch(502, adapter.autoResetQueueOnUpdate, items, err)
+        const keys = items.map(([key]) => key)
+        console.error(error(502), keys.join(), err)
+        if (!adapter.autoResetQueueOnUpdate) {
+          this.reset({ notify: false })
+        }
+        for (const key of keys) {
+          this.sync.emit(key)
+        }
         return [search, err]
       }
     }
@@ -271,28 +278,15 @@ export class ThrottledQueue {
     } catch (err) {
       // This may fail due to rate-limiting of history methods,
       // for example Safari only allows 100 updates in a 30s window.
-      this.reportFailedBatch(429, adapter.autoResetQueueOnUpdate, items, err)
+      const keys = items.map(([key]) => key)
+      console.error(error(429), keys.join(), err)
+      if (!adapter.autoResetQueueOnUpdate) {
+        this.reset({ notify: false })
+      }
+      for (const key of keys) {
+        this.sync.emit(key)
+      }
       return [search, err]
-    }
-  }
-
-  // The URL never changed: clear the failed overlay values if the adapter
-  // deferred the normal reset, then notify so every hook converges back to
-  // the committed search params instead of keeping optimistic values that
-  // will never land.
-  private reportFailedBatch(
-    code: 429 | 502,
-    autoResetQueueOnUpdate: boolean,
-    items: Array<[string, Query | null]>,
-    err: unknown
-  ): void {
-    const keys = items.map(([key]) => key)
-    console.error(error(code), keys.join(), err)
-    if (!autoResetQueueOnUpdate) {
-      this.reset({ notify: false })
-    }
-    for (const key of keys) {
-      this.sync.emit(key)
     }
   }
 }
