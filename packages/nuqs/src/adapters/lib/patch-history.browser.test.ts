@@ -163,6 +163,18 @@ describe('patchHistory: pending navigation', () => {
     expect(hasPendingPush()).toBe(false)
   })
 
+  it('repairs the pending entry after a deep replace on its predecessor', async () => {
+    history.replaceState({ idx: 4 }, historyUpdateMarker, '?')
+    optimisticPush('?a=1')
+    await traverse(() => history.back())
+    markPendingReplace(new URL('?b=1', location.href))
+    history.replaceState(history.state, historyUpdateMarker, '?b=1')
+    history.replaceState({ idx: 4 }, '', '?b=1')
+    await traverse(() => history.forward())
+    expect(history.state).toEqual({ idx: 5 })
+    expect(hasPendingPush()).toBe(false)
+  })
+
   it('repairs the pending entry after a marked replace changed its URL', async () => {
     history.replaceState({ idx: 4 }, historyUpdateMarker, '?')
     optimisticPush('?a=1')
