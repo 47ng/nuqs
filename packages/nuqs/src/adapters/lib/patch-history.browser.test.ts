@@ -71,7 +71,11 @@ describe('patchHistory: pending push', () => {
   it('turns the router commit of a pending push into a replace', () => {
     optimisticPush('?a=1')
     routerPush('?a=1')
-    expect(replaceState).toHaveBeenCalledExactlyOnceWith({ idx: 1 }, '', '?a=1')
+    expect(replaceState).toHaveBeenCalledExactlyOnceWith(
+      { idx: 1 },
+      '',
+      new URL('?a=1', location.href).href
+    )
     expect(pushState).not.toHaveBeenCalled()
     expect(onUpdate).toHaveBeenCalledExactlyOnceWith(
       new URLSearchParams('?a=1')
@@ -85,7 +89,7 @@ describe('patchHistory: pending push', () => {
     expect(replaceState).toHaveBeenCalledExactlyOnceWith(
       { idx: 1 },
       '',
-      '?redirected=true'
+      new URL('?redirected=true', location.href).href
     )
     expect(pushState).not.toHaveBeenCalled()
   })
@@ -300,9 +304,116 @@ describe('patchHistory: pending push', () => {
     expect(replaceState).toHaveBeenCalledExactlyOnceWith(
       { idx: 1 },
       '',
-      new URL('?a=1&shallow=pass', location.href)
+      new URL('?a=1&shallow=pass', location.href).href
     )
     expect(pushState).not.toHaveBeenCalled()
+    expect(onUpdate).toHaveBeenCalledExactlyOnceWith(
+      new URLSearchParams('a=1&shallow=pass')
+    )
+    expect(hasPendingPush()).toBe(false)
+  })
+
+  it('keeps the last of several shallow replacements', () => {
+    optimisticPush('?a=1')
+    history.replaceState(history.state, historyUpdateMarker, '?a=1&s=1')
+    history.replaceState(history.state, historyUpdateMarker, '?a=1&s=2')
+    replaceState.mockClear()
+    routerPush('?a=1')
+    expect(replaceState).toHaveBeenCalledExactlyOnceWith(
+      { idx: 1 },
+      '',
+      new URL('?a=1&s=2', location.href).href
+    )
+    expect(onUpdate).toHaveBeenCalledExactlyOnceWith(
+      new URLSearchParams('a=1&s=2')
+    )
+    expect(hasPendingPush()).toBe(false)
+  })
+
+  it('keeps the takeover URL when the router commits a taken-over push', () => {
+    optimisticPush('?a=1')
+    const takeoverUrl = new URL('?a=1&b=2', location.href)
+    history.replaceState(
+      markPendingPush(takeoverUrl),
+      historyUpdateMarker,
+      takeoverUrl
+    )
+    replaceState.mockClear()
+    routerPush('?a=1&b=2')
+    expect(replaceState).toHaveBeenCalledExactlyOnceWith(
+      { idx: 1 },
+      '',
+      takeoverUrl.href
+    )
+    expect(pushState).not.toHaveBeenCalled()
+    expect(hasPendingPush()).toBe(false)
+  })
+
+  it('lets a redirected commit win over a shallow replacement', () => {
+    history.replaceState({ idx: 0 }, historyUpdateMarker, '?a=1')
+    optimisticPush('?a=1')
+    history.replaceState(
+      history.state,
+      historyUpdateMarker,
+      '?a=1&shallow=pass'
+    )
+    replaceState.mockClear()
+    routerPush('?redirected=true')
+    expect(replaceState).toHaveBeenCalledExactlyOnceWith(
+      { idx: 1 },
+      '',
+      new URL('?redirected=true', location.href).href
+    )
+    expect(pushState).not.toHaveBeenCalled()
+    expect(onUpdate).toHaveBeenCalledExactlyOnceWith(
+      new URLSearchParams('redirected=true')
+    )
+    expect(hasPendingPush()).toBe(false)
+  })
+
+  it('repairs the retargeted pending entry traversed forward onto', async () => {
+    history.replaceState({ idx: 0 }, historyUpdateMarker, '?a=1')
+    optimisticPush('?a=1')
+    history.replaceState(
+      history.state,
+      historyUpdateMarker,
+      '?a=1&shallow=pass'
+    )
+    await traverse(() => history.back())
+    await traverse(() => history.forward())
+    expect(history.state).toEqual({ idx: 1 })
+    expect(hasPendingPush()).toBe(false)
+  })
+
+  it('keeps a shallow replacement when the router commit drops a bare fragment', () => {
+    optimisticPush('?a=1#')
+    const shallowUrl = new URL('?a=1&shallow=pass#', location.href)
+    history.replaceState(history.state, historyUpdateMarker, shallowUrl)
+    replaceState.mockClear()
+    routerPush('?a=1')
+    expect(replaceState).toHaveBeenCalledExactlyOnceWith(
+      { idx: 1 },
+      '',
+      shallowUrl.href
+    )
+    expect(pushState).not.toHaveBeenCalled()
+    expect(onUpdate).toHaveBeenCalledExactlyOnceWith(
+      new URLSearchParams('a=1&shallow=pass')
+    )
+    expect(hasPendingPush()).toBe(false)
+  })
+
+  it('folds a router commit that carries a bare fragment', () => {
+    optimisticPush('?a=1')
+    routerPush('?a=1#')
+    expect(replaceState).toHaveBeenCalledExactlyOnceWith(
+      { idx: 1 },
+      '',
+      new URL('?a=1', location.href).href
+    )
+    expect(pushState).not.toHaveBeenCalled()
+    expect(onUpdate).toHaveBeenCalledExactlyOnceWith(new URLSearchParams('a=1'))
+    expect(hasPendingPush()).toBe(false)
   })
 
   it('does not retarget a pending push from a shallow replace after Back', async () => {

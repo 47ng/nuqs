@@ -35,6 +35,10 @@ const pendingPush = globalSingleton('pending-navigation', () => ({
   nextId: 0
 }))
 
+function withoutEmptyFragment(href: string): string {
+  return href.endsWith('#') ? href.slice(0, -1) : href
+}
+
 export function markPendingPush(url: URL): PendingPushState {
   const id = ++pendingPush.nextId
   pendingPush.current = {
@@ -94,18 +98,15 @@ function repairOrNotePopOnPendingPush(): void {
   pending.poppedSince = true
 }
 
-function pendingPushCommitUrl(url: string | URL): string | URL | null {
+function pendingPushCommitUrl(url: string | URL): string | null {
   const pending = pendingPush.current
   if (!pending || pending.poppedSince || !isOnPendingPushEntry()) {
     return null
   }
   const href = new URL(url, location.href).href
-  if (href === pending.href) {
-    return pending.currentHref === pending.href
-      ? url
-      : new URL(pending.currentHref)
-  }
-  return url
+  return withoutEmptyFragment(href) === withoutEmptyFragment(pending.href)
+    ? pending.currentHref
+    : href
 }
 
 // React Router reads the optimistic entry's idx into its private index before
