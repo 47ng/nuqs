@@ -16,6 +16,7 @@ const config = {
   },
   reactCompiler: true,
   experimental: {
+    turbopackFileSystemCacheForBuild: true,
     turbopackRustReactCompiler: true
   },
   reactStrictMode: true,

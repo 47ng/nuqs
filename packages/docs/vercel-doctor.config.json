@@ -1,0 +1,15 @@
+{
+  "ignore": {
+    "rules": ["vercel-doctor/vercel-consider-bun-runtime"],
+    "files": [
+      "src/app/playground/_demos/**",
+      "src/app/(pages)/stats/page.tsx",
+      "src/components/anchored-details.tsx",
+      "src/components/anchored-tabs.tsx",
+      "src/components/release-contribution-graph.tsx",
+      "src/components/vercel-oss-badge.tsx",
+      "src/lib/remark-audience.ts"
+    ]
+  },
+  "diff": false
+}
