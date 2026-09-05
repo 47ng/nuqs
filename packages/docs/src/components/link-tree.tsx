@@ -12,6 +12,10 @@ export type LinkTreeItemProps = {
 
 export function LinkTreeItem({ href, icon, label, detail }: LinkTreeItemProps) {
   const isLocalRoute = href.startsWith('/')
+  const Component = isLocalRoute ? Link : 'a'
+  const props = isLocalRoute
+    ? { href, prefetch: false }
+    : { href, target: '_blank', rel: 'noopener noreferrer' }
   return (
     <li>
       <Button
@@ -21,11 +25,7 @@ export function LinkTreeItem({ href, icon, label, detail }: LinkTreeItemProps) {
           'flex w-full items-center justify-start gap-3 py-6 text-base transition-all active:scale-[0.99]'
         )}
       >
-        <Link
-          href={href}
-          target={isLocalRoute ? undefined : '_blank'}
-          rel={isLocalRoute ? undefined : 'noopener noreferrer'}
-        >
+        <Component {...props}>
           {icon}
           <span className="justify-self-center">{label}</span>
           {detail && (
@@ -33,7 +33,7 @@ export function LinkTreeItem({ href, icon, label, detail }: LinkTreeItemProps) {
               {detail}
             </span>
           )}
-        </Link>
+        </Component>
       </Button>
     </li>
   )

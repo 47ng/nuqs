@@ -1,6 +1,5 @@
 import { cn } from '@/src/lib/utils'
 import { Link } from 'lucide-react'
-import NextLink from 'next/link'
 import { ComponentProps } from 'react'
 
 export function H1({ children, className, ...props }: ComponentProps<'h1'>) {
@@ -15,12 +14,12 @@ export function H1({ children, className, ...props }: ComponentProps<'h1'>) {
     >
       {props.id ? (
         <>
-          <NextLink
+          <a
             href={`#${props.id}`}
             className="peer font-extrabold no-underline hover:opacity-100"
           >
             {children}
-          </NextLink>
+          </a>
           <Link
             className="text-fd-muted-foreground size-3.5 shrink-0 opacity-0 transition-opacity peer-hover:opacity-100"
             aria-label="Link to section"
@@ -45,12 +44,12 @@ export function H2({ children, className, ...props }: ComponentProps<'h2'>) {
     >
       {props.id ? (
         <>
-          <NextLink
+          <a
             href={`#${props.id}`}
             className="peer font-semibold no-underline hover:opacity-100"
           >
             {children}
-          </NextLink>
+          </a>
           <Link
             className="text-fd-muted-foreground size-3.5 shrink-0 opacity-0 transition-opacity peer-hover:opacity-100"
             aria-label="Link to section"
