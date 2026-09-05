@@ -14,7 +14,7 @@ export function LinkTreeItem({ href, icon, label, detail }: LinkTreeItemProps) {
   const isLocalRoute = href.startsWith('/')
   const Component = isLocalRoute ? Link : 'a'
   const props = isLocalRoute
-    ? { href }
+    ? { href, prefetch: false }
     : { href, target: '_blank', rel: 'noopener noreferrer' }
   return (
     <li>
