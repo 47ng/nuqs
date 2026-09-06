@@ -5,7 +5,7 @@ import { defineConfig, loadEnv } from 'vite'
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
   return {
-    plugins: [react()],
+    plugins: [react({ compiler: env.REACT_COMPILER === 'true' })],
     build: {
       target: 'es2022',
       sourcemap: true

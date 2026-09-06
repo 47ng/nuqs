@@ -21,18 +21,22 @@
     "react-router": "catalog:react-router7"
   },
   "devDependencies": {
+    "@babel/core": "catalog:react-compiler",
+    "@babel/preset-typescript": "catalog:react-compiler",
     "@playwright/test": "catalog:e2e",
     "@react-router/dev": "catalog:react-router7",
     "@react-router/express": "catalog:react-router7",
     "@types/node": "^24.13.3",
     "@types/react": "catalog:react19",
     "@types/react-dom": "catalog:react19",
+    "babel-plugin-react-compiler": "catalog:react-compiler",
     "compression": "^1.8.1",
     "cross-env": "^10.1.0",
     "e2e-shared": "workspace:*",
     "express": "^4.22.2",
     "typescript": "catalog:typescript",
     "vite": "catalog:vite",
+    "vite-plugin-babel": "catalog:react-compiler",
     "vite-tsconfig-paths": "^6.1.1"
   }
 }

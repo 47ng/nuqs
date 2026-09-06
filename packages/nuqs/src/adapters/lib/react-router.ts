@@ -1,4 +1,10 @@
-import { startTransition, useCallback, useEffect, useState } from 'react'
+import {
+  startTransition,
+  useCallback,
+  useEffect,
+  useInsertionEffect,
+  useState
+} from 'react'
 import { debug } from '../../lib/debug'
 import { setQueueResetMutex } from '../../lib/queues/reset'
 import { renderQueryString } from '../../lib/url-encoding'
@@ -134,7 +140,9 @@ export function createReactRouterBasedAdapter({
             false // No need for a copy here
           )
     })
-    useEffect(() => {
+    // Activity disconnects passive effects while hidden. Keep the router
+    // subscription attached so a memoized reader has pending work before reveal.
+    useInsertionEffect(() => {
       function onPopState() {
         startTransition(() => {
           setSearchParams(
@@ -149,6 +157,12 @@ export function createReactRouterBasedAdapter({
       }
       emitter.on('update', onEmitterUpdate)
       window.addEventListener('popstate', onPopState)
+      return () => {
+        emitter.off('update', onEmitterUpdate)
+        window.removeEventListener('popstate', onPopState)
+      }
+    }, [JSON.stringify(watchKeys)])
+    useEffect(() => {
       // Catch up with the URL as it stands now that we're subscribed. A hook
       // mounting during a navigation transition subscribes after the emitter
       // has fired (e.g. a sibling route's shallow update), so its state would
@@ -165,11 +179,7 @@ export function createReactRouterBasedAdapter({
       if (caughtUp.toString() !== searchParams.toString()) {
         setSearchParams(caughtUp)
       }
-      return () => {
-        emitter.off('update', onEmitterUpdate)
-        window.removeEventListener('popstate', onPopState)
-      }
-    }, [watchKeys.join('&')])
+    }, [JSON.stringify(watchKeys)])
     return searchParams
   }
   /**

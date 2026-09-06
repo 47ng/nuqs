@@ -35,6 +35,12 @@ export const testRepro1444 = defineTest('repro-1444', ({ path }) => {
     logSpy.logs.length = 0
     await toggle.click()
     await expect(page.locator('#client-state')).toHaveText('fresh-value')
+    await expect
+      .poll(
+        () => logSpy.logs.filter(log => log === 'commit: fresh-value').length,
+        'Activity child should commit the fresh value when revealed'
+      )
+      .toBeGreaterThan(0)
     await assertLogCount(
       logSpy,
       'commit: stale-value',

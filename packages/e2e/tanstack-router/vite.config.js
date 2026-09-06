@@ -7,7 +7,7 @@ import { defineConfig } from 'vite'
 export default defineConfig({
   plugins: [
     tanstackRouter({ autoCodeSplitting: true, target: 'react' }),
-    viteReact()
+    viteReact({ compiler: process.env.REACT_COMPILER === 'true' })
   ],
   build: {
     sourcemap: true

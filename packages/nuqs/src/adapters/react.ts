@@ -3,8 +3,10 @@ import {
   createElement,
   useContext,
   useEffect,
+  useInsertionEffect,
   useMemo,
   useRef,
+  useState,
   useSyncExternalStore,
   type ReactElement,
   type ReactNode
@@ -77,6 +79,7 @@ function useNuqsReactAdapter(watchKeys: string[]): AdapterInterface {
   // and it preserves key isolation (a change to an unwatched key keeps the same ref,
   // so this hook doesn't re-render).
   const cache = useRef<{ key: string; search: URLSearchParams } | null>(null)
+  const [, forceUpdate] = useState(0)
   function snapshot(source: string | URLSearchParams) {
     const filteredSearch = filterSearchParams(
       new URLSearchParams(source),
@@ -90,6 +93,19 @@ function useNuqsReactAdapter(watchKeys: string[]): AdapterInterface {
     cache.current = { key, search: filteredSearch }
     return filteredSearch
   }
+  // Activity disconnects passive effects while hidden. Keep a key-isolated
+  // invalidation attached so a memoized reader has pending work before reveal.
+  useInsertionEffect(
+    () =>
+      subscribe(() => {
+        const previous = cache.current?.search
+        const next = snapshot(location.search)
+        if (next !== previous) {
+          forceUpdate(version => version + 1)
+        }
+      }),
+    [JSON.stringify(watchKeys)]
+  )
   const searchParams = useSyncExternalStore(
     subscribe,
     // Reading location.search live in getSnapshot (rather than from React state

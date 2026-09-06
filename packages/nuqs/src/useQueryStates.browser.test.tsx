@@ -1,5 +1,7 @@
 import React, {
+  Activity,
   createElement,
+  memo,
   startTransition,
   Suspense,
   useEffect,
@@ -12,6 +14,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, render, renderHook } from 'vitest-browser-react'
 import { page, userEvent } from 'vitest/browser'
 import { createReactRouterBasedAdapter } from './adapters/lib/react-router'
+import { NuqsAdapter as NuqsReactAdapter } from './adapters/react'
 import {
   NullDetector,
   useFakeLoadingState
@@ -1811,6 +1814,67 @@ describe('useQueryStates: discarded renders', () => {
     await expect
       .element(page.getByTestId('value'))
       .toHaveTextContent('incoming')
+  })
+})
+
+describe('useQueryStates: detached Activity', () => {
+  const originalUrl = location.href
+
+  afterEach(() => {
+    history.replaceState(null, '', originalUrl)
+  })
+
+  it('reveals a memoized reader with the current external URL state', async () => {
+    const commits: Array<string | null> = []
+
+    const Reader = memo(function Reader() {
+      const [value] = useQueryState('test')
+      useEffect(() => {
+        commits.push(value)
+      })
+      return <div data-testid="activity-value">{String(value)}</div>
+    })
+
+    function App() {
+      const [visible, setVisible] = useState(true)
+      return (
+        <>
+          <button onClick={() => setVisible(value => !value)}>Toggle</button>
+          <button
+            onClick={() => {
+              history.back()
+            }}
+          >
+            Update
+          </button>
+          <Activity mode={visible ? 'visible' : 'hidden'}>
+            <Reader />
+          </Activity>
+        </>
+      )
+    }
+
+    history.replaceState(null, '', '/page?test=fresh')
+    history.pushState(null, '', '/page?test=stale')
+    render(
+      <NuqsReactAdapter>
+        <App />
+      </NuqsReactAdapter>
+    )
+    const user = userEvent.setup()
+    const value = page.getByTestId('activity-value')
+    const toggle = page.getByRole('button', { name: 'Toggle' })
+
+    await expect.element(value).toHaveTextContent('stale')
+    await user.click(toggle)
+    await user.click(page.getByRole('button', { name: 'Update' }))
+    await vi.waitFor(() => expect(location.search).toBe('?test=fresh'))
+
+    commits.length = 0
+    await user.click(toggle)
+    await expect.element(value).toHaveTextContent('fresh')
+    await vi.waitFor(() => expect(commits).toContain('fresh'))
+    expect(commits).not.toContain('stale')
   })
 })
 
