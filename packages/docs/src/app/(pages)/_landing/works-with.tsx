@@ -4,7 +4,8 @@ import {
   ReactSPA,
   Remix,
   TanStackRouter,
-  Vitest
+  Vitest,
+  Waku
 } from '@/src/components/frameworks'
 import { cn } from '@/src/lib/utils'
 import { ComponentProps } from 'react'
@@ -23,6 +24,7 @@ export function WorksWith({ className, ...props }: ComponentProps<'div'>) {
       <Remix />
       <Vitest />
       <TanStackRouter />
+      <Waku />
     </div>
   )
 }

@@ -108,6 +108,7 @@ Framework targets:
 - Remix
 - TanStack Router
 - React Router v6/v7/v8
+- Waku
 
 Coverage:
 

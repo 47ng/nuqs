@@ -54,11 +54,15 @@ catalogs:
     '@tanstack/router-plugin': 1.168.20
     '@tanstack/router-cli': 1.167.19
 
+  waku:
+    waku: ^1.0.0-rc.0
+
   react19:
     '@types/react': ^19.2.17
     '@types/react-dom': ^19.2.3
     react: ^19.2.7
     react-dom: ^19.2.7
+    react-server-dom-webpack: ^19.2.7
 
   typescript:
     typescript: '^7.0.2'

@@ -14,6 +14,7 @@ Adapters wrap the app root and provide the minimal translation layer between nuq
 - **React Router v7:** `nuqs/adapters/react-router/v7`
 - **React Router v8:** `nuqs/adapters/react-router/v8`
 - **TanStack Router:** `nuqs/adapters/tanstack-router`
+- **Waku:** `nuqs/adapters/waku`
 - **Testing:** `nuqs/adapters/testing`
 
 ## Adding a New Framework Adapter
