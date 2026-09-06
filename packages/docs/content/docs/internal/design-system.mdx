@@ -5,6 +5,7 @@ exposeTo: [user]
 ---
 
 import { H1, H2, Description } from '@/src/components/typography'
+import { SponsorsLayoutLab } from '@/src/components/sponsors-layout-lab'
 
 <Description>Who needs Storybook anyway? (using the `<Description>` component)</Description>
 
@@ -73,4 +74,12 @@ export const yep = "we got'em too."
 <FeatureSupportMatrix introducedInVersion='2.5.0' deprecatedInVersion='2.6.0' support={{ supported: true, frameworks: ['React Router (v6)', 'React Router (v7)', 'Remix']}}/>
 <FeatureSupportMatrix introducedInVersion='2.5.0' deprecatedInVersion='2.6.0' support={{ supported: true, frameworks: ['Next.js (app router)']}}/>
 <FeatureSupportMatrix introducedInVersion='2.5.0' deprecatedInVersion='2.6.0' support={{ supported: false, frameworks: ['Next.js (app router)']}}/>
+
+## Sidebar sponsors
+
+Layout candidates for the docs sidebar sponsors section, constrained to the
+sidebar width. Extra sponsors are pulled from the landing page to preview
+density with more slots.
+
+<SponsorsLayoutLab />
 
