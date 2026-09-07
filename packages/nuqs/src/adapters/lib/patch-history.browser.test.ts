@@ -385,6 +385,57 @@ describe('patchHistory: pending push', () => {
     expect(hasPendingPush()).toBe(false)
   })
 
+  it.each([
+    ['#chapter#', '#chapter'],
+    ['#chapter', '#chapter#'],
+    ['##', '#'],
+    ['#', '##']
+  ])(
+    'keeps distinct fragments %s and %s distinct',
+    (pendingHash, targetHash) => {
+      optimisticPush('?pending=1' + pendingHash)
+      const target = new URL('?pending=1' + targetHash, location.href)
+      routerPush(target.href)
+      expect(location.href).toBe(target.href)
+      expect(replaceState).toHaveBeenCalledExactlyOnceWith(
+        { idx: 1 },
+        '',
+        target.href
+      )
+      expect(pushState).not.toHaveBeenCalled()
+      expect(hasPendingPush()).toBe(false)
+    }
+  )
+
+  it.each([
+    ['#chapter#', '#chapter'],
+    ['#chapter', '#chapter#']
+  ])(
+    'lets a fragment change from %s to %s win over a shallow replacement',
+    (pendingHash, targetHash) => {
+      optimisticPush('?pending=1' + pendingHash)
+      history.replaceState(
+        history.state,
+        historyUpdateMarker,
+        '?pending=1&shallow=pass' + pendingHash
+      )
+      replaceState.mockClear()
+      const target = new URL('?pending=1' + targetHash, location.href)
+      routerPush(target.href)
+      expect(location.href).toBe(target.href)
+      expect(replaceState).toHaveBeenCalledExactlyOnceWith(
+        { idx: 1 },
+        '',
+        target.href
+      )
+      expect(pushState).not.toHaveBeenCalled()
+      expect(onUpdate).toHaveBeenCalledExactlyOnceWith(
+        new URLSearchParams('pending=1')
+      )
+      expect(hasPendingPush()).toBe(false)
+    }
+  )
+
   it('keeps a shallow replacement when the router commit drops a bare fragment', () => {
     optimisticPush('?a=1#')
     const shallowUrl = new URL('?a=1&shallow=pass#', location.href)

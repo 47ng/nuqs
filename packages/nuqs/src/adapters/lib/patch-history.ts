@@ -36,7 +36,7 @@ const pendingPush = globalSingleton('pending-navigation', () => ({
 }))
 
 function withoutEmptyFragment(href: string): string {
-  return href.endsWith('#') ? href.slice(0, -1) : href
+  return href.replace(/^([^#]*)#$/, '$1')
 }
 
 export function markPendingPush(url: URL): PendingPushState {
