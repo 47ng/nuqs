@@ -6,9 +6,11 @@ import {
   markPendingPush,
   markPendingReplace,
   patchHistory,
+  setPendingNavigationBlocker,
   type SearchParamsSyncEmitterEvents
 } from './patch-history'
 
+const go = vi.spyOn(history, 'go')
 const pushState = vi.spyOn(history, 'pushState')
 const replaceState = vi.spyOn(history, 'replaceState')
 const emitter = createEmitter<SearchParamsSyncEmitterEvents>()
@@ -29,6 +31,14 @@ function optimisticPush(search: string) {
   const url = new URL(search, location.href)
   history.pushState(markPendingPush(url), historyUpdateMarker, url)
   pushState.mockClear()
+}
+
+function expectRepairedState(idx: number): void {
+  expect(history.state).toEqual({
+    idx,
+    [historyUpdateMarker]: expect.any(Number),
+    __nuqs_offset__: 0
+  })
 }
 
 function traverse(action: () => void): Promise<void> {
@@ -57,6 +67,7 @@ describe('patchHistory: pending navigation', () => {
     routerReplace('?')
     routerPush('?')
     expect(hasPendingPush()).toBe(false)
+    go.mockClear()
     pushState.mockClear()
     replaceState.mockClear()
     onUpdate.mockClear()
@@ -82,6 +93,124 @@ describe('patchHistory: pending navigation', () => {
       new URLSearchParams('?a=1')
     )
     expect(hasPendingPush()).toBe(false)
+  })
+
+  for (const end of [
+    'cancel',
+    'push',
+    'replace',
+    'supersede',
+    'pop'
+  ] as const) {
+    it(`stops tracking the blocker on ${end}`, () => {
+      optimisticPush('?a=1')
+      const onEnd = vi.fn()
+      setPendingNavigationBlocker({
+        isCancelled: () => end === 'cancel',
+        unsubscribe: onEnd
+      })
+      if (end === 'push') routerPush('?a=1')
+      if (end === 'replace') routerReplace('?a=1')
+      if (end === 'supersede') optimisticPush('?b=1')
+      if (end === 'pop') window.dispatchEvent(new PopStateEvent('popstate'))
+      hasPendingPush()
+      expect(onEnd).toHaveBeenCalledOnce()
+    })
+  }
+
+  it('repairs a cancelled push when React Router blocks Back', async () => {
+    optimisticPush('?a=1')
+    setPendingNavigationBlocker({ isCancelled: () => true })
+    expect(hasPendingPush()).toBe(false)
+    await new Promise<void>((resolve, reject) => {
+      let pops = 0
+      const timeout = setTimeout(() => {
+        window.removeEventListener('popstate', onPop)
+        reject(new Error('history was not restored within 2s'))
+      }, 2000)
+      function onPop() {
+        pops++
+        if (pops === 1) {
+          history.go(0)
+        } else {
+          clearTimeout(timeout)
+          window.removeEventListener('popstate', onPop)
+          resolve()
+        }
+      }
+      window.addEventListener('popstate', onPop)
+      history.back()
+    })
+    expect(go).toHaveBeenCalledExactlyOnceWith(1)
+    expect(history.state?.idx).toBe(2)
+    expect(location.search).toBe('?a=1')
+  })
+
+  it.each([
+    ['null', null],
+    ['number', 42],
+    ['array', ['value']],
+    ['object', { value: true }]
+  ])('preserves %s state in an unmarked URL-less push', (_, state) => {
+    optimisticPush('?a=1')
+    setPendingNavigationBlocker({ isCancelled: () => true })
+    expect(hasPendingPush()).toBe(false)
+    history.pushState(state, '')
+    expect(history.state).toEqual(state)
+  })
+
+  it.each([
+    ['null', null],
+    ['number', 42],
+    ['array', ['draft']],
+    ['object', { value: true }],
+    ['date', new Date('2026-01-01')],
+    ['map', new Map([['value', true]])]
+  ])('preserves %s state in a marked shallow push', (_, state) => {
+    history.replaceState(state, '', '?before')
+    history.pushState(history.state, historyUpdateMarker, '?after')
+    expect(history.state).toEqual(state)
+  })
+
+  it('stops folding a cancelled navigation without a query hook update', () => {
+    optimisticPush('?a=1')
+    setPendingNavigationBlocker({ isCancelled: () => true })
+    routerPush('?b=1')
+    expect(pushState).toHaveBeenCalledExactlyOnceWith({ idx: 1 }, '', '?b=1')
+    expect(replaceState).toHaveBeenCalledExactlyOnceWith(
+      { idx: 2, [historyUpdateMarker]: expect.any(Number), __nuqs_offset__: 0 },
+      '',
+      undefined
+    )
+    expect(hasPendingPush()).toBe(false)
+  })
+
+  it('keeps a navigation that has not been cancelled', () => {
+    optimisticPush('?a=1')
+    setPendingNavigationBlocker({ isCancelled: () => false })
+    expect(hasPendingPush()).toBe(true)
+    routerPush('?a=1')
+    expect(pushState).not.toHaveBeenCalled()
+    expect(hasPendingPush()).toBe(false)
+  })
+
+  it('does not cancel a superseding navigation', () => {
+    optimisticPush('?a=1')
+    setPendingNavigationBlocker({ isCancelled: () => true })
+    optimisticPush('?b=1')
+    expect(hasPendingPush()).toBe(true)
+    routerPush('?b=1')
+    expect(pushState).not.toHaveBeenCalled()
+  })
+
+  it('does not retarget a cancelled replace', () => {
+    markPendingReplace(new URL('?a=1', location.href))
+    history.replaceState(history.state, historyUpdateMarker, '?a=1')
+    history.replaceState(history.state, historyUpdateMarker, '?a=2')
+    replaceState.mockClear()
+    setPendingNavigationBlocker({ isCancelled: () => true })
+    routerReplace('?a=1')
+    expect(replaceState).toHaveBeenCalledExactlyOnceWith({ idx: 1 }, '', '?a=1')
   })
 
   it('replaces the pending entry with a redirected commit', () => {
@@ -140,7 +269,7 @@ describe('patchHistory: pending navigation', () => {
     )
     await traverse(() => history.back())
     await traverse(() => history.forward())
-    expect(history.state).toEqual({ idx: 5 })
+    expectRepairedState(5)
     expect(hasPendingPush()).toBe(false)
   })
 
@@ -159,7 +288,7 @@ describe('patchHistory: pending navigation', () => {
     await traverse(() => history.back())
     history.replaceState({ idx: 4, usr: 'unrelated' }, '', '?')
     await traverse(() => history.forward())
-    expect(history.state).toEqual({ idx: 5 })
+    expectRepairedState(5)
     expect(hasPendingPush()).toBe(false)
   })
 
@@ -171,7 +300,7 @@ describe('patchHistory: pending navigation', () => {
     history.replaceState(history.state, historyUpdateMarker, '?b=1')
     history.replaceState({ idx: 4 }, '', '?b=1')
     await traverse(() => history.forward())
-    expect(history.state).toEqual({ idx: 5 })
+    expectRepairedState(5)
     expect(hasPendingPush()).toBe(false)
   })
 
@@ -181,7 +310,7 @@ describe('patchHistory: pending navigation', () => {
     history.replaceState(history.state, historyUpdateMarker, '?a=1&b=2')
     await traverse(() => history.back())
     await traverse(() => history.forward())
-    expect(history.state).toEqual({ idx: 5 })
+    expectRepairedState(5)
     expect(hasPendingPush()).toBe(false)
   })
 
@@ -204,18 +333,17 @@ describe('patchHistory: pending navigation', () => {
     history.pushState(history.state, historyUpdateMarker, '?a=1&shallow=1')
     history.replaceState(history.state, historyUpdateMarker, '?a=1&shallow=2')
     await traverse(() => history.back())
-    expect(history.state).toEqual({ idx: 5 })
+    expectRepairedState(5)
     expect(hasPendingPush()).toBe(false)
   })
 
-  it('does not repair an entry that only shares the pending marker', async () => {
+  it('repairs a shallow entry using its own offset when it shares the pending marker', async () => {
     history.replaceState({ idx: 4 }, historyUpdateMarker, '?')
     optimisticPush('?a=1')
     history.pushState(history.state, historyUpdateMarker, '?a=1&shallow=1')
     history.pushState(history.state, historyUpdateMarker, '?a=1&shallow=2')
     await traverse(() => history.back())
-    expect(history.state.idx).toBe(4)
-    expect(history.state[historyUpdateMarker]).toBeDefined()
+    expectRepairedState(6)
   })
 
   it('clears a pending push when a replace lands elsewhere without a pop', () => {
@@ -255,7 +383,10 @@ describe('patchHistory: pending navigation', () => {
     optimisticPush('?a=1')
     await traverse(() => history.back())
     await traverse(() => history.forward())
-    expect(history.state).toEqual({ [historyUpdateMarker]: expect.any(Number) })
+    expect(history.state).toEqual({
+      [historyUpdateMarker]: expect.any(Number),
+      __nuqs_offset__: 0
+    })
     expect(hasPendingPush()).toBe(false)
     pushState.mockClear()
     replaceState.mockClear()
@@ -394,7 +525,7 @@ describe('patchHistory: pending navigation', () => {
     )
     await traverse(() => history.back())
     await traverse(() => history.forward())
-    expect(history.state).toEqual({ idx: 1 })
+    expectRepairedState(1)
     expect(hasPendingPush()).toBe(false)
   })
 
@@ -490,7 +621,7 @@ describe('patchHistory: pending navigation', () => {
       '?a=1&shallow=pass'
     )
     await traverse(() => history.forward())
-    expect(history.state).toEqual({ idx: 1 })
+    expectRepairedState(1)
     expect(hasPendingPush()).toBe(false)
   })
 

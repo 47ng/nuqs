@@ -48,6 +48,8 @@ const router = createBrowserRouter(
       <Route path="scroll"                                    lazy={load(import('./routes/scroll'))} />
 
       {/* Local tests */}
+      <Route path="blocker"                                  lazy={load(import('./routes/blocker'))} />
+      <Route path="blocker-no-loader"                        lazy={load(import('./routes/blocker.no-loader'))} />
       <Route path="debounce"                                  lazy={load(import('./routes/debounce'))} />
       <Route path="debounce/other"                            lazy={load(import('./routes/debounce.other'))} />
       <Route path="dynamic-segments/catch-all?*"              lazy={load(import('./routes/dynamic-segments.catch-all.$'))} />
