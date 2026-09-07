@@ -16,13 +16,12 @@
 // issues), so the drafted notes always list exactly what finalize comments on;
 // only the extra notes-only fields differ between them.
 //
-// Pure core (range resolution, PR-number extraction, channel detection,
+// Pure core (PR-number extraction, channel detection,
 // contributor collection) is unit-tested, and both discovery paths are tested
 // through an injected `ReleaseGraphReader`; the production reader (git log,
 // GitHub GraphQL) is thin glue and untested by design.
 
 import { z } from 'zod'
-import type { Channel } from '../compute-version.ts'
 import type {
   DirectCommitChange,
   ReleaseChanges,
@@ -35,11 +34,11 @@ import {
 } from './conventional-commits.ts'
 import { git, readAllTags } from './git.ts'
 import {
-  greatestTag,
+  type Channel,
   isBeta,
   isGA,
-  isValidSemver,
-  precedes
+  type Range,
+  resolveRange
 } from './version.ts'
 
 // --- Pure core: channel detection -----------------------------------------
@@ -56,42 +55,6 @@ export function resolveChannel(ref: string): Channel {
   throw new Error(
     `resolveChannel: "${ref}" is neither a GA (vX.Y.Z) nor a beta (vX.Y.Z-beta.N) tag`
   )
-}
-
-// --- Pure core: range resolution ------------------------------------------
-
-// The git range `(from, to]` to walk for a release. `from` is null for the
-// first-ever release (walk from the beginning of history).
-export type Range = { from: string | null; to: string }
-
-// Resolve the commit range a release covers, asymmetric by channel:
-//   - GA `vX`      → (previous GA tag, this]      cumulative; betas skipped.
-//   - beta `vX-..` → (greatest published tag, this]  incremental delta.
-// The tag graph is the announcement ledger: tags exist only for *published*
-// releases, so a staged-then-rejected beta leaves no checkpoint and its PRs
-// fold into the next published release (self-healing).
-//
-// `currentRef` is either a tag (finalize: the just-published tag, present in
-// `tags`) or the literal `HEAD` (draft: the tag does not exist yet, and HEAD
-// sits above every tag). The checkpoint is the semver-greatest candidate
-// strictly below `currentRef` — for GA, only GA tags are candidates (so
-// intervening betas are skipped); for beta, every published tag qualifies.
-export function resolveRange(args: {
-  channel: Channel
-  currentRef: string
-  tags: string[]
-}): Range {
-  const { channel, currentRef, tags } = args
-  const candidates = tags.filter(tag =>
-    channel === 'stable' ? isGA(tag) : isValidSemver(tag)
-  )
-  // HEAD is above every tag, so every candidate is "below" it; a real tag is
-  // compared by semver precedence (which also excludes the tag itself).
-  const below =
-    currentRef === 'HEAD'
-      ? candidates
-      : candidates.filter(tag => precedes(tag, currentRef))
-  return { from: greatestTag(below), to: currentRef }
 }
 
 // --- Pure core: PR-number extraction --------------------------------------

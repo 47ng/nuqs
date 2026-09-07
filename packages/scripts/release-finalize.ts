@@ -4,7 +4,7 @@ import type { ThrottlingOptions } from '@octokit/plugin-throttling'
 import { createEnv } from '@t3-oss/env-core'
 import { Octokit, RequestError } from 'octokit'
 import { z } from 'zod'
-import type { Channel } from './compute-version.ts'
+import type { Channel } from './lib/version.ts'
 import {
   type Discussion,
   discoverTargets,
@@ -288,13 +288,16 @@ function collectTargets(
   discussions: Discussion[]
 ): Target[] {
   return [
-    ...changes.map(
-      ({ prNumber }): Target => ({ kind: 'PR', number: prNumber })
-    ),
+    ...changes.map(({ prNumber }): Target => ({
+      kind: 'PR',
+      number: prNumber
+    })),
     ...issues.map((number): Target => ({ kind: 'issue', number })),
-    ...discussions.map(
-      ({ number, id }): Target => ({ kind: 'discussion', number, id })
-    )
+    ...discussions.map(({ number, id }): Target => ({
+      kind: 'discussion',
+      number,
+      id
+    }))
   ]
 }
 

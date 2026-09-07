@@ -1,6 +1,9 @@
 import semver from 'semver'
 import type { Bump } from './conventional-commits.ts'
 
+export type Channel = 'stable' | 'beta'
+export type Range = { from: string | null; to: string }
+
 // The single version vocabulary the release tools speak. semver is an
 // implementation detail held behind this boundary: callers reason about tags,
 // GA/beta channels, and precedence — never semver primitives. The lone leak is
@@ -46,6 +49,28 @@ export function greatestTag(tags: string[]): string | null {
 // The greatest GA tag, ignoring betas — i.e. the previous stable checkpoint.
 export function greatestGATag(tags: string[]): string | null {
   return greatestTag(tags.filter(isGA))
+}
+
+// Resolve the commit range a release covers, asymmetric by channel:
+//   - GA `vX`      → (previous GA tag, this]          cumulative; betas skipped.
+//   - beta `vX-..` → (greatest published tag, this]  incremental delta.
+// Tags are publication checkpoints. A staged but rejected beta has no tag and
+// therefore folds into the next published release. `currentRef` is either HEAD
+// during the draft or the new tag during finalization.
+export function resolveRange(args: {
+  channel: Channel
+  currentRef: string
+  tags: string[]
+}): Range {
+  const { channel, currentRef, tags } = args
+  const candidates = tags.filter(tag =>
+    channel === 'stable' ? isGA(tag) : isValidSemver(tag)
+  )
+  const below =
+    currentRef === 'HEAD'
+      ? candidates
+      : candidates.filter(tag => precedes(tag, currentRef))
+  return { from: greatestTag(below), to: currentRef }
 }
 
 // The highest existing -beta.N for an exact GA target (e.g. '1.3.0'), or 0 when

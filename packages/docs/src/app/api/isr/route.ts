@@ -25,8 +25,6 @@ export async function GET(req: NextRequest) {
   // Reject a missing/empty configured token outright, so an unset ISR_TOKEN
   // can't be matched by an empty `?token=`.
   if (!expected || !token || !tokensMatch(token, expected)) {
-    // Log the requested token for analysis (sliced to avoid flooding logs)
-    console.log('Invalid token `%s`', token?.slice(0, 256))
     return NextResponse.json({ error: 'Invalid token' }, { status: 401 })
   }
   // Accept one or more `tag` params so a single call can bust several tags
