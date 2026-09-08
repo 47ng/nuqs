@@ -3,6 +3,7 @@ import { createEmitter, type Emitter } from '../../lib/emitter'
 import { error } from '../../lib/errors'
 import { globalSingleton } from '../../lib/global-singleton'
 import {
+  getQueueResetMutex,
   resetQueues,
   setQueueResetMutex,
   spinQueueResetMutex
@@ -115,6 +116,45 @@ export function setPendingNavigationBlocker({
     current.isOriginalBlockerOpen = isOriginalBlockerOpen
   } else {
     unsubscribe?.()
+  }
+}
+
+export function onPendingNavigationEnd(onEnd: () => void): void {
+  const current = pendingNavigation.current
+  if (!current) {
+    onEnd()
+    return
+  }
+  const unsubscribe = current.unsubscribe
+  current.unsubscribe = () => {
+    unsubscribe?.()
+    onEnd()
+  }
+}
+
+export function interruptPendingPush(): () => boolean {
+  const current = getPendingNavigation()
+  if (current?.history !== 'push' || !isPendingPushEntry(current)) {
+    return () => false
+  }
+  const state = history.state
+  const queueResetMutex = getQueueResetMutex()
+  const interrupted = { ...current, unsubscribe: undefined }
+  cancelPendingNavigation()
+  return () => {
+    if (
+      pendingNavigation.current ||
+      pendingNavigation.cancelledPush !== current ||
+      !isPendingPushEntry(current) ||
+      interrupted.isCancelled?.()
+    ) {
+      return false
+    }
+    clearCancelledPush()
+    history.replaceState(state, historyUpdateMarker)
+    pendingNavigation.current = interrupted
+    setQueueResetMutex(queueResetMutex)
+    return true
   }
 }
 

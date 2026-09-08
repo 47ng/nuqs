@@ -10,8 +10,10 @@ import {
   getHistorySyncEmitter,
   hasPendingPush,
   historyUpdateMarker,
+  interruptPendingPush,
   markPendingPush,
   markPendingReplace,
+  onPendingNavigationEnd,
   setPendingNavigationBlocker,
   patchHistory as applyHistoryPatch
 } from './patch-history'
@@ -44,6 +46,54 @@ type DataRouter = {
   }
   subscribe: (listener: () => void) => () => void
   deleteBlocker: (key: string) => void
+  navigate(
+    to: string | NavigateUrl | number,
+    options?: NavigateOptions
+  ): void | Promise<void>
+}
+
+function trackRouterNavigations(router: DataRouter | undefined): void {
+  if (!router) {
+    return
+  }
+  const navigate = router.navigate
+  const navigateOutsideNuqs: DataRouter['navigate'] = (to, options) => {
+    if (typeof to === 'number') {
+      return navigate.call(router, to, options)
+    }
+    const blockersBeforeNavigation = router.state.blockers
+    const restorePendingPush = interruptPendingPush()
+    const result = navigate.call(router, to, options)
+    for (const [key, blocker] of router.state.blockers ?? []) {
+      if (
+        blocker.state === 'blocked' &&
+        blocker !== blockersBeforeNavigation?.get(key) &&
+        restorePendingPush()
+      ) {
+        trackRouterNavigations(router)
+        const unsubscribe = subscribeToBlockerUpdatesAndRemoval(router, () => {
+          const current = router.state.blockers?.get(key)
+          if (
+            current?.state === 'proceeding' &&
+            current.location === blocker.location
+          ) {
+            cancelPendingNavigation()
+          } else if (current?.location !== blocker.location) {
+            unsubscribe()
+          }
+        })
+        onPendingNavigationEnd(unsubscribe)
+        break
+      }
+    }
+    return result
+  }
+  router.navigate = navigateOutsideNuqs
+  onPendingNavigationEnd(() => {
+    if (router.navigate === navigateOutsideNuqs) {
+      router.navigate = navigate
+    }
+  })
 }
 
 function trackNewNavigationBlocker(
@@ -185,6 +235,9 @@ export function createReactRouterBasedAdapter({
             }
           )
           trackNewNavigationBlocker(router, blockersBeforeNavigation)
+          if (routerCommitsPush) {
+            trackRouterNavigations(router)
+          }
           // Return the router's promise; waiting for a commit can deadlock.
           if (result instanceof Promise) {
             navigationPromise = result

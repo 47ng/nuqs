@@ -14,6 +14,123 @@ async function readLoaderCall(page: Page): Promise<number> {
   return Number(await page.locator('#loader-call').textContent())
 }
 
+export const testRepro1563Link = defineTest('repro-1563-link', ({ path }) => {
+  it('keeps a queued update when a separate Link is canceled', async ({
+    page
+  }) => {
+    it.setTimeout(10_000)
+    await navigateToRepro(page, path, '?test=init&delay=1000')
+    await page.locator('#push').click()
+    await expect(page.locator('#navigation-state')).toHaveText('loading')
+    await page.locator('#debounced-other').click()
+    await page.locator('#block-links').check()
+    await page.locator('#router-link').click()
+    await expect(page.locator('#blocker')).toHaveText('blocked')
+    await page.locator('#cancel-link').click()
+    await page.locator('#block-links').uncheck()
+    await expect(page.locator('#loader-state')).toHaveText('pass')
+    await expectSearch(page, { test: 'pass', other: 'pass' })
+    await expect(page.locator('#navigation-state')).toHaveText('idle')
+  })
+
+  it('reuses the pending search entry for its own redirect', async ({
+    page
+  }) => {
+    it.setTimeout(10_000)
+    await navigateToRepro(page, path, '?test=init&delay=1000&redirect=true')
+    await page.locator('#push').click()
+    await expectSearch(page, { test: 'redirected' })
+    await expect(page.locator('#loader-state')).toHaveText('redirected')
+    await page.goBack()
+    await expectSearch(page, { test: 'init' })
+    await expect(page.locator('#loader-state')).toHaveText('init')
+  })
+
+  it('keeps the pending search before a separate Link redirect', async ({
+    page
+  }) => {
+    it.setTimeout(10_000)
+    await navigateToRepro(page, path, '?test=init&delay=1000')
+    await page.locator('#push').click()
+    await expect(page.locator('#navigation-state')).toHaveText('loading')
+    await page.locator('#router-redirect-link').click()
+    await expectSearch(page, { test: 'redirected' })
+    await expect(page.locator('#loader-state')).toHaveText('redirected')
+    await page.goBack()
+    await expectSearch(page, { test: 'pass' })
+    await expect(page.locator('#loader-state')).toHaveText('pass')
+    await page.goBack()
+    await expectSearch(page, { test: 'init' })
+  })
+
+  it('lets the pending search finish when a separate Link is canceled', async ({
+    page
+  }) => {
+    it.setTimeout(10_000)
+    await navigateToRepro(page, path, '?test=init&delay=1000')
+    await page.locator('#push').click()
+    await expect(page.locator('#navigation-state')).toHaveText('loading')
+    await page.locator('#block-links').check()
+    await page.locator('#router-link').click()
+    await expect(page.locator('#blocker')).toHaveText('blocked')
+    await page.locator('#cancel-link').click()
+    await expect(page.locator('#navigation-state')).toHaveText('idle')
+    await expect(page.locator('#loader-state')).toHaveText('pass')
+
+    await page.locator('#block-links').uncheck()
+    await page.goBack()
+    await expectSearch(page, { test: 'init' })
+    await expect(page.locator('#loader-state')).toHaveText('init')
+  })
+
+  it('keeps the pending search when a blocked Link proceeds', async ({
+    page
+  }) => {
+    it.setTimeout(10_000)
+    await navigateToRepro(page, path, '?test=init&delay=1000')
+    await page.locator('#push').click()
+    await expect(page.locator('#navigation-state')).toHaveText('loading')
+    await page.locator('#block-links').check()
+    await page.locator('#router-link').click()
+    await expect(page.locator('#blocker')).toHaveText('blocked')
+    await page.locator('#proceed-link').click()
+    await expect(page).toHaveURL(url => url.pathname === '/')
+    await expect(page.locator('#router-link')).toHaveCount(0)
+
+    await page.goBack()
+    await expectSearch(page, { test: 'pass' })
+    await expect(page.locator('#loader-state')).toHaveText('pass')
+    await page.goBack()
+    await expectSearch(page, { test: 'init' })
+  })
+
+  it('keeps a pending push before a separate Link push', async ({ page }) => {
+    it.setTimeout(10_000)
+    await navigateToRepro(page, path, '?test=init&delay=1000')
+    await expect(page.locator('#loader-state')).toHaveText('init')
+
+    await page.locator('#push').click()
+    await expect(page.locator('#navigation-state')).toHaveText('loading')
+    await page.locator('#router-link').click()
+    await expect(page).toHaveURL(url => url.pathname === '/')
+    await expect(page.locator('#router-link')).toHaveCount(0)
+
+    await page.goBack()
+    await expectSearch(page, { test: 'pass' })
+    await expect(page.locator('#loader-state')).toHaveText('pass')
+    await expect(page.locator('#navigation-state')).toHaveText('idle')
+
+    await page.goBack()
+    await expectSearch(page, { test: 'init' })
+    await expect(page.locator('#loader-state')).toHaveText('init')
+    await page.goForward()
+    await expectSearch(page, { test: 'pass' })
+    await expect(page.locator('#loader-state')).toHaveText('pass')
+    await page.goForward()
+    await expect(page).toHaveURL(url => url.pathname === '/')
+  })
+})
+
 export const testRepro1563 = defineTest('repro-1563', ({ path }) => {
   it('advances the router history index on push with shallow: false', async ({
     page
