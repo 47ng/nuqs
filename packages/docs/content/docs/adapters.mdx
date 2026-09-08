@@ -315,24 +315,6 @@ export default function App() {
 
 </Callout>
 
-### Navigation blockers (v6, v7, v8) [#react-router-blockers]
-
-If your app asks for confirmation before navigation, note that nuqs updates the
-URL and query state before React Router checks `useBlocker`.
-In data routers, [`shallow: false{:ts}`](/docs/options#shallow) updates can trigger
-that blocker. Calling `blocker.reset(){:ts}` cancels the router navigation, but
-keeps the query state and URL update, including any new history entry.
-Calling `blocker.proceed(){:ts}` lets the router run its loaders.
-
-Shallow updates do not call the router or trigger its blockers.
-
-<Callout type="warn" title="History limits">
-  Do not rely on `useBlocker` to protect unsaved work across all nuqs history
-  updates. After a shallow push with no pending deep navigation, the first
-  blocked Back can reload the page. This can also happen if the router commits
-  a pending deep push as a replace.
-</Callout>
-
 ## <HumanContent><TanStackRouter className='inline mr-2 -mt-1 not-prose' aria-hidden /></HumanContent>TanStack Router [#tanstack-router]
 
 ```tsx title="src/routes/__root.tsx"
