@@ -419,7 +419,8 @@ export function markHistoryAsPatched(adapter: string): void {
 
 export function patchHistory(
   emitter: Emitter<SearchParamsSyncEmitterEvents>,
-  adapter: string
+  adapter: string,
+  { trackRouterHistory = false }: { trackRouterHistory?: boolean } = {}
 ): void {
   if (!shouldPatchHistory(adapter)) {
     return
@@ -435,8 +436,10 @@ export function patchHistory(
     'popstate',
     () => {
       lastSearchSeen = location.search
-      handlePopOnPendingNavigation()
-      repairHistoryIndex()
+      if (trackRouterHistory) {
+        handlePopOnPendingNavigation()
+        repairHistoryIndex()
+      }
       resetQueues()
     },
     { capture: true }
@@ -456,6 +459,19 @@ export function patchHistory(
     } catch (e) {
       console.error(e)
     }
+  }
+  if (!trackRouterHistory) {
+    for (const method of ['pushState', 'replaceState'] as const) {
+      const original = history[method]
+      history[method] = function nuqs_history(state, marker, url) {
+        original.call(history, state, '', url)
+        if (marker !== historyUpdateMarker && url) {
+          sync(url)
+        }
+      }
+    }
+    markHistoryAsPatched(adapter)
+    return
   }
   const originalPushState = history.pushState
   const originalReplaceState = history.replaceState

@@ -327,7 +327,7 @@ export function createReactRouterBasedAdapter({
    *
    * Note: this is actually required in React Router frameworks to follow Link navigations.
    */
-  applyHistoryPatch(emitter, adapter)
+  applyHistoryPatch(emitter, adapter, { trackRouterHistory: true })
 
   return {
     NuqsAdapter: createAdapterProvider(useNuqsReactRouterBasedAdapter),

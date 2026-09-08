@@ -58,7 +58,7 @@ function traverse(action: () => void): Promise<void> {
 
 describe('patchHistory: pending navigation', () => {
   beforeAll(() => {
-    patchHistory(emitter, 'test')
+    patchHistory(emitter, 'test', { trackRouterHistory: true })
     window.addEventListener('popstate', () =>
       indexSeenOnPop(history.state?.idx)
     )
