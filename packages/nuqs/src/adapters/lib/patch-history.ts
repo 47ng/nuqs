@@ -3,7 +3,6 @@ import { createEmitter, type Emitter } from '../../lib/emitter'
 import { error } from '../../lib/errors'
 import { globalSingleton } from '../../lib/global-singleton'
 import {
-  getQueueResetMutex,
   resetQueues,
   setQueueResetMutex,
   spinQueueResetMutex
@@ -138,9 +137,8 @@ export function interruptPendingPush(): () => boolean {
     return () => false
   }
   const state = history.state
-  const queueResetMutex = getQueueResetMutex()
   const interrupted = { ...current, unsubscribe: undefined }
-  cancelPendingNavigation()
+  const queueResetMutex = cancelPendingNavigation()
   return () => {
     if (
       pendingNavigation.current ||
@@ -158,11 +156,9 @@ export function interruptPendingPush(): () => boolean {
   }
 }
 
-export function cancelPendingNavigation(onPop = false): void {
+export function cancelPendingNavigation(onPop = false): number | undefined {
   const current = pendingNavigation.current
-  if (current) {
-    setQueueResetMutex(1)
-  }
+  const queueResetMutex = current ? setQueueResetMutex(1) : undefined
   if (current?.history === 'push' && (onPop || isPendingPushEntry(current))) {
     const isAnyBlockerProceeding = current.isAnyBlockerProceeding
     clearCurrentPendingNavigation()
@@ -171,9 +167,10 @@ export function cancelPendingNavigation(onPop = false): void {
     if (!onPop) {
       repairPendingPushIndex(current)
     }
-    return
+    return queueResetMutex
   }
   clearCurrentPendingNavigation()
+  return queueResetMutex
 }
 
 function getPendingNavigation(): PendingNavigation | null {
