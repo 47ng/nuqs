@@ -10,7 +10,10 @@ type BlockerProps = {
     proceed?: () => void
   }
   useNavigation: () => { state: string }
-  useNavigate: () => (to: string) => void | Promise<void>
+  useNavigate: () => (
+    to: string,
+    options?: { replace?: boolean }
+  ) => void | Promise<void>
 }
 
 export function Blocker({
@@ -28,6 +31,12 @@ export function Blocker({
       <output id="navigation">{navigation.state}</output>
       <button id="router-push" onClick={() => navigate('?count=3')}>
         Router push
+      </button>
+      <button
+        id="router-replace"
+        onClick={() => navigate('?count=3', { replace: true })}
+      >
+        Router replace
       </button>
       <button
         id="toggle-controls"

@@ -14,6 +14,7 @@ import {
   markPendingPush,
   markPendingReplace,
   onPendingNavigationEnd,
+  repairHistoryIndex,
   setPendingNavigationBlocker,
   patchHistory as applyHistoryPatch
 } from './patch-history'
@@ -43,6 +44,7 @@ type UseSearchParams = (initial: URLSearchParams) => [URLSearchParams, {}]
 type DataRouter = {
   state: {
     blockers?: Map<string, { state: string; location?: unknown }>
+    navigation?: { location?: { key: string } }
   }
   subscribe: (listener: () => void) => () => void
   deleteBlocker: (key: string) => void
@@ -52,8 +54,10 @@ type DataRouter = {
   ): void | Promise<void>
 }
 
+const navigationCleanups = new WeakMap<DataRouter, () => void>()
+
 function trackRouterNavigations(router: DataRouter | undefined): void {
-  if (!router) {
+  if (!router || navigationCleanups.has(router)) {
     return
   }
   const navigate = router.navigate
@@ -61,8 +65,10 @@ function trackRouterNavigations(router: DataRouter | undefined): void {
     if (typeof to === 'number') {
       return navigate.call(router, to, options)
     }
+    cleanup()
     const blockersBeforeNavigation = router.state.blockers
     const restorePendingPush = interruptPendingPush()
+    repairHistoryIndex()
     const result = navigate.call(router, to, options)
     for (const [key, blocker] of router.state.blockers ?? []) {
       if (
@@ -88,12 +94,17 @@ function trackRouterNavigations(router: DataRouter | undefined): void {
     }
     return result
   }
-  router.navigate = navigateOutsideNuqs
-  onPendingNavigationEnd(() => {
+  const cleanup = () => {
     if (router.navigate === navigateOutsideNuqs) {
       router.navigate = navigate
+      navigationCleanups.delete(router)
     }
-  })
+  }
+  router.navigate = navigateOutsideNuqs
+  navigationCleanups.set(router, cleanup)
+  if (hasPendingPush()) {
+    onPendingNavigationEnd(cleanup)
+  }
 }
 
 function trackNewNavigationBlocker(
@@ -190,6 +201,9 @@ export function createReactRouterBasedAdapter({
     const searchParams = useOptimisticSearchParams(watchKeys)
     const updateUrl = useCallback(
       (search: URLSearchParams, options: AdapterOptions) => {
+        if (router && options.shallow === false) {
+          navigationCleanups.get(router)?.()
+        }
         startTransition(() => {
           emitter.emit('update', search)
         })
@@ -215,6 +229,19 @@ export function createReactRouterBasedAdapter({
           historyUpdateMarker,
           url
         )
+        const pendingLocation = router?.state.navigation?.location
+        if (
+          !hasUncommittedPush &&
+          !routerCommitsPush &&
+          (requiresRouterNavigation ||
+            (pendingLocation &&
+              pendingLocation.key !== (history.state?.key || 'default')) ||
+            Array.from(router?.state.blockers?.values() ?? []).some(
+              blocker => blocker.state !== 'unblocked'
+            ))
+        ) {
+          repairHistoryIndex()
+        }
         let navigationPromise: Promise<void> | undefined
         if (requiresRouterNavigation) {
           if (!routerCommitsPush) {
@@ -235,14 +262,12 @@ export function createReactRouterBasedAdapter({
             }
           )
           trackNewNavigationBlocker(router, blockersBeforeNavigation)
-          if (routerCommitsPush) {
-            trackRouterNavigations(router)
-          }
           // Return the router's promise; waiting for a commit can deadlock.
           if (result instanceof Promise) {
             navigationPromise = result
           }
         }
+        trackRouterNavigations(router)
         if (options.scroll) {
           window.scrollTo(0, 0)
         }

@@ -259,7 +259,7 @@ function getHistoryStateOffset(state: History['state']): number {
     : 0
 }
 
-function repairHistoryIndex(): number | undefined {
+export function repairHistoryIndex(): number | undefined {
   const index = history.state?.idx
   if (typeof index !== 'number') {
     return

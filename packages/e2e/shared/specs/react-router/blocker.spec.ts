@@ -21,9 +21,236 @@ async function expectTwoShallowPushes(page: Page, initialCount: number) {
   expect(await page.evaluate(() => history.length)).toBe(before + 2)
 }
 
+function testRouterHistory(path: string) {
+  for (const mode of ['push', 'replace'] as const) {
+    it(`blocks Back after idle shallow pushes and an ordinary router ${mode}`, async ({
+      page
+    }) => {
+      await navigateTo(page, path, '?count=0')
+      await page.locator('#enabled').uncheck()
+      const before = await page.evaluate(() => history.length)
+      await expectTwoShallowPushes(page, 0)
+      await page.locator(`#router-${mode}`).click()
+      await expectCount(page, 3)
+      await expect(page.locator('#navigation')).toHaveText('idle')
+      expect(await page.evaluate(() => history.length)).toBe(
+        before + (mode === 'push' ? 3 : 2)
+      )
+      await page.locator('#enabled').check()
+      await page.evaluate(() => {
+        document.body.dataset.blockerTest = 'mounted'
+        history.back()
+      })
+      await expect(page.locator('#blocker')).toHaveText('blocked')
+      await expectCount(page, 3)
+      await page.locator('#cancel').click()
+      await expect(page.locator('#blocker')).toHaveText('unblocked')
+      await expectCount(page, 3)
+      await page.evaluate(() => history.back())
+      await expect(page.locator('#blocker')).toHaveText('blocked')
+      await expectCount(page, 3)
+      await page.locator('#proceed').click()
+      await expect(page.locator('#blocker')).toHaveText('unblocked')
+      const previousCount = mode === 'push' ? 2 : 1
+      await expectCount(page, previousCount)
+      for (const direction of ['forward', 'back'] as const) {
+        const from = direction === 'forward' ? previousCount : 3
+        const to = direction === 'forward' ? 3 : previousCount
+        await page.evaluate(direction => history[direction](), direction)
+        await expect(page.locator('#blocker')).toHaveText('blocked')
+        await expectCount(page, from)
+        await page.locator('#cancel').click()
+        await expect(page.locator('#blocker')).toHaveText('unblocked')
+        await expectCount(page, from)
+        await page.evaluate(direction => history[direction](), direction)
+        await expect(page.locator('#blocker')).toHaveText('blocked')
+        await expectCount(page, from)
+        await page.locator('#proceed').click()
+        await expect(page.locator('#blocker')).toHaveText('unblocked')
+        await expectCount(page, to)
+      }
+      expect(await page.evaluate(() => document.body.dataset.blockerTest)).toBe(
+        'mounted'
+      )
+    })
+  }
+
+  it('keeps a separate router entry after a shallow push during confirmation', async ({
+    page
+  }) => {
+    await navigateTo(page, path, '?count=0')
+    const before = await page.evaluate(() => {
+      document.body.dataset.blockerTest = 'mounted'
+      return history.length
+    })
+    await expectTwoShallowPushes(page, 0)
+    await page.locator('#router-push').click()
+    await expect(page.locator('#blocker')).toHaveText('blocked')
+    await expectCount(page, 2)
+    await shallowPush(page, 3)
+    await expect(page.locator('#blocker')).toHaveText('blocked')
+    const shallowUrl = page.url()
+    expect(await page.evaluate(() => history.length)).toBe(before + 3)
+    await page.locator('#proceed').click()
+    await expect(page.locator('#blocker')).toHaveText('unblocked')
+    await expect(page.locator('#navigation')).toHaveText('idle')
+    await expectCount(page, 3)
+    await expect(page).toHaveURL(shallowUrl)
+    expect(await page.evaluate(() => history.length)).toBe(before + 4)
+    await page.evaluate(() => history.back())
+    await expect(page.locator('#blocker')).toHaveText('blocked')
+    await expectCount(page, 3)
+    await page.locator('#proceed').click()
+    await expect(page.locator('#blocker')).toHaveText('unblocked')
+    await expect(page.locator('#navigation')).toHaveText('idle')
+    await expectCount(page, 3)
+    await expect(page).toHaveURL(shallowUrl)
+    await page.locator('#enabled').uncheck()
+    await page.evaluate(() => history.back())
+    await expectCount(page, 2)
+    expect(await page.evaluate(() => document.body.dataset.blockerTest)).toBe(
+      'mounted'
+    )
+  })
+
+  for (const action of ['deep', 'deep-replace'] as const) {
+    it(`blocks Back after idle shallow pushes and an accepted ${action}`, async ({
+      page
+    }) => {
+      await navigateTo(page, path, '?count=0')
+      await expectTwoShallowPushes(page, 0)
+      await page.locator(`#${action}`).click()
+      await expect(page.locator('#blocker')).toHaveText('blocked')
+      await expectCount(page, 3)
+      await page.locator('#proceed').click()
+      await expect(page.locator('#blocker')).toHaveText('unblocked')
+      await expect(page.locator('#navigation')).toHaveText('idle')
+      await expectCount(page, 3)
+      await page.evaluate(() => {
+        document.body.dataset.blockerTest = 'mounted'
+        history.back()
+      })
+      await expect(page.locator('#blocker')).toHaveText('blocked')
+      await expectCount(page, 3)
+      await page.locator('#cancel').click()
+      await expect(page.locator('#blocker')).toHaveText('unblocked')
+      await expectCount(page, 3)
+      await page.evaluate(() => history.back())
+      await expect(page.locator('#blocker')).toHaveText('blocked')
+      await expectCount(page, 3)
+      await page.locator('#proceed').click()
+      await expect(page.locator('#blocker')).toHaveText('unblocked')
+      await expectCount(page, action === 'deep' ? 2 : 1)
+      expect(await page.evaluate(() => document.body.dataset.blockerTest)).toBe(
+        'mounted'
+      )
+    })
+  }
+
+  for (const repeatUrl of [false, true]) {
+    it(`restores multi-entry Back after a router push (repeat URL: ${repeatUrl})`, async ({
+      page
+    }) => {
+      await navigateTo(page, path, '?count=0')
+      await page.locator('#enabled').uncheck()
+      await expectTwoShallowPushes(page, 0)
+      if (repeatUrl) {
+        await page.locator('#shallow-decrement').click()
+        await expectCount(page, 1)
+      }
+      await page.locator('#router-push').click()
+      await expectCount(page, 3)
+      await expect(page.locator('#navigation')).toHaveText('idle')
+      await page.locator('#enabled').check()
+      await page.evaluate(() => {
+        document.body.dataset.blockerTest = 'mounted'
+        history.go(-2)
+      })
+      await expect(page.locator('#blocker')).toHaveText('blocked')
+      await expectCount(page, 3)
+      await page.locator('#proceed').click()
+      await expect(page.locator('#blocker')).toHaveText('unblocked')
+      await expectCount(page, repeatUrl ? 2 : 1)
+      expect(await page.evaluate(() => document.body.dataset.blockerTest)).toBe(
+        'mounted'
+      )
+    })
+  }
+
+  it('blocks multi-entry Back after Cancel and blocker remount', async ({
+    page
+  }) => {
+    await navigateTo(page, path, '?count=0')
+    await page.locator('#enabled').uncheck()
+    await expectTwoShallowPushes(page, 0)
+    await page.locator('#router-push').click()
+    await expectCount(page, 3)
+    await expect(page.locator('#navigation')).toHaveText('idle')
+    await page.locator('#enabled').check()
+    await page.evaluate(() => {
+      document.body.dataset.blockerTest = 'mounted'
+      history.back()
+    })
+    await expect(page.locator('#blocker')).toHaveText('blocked')
+    await expectCount(page, 3)
+    await page.locator('#cancel').click()
+    await expect(page.locator('#blocker')).toHaveText('unblocked')
+    await expectCount(page, 3)
+    await page.locator('#toggle-blocker').click()
+    await expect(page.locator('#blocker')).toHaveCount(0)
+    await page.locator('#toggle-blocker').click()
+    await expect(page.locator('#blocker')).toHaveText('unblocked')
+    await page.locator('#enabled').uncheck()
+    await page.locator('#enabled').check()
+    await page.evaluate(() => history.go(-2))
+    await expect(page.locator('#blocker')).toHaveText('blocked')
+    await expectCount(page, 3)
+    await page.locator('#proceed').click()
+    await expect(page.locator('#blocker')).toHaveText('unblocked')
+    await expectCount(page, 1)
+    expect(await page.evaluate(() => document.body.dataset.blockerTest)).toBe(
+      'mounted'
+    )
+  })
+
+  it('blocks Forward after an allowed Back across shallow pushes and a router push', async ({
+    page
+  }) => {
+    await navigateTo(page, path, '?count=0')
+    await page.locator('#enabled').uncheck()
+    await expectTwoShallowPushes(page, 0)
+    await page.locator('#router-push').click()
+    await expectCount(page, 3)
+    await expect(page.locator('#navigation')).toHaveText('idle')
+    await page.evaluate(() => {
+      document.body.dataset.blockerTest = 'mounted'
+      history.back()
+    })
+    await expectCount(page, 2)
+    await page.locator('#enabled').check()
+    await page.evaluate(() => history.forward())
+    await expect(page.locator('#blocker')).toHaveText('blocked')
+    await expectCount(page, 2)
+    await page.locator('#cancel').click()
+    await expect(page.locator('#blocker')).toHaveText('unblocked')
+    await expectCount(page, 2)
+    await page.evaluate(() => history.forward())
+    await expect(page.locator('#blocker')).toHaveText('blocked')
+    await expectCount(page, 2)
+    await page.locator('#proceed').click()
+    await expect(page.locator('#blocker')).toHaveText('unblocked')
+    await expectCount(page, 3)
+    expect(await page.evaluate(() => document.body.dataset.blockerTest)).toBe(
+      'mounted'
+    )
+  })
+}
+
 export const testBlockerWithoutLoader = defineTest(
   'React Router blockers without loaders',
   ({ path }) => {
+    testRouterHistory(path)
+
     it('blocks Back after an open blocker unmounts before a router push', async ({
       page
     }) => {
@@ -55,6 +282,50 @@ export const testBlockerWithoutLoader = defineTest(
 )
 
 export const testBlocker = defineTest('React Router blockers', ({ path }) => {
+  testRouterHistory(path)
+
+  for (const { name, control, state } of [
+    { name: 'Link loader', control: 'link', state: 'loading' },
+    { name: 'POST action', control: 'submit', state: 'submitting' }
+  ] as const) {
+    it(`adds a router entry after shallow pushes while a ${name} waits`, async ({
+      page
+    }) => {
+      it.setTimeout(10_000)
+      await navigateTo(page, path, '?count=0')
+      await page.locator('#enabled').uncheck()
+      const before = await page.evaluate(() => history.length)
+      await expectTwoShallowPushes(page, 0)
+      await page.locator(`#router-slow-${control}`).click()
+      await expect(page.locator('#navigation')).toHaveText(state)
+      await shallowPush(page, 3)
+      await shallowPush(page, 4)
+      await expect(page.locator('#navigation')).toHaveText(state)
+      await expect(page.locator('#navigation')).toHaveText('idle')
+      await expectCount(page, 3)
+      expect(await page.evaluate(() => history.length)).toBe(before + 5)
+      await page.locator('#enabled').check()
+      await page.evaluate(() => {
+        document.body.dataset.blockerTest = 'mounted'
+        history.back()
+      })
+      await expect(page.locator('#blocker')).toHaveText('blocked')
+      await expectCount(page, 3)
+      await page.locator('#cancel').click()
+      await expect(page.locator('#blocker')).toHaveText('unblocked')
+      await expectCount(page, 3)
+      await page.evaluate(() => history.back())
+      await expect(page.locator('#blocker')).toHaveText('blocked')
+      await expectCount(page, 3)
+      await page.locator('#proceed').click()
+      await expect(page.locator('#blocker')).toHaveText('unblocked')
+      await expectCount(page, 4)
+      expect(await page.evaluate(() => document.body.dataset.blockerTest)).toBe(
+        'mounted'
+      )
+    })
+  }
+
   for (const cancelFirst of [false, true]) {
     it(
       cancelFirst
@@ -291,6 +562,8 @@ export const testBlocker = defineTest('React Router blockers', ({ path }) => {
     await expect(page.locator('#blocker')).toHaveCount(0)
     await page.locator('#toggle-blocker').click()
     await expect(page.locator('#blocker')).toHaveText('unblocked')
+    await page.locator('#enabled').uncheck()
+    await page.locator('#enabled').check()
     await page.evaluate(() => {
       document.body.dataset.blockerTest = 'mounted'
       history.back()
@@ -367,14 +640,18 @@ export const testBlocker = defineTest('React Router blockers', ({ path }) => {
     )
   })
 
-  it('keeps tracking cancellation after index repair', async ({ page }) => {
+  it('blocks Back after repeated cancellation and a shallow push', async ({
+    page
+  }) => {
     await navigateTo(page, path, '?count=0')
     await page.locator('#deep').click()
     await expect(page.locator('#blocker')).toHaveText('blocked')
     await page.locator('#cancel').click()
+    await expect(page.locator('#blocker')).toHaveText('unblocked')
     await page.evaluate(() => history.back())
     await expect(page.locator('#blocker')).toHaveText('blocked')
     await page.locator('#cancel').click()
+    await expect(page.locator('#blocker')).toHaveText('unblocked')
     await shallowPush(page, 2)
     await page.evaluate(() => history.back())
     await expect(page.locator('#blocker')).toHaveText('blocked')
@@ -388,6 +665,7 @@ export const testBlocker = defineTest('React Router blockers', ({ path }) => {
     await page.locator('#deep').click()
     await expect(page.locator('#blocker')).toHaveText('blocked')
     await page.locator('#cancel').click()
+    await expect(page.locator('#blocker')).toHaveText('unblocked')
     await expectTwoShallowPushes(page, 1)
     await page.evaluate(() => {
       document.body.dataset.blockerTest = 'mounted'
@@ -411,6 +689,7 @@ export const testBlocker = defineTest('React Router blockers', ({ path }) => {
     await page.locator('#deep').click()
     await expect(page.locator('#blocker')).toHaveText('blocked')
     await page.locator('#cancel').click()
+    await expect(page.locator('#blocker')).toHaveText('unblocked')
     await page.evaluate(() => history.go(-2))
     await expect(page.locator('#blocker')).toHaveText('blocked')
     await expectCount(page, 3)
@@ -469,6 +748,7 @@ export const testBlocker = defineTest('React Router blockers', ({ path }) => {
     await expect(page.locator('#blocker')).toHaveText('blocked')
     await expectCount(page, 1)
     await page.locator('#cancel').click()
+    await expect(page.locator('#blocker')).toHaveText('unblocked')
     await page.locator('#enabled').uncheck()
     await page.evaluate(() => {
       document.body.dataset.blockerTest = 'mounted'
@@ -497,6 +777,8 @@ export const testBlocker = defineTest('React Router blockers', ({ path }) => {
     await expect(page.locator('#blocker')).toHaveCount(0)
     await page.locator('#toggle-blocker').click()
     await expect(page.locator('#blocker')).toHaveText('unblocked')
+    await page.locator('#enabled').uncheck()
+    await page.locator('#enabled').check()
     await page.evaluate(() => {
       document.body.dataset.blockerTest = 'mounted'
       history.back()
@@ -541,6 +823,9 @@ export const testBlocker = defineTest('React Router blockers', ({ path }) => {
       await expect(page.locator('#navigation')).toHaveText('loading')
       await expectCount(page, 2)
       await page.locator(`#${remove}`).click()
+      if (remove === 'cancel') {
+        await expect(page.locator('#blocker')).toHaveText('unblocked')
+      }
       await shallowPush(page, 3)
       expect(await page.evaluate(() => history.length)).toBe(before + 1)
       await expect(page.locator('#navigation')).toHaveText('idle')
