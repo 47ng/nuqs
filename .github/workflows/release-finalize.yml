@@ -23,6 +23,8 @@ concurrency:
   group: release-finalize-${{ github.event.release.tag_name }}
   cancel-in-progress: false
 
+cache-mode: none
+
 jobs:
   finalize:
     name: Comment + label impacted issues/PRs

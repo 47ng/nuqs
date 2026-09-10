@@ -12,6 +12,8 @@ on:
 permissions:
   contents: read # for actions/checkout
 
+cache-mode: none
+
 env:
   FORCE_COLOR: 3 # Diplay chalk colors
   VERSION: ${{ inputs.version }}
@@ -40,7 +42,7 @@ jobs:
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
         with:
           node-version-file: .node-version
-          cache: pnpm
+          package-manager-cache: false
       - name: Install dependencies
         run: pnpm install --frozen-lockfile --ignore-scripts --filter scripts...
       - name: Check for changes in app router

@@ -30,6 +30,8 @@ on:
 # Default to no token scope; each job grants only what it writes.
 permissions: {}
 
+cache-mode: none
+
 env:
   BACKLOG_MILESTONE_NUMBER: 3 # "🪵 Backlog"
 
