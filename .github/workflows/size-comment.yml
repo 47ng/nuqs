@@ -11,6 +11,8 @@ on:
 
 permissions: {}
 
+cache-mode: none
+
 concurrency:
   group: bundle-size-comment-${{ github.event.workflow_run.head_repository.full_name }}-${{ github.event.workflow_run.head_branch }}
   cancel-in-progress: true

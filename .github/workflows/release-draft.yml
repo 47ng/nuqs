@@ -90,6 +90,7 @@ jobs:
     name: CI gate
     needs: [compute-version, generate-notes]
     if: ${{ needs.compute-version.outputs.needsReleasing == 'true' }}
+    cache-mode: read
     permissions:
       contents: read
       actions: read # ci-cd.yml's docs build reads the workflow-run status when rendering the landing-page CI component.
@@ -103,6 +104,7 @@ jobs:
   stage:
     name: Stage to npm
     runs-on: ubuntu-24.04-arm
+    cache-mode: none
     needs: [compute-version, ci]
     if: ${{ needs.compute-version.outputs.needsReleasing == 'true' }}
     permissions:
@@ -205,6 +207,7 @@ jobs:
   create-draft:
     name: Draft GitHub release
     runs-on: ubuntu-24.04-arm
+    cache-mode: none
     needs: [compute-version, generate-notes, stage]
     permissions:
       contents: write # create the draft GitHub release

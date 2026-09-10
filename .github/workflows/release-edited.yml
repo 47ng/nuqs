@@ -19,6 +19,8 @@ concurrency:
 permissions:
   contents: read
 
+cache-mode: none
+
 jobs:
   refresh-changelog:
     name: Bust the releases ISR cache
