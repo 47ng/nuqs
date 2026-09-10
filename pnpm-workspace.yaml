@@ -17,7 +17,7 @@ catalogs:
     '@stryker-mutator/vitest-runner': 9.6.1
 
   vitest:
-    vitest: ^4.1.10
+    vitest: ^4.1.11
     '@vitest/browser-playwright': ^4.1.10
     '@vitest/coverage-v8': ^4.1.10
 
