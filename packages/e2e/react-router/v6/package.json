@@ -15,7 +15,7 @@
     "nuqs": "workspace:*",
     "react": "catalog:react19",
     "react-dom": "catalog:react19",
-    "react-router-dom": "6.30.3"
+    "react-router-dom": "6.30.6"
   },
   "devDependencies": {
     "@playwright/test": "catalog:e2e",
