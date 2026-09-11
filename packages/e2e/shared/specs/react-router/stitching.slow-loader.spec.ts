@@ -9,7 +9,7 @@ export const testStitchingSlowLoader = defineTest(
   'Stitching - slow loader',
   ({ path }) => {
     for (const hook of ['useQueryState', 'useQueryStates'] as const) {
-      it(`currently coalesces deep pushes across keys while a loader is pending (${hook})`, async ({
+      it(`keeps each deep push across keys while a loader is pending (${hook})`, async ({
         page
       }) => {
         await navigateTo(
@@ -22,17 +22,33 @@ export const testStitchingSlowLoader = defineTest(
         await expectSearch(page, { a: '1' })
         await expectSearch(page, { a: '1', b: '1' })
         await expectSearch(page, { a: '1', b: '1', c: '1' })
-        await expect.poll(() => readHistoryIndex(page)).toBe(initialIndex + 1)
+        await expect.poll(() => readHistoryIndex(page)).toBe(initialIndex + 3)
         await expect(page.locator('#client-state')).toHaveText('1,1,1')
         await expectSearch(page, { a: '1', b: '1', c: '1' })
+        await page.goBack()
+        await expect(page.locator('#client-state')).toHaveText('1,1,0')
+        await expectSearch(page, { a: '1', b: '1', c: null })
+        expect(await readHistoryIndex(page)).toBe(initialIndex + 2)
+        await page.goBack()
+        await expect(page.locator('#client-state')).toHaveText('1,0,0')
+        await expectSearch(page, { a: '1', b: null, c: null })
+        expect(await readHistoryIndex(page)).toBe(initialIndex + 1)
         await page.goBack()
         await expect(page.locator('#client-state')).toHaveText('0,0,0')
         await expectUrl(page, url => !url.searchParams.has('a'))
         expect(await readHistoryIndex(page)).toBe(initialIndex)
         await page.goForward()
+        await expect(page.locator('#client-state')).toHaveText('1,0,0')
+        await expectSearch(page, { a: '1', b: null, c: null })
+        expect(await readHistoryIndex(page)).toBe(initialIndex + 1)
+        await page.goForward()
+        await expect(page.locator('#client-state')).toHaveText('1,1,0')
+        await expectSearch(page, { a: '1', b: '1', c: null })
+        expect(await readHistoryIndex(page)).toBe(initialIndex + 2)
+        await page.goForward()
         await expect(page.locator('#client-state')).toHaveText('1,1,1')
         await expectSearch(page, { a: '1', b: '1', c: '1' })
-        expect(await readHistoryIndex(page)).toBe(initialIndex + 1)
+        expect(await readHistoryIndex(page)).toBe(initialIndex + 3)
       })
     }
   }
