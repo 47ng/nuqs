@@ -10,7 +10,10 @@ import {
 import { getSearchParams } from '../../lib/search-params'
 import { version } from '../../lib/version'
 
-export type SearchParamsSyncEmitterEvents = { update: URLSearchParams }
+export type SearchParamsSyncEmitterEvents = {
+  update: URLSearchParams
+  pop: { index: number; delta: number }
+}
 
 export function getHistorySyncEmitter(
   adapter: string
@@ -40,19 +43,21 @@ type PendingNavigationBase = Partial<PendingNavigationBlocker> & {
   entryHref: string
 }
 
-type PendingPush = PendingNavigationBase & {
-  history: 'push'
-  id: number
+type PendingNavigation = PendingNavigationBase & {
+  history: 'push' | 'replace'
+  id: number | undefined
   offset: number
   routerIndex: number | undefined
 }
 
-type PendingNavigation =
-  PendingPush | (PendingNavigationBase & { history: 'replace' })
-
 const pendingNavigation = globalSingleton('pending-navigation', () => ({
   current: null as PendingNavigation | null,
-  cancelledPush: null as PendingPush | null,
+  accepted: null as
+    | (Pick<PendingNavigation, 'history' | 'requestedHref'> & {
+        onCommit?: () => void
+      })
+    | null,
+  cancelledPush: null as PendingNavigation | null,
   cancelledPushTraversal: null as
     'departing' | 'restoring' | 'proceeding' | null,
   cancelledPushDistance: null as number | null,
@@ -61,6 +66,41 @@ const pendingNavigation = globalSingleton('pending-navigation', () => ({
 
 function withoutEmptyFragment(href: string): string {
   return href.replace(/^([^#]*)#$/, '$1')
+}
+
+export function capturePendingNavigation(): (onCommit: () => void) => void {
+  const current = getPendingNavigation()
+  const accepted =
+    pendingNavigation.accepted ??
+    (current?.isOriginalBlockerOpen?.() ? null : current)
+  pendingNavigation.accepted = null
+  return onCommit => {
+    pendingNavigation.accepted = accepted ? { ...accepted, onCommit } : null
+  }
+}
+
+export function discardAcceptedNavigation(): void {
+  pendingNavigation.accepted = null
+}
+
+function preserveAcceptedCommit(
+  url: string | URL,
+  history: 'push' | 'replace'
+): boolean {
+  const accepted = pendingNavigation.accepted
+  if (
+    accepted?.history !== history ||
+    withoutEmptyFragment(new URL(url, location.href).href) !==
+      withoutEmptyFragment(accepted.requestedHref)
+  ) {
+    return false
+  }
+  pendingNavigation.accepted = null
+  accepted.onCommit?.()
+  if (pendingNavigation.cancelledPush) {
+    repairPendingPushIndex(pendingNavigation.cancelledPush)
+  }
+  return true
 }
 
 export function markPendingPush(
@@ -97,7 +137,10 @@ export function markPendingReplace(url: URL): void {
   pendingNavigation.current = {
     history: 'replace',
     requestedHref: url.href,
-    entryHref: url.href
+    entryHref: url.href,
+    id: history.state?.[historyUpdateMarker],
+    offset: getHistoryStateOffset(history.state),
+    routerIndex: history.state?.idx
   }
 }
 
@@ -115,6 +158,14 @@ export function setPendingNavigationBlocker({
     current.isOriginalBlockerOpen = isOriginalBlockerOpen
   } else {
     unsubscribe?.()
+  }
+}
+
+export function setPendingPopBlocker(
+  isAnyBlockerProceeding: () => boolean
+): void {
+  if (pendingNavigation.current) {
+    pendingNavigation.current.isAnyBlockerProceeding = isAnyBlockerProceeding
   }
 }
 
@@ -164,7 +215,7 @@ export function cancelPendingNavigation(onPop = false): number | undefined {
     clearCurrentPendingNavigation()
     current.isAnyBlockerProceeding = isAnyBlockerProceeding
     pendingNavigation.cancelledPush = current
-    if (!onPop) {
+    if (!onPop && !pendingNavigation.accepted) {
       repairPendingPushIndex(current)
     }
     return queueResetMutex
@@ -180,10 +231,12 @@ function getPendingNavigation(): PendingNavigation | null {
   return pendingNavigation.current
 }
 
-function isPendingPushEntry(pending: PendingPush): boolean {
+function isPendingPushEntry(pending: PendingNavigation): boolean {
   return (
     history.state?.[historyUpdateMarker] === pending.id &&
-    history.state?.[historyUpdateOffsetMarker] === pending.offset &&
+    (pending.history === 'replace'
+      ? getHistoryStateOffset(history.state)
+      : history.state?.[historyUpdateOffsetMarker]) === pending.offset &&
     history.state?.idx === pending.routerIndex &&
     location.href === pending.entryHref
   )
@@ -213,10 +266,8 @@ function movePendingHref(): void {
       continue
     }
     pending.entryHref = location.href
-    if (
-      pending.history === 'push' &&
-      history.state?.[historyUpdateMarker] === pending.id
-    ) {
+    if (history.state?.[historyUpdateMarker] === pending.id) {
+      pending.routerIndex = history.state.idx
       pending.offset =
         history.state[historyUpdateOffsetMarker] ?? pending.offset
     }
@@ -249,6 +300,7 @@ function clearCancelledPush(): void {
 }
 
 function clearPendingNavigation(): void {
+  pendingNavigation.accepted = null
   clearCurrentPendingNavigation()
   clearCancelledPush()
 }
@@ -278,7 +330,7 @@ export function repairHistoryIndex(): number | undefined {
   return index + offset
 }
 
-function repairPendingPushIndex(pending: PendingPush): void {
+function repairPendingPushIndex(pending: PendingNavigation): void {
   const index = repairHistoryIndex()
   if (index !== undefined) {
     pending.routerIndex = index
@@ -286,7 +338,7 @@ function repairPendingPushIndex(pending: PendingPush): void {
   }
 }
 
-function getCancelledPushDistance(pending: PendingPush): number | null {
+function getCancelledPushDistance(pending: PendingNavigation): number | null {
   const targetOffset = history.state?.[historyUpdateOffsetMarker]
   if (
     typeof pending.routerIndex === 'number' &&
@@ -315,16 +367,48 @@ function handlePopOnPendingNavigation(): void {
   ) {
     cancelPendingNavigation(true)
   }
+  if (
+    !pendingNavigation.cancelledPush &&
+    pendingNavigation.current?.isAnyBlockerProceeding
+  ) {
+    pendingNavigation.cancelledPush = pendingNavigation.current
+  }
   const cancelledPush = pendingNavigation.cancelledPush
   if (cancelledPush) {
     if (pendingNavigation.cancelledPushTraversal === 'restoring') {
       if (isPendingPushEntry(cancelledPush)) {
         repairPendingPushIndex(cancelledPush)
         pendingNavigation.cancelledPushTraversal = null
+        if (
+          (pendingNavigation.current === cancelledPush &&
+            cancelledPush.history === 'push') ||
+          pendingNavigation.accepted?.history === 'push'
+        ) {
+          queueMicrotask(() => {
+            if (
+              (pendingNavigation.current === cancelledPush ||
+                (pendingNavigation.accepted &&
+                  pendingNavigation.cancelledPush === cancelledPush)) &&
+              isPendingPushEntry(cancelledPush) &&
+              typeof cancelledPush.routerIndex === 'number'
+            ) {
+              history.replaceState(
+                {
+                  ...history.state,
+                  idx: cancelledPush.routerIndex - 1,
+                  [historyUpdateOffsetMarker]: 1
+                },
+                historyUpdateMarker
+              )
+            }
+          })
+        }
       }
       return
     }
     if (pendingNavigation.cancelledPushTraversal === 'proceeding') {
+      pendingNavigation.accepted = null
+      clearCurrentPendingNavigation()
       clearCancelledPush()
     } else if (!isPendingPushEntry(cancelledPush)) {
       const distance = getCancelledPushDistance(cancelledPush)
@@ -339,12 +423,21 @@ function handlePopOnPendingNavigation(): void {
           pendingNavigation.cancelledPushTraversal === 'departing' &&
           pendingNavigation.cancelledPush === cancelledPush
         ) {
+          pendingNavigation.accepted = null
+          if (pendingNavigation.current === cancelledPush) {
+            clearCurrentPendingNavigation()
+          }
           clearCancelledPush()
         }
       }, 0)
     }
   }
-  clearCurrentPendingNavigation()
+  if (pendingNavigation.current !== cancelledPush) {
+    clearCurrentPendingNavigation()
+  }
+  if (!cancelledPush) {
+    pendingNavigation.accepted = null
+  }
 }
 
 function retargetPendingCommit(
@@ -352,10 +445,14 @@ function retargetPendingCommit(
   url: string | URL
 ): string {
   const href = new URL(url, location.href).href
-  return withoutEmptyFragment(href) ===
-    withoutEmptyFragment(pending.requestedHref)
-    ? pending.entryHref
-    : href
+  if (
+    withoutEmptyFragment(href) === withoutEmptyFragment(pending.requestedHref)
+  ) {
+    return pending.entryHref
+  }
+  // Redirects must not inherit the expected commit's queue protection.
+  setQueueResetMutex(1)
+  return href
 }
 
 function pendingPushCommitUrl(url: string | URL): string | null {
@@ -426,6 +523,11 @@ export function patchHistory(
     return
   }
   let lastSearchSeen = typeof location === 'object' ? location.search : ''
+  const readIndex = () =>
+    typeof history.state?.idx === 'number'
+      ? history.state.idx + getHistoryStateOffset(history.state)
+      : undefined
+  let lastHistoryIndex = readIndex()
 
   emitter.on('update', search => {
     const searchString = search.toString()
@@ -437,6 +539,12 @@ export function patchHistory(
     () => {
       lastSearchSeen = location.search
       if (trackRouterHistory) {
+        const index = readIndex()
+        const previousIndex = lastHistoryIndex
+        lastHistoryIndex = index
+        if (index !== undefined && previousIndex !== undefined) {
+          emitter.emit('pop', { index, delta: index - previousIndex })
+        }
         handlePopOnPendingNavigation()
         repairHistoryIndex()
       }
@@ -473,8 +581,16 @@ export function patchHistory(
     markHistoryAsPatched(adapter)
     return
   }
-  const originalPushState = history.pushState
-  const originalReplaceState = history.replaceState
+  const nativePushState = history.pushState
+  const nativeReplaceState = history.replaceState
+  const originalPushState: History['pushState'] = function (...args) {
+    nativePushState.apply(history, args)
+    lastHistoryIndex = readIndex()
+  }
+  const originalReplaceState: History['replaceState'] = function (...args) {
+    nativeReplaceState.apply(history, args)
+    lastHistoryIndex = readIndex()
+  }
   const originalGo = history.go
   history.go = function nuqs_go(delta) {
     const cancelledPush = pendingNavigation.cancelledPush
@@ -522,7 +638,12 @@ export function patchHistory(
       if (onTrackedEntry) {
         movePendingHref()
       }
-      if (onCancelledPush && pendingNavigation.cancelledPush) {
+      if (
+        onCancelledPush &&
+        pendingNavigation.cancelledPush &&
+        pendingNavigation.current !== pendingNavigation.cancelledPush &&
+        !pendingNavigation.accepted
+      ) {
         repairPendingPushIndex(pendingNavigation.cancelledPush)
       }
       if (onCancelledPush && pendingNavigation.cancelledPushDistance !== null) {
@@ -532,6 +653,10 @@ export function patchHistory(
     }
     if (!url) {
       originalPushState.call(history, state, '', url)
+      return
+    }
+    if (preserveAcceptedCommit(url, 'push')) {
+      sync(location.href)
       return
     }
     // The router committing an optimistic deep push must not add
@@ -552,6 +677,10 @@ export function patchHistory(
       if (onTrackedEntry) {
         movePendingHref()
       }
+      return
+    }
+    if (preserveAcceptedCommit(url, 'replace')) {
+      sync(location.href)
       return
     }
     const commitUrl = pendingReplaceCommit(url)

@@ -48,6 +48,7 @@ const router = createBrowserRouter(
       <Route path="scroll"                                    lazy={load(import('./routes/scroll'))} />
 
       {/* Local tests */}
+      <Route path="pending-loader"                           lazy={load(import('./routes/pending-loader'))} />
       <Route path="blocker"                                  lazy={load(import('./routes/blocker'))} />
       <Route path="blocker-no-loader"                        lazy={load(import('./routes/blocker.no-loader'))} />
       <Route path="debounce"                                  lazy={load(import('./routes/debounce'))} />

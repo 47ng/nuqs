@@ -4,8 +4,20 @@ import { expectSearch } from '../../playwright/expect-url'
 import { readHistoryIndex } from '../../playwright/history'
 import { navigateTo } from '../../playwright/navigate'
 
-async function navigateToRepro(page: Page, path: string, search: string) {
+async function navigateToRepro(
+  page: Page,
+  path: string,
+  search: string,
+  options: {
+    testHistory?: 'push' | 'replace'
+    otherHistory?: 'push' | 'replace'
+    shallowHistory?: 'push' | 'replace'
+  } = {}
+) {
   const searchParams = new URLSearchParams(search)
+  for (const [key, value] of Object.entries(options)) {
+    searchParams.set(key, value)
+  }
   searchParams.set('loaderId', crypto.randomUUID())
   await navigateTo(page, path, `?${searchParams}`)
 }
@@ -175,7 +187,9 @@ export const testRepro1563 = defineTest('repro-1563', ({ path }) => {
 
   for (const history of ['replace', 'push'] as const) {
     it(`does not run loaders for shallow ${history}`, async ({ page }) => {
-      await navigateToRepro(page, path, '?test=init&delay=1000')
+      await navigateToRepro(page, path, '?test=init&delay=1000', {
+        shallowHistory: history
+      })
       const initialLoaderCall = await readLoaderCall(page)
 
       await page.locator(`#shallow-${history}`).click()
@@ -206,7 +220,10 @@ export const testRepro1563 = defineTest('repro-1563', ({ path }) => {
   it('adds an entry when a deep push takes over a pending deep replace', async ({
     page
   }) => {
-    await navigateToRepro(page, path, '?test=init&delay=1000')
+    await navigateToRepro(page, path, '?test=init&delay=1000', {
+      testHistory: 'replace',
+      otherHistory: 'push'
+    })
     const initialIndex = await readHistoryIndex(page)
     const initialHistoryLength = await page.evaluate(() => history.length)
     await page.locator('#deep-replace').click()
@@ -273,7 +290,9 @@ export const testRepro1563 = defineTest('repro-1563', ({ path }) => {
   it('keeps a shallow replace made while a deep replace is pending', async ({
     page
   }) => {
-    await navigateToRepro(page, path, '?test=init&delay=1000')
+    await navigateToRepro(page, path, '?test=init&delay=1000', {
+      testHistory: 'replace'
+    })
     const initialIndex = await readHistoryIndex(page)
     const initialLoaderCall = await readLoaderCall(page)
     await page.locator('#deep-replace').click()
@@ -286,10 +305,12 @@ export const testRepro1563 = defineTest('repro-1563', ({ path }) => {
     expect(await readLoaderCall(page)).toBe(initialLoaderCall + 1)
   })
 
-  it('keeps a shallow push made while a deep push is pending', async ({
+  it('currently coalesces a shallow push with a pending deep push', async ({
     page
   }) => {
-    await navigateToRepro(page, path, '?test=init&delay=1000')
+    await navigateToRepro(page, path, '?test=init&delay=1000', {
+      shallowHistory: 'push'
+    })
     const initialIndex = await readHistoryIndex(page)
     const initialLoaderCall = await readLoaderCall(page)
     await page.locator('#push').click()
@@ -308,7 +329,10 @@ export const testRepro1563 = defineTest('repro-1563', ({ path }) => {
   it('keeps a shallow push made while a deep replace is pending', async ({
     page
   }) => {
-    await navigateToRepro(page, path, '?test=init&delay=1000')
+    await navigateToRepro(page, path, '?test=init&delay=1000', {
+      testHistory: 'replace',
+      shallowHistory: 'push'
+    })
     const initialLoaderCall = await readLoaderCall(page)
     const initialHistoryLength = await page.evaluate(() => history.length)
     await page.locator('#deep-replace').click()
@@ -326,7 +350,10 @@ export const testRepro1563 = defineTest('repro-1563', ({ path }) => {
   it('does not let a pending deep replace mutate history after Back', async ({
     page
   }) => {
-    await navigateToRepro(page, path, '?test=init&delay=1000')
+    await navigateToRepro(page, path, '?test=init&delay=1000', {
+      testHistory: 'replace',
+      shallowHistory: 'push'
+    })
     const initialIndex = await readHistoryIndex(page)
     const initialLoaderCall = await readLoaderCall(page)
     await page.locator('#deep-replace').click()
@@ -422,7 +449,9 @@ export const testRepro1563 = defineTest('repro-1563', ({ path }) => {
   it('shallow-pushes after Back cancelled a pending deep push', async ({
     page
   }) => {
-    await navigateToRepro(page, path, '?test=init&delay=1000')
+    await navigateToRepro(page, path, '?test=init&delay=1000', {
+      shallowHistory: 'push'
+    })
     const initialIndex = await readHistoryIndex(page)
     await page.locator('#push').click()
     await expect(page).toHaveURL(url => url.searchParams.get('test') === 'pass')

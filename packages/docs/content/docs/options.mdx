@@ -273,6 +273,14 @@ function Search() {
 }
 ```
 
+<Callout title="React Router and Remix redirects">
+  If a loader redirects a `shallow: false{:ts}` query update to a different URL
+  with the same history mode (`push` or `replace`), nuqs cancels queued debounced
+  edits. They will not write onto the redirect URL after their delay.
+  If the loader completes at its requested URL, queued edits keep their delay
+  and can still write to the URL.
+</Callout>
+
 ### Resetting
 
 You can use the `defaultRateLimit{:ts}` import to reset debouncing or throttling to

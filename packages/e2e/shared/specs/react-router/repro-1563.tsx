@@ -1,7 +1,8 @@
 'use client'
 
-import { debounce, useQueryState } from 'nuqs'
+import { debounce, useQueryState, useQueryStates } from 'nuqs'
 import { useState } from 'react'
+import { reproHistoryOptions } from './repro-1563.defs'
 
 type Repro1563Props = {
   loaderCall: number
@@ -27,12 +28,21 @@ export function Repro1563({
   useNavigationType,
   useBlocker
 }: Repro1563Props) {
+  const [{ testHistory, otherHistory, shallowHistory }] =
+    useQueryStates(reproHistoryOptions)
   const [state, setState] = useQueryState('test', {
-    history: 'push',
+    history: testHistory,
     shallow: false
   })
-  const [, setOther] = useQueryState('other', { shallow: false })
-  const [shallow, setShallow] = useQueryState('shallow')
+  const [, setOther] = useQueryState('other', {
+    history: otherHistory,
+    shallow: false
+  })
+  const [shallow, setShallow] = useQueryState('shallow', {
+    history: shallowHistory,
+    shallow: true,
+    limitUrlUpdates: debounce(100)
+  })
   const navigate = useNavigate()
   const navigation = useNavigation()
   const navigationType = useNavigationType()
@@ -43,8 +53,11 @@ export function Repro1563({
 
   return (
     <>
-      <button id="push" onClick={() => setState('pass')}>
-        Push
+      <button
+        id={testHistory === 'push' ? 'push' : 'deep-replace'}
+        onClick={() => setState('pass')}
+      >
+        Update test
       </button>
       <button
         id="router-replace"
@@ -66,43 +79,16 @@ export function Repro1563({
         Push then replace
       </button>
       <button
-        id="deep-replace"
-        onClick={() => setState('pass', { history: 'replace' })}
+        id={`shallow-${shallowHistory}`}
+        onClick={() => setShallow('pass')}
       >
-        Deep replace
+        Update shallow
       </button>
       <button
-        id="push-other"
-        onClick={() => setOther('pass', { history: 'push' })}
+        id={otherHistory === 'push' ? 'push-other' : 'replace'}
+        onClick={() => setOther('pass')}
       >
-        Push other
-      </button>
-      <button
-        id="shallow-replace"
-        onClick={() =>
-          setShallow('pass', {
-            history: 'replace',
-            shallow: true,
-            limitUrlUpdates: debounce(100)
-          })
-        }
-      >
-        Shallow replace
-      </button>
-      <button
-        id="shallow-push"
-        onClick={() =>
-          setShallow('pass', {
-            history: 'push',
-            shallow: true,
-            limitUrlUpdates: debounce(100)
-          })
-        }
-      >
-        Shallow push
-      </button>
-      <button id="replace" onClick={() => setOther('pass')}>
-        Replace
+        Update other
       </button>
       <pre id="state">{state}</pre>
       <pre id="shallow-state">{shallow}</pre>
