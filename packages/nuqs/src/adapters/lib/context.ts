@@ -8,9 +8,9 @@ import {
   type ReactNode
 } from 'react'
 import type { Options } from '../../defs'
-import { error } from '../../lib/errors'
+import { error303, error404 } from '../../lib/errors'
 import { globalWeakSingleton } from '../../lib/global-singleton'
-import type { AdapterInterface, UseAdapterHook } from './defs'
+import type { UseAdapterHook } from './defs'
 
 export type AdapterProps = {
   defaultOptions?: Partial<
@@ -37,7 +37,7 @@ export const context: Context<AdapterContext> = globalWeakSingleton(
   () => {
     const ctx = createContext<AdapterContext>({
       useAdapter() {
-        throw new Error(error(404))
+        throw new Error(error404)
       }
     })
     ctx.displayName = 'NuqsAdapterContext'
@@ -56,7 +56,7 @@ declare global {
 // on one React share a single context via globalWeakSingleton above.
 if (typeof window !== 'undefined') {
   if (window.__NuqsAdapterContext && window.__NuqsAdapterContext !== context) {
-    console.error(error(303))
+    console.error(error303)
   }
   window.__NuqsAdapterContext = context
 }
@@ -89,17 +89,10 @@ export function createAdapterProvider(
     )
 }
 
-export function useAdapter(watchKeys: string[]): AdapterInterface {
+export function useAdapterContext(): AdapterContext {
   const value = useContext(context)
   if (!('useAdapter' in value)) {
-    throw new Error(error(404))
+    throw new Error(error404)
   }
-  return value.useAdapter(watchKeys)
+  return value
 }
-
-export const useAdapterDefaultOptions = (): AdapterProps['defaultOptions'] =>
-  useContext(context).defaultOptions
-
-export const useAdapterProcessUrlSearchParams =
-  (): AdapterProps['processUrlSearchParams'] =>
-    useContext(context).processUrlSearchParams

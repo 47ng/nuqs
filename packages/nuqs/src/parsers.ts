@@ -155,16 +155,17 @@ export function createParser<T>(
       return null
     }
     const isArray = Array.isArray(value)
-    if (isArray && value[0] === undefined) {
-      return null
-    }
-    value = isArray ? value[0]! : typeof value === 'string' ? value : ''
-    return safeParse(parser.parse, value)
+    return isArray && value[0] === undefined
+      ? null
+      : safeParse(
+          parser.parse,
+          isArray ? value[0]! : typeof value === 'string' ? value : ''
+        )
   }
 
   return {
     type: 'single',
-    eq: (a, b) => a === b,
+    eq: isEqual,
     ...parser,
     parseServerSide: parseServerSideNullable,
     withDefault(defaultValue) {
@@ -197,7 +198,7 @@ export function createMultiParser<T>(
 
   return {
     type: 'multi',
-    eq: (a, b) => a === b,
+    eq: isEqual,
     ...parser,
     parseServerSide: parseServerSideNullable,
     withDefault(defaultValue) {
@@ -220,51 +221,57 @@ export function createMultiParser<T>(
 
 // Parsers implementations -----------------------------------------------------
 
-export const parseAsString: SingleParserBuilder<string> = createParser({
-  parse: v => v,
-  serialize: String
-})
+export const parseAsString: SingleParserBuilder<string> =
+  /* @__PURE__ */ createParser({
+    parse: v => v,
+    serialize: String
+  })
 
-export const parseAsInteger: SingleParserBuilder<number> = createParser({
-  parse: v => {
-    const int = parseInt(v)
-    return int == int ? int : null // NaN check at low bundle size cost
-  },
-  serialize: v => '' + Math.round(v)
-})
+export const parseAsInteger: SingleParserBuilder<number> =
+  /* @__PURE__ */ createParser({
+    parse: v => {
+      const int = parseInt(v)
+      return int == int ? int : null // NaN check at low bundle size cost
+    },
+    serialize: v => '' + Math.round(v)
+  })
 
-export const parseAsIndex: SingleParserBuilder<number> = createParser({
-  parse: v => {
-    const int = parseInt(v)
-    return int == int ? int - 1 : null // NaN check at low bundle size cost
-  },
-  serialize: v => '' + Math.round(v + 1)
-})
+export const parseAsIndex: SingleParserBuilder<number> =
+  /* @__PURE__ */ createParser({
+    parse: v => {
+      const int = parseInt(v)
+      return int == int ? int - 1 : null // NaN check at low bundle size cost
+    },
+    serialize: v => '' + Math.round(v + 1)
+  })
 
-export const parseAsHex: SingleParserBuilder<number> = createParser({
-  parse: v => {
-    const int = parseInt(v, 16)
-    return int == int ? int : null // NaN check at low bundle size cost
-  },
-  serialize: v => {
-    const hex = Math.round(v).toString(16)
-    // Negative hex starts with '-', which sorts before '0' and needs no padding
-    return hex < '0' || !(hex.length & 1) ? hex : '0' + hex
-  }
-})
+export const parseAsHex: SingleParserBuilder<number> =
+  /* @__PURE__ */ createParser({
+    parse: v => {
+      const int = parseInt(v, 16)
+      return int == int ? int : null // NaN check at low bundle size cost
+    },
+    serialize: v => {
+      const hex = Math.round(v).toString(16)
+      // Negative hex starts with '-', which sorts before '0' and needs no padding
+      return hex < '0' || !(hex.length & 1) ? hex : '0' + hex
+    }
+  })
 
-export const parseAsFloat: SingleParserBuilder<number> = createParser({
-  parse: v => {
-    const float = parseFloat(v)
-    return float == float ? float : null // NaN check at low bundle size cost
-  },
-  serialize: String
-})
+export const parseAsFloat: SingleParserBuilder<number> =
+  /* @__PURE__ */ createParser({
+    parse: v => {
+      const float = parseFloat(v)
+      return float == float ? float : null // NaN check at low bundle size cost
+    },
+    serialize: String
+  })
 
-export const parseAsBoolean: SingleParserBuilder<boolean> = createParser({
-  parse: v => v.toLowerCase() === 'true',
-  serialize: String
-})
+export const parseAsBoolean: SingleParserBuilder<boolean> =
+  /* @__PURE__ */ createParser({
+    parse: v => v.toLowerCase() === 'true',
+    serialize: String
+  })
 
 function compareDates(a: Date, b: Date) {
   return a.valueOf() === b.valueOf()
@@ -274,14 +281,15 @@ function compareDates(a: Date, b: Date) {
  * Querystring encoded as the number of milliseconds since epoch,
  * and returned as a Date object.
  */
-export const parseAsTimestamp: SingleParserBuilder<Date> = createParser({
-  parse: v => {
-    const date = new Date(parseInt(v))
-    return +date == +date ? date : null // NaN check at low bundle size cost
-  },
-  serialize: (v: Date) => '' + v.valueOf(),
-  eq: compareDates
-})
+export const parseAsTimestamp: SingleParserBuilder<Date> =
+  /* @__PURE__ */ createParser({
+    parse: v => {
+      const date = new Date(parseInt(v))
+      return +date == +date ? date : null // NaN check at low bundle size cost
+    },
+    serialize: (v: Date) => '' + v.valueOf(),
+    eq: compareDates
+  })
 
 /**
  * Querystring encoded as an ISO-8601 string (UTC),
@@ -291,17 +299,18 @@ export const parseAsTimestamp: SingleParserBuilder<Date> = createParser({
  * impossible dates like 2021-02-29 and reduced-precision
  * or non-ISO forms parse to null.
  */
-export const parseAsIsoDateTime: SingleParserBuilder<Date> = createParser({
-  parse: v => {
-    const date = new Date(v)
-    // The NaN check rejects invalid time parts.
-    // parseAsIsoDate.parse rejects invalid calendar dates
-    // (reused to keep the bundle small).
-    return +date == +date && parseAsIsoDate.parse(v) ? date : null
-  },
-  serialize: (v: Date) => v.toISOString(),
-  eq: compareDates
-})
+export const parseAsIsoDateTime: SingleParserBuilder<Date> =
+  /* @__PURE__ */ createParser({
+    parse: v => {
+      const date = new Date(v)
+      // The NaN check rejects invalid time parts.
+      // parseAsIsoDate.parse rejects invalid calendar dates
+      // (reused to keep the bundle small).
+      return +date == +date && parseAsIsoDate.parse(v) ? date : null
+    },
+    serialize: (v: Date) => v.toISOString(),
+    eq: compareDates
+  })
 
 /**
  * Querystring encoded as an ISO-8601 string (UTC)
@@ -315,19 +324,20 @@ export const parseAsIsoDateTime: SingleParserBuilder<Date> = createParser({
  * impossible dates like 2021-02-29 and reduced-precision
  * or non-ISO forms parse to null.
  */
-export const parseAsIsoDate: SingleParserBuilder<Date> = createParser({
-  parse: v => {
-    const date = new Date(v.slice(0, 10))
-    // NaN check first: serialize throws on Invalid Date.
-    // new Date() turns 2021-02-29 into 2021-03-01 silently,
-    // so serialize back and compare with the input.
-    return +date == +date && parseAsIsoDate.serialize(date) === v.slice(0, 10)
-      ? date
-      : null
-  },
-  serialize: (v: Date) => v.toISOString().slice(0, 10),
-  eq: compareDates
-})
+export const parseAsIsoDate: SingleParserBuilder<Date> =
+  /* @__PURE__ */ createParser({
+    parse: v => {
+      const date = new Date(v.slice(0, 10))
+      // NaN check first: serialize throws on Invalid Date.
+      // new Date() turns 2021-02-29 into 2021-03-01 silently,
+      // so serialize back and compare with the input.
+      return +date == +date && parseAsIsoDate.serialize(date) === v.slice(0, 10)
+        ? date
+        : null
+    },
+    serialize: (v: Date) => v.toISOString().slice(0, 10),
+    eq: compareDates
+  })
 
 /**
  * String-based enums provide better type-safety for known sets of values.

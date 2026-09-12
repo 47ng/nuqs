@@ -1,16 +1,28 @@
-import { clearParseCache, parseWithClientCache } from './parse-cache.client'
+import {
+  clearParseCache,
+  clearParseCacheKey,
+  getParseCacheVersion,
+  parseWithClientCache,
+  retainParseCache
+} from './parse-cache.client'
 import { safeParse } from './safe-parse'
 
-export { clearParseCache }
+export {
+  clearParseCache,
+  clearParseCacheKey,
+  getParseCacheVersion,
+  retainParseCache
+}
 
 export function parseWithCache<T>(
   urlKey: string,
   parse: (query: string & Array<string>) => T | null,
-  query: string & Array<string>
+  query: string & Array<string>,
+  value?: T
 ): T | null {
   if (typeof window === 'undefined') {
     // A module-scoped cache on the server would be shared across requests.
     return safeParse(parse, query, urlKey)
   }
-  return parseWithClientCache(urlKey, parse, query)
+  return parseWithClientCache(urlKey, parse, query, value)
 }

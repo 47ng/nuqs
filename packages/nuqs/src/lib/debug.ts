@@ -1,7 +1,7 @@
 // Type-only import: erased at build time (verbatimModuleSyntax), so the message
 // catalog's *types* constrain the call sites here while its *values* stay out of
 // the core bundle (they only ship via the opt-in `nuqs/debug` entry).
-import type { DebugArgs, DebugCode } from './debug-messages'
+import type { DebugArgs, DebugCode, WarnCode } from './debug-messages'
 
 export type DebugSink = (
   code: DebugCode,
@@ -25,7 +25,7 @@ export function debug<Code extends DebugCode>(
   sink?.(code, args)
 }
 
-export function warn<Code extends DebugCode>(
+export function warn<Code extends WarnCode>(
   code: Code,
   ...args: DebugArgs<Code>
 ): void {
@@ -43,15 +43,11 @@ export function isDebugFlagSet(): boolean {
     )
   }
 
-  // Check if localStorage is available.
-  // It may be unavailable in some environments,
-  // like Safari in private browsing mode.
+  // Accessing or writing to localStorage may throw, notably in Safari private
+  // browsing mode, so keep the complete availability check inside this try.
   // See https://github.com/47ng/nuqs/pull/588
   try {
     const test = 'nuqs-localStorage-test'
-    if (typeof localStorage === 'undefined') {
-      return false
-    }
     localStorage.setItem(test, test)
     const isStorageAvailable = localStorage.getItem(test) === test
     localStorage.removeItem(test)

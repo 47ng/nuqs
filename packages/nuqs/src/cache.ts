@@ -1,7 +1,7 @@
 import * as React from 'react'
 import type { SearchParams, UrlKeys } from './defs'
 import { compareQuery } from './lib/compare'
-import { error } from './lib/errors'
+import { error500, error501 } from './lib/errors'
 import { getOwn } from './lib/url-keys'
 import { createLoader, type LoaderFunctionOptions } from './loader'
 import type { inferParserType, ParserMap } from './parsers'
@@ -89,7 +89,7 @@ export function createSearchParamsCache<Parsers extends ParserMap>(
         return all()
       }
       // Different inputs in the same request - fail
-      throw new Error(error(501))
+      throw new Error(error501)
     }
     c.searchParams = load(searchParams, loaderOptions)
     c[$input] = searchParams
@@ -118,7 +118,7 @@ export function createSearchParamsCache<Parsers extends ParserMap>(
   function all() {
     const { searchParams } = getCache()
     if (Object.keys(searchParams).length === 0) {
-      throw new Error(error(500))
+      throw new Error(error500)
     }
     return searchParams as ParsedSearchParams
   }
@@ -127,7 +127,7 @@ export function createSearchParamsCache<Parsers extends ParserMap>(
     const entry = getOwn(searchParams, key)
     if (typeof entry === 'undefined') {
       throw new Error(
-        error(500) +
+        error500 +
           `
   in get(${String(key)})`
       )

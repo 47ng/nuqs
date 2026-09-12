@@ -1,6 +1,6 @@
 import { debug } from '../../lib/debug'
 import { createEmitter, type Emitter } from '../../lib/emitter'
-import { error } from '../../lib/errors'
+import { error409 } from '../../lib/errors'
 import { globalSingleton } from '../../lib/global-singleton'
 import { resetQueues, spinQueueResetMutex } from '../../lib/queues/reset'
 import { getSearchParams } from '../../lib/search-params'
@@ -27,7 +27,7 @@ export function shouldPatchHistory(adapter: string): boolean {
   }
   if (history.nuqs?.version && history.nuqs.version !== version) {
     console.error(
-      error(409),
+      error409,
       history.nuqs.version,
       version,
       `the ${adapter} adapter`

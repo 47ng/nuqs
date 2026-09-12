@@ -1,9 +1,9 @@
 import type { AdapterInterface, AdapterOptions } from '../../adapters/lib/defs'
 import type { Options } from '../../defs'
-import { compose } from '../compose'
+
 import { debug } from '../debug'
 import { createEmitter, type Emitter } from '../emitter'
-import { error } from '../errors'
+import { error429, error502 } from '../errors'
 import { globalSingleton } from '../global-singleton'
 import { write, type Query } from '../search-params'
 import { timeout } from '../timeout'
@@ -151,11 +151,9 @@ export class ThrottledQueue {
     const flushNow = () => {
       this.lastFlushedAt = performance.now()
       const [search, error] = this.applyPendingUpdates(
-        {
-          ...adapter,
-          autoResetQueueOnUpdate: adapter.autoResetQueueOnUpdate ?? true,
-          getSearchParamsSnapshot
-        },
+        adapter.updateUrl,
+        getSearchParamsSnapshot,
+        adapter.autoResetQueueOnUpdate ?? true,
         processUrlSearchParams
       )
       if (error === null) {
@@ -226,17 +224,20 @@ export class ThrottledQueue {
   }
 
   applyPendingUpdates(
-    adapter: Required<Omit<UpdateQueueAdapterContext, 'rateLimitFactor'>>,
+    updateUrl: UpdateQueueAdapterContext['updateUrl'],
+    getSearchParamsSnapshot: NonNullable<
+      UpdateQueueAdapterContext['getSearchParamsSnapshot']
+    >,
+    autoResetQueueOnUpdate: boolean,
     processUrlSearchParams?: (search: URLSearchParams) => URLSearchParams
   ): [URLSearchParams, null | unknown] {
-    const { updateUrl, getSearchParamsSnapshot } = adapter
     let search = getSearchParamsSnapshot()
     debug(11, this.updateMap.size, search.toString())
     if (this.updateMap.size === 0) {
       return [search, null]
     }
     // Work on a copy and clear the queue immediately
-    const items = Array.from(this.updateMap.entries())
+    const items = Array.from(this.updateMap)
     const options = { ...this.options }
     const transitions = Array.from(this.transitions)
     // Let the adapters choose whether to reset, as it depends on how they
@@ -246,7 +247,7 @@ export class ThrottledQueue {
     // Notifying would revert optimistic state on adapters whose committed
     // view lags the URL update (next/pages) or never reflects it
     // (memory-less testing adapter). The error path below compensates.
-    if (adapter.autoResetQueueOnUpdate) {
+    if (autoResetQueueOnUpdate) {
       this.reset({ notify: false })
     }
     debug(12, items, options)
@@ -257,19 +258,25 @@ export class ThrottledQueue {
         search = write(search, key, value)
       }
     }
-    let failureCode: 429 | 502 = 502
+    let failure = error502
     try {
       if (processUrlSearchParams) {
         search = processUrlSearchParams(search)
       }
-      failureCode = 429
+      failure = error429
       // This may fail due to rate-limiting of history methods,
       // for example Safari only allows 100 updates in a 30s window.
-      compose(transitions, () => updateUrl(search, options))
+      let runUpdate = () => updateUrl(search, options)
+      for (let i = transitions.length - 1; i >= 0; i--) {
+        const transition = transitions[i]!
+        const next = runUpdate
+        runUpdate = () => transition(next)
+      }
+      runUpdate()
       return [search, null]
     } catch (err) {
       const keys = items.map(([key]) => key)
-      console.error(error(failureCode), keys.join(), err)
+      console.error(failure, keys.join(), err)
       this.reset({ notify: false })
       for (const key of keys) {
         this.sync.emit(key)
