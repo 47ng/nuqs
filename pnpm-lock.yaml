@@ -270,6 +270,9 @@ importers:
       server-only:
         specifier: ^0.0.1
         version: 0.0.1
+      sury:
+        specifier: ^11.0.0
+        version: 11.0.0
       tailwind-merge:
         specifier: ^3.6.0
         version: 3.6.0
@@ -921,6 +924,9 @@ importers:
       size-limit:
         specifier: ^12.1.0
         version: 12.1.0(jiti@2.7.0)
+      sury:
+        specifier: ^11.0.0
+        version: 11.0.0
       tsdown:
         specifier: ^0.22.9
         version: 0.22.9(oxc-resolver@11.21.3)(publint@0.3.21)(typescript@7.0.2)
@@ -8973,6 +8979,14 @@ packages:
   supports-color@7.2.0:
     resolution: {integrity: sha512-qpCAvRl9stuOHveKsn7HncJRvv501qIacKzQlO/+Lwxc9+0q2wLyv4Dfvt80/DPn2pqOBsJdDiogXGR9+OvwRw==}
     engines: {node: '>=8'}
+
+  sury@11.0.0:
+    resolution: {integrity: sha512-ixo9P04kr1VB15m+9OX1llkGYityBl5z79XBZqU4hIUjixbdoaoK92wO25DsPqVH8UjyB1rbotf8Gqj0K/uRwA==}
+    peerDependencies:
+      rescript: 12.x
+    peerDependenciesMeta:
+      rescript:
+        optional: true
 
   systeminformation@5.31.17:
     resolution: {integrity: sha512-TvFA9iwDWlMjqZVlKIJ0Cy+Zgm9ttlMx0SMRwJDMNKyhlEKWBMb3+WRwDi/3dvHdWbexpos4Osp4U49p5WjB5g==}
@@ -18232,6 +18246,8 @@ snapshots:
   supports-color@7.2.0:
     dependencies:
       has-flag: 4.0.0
+
+  sury@11.0.0: {}
 
   systeminformation@5.31.17: {}
 
