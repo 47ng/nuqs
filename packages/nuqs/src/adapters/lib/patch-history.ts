@@ -18,21 +18,20 @@ export function getHistorySyncEmitter(
 
 export const historyUpdateMarker = '__nuqs__'
 
-declare global {
-  interface History {
-    nuqs?: {
-      version: string
-      adapters: string[]
-    }
-  }
-}
+// Note: the `history.nuqs` slot type is declared in lib/queues/throttle.ts,
+// which shares it for cross-copy rate-limit accounting.
 
 export function shouldPatchHistory(adapter: string): boolean {
   if (typeof history === 'undefined') {
     return false
   }
   if (history.nuqs?.version && history.nuqs.version !== version) {
-    console.error(error(409), history.nuqs.version, version, adapter)
+    console.error(
+      error(409),
+      history.nuqs.version,
+      version,
+      `the ${adapter} adapter`
+    )
     return false
   }
   if (history.nuqs?.adapters?.includes(adapter)) {
@@ -42,11 +41,12 @@ export function shouldPatchHistory(adapter: string): boolean {
 }
 
 export function markHistoryAsPatched(adapter: string): void {
-  history.nuqs = history.nuqs ?? {
-    version,
-    adapters: []
-  }
-  history.nuqs.adapters.push(adapter)
+  // The slot may pre-exist (created by the update queue for rate-limit
+  // accounting), so claim `version` and `adapters` individually.
+  const slot = (history.nuqs ??= {})
+  slot.version ??= version
+  slot.adapters ??= []
+  slot.adapters.push(adapter)
 }
 
 export function patchHistory(

@@ -1,10 +1,14 @@
-# Multiple versions of the library are loaded
+# Multiple copies of the library are loaded
 
-This error occurs if two different versions of `nuqs` are
-loaded in the same application.
+This error occurs if two different versions of `nuqs` are loaded in the
+same application.
 
 This may happen if you are using a package that embeds `nuqs` and
 you are also using `nuqs` directly.
+
+Copies of the same version share an internal state (island architecture).
+Different copies will use different queues and don't know about each other,
+so they risk racing on the History API rate limits.
 
 ## Possible Solutions
 

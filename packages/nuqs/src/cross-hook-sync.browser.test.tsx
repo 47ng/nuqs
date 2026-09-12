@@ -1,8 +1,8 @@
 import React from 'react'
 import { describe, expect, it } from 'vitest'
 import { page, userEvent } from 'vitest/browser'
-import { withNuqsTestingAdapter } from '../adapters/testing'
-import { parseAsInteger, useQueryState, useQueryStates } from '../index'
+import { withNuqsTestingAdapter } from './adapters/testing'
+import { parseAsInteger, useQueryState, useQueryStates } from './index'
 import { render } from 'vitest-browser-react'
 
 type TestComponentProps = {

@@ -21,6 +21,5 @@ export function spinQueueResetMutex(onReset: () => void = resetQueues): void {
 export function resetQueues(): void {
   debug(19)
   debounceController.abortAll()
-  const abortedKeys = globalThrottleQueue.abort()
-  abortedKeys.forEach(key => debounceController.queuedQuerySync.emit(key))
+  globalThrottleQueue.abort()
 }

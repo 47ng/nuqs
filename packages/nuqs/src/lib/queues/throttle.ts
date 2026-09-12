@@ -2,12 +2,34 @@ import type { AdapterInterface, AdapterOptions } from '../../adapters/lib/defs'
 import type { Options } from '../../defs'
 import { compose } from '../compose'
 import { debug } from '../debug'
+import { createEmitter, type Emitter } from '../emitter'
 import { error } from '../errors'
 import { globalSingleton } from '../global-singleton'
 import { write, type Query } from '../search-params'
 import { timeout } from '../timeout'
 import { withResolvers, type Resolvers } from '../with-resolvers'
 import { defaultRateLimit } from './rate-limiting'
+
+declare global {
+  interface History {
+    nuqs?: {
+      version?: string
+      adapters?: string[]
+      lastFlushedAt?: number
+    }
+  }
+}
+
+// `version` is claimed by the history patch (adapters/lib/patch-history.ts),
+// keeping mount-order precedence for the version-skew detection there.
+// `adapters` is seeded here: older nuqs copies sharing the slot assume it
+// exists whenever the slot does, and would crash on `adapters.push`.
+function getHistorySlot(): NonNullable<History['nuqs']> | null {
+  if (typeof history === 'undefined') {
+    return null
+  }
+  return (history.nuqs ??= { adapters: [] })
+}
 
 type UpdateMap = Map<string, Query | null>
 type TransitionSet = Set<React.TransitionStartFunction>
@@ -31,6 +53,10 @@ export function getSearchParamsSnapshotFromLocation(): URLSearchParams {
 
 export class ThrottledQueue {
   updateMap: UpdateMap = new Map()
+  // Notifies subscribers (per url key) of any change to the pending update
+  // overlay, so hooks re-read their raw optimistic value. Debounce queues
+  // (which hold the other half of the overlay) emit into it too.
+  sync: Emitter<Record<string, undefined>> = createEmitter()
   options: Required<AdapterOptions> = {
     history: 'replace',
     scroll: false,
@@ -40,15 +66,34 @@ export class ThrottledQueue {
   transitions: TransitionSet = new Set()
   resolvers: Resolvers<URLSearchParams> | null = null
   controller: AbortController | null = null
-  lastFlushedAt = 0
   resetQueueOnNextPush = false
+  // Fallback when the History API is not available (SSR)
+  localLastFlushedAt = 0
+
+  // There is only one rate-limit budget per page, shared by every queue
+  // instance and every copy of this module: account for it on `history`.
+  get lastFlushedAt(): number {
+    return getHistorySlot()?.lastFlushedAt ?? this.localLastFlushedAt
+  }
+  set lastFlushedAt(value: number) {
+    const slot = getHistorySlot()
+    if (slot) {
+      slot.lastFlushedAt = value
+    } else {
+      this.localLastFlushedAt = value
+    }
+  }
 
   push(
     { key, query, options }: UpdateQueuePushArgs,
     timeMs: number = defaultRateLimit.timeMs
   ): void {
     if (this.resetQueueOnNextPush) {
-      this.reset()
+      // The entries cleared here were successfully flushed to the URL
+      // (the flag is only set on flush success), so like the flush-time
+      // reset below, notifying would revert optimistic state on adapters
+      // whose committed view lags the URL update.
+      this.reset({ notify: false })
       this.resetQueueOnNextPush = false
     }
     debug(7, key, query, options)
@@ -66,10 +111,13 @@ export class ThrottledQueue {
     if (options.startTransition) {
       this.transitions.add(options.startTransition)
     }
-    // Keep the maximum finite throttle value (or set if previous was Infinity)
+    // Keep the longest throttle value, except after an Infinity push: that one
+    // defers the flush, and the next push (finite or not) replaces it, which
+    // lets the deferred entries flush with the new value.
     if (!Number.isFinite(this.timeMs) || timeMs > this.timeMs) {
       this.timeMs = timeMs
     }
+    this.sync.emit(key)
   }
 
   getQueuedQuery(key: string): Query | null | undefined {
@@ -149,7 +197,16 @@ export class ThrottledQueue {
     return this.reset()
   }
 
-  reset(): string[] {
+  // `notify: false` is reserved for two cases:
+  // - render-phase resets (NavigationSpy), where notifying would schedule
+  //   updates on other components mid-render;
+  // - clearing already-flushed entries (flush & deferred reset-on-push),
+  //   where the committed search params carry the flushed values.
+  // Every other overlay mutation must notify, otherwise a stale overlay
+  // value would keep shadowing a newer committed one. The testing adapter's
+  // mount-time resetQueues() also runs during render with notifications:
+  // safe only because its subscribers don't exist yet at that point.
+  reset({ notify = true }: { notify?: boolean } = {}): string[] {
     const queuedKeys = Array.from(this.updateMap.keys())
     debug(10, JSON.stringify(Object.fromEntries(this.updateMap)))
     this.updateMap.clear()
@@ -160,6 +217,11 @@ export class ThrottledQueue {
       shallow: true
     }
     this.timeMs = defaultRateLimit.timeMs
+    if (notify) {
+      for (const key of queuedKeys) {
+        this.sync.emit(key)
+      }
+    }
     return queuedKeys
   }
 
@@ -179,8 +241,13 @@ export class ThrottledQueue {
     const transitions = Array.from(this.transitions)
     // Let the adapters choose whether to reset, as it depends on how they
     // handle concurrent rendering (see the life-and-death.cy.ts e2e test).
+    // `notify: false`: after a successful flush the committed search params
+    // carry the flushed values, so the merged raw value is unchanged.
+    // Notifying would revert optimistic state on adapters whose committed
+    // view lags the URL update (next/pages) or never reflects it
+    // (memory-less testing adapter). The error path below compensates.
     if (adapter.autoResetQueueOnUpdate) {
-      this.reset()
+      this.reset({ notify: false })
     }
     debug(12, items, options)
     for (const [key, value] of items) {
@@ -190,24 +257,23 @@ export class ThrottledQueue {
         search = write(search, key, value)
       }
     }
-    if (processUrlSearchParams) {
-      try {
-        search = processUrlSearchParams(search)
-      } catch (err) {
-        console.error(error(502), items.map(([key]) => key).join(), err)
-        // Some adapters keep the queue available during concurrent renders,
-        // so discard this failed batch only when the next update starts.
-        this.resetQueueOnNextPush = true
-        return [search, err]
-      }
-    }
+    let failureCode: 429 | 502 = 502
     try {
+      if (processUrlSearchParams) {
+        search = processUrlSearchParams(search)
+      }
+      failureCode = 429
+      // This may fail due to rate-limiting of history methods,
+      // for example Safari only allows 100 updates in a 30s window.
       compose(transitions, () => updateUrl(search, options))
       return [search, null]
     } catch (err) {
-      // This may fail due to rate-limiting of history methods,
-      // for example Safari only allows 100 updates in a 30s window.
-      console.error(error(429), items.map(([key]) => key).join(), err)
+      const keys = items.map(([key]) => key)
+      console.error(error(failureCode), keys.join(), err)
+      this.reset({ notify: false })
+      for (const key of keys) {
+        this.sync.emit(key)
+      }
       return [search, err]
     }
   }

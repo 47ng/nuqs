@@ -13,6 +13,10 @@ export const browserProjects = [
       'src/useQueryStates.mutation.browser.test.tsx',
       'src/useQueryStates.discarded-reconcile.browser.test.tsx'
     ]
+  },
+  {
+    mutate: 'src/lib/parse-cache.client.ts',
+    testFiles: ['src/lib/parse-cache.client.browser.test.ts']
   }
 ]
 
