@@ -1,3 +1,3 @@
-// #region Variables
-export var NuqsAdapter /* const */
+// #region Functions
+export function NuqsAdapter(_) {}
 // #endregion

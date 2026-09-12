@@ -1,3 +1,4 @@
+import type { IsolatedPage } from '@/components/isolated-page'
 import { HydrationMarker } from 'e2e-shared/components/hydration-marker'
 import { LinkProvider } from 'e2e-shared/components/link'
 import { type Router, RouterProvider } from 'e2e-shared/components/router'
@@ -18,17 +19,24 @@ const router: Router = {
   }
 }
 
+type PageComponent = AppProps['Component'] & Partial<IsolatedPage>
+
 export default function MyApp({ Component, pageProps }: AppProps) {
+  const page = (
+    <LinkProvider Link={Link}>
+      <RouterProvider router={router}>
+        <Component {...pageProps} />
+      </RouterProvider>
+    </LinkProvider>
+  )
   return (
     <>
       <HydrationMarker />
-      <NuqsAdapter>
-        <LinkProvider Link={Link}>
-          <RouterProvider router={router}>
-            <Component {...pageProps} />
-          </RouterProvider>
-        </LinkProvider>
-      </NuqsAdapter>
+      {(Component as PageComponent).skipNuqsAdapter ? (
+        page
+      ) : (
+        <NuqsAdapter>{page}</NuqsAdapter>
+      )}
     </>
   )
 }

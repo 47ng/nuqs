@@ -31,12 +31,15 @@ describe('filterSearchParams', () => {
     expect(search.toString()).toBe('a=1&b=2&c=3&d=4&keep=5&e=6')
   })
 
-  it('returns the same instance untouched when no keys are watched', () => {
-    const search = new URLSearchParams('a=1&b=2')
-    const filtered = filterSearchParams(search, [], false)
-    expect(filtered).toBe(search)
-    expect(filtered.toString()).toBe('a=1&b=2')
-  })
+  it.each([false, true])(
+    'returns the same instance untouched when no keys are watched (copy: %s)',
+    copy => {
+      const search = new URLSearchParams('a=1&b=2')
+      const filtered = filterSearchParams(search, [], copy)
+      expect(filtered).toBe(search)
+      expect(filtered.toString()).toBe('a=1&b=2')
+    }
+  )
 
   it('keeps all values of a multi-value watched key and drops unwatched ones', () => {
     const search = new URLSearchParams('tag=a&x=1&tag=b')
