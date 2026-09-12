@@ -6,11 +6,19 @@ import { createAdapterProvider, type AdapterProvider } from './context'
 import type { AdapterInterface, AdapterOptions } from './defs'
 import { applyChange, filterSearchParams } from './key-isolation'
 import {
+  cancelPendingNavigation,
+  capturePendingNavigation,
+  discardAcceptedNavigation,
   getHistorySyncEmitter,
   hasPendingPush,
   historyUpdateMarker,
+  interruptPendingPush,
   markPendingPush,
   markPendingReplace,
+  onPendingNavigationEnd,
+  repairHistoryIndex,
+  setPendingNavigationBlocker,
+  setPendingPopBlocker,
   patchHistory as applyHistoryPatch
 } from './patch-history'
 
@@ -36,7 +44,249 @@ type UseSearchParams = (initial: URLSearchParams) => [URLSearchParams, {}]
 
 // --
 
+type DataRouter = {
+  state: {
+    blockers?: Map<string, { state: string; location?: unknown }>
+    navigation?: { location?: { key: string } }
+  }
+  subscribe: (listener: () => void) => () => void
+  deleteBlocker: (key: string) => void
+  navigate(
+    to: string | NavigateUrl | number,
+    options?: NavigateOptions
+  ): void | Promise<void>
+}
+
+const navigationCleanups = new WeakMap<DataRouter, () => void>()
+const popSubscriptions = new WeakMap<
+  DataRouter,
+  { count: number; unsubscribe: () => void }
+>()
+
+function trackRouterPopBlockers(
+  router: DataRouter | undefined,
+  emitter: ReturnType<typeof getHistorySyncEmitter>
+): () => void {
+  if (!router) return () => {}
+  let subscription = popSubscriptions.get(router)
+  if (!subscription) {
+    let pending: {
+      index: number
+      restoreIndex: number | undefined
+      blockers: DataRouter['state']['blockers']
+      key?: string
+      location?: unknown
+    } | null = null
+    const onPop = ({ index, delta }: { index: number; delta: number }) => {
+      if (pending?.restoreIndex === index) {
+        pending.restoreIndex = undefined
+        return
+      }
+      if (!delta || !router.state.navigation?.location) {
+        return
+      }
+      pending = {
+        index,
+        restoreIndex: index - delta,
+        blockers: router.state.blockers
+      }
+    }
+    const unsubscribe = router.subscribe(() => {
+      if (!pending) return
+      if (!pending.key) {
+        for (const [key, blocker] of router.state.blockers ?? []) {
+          if (
+            blocker.state === 'blocked' &&
+            blocker !== pending.blockers?.get(key)
+          ) {
+            pending.key = key
+            pending.location = blocker.location
+            return
+          }
+        }
+        pending = null
+        return
+      }
+      const blocker = router.state.blockers?.get(pending.key)
+      if (
+        blocker?.state === 'blocked' &&
+        blocker.location === pending.location
+      ) {
+        return
+      }
+      const index = pending.index
+      pending = null
+      if (
+        blocker?.state === 'unblocked' &&
+        !router.state.navigation?.location &&
+        typeof history.state?.idx === 'number'
+      ) {
+        history.go(index - history.state.idx)
+      }
+    })
+    emitter.on('pop', onPop)
+    subscription = {
+      count: 0,
+      unsubscribe: () => {
+        emitter.off('pop', onPop)
+        unsubscribe()
+      }
+    }
+    popSubscriptions.set(router, subscription)
+  }
+  subscription.count++
+  return () => {
+    if (--subscription.count === 0) {
+      subscription.unsubscribe()
+      popSubscriptions.delete(router)
+    }
+  }
+}
+
+function trackRouterNavigations(router: DataRouter | undefined): void {
+  if (!router || navigationCleanups.has(router)) {
+    return
+  }
+  setPendingPopBlocker(() =>
+    Array.from(router.state.blockers?.values() ?? []).some(
+      blocker => blocker.state === 'proceeding'
+    )
+  )
+  const navigate = router.navigate
+  const navigateOutsideNuqs: DataRouter['navigate'] = (to, options) => {
+    if (typeof to === 'number') {
+      return navigate.call(router, to, options)
+    }
+    cleanup()
+    const blockersBeforeNavigation = router.state.blockers
+    const restorePendingPush = interruptPendingPush()
+    repairHistoryIndex()
+    const result = navigate.call(router, to, options)
+    for (const [key, blocker] of router.state.blockers ?? []) {
+      if (
+        blocker.state === 'blocked' &&
+        blocker !== blockersBeforeNavigation?.get(key) &&
+        restorePendingPush()
+      ) {
+        trackRouterNavigations(router)
+        const unsubscribe = subscribeToBlockerUpdatesAndRemoval(router, () => {
+          const current = router.state.blockers?.get(key)
+          if (
+            current?.state === 'proceeding' &&
+            current.location === blocker.location
+          ) {
+            cancelPendingNavigation()
+          } else if (current?.location !== blocker.location) {
+            unsubscribe()
+          }
+        })
+        onPendingNavigationEnd(unsubscribe)
+        break
+      }
+    }
+    return result
+  }
+  const cleanup = () => {
+    if (router.navigate === navigateOutsideNuqs) {
+      router.navigate = navigate
+      navigationCleanups.delete(router)
+    }
+  }
+  router.navigate = navigateOutsideNuqs
+  navigationCleanups.set(router, cleanup)
+  if (hasPendingPush()) {
+    onPendingNavigationEnd(cleanup)
+  }
+}
+
+function trackNewNavigationBlocker(
+  router: DataRouter | undefined,
+  blockersBeforeNavigation: DataRouter['state']['blockers'],
+  preserveAcceptedNavigation: (onCommit: () => void) => void,
+  retryNavigation: () => unknown
+): void {
+  if (!router) {
+    return
+  }
+  for (const [key, blocker] of router.state.blockers ?? []) {
+    if (blocker === blockersBeforeNavigation?.get(key)) {
+      continue
+    }
+    if (blocker.state !== 'blocked') {
+      continue
+    }
+    let acceptedCommit = false
+    preserveAcceptedNavigation(() => {
+      acceptedCommit = true
+    })
+    let didProceed = false
+    const isCancelled = () =>
+      !acceptedCommit &&
+      !didProceed &&
+      router.state.blockers?.get(key)?.location !== blocker.location
+    const isAnyBlockerProceeding = () => {
+      for (const current of router.state.blockers?.values() ?? []) {
+        if (current.state === 'proceeding') {
+          return true
+        }
+      }
+      return false
+    }
+    const handleBlockerDecision = () => {
+      const current = router.state.blockers?.get(key)
+      if (acceptedCommit && current?.state === 'unblocked') {
+        unsubscribe()
+        setPendingNavigationBlocker({ isCancelled: () => false })
+        const before = router.state.blockers
+        retryNavigation()
+        trackNewNavigationBlocker(router, before, () => {}, retryNavigation)
+        trackRouterNavigations(router)
+        return
+      }
+      didProceed ||=
+        current?.state === 'proceeding' && current.location === blocker.location
+      if (didProceed) {
+        discardAcceptedNavigation()
+        unsubscribe()
+      } else if (isCancelled()) {
+        cancelPendingNavigation()
+      }
+    }
+    const unsubscribe = subscribeToBlockerUpdatesAndRemoval(
+      router,
+      handleBlockerDecision
+    )
+    setPendingNavigationBlocker({
+      isCancelled,
+      unsubscribe,
+      isAnyBlockerProceeding,
+      isOriginalBlockerOpen: () => router.state.blockers?.get(key) === blocker
+    })
+    break
+  }
+}
+
+function subscribeToBlockerUpdatesAndRemoval(
+  router: DataRouter,
+  onChange: () => void
+): () => void {
+  const unsubscribe = router.subscribe(onChange)
+  const deleteBlocker = router.deleteBlocker
+  const removeBlocker = (key: string) => {
+    deleteBlocker.call(router, key)
+    onChange()
+  }
+  router.deleteBlocker = removeBlocker
+  return () => {
+    unsubscribe()
+    if (router.deleteBlocker === removeBlocker) {
+      router.deleteBlocker = deleteBlocker
+    }
+  }
+}
+
 type CreateReactRouterBasedAdapterArgs = {
+  useRouter?: () => DataRouter | undefined
   adapter: string
   useNavigate: UseNavigate
   useSearchParams: UseSearchParams
@@ -45,7 +295,8 @@ type CreateReactRouterBasedAdapterArgs = {
 export function createReactRouterBasedAdapter({
   adapter,
   useNavigate,
-  useSearchParams
+  useSearchParams,
+  useRouter = () => undefined
 }: CreateReactRouterBasedAdapterArgs): {
   NuqsAdapter: AdapterProvider
   useOptimisticSearchParams: () => URLSearchParams
@@ -55,78 +306,96 @@ export function createReactRouterBasedAdapter({
     watchKeys: string[]
   ): AdapterInterface {
     const navigate = useNavigate()
+    const router = useRouter()
+    useEffect(() => trackRouterPopBlockers(router, emitter), [router])
     const searchParams = useOptimisticSearchParams(watchKeys)
     const updateUrl = useCallback(
       (search: URLSearchParams, options: AdapterOptions) => {
+        if (router && options.shallow === false) {
+          navigationCleanups.get(router)?.()
+        }
         startTransition(() => {
           emitter.emit('update', search)
         })
         const url = new URL(location.href)
         url.search = renderQueryString(search)
         debug(20, adapter, url)
-        // First, update the URL locally without triggering a network request,
-        // this allows keeping a reactive URL if the network is slow.
-        //
-        // While a deep push is pending, later writes must target the same top
-        // entry: shallow pushes fold as replaces and deep replaces keep push
-        // semantics. Otherwise the router commit would overwrite an entry
-        // stacked above its optimistic entry (#1563).
-        const isDeep = options.shallow === false
-        const pendingPush = hasPendingPush()
-        const commitsAsPush =
-          isDeep && (options.history === 'push' || pendingPush)
-        const updateMethod =
-          options.history === 'push' && !pendingPush
+        const requiresRouterNavigation = options.shallow === false
+        const hasUncommittedPush = hasPendingPush()
+        const routerCommitsPush =
+          requiresRouterNavigation &&
+          (options.history === 'push' || hasUncommittedPush)
+        const writeOptimisticHistory =
+          options.history === 'push' && !hasUncommittedPush
             ? history.pushState
             : history.replaceState
-        setQueueResetMutex(isDeep ? 2 : 1)
-        const historyState = commitsAsPush
-          ? markPendingPush(url)
+        setQueueResetMutex(requiresRouterNavigation ? 2 : 1)
+        const preserveAcceptedNavigation = requiresRouterNavigation
+          ? capturePendingNavigation()
+          : () => {}
+        const historyState = routerCommitsPush
+          ? markPendingPush(url, hasUncommittedPush ? 'replace' : 'push')
           : history.state
-        updateMethod.call(
+        writeOptimisticHistory.call(
           history,
-          historyState, // Maintain the history state
+          historyState,
           historyUpdateMarker,
           url
         )
-        let navigationSettled: Promise<void> | undefined
-        // A shallow push with no deep navigation skips the router and its loaders.
-        // It cannot advance the router's private history index.
-        // On the first blocked traversal, React Router computes a zero delta.
-        // It calls history.go(0), which reloads the page.
-        if (isDeep) {
-          if (!commitsAsPush) {
+        const pendingLocation = router?.state.navigation?.location
+        if (
+          !hasUncommittedPush &&
+          !routerCommitsPush &&
+          (requiresRouterNavigation ||
+            (pendingLocation &&
+              pendingLocation.key !== (history.state?.key || 'default')) ||
+            Array.from(router?.state.blockers?.values() ?? []).some(
+              blocker => blocker.state !== 'unblocked'
+            ))
+        ) {
+          repairHistoryIndex()
+        }
+        let navigationPromise: Promise<void> | undefined
+        if (requiresRouterNavigation) {
+          if (!routerCommitsPush) {
             markPendingReplace(url)
           }
-          const maybePromise = navigate(
-            {
-              // Somehow passing the full URL object here strips the search params
-              // when accessing the request.url in loaders.
-              hash: url.hash,
-              search: url.search
-            },
-            {
-              replace: !commitsAsPush,
-              preventScrollReset: true,
-              state: history.state?.usr
-            }
+          const blockersBeforeNavigation = router?.state.blockers
+          const retryNavigation = () => {
+            if (router) navigationCleanups.get(router)?.()
+            return navigate(
+              {
+                // Somehow passing the full URL object here strips the search params
+                // when accessing the request.url in loaders.
+                hash: url.hash,
+                search: url.search
+              },
+              {
+                replace: !routerCommitsPush,
+                preventScrollReset: true,
+                state: history.state?.usr
+              }
+            )
+          }
+          const result = retryNavigation()
+          trackNewNavigationBlocker(
+            router,
+            blockersBeforeNavigation,
+            preserveAcceptedNavigation,
+            retryNavigation
           )
-          // Returning the navigation promise (v7+) turns the user's
-          // startTransition into an async action, keeping isPending true
-          // until loaders have settled (#1184). It must come from the router,
-          // not from observing a commit: while the action is pending, React
-          // entangles the router's own transition-wrapped state updates with
-          // it, so waiting on a commit would deadlock.
-          if (maybePromise instanceof Promise) {
-            navigationSettled = maybePromise
+          // Return the router's promise; waiting for a commit can deadlock.
+          if (result instanceof Promise) {
+            navigationPromise = result
           }
         }
+        trackRouterNavigations(router)
         if (options.scroll) {
           window.scrollTo(0, 0)
         }
-        return navigationSettled
+        return navigationPromise
       },
-      [navigate]
+      [navigate, router]
     )
     return {
       searchParams,
@@ -205,7 +474,7 @@ export function createReactRouterBasedAdapter({
    *
    * Note: this is actually required in React Router frameworks to follow Link navigations.
    */
-  applyHistoryPatch(emitter, adapter)
+  applyHistoryPatch(emitter, adapter, { trackRouterHistory: true })
 
   return {
     NuqsAdapter: createAdapterProvider(useNuqsReactRouterBasedAdapter),

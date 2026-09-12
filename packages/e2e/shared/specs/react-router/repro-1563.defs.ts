@@ -1,3 +1,13 @@
+import { parseAsStringLiteral } from 'nuqs/server'
+
+const history = parseAsStringLiteral(['push', 'replace'])
+
+export const reproHistoryOptions = {
+  testHistory: history.withDefault('push'),
+  otherHistory: history.withDefault('replace'),
+  shallowHistory: history.withDefault('replace')
+}
+
 const loaderCalls = new Map<string, number>()
 
 export function countLoaderCall(request: Request): number {
