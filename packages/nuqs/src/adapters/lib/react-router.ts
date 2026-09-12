@@ -10,6 +10,7 @@ import {
   hasPendingPush,
   historyUpdateMarker,
   markPendingPush,
+  markPendingReplace,
   patchHistory as applyHistoryPatch
 } from './patch-history'
 
@@ -66,18 +67,19 @@ export function createReactRouterBasedAdapter({
         // First, update the URL locally without triggering a network request,
         // this allows keeping a reactive URL if the network is slow.
         //
-        // A deep push marks its optimistic entry pending until the router
-        // commits it. Until then, further deep updates take that entry over
-        // instead of stacking on it, and they commit as a push (#1563).
+        // While a deep push is pending, later writes must target the same top
+        // entry: shallow pushes fold as replaces and deep replaces keep push
+        // semantics. Otherwise the router commit would overwrite an entry
+        // stacked above its optimistic entry (#1563).
         const isDeep = options.shallow === false
-        const takesOverPendingPush = isDeep && hasPendingPush()
+        const pendingPush = hasPendingPush()
         const commitsAsPush =
-          isDeep && (options.history === 'push' || takesOverPendingPush)
+          isDeep && (options.history === 'push' || pendingPush)
         const updateMethod =
-          options.history === 'push' && !takesOverPendingPush
+          options.history === 'push' && !pendingPush
             ? history.pushState
             : history.replaceState
-        setQueueResetMutex(options.shallow ? 1 : 2)
+        setQueueResetMutex(isDeep ? 2 : 1)
         const historyState = commitsAsPush
           ? markPendingPush(url)
           : history.state
@@ -88,7 +90,14 @@ export function createReactRouterBasedAdapter({
           url
         )
         let navigationSettled: Promise<void> | undefined
+        // A shallow push with no deep navigation skips the router and its loaders.
+        // It cannot advance the router's private history index.
+        // On the first blocked traversal, React Router computes a zero delta.
+        // It calls history.go(0), which reloads the page.
         if (isDeep) {
+          if (!commitsAsPush) {
+            markPendingReplace(url)
+          }
           const maybePromise = navigate(
             {
               // Somehow passing the full URL object here strips the search params
