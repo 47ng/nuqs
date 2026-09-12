@@ -24,9 +24,11 @@ declare global {
 // keeping mount-order precedence for the version-skew detection there.
 // `adapters` is seeded here: older nuqs copies sharing the slot assume it
 // exists whenever the slot does, and would crash on `adapters.push`.
-function getHistorySlot(): NonNullable<History['nuqs']> | null {
+function getHistorySlot(
+  fallback: NonNullable<History['nuqs']>
+): NonNullable<History['nuqs']> {
   if (typeof history === 'undefined') {
-    return null
+    return fallback
   }
   return (history.nuqs ??= { adapters: [] })
 }
@@ -68,20 +70,15 @@ export class ThrottledQueue {
   controller: AbortController | null = null
   resetQueueOnNextPush = false
   // Fallback when the History API is not available (SSR)
-  localLastFlushedAt = 0
+  localSlot: NonNullable<History['nuqs']> = {}
 
   // There is only one rate-limit budget per page, shared by every queue
   // instance and every copy of this module: account for it on `history`.
   get lastFlushedAt(): number {
-    return getHistorySlot()?.lastFlushedAt ?? this.localLastFlushedAt
+    return getHistorySlot(this.localSlot).lastFlushedAt ?? 0
   }
   set lastFlushedAt(value: number) {
-    const slot = getHistorySlot()
-    if (slot) {
-      slot.lastFlushedAt = value
-    } else {
-      this.localLastFlushedAt = value
-    }
+    getHistorySlot(this.localSlot).lastFlushedAt = value
   }
 
   push(

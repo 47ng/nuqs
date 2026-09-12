@@ -7,7 +7,7 @@ import {
   type ReactElement,
   type ReactNode
 } from 'react'
-import { clearParseCache } from '../lib/parse-cache'
+import { clearParseCache } from '../lib/parse-cache.client'
 import { resetQueues } from '../lib/queues/reset'
 import { renderQueryString } from './custom'
 import { context, type AdapterProps } from './lib/context'
