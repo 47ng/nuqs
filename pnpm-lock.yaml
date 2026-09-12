@@ -113,7 +113,9 @@ catalogs:
       version: 4.1.11
 
 overrides:
-  '@remix-run/router@1.23.3': 1.23.4
+  '@remix-run/dev>@remix-run/router': 1.23.4
+  '@remix-run/react>@remix-run/router': 1.23.4
+  '@remix-run/server-runtime>@remix-run/router': 1.23.4
   '@remix-run/react>react-router': 6.30.6
   '@remix-run/react>react-router-dom': 6.30.6
 
