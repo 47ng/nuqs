@@ -18,8 +18,8 @@ catalogs:
 
   vitest:
     vitest: ^4.1.11
-    '@vitest/browser-playwright': ^4.1.10
-    '@vitest/coverage-v8': ^4.1.10
+    '@vitest/browser-playwright': ^4.1.11
+    '@vitest/coverage-v8': ^4.1.11
 
   vite:
     vite: ^8.1.5
@@ -28,18 +28,18 @@ catalogs:
     next: 16.3.3
 
   react-router7:
-    react-router: ^7.18.1
-    '@react-router/dev': ^7.18.1
-    '@react-router/express': ^7.18.1
-    '@react-router/node': ^7.18.1
-    '@react-router/serve': ^7.18.1
+    react-router: ^7.18.3
+    '@react-router/dev': ^7.18.3
+    '@react-router/express': ^7.18.3
+    '@react-router/node': ^7.18.3
+    '@react-router/serve': ^7.18.3
 
   react-router8:
-    react-router: ^8.2.0
-    '@react-router/dev': ^8.2.0
-    '@react-router/express': ^8.2.0
-    '@react-router/node': ^8.2.0
-    '@react-router/serve': ^8.2.0
+    react-router: ^8.3.1
+    '@react-router/dev': ^8.3.1
+    '@react-router/express': ^8.3.1
+    '@react-router/node': ^8.3.1
+    '@react-router/serve': ^8.3.1
 
   # react-router pinned below 1.170.16: TSR PR #7596 (1.170.16) resets
   # scroll on mount, and PR #7695 (1.170.17, router-core 1.171.14)
@@ -79,3 +79,10 @@ allowBuilds:
   esbuild: true
   sharp: true
   msw: false
+
+# Keep Remix's exact React Router dependencies aligned on the patched v6
+# release without changing nuqs's React Router peer-resolution target.
+overrides:
+  '@remix-run/router@1.23.3': 1.23.4
+  '@remix-run/react>react-router': 6.30.6
+  '@remix-run/react>react-router-dom': 6.30.6
