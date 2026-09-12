@@ -326,15 +326,13 @@ export function createReactRouterBasedAdapter({
           requiresRouterNavigation &&
           (options.history === 'push' || hasUncommittedPush)
         const writeOptimisticHistory =
-          options.history === 'push' && !hasUncommittedPush
-            ? history.pushState
-            : history.replaceState
+          options.history === 'push' ? history.pushState : history.replaceState
         setQueueResetMutex(requiresRouterNavigation ? 2 : 1)
         const preserveAcceptedNavigation = requiresRouterNavigation
           ? capturePendingNavigation()
           : () => {}
         const historyState = routerCommitsPush
-          ? markPendingPush(url, hasUncommittedPush ? 'replace' : 'push')
+          ? markPendingPush(url, options.history)
           : history.state
         writeOptimisticHistory.call(
           history,

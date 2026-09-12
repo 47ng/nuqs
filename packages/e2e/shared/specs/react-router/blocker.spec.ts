@@ -392,7 +392,7 @@ export const testBlocker = defineTest('React Router blockers', ({ path }) => {
     await expectCount(page, 1)
     await page.locator('#deep').click()
     await expectCount(page, 2)
-    expect(await page.evaluate(() => history.length)).toBe(before + 1)
+    expect(await page.evaluate(() => history.length)).toBe(before + 2)
     await page.locator('#cancel').click()
     await expect(page.locator('#blocker')).toHaveText('unblocked')
     await page.evaluate(() => {
@@ -401,6 +401,12 @@ export const testBlocker = defineTest('React Router blockers', ({ path }) => {
     })
     await expect(page.locator('#blocker')).toHaveText('blocked')
     await expectCount(page, 2)
+    await page.locator('#proceed').click()
+    await expect(page.locator('#blocker')).toHaveText('unblocked')
+    await expectCount(page, 1)
+    await page.evaluate(() => history.back())
+    await expect(page.locator('#blocker')).toHaveText('blocked')
+    await expectCount(page, 1)
     await page.locator('#proceed').click()
     await expect(page.locator('#blocker')).toHaveText('unblocked')
     await expectCount(page, 0)
@@ -827,10 +833,10 @@ export const testBlocker = defineTest('React Router blockers', ({ path }) => {
         await expect(page.locator('#blocker')).toHaveText('unblocked')
       }
       await shallowPush(page, 3)
-      expect(await page.evaluate(() => history.length)).toBe(before + 1)
+      expect(await page.evaluate(() => history.length)).toBe(before + 3)
       await expect(page.locator('#navigation')).toHaveText('idle')
       await expectCount(page, 3)
-      expect(await page.evaluate(() => history.length)).toBe(before + 1)
+      expect(await page.evaluate(() => history.length)).toBe(before + 3)
       await expectTwoShallowPushes(page, 3)
     })
   }
@@ -851,10 +857,14 @@ export const testBlocker = defineTest('React Router blockers', ({ path }) => {
       if (shallow) {
         await shallowPush(page, 2)
       }
-      expect(await page.evaluate(() => history.length)).toBe(before + 1)
+      expect(await page.evaluate(() => history.length)).toBe(
+        before + (shallow ? 2 : 1)
+      )
       await expect(page.locator('#navigation')).toHaveText('idle')
       await expectCount(page, shallow ? 2 : 1)
-      expect(await page.evaluate(() => history.length)).toBe(before + 1)
+      expect(await page.evaluate(() => history.length)).toBe(
+        before + (shallow ? 2 : 1)
+      )
       await expectTwoShallowPushes(page, shallow ? 2 : 1)
     })
   }
@@ -862,8 +872,8 @@ export const testBlocker = defineTest('React Router blockers', ({ path }) => {
   for (const blocked of [false, true]) {
     it(
       blocked
-        ? 'keeps shallow pushes in the pending entry through Proceed'
-        : 'keeps shallow pushes in a pending loader navigation',
+        ? 'keeps each shallow push entry through Proceed'
+        : 'keeps each shallow push entry during a pending loader navigation',
       async ({ page }) => {
         it.setTimeout(10_000)
         await navigateTo(page, path, '?count=0&delay=1000')
@@ -876,22 +886,27 @@ export const testBlocker = defineTest('React Router blockers', ({ path }) => {
         if (blocked) {
           await expect(page.locator('#blocker')).toHaveText('blocked')
           await shallowPush(page, 2)
-          expect(await page.evaluate(() => history.length)).toBe(before + 1)
+          expect(await page.evaluate(() => history.length)).toBe(before + 2)
           await page.locator('#proceed').click()
           await expect(page.locator('#blocker')).toHaveText('proceeding')
         }
         await expect(page.locator('#navigation')).toHaveText('loading')
         const count = blocked ? 3 : 2
         await shallowPush(page, count)
-        expect(await page.evaluate(() => history.length)).toBe(before + 1)
+        expect(await page.evaluate(() => history.length)).toBe(before + count)
         await expect(page.locator('#navigation')).toHaveText('idle')
         await expect(page.locator('#blocker')).toHaveText('unblocked')
         await expectCount(page, count)
-        expect(await page.evaluate(() => history.length)).toBe(before + 1)
+        expect(await page.evaluate(() => history.length)).toBe(before + count)
         await page.locator('#enabled').uncheck()
-        await page.goBack()
-        await expectCount(page, 0)
-        await page.goForward()
+        for (let previous = count - 1; previous >= 0; previous--) {
+          await page.goBack()
+          await expectCount(page, previous)
+        }
+        for (let next = 1; next <= count; next++) {
+          await page.goForward()
+          await expectCount(page, next)
+        }
         await expectCount(page, count)
         await expect(page.locator('#navigation')).toHaveText('idle')
         await expectTwoShallowPushes(page, count)
