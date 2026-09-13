@@ -1,0 +1,75 @@
+---
+title: Sury Parsers
+description: Use Sury to parse, serialize and compare URL state.
+---
+
+import { HumanContent, LLMContent } from '@/src/components/audience'
+
+A [Sury](https://github.com/DZakh/sury) schema reads a value, writes it back and
+compares two of them, which is everything a nuqs parser needs:
+
+```ts
+import { createParser } from 'nuqs'
+import * as S from 'sury'
+
+function createSuryParser<Output>(schema: S.Schema<string, Output>) {
+  return createParser<Output>({
+    parse: S.parseOrThrow(schema),
+    serialize: S.encodeOrThrow(schema),
+    eq: S.isEqualOutput(schema)
+  })
+}
+```
+
+Coercions come built in, so a query value arrives as the type you asked for,
+and anything the schema rejects reads back as `null{:ts}`:
+
+```ts
+createSuryParser(S.string.with(S.to, S.number)) // ?page=2 → 2
+createSuryParser(S.string.with(S.to, S.date)) // ?from=2025-06-12 → Date
+createSuryParser(S.union(['asc', 'desc'])) // ?sort=sideways → null
+createSuryParser(S.string.with(S.to, S.int32.with(S.gte, 1))) // ?page=0 → null
+```
+
+## Example
+
+Schemas compose, so an encoding several steps deep is still one schema:
+
+```ts
+const schema = S.base64url.with(S.to, S.jsonString).with(
+  S.to,
+  S.schema({
+    name: S.string.with(S.nonEmpty),
+    age: S.int32.with(S.gte, 1)
+  })
+)
+
+const [user, setUser] = useQueryState(
+  'user',
+  createSuryParser(schema).withDefault({ name: 'John Vim', age: 25 })
+)
+
+// ?user=eyJuYW1lIjoiSm9obiBWaW0iLCJhZ2UiOjI1fQ
+```
+
+Setting the state back to `{ name: 'John Vim', age: 25 }{:ts}` clears the query
+param, even though it's a different object than the default: the schema knows
+how to compare two users.
+
+import { Suspense } from 'react'
+import { SuryDemo } from './sury-demo'
+
+<HumanContent>
+
+## Interactive Demo
+
+<Suspense>
+  <SuryDemo />
+</Suspense>
+
+</HumanContent>
+
+<LLMContent>
+Interactive demo omitted. The examples above show how to bridge a Sury schema
+with `createParser`.
+</LLMContent>

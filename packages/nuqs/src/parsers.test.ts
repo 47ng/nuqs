@@ -1,4 +1,5 @@
 import { type } from 'arktype'
+import * as S from 'sury'
 import * as v from 'valibot'
 import { describe, expect, it } from 'vitest'
 import { z } from 'zod'
@@ -264,6 +265,31 @@ describe('parsers', () => {
     const schema = v.object({
       foo: v.string(),
       bar: v.number()
+    })
+    const parser = parseAsJson(schema) // note: using the schema directly
+    expect(parser.parse('')).toBeNull()
+    expect(parser.parse('{"foo":"abc","bar":42}')).toEqual({
+      foo: 'abc',
+      bar: 42
+    })
+    expect(parser.parse('{"foo":"abc","bar":"not-a-number"}')).toBeNull()
+    expect(parser.serialize({ foo: 'abc', bar: 42 })).toBe(
+      '{"foo":"abc","bar":42}'
+    )
+    expect(testParseThenSerialize(parser, '{"foo":"abc","bar":42}')).toBe(true)
+    expect(testSerializeThenParse(parser, { foo: 'abc', bar: 42 })).toBe(true)
+    expect(
+      isParserBijective(parser, '{"foo":"abc","bar":42}', {
+        foo: 'abc',
+        bar: 42
+      })
+    ).toBe(true)
+  })
+
+  it('parseAsJson (validator: Sury)', () => {
+    const schema = S.schema({
+      foo: S.string,
+      bar: S.number
     })
     const parser = parseAsJson(schema) // note: using the schema directly
     expect(parser.parse('')).toBeNull()
