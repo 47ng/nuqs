@@ -22,16 +22,23 @@ type PendingPushState = {
   [historyUpdateMarker]: number
 }
 
-type PendingPush = {
+type PendingNavigationBase = {
   href: string
-  id: number
   currentHref: string
-  routerIndex: number | undefined
-  poppedSince: boolean
 }
 
-const pendingPush = globalSingleton('pending-navigation', () => ({
-  current: null as PendingPush | null,
+type PendingPush = PendingNavigationBase & {
+  history: 'push'
+  id: number
+  routerIndex: number | undefined
+}
+
+type PendingNavigation =
+  PendingPush | (PendingNavigationBase & { history: 'replace' })
+
+const pendingNavigation = globalSingleton('pending-navigation', () => ({
+  current: null as PendingNavigation | null,
+  popped: null as PendingPush | null,
   nextId: 0
 }))
 
@@ -40,21 +47,27 @@ function withoutEmptyFragment(href: string): string {
 }
 
 export function markPendingPush(url: URL): PendingPushState {
-  const id = ++pendingPush.nextId
-  pendingPush.current = {
+  const id = ++pendingNavigation.nextId
+  pendingNavigation.current = {
+    history: 'push',
     href: url.href,
-    id,
     currentHref: url.href,
-    routerIndex: history.state?.idx,
-    poppedSince: false
+    id,
+    routerIndex: history.state?.idx
   }
   return { ...history.state, [historyUpdateMarker]: id }
 }
 
-function isOnPendingPushEntry(): boolean {
-  const pending = pendingPush.current
+export function markPendingReplace(url: URL): void {
+  pendingNavigation.current = {
+    history: 'replace',
+    href: url.href,
+    currentHref: url.href
+  }
+}
+
+function isPendingPushEntry(pending: PendingPush): boolean {
   return (
-    pending !== null &&
     history.state?.[historyUpdateMarker] === pending.id &&
     // Shallow updates pass the starting state to pushState or replaceState.
     // The URL distinguishes the pending entry from the resulting marker copies.
@@ -62,51 +75,84 @@ function isOnPendingPushEntry(): boolean {
   )
 }
 
-function movePendingPushHref(): void {
-  const pending = pendingPush.current
+function isOnPendingPushEntry(): boolean {
+  const pending = pendingNavigation.current
+  return pending?.history === 'push' && isPendingPushEntry(pending)
+}
+
+function isOnPendingReplaceEntry(): boolean {
+  const pending = pendingNavigation.current
+  return pending?.history === 'replace' && location.href === pending.currentHref
+}
+
+function movePendingHref(): void {
+  const pending = pendingNavigation.current
   if (pending) {
     pending.currentHref = location.href
   }
 }
 
 export function hasPendingPush(): boolean {
-  const pending = pendingPush.current
-  return pending !== null && !pending.poppedSince
+  return pendingNavigation.current?.history === 'push'
 }
 
-function clearPendingPush(): void {
-  pendingPush.current = null
+function clearPendingNavigation(): void {
+  pendingNavigation.current = null
+  pendingNavigation.popped = null
+}
+
+function repairPendingPushIndex(pending: PendingPush): void {
+  if (typeof pending.routerIndex !== 'number') {
+    return
+  }
+  const { [historyUpdateMarker]: _, ...state } = history.state
+  history.replaceState(
+    { ...state, idx: pending.routerIndex + 1 },
+    historyUpdateMarker
+  )
 }
 
 // Traversing forward onto an entry the router never committed leaves it
 // with the index nuqs cloned from its predecessor. Repair it before
 // the router reads it, so traversal deltas stay right (#1563).
-function repairOrNotePopOnPendingPush(): void {
-  const pending = pendingPush.current
-  if (!pending) {
-    return
+function handlePopOnPendingNavigation(): void {
+  const { current, popped } = pendingNavigation
+  if (popped && isPendingPushEntry(popped)) {
+    repairPendingPushIndex(popped)
+    pendingNavigation.popped = null
   }
-  if (isOnPendingPushEntry() && typeof pending.routerIndex === 'number') {
-    const { [historyUpdateMarker]: _, ...state } = history.state
-    history.replaceState(
-      { ...state, idx: pending.routerIndex + 1 },
-      historyUpdateMarker
-    )
-    pendingPush.current = null
-    return
+  if (current?.history === 'push') {
+    if (isPendingPushEntry(current)) {
+      repairPendingPushIndex(current)
+    } else {
+      pendingNavigation.popped = current
+    }
   }
-  pending.poppedSince = true
+  pendingNavigation.current = null
 }
 
-function pendingPushCommitUrl(url: string | URL): string | null {
-  const pending = pendingPush.current
-  if (!pending || pending.poppedSince || !isOnPendingPushEntry()) {
-    return null
-  }
+function retargetPendingCommit(
+  pending: PendingNavigationBase,
+  url: string | URL
+): string {
   const href = new URL(url, location.href).href
   return withoutEmptyFragment(href) === withoutEmptyFragment(pending.href)
     ? pending.currentHref
     : href
+}
+
+function pendingPushCommitUrl(url: string | URL): string | null {
+  const pending = pendingNavigation.current
+  return pending?.history === 'push' && isPendingPushEntry(pending)
+    ? retargetPendingCommit(pending, url)
+    : null
+}
+
+function pendingReplaceCommit(url: string | URL): string | URL {
+  const pending = pendingNavigation.current
+  return pending?.history === 'replace'
+    ? retargetPendingCommit(pending, url)
+    : url
 }
 
 // React Router reads the optimistic entry's idx into its private index before
@@ -118,10 +164,9 @@ function pendingPushCommitUrl(url: string | URL): string | null {
 function repairPendingPushReplaceState(
   state: History['state']
 ): History['state'] {
-  const pending = pendingPush.current
-  return pending &&
-    !pending.poppedSince &&
-    isOnPendingPushEntry() &&
+  const pending = pendingNavigation.current
+  return pending?.history === 'push' &&
+    isPendingPushEntry(pending) &&
     typeof pending.routerIndex === 'number' &&
     state?.idx === pending.routerIndex
     ? { ...state, idx: pending.routerIndex + 1 }
@@ -177,7 +222,7 @@ export function patchHistory(
     'popstate',
     () => {
       lastSearchSeen = location.search
-      repairOrNotePopOnPendingPush()
+      handlePopOnPendingNavigation()
       resetQueues()
     },
     { capture: true }
@@ -202,38 +247,39 @@ export function patchHistory(
   const originalReplaceState = history.replaceState
   history.pushState = function nuqs_pushState(state, marker, url) {
     if (marker === historyUpdateMarker || !url) {
+      const onPendingReplaceEntry = isOnPendingReplaceEntry()
       originalPushState.call(history, state, '', url)
+      if (onPendingReplaceEntry) {
+        movePendingHref()
+      }
       return
     }
     // The router committing an optimistic deep push must not add
     // a second entry (#1563).
     const commitUrl = pendingPushCommitUrl(url)
     const commit = commitUrl ? originalReplaceState : originalPushState
-    clearPendingPush()
+    clearPendingNavigation()
     commit.call(history, state, '', commitUrl ?? url)
     sync(commitUrl ?? url)
   }
   history.replaceState = function nuqs_replaceState(state, marker, url) {
-    const onPendingPushEntry = isOnPendingPushEntry()
+    const onPendingEntry = isOnPendingPushEntry() || isOnPendingReplaceEntry()
     if (!url || marker === historyUpdateMarker) {
       originalReplaceState.call(history, state, '', url)
-      if (onPendingPushEntry) {
-        movePendingPushHref()
+      if (onPendingEntry) {
+        movePendingHref()
       }
       return
     }
+    const commitUrl = pendingReplaceCommit(url)
     originalReplaceState.call(
       history,
       repairPendingPushReplaceState(state),
       '',
-      url
+      commitUrl
     )
-    // Back leaves the pending entry ahead; a replace elsewhere keeps its record.
-    // Forward needs it to repair its index; every other replace spends it.
-    if (onPendingPushEntry || hasPendingPush()) {
-      clearPendingPush()
-    }
-    sync(url)
+    pendingNavigation.current = null
+    sync(commitUrl)
   }
   markHistoryAsPatched(adapter)
 }
