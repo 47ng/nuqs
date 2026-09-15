@@ -7,6 +7,7 @@ import { z } from 'zod'
 const sponsorSchema = z.object({
   name: z.string().nullish(),
   handle: z.string(),
+  githubOwners: z.array(z.string()).optional(),
   url: z.string().url(),
   img: z.string(),
   title: z.custom<ReactNode>().optional()
@@ -51,19 +52,19 @@ const SPONSORS: Sponsors = [
     img: '/sponsors/coderabbit.svg'
   },
   {
-    handle: 'unkey.com',
+    handle: 'unkeyed',
     name: 'Unkey',
     url: 'https://unkey.com',
     img: 'https://avatars.githubusercontent.com/u/138932600?s=200&v=4'
   },
   {
-    handle: 'openstatus.dev',
+    handle: 'openstatusHQ',
     name: 'OpenStatus',
     url: 'https://openstatus.dev',
     img: 'https://avatars.githubusercontent.com/u/136892265?s=200&v=4'
   },
   {
-    handle: 'databuddy.cc',
+    handle: 'databuddy-analytics',
     name: 'Databuddy',
     url: 'https://databuddy.cc?utm_source=nuqs',
     img: 'https://avatars.githubusercontent.com/u/190393139?v=4'
@@ -106,6 +107,7 @@ const SPONSORS: Sponsors = [
   },
   {
     handle: 'pontusab',
+    githubOwners: ['midday-ai'],
     name: 'Pontus Abrahamsson',
     url: 'https://x.com/pontusab',
     img: 'https://avatars.githubusercontent.com/u/655158?s=200&v=4',
@@ -120,6 +122,7 @@ const SPONSORS: Sponsors = [
   },
   {
     handle: 'CarlLindesvard',
+    githubOwners: ['Openpanel-dev'],
     name: 'Carl Lindesvärd',
     url: 'https://x.com/CarlLindesvard',
     img: 'https://pbs.twimg.com/profile_images/1751607056316944384/8E4F88FL_400x400.jpg',
@@ -205,6 +208,17 @@ const SPONSORS: Sponsors = [
     img: 'https://avatars.githubusercontent.com/u/48634587?s=200&v=4'
   }
 ]
+
+const sponsorOwners = new Set(
+  SPONSORS.flatMap(sponsor => [
+    sponsor.handle.toLowerCase(),
+    ...(sponsor.githubOwners ?? []).map(owner => owner.toLowerCase())
+  ])
+)
+
+export function isSponsor(owner: string) {
+  return sponsorOwners.has(owner.toLowerCase())
+}
 
 export function SponsorsSection() {
   return (
@@ -325,7 +339,7 @@ export function SponsorsSection() {
       </ul>
       <div className="mt-16 flex justify-center">
         <Button className="text-md mx-auto font-semibold" asChild size="lg">
-          <a href="https://github.com/sponsors/franky47">
+          <a href="https://github.com/sponsors/franky47?metadata_source=nuqs-landing">
             <Heart className="mr-2 stroke-pink-500" size={18} /> Sponsor my work
           </a>
         </Button>
