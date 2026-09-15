@@ -1,0 +1,14 @@
+{
+  "type": "registry:item",
+  "name": "useSorting",
+  "title": "Sorting Hook",
+  "description": "Multi-column sorting state management with URL synchronization. Supports ascending, descending, and null states with smart toggling.",
+  "dependencies": ["nuqs"],
+  "files": [
+    {
+      "type": "registry:file",
+      "path": "https://raw.githubusercontent.com/iHiteshAgrawal/nuqs-presets/a230a749daab2327dae9907f845b445a0653dc04/registry/default/useSorting.ts",
+      "target": "~/hooks/nuqs-presets/useSorting.ts"
+    }
+  ]
+}
