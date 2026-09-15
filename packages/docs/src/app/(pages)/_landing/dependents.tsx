@@ -1,5 +1,5 @@
-import { cn } from '@/src/lib/utils'
 import { z } from 'zod'
+import { isSponsor } from './sponsors'
 
 const dependentSchema = z.object({
   stars: z.number(),
@@ -172,30 +172,43 @@ async function DependentsLeaderboard() {
     return <div className="text-red-500">{String(error)}</div>
   }
   return (
-    <div className="flex flex-wrap justify-center gap-1.5">
-      {dependents.map(dep => (
-        <a
-          key={dep.owner + dep.name}
-          href={`https://github.com/${dep.owner}/${dep.name}`}
-          className="relative h-8 w-8 rounded-full"
-        >
-          <img
-            src={upscaleGitHubAvatar(dep.avatarURL, 64)}
-            alt={dep.owner + '/' + dep.name}
-            className="rounded-full"
-            loading="lazy"
-            width={64}
-            height={64}
-          />
-          <span
-            className={cn(
-              'border-background absolute right-0 bottom-0 h-2.5 w-2.5 rounded-full border-2',
-              dep.pkg === 'nuqs' ? 'bg-green-500' : 'bg-zinc-500'
-            )}
-            aria-label={`Using ${dep.pkg}`}
-          />
-        </a>
-      ))}
+    <div className="space-y-8">
+      <div className="flex flex-wrap justify-center gap-1.5">
+        {dependents.map(dep => {
+          const sponsored = isSponsor(dep.owner)
+          return (
+            <a
+              key={dep.owner + dep.name}
+              href={`https://github.com/${dep.owner}/${dep.name}`}
+              className="relative h-8 w-8 rounded-full"
+            >
+              <img
+                src={upscaleGitHubAvatar(dep.avatarURL, 64)}
+                alt={dep.owner + '/' + dep.name}
+                className="rounded-full"
+                loading="lazy"
+                width={64}
+                height={64}
+              />
+              {sponsored && (
+                <span
+                  className="border-background absolute right-1.25 bottom-1.25 size-3.25 translate-x-1/2 translate-y-1/2 rounded-full border-2 bg-green-500"
+                  role="img"
+                  aria-label="Monthly sponsor"
+                  title="Monthly sponsor"
+                />
+              )}
+            </a>
+          )
+        })}
+      </div>
+      <p className="text-muted-foreground flex items-center justify-center gap-1.5 text-sm">
+        <span
+          className="border-background size-3.25 rounded-full border-2 bg-green-500"
+          aria-hidden="true"
+        />
+        Monthly sponsors
+      </p>
     </div>
   )
 }
