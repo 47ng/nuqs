@@ -50,6 +50,32 @@ export const testRepro1563 = defineTest('repro-1563', ({ path }) => {
     expect(await readHistoryIndex(page)).toBe(initialIndex)
   })
 
+  it('keeps a shallow replace made while a deep push is pending', async ({
+    page
+  }) => {
+    await navigateTo(page, path, '?test=init&delay=1000')
+    const initialIndex = await readHistoryIndex(page)
+    await page.locator('#push-then-shallow-replace').click()
+    await expect(page).toHaveURL(
+      url =>
+        url.searchParams.get('test') === 'pass' &&
+        url.searchParams.get('shallow') === 'pass'
+    )
+    await expect(page.locator('#shallow-state')).toHaveText('pass')
+    await expect.poll(() => readHistoryIndex(page)).toBe(initialIndex + 1)
+    await expect(page).toHaveURL(
+      url =>
+        url.searchParams.get('test') === 'pass' &&
+        url.searchParams.get('shallow') === 'pass'
+    )
+    await expect(page.locator('#state')).toHaveText('pass')
+    await expect(page.locator('#shallow-state')).toHaveText('pass')
+    await expect(page.locator('#navigation-type')).toHaveText('PUSH')
+    await page.goBack()
+    await expect(page.locator('#state')).toHaveText('init')
+    expect(await readHistoryIndex(page)).toBe(initialIndex)
+  })
+
   it('repairs the optimistic entry when Back runs before the commit', async ({
     page
   }) => {
