@@ -208,7 +208,7 @@ async function DependentsLeaderboard() {
           aria-hidden="true"
         />
         <a
-          href="https://github.com/sponsors/franky47/sponsorships?pay_prorated=false&tier_id=549650"
+          href="https://github.com/sponsors/franky47/sponsorships?pay_prorated=false&tier_id=549650&metadata_source=nuqs-landing"
           target="_blank"
           rel="noopener noreferrer"
           className="hover:underline"

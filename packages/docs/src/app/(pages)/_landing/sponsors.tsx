@@ -339,7 +339,7 @@ export function SponsorsSection() {
       </ul>
       <div className="mt-16 flex justify-center">
         <Button className="text-md mx-auto font-semibold" asChild size="lg">
-          <a href="https://github.com/sponsors/franky47">
+          <a href="https://github.com/sponsors/franky47?metadata_source=nuqs-landing">
             <Heart className="mr-2 stroke-pink-500" size={18} /> Sponsor my work
           </a>
         </Button>
