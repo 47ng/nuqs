@@ -207,7 +207,14 @@ async function DependentsLeaderboard() {
           className="border-background size-3.25 rounded-full border-2 bg-green-500"
           aria-hidden="true"
         />
-        Monthly sponsors
+        <a
+          href="https://github.com/sponsors/franky47/sponsorships?pay_prorated=false&tier_id=549650"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="hover:underline"
+        >
+          Monthly sponsors
+        </a>
       </p>
     </div>
   )
