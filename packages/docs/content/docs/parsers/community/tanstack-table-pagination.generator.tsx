@@ -21,14 +21,72 @@ import {
 } from '@/src/components/ui/select'
 import { Separator } from '@/src/components/ui/separator'
 import {
-  parseAsIndex,
+  createParser,
   parseAsInteger,
   parseAsString,
   useQueryState
 } from 'nuqs'
-import { useDeferredValue } from 'react'
+import { useDeferredValue, useMemo } from 'react'
 
 const NUM_PAGES = 5
+
+// Escapes user input shown inside a single-quoted string in the code samples.
+const quote = (value: string) =>
+  value.replaceAll('\\', '\\\\').replaceAll("'", "\\'")
+
+// Escapes user input shown inside a template literal in the code samples.
+const inTemplate = (value: string) =>
+  value.replaceAll('\\', '\\\\').replaceAll('`', '\\`').replaceAll('${', '\\${')
+
+const positivePageParser = createParser<number>({
+  parse: value => {
+    const page = Number(value)
+    return Number.isInteger(page) && page >= 1 ? page - 1 : null
+  },
+  serialize: value => String(Math.round(value + 1))
+})
+
+const positiveIntegerParser = createParser<number>({
+  parse: value => {
+    const size = Number(value)
+    return Number.isInteger(size) && size >= 1 ? size : null
+  },
+  serialize: value => String(Math.round(value))
+})
+
+type PaginationState = {
+  pageIndex: number
+  pageSize: number
+}
+
+function createPaginationParser(separator: string) {
+  return createParser<PaginationState>({
+    parse: value => {
+      if (!separator) return null
+      const index = value.indexOf(separator)
+      if (
+        index === -1 ||
+        value.indexOf(separator, index + separator.length) !== -1
+      ) {
+        return null
+      }
+      const pageIndex = Number(value.slice(0, index))
+      const pageSize = Number(value.slice(index + separator.length))
+      if (
+        !Number.isInteger(pageIndex) ||
+        pageIndex < 1 ||
+        !Number.isInteger(pageSize) ||
+        pageSize < 1
+      ) {
+        return null
+      }
+      return { pageIndex: pageIndex - 1, pageSize }
+    },
+    serialize: ({ pageIndex, pageSize }) =>
+      `${pageIndex + 1}${separator}${pageSize}`,
+    eq: (a, b) => a.pageIndex === b.pageIndex && a.pageSize === b.pageSize
+  })
+}
 
 export function TanStackTablePagination() {
   const [pageIndexUrlKey, setPageIndexUrlKey] = useQueryState(
@@ -41,32 +99,52 @@ export function TanStackTablePagination() {
   )
   const [page, setPage] = useQueryState(
     pageIndexUrlKey,
-    parseAsIndex.withDefault(0)
+    positivePageParser.withDefault(0)
   )
   const [pageSize, setPageSize] = useQueryState(
     pageSizeUrlKey,
-    parseAsInteger.withDefault(10)
+    positiveIntegerParser.withDefault(10)
   )
   const [separator, setSeparator] = useQueryState(
-    'separator',
+    'paginationSeparator',
     parseAsString.withDefault(',')
   )
   const [paginationKey, setPaginationKey] = useQueryState(
     'paginationKey',
     parseAsString.withDefault('pagination')
   )
+  const paginationParser = useMemo(
+    () => createPaginationParser(separator),
+    [separator]
+  )
+  // nuqs doesn't pick up a parser that changes between renders, and this
+  // demo lets you change the separator. So it stores the raw string and runs
+  // the parser for the current separator itself. The raw value can be briefly
+  // undefined while the URL key is being changed.
+  const [rawPagination, setRawPagination] = useQueryState(paginationKey)
+  const defaultPagination = { pageIndex: 0, pageSize: 10 }
+  const singlePagination =
+    (rawPagination == null ? null : paginationParser.parse(rawPagination)) ??
+    defaultPagination
+  const setSinglePagination = (value: PaginationState | null) =>
+    setRawPagination(
+      value === null || paginationParser.eq(value, defaultPagination)
+        ? null
+        : paginationParser.serialize(value)
+    )
 
   const queryStatesCode =
     useDeferredValue(`import { parseAsInteger, useQueryStates } from 'nuqs'
 
 const paginationParsers = {
+  // The URL is one-based while TanStack Table is zero-based.
   pageIndex: parseAsInteger.withDefault(1),
   pageSize: parseAsInteger.withDefault(10)
 }
 
 const paginationUrlKeys = {
-  pageIndex: '${pageIndexUrlKey}',
-  pageSize: '${pageSizeUrlKey}'
+  pageIndex: '${quote(pageIndexUrlKey)}',
+  pageSize: '${quote(pageSizeUrlKey)}'
 }
 
 export function usePaginationQuery() {
@@ -86,16 +164,19 @@ import {
 
 const [paginationQuery, setPaginationQuery] = usePaginationQuery()
 
+const pagination = {
+  pageIndex: paginationQuery.pageIndex - 1,
+  pageSize: paginationQuery.pageSize,
+}
+
 function onPaginationChange(updaterOrValue: Updater<PaginationState>) {
   const newPagination = typeof updaterOrValue === "function"
     ? updaterOrValue(pagination)
     : updaterOrValue
-  void setPaginationQuery(newPagination)
-}
-
-const pagination = {
-  pageIndex: paginationQuery.pageIndex - 1,
-  pageSize: paginationQuery.pageSize,
+  void setPaginationQuery({
+    ...newPagination,
+    pageIndex: newPagination.pageIndex + 1,
+  })
 }
 
 const table = useReactTable({
@@ -105,8 +186,7 @@ const table = useReactTable({
     ...otherState,
     pagination,
   }
-})
-  `)
+})`)
 
   const internalState = useDeferredValue(`{
   // zero-indexed
@@ -115,29 +195,33 @@ const table = useReactTable({
 }`)
 
   const customParserCode =
-    useDeferredValue(`import { parseAsInteger, useQueryState } from 'nuqs'
+    useDeferredValue(`import { createParser, useQueryState } from 'nuqs'
 import type { PaginationState } from '@tanstack/react-table'
 
 const defaultState: PaginationState = {
-  pageIndex: 1,
+  pageIndex: 0,
   pageSize: 10
 }
 
 const paginationParser = createParser<PaginationState>({
-  parse: (value) => {
-    const [pageIndex, pageSize] = value.split('${separator}')
-    return {
-      pageIndex: parseInt(pageIndex ?? \`\${defaultState.pageIndex}\`) - 1,
-      pageSize: parseInt(pageSize ?? \`\${defaultState.pageSize}\`)
+  parse: value => {
+    const index = value.indexOf('${quote(separator)}')
+    if (index === -1 || value.indexOf('${quote(separator)}', index + ${separator.length}) !== -1) {
+      return null
     }
+    const pageIndex = Number(value.slice(0, index))
+    const pageSize = Number(value.slice(index + ${separator.length}))
+    if (!Number.isInteger(pageIndex) || pageIndex < 1 || !Number.isInteger(pageSize) || pageSize < 1) {
+      return null
+    }
+    return { pageIndex: pageIndex - 1, pageSize }
   },
-  serialize: (value) => {
-    return \`\${value.pageIndex + 1}${separator}\${value.pageSize}\`
-  },
+  serialize: ({ pageIndex, pageSize }) => \`\${pageIndex + 1}${inTemplate(separator)}\${pageSize}\`,
+  eq: (a, b) => a.pageIndex === b.pageIndex && a.pageSize === b.pageSize
 })
 
 export function usePaginationQuery() {
-  return useQueryState('${paginationKey}', paginationParser
+  return useQueryState('${quote(paginationKey)}', paginationParser
     .withDefault(defaultState)
   )
 }`)
@@ -168,12 +252,29 @@ const table = useReactTable({
   }
 })`)
 
+  const customInternalState = useDeferredValue(`{
+  // zero-indexed
+  pageIndex: ${singlePagination.pageIndex},
+  pageSize: ${singlePagination.pageSize}
+}`)
+
+  const customPage = singlePagination.pageIndex
+  const customPageSize = singlePagination.pageSize
+  const setCustomPage = (value: number | ((page: number) => number)) =>
+    setSinglePagination({
+      ...singlePagination,
+      pageIndex: typeof value === 'function' ? value(customPage) : value
+    })
+  const setCustomPageSize = (pageSize: number) =>
+    setSinglePagination({ ...singlePagination, pageSize })
+
   return (
     <section>
-      <h2>Pagination with custom url key names</h2>
+      <h3>Two URL keys</h3>
       <p>
-        This strategy uses 2 different url keys for pagination, you can use
-        custom names instead of the default `pageIndex` and `pageSize`.
+        Store the page index and page size under two URL keys. You can rename
+        them to something shorter than <code>pageIndex</code> and{' '}
+        <code>pageSize</code>.
       </p>
       <div className="flex flex-wrap items-center justify-start gap-2 rounded-xl border border-dashed p-1">
         <Pagination className="not-prose mx-0 w-auto items-center gap-2">
@@ -181,6 +282,7 @@ const table = useReactTable({
             <PaginationItem>
               <PaginationPrevious
                 disabled={page <= 0}
+                aria-label="Previous page"
                 onClick={() => setPage(p => Math.max(0, p - 1))}
               />
             </PaginationItem>
@@ -197,6 +299,7 @@ const table = useReactTable({
             <PaginationItem>
               <PaginationNext
                 disabled={page >= NUM_PAGES - 1}
+                aria-label="Next page"
                 onClick={() => setPage(p => Math.min(NUM_PAGES - 1, p + 1))}
               />
             </PaginationItem>
@@ -221,7 +324,7 @@ const table = useReactTable({
         </Label>
       </div>
       <div className="flex flex-col gap-6 xl:flex-row">
-        <div className="flex flex-col">
+        <div className="flex min-w-0 flex-1 flex-col">
           <CodeBlock
             title="search-params.pagination.ts"
             lang="ts"
@@ -237,7 +340,7 @@ const table = useReactTable({
         </div>
         <aside className="w-full space-y-4 xl:w-64">
           <Querystring
-            value={`?${pageIndexUrlKey}=${page + 1}&${pageSizeUrlKey}=${pageSize}`}
+            value={`?${encodeURIComponent(pageIndexUrlKey)}=${page + 1}&${encodeURIComponent(pageSizeUrlKey)}=${pageSize}`}
           />
           <CodeBlock
             title="Internal state"
@@ -249,11 +352,11 @@ const table = useReactTable({
             <Label htmlFor="pageIndexKey">Page index URL key</Label>
             <input
               id="pageIndexKey"
-              className="border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring flex h-10 rounded-md border px-3 py-2 text-sm file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+              className="border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring flex h-10 w-full rounded-md border px-3 py-2 text-sm file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
               value={pageIndexUrlKey}
               onChange={e => {
                 setPage(null)
-                setPageIndexUrlKey(e.target.value)
+                setPageIndexUrlKey(e.target.value || null)
               }}
               placeholder="e.g., page"
               autoComplete="off"
@@ -264,10 +367,10 @@ const table = useReactTable({
             <input
               id="pageSizeKey"
               value={pageSizeUrlKey}
-              className="border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring flex h-10 rounded-md border px-3 py-2 text-sm file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+              className="border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring flex h-10 w-full rounded-md border px-3 py-2 text-sm file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
               onChange={e => {
                 setPageSize(null)
-                setPageSizeUrlKey(e.target.value)
+                setPageSizeUrlKey(e.target.value || null)
               }}
               placeholder="e.g., limit"
               autoComplete="off"
@@ -276,25 +379,26 @@ const table = useReactTable({
         </aside>
       </div>
       <Separator className="my-8" />
-      <h2>Pagination with custom url key and separator</h2>
+      <h3>A single URL key with a separator</h3>
       <p>
-        This strategy uses a single url key for pagination, and uses a separator
-        to differentiate between the index and size.
+        Store both values under a single URL key, split by a separator of your
+        choice.
       </p>
       <div className="flex flex-wrap items-center justify-start gap-2 rounded-xl border border-dashed p-1">
         <Pagination className="not-prose mx-0 w-auto items-center gap-2">
           <PaginationContent>
             <PaginationItem>
               <PaginationPrevious
-                disabled={page <= 0}
-                onClick={() => setPage(p => Math.max(0, p - 1))}
+                disabled={customPage <= 0}
+                aria-label="Previous page"
+                onClick={() => setCustomPage(p => Math.max(0, p - 1))}
               />
             </PaginationItem>
             {Array.from({ length: NUM_PAGES }, (_, index) => (
               <PaginationItem key={index}>
                 <PaginationButton
-                  isActive={page === index}
-                  onClick={() => setPage(index)}
+                  isActive={customPage === index}
+                  onClick={() => setCustomPage(index)}
                 >
                   {index + 1}
                 </PaginationButton>
@@ -302,8 +406,11 @@ const table = useReactTable({
             ))}
             <PaginationItem>
               <PaginationNext
-                disabled={page >= NUM_PAGES - 1}
-                onClick={() => setPage(p => Math.min(NUM_PAGES - 1, p + 1))}
+                disabled={customPage >= NUM_PAGES - 1}
+                aria-label="Next page"
+                onClick={() =>
+                  setCustomPage(p => Math.min(NUM_PAGES - 1, p + 1))
+                }
               />
             </PaginationItem>
           </PaginationContent>
@@ -311,8 +418,8 @@ const table = useReactTable({
         <Label className="ml-auto flex items-center gap-2">
           Items per page
           <Select
-            value={pageSize.toFixed()}
-            onValueChange={value => setPageSize(parseInt(value))}
+            value={customPageSize.toFixed()}
+            onValueChange={value => setCustomPageSize(parseInt(value))}
           >
             <SelectTrigger className="w-24">
               <SelectValue placeholder="10" />
@@ -327,7 +434,7 @@ const table = useReactTable({
         </Label>
       </div>
       <div className="flex flex-col gap-6 xl:flex-row">
-        <div className="flex flex-col">
+        <div className="flex min-w-0 flex-1 flex-col">
           <CodeBlock
             title="search-params.pagination.ts"
             lang="ts"
@@ -335,7 +442,7 @@ const table = useReactTable({
             code={customParserCode}
           />
           <CodeBlock
-            title="table.ts"
+            title="table.tsx"
             lang="tsx"
             icon={<TsLogo />}
             code={customParserUsageCode}
@@ -343,36 +450,38 @@ const table = useReactTable({
         </div>
         <aside className="w-full space-y-4 xl:w-64">
           <Querystring
-            value={`?${paginationKey}=${page + 1}${encodeURIComponent(separator).toString()}${pageSize}`}
+            value={`?${encodeURIComponent(paginationKey)}=${customPage + 1}${encodeURIComponent(separator)}${customPageSize}`}
           />
           <CodeBlock
             allowCopy={false}
             title="Internal state"
-            code={internalState}
+            code={customInternalState}
           />
           <Separator className="my-8" />
           <div className="space-y-2">
             <Label htmlFor="paginationKey">Pagination URL key</Label>
             <input
               id="paginationKey"
-              className="flex h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              className="border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring flex h-10 w-full rounded-md border px-3 py-2 text-sm file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
               value={paginationKey}
               onChange={e => {
-                setPaginationKey(e.target.value)
+                setSinglePagination(null)
+                setPaginationKey(e.target.value || null)
               }}
               placeholder="e.g., pagination"
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="paginationSeparator">URL key separator</Label>
+            <Label htmlFor="paginationSeparator">Separator</Label>
             <input
               id="paginationSeparator"
               value={separator}
-              className="flex h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              className="border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring flex h-10 w-full rounded-md border px-3 py-2 text-sm file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
               onChange={e => {
-                setSeparator(e.target.value)
+                setSinglePagination(null)
+                setSeparator(e.target.value || null)
               }}
-              placeholder="e.g., limit"
+              placeholder="e.g., ~"
             />
           </div>
         </aside>

@@ -4,9 +4,9 @@ description: Store your table state in the URL, with style.
 ---
 
 import { HumanContent, LLMContent } from '@/src/components/audience'
-import { TanStackTableFiltering } from './tanstack-table-filtering.generator'
 import { TanStackTablePagination } from './tanstack-table-pagination.generator'
 import { TanStackTableSorting } from './tanstack-table-sorting.generator'
+import { TanStackTableFiltering } from './tanstack-table-filtering.generator'
 
 [TanStack Table](https://tanstack.com/table) is a popular library for managing
 tabular content in React (and other frameworks).
@@ -15,12 +15,12 @@ By default, it will store its state in memory, losing all filters, sorts and
 pagination when the page is refreshed. This is a prime example where URL state
 shines.
 
-Using URL state instead of in memory state requires providing the query state to
-the `useReactTable` hook and then hooking in to the `onChange` event to update
-query state.
+To move that state into the URL, pass your query state to `useReactTable` and
+update it from the matching `on*Change` callbacks.
 
-For a complete
-example see [sadmann7/shadcn-table](https://github.com/sadmann7/shadcn-table)
+You can see pagination, filtering and sorting working together in the
+[playground](/playground/tanstack-table). For a complete, real-world example,
+see [sadmann7/shadcn-table](https://github.com/sadmann7/shadcn-table).
 
 ## Pagination
 
@@ -29,42 +29,8 @@ TanStack Table stores pagination under two pieces of state:
 - `pageIndex`: a zero-based integer representing the current page
 - `pageSize`: an integer representing the number of items per page
 
-```ts
-import {useReactTable, type PaginationState, type Updater} from "@tanstack/react-table"
-import {parseAsInteger, useQueryState} from 'nuqs'
-
-// You can change the url key here
-const [page, setPage] = useQueryState("page", parseAsInteger.withDefault(1))
-const [perPage, setPerPage] = useQueryState("perPage", parseAsInteger.withDefault(10))
-
-// The data object passed to the table
-const pagination: PaginationState = {
-  pageIndex: page - 1, // zero-based index -> one-based index
-  pageSize: perPage,
-}
-
-// Handle on pagination change callback from the table
-function onPaginationChange(updaterOrValue: Updater<PaginationState>) {
-  if (typeof updaterOrValue === "function") {
-    const newPagination = updaterOrValue(pagination)
-    void setPage(newPagination.pageIndex + 1)
-    void setPerPage(newPagination.pageSize)
-  } else {
-    void setPage(updaterOrValue.pageIndex + 1)
-    void setPerPage(updaterOrValue.pageSize)
-  }
-}
-
-// Create the table with manually provided state and callback
-const table = useReactTable({
-  ...otherProps,
-  onPaginationChange,
-  state: {
-    ...otherState,
-    pagination,
-  }
-})
-```
+You will likely want the URL to follow your UI and be one-based for the page index.
+Here are two ways to do it:
 
 <HumanContent>
 <Suspense>
@@ -76,46 +42,128 @@ const table = useReactTable({
 Interactive pagination example omitted. The key idea is to map TanStack Table's zero-based `pageIndex` state to a one-based query parameter representation.
 </LLMContent>
 
-<HumanContent>
-
 ## Filtering
 
-<Callout>
-  This section is empty for now, [contributions](https://github.com/47ng/nuqs) are welcome!
-</Callout>
+TanStack Table stores column filters as an array of `ColumnFilter` objects with
+keys:
 
-</HumanContent>
+- `id`: a string with the column name
+- `value`: the value to filter that column by
+
+A clean way to represent this in the URL is to use one query key per filterable
+column with [`useQueryStates`](/docs/batching), keeping the URL readable like
+`?name=john&country=france`.
+
+<LLMContent>
+
+```ts
+import { parseAsString, useQueryStates } from 'nuqs'
+
+// One URL key per filterable column.
+const filterParsers = {
+  name: parseAsString,
+  country: parseAsString
+}
+
+export function useFiltersQuery() {
+  return useQueryStates(filterParsers)
+}
+```
+
+Map the query state object onto TanStack Table's `ColumnFiltersState`, and back
+again in `onColumnFiltersChange`:
+
+```ts
+import { useFiltersQuery } from './search-params.filtering.ts'
+import { useReactTable, type ColumnFiltersState, type Updater } from '@tanstack/react-table'
+
+const [filters, setFilters] = useFiltersQuery()
+
+// Map the query state object onto ColumnFiltersState
+const columnFilters = Object.entries(filters)
+  .filter(([, value]) => value !== null)
+  .map(([id, value]) => ({ id, value }))
+
+function onColumnFiltersChange(updaterOrValue: Updater<ColumnFiltersState>) {
+  const next = typeof updaterOrValue === 'function' ? updaterOrValue(columnFilters) : updaterOrValue
+  // Clear every filter first, so removed filters are also removed from the URL.
+  void setFilters({
+    name: null,
+    country: null,
+    ...Object.fromEntries(next.map(({ id, value }) => [id, value as string]))
+  })
+}
+
+const table = useReactTable({
+  ...otherProps,
+  onColumnFiltersChange,
+  state: {
+    ...otherState,
+    columnFilters,
+  }
+})
+```
+
+</LLMContent>
 
 <HumanContent>
+<Suspense>
+  <TanStackTableFiltering />
+</Suspense>
+</HumanContent>
 
 ## Sorting
 
-TanStack Table stores sorting in an object with keys:
+TanStack Table stores sorting as an array of `ColumnSort` objects with keys:
 
 - `id`: a string with the column name
-- `desc`: a boolean with the direction of sorting
+- `desc`: a boolean indicating if the sorting is descending (`true`) or ascending (`false`)
+
+You _could_ store this state as JSON in the URL with
+[`parseAsJson`](/docs/parsers/built-in#json), but a custom parser lets us
+represent it in a much nicer way, like `?sort=name.asc,age.desc`.
+
+Here we build a parser for a single sorted column with
+[`createParser`](/docs/parsers/making-your-own), then combine it with
+[`parseAsArrayOf`](/docs/parsers/built-in#arrays) to support sorting over
+multiple columns.
+
+<LLMContent>
 
 ```ts
-import {useReactTable, type SortingState, type Updater} from "@tanstack/react-table"
-import {useQueryState, parseAsJson} from 'nuqs'
-import {z} from 'zod'
+import { createParser, parseAsArrayOf, useQueryState } from 'nuqs'
+import type { ColumnSort } from '@tanstack/react-table'
 
-// sorting schema to pase to `parseAsJson`. Any validation solution will work
-const sortingSchema = z.object({
-  id: z.string(),
-  desc: z.boolean(),
+const columnSortParser = createParser<ColumnSort>({
+  parse: query => {
+    // Use lastIndexOf so column ids may contain the separator.
+    const index = query.lastIndexOf('.')
+    if (index === -1) return null
+    const id = query.slice(0, index)
+    const direction = query.slice(index + 1)
+    if (!id || (direction !== 'asc' && direction !== 'desc')) return null
+    return { id, desc: direction === 'desc' }
+  },
+  serialize: ({ id, desc }) => `${id}.${desc ? 'desc' : 'asc'}`
 })
 
-const [sorting, setSorting] = useQueryState("sort", parseAsJson(sortingSchema.parse))
+export function useSortingQuery() {
+  return useQueryState('sort', parseAsArrayOf(columnSortParser, ',').withDefault([]))
+}
+```
 
-// Handle on sort change callback from the table
+Then pass the query state to `useReactTable` and update it in `onSortingChange`:
+
+```ts
+import { useSortingQuery } from './search-params.sorting.ts'
+import { useReactTable, type SortingState, type Updater } from '@tanstack/react-table'
+
+const [sorting, setSorting] = useSortingQuery()
+
+// Handle the onSortingChange callback from the table
 function onSortingChange(updaterOrValue: Updater<SortingState>) {
-  if (typeof updaterOrValue === "function") {
-    const newSorting = updaterOrValue(sorting)
-    void setSorting(newSorting)
-  } else {
-    void setSorting(updaterOrValue)
-  }
+  const newSorting = typeof updaterOrValue === 'function' ? updaterOrValue(sorting) : updaterOrValue
+  void setSorting(newSorting)
 }
 
 // Create the table with manually provided state and callback
@@ -129,8 +177,13 @@ const table = useReactTable({
 })
 ```
 
+</LLMContent>
+
+<HumanContent>
+Try changing the separator, how directions are rendered, or turning on
+multi-column sorting, and watch the URL update:
+
 <Suspense>
   <TanStackTableSorting />
 </Suspense>
-
 </HumanContent>

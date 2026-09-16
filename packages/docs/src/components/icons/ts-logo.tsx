@@ -4,7 +4,8 @@ export function TsLogo() {
       fill="none"
       viewBox="0 0 128 128"
       xmlns="http://www.w3.org/2000/svg"
-      role="presentation"
+      className="size-3.5 shrink-0"
+      aria-hidden="true"
     >
       <rect fill="currentColor" height="128" rx="6" width="128" />
       <path
