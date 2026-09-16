@@ -26,15 +26,13 @@ import {
   parseAsString,
   useQueryState
 } from 'nuqs'
-import { useDeferredValue, useMemo } from 'react'
+import { useDeferredValue } from 'react'
 
 const NUM_PAGES = 5
 
-// Escapes user input shown inside a single-quoted string in the code samples.
 const quote = (value: string) =>
   value.replaceAll('\\', '\\\\').replaceAll("'", "\\'")
 
-// Escapes user input shown inside a template literal in the code samples.
 const inTemplate = (value: string) =>
   value.replaceAll('\\', '\\\\').replaceAll('`', '\\`').replaceAll('${', '\\${')
 
@@ -113,14 +111,8 @@ export function TanStackTablePagination() {
     'paginationKey',
     parseAsString.withDefault('pagination')
   )
-  const paginationParser = useMemo(
-    () => createPaginationParser(separator),
-    [separator]
-  )
-  // nuqs doesn't pick up a parser that changes between renders, and this
-  // demo lets you change the separator. So it stores the raw string and runs
-  // the parser for the current separator itself. The raw value can be briefly
-  // undefined while the URL key is being changed.
+  const paginationParser = createPaginationParser(separator)
+  // nuqs keeps the first parser it sees, so parse the raw value with the current separator.
   const [rawPagination, setRawPagination] = useQueryState(paginationKey)
   const defaultPagination = { pageIndex: 0, pageSize: 10 }
   const singlePagination =
@@ -157,7 +149,7 @@ export function usePaginationQuery() {
   const queryStatesUsageCode =
     useDeferredValue(`import { usePaginationQuery } from './search-params.pagination.ts'
 import {
-  useReactTable,
+  useTable,
   type PaginationState,
   type Updater
 } from '@tanstack/react-table'
@@ -179,7 +171,7 @@ function onPaginationChange(updaterOrValue: Updater<PaginationState>) {
   })
 }
 
-const table = useReactTable({
+const table = useTable({
   ...otherProps,
   onPaginationChange,
   state: {
@@ -229,7 +221,7 @@ export function usePaginationQuery() {
   const customParserUsageCode =
     useDeferredValue(`import { usePaginationQuery } from './search-params.pagination.ts'
 import {
-  useReactTable,
+  useTable,
   type PaginationState,
   type Updater
 } from '@tanstack/react-table'
@@ -243,7 +235,7 @@ function onPaginationChange(updaterOrValue: Updater<PaginationState>) {
   void setPagination(newPagination)
 }
 
-const table = useReactTable({
+const table = useTable({
   ...otherProps,
   onPaginationChange,
   state: {

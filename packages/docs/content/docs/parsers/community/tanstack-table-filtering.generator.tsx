@@ -8,8 +8,6 @@ import { Label } from '@/src/components/ui/label'
 import { parseAsString, useQueryStates } from 'nuqs'
 import { useDeferredValue } from 'react'
 
-// One URL key per filterable column. `useQueryStates` keeps them in a single
-// object that maps cleanly onto TanStack Table's `ColumnFiltersState`.
 const filterParsers = {
   name: parseAsString,
   country: parseAsString
@@ -38,8 +36,6 @@ const FilterInput = ({
 export function TanStackTableFiltering() {
   const [filters, setFilters] = useFiltersQuery()
 
-  // Map the query state object onto TanStack Table's ColumnFiltersState,
-  // dropping any columns that aren't currently being filtered.
   const columnFilters = Object.entries(filters)
     .filter(([, value]) => value !== null)
     .map(([id, value]) => ({ id, value }))
@@ -49,7 +45,6 @@ export function TanStackTableFiltering() {
   const parserCode =
     useDeferredValue(`import { parseAsString, useQueryStates } from 'nuqs'
 
-// One URL key per filterable column.
 const filterParsers = {
   name: parseAsString,
   country: parseAsString
@@ -62,14 +57,13 @@ export function useFiltersQuery() {
   const usageCode =
     useDeferredValue(`import { useFiltersQuery } from './search-params.filtering.ts'
 import {
-  useReactTable,
+  useTable,
   type ColumnFiltersState,
   type Updater
 } from '@tanstack/react-table'
 
 const [filters, setFilters] = useFiltersQuery()
 
-// Map the query state object onto ColumnFiltersState
 const columnFilters = Object.entries(filters)
   .filter(([, value]) => value !== null)
   .map(([id, value]) => ({ id, value }))
@@ -86,7 +80,7 @@ function onColumnFiltersChange(updaterOrValue: Updater<ColumnFiltersState>) {
   })
 }
 
-const table = useReactTable({
+const table = useTable({
   ...otherProps,
   onColumnFiltersChange,
   state: {

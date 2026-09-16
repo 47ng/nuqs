@@ -12,7 +12,6 @@ export type Person = {
   email: string
 }
 
-// Fake an in-memory dataset to drive the table.
 export const people: Person[] = Array.from({ length: 50 }, (_, id) => ({
   id,
   name: faker.person.fullName(),

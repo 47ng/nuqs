@@ -15,7 +15,7 @@ By default, it will store its state in memory, losing all filters, sorts and
 pagination when the page is refreshed. This is a prime example where URL state
 shines.
 
-To move that state into the URL, pass your query state to `useReactTable` and
+To move that state into the URL, pass your query state to `useTable` and
 update it from the matching `on*Change` callbacks.
 
 You can see pagination, filtering and sorting working together in the
@@ -75,7 +75,7 @@ again in `onColumnFiltersChange`:
 
 ```ts
 import { useFiltersQuery } from './search-params.filtering.ts'
-import { useReactTable, type ColumnFiltersState, type Updater } from '@tanstack/react-table'
+import { useTable, type ColumnFiltersState, type Updater } from '@tanstack/react-table'
 
 const [filters, setFilters] = useFiltersQuery()
 
@@ -94,7 +94,7 @@ function onColumnFiltersChange(updaterOrValue: Updater<ColumnFiltersState>) {
   })
 }
 
-const table = useReactTable({
+const table = useTable({
   ...otherProps,
   onColumnFiltersChange,
   state: {
@@ -152,11 +152,11 @@ export function useSortingQuery() {
 }
 ```
 
-Then pass the query state to `useReactTable` and update it in `onSortingChange`:
+Then pass the query state to `useTable` and update it in `onSortingChange`:
 
 ```ts
 import { useSortingQuery } from './search-params.sorting.ts'
-import { useReactTable, type SortingState, type Updater } from '@tanstack/react-table'
+import { useTable, type SortingState, type Updater } from '@tanstack/react-table'
 
 const [sorting, setSorting] = useSortingQuery()
 
@@ -167,7 +167,7 @@ function onSortingChange(updaterOrValue: Updater<SortingState>) {
 }
 
 // Create the table with manually provided state and callback
-const table = useReactTable({
+const table = useTable({
   ...otherProps,
   onSortingChange,
   state: {

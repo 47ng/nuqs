@@ -18,16 +18,21 @@ import {
   TableRow
 } from '@/src/components/ui/table'
 import {
-  flexRender,
-  getCoreRowModel,
-  getFilteredRowModel,
-  getPaginationRowModel,
-  getSortedRowModel,
-  useReactTable,
-  type ColumnDef,
+  columnFilteringFeature,
+  createColumnHelper,
+  createFilteredRowModel,
+  createPaginatedRowModel,
+  createSortedRowModel,
+  filterFn_includesString,
+  rowPaginationFeature,
+  rowSortingFeature,
+  sortFn_alphanumeric,
+  sortFn_basic,
+  sortFn_text,
+  tableFeatures,
+  useTable,
   type ColumnFiltersState,
-  type ColumnSort,
-  type SortingState
+  type ColumnSort
 } from '@tanstack/react-table'
 import {
   ArrowDown,
@@ -45,7 +50,6 @@ import {
   useQueryState,
   useQueryStates
 } from 'nuqs'
-import { useMemo } from 'react'
 import { people, type Person } from './api'
 
 // Renders a single sorted column as `id.asc` / `id.desc` in the URL.
@@ -93,24 +97,44 @@ function SortableHeader({
   )
 }
 
-const columns: ColumnDef<Person>[] = (
-  [
-    ['name', 'Name'],
-    ['age', 'Age'],
-    ['country', 'Country'],
-    ['city', 'City'],
-    ['email', 'Email']
-  ] as const
-).map(([accessorKey, label]) => ({
-  accessorKey,
-  header: ({ column }) => (
-    <SortableHeader
-      label={label}
-      sorted={column.getIsSorted()}
-      onClick={column.getToggleSortingHandler()!}
-    />
+const features = tableFeatures({
+  columnFilteringFeature,
+  rowSortingFeature,
+  rowPaginationFeature,
+  filteredRowModel: createFilteredRowModel(),
+  sortedRowModel: createSortedRowModel(),
+  paginatedRowModel: createPaginatedRowModel(),
+  filterFns: { includesString: filterFn_includesString },
+  sortFns: {
+    alphanumeric: sortFn_alphanumeric,
+    basic: sortFn_basic,
+    text: sortFn_text
+  }
+})
+
+const columnHelper = createColumnHelper<typeof features, Person>()
+
+const columns = columnHelper.columns(
+  (
+    [
+      ['name', 'Name'],
+      ['age', 'Age'],
+      ['country', 'Country'],
+      ['city', 'City'],
+      ['email', 'Email']
+    ] as const
+  ).map(([accessor, label]) =>
+    columnHelper.accessor(accessor, {
+      header: ({ column }) => (
+        <SortableHeader
+          label={label}
+          sorted={column.getIsSorted()}
+          onClick={column.getToggleSortingHandler()!}
+        />
+      )
+    })
   )
-}))
+)
 
 export default function Client() {
   const [sorting, setSorting] = useQueryState(
@@ -127,18 +151,12 @@ export default function Client() {
     pageSize: parseAsInteger.withDefault(10)
   })
 
-  // Map the per-column query keys onto TanStack Table's ColumnFiltersState.
-  // Memoized so TanStack Table only resets the page index when the filters
-  // actually change, not on every render.
-  const columnFilters: ColumnFiltersState = useMemo(
-    () =>
-      Object.entries(filters)
-        .filter(([, value]) => value !== null)
-        .map(([id, value]) => ({ id, value })),
-    [filters]
-  )
+  const columnFilters: ColumnFiltersState = Object.entries(filters)
+    .filter(([, value]) => value !== null)
+    .map(([id, value]) => ({ id, value }))
 
-  const table = useReactTable<Person>({
+  const table = useTable({
+    features,
     data: people,
     columns,
     state: { sorting, columnFilters, pagination },
@@ -160,11 +178,7 @@ export default function Client() {
       void setPagination(old =>
         typeof updater === 'function' ? updater(old) : updater
       )
-    },
-    getCoreRowModel: getCoreRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-    getPaginationRowModel: getPaginationRowModel()
+    }
   })
 
   return (
@@ -213,12 +227,9 @@ export default function Client() {
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map(header => (
                   <TableHead key={header.id}>
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext()
-                        )}
+                    {header.isPlaceholder ? null : (
+                      <table.FlexRender header={header} />
+                    )}
                   </TableHead>
                 ))}
               </TableRow>
@@ -228,12 +239,9 @@ export default function Client() {
             {table.getRowModel().rows.length ? (
               table.getRowModel().rows.map(row => (
                 <TableRow key={row.id}>
-                  {row.getVisibleCells().map(cell => (
+                  {row.getAllCells().map(cell => (
                     <TableCell key={cell.id}>
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
+                      <table.FlexRender cell={cell} />
                     </TableCell>
                   ))}
                 </TableRow>
@@ -255,7 +263,7 @@ export default function Client() {
         <Label className="flex items-center gap-2">
           Rows per page
           <Select
-            value={table.getState().pagination.pageSize.toString()}
+            value={table.state.pagination.pageSize.toString()}
             onValueChange={value => table.setPageSize(Number(value))}
           >
             <SelectTrigger className="w-20">
@@ -271,8 +279,7 @@ export default function Client() {
           </Select>
         </Label>
         <span className="text-muted-foreground text-sm">
-          Page {table.getState().pagination.pageIndex + 1} of{' '}
-          {table.getPageCount()}
+          Page {table.state.pagination.pageIndex + 1} of {table.getPageCount()}
         </span>
         <div className="flex items-center gap-2">
           <Button

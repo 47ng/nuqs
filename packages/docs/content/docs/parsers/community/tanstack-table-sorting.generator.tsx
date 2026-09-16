@@ -30,9 +30,8 @@ import {
   parseAsStringLiteral,
   useQueryState
 } from 'nuqs'
-import { useDeferredValue, useMemo } from 'react'
+import { useDeferredValue } from 'react'
 
-// A single sorted column, matching TanStack Table's `ColumnSort` type.
 type ColumnSort = {
   id: string
   desc: boolean
@@ -40,7 +39,6 @@ type ColumnSort = {
 
 const columns = ['name', 'age', 'country', 'city'] as const
 
-// The text written after the column id for each sort direction.
 const directionRenderings = {
   'asc/desc': { asc: 'asc', desc: 'desc' },
   'a/d': { asc: 'a', desc: 'd' },
@@ -49,12 +47,9 @@ const directionRenderings = {
 
 type DirectionRendering = keyof typeof directionRenderings
 
-// Escapes user input shown inside a single-quoted string in the code samples.
 const quote = (value: string) =>
   value.replaceAll('\\', '\\\\').replaceAll("'", "\\'")
 
-// Builds a parser for a single column sort (e.g. `name.asc`), combined
-// with `parseAsArrayOf` below to support sorting over multiple columns.
 function createColumnSortParser(
   separator: string,
   { asc, desc }: { asc: string; desc: string }
@@ -167,15 +162,11 @@ export function TanStackTableSorting() {
   )
 
   const labels = directionRenderings[direction]
-  const sortParser = useMemo(
-    () =>
-      parseAsArrayOf(createColumnSortParser(separator, labels), listSeparator),
-    [separator, labels, listSeparator]
+  const sortParser = parseAsArrayOf(
+    createColumnSortParser(separator, labels),
+    listSeparator
   )
-  // nuqs doesn't pick up a parser that changes between renders, and this
-  // demo lets you change the format. So it stores the raw string and runs
-  // the parser for the current format itself. The raw value can be briefly
-  // undefined while the URL key is being changed.
+  // nuqs keeps the first parser it sees, so parse the raw value with the current format.
   const [rawSort, setRawSort] = useQueryState(sortKey)
   const sort = (rawSort == null ? null : sortParser.parse(rawSort)) ?? []
   const setSort = (value: ColumnSort[] | null) =>
@@ -220,7 +211,7 @@ export function useSortingQuery() {
   const usageCode =
     useDeferredValue(`import { useSortingQuery } from './search-params.sorting.ts'
 import {
-  useReactTable,
+  useTable,
   type SortingState,
   type Updater
 } from '@tanstack/react-table'
@@ -234,7 +225,7 @@ function onSortingChange(updaterOrValue: Updater<SortingState>) {
   void setSorting(newSorting)
 }
 
-const table = useReactTable({
+const table = useTable({
   ...otherProps,
   onSortingChange,
   state: {
