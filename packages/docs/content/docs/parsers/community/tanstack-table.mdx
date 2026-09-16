@@ -4,6 +4,9 @@ description: Store your table state in the URL, with style.
 ---
 
 import { HumanContent, LLMContent } from '@/src/components/audience'
+import { TanStackTablePagination } from './tanstack-table-pagination.generator'
+import { TanStackTableSorting } from './tanstack-table-sorting.generator'
+import { TanStackTableFiltering } from './tanstack-table-filtering.generator'
 
 [TanStack Table](https://tanstack.com/table) is a popular library for managing
 tabular content in React (and other frameworks).
@@ -12,6 +15,13 @@ By default, it will store its state in memory, losing all filters, sorts and
 pagination when the page is refreshed. This is a prime example where URL state
 shines.
 
+To move that state into the URL, pass your query state to `useTable` and
+update it from the matching `on*Change` callbacks.
+
+You can see pagination, filtering and sorting working together in the
+[playground](/playground/tanstack-table). For a complete, real-world example,
+see [sadmann7/shadcn-table](https://github.com/sadmann7/shadcn-table).
+
 ## Pagination
 
 TanStack Table stores pagination under two pieces of state:
@@ -19,9 +29,8 @@ TanStack Table stores pagination under two pieces of state:
 - `pageIndex`: a zero-based integer representing the current page
 - `pageSize`: an integer representing the number of items per page
 
-You will likely want the URL to follow your UI and be one-based for the page index:
-
-import { TanStackTablePagination } from './tanstack-table.generator'
+You will likely want the URL to follow your UI and be one-based for the page index.
+Here are two ways to do it:
 
 <HumanContent>
 <Suspense>
@@ -33,22 +42,148 @@ import { TanStackTablePagination } from './tanstack-table.generator'
 Interactive pagination example omitted. The key idea is to map TanStack Table's zero-based `pageIndex` state to a one-based query parameter representation.
 </LLMContent>
 
-<HumanContent>
-
 ## Filtering
 
-<Callout>
-  This section is empty for now, [contributions](https://github.com/47ng/nuqs) are welcome!
-</Callout>
+TanStack Table stores column filters as an array of `ColumnFilter` objects with
+keys:
 
-</HumanContent>
+- `id`: a string with the column name
+- `value`: the value to filter that column by
+
+A clean way to represent this in the URL is to use one query key per filterable
+column with [`useQueryStates`](/docs/batching), keeping the URL readable like
+`?name=john&country=france`.
+
+<LLMContent>
+
+```ts
+import { parseAsString, useQueryStates } from 'nuqs'
+
+// One URL key per filterable column.
+const filterParsers = {
+  name: parseAsString,
+  country: parseAsString
+}
+
+export function useFiltersQuery() {
+  return useQueryStates(filterParsers)
+}
+```
+
+Map the query state object onto TanStack Table's `ColumnFiltersState`, and back
+again in `onColumnFiltersChange`:
+
+```ts
+import { useFiltersQuery } from './search-params.filtering.ts'
+import { useTable, type ColumnFiltersState, type Updater } from '@tanstack/react-table'
+
+const [filters, setFilters] = useFiltersQuery()
+
+// Map the query state object onto ColumnFiltersState
+const columnFilters = Object.entries(filters)
+  .filter(([, value]) => value !== null)
+  .map(([id, value]) => ({ id, value }))
+
+function onColumnFiltersChange(updaterOrValue: Updater<ColumnFiltersState>) {
+  const next = typeof updaterOrValue === 'function' ? updaterOrValue(columnFilters) : updaterOrValue
+  // Clear every filter first, so removed filters are also removed from the URL.
+  void setFilters({
+    name: null,
+    country: null,
+    ...Object.fromEntries(next.map(({ id, value }) => [id, value as string]))
+  })
+}
+
+const table = useTable({
+  ...otherProps,
+  onColumnFiltersChange,
+  state: {
+    ...otherState,
+    columnFilters,
+  }
+})
+```
+
+</LLMContent>
 
 <HumanContent>
+<Suspense>
+  <TanStackTableFiltering />
+</Suspense>
+</HumanContent>
 
 ## Sorting
 
-<Callout>
-  This section is empty for now, [contributions](https://github.com/47ng/nuqs) are welcome!
-</Callout>
+TanStack Table stores sorting as an array of `ColumnSort` objects with keys:
 
+- `id`: a string with the column name
+- `desc`: a boolean indicating if the sorting is descending (`true`) or ascending (`false`)
+
+You _could_ store this state as JSON in the URL with
+[`parseAsJson`](/docs/parsers/built-in#json), but a custom parser lets us
+represent it in a much nicer way, like `?sort=name.asc,age.desc`.
+
+Here we build a parser for a single sorted column with
+[`createParser`](/docs/parsers/making-your-own), then combine it with
+[`parseAsArrayOf`](/docs/parsers/built-in#arrays) to support sorting over
+multiple columns.
+
+<LLMContent>
+
+```ts
+import { createParser, parseAsArrayOf, useQueryState } from 'nuqs'
+import type { ColumnSort } from '@tanstack/react-table'
+
+const columnSortParser = createParser<ColumnSort>({
+  parse: query => {
+    // Use lastIndexOf so column ids may contain the separator.
+    const index = query.lastIndexOf('.')
+    if (index === -1) return null
+    const id = query.slice(0, index)
+    const direction = query.slice(index + 1)
+    if (!id || (direction !== 'asc' && direction !== 'desc')) return null
+    return { id, desc: direction === 'desc' }
+  },
+  serialize: ({ id, desc }) => `${id}.${desc ? 'desc' : 'asc'}`
+})
+
+export function useSortingQuery() {
+  return useQueryState('sort', parseAsArrayOf(columnSortParser, ',').withDefault([]))
+}
+```
+
+Then pass the query state to `useTable` and update it in `onSortingChange`:
+
+```ts
+import { useSortingQuery } from './search-params.sorting.ts'
+import { useTable, type SortingState, type Updater } from '@tanstack/react-table'
+
+const [sorting, setSorting] = useSortingQuery()
+
+// Handle the onSortingChange callback from the table
+function onSortingChange(updaterOrValue: Updater<SortingState>) {
+  const newSorting = typeof updaterOrValue === 'function' ? updaterOrValue(sorting) : updaterOrValue
+  void setSorting(newSorting)
+}
+
+// Create the table with manually provided state and callback
+const table = useTable({
+  ...otherProps,
+  onSortingChange,
+  state: {
+    ...otherState,
+    sorting,
+  }
+})
+```
+
+</LLMContent>
+
+<HumanContent>
+Try changing the separator, how directions are rendered, or turning on
+multi-column sorting, and watch the URL update:
+
+<Suspense>
+  <TanStackTableSorting />
+</Suspense>
 </HumanContent>
