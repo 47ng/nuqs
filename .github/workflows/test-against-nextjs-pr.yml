@@ -1,0 +1,148 @@
+name: 'Test against Next.js PR'
+run-name: 'Test against Next.js PR #${{ inputs.pr_number }}'
+
+on:
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: 'Next.js pull request number'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: test-nextjs-pr-${{ inputs.pr_number }}
+  cancel-in-progress: true
+
+cache-mode: none
+
+env:
+  FORCE_COLOR: 3
+
+jobs:
+  resolve:
+    name: 'Resolve Next.js PR #${{ inputs.pr_number }}'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    outputs:
+      head-sha: ${{ steps.resolve.outputs.head-sha }}
+      short-sha: ${{ steps.resolve.outputs.short-sha }}
+      tarball-url: ${{ steps.resolve.outputs.tarball-url }}
+      version: ${{ steps.resolve.outputs.version }}
+    steps:
+      - name: Resolve PR head and wait for its preview build
+        id: resolve
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ inputs.pr_number }}
+        run: |
+          set -euo pipefail
+
+          if [[ ! "$PR_NUMBER" =~ ^[1-9][0-9]*$ ]]; then
+            echo "PR number must be a positive integer, got '$PR_NUMBER'" >&2
+            exit 1
+          fi
+
+          pr="$({
+            curl --fail --silent --show-error \
+              --header "Authorization: Bearer $GH_TOKEN" \
+              --header "Accept: application/vnd.github+json" \
+              --header "X-GitHub-Api-Version: 2022-11-28" \
+              "https://api.github.com/repos/vercel/next.js/pulls/$PR_NUMBER"
+          })"
+          head_sha="$(jq --exit-status --raw-output '.head.sha' <<<"$pr")"
+          pr_url="$(jq --exit-status --raw-output '.html_url' <<<"$pr")"
+          tarball_url="https://vercel-packages.vercel.app/next/commits/$head_sha/next"
+
+          echo "Resolved $pr_url to $head_sha"
+          echo "Waiting for the official Next.js preview tarball..."
+
+          for attempt in {1..120}; do
+            if curl --fail --silent --location \
+              --output "$RUNNER_TEMP/next.tgz" "$tarball_url"; then
+              break
+            fi
+            if [[ "$attempt" == 120 ]]; then
+              echo "No preview build appeared for $head_sha after 30 minutes." >&2
+              echo "Check https://github.com/vercel/next.js/actions/workflows/build_and_deploy.yml" >&2
+              exit 1
+            fi
+            sleep 15
+          done
+
+          version="$(
+            tar --extract --gzip --to-stdout \
+              --file "$RUNNER_TEMP/next.tgz" package/package.json |
+              jq --exit-status --raw-output '.version'
+          )"
+          if [[ "$version" != *-preview-* ]]; then
+            echo "Expected a Next.js preview version, got '$version'" >&2
+            exit 1
+          fi
+
+          {
+            echo "head-sha=$head_sha"
+            echo "short-sha=${head_sha:0:8}"
+            echo "tarball-url=$tarball_url"
+            echo "version=$version"
+          } >> "$GITHUB_OUTPUT"
+
+          {
+            echo "### Next.js PR build"
+            echo
+            echo "- PR: [$PR_NUMBER]($pr_url)"
+            echo "- Head: \`$head_sha\`"
+            echo "- Package: \`next@$version\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  e2e:
+    name: "E2E (PR #${{ inputs.pr_number }} ${{ needs.resolve.outputs.short-sha }}${{ matrix.base-path && ' ⚾' || ''}}${{ matrix.react-compiler && ' ⚛️' || ''}}${{ matrix.cache-components && ' 💾' || ''}})"
+    needs: resolve
+    # Next.js PR previews currently ship a linux-x64 SWC package only.
+    runs-on: ubuntu-24.04
+    cache-mode: read
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        base-path: [false, '/base']
+        react-compiler: [true, false]
+        cache-components: [true, false]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6.0.10
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Install Next.js PR preview
+        env:
+          NEXT_TARBALL_URL: ${{ needs.resolve.outputs.tarball-url }}
+        # The official preview rewrites its internal @next/* dependencies to
+        # immutable tarball URLs under the same commit-specific base URL.
+        run: pnpm add --filter e2e-next --filter nuqs --config.blockExoticSubdeps=false "next@$NEXT_TARBALL_URL"
+      - name: Run cacheComponents codemod
+        if: ${{ matrix.cache-components }}
+        run: pnpm run cacheComponents:codemod
+        working-directory: packages/e2e/next
+      - name: Run integration tests
+        # Do not expose the shared Turborepo cache to code from an external PR.
+        run: pnpm run test --filter e2e-next
+        env:
+          BASE_PATH: ${{ matrix.base-path && matrix.base-path || '/' }}
+          REACT_COMPILER: ${{ matrix.react-compiler }}
+          CACHE_COMPONENTS: ${{ matrix.cache-components }}
+          E2E_NO_CACHE_ON_RERUN: ${{ github.run_attempt }}
+      - name: Save Playwright report
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        if: failure()
+        with:
+          path: packages/e2e/next/.playwright/*
+          name: playwright-next-pr-${{ inputs.pr_number }}-${{ needs.resolve.outputs.short-sha }}${{ matrix.base-path && '-basePath' || ''}}${{ matrix.react-compiler && '-react-compiler' || ''}}${{ matrix.cache-components && '-cache-components' || ''}}
+          include-hidden-files: true
