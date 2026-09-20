@@ -23,7 +23,7 @@ env:
 
 jobs:
   resolve:
-    name: Resolve Next.js PR #${{ inputs.pr_number }}
+    name: 'Resolve Next.js PR #${{ inputs.pr_number }}'
     runs-on: ubuntu-24.04
     timeout-minutes: 35
     outputs:
@@ -98,7 +98,7 @@ jobs:
           } >> "$GITHUB_STEP_SUMMARY"
 
   e2e:
-    name: E2E (PR #${{ inputs.pr_number }} ${{ needs.resolve.outputs.short-sha }}${{ (matrix.base-path || matrix.cache-components || matrix.react-compiler) && ' ' || ''}}${{ matrix.base-path && '⚾' || ''}}${{ matrix.react-compiler && '⚛️' || ''}}${{ matrix.cache-components && '💾' || ''}})
+    name: "E2E (PR #${{ inputs.pr_number }} ${{ needs.resolve.outputs.short-sha }}${{ matrix.base-path && ' ⚾' || ''}}${{ matrix.react-compiler && ' ⚛️' || ''}}${{ matrix.cache-components && ' 💾' || ''}})"
     needs: resolve
     # Next.js PR previews currently ship a linux-x64 SWC package only.
     runs-on: ubuntu-24.04
