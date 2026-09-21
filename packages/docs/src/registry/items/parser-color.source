@@ -1,0 +1,116 @@
+import tinycolor from 'tinycolor2'
+import { createParser } from 'nuqs'
+
+/**
+ * Supported color output formats
+ */
+export type ColorFormat = 'hex' | 'rgb' | 'hsl' | 'hsv'
+
+/**
+ * Configuration options for color parser
+ */
+export interface ColorParserOptions {
+  /**
+   * Output format for the color
+   * @default 'hex'
+   */
+  format?: ColorFormat
+  /**
+   * For hex format: use 3-character form when possible (#fff vs #ffffff)
+   * @default false
+   */
+  short?: boolean
+}
+
+/**
+ * Parse color from query string and convert to specified format
+ * 
+ * Accepts hex, rgb, hsl, hsv, and named colors as input.
+ * Always serializes to hex in the URL for compactness.
+ * 
+ * @example
+ * ```tsx
+ * // Basic hex color
+ * const [color, setColor] = useQueryState(
+ *   'color',
+ *   parseAsColor().withDefault('#0055ff')
+ * )
+ * 
+ * // RGB output
+ * const [color, setColor] = useQueryState(
+ *   'color',
+ *   parseAsColor({ format: 'rgb' }).withDefault('rgb(0, 85, 255)')
+ * )
+ * 
+ * // Short hex format
+ * const [color, setColor] = useQueryState(
+ *   'color',
+ *   parseAsColor({ short: true }).withDefault('#05f')
+ * )
+ * ```
+ */
+export function parseAsColor(options: ColorParserOptions = {}) {
+  const { format = 'hex', short = false } = options
+
+  return createParser({
+    parse(value: string) {
+    // Decode URL-encoded characters (e.g., %23 -> #)
+    const decodedValue = decodeURIComponent(value)
+    const color = tinycolor(decodedValue)
+
+      if (!color.isValid()) {
+        return null
+      }
+
+      switch (format) {
+        case 'hex':
+          return short ? color.toHexString() : color.toHexString()
+        case 'rgb':
+          return color.toRgbString()
+        case 'hsl':
+          return color.toHslString()
+        case 'hsv':
+          return color.toHsvString()
+        default:
+          return color.toHexString()
+      }
+    },
+    
+    serialize(value: string) {
+      const color = tinycolor(value)
+      if (!color.isValid()) {
+        return ''
+      }
+      // Always use hex6 format for URL (most compact & consistent)
+      return color.toHex()
+    }
+  })
+}
+
+/**
+ * Parse as hex color (default)
+ * @example parseAsHex().withDefault('#0055ff')
+ */
+export const parseAsHex = (short = false) => 
+  parseAsColor({ format: 'hex', short })
+
+/**
+ * Parse as RGB color
+ * @example parseAsRgb().withDefault('rgb(0, 85, 255)')
+ */
+export const parseAsRgb = () => 
+  parseAsColor({ format: 'rgb' })
+
+/**
+ * Parse as HSL color
+ * @example parseAsHsl().withDefault('hsl(220, 100%, 50%)')
+ */
+export const parseAsHsl = () => 
+  parseAsColor({ format: 'hsl' })
+
+/**
+ * Parse as HSV color
+ * @example parseAsHsv().withDefault('hsv(220, 100%, 100%)')
+ */
+export const parseAsHsv = () => 
+  parseAsColor({ format: 'hsv' })
