@@ -1,7 +1,7 @@
 {
   "type": "registry:item",
   "name": "parser-uuid",
-  "title": "UUID Parser",
+  "title": "UUID",
   "description": "Parse and validate UUID strings (versions 1-8) from the query string.",
   "author": "Usman Sabuwala <max-programming>",
   "categories": ["parser"],
