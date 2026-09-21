@@ -22,7 +22,10 @@ export function expectUrl(
     .toBe(true)
 }
 
-export function expectSearch(page: Page, expected: Record<string, string>) {
+export function expectSearch(
+  page: Page,
+  expected: Record<string, string | null>
+) {
   return expectUrl(
     page,
     url =>

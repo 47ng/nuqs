@@ -31,6 +31,10 @@ export default [
     route('/scroll',                                    './routes/scroll.tsx'),
 
     // Local tests
+    route('/pending-loader',                           './routes/pending-loader.tsx'),
+    route('/redirect-queue',                           './routes/redirect-queue.tsx'),
+    route('/blocker',                                   './routes/blocker.tsx'),
+    route('/blocker-no-loader',                         './routes/blocker.no-loader.tsx'),
     route('/debounce',                                  './routes/debounce.tsx'),
     route('/debounce/other',                            './routes/debounce.other.tsx'),
     route('/dynamic-segments/catch-all?/*',             './routes/dynamic-segments.catch-all.$.tsx'),

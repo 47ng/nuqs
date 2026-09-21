@@ -12,14 +12,16 @@ import {
 export async function loader({ request }: LoaderFunctionArgs) {
   const call = countLoaderCall(request)
   await delayedLoader(request)
-  return call
+  const url = new URL(request.url)
+  return { call, state: url.searchParams.get('test') }
 }
 
 export default function Page() {
-  const loaderCall = useLoaderData<typeof loader>()
+  const { call, state } = useLoaderData<typeof loader>()
   return (
     <Repro1563
-      loaderCall={loaderCall}
+      loaderCall={call}
+      loaderState={state}
       useNavigate={useNavigate}
       useNavigation={useNavigation}
       useNavigationType={useNavigationType}
