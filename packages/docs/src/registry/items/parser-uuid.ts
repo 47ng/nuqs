@@ -1,4 +1,4 @@
-import { createParser } from 'nuqs'
+import { createParser } from 'nuqs/server'
 
 export type UuidVersion = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8
 
