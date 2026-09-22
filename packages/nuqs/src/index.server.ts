@@ -13,6 +13,7 @@ export {
   defaultRateLimit,
   throttle
 } from './lib/queues/rate-limiting'
+export { configure, type ConfigureOptions } from './lib/url-encoding'
 export {
   createLoader,
   type LoaderFunction,
