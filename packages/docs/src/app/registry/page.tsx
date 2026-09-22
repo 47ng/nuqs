@@ -7,7 +7,7 @@ import {
   DocsPage,
   DocsTitle
 } from 'fumadocs-ui/page'
-import { RssIcon } from 'lucide-react'
+import { Fingerprint, RssIcon } from 'lucide-react'
 import type { Metadata } from 'next'
 
 export const metadata = {
@@ -64,6 +64,10 @@ export default function Page() {
           >
             🚧 Coming soon to the registry, discussion on GitHub.
           </Card>
+        </Cards>
+        <H2 id="community-parsers">Community Parsers</H2>
+        <Cards>
+          <UuidParserCard />
         </Cards>
         {/* <H2 id="mcp-server">MCP Server</H2>
         <p>
@@ -218,6 +222,12 @@ const OneJsCard = () => (
   >
     One aims to make web + native with React and React Native much simpler, and
     faster.
+  </Card>
+)
+
+const UuidParserCard = () => (
+  <Card href="/registry/parser-uuid" title="UUID" icon={<Fingerprint />}>
+    Validate UUID strings (versions 1-8) in the query string.
   </Card>
 )
 

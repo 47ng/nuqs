@@ -58,19 +58,18 @@ export default async function RegistryLayout({
               url: `/registry/${item.name}`,
               description: item.description
             })),
-            // todo: Enable this when we have parsers
-            // {
-            //   $id: '#parsers-heading',
-            //   type: 'separator',
-            //   name: 'Parsers'
-            // },
-            // ...categories.Parsers.map(item => ({
-            //   $id: `#${item.name}`,
-            //   type: 'page' as const,
-            //   name: item.title,
-            //   url: `/registry/${item.name}`,
-            //   description: item.description
-            // })),
+            {
+              $id: '#parsers-heading',
+              type: 'separator',
+              name: 'Parsers'
+            },
+            ...categories.parser.map(item => ({
+              $id: `#${item.name}`,
+              type: 'page' as const,
+              name: item.title,
+              url: `/registry/${item.name}`,
+              description: item.description
+            })),
             {
               $id: '#utilities-heading',
               type: 'separator',
