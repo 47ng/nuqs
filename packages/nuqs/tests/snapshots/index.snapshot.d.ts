@@ -1,4 +1,7 @@
 // #region Types
+export type ConfigureOptions = {
+  prettyEncoding?: boolean;
+};
 export type CreateLoaderOptions<P extends ParserMap> = LoaderOptions<P>;
 export type CreateSerializerOptions<Parsers extends ParserMap> = Pick<Options, "clearOnDefault"> & {
   urlKeys?: UrlKeys<Parsers>;
@@ -80,6 +83,7 @@ export type Values<T extends UseQueryStatesKeysMap> = { [K in keyof T]: T[K]["de
 // #endregion
 
 // #region Functions
+export declare function configure(_: ConfigureOptions): void;
 export declare function createLoader<Parsers extends ParserMap>(_: Parsers, { urlKeys }?: CreateLoaderOptions<Parsers>): LoaderFunction<Parsers>;
 export declare function createMultiParser<T>(_: Omit<Require<MultiParser<T>, "parse" | "serialize">, "type">): MultiParserBuilder<T>;
 export declare function createParser<T>(_: Require<SingleParser<T>, "parse" | "serialize">): SingleParserBuilder<T>;
