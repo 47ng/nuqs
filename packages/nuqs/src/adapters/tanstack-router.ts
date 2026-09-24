@@ -22,6 +22,10 @@ type HistorySubscriberArgs = {
   }
 }
 
+function isObject(value: unknown): value is object {
+  return typeof value === 'object' && value !== null
+}
+
 function useNuqsTanstackRouterAdapter(watchKeys: string[]): AdapterInterface {
   const pathname = useLocation({ select: state => state.pathname })
   // Use useRouterState instead of useLocation so that structuralSharing
@@ -75,9 +79,16 @@ function useNuqsTanstackRouterAdapter(watchKeys: string[]): AdapterInterface {
       // ends up as { foo → 'bar,baz' } instead of { foo → 'bar', foo → 'baz' }
       new URLSearchParams(
         Object.entries(activeSearch).flatMap(([key, value]) => {
-          if (Array.isArray(value)) {
+          // A repeated key (?foo=bar&foo=baz) is parsed by TSR as an array of
+          // primitives, and must be flattened back into repeated key/value
+          // pairs, otherwise URLSearchParams renders { foo → 'bar,baz' }.
+          // An array containing objects can't come from a repeated key though
+          // (TSR only JSON.parses per key), so it's a single JSON value and
+          // must be re-stringified, otherwise each item collapses into
+          // `[object Object]`. See https://github.com/47ng/nuqs/issues/1127
+          if (Array.isArray(value) && !value.some(isObject)) {
             return value.map(v => [key, v])
-          } else if (typeof value === 'object' && value !== null) {
+          } else if (isObject(value)) {
             // TSR JSON.parses objects in the search params,
             // but parseAsJson expects a JSON string,
             // so we need to re-stringify it first.
