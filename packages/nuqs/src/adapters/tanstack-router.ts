@@ -47,7 +47,6 @@ function useNuqsTanstackRouterAdapter(watchKeys: string[]): AdapterInterface {
     select: state => state.resolvedLocation?.pathname ?? state.location.pathname
   })
   const router = useRouter()
-  const { navigate } = router
 
   // Track which pathname this hook instance was mounted under to
   // keep its last stable search during cross-page transitions.
@@ -95,27 +94,27 @@ function useNuqsTanstackRouterAdapter(watchKeys: string[]): AdapterInterface {
       // Wrapping in a startTransition seems to be necessary
       // to support scroll restoration
       startTransition(() => {
-        navigate({
-          // I know the docs say to use `search` here, but it would require
-          // userland code to stitch the nuqs definitions to the route declarations
-          // in order for TSR to serialize them, which kind of breaks the
-          // "works out of the box" promise, and it also wouldn't support
-          // the custom URL encoding.
-          // TBC if it causes issues with consuming those search params
-          // in other parts of the app.
-          //
-          // Note: we need to specify pathname + search here to avoid TSR appending
-          // a trailing slash to the pathname, see https://github.com/47ng/nuqs/issues/1215
-          from: '/',
-          to: pathname + renderQueryString(search),
-          replace: options.history === 'replace',
-          resetScroll: options.scroll,
-          hash: prevHash => prevHash ?? '',
-          state: state => state
-        })
+        // We don't use `navigate` here: TSR would either re-serialize the
+        // search params with its own encoder (losing nuqs' custom URL
+        // encoding), or, when passing `pathname + searchString` as `to`,
+        // resolve the whole string as a pathname. On routes with a dynamic
+        // segment, that glued string still matches the route, and TSR then
+        // appends the route's `validateSearch` defaults, resulting in a
+        // second query string. See https://github.com/47ng/nuqs/issues/1590
+        // (and https://github.com/47ng/nuqs/issues/1215 for trailing slashes).
+        const url = pathname + renderQueryString(search) + window.location.hash
+        const state = router.history.location.state
+        if (options.history === 'replace') {
+          router.history.replace(url, state)
+        } else {
+          router.history.push(url, state)
+        }
+        if (options.scroll) {
+          window.scrollTo({ top: 0 })
+        }
       })
     },
-    [navigate, pathname]
+    [router, pathname]
   )
 
   return {
