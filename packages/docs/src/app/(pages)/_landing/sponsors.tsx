@@ -40,6 +40,12 @@ const SPONSORS: Sponsors = [
     img: 'https://avatars.githubusercontent.com/u/148620833?s=200&v=4'
   },
   {
+    handle: 'usenotra',
+    name: 'Notra',
+    url: 'https://www.usenotra.com/?utm_source=nuqs&utm_medium=sponsor&utm_campaign=nuqs',
+    img: 'https://avatars.githubusercontent.com/u/250950776?s=200&v=4'
+  },
+  {
     handle: 'upstash',
     name: 'Upstash',
     url: 'https://upstash.com/?utm_source=nuqs&utm_medium=sponsor&utm_campaign=nuqs',
@@ -97,13 +103,22 @@ const SPONSORS: Sponsors = [
     handle: 'pqoqubbw',
     name: 'dmytro',
     url: 'https://pqoqubbw.dev/',
-    img: 'https://avatars.githubusercontent.com/u/71014515?s=200&v=4'
+    img: 'https://avatars.githubusercontent.com/u/71014515?s=200&v=4',
+    title: 'Design Engineer @ Mintlify'
   },
   {
     handle: 'ryanmagoon',
     name: 'Ryan Magoon',
-    url: 'https://x.com/Ryan_Magoon',
-    img: 'https://avatars.githubusercontent.com/u/5327290?s=200&v=4'
+    url: 'https://x.com/ryanmagoon',
+    img: 'https://avatars.githubusercontent.com/u/5327290?s=200&v=4',
+    title: 'Engineer @ PayPal'
+  },
+  {
+    handle: 'rauchg',
+    name: 'Guillermo Rauch',
+    url: 'https://x.com/rauchg',
+    img: 'https://avatars.githubusercontent.com/u/13041?s=200&v=4',
+    title: 'Chief Triangle Officer'
   },
   {
     handle: 'pontusab',
@@ -187,25 +202,73 @@ const SPONSORS: Sponsors = [
     handle: 'RhysSullivan',
     name: 'Rhys Sullivan',
     url: 'https://rhys.dev',
-    img: 'https://avatars.githubusercontent.com/u/39114868?s=200&v=4'
+    img: 'https://avatars.githubusercontent.com/u/39114868?s=200&v=4',
+    title: (
+      <>
+        Creator of{' '}
+        <a
+          href="https://executor.sh/?utm_source=nuqs"
+          className="hover:underline"
+        >
+          Executor.sh
+        </a>
+      </>
+    )
   },
   {
     handle: 'brandonmcconnell',
     name: 'Brandon McConnell',
     url: 'https://github.com/brandonmcconnell',
-    img: 'https://avatars.githubusercontent.com/u/5913254?s=200&v=4'
+    img: 'https://avatars.githubusercontent.com/u/5913254?s=200&v=4',
+    title: 'Frontend Engineer @ Mintlify'
   },
   {
     handle: 'haydenbleasel',
     name: 'Hayden Bleasel',
     url: 'https://www.haydenbleasel.com/',
-    img: 'https://avatars.githubusercontent.com/u/4142719?s=200&v=4'
+    img: 'https://avatars.githubusercontent.com/u/4142719?s=200&v=4',
+    title: 'MTS @ OpenAI'
   },
   {
     handle: 'DavidHDev',
     name: 'David Haz',
     url: 'https://github.com/DavidHDev',
-    img: 'https://avatars.githubusercontent.com/u/48634587?s=200&v=4'
+    img: 'https://avatars.githubusercontent.com/u/48634587?s=200&v=4',
+    title: (
+      <>
+        Creator of{' '}
+        <a
+          href="https://reactbits.dev/?utm_source=nuqs"
+          className="hover:underline"
+        >
+          React Bits
+        </a>
+      </>
+    )
+  },
+  {
+    handle: 'TheOrcDev',
+    name: 'OrcDev',
+    url: 'https://x.com/orcdev',
+    img: 'https://avatars.githubusercontent.com/u/7549148?s=200&v=4',
+    title: (
+      <>
+        Warchief of{' '}
+        <a
+          href="https://shipper.club/?utm_source=nuqs"
+          className="hover:underline"
+        >
+          Shipper Club
+        </a>
+      </>
+    )
+  },
+  {
+    handle: 'AlemTuzlak',
+    name: 'Alem Tuzlak',
+    url: 'https://github.com/AlemTuzlak',
+    img: 'https://avatars.githubusercontent.com/u/18480956?s=200&v=4',
+    title: 'TanStack AI & Devtools maintainer'
   }
 ]
 
@@ -226,7 +289,7 @@ export function SponsorsSection() {
       <h2 className="mb-12 text-center text-3xl font-bold tracking-tighter md:text-4xl xl:text-5xl dark:text-white">
         Sponsors
       </h2>
-      <div className="mb-12 flex flex-wrap items-center justify-center gap-8">
+      {/* <div className="mb-12 flex flex-wrap items-center justify-center gap-8">
         <a
           href="https://nextjsweekly.com?utm_source=nuqs&utm_medium=sponsor&utm_campaign=nuqs"
           target="_blank"
@@ -304,7 +367,7 @@ export function SponsorsSection() {
           </svg>
           <span className="mb-px text-3xl font-semibold">shadcn/studio</span>
         </a>
-      </div>
+      </div> */}
       <ul className="container flex flex-wrap justify-center gap-x-4 gap-y-8 md:gap-x-6 lg:gap-x-0">
         {SPONSORS.map(sponsor => (
           <li
@@ -325,12 +388,12 @@ export function SponsorsSection() {
             </a>
             <a
               href={sponsor.url}
-              className="mt-2 inline-block font-semibold hover:underline"
+              className="mt-2 inline-block text-center font-semibold hover:underline"
             >
               {sponsor.name ?? sponsor.handle}
             </a>
             {Boolean(sponsor.title) && (
-              <span className="mt-1 inline-block text-sm text-zinc-600 dark:text-zinc-400">
+              <span className="mt-1 inline-block text-center text-sm text-zinc-600 dark:text-zinc-400">
                 {sponsor.title}
               </span>
             )}

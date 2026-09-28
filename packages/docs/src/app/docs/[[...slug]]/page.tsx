@@ -1,13 +1,12 @@
-import { docsPageClassName } from '@/src/components/shared-layout'
 import { useMDXComponents } from '@/mdx-components'
-import type { TOCItemType } from 'fumadocs-core/toc'
-import { AsideSponsors } from '@/src/app/(pages)/_landing/sponsors'
+import { SponsorsSidebar } from '@/src/app/(pages)/_landing/sponsors-sidebar'
 import { source } from '@/src/app/source'
 import {
   CopyAsMarkdownButton,
   CopyMarkdownUrlButton,
   ViewOptions
 } from '@/src/components/ai/page-actions'
+import { docsPageClassName } from '@/src/components/shared-layout'
 import { getPublishedVersion, isPublished } from '@/src/lib/published-version'
 import { gatedHeadingIds } from '@/src/lib/strip-unreleased'
 import { getBaseUrl } from '@/src/lib/url'
@@ -52,7 +51,7 @@ export default async function Page(props: PageProps<'/docs/[[...slug]]'>) {
       tableOfContentPopover={{ list: { thumbBox: false } }}
       toc={toc}
       tableOfContent={{
-        footer: <AsideSponsors />
+        footer: <SponsorsSidebar />
       }}
     >
       <DocsTitle>{page.data.title}</DocsTitle>
