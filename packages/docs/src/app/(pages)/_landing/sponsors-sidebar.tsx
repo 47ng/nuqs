@@ -4,7 +4,7 @@ export const asideSponsors: SponsorProps[] = [
   {
     name: 'Notra',
     url: 'https://www.usenotra.com/?utm_source=nuqs&utm_medium=banner&utm_campaign=nuqs',
-    logoUrl: 'https://avatars.githubusercontent.com/u/250950776?s=200&v=4',
+    logoUrl: 'https://www.usenotra.com/logo-dark.svg',
     description:
       'Modern GEO tool that asks ChatGPT, Claude and Gemini the questions your buyers ask. See if you show up, who shows up instead, and how to fix it.'
   },

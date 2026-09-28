@@ -43,7 +43,7 @@ const SPONSORS: Sponsors = [
     handle: 'usenotra',
     name: 'Notra',
     url: 'https://www.usenotra.com/?utm_source=nuqs&utm_medium=sponsor&utm_campaign=nuqs',
-    img: 'https://avatars.githubusercontent.com/u/250950776?s=200&v=4'
+    img: 'https://www.usenotra.com/logo-dark.svg'
   },
   {
     handle: 'upstash',
