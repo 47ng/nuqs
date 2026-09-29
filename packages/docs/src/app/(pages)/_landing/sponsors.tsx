@@ -58,6 +58,12 @@ const SPONSORS: Sponsors = [
     img: '/sponsors/coderabbit.svg'
   },
   {
+    handle: 'neondatabase',
+    name: 'Neon',
+    url: 'https://neon.com/?utm_source=nuqs&utm_medium=sponsor&utm_campaign=nuqs',
+    img: 'https://avatars.githubusercontent.com/u/77690634?s=200&v=4'
+  },
+  {
     handle: 'unkeyed',
     name: 'Unkey',
     url: 'https://unkey.com',
