@@ -110,7 +110,7 @@ function SponsoredUsedBy() {
             fillOpacity="0.9"
           />
         </svg>
-        <span className="text-lg font-medium">openpanel.dev</span>
+        <span className="text-2xl font-medium">openpanel.dev</span>
       </a>
       <a href="https://www.liminity.se/">
         <svg
@@ -158,6 +158,19 @@ function SponsoredUsedBy() {
           <path d="M345.405 16.1753C357.375 16.1753 364.049 22.9373 364.049 34.9822C364.049 46.9739 357.481 53.6832 345.723 53.6832H333.009V16.1753H345.405ZM339.684 47.8193H345.405C353.349 47.8193 357.216 43.593 357.216 34.9822C357.216 26.2126 353.349 22.0392 345.405 22.0392H339.684V47.8193Z" />
           <path d="M367.32 16.1753H374.681L383.686 32.235L392.692 16.1753H400L387.024 38.7858V53.6832H380.349V38.7858L367.32 16.1753Z" />
         </svg>
+      </a>
+      <a
+        href="https://www.usenotra.com/?utm_source=nuqs&utm_medium=sponsor&utm_campaign=nuqs"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="flex items-center gap-2"
+      >
+        <img
+          src="https://www.usenotra.com/logo-dark.svg"
+          className="inline h-8 md:h-10"
+          role="presentation"
+        />
+        <span className="text-2xl font-medium">Notra</span>
       </a>
     </p>
   )
