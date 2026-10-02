@@ -191,7 +191,7 @@ jobs:
           cache: pnpm
       - name: Install dependencies
         run: pnpm install --frozen-lockfile --filter docs...
-      - name: Type-check docs
+      - name: Type-check and test docs
         run: pnpm run test --filter docs
         env:
           TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
