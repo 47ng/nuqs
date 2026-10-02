@@ -53,6 +53,15 @@ updates:
 useQueryState('foo', { history: 'push' })
 ```
 
+[Batched updates](/docs/batching#multiple-updates-batching) share one URL write and
+one history entry.
+
+In React Router based frameworks, each separate URL write with `history: 'push'{:ts}`
+adds an entry, even while a loader waits. For example, a deep `q=tea` push followed
+by a shallow `panel=open` push adds two entries. Back removes `panel` and keeps
+`q=tea`. The shallow push does not run a loader. Loader data still comes from the
+URL that started the request.
+
 <Callout title="Watch out!" type="warn">
 Breaking the Back button can lead to a bad user experience. Make sure to use this
 option only if the search params to update contribute to a navigation-like
