@@ -495,8 +495,7 @@ function parseMap<KeyMap extends UseQueryStatesKeysMap>(
     hasChanged = true
     const value = isAbsentFromUrl(query)
       ? null
-      : // we have properly narrowed `query` here, but TS doesn't keep track of that
-        safeParse(parser.parse, query as string & Array<string>, urlKey)
+      : parseShared(parser.parse, query, urlKey)
 
     out[stateKey as keyof KeyMap] = value ?? null
     cachedQuery[urlKey] = query
@@ -509,6 +508,30 @@ function parseMap<KeyMap extends UseQueryStatesKeysMap>(
   hasChanged ||= Object.keys(state).length !== Object.keys(cachedState).length
 
   return [hasChanged, state]
+}
+
+// The per-hook query cache above only lives as long as a hook instance, so a
+// newly mounted hook (or a sibling hook on the same key) would re-run `parse`
+// and mint a new reference for object values (Date, JSON...) even though the
+// query didn't change, breaking referential equality for consumers using it
+// as an effect / memo dependency or a key (#1531).
+// Remember the last parse per parser function, so hooks sharing a parser
+// share the parsed reference for the same query. One entry per parser keeps
+// memory bounded, and the WeakMap lets inline parsers be garbage-collected.
+const sharedParseCache = new WeakMap<Function, [query: Query, value: unknown]>()
+
+function parseShared<T>(
+  parse: (value: any) => T,
+  query: Query,
+  urlKey: string
+): T | null {
+  const cached = sharedParseCache.get(parse)
+  if (cached && compareQuery(cached[0], query)) {
+    return cached[1] as T | null
+  }
+  const value = safeParse(parse, query, urlKey)
+  sharedParseCache.set(parse, [query, value])
+  return value
 }
 
 function applyDefaultValues<KeyMap extends UseQueryStatesKeysMap>(
