@@ -207,6 +207,9 @@ importers:
       '@tailwindcss/postcss':
         specifier: ^4.3.3
         version: 4.3.3
+      '@usenotra/geo':
+        specifier: ^0.5.0
+        version: 0.5.0(zod@4.4.3)
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
@@ -5108,6 +5111,15 @@ packages:
 
   '@ungap/structured-clone@1.3.3':
     resolution: {integrity: sha512-60YRaenCQcVjYEKOcG824+DRGGIQ3VKErcBoAEDJZz5bKIs2ZG+X/H9Nk+Q6EVkwJk5QNApxbrc5QtBSwtrXAg==}
+
+  '@usenotra/geo@0.5.0':
+    resolution: {integrity: sha512-SUjbORLQ444fkvqRIMW9JeN2sC2wU6/iAzr3VtJet69ACnhlyprsmb35BjBPgqYDDEE4F4TVv0nqkJyyqGu3kA==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      zod: ^4.0.0
+    peerDependenciesMeta:
+      zod:
+        optional: true
 
   '@vanilla-extract/babel-plugin-debug-ids@1.2.2':
     resolution: {integrity: sha512-MeDWGICAF9zA/OZLOKwhoRlsUW+fiMwnfuOAqFVohL31Agj7Q/RBWAYweqjHLgFBCsdnr6XIfwjJnmb2znEWxw==}
@@ -13584,6 +13596,10 @@ snapshots:
       '@typescript/old': typescript@6.0.3
 
   '@ungap/structured-clone@1.3.3': {}
+
+  '@usenotra/geo@0.5.0(zod@4.4.3)':
+    optionalDependencies:
+      zod: 4.4.3
 
   '@vanilla-extract/babel-plugin-debug-ids@1.2.2':
     dependencies:
