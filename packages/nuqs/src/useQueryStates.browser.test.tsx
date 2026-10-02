@@ -1493,6 +1493,24 @@ describe('useQueryStates: adapter defaults', () => {
     expect(onUrlUpdate).toHaveBeenCalledOnce()
     expect(onUrlUpdate.mock.calls[0]![0].options.scroll).toBe(true)
   })
+  it('should let call-level `scroll` override parser and adapter defaults', async () => {
+    const onUrlUpdate = vi.fn<OnUrlUpdateFunction>()
+    const useTestHook = () =>
+      useQueryStates({
+        test: parseAsString.withOptions({ scroll: false })
+      })
+    const { result, act } = await renderHook(useTestHook, {
+      wrapper: withNuqsTestingAdapter({
+        defaultOptions: {
+          scroll: false
+        },
+        onUrlUpdate
+      })
+    })
+    await act(() => result.current[1]({ test: 'update' }, { scroll: true }))
+    expect(onUrlUpdate).toHaveBeenCalledOnce()
+    expect(onUrlUpdate.mock.calls[0]![0].options.scroll).toBe(true)
+  })
   it('should use adapter default value for `clearOnDefault` when provided', async () => {
     const onUrlUpdate = vi.fn<OnUrlUpdateFunction>()
     const useTestHook = () =>
