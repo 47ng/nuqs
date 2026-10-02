@@ -5,8 +5,10 @@ import { globalThrottleQueue } from './throttle'
 
 const state = globalSingleton('queue-reset', () => ({ mutex: 0 }))
 
-export function setQueueResetMutex(value = 1): void {
+export function setQueueResetMutex(value = 1): number {
+  const previous = state.mutex
   state.mutex = value
+  return previous
 }
 
 export function spinQueueResetMutex(onReset: () => void = resetQueues): void {
