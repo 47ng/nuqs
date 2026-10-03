@@ -1,0 +1,15 @@
+{
+  "type": "registry:item",
+  "name": "parser-color",
+  "title": "Color Parser",
+  "description": "Parse colors in multiple formats (hex, rgb, hsl, hsv) with nuqs using tinycolor2.",
+  "dependencies": ["nuqs", "tinycolor2"],
+  "devDependencies": ["@types/tinycolor2"],
+  "files": [
+    {
+      "type": "registry:file",
+      "path": "src/registry/items/parser-color.source",
+      "target": "~/lib/parsers/color.ts"
+    }
+  ]
+}
