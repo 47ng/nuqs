@@ -10,7 +10,8 @@
         "VERCEL_URL",
         "VERCEL_PROJECT_PRODUCTION_URL",
         "GITHUB_TOKEN",
-        "ISR_TOKEN"
+        "ISR_TOKEN",
+        "NOTRA_GEO_TOKEN"
       ]
     },
     "test": {

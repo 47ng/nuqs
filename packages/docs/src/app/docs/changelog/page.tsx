@@ -1,5 +1,4 @@
-import { docsPageClassName } from '@/src/components/shared-layout'
-import { AsideSponsors } from '@/src/app/(pages)/_landing/sponsors'
+import { SponsorsSidebar } from '@/src/app/(pages)/_landing/sponsors-sidebar'
 import {
   CopyAsMarkdownButton,
   CopyMarkdownUrlButton,
@@ -9,6 +8,7 @@ import { CommitLine } from '@/src/components/changelog/commit-line'
 import { ContributorsFooter } from '@/src/components/changelog/contributors-footer'
 import { PullRequestLine } from '@/src/components/changelog/pr-line'
 import { Preamble } from '@/src/components/changelog/preamble'
+import { docsPageClassName } from '@/src/components/shared-layout'
 import { github } from '@/src/lib/utils'
 import { Heading } from 'fumadocs-ui/components/heading'
 import {
@@ -82,7 +82,7 @@ export default async function ChangelogPage() {
       tableOfContentPopover={{ list: { thumbBox: false } }}
       toc={toc}
       tableOfContent={{
-        footer: <AsideSponsors />
+        footer: <SponsorsSidebar />
       }}
     >
       <nav className="flex items-baseline justify-between">
