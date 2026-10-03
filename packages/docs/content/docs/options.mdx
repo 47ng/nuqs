@@ -497,3 +497,43 @@ import { TimestampDemo } from './options.client'
 <LLMContent>
 Interactive demo omitted. `processUrlSearchParams` can also add derived values such as a timestamp before the URL update is committed.
 </LLMContent>
+
+## Query string encoding
+
+<SinceVersion v="2.11.0">
+
+<FeatureSupportMatrix introducedInVersion='2.11.0' />
+
+By default, nuqs renders **pretty** query strings: characters that are safe to
+leave as-is in a query (including `[]{}`) stay unencoded, so URLs remain readable.
+
+Some tools truncate or mis-parse those URLs. Slack, for example, cuts a link
+short when a [`parseAsJson{:ts}`](/docs/parsers/built-in#json) value contains
+braces. Opt out of pretty encoding to render with `URLSearchParams{:ts}`
+(`application/x-www-form-urlencoded`) instead.
+
+Call `configure{:ts}` once in **every runtime that writes URLs**. Hook updates
+run in the client bundle, and `createSerializer{:ts}` often runs from
+`nuqs/server{:ts}` — those are separate copies of the library, so each one
+needs the call. Loaders only parse search params; they do not render the
+query string, so they do not need `configure{:ts}`:
+
+```ts
+// Client entry (hooks)
+import { configure } from 'nuqs'
+
+configure({ prettyEncoding: false })
+```
+
+```ts
+// Server entry (serializers)
+import { configure } from 'nuqs/server'
+
+configure({ prettyEncoding: false })
+```
+
+Pretty encoding stays the default, so existing URLs do not change unless you
+opt out. The platform decodes search params before nuqs parses them, so
+bookmarks written with either encoding still load.
+
+</SinceVersion>
