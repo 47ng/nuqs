@@ -5,8 +5,10 @@ First off, thanks for your help! 🙏
 ## Getting started
 
 1. Fork and clone the repository
-2. Set up the checkout with `node --run setup:worktree`
-3. Start the development environment with `pnpm dev --filter <package-name>...`
+2. Install the Node.js version in `.node-version`
+3. [Install pnpm](https://pnpm.io/installation) using the version pinned in the root `package.json` field `packageManager`
+4. Set up the checkout with `node --run setup:worktree`
+5. Start the development environment with `pnpm dev --filter <package-name>...`
 
 ## Git hooks (optional)
 

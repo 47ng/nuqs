@@ -40,7 +40,7 @@
     "turbo": "^2.10.5",
     "typescript": "catalog:typescript"
   },
-  "packageManager": "pnpm@11.0.9",
+  "packageManager": "pnpm@12.9.1",
   "prettier": {
     "arrowParens": "avoid",
     "semi": false,

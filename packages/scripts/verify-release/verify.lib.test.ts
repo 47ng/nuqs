@@ -125,11 +125,11 @@ describe('parseToolchain', () => {
   it('extracts node/npm/pnpm, tolerating a leading v and whitespace', () => {
     expect(
       parseToolchain({
-        nodeVersion: 'v24.11.0\n',
-        npmVersion: '  11.16.0  ',
-        packageJson: JSON.stringify({ packageManager: 'pnpm@11.0.9' })
+        nodeVersion: 'v1.2.3\n',
+        npmVersion: '  4.5.6  ',
+        packageJson: JSON.stringify({ packageManager: 'pnpm@7.8.9' })
       })
-    ).toEqual({ node: '24.11.0', npm: '11.16.0', pnpm: '11.0.9' })
+    ).toEqual({ node: '1.2.3', npm: '4.5.6', pnpm: '7.8.9' })
   })
 
   it('reads pnpm from packageManager with a trailing hash suffix', () => {
