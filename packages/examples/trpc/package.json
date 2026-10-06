@@ -29,7 +29,7 @@
     "@types/node": "^24.13.3",
     "@types/react": "catalog:react19",
     "@types/react-dom": "catalog:react19",
-    "compression": "^1.8.1",
+    "compression": "^1.8.2",
     "cross-env": "^10.1.0",
     "express": "^4.22.2",
     "typescript": "catalog:typescript",
