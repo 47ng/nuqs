@@ -77,9 +77,13 @@ For a focused test run, filter the root Turbo command, for example:
 
 - `pnpm run test --filter nuqs`
 - `pnpm run test --filter e2e-next`
+- `pnpm run test --filter docs`
 
 Turbo builds each selected task's dependencies before testing them. Avoid
 calling package-level test scripts directly, as that bypasses the task graph.
+
+The docs command runs type checks and unit tests. CI runs it in the
+`Docs Typecheck & Build` job before building the docs app.
 
 Mutation testing is available separately because it is too slow for the regular
 test suite:
