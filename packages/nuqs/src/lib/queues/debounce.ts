@@ -3,7 +3,6 @@ import { createEmitter, type Emitter } from '../emitter'
 import { globalSingleton } from '../global-singleton'
 import type { Query } from '../search-params'
 import { timeout } from '../timeout'
-import { withResolvers, type Resolvers } from '../with-resolvers'
 import {
   getSearchParamsSnapshotFromLocation,
   globalThrottleQueue,
@@ -14,7 +13,8 @@ import {
 import { useSyncExternalStores } from './useSyncExternalStores'
 
 export class DebouncedPromiseQueue<ValueType, OutputType> {
-  resolvers: Resolvers<OutputType> = withResolvers<OutputType>()
+  resolvers: PromiseWithResolvers<OutputType> =
+    Promise.withResolvers<OutputType>()
   controller: AbortController = new AbortController()
   queuedValue: ValueType | undefined = undefined
 
@@ -42,7 +42,7 @@ export class DebouncedPromiseQueue<ValueType, OutputType> {
           const callbackPromise = callback(value)
           debug(14, this.queuedValue)
           this.queuedValue = undefined
-          this.resolvers = withResolvers<OutputType>()
+          this.resolvers = Promise.withResolvers<OutputType>()
           callbackPromise
             .then(output => outputResolvers.resolve(output))
             .catch(error => outputResolvers.reject(error))
