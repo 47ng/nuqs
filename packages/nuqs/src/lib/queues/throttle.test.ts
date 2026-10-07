@@ -289,6 +289,48 @@ describe('throttle: acknowledgement of flushed values', () => {
     expect(changed).toEqual(['selected'])
   })
 
+  it('drops a flushed value once the URL no longer holds it, even if the adapter lags', async () => {
+    const queue = await createQueueAwaitingAcknowledgement()
+    const changed = queue.acknowledge(
+      new URLSearchParams(),
+      url('?selected=other')
+    )
+    expect(queue.getQueuedQuery('selected')).toBeUndefined()
+    expect(changed).toEqual(['selected'])
+  })
+
+  it('keeps the latest value when the same key is flushed twice', async () => {
+    const queue = await createQueueAwaitingAcknowledgement()
+    queue.push({ key: 'selected', query: 'item-2', options: {} })
+    await flush(queue)
+    queue.push({ key: 'page', query: '2', options: {} })
+    queue.acknowledge(
+      new URLSearchParams('?selected=item-1'),
+      url('?selected=item-2')
+    )
+    expect(queue.getQueuedQuery('selected')).toBe('item-2')
+    queue.acknowledge(
+      new URLSearchParams('?selected=item-2'),
+      url('?selected=item-2')
+    )
+    expect(queue.getQueuedQuery('selected')).toBeUndefined()
+  })
+
+  it('compares multi-value keys with all their values', async () => {
+    const queue = new ThrottledQueue()
+    queue.push({ key: 'tags', query: ['a', 'b'], options: {} })
+    await flush(queue)
+    queue.push({ key: 'page', query: '2', options: {} })
+    queue.acknowledge(new URLSearchParams('?tags=a'), url('?tags=a&tags=b'))
+    expect(queue.getQueuedQuery('tags')).toEqual(['a', 'b'])
+    const changed = queue.acknowledge(
+      new URLSearchParams('?tags=a&tags=b'),
+      url('?tags=a&tags=b')
+    )
+    expect(queue.getQueuedQuery('tags')).toBeUndefined()
+    expect(changed).toEqual([])
+  })
+
   it('drops a flushed value that did not change the URL', async () => {
     const queue = await createQueueAwaitingAcknowledgement()
     await flush(queue)

@@ -32,8 +32,8 @@ export function getSearchParamsSnapshotFromLocation(): URLSearchParams {
 
 export class ThrottledQueue {
   updateMap: UpdateMap = new Map()
-  // Flushed values kept readable until the adapter's search params show
-  // the URL they were written to (see `acknowledge`).
+  // Flushed values kept readable until the adapter's search params match
+  // the URL for their key, or the URL no longer holds them (see `acknowledge`).
   flushedMap: UpdateMap = new Map()
   options: Required<AdapterOptions> = {
     history: 'replace',
@@ -83,7 +83,8 @@ export class ThrottledQueue {
   }
 
   // Adapters that update their search params in a transition can lag behind
-  // the URL, so flushed values stay readable until the adapter catches up.
+  // the URL, so flushed values stay readable until the adapter catches up,
+  // or until the URL changes to something else.
   // Returns the keys whose dropped value differs from the adapter's,
   // as hooks rendered with it need to sync again.
   acknowledge(
@@ -94,9 +95,14 @@ export class ThrottledQueue {
     const changedKeys: string[] = []
     this.flushedMap.forEach((query, key) => {
       const adapterQuery = adapterSearchParams.getAll(key)
-      if (compareQuery(adapterQuery, urlSearchParams.getAll(key))) {
+      const urlQuery = urlSearchParams.getAll(key)
+      const flushedQuery = query === null ? [] : [query].flat()
+      if (
+        compareQuery(adapterQuery, urlQuery) ||
+        !compareQuery(flushedQuery, urlQuery)
+      ) {
         this.flushedMap.delete(key)
-        if (!compareQuery(adapterQuery, query === null ? [] : [query].flat())) {
+        if (!compareQuery(adapterQuery, flushedQuery)) {
           changedKeys.push(key)
         }
       }
@@ -203,7 +209,7 @@ export class ThrottledQueue {
     if (this.updateMap.size === 0) {
       return [search, null]
     }
-    // Work on a copy and clear the queue immediately
+    // Work on a copy, adapters decide below whether to clear the queue now
     const items = Array.from(this.updateMap.entries())
     const options = { ...this.options }
     const transitions = Array.from(this.transitions)
@@ -226,7 +232,8 @@ export class ThrottledQueue {
       } catch (err) {
         console.error(error(502), items.map(([key]) => key).join(), err)
         // Some adapters keep the queue available during concurrent renders,
-        // so discard this failed batch only when the next update starts.
+        // so discard this failed batch only when the next update starts
+        // (it never reaches `flushedMap`, which the next push keeps).
         this.resetQueueOnNextPush = true
         return [search, err]
       }

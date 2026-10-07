@@ -18,7 +18,8 @@ export const testRepro1612 = defineTest('repro-1612', ({ path }) => {
         url => url.searchParams.get('selected') === 'item-1'
       )
       await expect(page.locator('#child')).toBeVisible()
-      // The bug reverts to the correct final state, so give it time to show
+      // The bug ends on the correct state after an extra null commit,
+      // so wait for those logs before asserting
       await page.waitForTimeout(300)
 
       const sequence = logSpy.logs.filter(
