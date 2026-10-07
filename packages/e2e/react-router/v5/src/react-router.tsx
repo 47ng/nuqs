@@ -52,6 +52,7 @@ const routes = {
   '/repro-1444':                lazy(() => import('./routes/repro-1444')),
   '/repro-1501':                lazy(() => import('./routes/repro-1501')),
   '/repro-1506':                lazy(() => import('./routes/repro-1506')),
+  '/repro-1612':                lazy(() => import('./routes/repro-1612')),
 }
 
 export function ReactRouter() {
