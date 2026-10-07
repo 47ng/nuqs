@@ -24,7 +24,7 @@
     "test:worktree-setup": "pnpm --filter scripts exec vitest run worktree-setup.test.mjs",
     "// setup:hooks": "Opt-in per clone (not on install). Removes only the obsolete Husky path, adds the tracked config idempotently, and verifies the worktree hook",
     "setup:hooks": "if [ \"$(git config --local --get core.hooksPath || true)\" = .husky/_ ]; then git config --local --unset core.hooksPath; fi && git config --local --replace-all include.path ../.gitconfig '^\\.\\./\\.gitconfig$' && git hook list post-checkout",
-    "typegen": "pnpm run --filter \"e2e-*\" --filter docs --filter examples-trpc typegen",
+    "typegen": "pnpm -r run typegen",
     "lint": "pnpm run typegen && pnpm run -w --parallel --stream '/^lint:/'",
     "lint:knip": "knip",
     "lint:prettier": "prettier --check ./packages/nuqs",
