@@ -20,7 +20,8 @@
     "build:registry": "./src/registry/assemble.ts && shadcn build",
     "gen:schema": "./src/schemas/changelog-dto.gen.ts",
     "start": "next start",
-    "postinstall": "fumadocs-mdx",
+    "postinstall": "pnpm run typegen",
+    "typegen": "fumadocs-mdx",
     "test": "fumadocs-mdx && next typegen && fumadocs-mdx && tsc && vitest run"
   },
   "dependencies": {
