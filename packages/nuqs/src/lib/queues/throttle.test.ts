@@ -100,6 +100,11 @@ describe('throttle: ThrottleQueue option combination logic', () => {
       shallow: true
     })
   })
+  it('does not register a transition when none is given', () => {
+    const queue = new ThrottledQueue()
+    queue.push({ key: 'a', query: 'a', options: {} })
+    expect(queue.transitions.size).toBe(0)
+  })
   it('should compose transitions', async () => {
     const mockStartTransition = (callback: () => void) => {
       callback()
@@ -380,6 +385,21 @@ describe('throttle: flush', () => {
     vi.restoreAllMocks()
   })
 
+  it('returns the pending flush Promise, or the current search params when idle', async () => {
+    const adapter = {
+      ...createMockAdapter(),
+      getSearchParamsSnapshot: () => new URLSearchParams('?idle=true')
+    }
+    const queue = new ThrottledQueue()
+    await expect(queue.getPendingPromise(adapter)).resolves.toEqual(
+      new URLSearchParams('?idle=true')
+    )
+    queue.push({ key: 'a', query: 'a', options: {} })
+    const flushed = queue.flush(adapter)
+    expect(queue.getPendingPromise(adapter)).toBe(flushed)
+    vi.runAllTimers()
+    await flushed
+  })
   it('returns a Promise of the current search params if flushed without updates', async () => {
     const throttle = new ThrottledQueue()
     const mockAdapter = createMockAdapter()

@@ -11,7 +11,8 @@ export const browserProjects = [
     testFiles: [
       'src/useQueryStates.browser.test.tsx',
       'src/useQueryStates.mutation.browser.test.tsx',
-      'src/useQueryStates.discarded-reconcile.browser.test.tsx'
+      'src/useQueryStates.discarded-reconcile.browser.test.tsx',
+      'src/useQueryStates.lagging-adapter.browser.test.tsx'
     ]
   }
 ]
