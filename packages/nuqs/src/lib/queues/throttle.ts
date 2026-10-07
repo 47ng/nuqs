@@ -88,7 +88,7 @@ export class ThrottledQueue {
   // as hooks rendered with it need to sync again.
   acknowledge(
     adapterSearchParams: URLSearchParams,
-    getSearchParamsSnapshot = getSearchParamsSnapshotFromLocation
+    getSearchParamsSnapshot: () => URLSearchParams = getSearchParamsSnapshotFromLocation
   ): string[] {
     const urlSearchParams = getSearchParamsSnapshot()
     const changedKeys: string[] = []
