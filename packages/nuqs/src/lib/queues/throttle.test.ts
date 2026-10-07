@@ -234,6 +234,102 @@ describe('throttle: Abort & reset logic', () => {
   })
 })
 
+describe('throttle: acknowledgement of flushed values', () => {
+  beforeEach(() => {
+    vi.useFakeTimers()
+  })
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
+  const adapter = {
+    ...createMockAdapter(),
+    autoResetQueueOnUpdate: false
+  }
+
+  async function flush(queue: ThrottledQueue) {
+    const flushed = queue.flush(adapter)
+    vi.runAllTimers()
+    await flushed
+  }
+
+  async function createQueueAwaitingAcknowledgement() {
+    const queue = new ThrottledQueue()
+    queue.push({ key: 'selected', query: 'item-1', options: {} })
+    await flush(queue)
+    queue.push({ key: 'filter', query: null, options: {} })
+    return queue
+  }
+
+  const url = (search: string) => () => new URLSearchParams(search)
+
+  it('keeps a flushed value while the adapter search params lag behind the URL', async () => {
+    const queue = await createQueueAwaitingAcknowledgement()
+    queue.acknowledge(new URLSearchParams(), url('?selected=item-1'))
+    expect(queue.getQueuedQuery('selected')).toBe('item-1')
+  })
+
+  it('drops a flushed value once the adapter search params match the URL', async () => {
+    const queue = await createQueueAwaitingAcknowledgement()
+    const changed = queue.acknowledge(
+      new URLSearchParams('?selected=item-1'),
+      url('?selected=item-1')
+    )
+    expect(queue.getQueuedQuery('selected')).toBeUndefined()
+    expect(changed).toEqual([])
+  })
+
+  it('drops a flushed value when the URL changed externally and the adapter caught up', async () => {
+    const queue = await createQueueAwaitingAcknowledgement()
+    const changed = queue.acknowledge(
+      new URLSearchParams('?selected=other'),
+      url('?selected=other')
+    )
+    expect(queue.getQueuedQuery('selected')).toBeUndefined()
+    expect(changed).toEqual(['selected'])
+  })
+
+  it('drops a flushed value that did not change the URL', async () => {
+    const queue = await createQueueAwaitingAcknowledgement()
+    await flush(queue)
+    queue.push({ key: 'page', query: '2', options: {} })
+    const changed = queue.acknowledge(
+      new URLSearchParams(),
+      url('?selected=item-1')
+    )
+    expect(queue.getQueuedQuery('filter')).toBeUndefined()
+    expect(queue.getQueuedQuery('selected')).toBe('item-1')
+    expect(changed).toEqual([])
+  })
+
+  it('does not drop queued values that were not flushed yet', () => {
+    const queue = new ThrottledQueue()
+    queue.push({ key: 'selected', query: 'item-1', options: {} })
+    queue.acknowledge(new URLSearchParams(), url(''))
+    expect(queue.getQueuedQuery('selected')).toBe('item-1')
+  })
+
+  it('keeps values awaiting acknowledgement across later batches', async () => {
+    const queue = await createQueueAwaitingAcknowledgement()
+    await flush(queue)
+    queue.push({ key: 'page', query: '2', options: {} })
+    expect(queue.getQueuedQuery('selected')).toBe('item-1')
+    expect(queue.getQueuedQuery('filter')).toBeNull()
+  })
+
+  it('prefers a newer queued value over one awaiting acknowledgement', async () => {
+    const queue = await createQueueAwaitingAcknowledgement()
+    queue.push({ key: 'selected', query: 'item-2', options: {} })
+    expect(queue.getQueuedQuery('selected')).toBe('item-2')
+  })
+
+  it('clears and reports values awaiting acknowledgement on reset', async () => {
+    const queue = await createQueueAwaitingAcknowledgement()
+    expect(queue.reset()).toContain('selected')
+    expect(queue.getQueuedQuery('selected')).toBeUndefined()
+  })
+})
+
 describe('throttle: flush', () => {
   beforeEach(() => {
     vi.useFakeTimers()
@@ -482,6 +578,58 @@ describe('throttle: flush', () => {
       new URLSearchParams('?next=batch'),
       { history: 'replace', scroll: false, shallow: true }
     )
+  })
+
+  it('keeps a flushed batch readable after the next push, until acknowledged (when autoResetQueueOnUpdate: false)', async () => {
+    const adapter = {
+      ...createMockAdapter(),
+      autoResetQueueOnUpdate: false
+    }
+    const queue = new ThrottledQueue()
+    queue.push({ key: 'search', query: 'nuqs', options: {} })
+    const first = queue.flush(adapter)
+    vi.runAllTimers()
+    await first
+
+    queue.push({ key: 'next', query: 'batch', options: {} })
+    expect(queue.getQueuedQuery('search')).toBe('nuqs')
+    const second = queue.flush(adapter)
+    vi.runAllTimers()
+    await second
+    expect(adapter.updateUrl).toHaveBeenLastCalledWith(
+      new URLSearchParams('?next=batch'),
+      { history: 'replace', scroll: false, shallow: true }
+    )
+  })
+
+  it('does not keep a flushed batch after the next push (when autoResetQueueOnUpdate: true)', async () => {
+    const adapter = createMockAdapter()
+    const queue = new ThrottledQueue()
+    queue.push({ key: 'search', query: 'nuqs', options: {} })
+    const first = queue.flush(adapter)
+    vi.runAllTimers()
+    await first
+
+    queue.push({ key: 'next', query: 'batch', options: {} })
+    expect(queue.getQueuedQuery('search')).toBeUndefined()
+  })
+
+  it('does not keep a batch rejected by processUrlSearchParams after the next push', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {})
+    const adapter = {
+      ...createMockAdapter(),
+      autoResetQueueOnUpdate: false
+    }
+    const queue = new ThrottledQueue()
+    queue.push({ key: 'a', query: 'a', options: {} })
+    const promise = queue.flush(adapter, () => {
+      throw new Error('middleware error')
+    })
+    vi.runAllTimers()
+    await expect(promise).rejects.toBeDefined()
+
+    queue.push({ key: 'b', query: 'b', options: {} })
+    expect(queue.getQueuedQuery('a')).toBeUndefined()
   })
 
   it('applies the adapter rate-limit factor to the initial delay', async () => {

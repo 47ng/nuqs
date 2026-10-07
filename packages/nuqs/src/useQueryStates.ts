@@ -264,6 +264,9 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
   // render-time reconcile there (a stale frame until the next URL change, #1273).
   useEffect(() => {
     committedPathnameRef.current = adapter.pathname ?? location.pathname
+    globalThrottleQueue
+      .acknowledge(initialSearchParams, adapter.getSearchParamsSnapshot)
+      .forEach(key => debounceController.queuedQuerySync.emit(key))
     reconcile()
   }, [searchParamsSyncKey, adapter.pathname])
 

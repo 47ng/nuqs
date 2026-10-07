@@ -1,5 +1,6 @@
 import type { AdapterInterface, AdapterOptions } from '../../adapters/lib/defs'
 import type { Options } from '../../defs'
+import { compareQuery } from '../compare'
 import { compose } from '../compose'
 import { debug } from '../debug'
 import { error } from '../errors'
@@ -31,6 +32,9 @@ export function getSearchParamsSnapshotFromLocation(): URLSearchParams {
 
 export class ThrottledQueue {
   updateMap: UpdateMap = new Map()
+  // Flushed values kept readable until the adapter's search params show
+  // the URL they were written to (see `acknowledge`).
+  flushedMap: UpdateMap = new Map()
   options: Required<AdapterOptions> = {
     history: 'replace',
     scroll: false,
@@ -48,7 +52,9 @@ export class ThrottledQueue {
     timeMs: number = defaultRateLimit.timeMs
   ): void {
     if (this.resetQueueOnNextPush) {
+      const { flushedMap } = this
       this.reset()
+      this.flushedMap = flushedMap
       this.resetQueueOnNextPush = false
     }
     debug(7, key, query, options)
@@ -73,7 +79,29 @@ export class ThrottledQueue {
   }
 
   getQueuedQuery(key: string): Query | null | undefined {
-    return this.updateMap.get(key)
+    return (this.updateMap.has(key) ? this.updateMap : this.flushedMap).get(key)
+  }
+
+  // Adapters that update their search params in a transition can lag behind
+  // the URL, so flushed values stay readable until the adapter catches up.
+  // Returns the keys whose dropped value differs from the adapter's,
+  // as hooks rendered with it need to sync again.
+  acknowledge(
+    adapterSearchParams: URLSearchParams,
+    getSearchParamsSnapshot = getSearchParamsSnapshotFromLocation
+  ): string[] {
+    const urlSearchParams = getSearchParamsSnapshot()
+    const changedKeys: string[] = []
+    this.flushedMap.forEach((query, key) => {
+      const adapterQuery = adapterSearchParams.getAll(key)
+      if (compareQuery(adapterQuery, urlSearchParams.getAll(key))) {
+        this.flushedMap.delete(key)
+        if (!compareQuery(adapterQuery, query === null ? [] : [query].flat())) {
+          changedKeys.push(key)
+        }
+      }
+    })
+    return changedKeys
   }
 
   getPendingPromise({
@@ -113,6 +141,7 @@ export class ThrottledQueue {
       if (error === null) {
         this.resolvers!.resolve(search)
         this.resetQueueOnNextPush = true
+        this.flushedMap = new Map([...this.flushedMap, ...this.updateMap])
       } else {
         this.resolvers!.reject(search)
       }
@@ -150,9 +179,10 @@ export class ThrottledQueue {
   }
 
   reset(): string[] {
-    const queuedKeys = Array.from(this.updateMap.keys())
+    const queuedKeys = [...this.updateMap.keys(), ...this.flushedMap.keys()]
     debug(10, JSON.stringify(Object.fromEntries(this.updateMap)))
     this.updateMap.clear()
+    this.flushedMap = new Map()
     this.transitions.clear()
     this.options = {
       history: 'replace',
