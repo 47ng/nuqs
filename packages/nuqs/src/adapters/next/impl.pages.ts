@@ -26,7 +26,8 @@ export function isPagesRouter(): boolean {
 const adapterState = globalSingleton('next-pages-router-update', () => ({
   isNuqsUpdate: false,
   navigationHandled: false,
-  fallbackScheduled: false
+  fallbackScheduled: false,
+  pendingSearch: null as URLSearchParams | null
 }))
 
 function onNavigation() {
@@ -34,6 +35,7 @@ function onNavigation() {
     return
   }
   adapterState.navigationHandled = true
+  adapterState.pendingSearch = null
   resetQueues()
 }
 
@@ -81,6 +83,8 @@ export function useNuqsNextPagesRouterAdapter(): AdapterInterface {
   }, [JSON.stringify(router?.query)])
 
   const updateUrl: UpdateUrlFunction = useCallback((search, options) => {
+    const pendingSearch = new URLSearchParams(search)
+    adapterState.pendingSearch = pendingSearch
     // While the Next.js team doesn't recommend using internals like this,
     // we need direct access to the pages router, as a bound/closured version from
     // useRouter may be out of date by the time the updateUrl function is called,
@@ -125,9 +129,15 @@ export function useNuqsNextPagesRouterAdapter(): AdapterInterface {
           }
         )
         .finally(() => {
+          if (adapterState.pendingSearch === pendingSearch) {
+            adapterState.pendingSearch = null
+          }
           adapterState.isNuqsUpdate = false
         })
     } catch (error) {
+      if (adapterState.pendingSearch === pendingSearch) {
+        adapterState.pendingSearch = null
+      }
       adapterState.isNuqsUpdate = false
       throw error
     }
@@ -135,6 +145,10 @@ export function useNuqsNextPagesRouterAdapter(): AdapterInterface {
 
   return {
     searchParams,
+    getSearchParamsSnapshot: useCallback(
+      () => new URLSearchParams(adapterState.pendingSearch ?? location.search),
+      []
+    ),
     updateUrl,
     autoResetQueueOnUpdate: false
   }
