@@ -27,6 +27,52 @@ async function readLoaderCall(page: Page): Promise<number> {
 }
 
 export const testRepro1563Link = defineTest('repro-1563-link', ({ path }) => {
+  it('blocks Back and Forward through separate deep and shallow pushes after commit', async ({
+    page
+  }) => {
+    it.setTimeout(15_000)
+    await navigateToRepro(page, path, '?test=init&delay=1000', {
+      shallowHistory: 'push'
+    })
+    await page.locator('#push').click()
+    await expect(page.locator('#navigation-state')).toHaveText('loading')
+    await page.locator('#shallow-push').click()
+    await expectSearch(page, { test: 'pass', shallow: 'pass' })
+    await expect(page.locator('#navigation-state')).toHaveText('idle')
+    await page.locator('#block-links').check()
+    await page.evaluate(() => {
+      document.body.dataset.pushTest = 'mounted'
+      history.back()
+    })
+    await expect(page.locator('#blocker')).toHaveText('blocked')
+    await expectSearch(page, { test: 'pass', shallow: 'pass' })
+    await page.locator('#cancel-link').click()
+    await expect(page.locator('#blocker')).toHaveText('unblocked')
+    await expectSearch(page, { test: 'pass', shallow: 'pass' })
+    await page.evaluate(() => history.back())
+    await expect(page.locator('#blocker')).toHaveText('blocked')
+    await page.locator('#proceed-link').click()
+    await expectSearch(page, { test: 'pass', shallow: null })
+    await expect(page.locator('#navigation-state')).toHaveText('idle')
+    await expect(page.locator('#state')).toHaveText('pass')
+    await expect(page.locator('#shallow-state')).toBeEmpty()
+    await page.evaluate(() => history.forward())
+    await expect(page.locator('#blocker')).toHaveText('blocked')
+    await expectSearch(page, { test: 'pass', shallow: null })
+    await page.locator('#cancel-link').click()
+    await expect(page.locator('#blocker')).toHaveText('unblocked')
+    await page.evaluate(() => history.forward())
+    await expect(page.locator('#blocker')).toHaveText('blocked')
+    await page.locator('#proceed-link').click()
+    await expectSearch(page, { test: 'pass', shallow: 'pass' })
+    await expect(page.locator('#navigation-state')).toHaveText('idle')
+    await expect(page.locator('#state')).toHaveText('pass')
+    await expect(page.locator('#shallow-state')).toHaveText('pass')
+    expect(await page.evaluate(() => document.body.dataset.pushTest)).toBe(
+      'mounted'
+    )
+  })
+
   it('keeps a queued update when a separate Link is canceled', async ({
     page
   }) => {
@@ -305,7 +351,7 @@ export const testRepro1563 = defineTest('repro-1563', ({ path }) => {
     expect(await readLoaderCall(page)).toBe(initialLoaderCall + 1)
   })
 
-  it('currently coalesces a shallow push with a pending deep push', async ({
+  it('keeps separate shallow and pending deep push entries', async ({
     page
   }) => {
     await navigateToRepro(page, path, '?test=init&delay=1000', {
@@ -319,8 +365,13 @@ export const testRepro1563 = defineTest('repro-1563', ({ path }) => {
     await expectSearch(page, { test: 'pass', shallow: 'pass' })
     await expect(page.locator('#navigation-state')).toHaveText('idle')
     await expectSearch(page, { test: 'pass', shallow: 'pass' })
-    expect(await readHistoryIndex(page)).toBe(initialIndex + 1)
+    expect(await readHistoryIndex(page)).toBe(initialIndex + 2)
     expect(await readLoaderCall(page)).toBe(initialLoaderCall + 1)
+    await page.goBack()
+    await expectSearch(page, { test: 'pass', shallow: null })
+    await expect(page.locator('#state')).toHaveText('pass')
+    await expect(page.locator('#loader-state')).toHaveText('pass')
+    expect(await readHistoryIndex(page)).toBe(initialIndex + 1)
     await page.goBack()
     await expect(page.locator('#state')).toHaveText('init')
     expect(await readHistoryIndex(page)).toBe(initialIndex)

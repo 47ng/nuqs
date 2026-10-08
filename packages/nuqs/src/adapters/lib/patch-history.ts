@@ -618,8 +618,10 @@ export function patchHistory(
   }
   history.pushState = function nuqs_pushState(state, marker, url) {
     if (marker === historyUpdateMarker) {
+      const onPendingPush = isOnPendingPushEntry()
       const onCancelledPush = isOnCancelledPushEntry()
-      const onTrackedEntry = isOnPendingReplaceEntry() || onCancelledPush
+      const onTrackedEntry =
+        onPendingPush || isOnPendingReplaceEntry() || onCancelledPush
       const current = getPendingNavigation()
       const isMarkedPendingPush =
         current?.history === 'push' &&
@@ -629,11 +631,17 @@ export function patchHistory(
       const nextState =
         isMarkedPendingPush || typeof state?.idx !== 'number'
           ? state
-          : {
-              ...state,
-              [historyUpdateOffsetMarker]:
-                getHistoryStateOffset(history.state) + 1
-            }
+          : onPendingPush
+            ? {
+                ...state,
+                idx: state.idx + getHistoryStateOffset(state),
+                [historyUpdateOffsetMarker]: 1
+              }
+            : {
+                ...state,
+                [historyUpdateOffsetMarker]:
+                  getHistoryStateOffset(history.state) + 1
+              }
       originalPushState.call(history, nextState, '', url)
       if (onTrackedEntry) {
         movePendingHref()
