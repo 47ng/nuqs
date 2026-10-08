@@ -9,7 +9,7 @@ export const testStitchingSlowLoader = defineTest(
   'Stitching - slow loader',
   ({ path }) => {
     for (const hook of ['useQueryState', 'useQueryStates'] as const) {
-      it(`keeps stitching updates while a deep push loader is pending (${hook})`, async ({
+      it(`currently coalesces deep pushes across keys while a loader is pending (${hook})`, async ({
         page
       }) => {
         await navigateTo(
