@@ -262,8 +262,12 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
   // leaves `searchParamsSyncKey` unchanged, so without it the recorded pathname
   // would stay frozen on the previous route and wrongly gate off the next
   // render-time reconcile there (a stale frame until the next URL change, #1273).
+  // It also lets the queue drop flushed values once the adapter shows them (#1612).
   useEffect(() => {
     committedPathnameRef.current = adapter.pathname ?? location.pathname
+    globalThrottleQueue
+      .acknowledge(initialSearchParams, adapter.getSearchParamsSnapshot)
+      .forEach(key => debounceController.queuedQuerySync.emit(key))
     reconcile()
   }, [searchParamsSyncKey, adapter.pathname])
 

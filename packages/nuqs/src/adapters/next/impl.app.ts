@@ -91,7 +91,7 @@ export function NavigationSpy() {
   const prevPathname = useRef(pathname)
   // Intentionally in the render phase (not an effect): the queue must be
   // cleared before the new page's components render so they don't read
-  // stale values via getQueuedQuery. This is safe because:
+  // stale values (pending or flushed) via getQueuedQuery. This is safe because:
   // - In StrictMode the second render sees prevPathname === pathname (no-op)
   // - globalThrottleQueue.reset() is idempotent
   // - No React state updates are triggered (no useSyncExternalStore emissions)
