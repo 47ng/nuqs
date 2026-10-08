@@ -1,4 +1,5 @@
 // #region Functions
+export function configure(_) {}
 export function createLoader(_, _) {}
 export function createMultiParser(_) {}
 export function createParser(_) {}
