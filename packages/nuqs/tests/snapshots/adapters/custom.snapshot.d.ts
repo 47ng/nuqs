@@ -6,6 +6,7 @@ export type unstable_AdapterInterface = {
   searchParams: URLSearchParams;
   pathname?: string;
   updateUrl: UpdateUrlFunction;
+  scheduleFlush?: (_: () => void, _: number, _: AbortSignal) => void;
   getSearchParamsSnapshot?: () => URLSearchParams;
   rateLimitFactor?: number;
   autoResetQueueOnUpdate?: boolean;

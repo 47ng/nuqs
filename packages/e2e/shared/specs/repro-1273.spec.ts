@@ -21,6 +21,12 @@ export const testRepro1273 = defineTest('repro-1273', ({ path }) => {
     )
     await expect(page.getByRole('code')).toHaveText('test: 1') // Test eventual consistency
 
+    // The DOM can update before the passive effect's console message reaches
+    // Playwright. Observe that commit before clearing the navigation's logs.
+    await expect
+      .poll(() => logSpy.logs.filter(log => log === 'commit: 1').length)
+      .toBeGreaterThan(0)
+
     // Navigate back
     logSpy.logs.length = 0 // Clear logs
     await page.goBack()
@@ -82,6 +88,10 @@ export const testRepro1273 = defineTest('repro-1273', ({ path }) => {
         url.searchParams.get('test') === '1'
     )
     await expect(page.getByRole('code')).toHaveText('test: 1') // Test eventual consistency
+
+    await expect
+      .poll(() => logSpy.logs.filter(log => log === 'commit: 1').length)
+      .toBeGreaterThan(0)
 
     // Navigate back
     logSpy.logs.length = 0 // Clear logs

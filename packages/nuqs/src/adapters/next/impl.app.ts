@@ -7,6 +7,7 @@ import {
   useRef
 } from 'react'
 import { debug } from '../../lib/debug'
+import { globalSingleton } from '../../lib/global-singleton'
 import {
   resetQueues,
   setQueueResetMutex,
@@ -14,6 +15,8 @@ import {
 } from '../../lib/queues/reset'
 import { globalThrottleQueue } from '../../lib/queues/throttle'
 import { renderQueryString } from '../../lib/url-encoding'
+import { timeout } from '../../lib/timeout'
+import { withResolvers, type Resolvers } from '../../lib/with-resolvers'
 import type { AdapterInterface, UpdateUrlFunction } from '../lib/defs'
 import {
   historyUpdateMarker,
@@ -25,9 +28,33 @@ import {
 // and https://github.com/47ng/nuqs/discussions/960#discussioncomment-12699171
 const NUM_HISTORY_CALLS_PER_UPDATE = 3
 
+// Shared with all hooks (including duplicate library copies). A hook may render
+// and suspend before mounting, so its own effect cannot release this barrier.
+const navigation = globalSingleton('next-app-navigation', () => ({
+  pending: undefined as (Resolvers<void> & { from: string }) | undefined
+}))
+
+function scheduleFlush(flush: () => void, delay: number, signal: AbortSignal) {
+  timeout(
+    () => {
+      if (navigation.pending) {
+        void navigation.pending.promise.then(() => {
+          if (!signal.aborted) flush()
+        })
+      } else {
+        flush()
+      }
+    },
+    delay,
+    signal
+  )
+}
+
 function onPopState() {
   setQueueResetMutex(0)
   resetQueues()
+  navigation.pending?.resolve()
+  navigation.pending = undefined
 }
 
 function onHistoryStateUpdate() {
@@ -38,7 +65,17 @@ function onHistoryStateUpdate() {
   // The useInsertionEffect in question is the one in the Next.js app router core
   //  dealing with history API calls.
   spinQueueResetMutex(() => {
-    queueMicrotask(resetQueues)
+    const pending = navigation.pending
+    queueMicrotask(() => {
+      resetQueues()
+      if (
+        navigation.pending === pending &&
+        pending?.from === location.pathname
+      ) {
+        pending.resolve()
+        navigation.pending = undefined
+      }
+    })
   })
 }
 
@@ -53,19 +90,30 @@ function patchHistory() {
   // patching history state after our update) also use replaceState but
   // WITHOUT the marker, and there is no reliable way to distinguish them
   // from external replaceState calls. We skip onHistoryStateUpdate for
-  // all replaceState to avoid cascades prematurely resetting the queue.
-  // Trade-off: external history.replaceState() on the same pathname won't
-  // cancel pending nuqs work. Cross-page navigations are still covered
+  // ordinary replaceState to avoid cascades prematurely resetting the queue.
+  // A commit back to a pending navigation's source path is handled below:
+  // it cancels speculative work whose NavigationSpy render was discarded.
+  // Outside that cancellation case, external history.replaceState() on the
+  // same pathname won't cancel pending nuqs work. Cross-page navigations are covered
   // by the pathname-based reset in NavigationSpy below, and pushState-
   // based navigations (Link clicks, router.push) are covered by the
   // pushState handler.
   history.replaceState = function nuqs_replaceState(state, marker, url) {
-    return originalReplaceState.call(
+    originalReplaceState.call(
       history,
       state,
       marker === historyUpdateMarker ? '' : marker,
       url
     )
+    // Next also commits when a suspended navigation is superseded by the
+    // already-active route. Its pathname context can bail out in that case,
+    // so NavigationSpy has no new effect to cancel the speculative batch.
+    const pending = navigation.pending
+    if (marker !== historyUpdateMarker && pending?.from === location.pathname) {
+      queueMicrotask(() => {
+        if (navigation.pending === pending) onPopState()
+      })
+    }
   }
   // pushState: nuqs's own calls carry the marker (stripped below).
   // External navigation (link clicks, router.push) uses pushState without
@@ -93,12 +141,23 @@ export function NavigationSpy() {
   // cleared before the new page's components render so they don't read
   // stale values (pending or flushed) via getQueuedQuery. This is safe because:
   // - In StrictMode the second render sees prevPathname === pathname (no-op)
-  // - globalThrottleQueue.reset() is idempotent
+  // - globalThrottleQueue.abort() is idempotent
   // - No React state updates are triggered (no useSyncExternalStore emissions)
   if (prevPathname.current !== pathname) {
     prevPathname.current = pathname
-    globalThrottleQueue.reset()
+    globalThrottleQueue.abort()
+    navigation.pending?.resolve()
+    navigation.pending = { ...withResolvers<void>(), from: location.pathname }
   }
+  const pending = navigation.pending
+  useEffect(() => {
+    // Next's history update runs in an insertion effect, before this commit.
+    // Render-time setters must not write the incoming query onto the old URL.
+    pending?.resolve()
+    if (navigation.pending === pending) {
+      navigation.pending = undefined
+    }
+  }, [pending])
   useEffect(() => {
     patchHistory()
     window.addEventListener('popstate', onPopState)
@@ -162,6 +221,7 @@ export function useNuqsNextAppRouterAdapter(): AdapterInterface {
     searchParams: optimisticSearchParams,
     pathname,
     updateUrl,
+    scheduleFlush,
     rateLimitFactor: NUM_HISTORY_CALLS_PER_UPDATE,
     autoResetQueueOnUpdate: false
   }
