@@ -18,6 +18,7 @@ export type UpdateQueueAdapterContext = Pick<
   | 'getSearchParamsSnapshot'
   | 'rateLimitFactor'
   | 'autoResetQueueOnUpdate'
+  | 'scheduleFlush'
 >
 
 export type UpdateQueuePushArgs = {
@@ -118,6 +119,7 @@ export class ThrottledQueue {
 
   flush(
     {
+      scheduleFlush = timeout,
       getSearchParamsSnapshot = getSearchParamsSnapshotFromLocation,
       rateLimitFactor = 1,
       ...adapter
@@ -166,12 +168,11 @@ export class ThrottledQueue {
       if (flushInMs === 0) {
         // Since we're already in the "next tick" from queued updates,
         // no need to do setTimeout(0) here.
-        flushNow()
-      } else {
-        timeout(flushNow, flushInMs, this.controller!.signal)
+        return flushNow()
       }
+      timeout(flushNow, flushInMs, this.controller!.signal)
     }
-    timeout(runOnNextTick, 0, this.controller.signal)
+    scheduleFlush(runOnNextTick, 0, this.controller.signal)
     return this.resolvers.promise
   }
 
@@ -200,7 +201,9 @@ export class ThrottledQueue {
   }
 
   applyPendingUpdates(
-    adapter: Required<Omit<UpdateQueueAdapterContext, 'rateLimitFactor'>>,
+    adapter: Required<
+      Omit<UpdateQueueAdapterContext, 'rateLimitFactor' | 'scheduleFlush'>
+    >,
     processUrlSearchParams?: (search: URLSearchParams) => URLSearchParams
   ): [URLSearchParams, null | unknown] {
     const { updateUrl, getSearchParamsSnapshot } = adapter

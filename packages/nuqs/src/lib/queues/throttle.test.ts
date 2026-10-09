@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { UpdateUrlFunction } from '../../adapters/lib/defs'
+import { withResolvers } from '../with-resolvers'
 import { defaultRateLimit } from './rate-limiting'
 import { ThrottledQueue, type UpdateQueueAdapterContext } from './throttle'
 
@@ -383,6 +384,76 @@ describe('throttle: flush', () => {
   })
   afterEach(() => {
     vi.restoreAllMocks()
+  })
+
+  it('waits for the route commit before reading the URL and flushing a batch', async () => {
+    const commit = withResolvers<void>()
+    let search = new URLSearchParams('route=old')
+    const adapter = {
+      ...createMockAdapter(),
+      scheduleFlush: (
+        flush: () => void,
+        _delay: number,
+        signal: AbortSignal
+      ) => {
+        void commit.promise.then(() => {
+          if (!signal.aborted) flush()
+        })
+      },
+      getSearchParamsSnapshot: () => new URLSearchParams(search)
+    }
+    const queue = new ThrottledQueue()
+    queue.push({ key: 'a', query: '1', options: {} })
+    const flushed = queue.flush(adapter)
+    const resolved = vi.fn()
+    void flushed.then(resolved)
+    await vi.runAllTimersAsync()
+    expect(adapter.updateUrl).not.toHaveBeenCalled()
+    expect(resolved).not.toHaveBeenCalled()
+
+    queue.push({ key: 'b', query: '2', options: {} })
+    expect(queue.flush(adapter)).toBe(flushed)
+    search = new URLSearchParams('route=new')
+    commit.resolve()
+    await vi.runAllTimersAsync()
+    await expect(flushed).resolves.toEqual(
+      new URLSearchParams('route=new&a=1&b=2')
+    )
+    expect(adapter.updateUrl).toHaveBeenCalledExactlyOnceWith(
+      new URLSearchParams('route=new&a=1&b=2'),
+      { history: 'replace', scroll: false, shallow: true }
+    )
+  })
+
+  it('does not let an aborted commit wait flush a later batch', async () => {
+    const commit = withResolvers<void>()
+    const abandonedAdapter = {
+      ...createMockAdapter(),
+      scheduleFlush: (
+        flush: () => void,
+        _delay: number,
+        signal: AbortSignal
+      ) => {
+        void commit.promise.then(() => {
+          if (!signal.aborted) flush()
+        })
+      }
+    }
+    const queue = new ThrottledQueue()
+    queue.push({ key: 'old', query: '1', options: {} })
+    const abandoned = queue.flush(abandonedAdapter)
+    await vi.runAllTimersAsync()
+    queue.abort()
+    await expect(abandoned).resolves.toEqual(new URLSearchParams())
+
+    const adapter = createMockAdapter()
+    queue.push({ key: 'new', query: '2', options: {} })
+    const flushed = queue.flush(adapter)
+    commit.resolve()
+    await vi.runAllTimersAsync()
+    await expect(flushed).resolves.toEqual(new URLSearchParams('new=2'))
+    expect(abandonedAdapter.updateUrl).not.toHaveBeenCalled()
+    expect(adapter.updateUrl).toHaveBeenCalledOnce()
   })
 
   it('returns the pending flush Promise, or the current search params when idle', async () => {

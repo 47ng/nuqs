@@ -16,6 +16,20 @@ export function testStitching({
   enableShallowFalse = true,
   ...config
 }: Config) {
+  // Keep one trace across actions so a delayed router commit of the same URL
+  // is deduplicated consistently, even after an assertion has completed.
+  const expectedSearches: Array<Record<string, string>> = [
+    { a: '1' },
+    { a: '1', b: '1' },
+    { a: '1', b: '1', c: '1' },
+    { a: '2', b: '1', c: '1' },
+    { a: '2', b: '2', c: '1' },
+    { a: '2', b: '2', c: '2' },
+    { a: '3', b: '2', c: '2' },
+    { a: '4', b: '2', c: '2' },
+    { a: '4', b: '4', c: '2' },
+    { a: '4', b: '4', c: '4' }
+  ]
   const hooks = ['useQueryState', 'useQueryStates'] as const
   const shallows = enableShallowFalse ? [true, false] : [true]
   const histories = ['replace', 'push'] as const
@@ -35,30 +49,15 @@ export function testStitching({
               using urlSpy = setupUrlSpy(page)
               await page.locator('#same-tick').click()
               await expect(page.locator('#client-state')).toHaveText('1,1,1')
-              await urlSpy.assertSearches([
-                { a: '1' },
-                { a: '1', b: '1' },
-                { a: '1', b: '1', c: '1' }
-              ])
+              await urlSpy.assertSearches(expectedSearches.slice(0, 3))
               await expectNoStitchingError(page)
-              urlSpy.reset()
               await page.locator('#same-tick').click()
               await expect(page.locator('#client-state')).toHaveText('2,2,2')
-              await urlSpy.assertSearches([
-                { a: '2', b: '1', c: '1' },
-                { a: '2', b: '2', c: '1' },
-                { a: '2', b: '2', c: '2' }
-              ])
+              await urlSpy.assertSearches(expectedSearches.slice(0, 6))
               await expectNoStitchingError(page)
-              urlSpy.reset()
               await page.locator('#same-tick-overlap').click()
               await expect(page.locator('#client-state')).toHaveText('4,4,4')
-              await urlSpy.assertSearches([
-                { a: '3', b: '2', c: '2' },
-                { a: '4', b: '2', c: '2' },
-                { a: '4', b: '4', c: '2' },
-                { a: '4', b: '4', c: '4' }
-              ])
+              await urlSpy.assertSearches(expectedSearches)
               await expectNoStitchingError(page)
             })
 
@@ -67,30 +66,15 @@ export function testStitching({
               using urlSpy = setupUrlSpy(page)
               await page.locator('#staggered').click()
               await expect(page.locator('#client-state')).toHaveText('1,1,1')
-              await urlSpy.assertSearches([
-                { a: '1' },
-                { a: '1', b: '1' },
-                { a: '1', b: '1', c: '1' }
-              ])
+              await urlSpy.assertSearches(expectedSearches.slice(0, 3))
               await expectNoStitchingError(page)
-              urlSpy.reset()
               await page.locator('#staggered').click()
               await expect(page.locator('#client-state')).toHaveText('2,2,2')
-              await urlSpy.assertSearches([
-                { a: '2', b: '1', c: '1' },
-                { a: '2', b: '2', c: '1' },
-                { a: '2', b: '2', c: '2' }
-              ])
+              await urlSpy.assertSearches(expectedSearches.slice(0, 6))
               await expectNoStitchingError(page)
-              urlSpy.reset()
               await page.locator('#staggered-overlap').click()
               await expect(page.locator('#client-state')).toHaveText('4,4,4')
-              await urlSpy.assertSearches([
-                { a: '3', b: '2', c: '2' },
-                { a: '4', b: '2', c: '2' },
-                { a: '4', b: '4', c: '2' },
-                { a: '4', b: '4', c: '4' }
-              ])
+              await urlSpy.assertSearches(expectedSearches)
               await expectNoStitchingError(page)
             })
           }

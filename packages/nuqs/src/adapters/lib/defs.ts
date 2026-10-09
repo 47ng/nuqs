@@ -20,6 +20,16 @@ export type AdapterInterface = {
   searchParams: URLSearchParams
   pathname?: string
   updateUrl: UpdateUrlFunction
+  /**
+   * Schedule a queued URL write, optionally waiting for the route to commit.
+   * Invoke once after the supplied delay and any route wait, unless aborted.
+   * Defaults to an abortable timeout.
+   */
+  scheduleFlush?: (
+    flush: () => void,
+    delay: number,
+    signal: AbortSignal
+  ) => void
   getSearchParamsSnapshot?: () => URLSearchParams
   rateLimitFactor?: number
   autoResetQueueOnUpdate?: boolean
