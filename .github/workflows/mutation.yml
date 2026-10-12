@@ -83,7 +83,7 @@ jobs:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
-          BASE_SHA="$(git rev-parse "$HEAD_SHA^")"
+          BASE_SHA="$(git merge-base "$BASE_SHA" "$HEAD_SHA")"
           git checkout --detach "$BASE_SHA"
       - name: Check whether the base supports mutation testing
         id: baseline
