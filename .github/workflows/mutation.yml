@@ -37,6 +37,8 @@ jobs:
         run: |
           if git diff --quiet "$BASE_SHA...$HEAD_SHA" -- \
             '.github/workflows/mutation.yml' \
+            'patches' \
+            'pnpm-workspace.yaml' \
             'packages/nuqs/src' \
             'packages/nuqs/tests' \
             'packages/nuqs/package.json' \
