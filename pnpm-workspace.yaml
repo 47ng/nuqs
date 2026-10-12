@@ -88,3 +88,6 @@ overrides:
   '@remix-run/server-runtime>@remix-run/router': 1.23.4
   '@remix-run/react>react-router': 6.30.6
   '@remix-run/react>react-router-dom': 6.30.6
+
+patchedDependencies:
+  '@vitest/browser-playwright@4.1.11': patches/@vitest__browser-playwright@4.1.11.patch
