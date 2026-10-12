@@ -156,7 +156,7 @@ jobs:
             "$RUNNER_TEMP/mutation-baseline/stryker-incremental.json" \
             packages/nuqs/reports/mutation/stryker-incremental.json \
             > "$RUNNER_TEMP/mutation-gate.log" 2>&1 || status=$?
-          if [ "$status" -le 1 ]; then
+          if [ "$status" -eq 1 ]; then
             echo 'retry=true' >> "$GITHUB_OUTPUT"
             echo '::notice::Mutation debt increased. Running the baseline again to rule out a spurious baseline kill.'
             exit 0
