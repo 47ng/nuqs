@@ -7,6 +7,7 @@ import { afterEach, describe, expect, it } from 'vitest'
 import {
   compareMutationReports,
   formatUndetectedMutants,
+  mergeBaselineReports,
   summarizeMutationReport,
   type MutationReport
 } from './mutation-gate'
@@ -79,20 +80,26 @@ afterEach(() => {
 function runGate(
   baseline: unknown,
   candidate: unknown,
-  env: Record<string, string> = {}
+  env: Record<string, string> = {},
+  baselineRetry?: unknown
 ) {
   const directory = mkdtempSync(join(tmpdir(), 'nuqs-mutation-gate-'))
   temporaryDirectories.push(directory)
   const baselinePath = join(directory, 'baseline.json')
   const candidatePath = join(directory, 'candidate.json')
+  const baselineRetryPath = join(directory, 'baseline-retry.json')
   writeFileSync(baselinePath, JSON.stringify(baseline))
   writeFileSync(candidatePath, JSON.stringify(candidate))
+  if (baselineRetry !== undefined) {
+    writeFileSync(baselineRetryPath, JSON.stringify(baselineRetry))
+  }
   return spawnSync(
     process.execPath,
     [
       fileURLToPath(new URL('./mutation-gate.ts', import.meta.url)),
       baselinePath,
-      candidatePath
+      candidatePath,
+      ...(baselineRetry === undefined ? [] : [baselineRetryPath])
     ],
     {
       encoding: 'utf8',
@@ -406,6 +413,53 @@ describe('mutation gate', () => {
     expect(result.stderr).toContain(
       'https://github.com/47ng/nuqs/blob/deadbeef/packages/nuqs/src/example.ts#L1'
     )
+  })
+
+  it('counts a mutant as undetected when either baseline run left it undetected', () => {
+    const merged = mergeBaselineReports(
+      report(['Killed', 'Survived', 'Killed', 'NoCoverage']),
+      report(['Survived', 'Killed', 'Timeout', 'NoCoverage'])
+    )
+
+    expect(
+      merged.files['src/example.ts']!.mutants.map(mutant => mutant.status)
+    ).toEqual(['Survived', 'Survived', 'Killed', 'NoCoverage'])
+  })
+
+  it('rejects a baseline retry of different code', () => {
+    const retry = report(['Killed'])
+    retry.files['src/example.ts']!.source = 'changed'
+
+    expect(() => mergeBaselineReports(report(['Killed']), retry)).toThrow(
+      'baseline retry does not match the baseline'
+    )
+    expect(() =>
+      mergeBaselineReports(report(['Killed']), report(['Killed', 'Killed']))
+    ).toThrow('baseline retry does not match the baseline')
+  })
+
+  it('passes when the baseline retry shows a spurious baseline kill', () => {
+    const result = runGate(
+      report(['Killed']),
+      report(['Survived']),
+      {},
+      report(['Survived'])
+    )
+    expect(result.error, result.stderr).toBeUndefined()
+    expect(result.status).toBe(0)
+    expect(result.stdout).toContain('Mutation debt stayed identical')
+  })
+
+  it('still fails with a baseline retry when the candidate adds debt', () => {
+    const result = runGate(
+      report(['Killed']),
+      report(['Survived']),
+      {},
+      report(['Killed'])
+    )
+    expect(result.error, result.stderr).toBeUndefined()
+    expect(result.status).toBe(1)
+    expect(result.stderr).toContain('Mutation debt increased by 1')
   })
 
   it('exits with an error for malformed reports', () => {

@@ -191,6 +191,47 @@ export function summarizeMutationReport(
   return summary
 }
 
+export function mergeBaselineReports(
+  baseline: MutationReport,
+  retry: MutationReport
+): MutationReport {
+  const baselineFiles = Object.keys(baseline.files)
+  const sameCode =
+    baselineFiles.length === Object.keys(retry.files).length &&
+    baselineFiles.every(file => {
+      const { source, mutants } = baseline.files[file]!
+      const retried = retry.files[file]
+      return (
+        retried?.source === source &&
+        retried.mutants.length === mutants.length &&
+        mutants.every(({ id }) => retried.mutants.some(m => m.id === id))
+      )
+    })
+  if (!sameCode) {
+    throw new Error('baseline retry does not match the baseline')
+  }
+  return {
+    ...baseline,
+    files: Object.fromEntries(
+      Object.entries(baseline.files).map(([file, entry]) => [
+        file,
+        {
+          ...entry,
+          mutants: entry.mutants.map(mutant => {
+            const retried = retry.files[file]!.mutants.find(
+              ({ id }) => id === mutant.id
+            )!
+            return UNDETECTED_STATUSES.has(retried.status) &&
+              !UNDETECTED_STATUSES.has(mutant.status)
+              ? retried
+              : mutant
+          })
+        }
+      ])
+    )
+  }
+}
+
 function sourceAtLocation(
   source: string,
   location?: UndetectedMutant['location']
@@ -398,15 +439,19 @@ async function readReport(path: string): Promise<MutationReport> {
 }
 
 async function main(): Promise<void> {
-  const [baselinePath, candidatePath, ...extra] = process.argv.slice(2)
+  const [baselinePath, candidatePath, baselineRetryPath, ...extra] =
+    process.argv.slice(2)
   if (!baselinePath || !candidatePath || extra.length > 0) {
     throw new Error(
-      'usage: mutation-gate.ts <baseline-report.json> <candidate-report.json>'
+      'usage: mutation-gate.ts <baseline-report.json> <candidate-report.json> [baseline-retry-report.json]'
     )
   }
 
+  const baseline = await readReport(baselinePath)
   const result = compareMutationReports(
-    await readReport(baselinePath),
+    baselineRetryPath
+      ? mergeBaselineReports(baseline, await readReport(baselineRetryPath))
+      : baseline,
     await readReport(candidatePath)
   )
   process.stdout.write(JSON.stringify(result, null, 2) + '\n')
