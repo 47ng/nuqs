@@ -436,6 +436,24 @@ describe('mutation gate', () => {
     expect(() =>
       mergeBaselineReports(report(['Killed']), report(['Killed', 'Killed']))
     ).toThrow('baseline retry does not match the baseline')
+
+    const renamed = report(['Killed', 'Killed'])
+    renamed.files['src/example.ts']!.mutants[1]!.id = '2'
+    expect(() =>
+      mergeBaselineReports(report(['Killed', 'Killed']), renamed)
+    ).toThrow('baseline retry does not match the baseline')
+
+    const missingFile = report(['Killed'])
+    missingFile.files = { 'src/other.ts': missingFile.files['src/example.ts']! }
+    expect(() => mergeBaselineReports(report(['Killed']), missingFile)).toThrow(
+      'baseline retry does not match the baseline'
+    )
+
+    const fewerTests = report(['Killed'])
+    fewerTests.config.scope.node.executedTests = []
+    expect(() => mergeBaselineReports(report(['Killed']), fewerTests)).toThrow(
+      'baseline retry does not match the baseline'
+    )
   })
 
   it('passes when the baseline retry shows a spurious baseline kill', () => {

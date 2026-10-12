@@ -197,6 +197,8 @@ export function mergeBaselineReports(
 ): MutationReport {
   const baselineFiles = Object.keys(baseline.files)
   const sameCode =
+    JSON.stringify(baseline.config.scope) ===
+      JSON.stringify(retry.config.scope) &&
     baselineFiles.length === Object.keys(retry.files).length &&
     baselineFiles.every(file => {
       const { source, mutants } = baseline.files[file]!
