@@ -142,7 +142,51 @@ jobs:
           packages/nuqs
           packages/nuqs/reports/mutation/stryker-incremental.json
       - name: Enforce the mutation-debt ratchet
+        id: gate
         if: steps.baseline.outputs.supported == 'true'
+        env:
+          MUTATION_SOURCE_ROOT: packages/nuqs
+          MUTATION_SOURCE_URL: ${{ github.server_url }}/${{ github.repository }}/blob/${{ github.event.pull_request.head.sha }}
+        run: |
+          status=0
+          node packages/scripts/mutation-gate.ts \
+            "$RUNNER_TEMP/mutation-baseline/stryker-incremental.json" \
+            packages/nuqs/reports/mutation/stryker-incremental.json \
+            > "$RUNNER_TEMP/mutation-gate.log" 2>&1 || status=$?
+          if [ "$status" -eq 1 ]; then
+            echo 'retry=true' >> "$GITHUB_OUTPUT"
+            echo '::notice::Mutation debt increased. Running the baseline again to rule out a spurious baseline kill.'
+            exit 0
+          fi
+          cat "$RUNNER_TEMP/mutation-gate.log"
+          exit "$status"
+      - name: Run the mutation baseline again
+        if: steps.gate.outputs.retry == 'true'
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          worktree="$RUNNER_TEMP/mutation-baseline-worktree"
+          git worktree add --detach "$worktree" "$(git merge-base "$BASE_SHA" "$HEAD_SHA")"
+          cd "$worktree"
+          pnpm install --ignore-scripts --frozen-lockfile --filter nuqs...
+          (cd packages/nuqs && ./node_modules/.bin/playwright install chromium)
+          pnpm exec turbo run mutation --filter=nuqs -- --force
+          node "$RUNNER_TEMP/mutation-scope.mjs" \
+            packages/nuqs \
+            packages/nuqs/reports/mutation/stryker-incremental.json
+          cp -R packages/nuqs/reports/mutation "$RUNNER_TEMP/mutation-baseline-retry"
+      - name: Upload baseline retry mutation report
+        if: always() && steps.gate.outputs.retry == 'true'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: mutation-baseline-retry-${{ github.event.pull_request.number }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/mutation-baseline-retry/
+          if-no-files-found: ignore
+          overwrite: true
+          retention-days: 14
+      - name: Enforce the mutation-debt ratchet with the baseline retry
+        if: steps.gate.outputs.retry == 'true'
         env:
           MUTATION_SOURCE_ROOT: packages/nuqs
           MUTATION_SOURCE_URL: ${{ github.server_url }}/${{ github.repository }}/blob/${{ github.event.pull_request.head.sha }}
@@ -150,6 +194,7 @@ jobs:
           node packages/scripts/mutation-gate.ts
           "$RUNNER_TEMP/mutation-baseline/stryker-incremental.json"
           "packages/nuqs/reports/mutation/stryker-incremental.json"
+          "$RUNNER_TEMP/mutation-baseline-retry/stryker-incremental.json"
       - name: Upload candidate mutation report
         if: always() && steps.candidate_scope.outcome == 'success'
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
