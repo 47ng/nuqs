@@ -24,6 +24,9 @@ const config = {
   ...shared,
   mutate: browserMutate,
   testFiles: browserTestFiles,
+  // Browser test files run in parallel, so Stryker measures no overhead,
+  // and the margin must also cover a worker's cold start (Chromium + Vite).
+  timeoutMS: 10_000,
   vitest: {
     configFile: 'vitest.browser.mutation.config.ts',
     related: false
