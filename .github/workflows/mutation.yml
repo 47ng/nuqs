@@ -170,7 +170,6 @@ jobs:
           git worktree add --detach "$worktree" "$(git merge-base "$BASE_SHA" "$HEAD_SHA")"
           cd "$worktree"
           pnpm install --ignore-scripts --frozen-lockfile --filter nuqs...
-          (cd packages/nuqs && ./node_modules/.bin/playwright install chromium)
           pnpm exec turbo run mutation --filter=nuqs -- --force
           node "$RUNNER_TEMP/mutation-scope.mjs" \
             packages/nuqs \
