@@ -132,6 +132,9 @@ jobs:
       - name: Install candidate Playwright Chromium
         run: ./node_modules/.bin/playwright install chromium
         working-directory: packages/nuqs
+        env:
+          # Keep the Chromium of the merge base for the baseline retry.
+          PLAYWRIGHT_SKIP_BROWSER_GC: '1'
       - name: Run candidate mutation tests
         run: pnpm exec turbo run mutation --filter=nuqs -- --force
       - name: Record candidate mutation scope
@@ -194,6 +197,13 @@ jobs:
           "$RUNNER_TEMP/mutation-baseline/stryker-incremental.json"
           "packages/nuqs/reports/mutation/stryker-incremental.json"
           "$RUNNER_TEMP/mutation-baseline-retry/stryker-incremental.json"
+      - name: Show the first mutation gate result
+        if: failure() && steps.gate.outputs.retry == 'true'
+        run: |
+          token="$(cat /proc/sys/kernel/random/uuid)"
+          echo "::stop-commands::$token"
+          cat "$RUNNER_TEMP/mutation-gate.log"
+          echo "::$token::"
       - name: Upload candidate mutation report
         if: always() && steps.candidate_scope.outcome == 'success'
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
