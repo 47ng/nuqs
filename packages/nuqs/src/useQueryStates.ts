@@ -450,7 +450,6 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
       stableKeyMap,
       resolvedUrlKeys,
       adapter.updateUrl,
-      adapter.scheduleFlush,
       adapter.getSearchParamsSnapshot,
       adapter.rateLimitFactor,
       processUrlSearchParams
