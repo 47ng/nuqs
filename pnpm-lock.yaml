@@ -278,7 +278,7 @@ overrides:
   '@remix-run/react>react-router-dom': 6.30.6
 
 patchedDependencies:
-  '@vitest/browser-playwright@4.1.11': 3906d6c8724a7390858c25af330d4a91b718c59847cecb446f1fd9d380b0d45f
+  '@vitest/browser-playwright@4.1.11': 99dec5d90d7e408476aad292437b38dc83fda39939985133eceec0a990d25b23
 
 importers:
 
@@ -1057,7 +1057,7 @@ importers:
         version: 6.0.3(babel-plugin-react-compiler@1.0.0)(vite@8.1.5(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.0))
       '@vitest/browser-playwright':
         specifier: catalog:vitest
-        version: 4.1.11(patch_hash=3906d6c8724a7390858c25af330d4a91b718c59847cecb446f1fd9d380b0d45f)(msw@2.15.0(@types/node@24.13.3)(typescript@7.0.2))(playwright@1.61.1)(vite@8.1.5(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.0))(vitest@4.1.11)
+        version: 4.1.11(patch_hash=99dec5d90d7e408476aad292437b38dc83fda39939985133eceec0a990d25b23)(msw@2.15.0(@types/node@24.13.3)(typescript@7.0.2))(playwright@1.61.1)(vite@8.1.5(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.0))(vitest@4.1.11)
       '@vitest/coverage-v8':
         specifier: catalog:vitest
         version: 4.1.11(@vitest/browser@4.1.11)(vitest@4.1.11)
@@ -13853,7 +13853,7 @@ snapshots:
     optionalDependencies:
       babel-plugin-react-compiler: 1.0.0
 
-  '@vitest/browser-playwright@4.1.11(patch_hash=3906d6c8724a7390858c25af330d4a91b718c59847cecb446f1fd9d380b0d45f)(msw@2.15.0(@types/node@24.13.3)(typescript@7.0.2))(playwright@1.61.1)(vite@8.1.5(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.0))(vitest@4.1.11)':
+  '@vitest/browser-playwright@4.1.11(patch_hash=99dec5d90d7e408476aad292437b38dc83fda39939985133eceec0a990d25b23)(msw@2.15.0(@types/node@24.13.3)(typescript@7.0.2))(playwright@1.61.1)(vite@8.1.5(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.0))(vitest@4.1.11)':
     dependencies:
       '@vitest/browser': 4.1.11(msw@2.15.0(@types/node@24.13.3)(typescript@7.0.2))(vite@8.1.5(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.0))(vitest@4.1.11)
       '@vitest/mocker': 4.1.11(msw@2.15.0(@types/node@24.13.3)(typescript@7.0.2))(vite@8.1.5(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.0))
@@ -19094,7 +19094,7 @@ snapshots:
       why-is-node-running: 2.3.0
     optionalDependencies:
       '@types/node': 24.13.3
-      '@vitest/browser-playwright': 4.1.11(patch_hash=3906d6c8724a7390858c25af330d4a91b718c59847cecb446f1fd9d380b0d45f)(msw@2.15.0(@types/node@24.13.3)(typescript@7.0.2))(playwright@1.61.1)(vite@8.1.5(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.0))(vitest@4.1.11)
+      '@vitest/browser-playwright': 4.1.11(patch_hash=99dec5d90d7e408476aad292437b38dc83fda39939985133eceec0a990d25b23)(msw@2.15.0(@types/node@24.13.3)(typescript@7.0.2))(playwright@1.61.1)(vite@8.1.5(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.0))(vitest@4.1.11)
       '@vitest/coverage-v8': 4.1.11(@vitest/browser@4.1.11)(vitest@4.1.11)
     transitivePeerDependencies:
       - msw
