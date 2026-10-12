@@ -109,6 +109,15 @@ jobs:
             packages/nuqs/reports/mutation/stryker-incremental.json
           cp -R packages/nuqs/reports/mutation \
             "$RUNNER_TEMP/mutation-baseline"
+      - name: Upload baseline mutation report
+        if: always() && steps.baseline.outputs.supported == 'true'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: mutation-baseline-${{ github.event.pull_request.number }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/mutation-baseline/
+          if-no-files-found: ignore
+          overwrite: true
+          retention-days: 14
       - name: Check out the exact candidate commit
         env:
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
