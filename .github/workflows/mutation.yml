@@ -168,17 +168,37 @@ jobs:
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          MUTATION_SOURCE_ROOT: packages/nuqs
+          MUTATION_SOURCE_URL: ${{ github.server_url }}/${{ github.repository }}/blob/${{ github.event.pull_request.head.sha }}
         run: |
           worktree="$RUNNER_TEMP/mutation-baseline-worktree"
           git worktree add --detach "$worktree" "$(git merge-base "$BASE_SHA" "$HEAD_SHA")"
-          cd "$worktree"
-          pnpm install --ignore-scripts --frozen-lockfile --filter nuqs...
-          pnpm exec turbo run mutation --filter=nuqs -- --force
-          node "$RUNNER_TEMP/mutation-scope.mjs" \
-            packages/nuqs \
-            packages/nuqs/reports/mutation/stryker-incremental.json
-          cp -R packages/nuqs/reports/mutation "$RUNNER_TEMP/mutation-baseline-retry"
-      - name: Upload baseline retry mutation report
+          (cd "$worktree" && pnpm install --ignore-scripts --frozen-lockfile --filter nuqs...)
+          mkdir -p "$RUNNER_TEMP/mutation-baseline-retry"
+          retries=()
+          for run in 1 2; do
+            (
+              cd "$worktree"
+              rm -rf packages/nuqs/reports/mutation
+              pnpm exec turbo run mutation --filter=nuqs -- --force
+              node "$RUNNER_TEMP/mutation-scope.mjs" \
+                packages/nuqs \
+                packages/nuqs/reports/mutation/stryker-incremental.json
+            )
+            cp -R "$worktree/packages/nuqs/reports/mutation" "$RUNNER_TEMP/mutation-baseline-retry/$run"
+            retries+=("$RUNNER_TEMP/mutation-baseline-retry/$run/stryker-incremental.json")
+            status=0
+            node packages/scripts/mutation-gate.ts \
+              "$RUNNER_TEMP/mutation-baseline/stryker-incremental.json" \
+              packages/nuqs/reports/mutation/stryker-incremental.json \
+              "${retries[@]}" > "$RUNNER_TEMP/mutation-gate-retry.log" 2>&1 || status=$?
+            if [ "$status" -ne 1 ]; then
+              break
+            fi
+          done
+          cat "$RUNNER_TEMP/mutation-gate-retry.log"
+          exit "$status"
+      - name: Upload baseline retry mutation reports
         if: always() && steps.gate.outputs.retry == 'true'
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
@@ -187,16 +207,6 @@ jobs:
           if-no-files-found: ignore
           overwrite: true
           retention-days: 14
-      - name: Enforce the mutation-debt ratchet with the baseline retry
-        if: steps.gate.outputs.retry == 'true'
-        env:
-          MUTATION_SOURCE_ROOT: packages/nuqs
-          MUTATION_SOURCE_URL: ${{ github.server_url }}/${{ github.repository }}/blob/${{ github.event.pull_request.head.sha }}
-        run: >-
-          node packages/scripts/mutation-gate.ts
-          "$RUNNER_TEMP/mutation-baseline/stryker-incremental.json"
-          "packages/nuqs/reports/mutation/stryker-incremental.json"
-          "$RUNNER_TEMP/mutation-baseline-retry/stryker-incremental.json"
       - name: Show the first mutation gate result
         if: failure() && steps.gate.outputs.retry == 'true'
         run: |
