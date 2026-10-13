@@ -846,6 +846,37 @@ serialize(url, { foo: 'bar' }) // https://example.com/path?baz=qux&foo=bar
 serialize('?remove=me', { foo: 'bar', remove: null }) // ?foo=bar
 ```
 
+## Query string encoding
+
+By default, nuqs renders **pretty** query strings: characters that are safe to
+leave as-is in a query (including `[]{}`) stay unencoded, so URLs remain readable.
+
+Some tools truncate those URLs. Slack, for example, cuts a link short when a
+JSON value contains braces. Opt out to render with `URLSearchParams`
+(`application/x-www-form-urlencoded`) instead:
+
+```ts
+// Client entry (hooks)
+import { configure } from 'nuqs'
+
+configure({ prettyEncoding: false })
+```
+
+```ts
+// Server entry (serializers)
+import { configure } from 'nuqs/server'
+
+configure({ prettyEncoding: false })
+```
+
+Call `configure` in every runtime that **writes** URLs. Client hooks and
+`createSerializer` (often imported from `nuqs/server`) are separate copies of
+the library, so each one needs the call. Loaders only parse search params;
+they do not render the query string, so they do not need `configure`.
+
+Pretty encoding stays the default. Parsing is unchanged: the platform decodes
+either form before nuqs reads it.
+
 ## Parser type inference
 
 To access the underlying type returned by a parser, you can use the
