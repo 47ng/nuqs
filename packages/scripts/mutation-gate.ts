@@ -441,19 +441,20 @@ async function readReport(path: string): Promise<MutationReport> {
 }
 
 async function main(): Promise<void> {
-  const [baselinePath, candidatePath, baselineRetryPath, ...extra] =
+  const [baselinePath, candidatePath, ...baselineRetryPaths] =
     process.argv.slice(2)
-  if (!baselinePath || !candidatePath || extra.length > 0) {
+  if (!baselinePath || !candidatePath) {
     throw new Error(
-      'usage: mutation-gate.ts <baseline-report.json> <candidate-report.json> [baseline-retry-report.json]'
+      'usage: mutation-gate.ts <baseline-report.json> <candidate-report.json> [baseline-retry-report.json...]'
     )
   }
 
-  const baseline = await readReport(baselinePath)
+  let baseline = await readReport(baselinePath)
+  for (const retryPath of baselineRetryPaths) {
+    baseline = mergeBaselineReports(baseline, await readReport(retryPath))
+  }
   const result = compareMutationReports(
-    baselineRetryPath
-      ? mergeBaselineReports(baseline, await readReport(baselineRetryPath))
-      : baseline,
+    baseline,
     await readReport(candidatePath)
   )
   process.stdout.write(JSON.stringify(result, null, 2) + '\n')

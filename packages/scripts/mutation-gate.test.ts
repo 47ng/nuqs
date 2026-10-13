@@ -81,25 +81,26 @@ function runGate(
   baseline: unknown,
   candidate: unknown,
   env: Record<string, string> = {},
-  baselineRetry?: unknown
+  baselineRetries: unknown[] = []
 ) {
   const directory = mkdtempSync(join(tmpdir(), 'nuqs-mutation-gate-'))
   temporaryDirectories.push(directory)
   const baselinePath = join(directory, 'baseline.json')
   const candidatePath = join(directory, 'candidate.json')
-  const baselineRetryPath = join(directory, 'baseline-retry.json')
+  const baselineRetryPaths = baselineRetries.map((retry, index) => {
+    const path = join(directory, `baseline-retry-${index}.json`)
+    writeFileSync(path, JSON.stringify(retry))
+    return path
+  })
   writeFileSync(baselinePath, JSON.stringify(baseline))
   writeFileSync(candidatePath, JSON.stringify(candidate))
-  if (baselineRetry !== undefined) {
-    writeFileSync(baselineRetryPath, JSON.stringify(baselineRetry))
-  }
   return spawnSync(
     process.execPath,
     [
       fileURLToPath(new URL('./mutation-gate.ts', import.meta.url)),
       baselinePath,
       candidatePath,
-      ...(baselineRetry === undefined ? [] : [baselineRetryPath])
+      ...baselineRetryPaths
     ],
     {
       encoding: 'utf8',
@@ -457,11 +458,20 @@ describe('mutation gate', () => {
   })
 
   it('passes when the baseline retry shows a spurious baseline kill', () => {
-    const result = runGate(
-      report(['Killed']),
-      report(['Survived']),
-      {},
+    const result = runGate(report(['Killed']), report(['Survived']), {}, [
       report(['Survived'])
+    ])
+    expect(result.error, result.stderr).toBeUndefined()
+    expect(result.status).toBe(0)
+    expect(result.stdout).toContain('Mutation debt stayed identical')
+  })
+
+  it('merges every baseline retry', () => {
+    const result = runGate(
+      report(['Killed', 'Survived']),
+      report(['Survived', 'Survived']),
+      {},
+      [report(['Killed', 'Killed']), report(['Survived', 'Killed'])]
     )
     expect(result.error, result.stderr).toBeUndefined()
     expect(result.status).toBe(0)
@@ -469,12 +479,10 @@ describe('mutation gate', () => {
   })
 
   it('still fails with a baseline retry when the candidate adds debt', () => {
-    const result = runGate(
+    const result = runGate(report(['Killed']), report(['Survived']), {}, [
       report(['Killed']),
-      report(['Survived']),
-      {},
       report(['Killed'])
-    )
+    ])
     expect(result.error, result.stderr).toBeUndefined()
     expect(result.status).toBe(1)
     expect(result.stderr).toContain('Mutation debt increased by 1')
