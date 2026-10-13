@@ -468,10 +468,10 @@ describe('mutation gate', () => {
 
   it('merges every baseline retry', () => {
     const result = runGate(
-      report(['Killed', 'Survived']),
+      report(['Killed', 'Killed']),
       report(['Survived', 'Survived']),
       {},
-      [report(['Killed', 'Killed']), report(['Survived', 'Killed'])]
+      [report(['Survived', 'Killed']), report(['Killed', 'Survived'])]
     )
     expect(result.error, result.stderr).toBeUndefined()
     expect(result.status).toBe(0)
