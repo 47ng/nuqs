@@ -2,6 +2,13 @@ import { Heart } from 'lucide-react'
 
 export const asideSponsors: SponsorProps[] = [
   {
+    name: 'Neon',
+    url: 'https://neon.com/?utm_source=nuqs&utm_medium=sponsor&utm_campaign=nuqs',
+    logoUrl: 'https://avatars.githubusercontent.com/u/77690634?s=200&v=4',
+    description:
+      'The backend for apps and agents, built to scale on Lakebase Postgres.'
+  },
+  {
     name: 'Notra',
     url: 'https://www.usenotra.com/?utm_source=nuqs&utm_medium=banner&utm_campaign=nuqs',
     logoUrl: 'https://www.usenotra.com/logo-dark.svg',
