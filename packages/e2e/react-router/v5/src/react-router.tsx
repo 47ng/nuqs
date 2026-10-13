@@ -2,6 +2,9 @@ import { lazy, Suspense } from 'react'
 import { BrowserRouter, Route, Switch } from 'react-router-dom'
 import { NuqsAdapter } from './adapter'
 import RootLayout from './layout'
+// Loading this measurement route lazily can introduce discarded Suspense
+// renders before mount, obscuring the render counts caused by nuqs itself.
+import RenderCountPage from './routes/render-count.$hook.$shallow.$history.$startTransition.no-loader'
 
 // prettier-ignore
 const routes = {
@@ -42,7 +45,7 @@ const routes = {
   '/stitching':                                 lazy(() => import('./routes/stitching')),
 
   // Render Count
-  '/render-count/:hook/:shallow/:history/:startTransition/no-loader': lazy(() => import('./routes/render-count.$hook.$shallow.$history.$startTransition.no-loader')),
+  '/render-count/:hook/:shallow/:history/:startTransition/no-loader': RenderCountPage,
 
   // Reproductions
   '/repro-359':                 lazy(() => import('./routes/repro-359')),

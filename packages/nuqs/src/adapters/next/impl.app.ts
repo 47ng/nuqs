@@ -3,6 +3,7 @@ import {
   startTransition,
   useCallback,
   useEffect,
+  useLayoutEffect,
   useOptimistic,
   useRef
 } from 'react'
@@ -24,6 +25,9 @@ import {
 // See: https://github.com/47ng/nuqs/issues/603#issuecomment-2317057128
 // and https://github.com/47ng/nuqs/discussions/960#discussioncomment-12699171
 const NUM_HISTORY_CALLS_PER_UPDATE = 3
+
+let committedPathname: string | undefined
+let hasSkippedUpdates = false
 
 function onPopState() {
   setQueueResetMutex(0)
@@ -99,6 +103,13 @@ export function NavigationSpy() {
     prevPathname.current = pathname
     globalThrottleQueue.reset()
   }
+  useLayoutEffect(() => {
+    committedPathname = pathname
+    if (hasSkippedUpdates) {
+      hasSkippedUpdates = false
+      queueMicrotask(resetQueues)
+    }
+  }, [pathname])
   useEffect(() => {
     patchHistory()
     window.addEventListener('popstate', onPopState)
@@ -123,7 +134,22 @@ export function useNuqsNextAppRouterAdapter(): AdapterInterface {
   const searchParams = useSearchParams() ?? new URLSearchParams()
   const [optimisticSearchParams, setOptimisticSearchParams] =
     useOptimistic<URLSearchParams>(searchParams)
+  const isMountedRef = useRef(false)
+  useEffect(() => {
+    isMountedRef.current = true
+  }, [])
   const updateUrl: UpdateUrlFunction = useCallback((search, options) => {
+    // A hook rendering for a route that has not committed yet
+    // must not write its updates onto the URL of the current route (#1358).
+    // It renders again once its route commits and the queues reset.
+    if (
+      !isMountedRef.current &&
+      committedPathname !== undefined &&
+      pathname !== committedPathname
+    ) {
+      hasSkippedUpdates = true
+      return
+    }
     startTransition(() => {
       if (!options.shallow) {
         setOptimisticSearchParams(search)
