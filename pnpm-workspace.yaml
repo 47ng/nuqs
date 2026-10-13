@@ -90,4 +90,4 @@ overrides:
   '@remix-run/react>react-router-dom': 6.30.6
 
 patchedDependencies:
-  '@vitest/browser-playwright@4.1.11': patches/@vitest__browser-playwright@4.1.11.patch
+  '@vitest/browser-playwright': patches/@vitest__browser-playwright.patch

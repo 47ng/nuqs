@@ -278,7 +278,7 @@ overrides:
   '@remix-run/react>react-router-dom': 6.30.6
 
 patchedDependencies:
-  '@vitest/browser-playwright@4.1.11': 99dec5d90d7e408476aad292437b38dc83fda39939985133eceec0a990d25b23
+  '@vitest/browser-playwright': 99dec5d90d7e408476aad292437b38dc83fda39939985133eceec0a990d25b23
 
 importers:
 
