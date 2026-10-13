@@ -1,0 +1,17 @@
+diff --git a/dist/index.js b/dist/index.js
+index f690b4d092a93d8a5fc5da4450eb24135a73c929..65e722a880e4fe20d85af8b226ee2aeea9e349b9 100644
+--- a/dist/index.js
++++ b/dist/index.js
+@@ -1132,7 +1132,11 @@ class PlaywrightBrowserProvider {
+ 				});
+ 			},
+ 			get iframe() {
+-				return page.frameLocator("[data-vitest=\"true\"]");
++				const frame = page.frame("vitest-iframe");
++				if (!frame) {
++					throw new Error(`Cannot find "vitest-iframe" on the page. The test that sent this command has ended.`);
++				}
++				return frame;
+ 			}
+ 		};
+ 	}
