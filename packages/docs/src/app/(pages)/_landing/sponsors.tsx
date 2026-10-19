@@ -102,7 +102,7 @@ const SPONSORS: Sponsors = [
   {
     handle: 'elmohq',
     name: 'Elmo',
-    url: 'https://x.com/tryelmo',
+    url: 'https://www.elmohq.com/?utm_source=nuqs&utm_medium=sponsor&utm_campaign=nuqs',
     img: '/sponsors/elmo.svg'
   },
   {

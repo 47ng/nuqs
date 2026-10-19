@@ -3,7 +3,7 @@ import { Heart } from 'lucide-react'
 export const asideSponsors: SponsorProps[] = [
   {
     name: 'Elmo',
-    url: 'https://x.com/tryelmo',
+    url: 'https://www.elmohq.com/?utm_source=nuqs&utm_medium=banner&utm_campaign=nuqs',
     logoUrl: '/sponsors/elmo.svg',
     description: 'Open source AI Search tracking and optimization.'
   },
