@@ -100,6 +100,12 @@ const SPONSORS: Sponsors = [
     img: 'https://avatars.githubusercontent.com/u/93287080?s=200&v=4'
   },
   {
+    handle: 'elmohq',
+    name: 'Elmo',
+    url: 'https://x.com/tryelmo',
+    img: '/sponsors/elmo.svg'
+  },
+  {
     handle: 'teknikgeek',
     name: 'TeknikGeek',
     url: 'https://www.teknikgeek.se/',
