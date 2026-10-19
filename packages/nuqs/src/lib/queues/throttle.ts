@@ -7,7 +7,6 @@ import { error } from '../errors'
 import { globalSingleton } from '../global-singleton'
 import { write, type Query } from '../search-params'
 import { timeout } from '../timeout'
-import { withResolvers, type Resolvers } from '../with-resolvers'
 import { defaultRateLimit } from './rate-limiting'
 
 type UpdateMap = Map<string, Query | null>
@@ -42,7 +41,7 @@ export class ThrottledQueue {
   }
   timeMs: number = defaultRateLimit.timeMs
   transitions: TransitionSet = new Set()
-  resolvers: Resolvers<URLSearchParams> | null = null
+  resolvers: PromiseWithResolvers<URLSearchParams> | null = null
   controller: AbortController | null = null
   lastFlushedAt = 0
   resetQueueOnNextPush = false
@@ -133,7 +132,7 @@ export class ThrottledQueue {
       // Flush already scheduled
       return this.resolvers.promise
     }
-    this.resolvers = withResolvers<URLSearchParams>()
+    this.resolvers = Promise.withResolvers<URLSearchParams>()
     const flushNow = () => {
       this.lastFlushedAt = performance.now()
       const [search, error] = this.applyPendingUpdates(
