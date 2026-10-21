@@ -1,5 +1,6 @@
 import { HydrationMarker } from 'e2e-shared/components/hydration-marker'
-import { NuqsAdapter } from 'nuqs/adapters/next/app'
+import { NuqsAdapter as UnifiedNuqsAdapter } from 'nuqs/adapters/next'
+import { NuqsAdapter as AppRouterNuqsAdapter } from 'nuqs/adapters/next/app'
 import { Fragment, type ReactNode, Suspense } from 'react'
 import { Providers } from './providers'
 
@@ -9,6 +10,10 @@ export const metadata = {
 
 const SuspenseIfCacheComponents =
   process.env.CACHE_COMPONENTS === 'true' ? Suspense : Fragment
+const NuqsAdapter =
+  process.env.NUQS_E2E_UNIFIED_ADAPTER === 'true'
+    ? UnifiedNuqsAdapter
+    : AppRouterNuqsAdapter
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
