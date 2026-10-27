@@ -97,6 +97,20 @@ describe('debounce: DebouncedPromiseQueue', () => {
     expect(queue.queuedValue).toBeUndefined()
     await expect(p).rejects.toThrowError('error')
   })
+  it('recovers after the callback throws synchronously', async () => {
+    vi.useFakeTimers()
+    const queue = new DebouncedPromiseQueue<string, string>()
+    const failed = queue.push('a', 100, () => {
+      throw new Error('error')
+    })
+    vi.advanceTimersToNextTimer()
+    await expect(failed).rejects.toThrowError('error')
+
+    const next = queue.push('b', 100, passThrough)
+    expect(next).not.toBe(failed)
+    vi.advanceTimersToNextTimer()
+    await expect(next).resolves.toBe('b')
+  })
   it('returns a new Promise when an update is pushed while the callback is pending', async () => {
     vi.useFakeTimers()
     const callback = async (input: string) => {
