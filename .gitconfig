@@ -12,9 +12,10 @@
 #   post-checkout passes <old> <new> <flag> (ignored by the setup script).
 # Runs the setup script pinned at origin/HEAD, never the checked-out branch's
 # copy, from a per-worktree cache in the git directory.
+# Uses fnm, when available, to run setup under the version in .node-version.
 [hook "worktree-setup"]
 	event = post-checkout
-	command = "sh -c 'test -f .git || exit 0; dir=\"$(git rev-parse --path-format=absolute --git-dir)\" || exit; script=\"$dir/nuqs-worktree-setup.mjs\"; if git cat-file blob origin/HEAD:packages/scripts/worktree-setup.mjs > \"$script\" 2>/dev/null; then exec node \"$script\" --hook \"$@\"; else echo \"worktree-setup: cannot read the setup script from origin/HEAD, run node --run setup:worktree manually\" >&2; fi' -"
+	command = "sh -c 'test -f .git || exit 0; dir=\"$(git rev-parse --path-format=absolute --git-dir)\" || exit; script=\"$dir/nuqs-worktree-setup.mjs\"; if git cat-file blob origin/HEAD:packages/scripts/worktree-setup.mjs > \"$script\" 2>/dev/null; then if command -v fnm >/dev/null 2>&1; then exec fnm exec --using=.node-version node \"$script\" --hook \"$@\"; fi; exec node \"$script\" --hook \"$@\"; else echo \"worktree-setup: cannot read the setup script from origin/HEAD, run node --run setup:worktree manually\" >&2; fi' -"
 [hook "prettier"]
 	event = pre-commit
 	command = node --run lint:prettier
