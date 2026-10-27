@@ -37,12 +37,12 @@ export class DebouncedPromiseQueue<ValueType, OutputType> {
         // while the callback is pending, so that the next push can be
         // assigned to a new Promise (and not dropped).
         const outputResolvers = this.resolvers
+        this.resolvers = withResolvers<OutputType>()
         try {
           debug(13, value)
           const callbackPromise = callback(value)
           debug(14, this.queuedValue)
           this.queuedValue = undefined
-          this.resolvers = withResolvers<OutputType>()
           callbackPromise
             .then(output => outputResolvers.resolve(output))
             .catch(error => outputResolvers.reject(error))
