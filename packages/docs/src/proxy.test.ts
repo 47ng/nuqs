@@ -1,11 +1,13 @@
 import { http, HttpResponse } from 'msw'
 import { setupServer } from 'msw/node'
+import { unstable_doesMiddlewareMatch } from 'next/experimental/testing/server'
 import { after, NextResponse } from 'next/server'
 import {
   afterAll,
   afterEach,
   beforeAll,
   beforeEach,
+  describe,
   expect,
   it,
   vi
@@ -106,4 +108,46 @@ it('serves requests without a token and sends no analytics', async () => {
   await callback()
   await vi.mocked(after).mock.calls[1]![0]
   expect(onRequest).not.toHaveBeenCalled()
+})
+
+describe('matcher', async () => {
+  const { config } = await import('./proxy')
+  const matches = (url: string, headers?: Record<string, string>) =>
+    unstable_doesMiddlewareMatch({ config, url, headers })
+
+  it.each([
+    '/',
+    '/docs/installation',
+    '/docs/installation.md',
+    '/llms.txt',
+    '/llms-full.txt',
+    '/blog/the-fundamentals-of-url-state'
+  ])('runs on pages AI agents read: %s', url => {
+    expect(matches(url)).toBe(true)
+  })
+
+  it.each([
+    '/_next/static/chunks/main.js',
+    '/_next/image?url=%2Favatar-128.jpeg&w=64&q=75',
+    '/_vercel/insights/script.js',
+    '/api/search',
+    '/favicon.ico',
+    '/avatar-128.jpeg',
+    '/icon.svg',
+    '/r/adapter-inertia.json',
+    '/robots.txt',
+    '/sitemap.xml',
+    '/blog/rss.xml',
+    '/react-paris-25-slides.pdf',
+    '/og/docs/installation.png'
+  ])('skips assets and API routes: %s', url => {
+    expect(matches(url)).toBe(false)
+  })
+
+  it.each(['rsc', 'next-router-prefetch'])(
+    'skips client navigations with a %s header',
+    header => {
+      expect(matches('/docs/installation', { [header]: '1' })).toBe(false)
+    }
+  )
 })
