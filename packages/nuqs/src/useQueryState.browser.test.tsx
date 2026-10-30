@@ -3,6 +3,7 @@ import React, {
   useCallback,
   useEffect,
   useLayoutEffect,
+  useRef,
   useState
 } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -26,6 +27,7 @@ import { resetQueues } from './lib/queues/reset'
 import {
   parseAsArrayOf,
   parseAsInteger,
+  parseAsIsoDateTime,
   parseAsJson,
   parseAsNativeArrayOf,
   parseAsString
@@ -164,6 +166,94 @@ describe('useQueryState: referential equality', () => {
     await rerender('push')
 
     expect(result.current[0]).toBe(defaultValue)
+  })
+
+  // https://github.com/47ng/nuqs/issues/1531
+  // (failing cases contributed by @Gjdoalfnrxu in the issue)
+  it('keeps referential equality for an object parsed from the URL across remounts', async () => {
+    const searchParams = { date: '2024-01-01T00:00:00.000Z' }
+    const seen: (Date | null)[] = []
+    let remount = () => {}
+    function Reader() {
+      const [date] = useQueryState('date', parseAsIsoDateTime)
+      seen.push(date)
+      return null
+    }
+    function Remounter() {
+      const [key, setKey] = useState(0)
+      remount = () => setKey(k => k + 1)
+      return <Reader key={key} />
+    }
+    render(<Remounter />, {
+      wrapper: withNuqsTestingAdapter({ searchParams })
+    })
+    await waitForNextTick()
+    remount()
+    await waitForNextTick()
+    remount()
+    await waitForNextTick()
+    expect(new Set(seen.map(date => date?.valueOf())).size).toBe(1)
+    expect(new Set(seen).size).toBe(1)
+  })
+
+  it('shares the parsed object reference between hooks on the same key', async () => {
+    const searchParams = { date: '2024-01-01T00:00:00.000Z' }
+    const { result } = await renderHook(
+      () => [
+        useQueryState('date', parseAsIsoDateTime)[0],
+        useQueryState('date', parseAsIsoDateTime)[0]
+      ],
+      { wrapper: withNuqsTestingAdapter({ searchParams }) }
+    )
+    expect(result.current[0]).toBeInstanceOf(Date)
+    expect(result.current[0]).toBe(result.current[1])
+  })
+
+  it('settles when a remounted reader reports an object value upward', async () => {
+    const searchParams = { date: '2024-01-01T00:00:00.000Z' }
+    let renders = 0
+    function Subscriber({ report }: { report: (date: Date | null) => void }) {
+      const [date] = useQueryState('date', parseAsIsoDateTime)
+      useEffect(() => {
+        report(date)
+      }, [date, report])
+      return null
+    }
+    function Consumer() {
+      renders++
+      if (renders > 50) {
+        throw new Error(`render loop: ${renders} renders without settling`)
+      }
+      const [reported, setReported] = useState<Date | null>(null)
+      const version = useRef(0)
+      const previous = useRef<Date | null>(null)
+      if (previous.current !== reported) {
+        previous.current = reported
+        version.current++
+      }
+      const report = useCallback((date: Date | null) => setReported(date), [])
+      return <Subscriber key={version.current} report={report} />
+    }
+    render(<Consumer />, { wrapper: withNuqsTestingAdapter({ searchParams }) })
+    await waitForNextTick()
+    await waitForNextTick()
+    await waitForNextTick()
+    expect(renders).toBeLessThan(50)
+  })
+
+  it('re-parses when the query changes', async () => {
+    const { result, act } = await renderHook(
+      () => useQueryState('date', parseAsIsoDateTime),
+      {
+        wrapper: withNuqsTestingAdapter({
+          searchParams: { date: '2024-01-01T00:00:00.000Z' }
+        })
+      }
+    )
+    const first = result.current[0]
+    await act(() => result.current[1](new Date('2025-01-01T00:00:00.000Z')))
+    expect(result.current[0]?.toISOString()).toBe('2025-01-01T00:00:00.000Z')
+    expect(result.current[0]).not.toBe(first)
   })
 })
 

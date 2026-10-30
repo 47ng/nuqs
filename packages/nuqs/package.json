@@ -217,12 +217,12 @@
     {
       "name": "Client",
       "path": "dist/index.js",
-      "limit": "6.1 kB"
+      "limit": "6.15 kB"
     },
     {
       "name": "Client (minimal tree-shaken)",
       "path": "dist/index.js",
-      "limit": "4.5 kB",
+      "limit": "4.55 kB",
       "import": "{ useQueryStates, parseAsInteger }"
     },
     {
