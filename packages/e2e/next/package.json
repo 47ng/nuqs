@@ -14,7 +14,8 @@
     "dev": "next dev --port 3001",
     "build": "next build",
     "start": "NODE_OPTIONS='--enable-source-maps=true' next start --port 3001",
-    "test": "playwright install chromium && playwright test --project=chromium",
+    "test": "playwright install chromium && playwright test --project=chromium && pnpm run test:unified-adapter",
+    "test:unified-adapter": "node scripts/test-unified-adapter.mjs",
     "cacheComponents:codemod": "node scripts/cache-components-codemod.ts"
   },
   "dependencies": {
