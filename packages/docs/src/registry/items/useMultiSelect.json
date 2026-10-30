@@ -1,0 +1,14 @@
+{
+  "type": "registry:item",
+  "name": "useMultiSelect",
+  "title": "Multi-Select Hook",
+  "description": "Array-based multi-selection state management with URL synchronization. Supports toggle, select all, and deselect all operations.",
+  "dependencies": ["nuqs"],
+  "files": [
+    {
+      "type": "registry:file",
+      "path": "https://raw.githubusercontent.com/iHiteshAgrawal/nuqs-presets/a230a749daab2327dae9907f845b445a0653dc04/registry/default/useMultiSelect.ts",
+      "target": "~/hooks/nuqs-presets/useMultiSelect.ts"
+    }
+  ]
+}
