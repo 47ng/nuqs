@@ -113,7 +113,7 @@ jobs:
             "$RUNNER_TEMP/mutation-baseline"
       - name: Upload baseline mutation report
         if: always() && steps.baseline.outputs.supported == 'true'
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
           name: mutation-baseline-${{ github.event.pull_request.number }}-${{ github.run_attempt }}
           path: ${{ runner.temp }}/mutation-baseline/
@@ -200,7 +200,7 @@ jobs:
           exit "$status"
       - name: Upload baseline retry mutation reports
         if: always() && steps.gate.outputs.retry == 'true'
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
           name: mutation-baseline-retry-${{ github.event.pull_request.number }}-${{ github.run_attempt }}
           path: ${{ runner.temp }}/mutation-baseline-retry/
@@ -216,7 +216,7 @@ jobs:
           echo "::$token::"
       - name: Upload candidate mutation report
         if: always() && steps.candidate_scope.outcome == 'success'
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
           name: mutation-report-${{ github.event.pull_request.number }}-${{ github.run_attempt }}
           path: packages/nuqs/reports/mutation/
@@ -246,7 +246,7 @@ jobs:
         run: pnpm exec turbo run mutation --filter=nuqs -- --force
       - name: Upload mutation report
         if: always()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
           name: mutation-report-${{ github.run_id }}-${{ github.run_attempt }}
           path: packages/nuqs/reports/mutation/
