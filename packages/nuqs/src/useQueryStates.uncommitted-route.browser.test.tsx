@@ -350,4 +350,132 @@ describe('useQueryStates: setters called before the route commits', () => {
       .toBe('good')
     expect(errors).toEqual(['bad: boom'])
   })
+
+  it('does not replay over a newer layout effect call of an earlier sibling', async () => {
+    function Earlier() {
+      const [, setMode] = useQueryState('mode')
+      useLayoutEffect(() => {
+        void setMode('earlier')
+      }, [])
+      return null
+    }
+    function Later() {
+      const [, setMode] = useQueryState('mode')
+      const initialised = useRef(false)
+      if (!initialised.current) {
+        initialised.current = true
+        void setMode('later')
+      }
+      return null
+    }
+    await render(
+      <Adapter>
+        <Earlier />
+        <Later />
+      </Adapter>
+    )
+    await expect.poll(() => writes.length).toBeGreaterThan(0)
+    await new Promise(resolve => setTimeout(resolve, 100))
+    expect(urlMode()).toBe('earlier')
+  })
+
+  it('keeps the call order between render-time calls of a parent and its child', async () => {
+    function Child() {
+      const [, setMode] = useQueryState('mode')
+      const initialised = useRef(false)
+      if (!initialised.current) {
+        initialised.current = true
+        void setMode('child')
+      }
+      return null
+    }
+    function Parent() {
+      const [, setMode] = useQueryState('mode')
+      const initialised = useRef(false)
+      if (!initialised.current) {
+        initialised.current = true
+        void setMode('parent')
+      }
+      return <Child />
+    }
+    await render(
+      <Adapter>
+        <Parent />
+      </Adapter>
+    )
+    await expect.poll(() => writes.length).toBeGreaterThan(0)
+    await new Promise(resolve => setTimeout(resolve, 100))
+    expect(urlMode()).toBe('child')
+  })
+
+  it('does not replay the calls of a hidden Activity over newer ones on reveal', async () => {
+    function Hidden() {
+      const [, setMode] = useQueryState('mode')
+      const initialised = useRef(false)
+      if (!initialised.current) {
+        initialised.current = true
+        void setMode('hidden')
+      }
+      return null
+    }
+    function Visible({ write }: { write: boolean }) {
+      const [, setMode] = useQueryState('mode')
+      useEffect(() => {
+        if (write) {
+          void setMode('visible')
+        }
+      }, [write])
+      return null
+    }
+    const tree = (mode: 'hidden' | 'visible', write: boolean) => (
+      <Adapter>
+        <Activity mode={mode}>
+          <Hidden />
+        </Activity>
+        <Visible write={write} />
+      </Adapter>
+    )
+    const screen = await render(tree('hidden', false))
+    await new Promise(resolve => setTimeout(resolve, 100))
+    await screen.rerender(tree('hidden', true))
+    await expect.poll(urlMode).toBe('visible')
+    await screen.rerender(tree('visible', true))
+    await new Promise(resolve => setTimeout(resolve, 100))
+    expect(urlMode()).toBe('visible')
+  })
+
+  it('does not overwrite newer values with a render-time default on reveal', async () => {
+    // Not guarded by a ref: also called again when revealed.
+    function Hidden() {
+      const [mode, setMode] = useQueryState('mode')
+      if (!mode) {
+        void setMode('hidden')
+      }
+      return null
+    }
+    function Visible({ write }: { write: boolean }) {
+      const [, setMode] = useQueryState('mode')
+      useEffect(() => {
+        if (write) {
+          void setMode('visible')
+        }
+      }, [write])
+      return null
+    }
+    const tree = (mode: 'hidden' | 'visible', write: boolean) => (
+      <Adapter>
+        <Activity mode={mode}>
+          <Hidden />
+        </Activity>
+        <Visible write={write} />
+      </Adapter>
+    )
+    const screen = await render(tree('hidden', false))
+    await new Promise(resolve => setTimeout(resolve, 100))
+    await screen.rerender(tree('hidden', true))
+    await expect.poll(urlMode).toBe('visible')
+    await screen.rerender(tree('visible', true))
+    await new Promise(resolve => setTimeout(resolve, 100))
+    expect(urlMode()).toBe('visible')
+  })
 })
