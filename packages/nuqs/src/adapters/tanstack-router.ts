@@ -47,7 +47,6 @@ function useNuqsTanstackRouterAdapter(watchKeys: string[]): AdapterInterface {
     select: state => state.resolvedLocation?.pathname ?? state.location.pathname
   })
   const router = useRouter()
-  const { navigate } = router
 
   // Track which pathname this hook instance was mounted under to
   // keep its last stable search during cross-page transitions.
@@ -95,27 +94,44 @@ function useNuqsTanstackRouterAdapter(watchKeys: string[]): AdapterInterface {
       // Wrapping in a startTransition seems to be necessary
       // to support scroll restoration
       startTransition(() => {
-        navigate({
-          // I know the docs say to use `search` here, but it would require
-          // userland code to stitch the nuqs definitions to the route declarations
-          // in order for TSR to serialize them, which kind of breaks the
-          // "works out of the box" promise, and it also wouldn't support
-          // the custom URL encoding.
-          // TBC if it causes issues with consuming those search params
-          // in other parts of the app.
-          //
-          // Note: we need to specify pathname + search here to avoid TSR appending
-          // a trailing slash to the pathname, see https://github.com/47ng/nuqs/issues/1215
-          from: '/',
-          to: pathname + renderQueryString(search),
-          replace: options.history === 'replace',
-          resetScroll: options.scroll,
-          hash: prevHash => prevHash ?? '',
-          state: state => state
-        })
+        // I know the docs say to use `search` here, but it would require
+        // userland code to stitch the nuqs definitions to the route declarations
+        // in order for TSR to serialize them, which kind of breaks the
+        // "works out of the box" promise, and it also wouldn't support
+        // the custom URL encoding: TSR's default `stringifySearch` can't
+        // render arrays as repeated keys, and it re-types string values
+        // that happen to look like JSON (numbers, booleans, `null`, quoted
+        // strings), which would corrupt nuqs's own encoding.
+        //
+        // We used to glue our rendered query string onto `to` instead
+        // (`to: pathname + renderQueryString(search)`), but `navigate({ to })`
+        // treats `to` as a path *template* to match against the route tree.
+        // On a route with a dynamic segment, the glued-on query string gets
+        // consumed as the segment's value instead of being split off the
+        // path, so the router still resolves a route there and appends its
+        // own search (built from that route's `validateSearch` defaults)
+        // *after* ours, producing a doubled, malformed query string.
+        // See https://github.com/47ng/nuqs/issues/1590
+        //
+        // So instead, we push through the router's own history wrapper with
+        // the fully-rendered href. It splits pathname/search/hash from the
+        // literal string the same way it parses the address bar on any real
+        // navigation (no template-matching involved), and it notifies the
+        // router the same way any other history change does, keeping
+        // matches/loaders in sync.
+        const hash = router.history.location.hash
+        const href = pathname + renderQueryString(search) + hash
+        // `commitLocation` (used by `navigate()`) is what normally sets this
+        // for scroll restoration to pick up; since we're bypassing it, set
+        // it ourselves so `scroll: false` updates keep behaving like before.
+        if (router._scroll) {
+          router._scroll.next = options.scroll
+        }
+        const method = options.history === 'replace' ? 'replace' : 'push'
+        router.history[method](href, router.history.location.state)
       })
     },
-    [navigate, pathname]
+    [router, pathname]
   )
 
   return {
