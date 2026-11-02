@@ -1,4 +1,4 @@
-import React, { Suspense, use } from 'react'
+import React, { Suspense, use, useLayoutEffect } from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, render, renderHook } from 'vitest-browser-react'
 import { resetQueues } from '../../lib/queues/reset'
@@ -97,6 +97,31 @@ describe('Next App Router Adapter: route commits', () => {
     expect(getFrom()).toBeNull()
     await Promise.resolve()
     expect(globalThrottleQueue.getQueuedQuery('from')).toBeUndefined()
+  })
+
+  it('keeps the updates queued by the layout effects of the committed route', async () => {
+    function Route({ pathname }: { pathname: string }) {
+      useLayoutEffect(() => {
+        if (pathname === '/b') {
+          globalThrottleQueue.push({ key: 'init', query: 'b', options: {} })
+        }
+      }, [pathname])
+      return null
+    }
+    function Router() {
+      return (
+        <>
+          <NavigationSpy />
+          <Route key={navigation.pathname} pathname={navigation.pathname} />
+        </>
+      )
+    }
+    navigation.pathname = '/a'
+    const { rerender } = await render(<Router />)
+    navigation.pathname = '/b'
+    await rerender(<Router />)
+    await Promise.resolve()
+    expect(globalThrottleQueue.getQueuedQuery('init')).toBe('b')
   })
 
   it('writes the URL from a committed hook after the route changed', async () => {

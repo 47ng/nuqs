@@ -104,7 +104,11 @@ export function NavigationSpy() {
   }
   useLayoutEffect(() => {
     if (committedPathname !== undefined && committedPathname !== pathname) {
-      queueMicrotask(resetQueues)
+      // Synchronous, not deferred: this spy renders before the app tree, so its
+      // layout effect runs before those of the committed route. Resetting now
+      // drops the updates queued before the commit, and keeps the ones the
+      // route's own layout effects are about to queue.
+      resetQueues()
     }
     committedPathname = pathname
   }, [pathname])
