@@ -2,7 +2,6 @@ import {
   useCallback,
   useEffect,
   useId,
-  useInsertionEffect,
   useLayoutEffect,
   useMemo,
   useRef,
@@ -27,11 +26,6 @@ import { isAbsentFromUrl, type Query } from './lib/search-params'
 import { emitter, type CrossHookSyncPayload } from './lib/sync'
 import { getOwn, getUrlKey } from './lib/url-keys'
 import { type GenericParser } from './parsers'
-
-// Setter calls made before their hook first committed, in call order:
-// [whether that hook has committed, replay]. The calls made from renders that
-// never commit are kept, as they cannot be told apart from pending ones.
-let deferredCalls: Array<[{ current: boolean }, () => void]> = []
 
 const useIsomorphicLayoutEffect =
   typeof window === 'undefined' ? useEffect : useLayoutEffect
@@ -367,24 +361,24 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
   }, [stateKeys, resolvedUrlKeys])
 
   // Setter calls made before this hook first committed (eg: during the render
-  // of a route that has not committed yet), replayed once mounted.
+  // of a route that has not committed yet), replayed once it lays out.
   const isCommittedRef = useRef(false)
+  const deferredCallsRef = useRef<Array<() => void>>([])
   const update = useCallback<SetValues<KeyMap>>(
     (stateUpdater, callOptions = {}) => {
-      // Nothing must leak out of a render that may never commit (#1358):
-      // neither to the URL, nor to the other hooks or the queues.
-      if (!isCommittedRef.current) {
-        return new Promise(resolve =>
-          deferredCalls.push([
-            isCommittedRef,
-            () => resolve(update(stateUpdater, callOptions))
-          ])
-        )
-      }
       const requestedState =
         typeof stateUpdater === 'function'
           ? stateUpdater(applyDefaultValues(stateRef.current, stableKeyMap))
           : stateUpdater
+      // Nothing must leak out of a render that may never commit (#1358):
+      // neither to the URL, nor to the other hooks or the queues.
+      if (!isCommittedRef.current) {
+        return new Promise(resolve =>
+          deferredCallsRef.current.push(() =>
+            resolve(update(requestedState, callOptions))
+          )
+        )
+      }
       // `null` (or an updater returning `null`) clears every key of the map.
       const newState: Partial<Nullable<KeyMap>> =
         requestedState ??
@@ -491,16 +485,12 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
     ]
   )
 
-  // Insertion effects run for the whole commit before any layout effect:
-  // the first hook to lay out replays the calls of every hook of the commit,
-  // in call order, before any later setter call and before the paint.
-  useInsertionEffect(() => {
-    isCommittedRef.current = true
-  }, [])
+  // A layout effect, so that the calls are replayed before the paint, and before
+  // the passive effects (where children usually call setters on mount).
+  // Hidden `<Activity>` subtrees only lay out once revealed.
   useIsomorphicLayoutEffect(() => {
-    deferredCalls = deferredCalls.filter(
-      ([isCommitted, replay]) => !isCommitted.current || void replay()
-    )
+    isCommittedRef.current = true
+    deferredCallsRef.current.splice(0).forEach(replay => replay())
     // The hooks of this commit subscribe to the others in a passive effect:
     // read what was just queued from the queue instead, before the paint.
     reconcile(getQueuedQueries())

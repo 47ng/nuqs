@@ -1,4 +1,12 @@
-import React, { Suspense, use, useEffect, useLayoutEffect, useRef } from 'react'
+import React, {
+  Activity,
+  Component,
+  Suspense,
+  use,
+  useEffect,
+  useLayoutEffect,
+  useRef
+} from 'react'
 import { afterEach, describe, expect, it } from 'vitest'
 import { cleanup, render } from 'vitest-browser-react'
 import { page } from 'vitest/browser'
@@ -201,5 +209,145 @@ describe('useQueryStates: setters called before the route commits', () => {
     await expect.poll(() => resolved).toBeDefined()
     expect(resolved).toBe('default')
     expect(urlMode()).toBe('default')
+  })
+
+  it('keeps the call order with a layout effect of a component without a hook', async () => {
+    function Child({ setMode }: { setMode: (value: string) => unknown }) {
+      useLayoutEffect(() => {
+        void setMode('child')
+      }, [])
+      return null
+    }
+    function Parent() {
+      const [, setMode] = useQueryState('mode')
+      const initialised = useRef(false)
+      if (!initialised.current) {
+        initialised.current = true
+        void setMode('parent')
+      }
+      return <Child setMode={setMode} />
+    }
+    await render(
+      <Adapter>
+        <Parent />
+      </Adapter>
+    )
+    await expect.poll(() => writes.length).toBeGreaterThan(0)
+    await new Promise(resolve => setTimeout(resolve, 100))
+    expect(urlMode()).toBe('child')
+  })
+
+  it('keeps the setter calls of a hidden Activity until it is revealed', async () => {
+    function Hidden() {
+      const [, setMode] = useQueryState('mode')
+      const initialised = useRef(false)
+      if (!initialised.current) {
+        initialised.current = true
+        void setMode('hidden')
+      }
+      return null
+    }
+    function Unrelated() {
+      useQueryState('other')
+      return null
+    }
+    const tree = (
+      mode: 'hidden' | 'visible' | 'removed',
+      unrelated: boolean
+    ) => (
+      <Adapter>
+        {mode !== 'removed' && (
+          <Activity mode={mode}>
+            <Hidden />
+          </Activity>
+        )}
+        {unrelated && <Unrelated />}
+      </Adapter>
+    )
+    const screen = await render(tree('hidden', false))
+    await new Promise(resolve => setTimeout(resolve, 100))
+    // An unrelated hook mounting must not replay them.
+    await screen.rerender(tree('hidden', true))
+    await new Promise(resolve => setTimeout(resolve, 100))
+    expect(writes).toEqual([])
+    await screen.rerender(tree('visible', true))
+    await expect.poll(urlMode).toBe('hidden')
+  })
+
+  it('drops the setter calls of a hidden Activity removed before it is revealed', async () => {
+    function Hidden() {
+      const [, setMode] = useQueryState('mode')
+      const initialised = useRef(false)
+      if (!initialised.current) {
+        initialised.current = true
+        void setMode('hidden')
+      }
+      return null
+    }
+    const screen = await render(
+      <Adapter>
+        <Activity mode="hidden">
+          <Hidden />
+        </Activity>
+      </Adapter>
+    )
+    await new Promise(resolve => setTimeout(resolve, 100))
+    await screen.rerender(<Adapter>{null}</Adapter>)
+    await render(
+      <Adapter>
+        <Observer />
+      </Adapter>
+    )
+    await new Promise(resolve => setTimeout(resolve, 100))
+    expect(writes).toEqual([])
+  })
+
+  it('throws a render-time updater error in the calling component only', async () => {
+    const errors: string[] = []
+    class Boundary extends Component<
+      { name: string; children: React.ReactNode },
+      { failed: boolean }
+    > {
+      state = { failed: false }
+      static getDerivedStateFromError() {
+        return { failed: true }
+      }
+      componentDidCatch(error: Error) {
+        errors.push(`${this.props.name}: ${error.message}`)
+      }
+      render() {
+        return this.state.failed ? null : this.props.children
+      }
+    }
+    function Bad() {
+      const [mode, setMode] = useQueryState('mode')
+      if (!mode) {
+        void setMode(() => {
+          throw new Error('boom')
+        })
+      }
+      return null
+    }
+    function Good() {
+      const [filter, setFilter] = useQueryState('filter')
+      if (!filter) {
+        void setFilter('good')
+      }
+      return null
+    }
+    await render(
+      <Adapter>
+        <Boundary name="bad">
+          <Bad />
+        </Boundary>
+        <Boundary name="good">
+          <Good />
+        </Boundary>
+      </Adapter>
+    )
+    await expect
+      .poll(() => new URLSearchParams(location.search).get('filter'))
+      .toBe('good')
+    expect(errors).toEqual(['bad: boom'])
   })
 })
