@@ -27,7 +27,6 @@ import {
 const NUM_HISTORY_CALLS_PER_UPDATE = 3
 
 let committedPathname: string | undefined
-let hasSkippedUpdates = false
 
 function onPopState() {
   setQueueResetMutex(0)
@@ -104,11 +103,10 @@ export function NavigationSpy() {
     globalThrottleQueue.reset()
   }
   useLayoutEffect(() => {
-    committedPathname = pathname
-    if (hasSkippedUpdates) {
-      hasSkippedUpdates = false
+    if (committedPathname !== undefined && committedPathname !== pathname) {
       queueMicrotask(resetQueues)
     }
+    committedPathname = pathname
   }, [pathname])
   useEffect(() => {
     patchHistory()
@@ -147,7 +145,6 @@ export function useNuqsNextAppRouterAdapter(): AdapterInterface {
       committedPathname !== undefined &&
       pathname !== committedPathname
     ) {
-      hasSkippedUpdates = true
       return
     }
     startTransition(() => {
