@@ -1,5 +1,6 @@
 import { expect, test as it, type Page } from '@playwright/test'
 import { navigateTo } from 'e2e-shared/playwright/navigate.ts'
+import { createRequire } from 'node:module'
 
 // A destination route can render (and run its render-time setters, see #1358)
 // long before it commits. Each kind below keeps it uncommitted the way real
@@ -8,6 +9,14 @@ import { navigateTo } from 'e2e-shared/playwright/navigate.ts'
 // - promise: a Server Component promise unwrapped with `use()` on the client
 // - cpu: a slow client render (eg: a large table on a slow device)
 const kinds = ['rsc', 'promise', 'cpu'] as const
+
+// Before Next 16, a second navigation does not abandon a slow client render:
+// the cpu route still commits, and its defaults are then written while the
+// second navigation is pending, which drops it (as on the base branch).
+const nextMajor = Number.parseInt(
+  createRequire(import.meta.url)('next/package.json').version,
+  10
+)
 
 function recordLogs(page: Page) {
   const logs: string[] = []
@@ -58,6 +67,10 @@ it.describe(
       it(`${kind}: leaves no unwritten values when the navigation is abandoned`, async ({
         page
       }) => {
+        it.skip(
+          kind === 'cpu' && nextMajor < 16,
+          `requires Next >= 16 (got Next ${nextMajor})`
+        )
         const logs = recordLogs(page)
         await navigateTo(page, '/app/uncommitted-route/a')
         await page.getByRole('link', { name: `to ${kind}` }).click()
