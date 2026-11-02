@@ -344,8 +344,17 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
     }
   }, [stateKeys, resolvedUrlKeys])
 
+  // Setter calls made before this hook first committed (eg: during the render
+  // of a route that has not committed yet), replayed once mounted.
+  const deferredCallsRef = useRef<Parameters<SetValues<KeyMap>>[]>([])
   const update = useCallback<SetValues<KeyMap>>(
     (stateUpdater, callOptions = {}) => {
+      // Nothing must leak out of a render that may never commit (#1358):
+      // neither to the URL, nor to the other hooks or the queues.
+      if (committedPathnameRef.current === null) {
+        deferredCallsRef.current.push([stateUpdater, callOptions])
+        return globalThrottleQueue.getPendingPromise(adapter)
+      }
       const requestedState =
         typeof stateUpdater === 'function'
           ? stateUpdater(applyDefaultValues(stateRef.current, stableKeyMap))
@@ -455,6 +464,10 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
       processUrlSearchParams
     ]
   )
+
+  useEffect(() => {
+    deferredCallsRef.current.splice(0).forEach(args => void update(...args))
+  }, [])
 
   const outputState = useMemo(
     () => applyDefaultValues(internalState, stableKeyMap),
