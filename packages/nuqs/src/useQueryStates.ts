@@ -1,4 +1,13 @@
-import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react'
+import {
+  useCallback,
+  useEffect,
+  useId,
+  useInsertionEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState
+} from 'react'
 import {
   useAdapter,
   useAdapterDefaultOptions,
@@ -18,6 +27,14 @@ import { isAbsentFromUrl, type Query } from './lib/search-params'
 import { emitter, type CrossHookSyncPayload } from './lib/sync'
 import { getOwn, getUrlKey } from './lib/url-keys'
 import { type GenericParser } from './parsers'
+
+// Setter calls made before their hook first committed, in call order:
+// [whether that hook has committed, replay]. The calls made from renders that
+// never commit are kept, as they cannot be told apart from pending ones.
+let deferredCalls: Array<[{ current: boolean }, () => void]> = []
+
+const useIsomorphicLayoutEffect =
+  typeof window === 'undefined' ? useEffect : useLayoutEffect
 
 type KeyMapValue<Type> = GenericParser<Type> &
   Options & {
@@ -179,12 +196,17 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
   const searchParamsSyncKey = getSearchParamsSyncKey(initialSearchParams)
   // Adopts the current URL value into the internal state when it has changed.
   // Used both during render (below) and from the effect backstop further down.
-  const reconcile = () => {
+  // Effects read the queue as it is now, not as it was when rendering.
+  const getQueuedQueries = () =>
+    Object.fromEntries(
+      urlKeyList.map(key => [key, debounceController.getQueuedQuery(key)])
+    )
+  const reconcile = (queued = queuedQueries) => {
     const [hasChanged, state] = parseMap(
       keyMap,
       resolvedUrlKeys,
       initialSearchParams,
-      queuedQueries,
+      queued,
       queryRef.current,
       stateRef.current
     )
@@ -268,7 +290,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
     globalThrottleQueue
       .acknowledge(initialSearchParams, adapter.getSearchParamsSnapshot)
       .forEach(key => debounceController.queuedQuerySync.emit(key))
-    reconcile()
+    reconcile(getQueuedQueries())
   }, [searchParamsSyncKey, adapter.pathname])
 
   // Sync all hooks together & with external URL changes
@@ -346,14 +368,18 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
 
   // Setter calls made before this hook first committed (eg: during the render
   // of a route that has not committed yet), replayed once mounted.
-  const deferredCallsRef = useRef<Parameters<SetValues<KeyMap>>[]>([])
+  const isCommittedRef = useRef(false)
   const update = useCallback<SetValues<KeyMap>>(
     (stateUpdater, callOptions = {}) => {
       // Nothing must leak out of a render that may never commit (#1358):
       // neither to the URL, nor to the other hooks or the queues.
-      if (committedPathnameRef.current === null) {
-        deferredCallsRef.current.push([stateUpdater, callOptions])
-        return globalThrottleQueue.getPendingPromise(adapter)
+      if (!isCommittedRef.current) {
+        return new Promise(resolve =>
+          deferredCalls.push([
+            isCommittedRef,
+            () => resolve(update(stateUpdater, callOptions))
+          ])
+        )
       }
       const requestedState =
         typeof stateUpdater === 'function'
@@ -465,8 +491,19 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
     ]
   )
 
-  useEffect(() => {
-    deferredCallsRef.current.splice(0).forEach(args => void update(...args))
+  // Insertion effects run for the whole commit before any layout effect:
+  // the first hook to lay out replays the calls of every hook of the commit,
+  // in call order, before any later setter call and before the paint.
+  useInsertionEffect(() => {
+    isCommittedRef.current = true
+  }, [])
+  useIsomorphicLayoutEffect(() => {
+    deferredCalls = deferredCalls.filter(
+      ([isCommitted, replay]) => !isCommitted.current || void replay()
+    )
+    // The hooks of this commit subscribe to the others in a passive effect:
+    // read what was just queued from the queue instead, before the paint.
+    reconcile(getQueuedQueries())
   }, [])
 
   const outputState = useMemo(
