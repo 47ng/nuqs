@@ -1,10 +1,14 @@
-import { createElement } from 'react'
+import { useRouter } from 'next/compat/router.js'
+import { createElement, Suspense } from 'react'
 import { createAdapterProvider, type AdapterProvider } from './lib/context'
 import type { AdapterInterface } from './lib/defs'
-import { useNuqsNextAppRouterAdapter } from './next/impl.app'
+import {
+  NavigationSpy as AppRouterNavigationSpy,
+  useNuqsNextAppRouterAdapter
+} from './next/impl.app'
 import {
   isPagesRouter,
-  NavigationSpy,
+  NavigationSpy as PagesRouterNavigationSpy,
   useNuqsNextPagesRouterAdapter
 } from './next/impl.pages'
 
@@ -22,6 +26,12 @@ function useNuqsNextAdapter(): AdapterInterface {
     },
     autoResetQueueOnUpdate: false
   }
+}
+
+function NavigationSpy() {
+  const pagesRouter = useRouter()
+  const Spy = pagesRouter ? PagesRouterNavigationSpy : AppRouterNavigationSpy
+  return createElement(Suspense, { fallback: null }, createElement(Spy))
 }
 
 const Provider = createAdapterProvider(useNuqsNextAdapter)
