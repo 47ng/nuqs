@@ -2,7 +2,7 @@ import { expect, test, type Page } from '@playwright/test'
 import { navigateTo } from 'e2e-shared/playwright/navigate.ts'
 
 async function waitForHydration(page: Page) {
-  await page.locator('#hydration-marker').waitFor({ state: 'hidden' })
+  await page.locator('#hydration-marker').waitFor({ state: 'attached' })
   await page.waitForTimeout(50)
 }
 
