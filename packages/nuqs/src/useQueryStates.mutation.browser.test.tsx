@@ -18,7 +18,7 @@ import type { LimitUrlUpdates } from './defs'
 import { debounce } from './lib/queues/rate-limiting'
 import { resetQueues } from './lib/queues/reset'
 import { emitter } from './lib/sync'
-import { parseAsString } from './parsers'
+import { parseAsNativeArrayOf, parseAsString } from './parsers'
 import { useQueryStates } from './useQueryStates'
 
 const click = (testId: string) =>
@@ -327,5 +327,29 @@ describe('useQueryStates: options and parser caching', () => {
       </NuqsTestingAdapter>
     )
     await expect.element(page.getByTestId('value')).toHaveTextContent('default')
+  })
+
+  it('caches the URL values of the added keys, for multi parsers too', async () => {
+    const single = { s: parseAsString }
+    const both = { s: parseAsString, m: parseAsNativeArrayOf(parseAsString) }
+    const commits: unknown[] = []
+    function Probe({ keys }: { keys: 'single' | 'both' }) {
+      const [state] = useQueryStates(keys === 'single' ? single : both)
+      useLayoutEffect(() => {
+        commits.push(state)
+      })
+      return null
+    }
+    const tree = (keys: 'single' | 'both') => (
+      <NuqsTestingAdapter searchParams="?s=1&m=x&m=y">
+        <Probe keys={keys} />
+      </NuqsTestingAdapter>
+    )
+    const screen = await render(tree('single'))
+    await screen.rerender(tree('both'))
+    await new Promise(resolve => setTimeout(resolve, 50))
+    // A cache miss on the added keys would commit a new state again.
+    expect(commits).toHaveLength(2)
+    expect(commits.at(-1)).toEqual({ s: '1', m: ['x', 'y'] })
   })
 })
