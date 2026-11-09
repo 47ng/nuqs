@@ -3,9 +3,10 @@ import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 
-// Importing from 'react' in declarations resolves next to nuqs's real path,
-// which has no @types/react under pnpm's global virtual store (#1634).
-// A types reference resolves from the consumer's typeRoots instead.
+// Declarations must not import from 'react' (#1634):
+// under pnpm's global virtual store, TypeScript resolves it from nuqs's own folder,
+// which has no @types/react, so React types silently become `any`.
+// Use the global namespace (`React.ReactNode`) instead.
 
 const distRoot = fileURLToPath(new URL('../dist', import.meta.url))
 const declarations = await Promise.all(
