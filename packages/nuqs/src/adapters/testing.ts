@@ -1,12 +1,4 @@
-import {
-  createElement,
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-  type ReactElement,
-  type ReactNode
-} from 'react'
+import { createElement, useCallback, useEffect, useRef, useState } from 'react'
 import { resetQueues } from '../lib/queues/reset'
 import { renderQueryString } from './custom'
 import { context, type AdapterProps } from './lib/context'
@@ -59,7 +51,7 @@ type TestingAdapterProps = Pick<AdapterInterface, 'autoResetQueueOnUpdate'> & {
    */
   hasMemory?: boolean
 
-  children: ReactNode
+  children: React.ReactNode
 } & AdapterProps
 
 function renderInitialSearchParams(
@@ -87,7 +79,7 @@ export function NuqsTestingAdapter({
   onUrlUpdate,
   children,
   searchParams: initialSearchParams = ''
-}: TestingAdapterProps): ReactElement {
+}: TestingAdapterProps): React.ReactElement {
   const renderedInitialSearchParams =
     renderInitialSearchParams(initialSearchParams)
   // Simulate a central location.search in memory
@@ -166,8 +158,8 @@ export function withNuqsTestingAdapter(
   return function NuqsTestingAdapterWrapper({
     children
   }: {
-    children: ReactNode
-  }): ReactElement {
+    children: React.ReactNode
+  }): React.ReactElement {
     return createElement(
       NuqsTestingAdapter,
       // @ts-expect-error - Ignore missing children error

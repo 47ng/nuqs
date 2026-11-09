@@ -31,6 +31,12 @@ const commonConfig = {
       return id.replace(/\\/g, '/').endsWith('/src/debug.ts') || undefined
     }
   },
+  // Declarations use the global React namespace rather than importing 'react',
+  // which resolves next to nuqs and misses @types/react in pnpm's global virtual store.
+  // The isolated declarations transform drops reference directives from sources.
+  banner: {
+    dts: '/// <reference types="react" />'
+  },
   tsconfig: 'tsconfig.build.json'
 } satisfies UserConfig
 

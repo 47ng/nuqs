@@ -1,5 +1,5 @@
 // #region Functions
 export declare function NuqsAdapter({ children, ...adapterProps }: AdapterProps & {
-  children: ReactNode;
-}): ReactElement;
+  children: React.ReactNode;
+}): React.ReactElement;
 // #endregion

@@ -8,8 +8,8 @@ export type UrlUpdateEvent = {
 // #endregion
 
 // #region Functions
-export declare function NuqsTestingAdapter({ resetUrlUpdateQueueOnMount, autoResetQueueOnUpdate, defaultOptions, processUrlSearchParams, rateLimitFactor, hasMemory, onUrlUpdate, children, searchParams: initialSearchParams }: TestingAdapterProps): ReactElement;
+export declare function NuqsTestingAdapter({ resetUrlUpdateQueueOnMount, autoResetQueueOnUpdate, defaultOptions, processUrlSearchParams, rateLimitFactor, hasMemory, onUrlUpdate, children, searchParams: initialSearchParams }: TestingAdapterProps): React.ReactElement;
 export declare function withNuqsTestingAdapter(_?: Omit<TestingAdapterProps, "children">): ({ children }: {
-  children: ReactNode;
-}) => ReactElement;
+  children: React.ReactNode;
+}) => React.ReactElement;
 // #endregion

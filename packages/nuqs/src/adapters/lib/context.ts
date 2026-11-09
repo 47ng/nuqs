@@ -1,12 +1,4 @@
-import {
-  createContext,
-  createElement,
-  useContext,
-  type Context,
-  type ProviderProps,
-  type ReactElement,
-  type ReactNode
-} from 'react'
+import { createContext, createElement, useContext } from 'react'
 import type { Options } from '../../defs'
 import { error } from '../../lib/errors'
 import { globalWeakSingleton } from '../../lib/global-singleton'
@@ -31,7 +23,7 @@ export type AdapterContext = AdapterProps & {
 // Revisit in nuqs@3 (react@^19 only): the React 18/19 Provider shape hazard
 // goes away, but distinct React instances on one page would then share one
 // context object (concurrent renders interleave its _currentValue).
-export const context: Context<AdapterContext> = globalWeakSingleton(
+export const context: React.Context<AdapterContext> = globalWeakSingleton(
   'adapter-context',
   createContext,
   () => {
@@ -63,9 +55,9 @@ if (typeof window !== 'undefined') {
 
 export type AdapterProvider = (
   props: AdapterProps & {
-    children: ReactNode
+    children: React.ReactNode
   }
-) => ReactElement<ProviderProps<AdapterContext>>
+) => React.ReactElement<React.ProviderProps<AdapterContext>>
 
 /**
  * Create a custom adapter (context provider) for nuqs to work with your framework / router.

@@ -5,9 +5,7 @@ import {
   useEffect,
   useMemo,
   useRef,
-  useSyncExternalStore,
-  type ReactElement,
-  type ReactNode
+  useSyncExternalStore
 } from 'react'
 import { debug } from '../lib/debug'
 import { resetQueues } from '../lib/queues/reset'
@@ -121,7 +119,7 @@ export function NuqsAdapter({
   serverSearch,
   ...adapterProps
 }: AdapterProps & {
-  children: ReactNode
+  children: React.ReactNode
   fullPageNavigationOnShallowFalseUpdates?: boolean
   /**
    * The search string of the request, for server-side rendering where
@@ -137,7 +135,7 @@ export function NuqsAdapter({
    * Accepts the search string with or without the leading `?`.
    */
   serverSearch?: string | URLSearchParams
-}): ReactElement {
+}): React.ReactElement {
   return createElement(
     NuqsReactAdapterContext.Provider,
     { value: { fullPageNavigationOnShallowFalseUpdates, serverSearch } },
