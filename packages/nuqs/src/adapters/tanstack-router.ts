@@ -119,6 +119,8 @@ function useNuqsTanstackRouterAdapter(watchKeys: string[]): AdapterInterface {
   )
 
   return {
+    getSearchParamsSnapshot: () =>
+      new URLSearchParams(router.state.location.searchStr),
     searchParams,
     updateUrl,
     rateLimitFactor: 1
