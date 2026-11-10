@@ -12,7 +12,8 @@ export const browserProjects = [
       'src/useQueryStates.browser.test.tsx',
       'src/useQueryStates.mutation.browser.test.tsx',
       'src/useQueryStates.discarded-reconcile.browser.test.tsx',
-      'src/useQueryStates.lagging-adapter.browser.test.tsx'
+      'src/useQueryStates.lagging-adapter.browser.test.tsx',
+      'src/useQueryStates.uncommitted-route.browser.test.tsx'
     ]
   }
 ]

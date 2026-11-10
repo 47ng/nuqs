@@ -1,4 +1,12 @@
-import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react'
+import {
+  useCallback,
+  useEffect,
+  useId,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState
+} from 'react'
 import {
   useAdapter,
   useAdapterDefaultOptions,
@@ -18,6 +26,15 @@ import { isAbsentFromUrl, type Query } from './lib/search-params'
 import { emitter, type CrossHookSyncPayload } from './lib/sync'
 import { getOwn, getUrlKey } from './lib/url-keys'
 import { type GenericParser } from './parsers'
+
+// Setter calls are numbered, so that a held back call, replayed later, does not
+// overwrite the keys that newer calls have set since.
+let callCount = 0
+let replayedCallId: number | undefined
+const lastCallIds: Record<string, number> = {}
+
+const useIsomorphicLayoutEffect =
+  typeof window === 'undefined' ? useEffect : useLayoutEffect
 
 type KeyMapValue<Type> = GenericParser<Type> &
   Options & {
@@ -179,12 +196,17 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
   const searchParamsSyncKey = getSearchParamsSyncKey(initialSearchParams)
   // Adopts the current URL value into the internal state when it has changed.
   // Used both during render (below) and from the effect backstop further down.
-  const reconcile = () => {
+  // Effects read the queue as it is now, not as it was when rendering.
+  const getQueuedQueries = () =>
+    Object.fromEntries(
+      urlKeyList.map(key => [key, debounceController.getQueuedQuery(key)])
+    )
+  const reconcile = (queued = queuedQueries) => {
     const [hasChanged, state] = parseMap(
       keyMap,
       resolvedUrlKeys,
       initialSearchParams,
-      queuedQueries,
+      queued,
       queryRef.current,
       stateRef.current
     )
@@ -268,7 +290,7 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
     globalThrottleQueue
       .acknowledge(initialSearchParams, adapter.getSearchParamsSnapshot)
       .forEach(key => debounceController.queuedQuerySync.emit(key))
-    reconcile()
+    reconcile(getQueuedQueries())
   }, [searchParamsSyncKey, adapter.pathname])
 
   // Sync all hooks together & with external URL changes
@@ -344,12 +366,28 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
     }
   }, [stateKeys, resolvedUrlKeys])
 
+  // Setter calls made before this hook first committed (eg: during the render
+  // of a route that has not committed yet), replayed once it lays out.
+  const isCommittedRef = useRef(false)
+  const deferredCallsRef = useRef<Array<() => void>>([])
   const update = useCallback<SetValues<KeyMap>>(
     (stateUpdater, callOptions = {}) => {
+      const callId = replayedCallId ?? ++callCount
+      replayedCallId = undefined
       const requestedState =
         typeof stateUpdater === 'function'
           ? stateUpdater(applyDefaultValues(stateRef.current, stableKeyMap))
           : stateUpdater
+      // Nothing must leak out of a render that may never commit (#1358):
+      // neither to the URL, nor to the other hooks or the queues.
+      if (!isCommittedRef.current) {
+        return new Promise(resolve =>
+          deferredCallsRef.current.push(() => {
+            replayedCallId = callId
+            resolve(update(requestedState, callOptions))
+          })
+        )
+      }
       // `null` (or an updater returning `null`) clears every key of the map.
       const newState: Partial<Nullable<KeyMap>> =
         requestedState ??
@@ -367,9 +405,15 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
       for (let [stateKey, value] of Object.entries(newState)) {
         const parser = getOwn(stableKeyMap, stateKey)
         const urlKey = resolvedUrlKeys[stateKey]!
-        if (!parser || urlKey === undefined || value === undefined) {
+        if (
+          !parser ||
+          urlKey === undefined ||
+          value === undefined ||
+          lastCallIds[urlKey]! > callId
+        ) {
           continue
         }
+        lastCallIds[urlKey] = callId
         if (
           (callOptions.clearOnDefault ??
             parser.clearOnDefault ??
@@ -456,9 +500,27 @@ export function useQueryStates<KeyMap extends UseQueryStatesKeysMap>(
     ]
   )
 
+  // A layout effect, so that the calls are replayed before the paint, and before
+  // the passive effects (where children usually call setters on mount).
+  // Hidden `<Activity>` subtrees only lay out once revealed.
+  useIsomorphicLayoutEffect(() => {
+    isCommittedRef.current = true
+    deferredCallsRef.current.splice(0).forEach(replay => replay())
+    // The hooks of this commit subscribe to the others in a passive effect:
+    // read what was just queued from the queue instead, before the paint.
+    reconcile(getQueuedQueries())
+  }, [])
+
+  // Until the hook commits, it has no optimistic state: its render-time
+  // reconciliation is the latest URL state, so render it right away. Otherwise
+  // a render-time setter would act on the stale state, eg: on the reveal of a
+  // hidden `<Activity>`, and overwrite what was written in the meantime.
+  const renderedState = isCommittedRef.current
+    ? internalState
+    : stateRef.current
   const outputState = useMemo(
-    () => applyDefaultValues(internalState, stableKeyMap),
-    [internalState, stableKeyMap]
+    () => applyDefaultValues(renderedState, stableKeyMap),
+    [renderedState, stableKeyMap]
   )
   return [outputState, update]
 }

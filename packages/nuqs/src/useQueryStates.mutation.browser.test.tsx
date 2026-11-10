@@ -13,10 +13,12 @@ import { cleanup, render } from 'vitest-browser-react'
 import { page } from 'vitest/browser'
 import { context } from './adapters/lib/context'
 import type { AdapterInterface } from './adapters/lib/defs'
-import { NuqsTestingAdapter } from './adapters/testing'
+import { NuqsTestingAdapter, type UrlUpdateEvent } from './adapters/testing'
+import type { LimitUrlUpdates } from './defs'
+import { debounce } from './lib/queues/rate-limiting'
 import { resetQueues } from './lib/queues/reset'
 import { emitter } from './lib/sync'
-import { parseAsString } from './parsers'
+import { parseAsNativeArrayOf, parseAsString } from './parsers'
 import { useQueryStates } from './useQueryStates'
 
 const click = (testId: string) =>
@@ -209,5 +211,145 @@ describe('useQueryStates: mutation qualification', () => {
     expect(commits.at(-1)).toEqual({ a: '1', b: '2' })
     expect(commits.at(-1)).not.toBe(initialState)
     expect(page.getByTestId('state').element().textContent).toBe('1,2')
+  })
+})
+
+describe('useQueryStates: options and parser caching', () => {
+  afterEach(async () => {
+    await cleanup()
+    resetQueues()
+  })
+
+  async function renderSetter(
+    keyMap: Parameters<typeof useQueryStates>[0],
+    onUrlUpdate: (event: UrlUpdateEvent) => void
+  ) {
+    let set!: ReturnType<typeof useQueryStates>[1]
+    function Probe() {
+      ;[, set] = useQueryStates(keyMap)
+      return null
+    }
+    await render(
+      <NuqsTestingAdapter onUrlUpdate={onUrlUpdate}>
+        <Probe />
+      </NuqsTestingAdapter>
+    )
+    return set
+  }
+
+  it('defaults to shallow updates, and takes shallow and scroll from the parser', async () => {
+    const events: UrlUpdateEvent[] = []
+    const set = await renderSetter(
+      {
+        a: parseAsString,
+        b: parseAsString.withOptions({ shallow: false, scroll: true })
+      },
+      event => events.push(event)
+    )
+    await set({ a: 'a' })
+    expect(events.at(-1)?.options).toMatchObject({
+      shallow: true,
+      scroll: false
+    })
+    await set({ b: 'b' })
+    expect(events.at(-1)?.options).toMatchObject({
+      shallow: false,
+      scroll: true
+    })
+  })
+
+  it('resolves with the largest debounce, and uses the default debounce time', async () => {
+    const events: UrlUpdateEvent[] = []
+    const set = await renderSetter(
+      {
+        slow: parseAsString.withOptions({ limitUrlUpdates: debounce(200) }),
+        fast: parseAsString.withOptions({ limitUrlUpdates: debounce(20) })
+      },
+      event => events.push(event)
+    )
+    const search = await set({ slow: 'slow', fast: 'fast' })
+    expect(search.get('slow')).toBe('slow')
+    events.length = 0
+    // `timeMs` is required by the types, not from JavaScript callers.
+    const defaultDebounce = { method: 'debounce' } as LimitUrlUpdates
+    void set({ fast: 'default' }, { limitUrlUpdates: defaultDebounce })
+    await new Promise(resolve => setTimeout(resolve, 10))
+    expect(events).toEqual([])
+    await expect.poll(() => events.length).toBe(1)
+  })
+
+  it.each([
+    { name: 'gains', from: undefined, to: 'default', expected: 'default' },
+    { name: 'loses', from: 'default', to: undefined, expected: 'null' }
+  ])(
+    'renders the new default value when a parser $name it',
+    async ({ from, to, expected }) => {
+      // An `eq` that matches anything: only defined values can be compared.
+      const parser = { parse: (v: string) => v, eq: () => true }
+      function Probe({ defaultValue }: { defaultValue?: string }) {
+        const [{ value }] = useQueryStates({
+          value: { ...parser, defaultValue }
+        })
+        return <p data-testid="value">{String(value)}</p>
+      }
+      const screen = await render(
+        <NuqsTestingAdapter>
+          <Probe defaultValue={from} />
+        </NuqsTestingAdapter>
+      )
+      await screen.rerender(
+        <NuqsTestingAdapter>
+          <Probe defaultValue={to} />
+        </NuqsTestingAdapter>
+      )
+      await expect
+        .element(page.getByTestId('value'))
+        .toHaveTextContent(expected)
+    }
+  )
+
+  it('compares the default values of a parser without eq', async () => {
+    function Probe() {
+      // A new default value on each render, and no `eq` to compare them.
+      const [{ value }] = useQueryStates({
+        value: { parse: (v: string) => v, defaultValue: ['default'] }
+      })
+      return <p data-testid="value">{String(value)}</p>
+    }
+    const screen = await render(
+      <NuqsTestingAdapter>
+        <Probe />
+      </NuqsTestingAdapter>
+    )
+    await screen.rerender(
+      <NuqsTestingAdapter>
+        <Probe />
+      </NuqsTestingAdapter>
+    )
+    await expect.element(page.getByTestId('value')).toHaveTextContent('default')
+  })
+
+  it('caches the URL values of the added keys, for multi parsers too', async () => {
+    const single = { s: parseAsString }
+    const both = { s: parseAsString, m: parseAsNativeArrayOf(parseAsString) }
+    const commits: unknown[] = []
+    function Probe({ keys }: { keys: 'single' | 'both' }) {
+      const [state] = useQueryStates(keys === 'single' ? single : both)
+      useLayoutEffect(() => {
+        commits.push(state)
+      })
+      return null
+    }
+    const tree = (keys: 'single' | 'both') => (
+      <NuqsTestingAdapter searchParams="?s=1&m=x&m=y">
+        <Probe keys={keys} />
+      </NuqsTestingAdapter>
+    )
+    const screen = await render(tree('single'))
+    await screen.rerender(tree('both'))
+    await new Promise(resolve => setTimeout(resolve, 50))
+    // A cache miss on the added keys would commit a new state again.
+    expect(commits).toHaveLength(2)
+    expect(commits.at(-1)).toEqual({ s: '1', m: ['x', 'y'] })
   })
 })
