@@ -1,5 +1,3 @@
-import type { TransitionStartFunction } from 'react'
-
 export type SearchParams = Record<string, string | string[] | undefined>
 export type HistoryOptions = 'replace' | 'push'
 export type LimitUrlUpdates =
@@ -75,7 +73,7 @@ export type Options = {
    * In other frameworks, navigation events triggered by a query update can also
    * be wrapped in a transition this way (e.g. `React.startTransition`).
    */
-  startTransition?: TransitionStartFunction
+  startTransition?: React.TransitionStartFunction
 
   /**
    * Clear the key-value pair from the URL query string when setting the state

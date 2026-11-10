@@ -41,7 +41,7 @@ export type Options = {
   shallow?: boolean;
   throttleMs?: number;
   limitUrlUpdates?: LimitUrlUpdates;
-  startTransition?: TransitionStartFunction;
+  startTransition?: React.TransitionStartFunction;
   clearOnDefault?: boolean;
 };
 export type Parser<T> = SingleParser<T>;

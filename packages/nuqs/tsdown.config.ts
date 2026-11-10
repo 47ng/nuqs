@@ -31,6 +31,12 @@ const commonConfig = {
       return id.replace(/\\/g, '/').endsWith('/src/debug.ts') || undefined
     }
   },
+  // Declarations use the global React namespace, not imports from 'react' (#1634).
+  // This line loads it from the app's own @types folders.
+  // It must be a banner: the isolated declarations transform drops it from sources.
+  banner: {
+    dts: '/// <reference types="react" />'
+  },
   tsconfig: 'tsconfig.build.json'
 } satisfies UserConfig
 

@@ -1,9 +1,4 @@
-import {
-  createElement,
-  Suspense,
-  type ReactElement,
-  type ReactNode
-} from 'react'
+import { createElement, Suspense } from 'react'
 import { createAdapterProvider, type AdapterProps } from '../lib/context'
 import { NavigationSpy, useNuqsNextAppRouterAdapter } from './impl.app'
 
@@ -13,8 +8,8 @@ export function NuqsAdapter({
   children,
   ...adapterProps
 }: AdapterProps & {
-  children: ReactNode
-}): ReactElement {
+  children: React.ReactNode
+}): React.ReactElement {
   return createElement(Provider, {
     ...adapterProps,
     children: [

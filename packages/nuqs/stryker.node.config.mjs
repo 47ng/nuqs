@@ -5,7 +5,7 @@ const config = {
   ...shared,
   mutate: nodeMutate,
   testFiles: [
-    'src/!(api|*.browser).test.ts',
+    'src/!(api|dts-react-types|*.browser).test.ts',
     'src/lib/**/!(*.browser).test.ts'
   ],
   vitest: {
