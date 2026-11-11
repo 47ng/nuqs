@@ -1,0 +1,14 @@
+{
+  "type": "registry:item",
+  "name": "useDateRange",
+  "title": "Date Range Hook",
+  "description": "Date range selection with URL synchronization and preset support. Includes common presets like last 7 days, last 30 days, and custom ranges.",
+  "dependencies": ["nuqs", "date-fns@^4.1.0"],
+  "files": [
+    {
+      "type": "registry:file",
+      "path": "https://raw.githubusercontent.com/iHiteshAgrawal/nuqs-presets/a230a749daab2327dae9907f845b445a0653dc04/registry/default/useDateRange.ts",
+      "target": "~/hooks/nuqs-presets/useDateRange.ts"
+    }
+  ]
+}

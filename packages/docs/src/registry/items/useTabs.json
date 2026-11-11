@@ -1,0 +1,14 @@
+{
+  "type": "registry:item",
+  "name": "useTabs",
+  "title": "Tabs Hook",
+  "description": "Type-safe tab navigation with URL synchronization. Provides strongly-typed tab values and active state checking.",
+  "dependencies": ["nuqs"],
+  "files": [
+    {
+      "type": "registry:file",
+      "path": "https://raw.githubusercontent.com/iHiteshAgrawal/nuqs-presets/a230a749daab2327dae9907f845b445a0653dc04/registry/default/useTabs.ts",
+      "target": "~/hooks/nuqs-presets/useTabs.ts"
+    }
+  ]
+}
