@@ -118,9 +118,13 @@ function useNuqsTanstackRouterAdapter(watchKeys: string[]): AdapterInterface {
     [navigate, pathname]
   )
 
+  const getSearchParamsSnapshot = useCallback(
+    () => new URLSearchParams(router.state.location.searchStr),
+    [router]
+  )
+
   return {
-    getSearchParamsSnapshot: () =>
-      new URLSearchParams(router.state.location.searchStr),
+    getSearchParamsSnapshot,
     searchParams,
     updateUrl,
     rateLimitFactor: 1
