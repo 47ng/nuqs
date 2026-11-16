@@ -14,11 +14,8 @@ import { NuqsAdapter } from './tanstack-router'
 
 afterEach(() => vi.unstubAllGlobals())
 
-it('preserves router-only search params when flushing a queued update', async () => {
-  vi.stubGlobal('location', new URL('https://example.com/?browserOnly=ignored'))
-  const history = createMemoryHistory({
-    initialEntries: ['/?routerOnly=preserved']
-  })
+async function flushQueuedUpdate(initialEntry: string) {
+  const history = createMemoryHistory({ initialEntries: [initialEntry] })
   const router = createRouter({ routeTree: createRootRoute(), history })
   let adapter: AdapterInterface | undefined
 
@@ -34,16 +31,31 @@ it('preserves router-only search params when flushing a queued update', async ()
       </NuqsAdapter>
     </RouterContextProvider>
   )
-  expect(adapter!.searchParams.has('routerOnly')).toBe(false)
 
   const queue = new ThrottledQueue()
   queue.push({ key: 'query', query: 'updated', options: {} })
   const search = await queue.flush(adapter!)
+  return { adapter: adapter!, history, search }
+}
 
+it('preserves router-only search params when flushing a queued update', async () => {
+  vi.stubGlobal('location', new URL('https://example.com/?browserOnly=ignored'))
+  const { adapter, history, search } = await flushQueuedUpdate(
+    '/?routerOnly=preserved'
+  )
+
+  expect(adapter.searchParams.has('routerOnly')).toBe(false)
   expect(Object.fromEntries(search)).toEqual({
     routerOnly: 'preserved',
     query: 'updated'
   })
   expect(history.location.search).toBe('?routerOnly=preserved&query=updated')
   expect(location.search).toBe('?browserOnly=ignored')
+})
+
+it('keeps the raw text of untouched search params when flushing a queued update', async () => {
+  const raw = '?tag=a&tag=b&v=1.10&id=12345678901234567890&s="exact"'
+  const { history } = await flushQueuedUpdate(`/${raw}`)
+
+  expect(history.location.search).toBe(`${raw}&query=updated`)
 })
