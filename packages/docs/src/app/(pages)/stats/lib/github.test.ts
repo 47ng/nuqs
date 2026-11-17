@@ -147,6 +147,24 @@ describe('getStarHistory', () => {
     expect(history.bins[11]).toMatchObject({ date: '2024-06-05', diff: 3 })
   })
 
+  it('queries the stargazer count of the repository with the token', async () => {
+    const sent = { authorization: null as string | null, query: '' }
+    mockGitHub()
+    server.use(
+      http.post(graphqlEndpoint, async ({ request }) => {
+        sent.authorization = request.headers.get('authorization')
+        sent.query = ((await request.json()) as { query: string }).query
+        return HttpResponse.json({
+          data: { repository: { stargazerCount: 1 } }
+        })
+      })
+    )
+    await getAvailableStarHistory()
+    expect(sent.authorization).toBe('bearer test-token')
+    expect(sent.query).toContain('repository(owner: "47ng", name: "nuqs")')
+    expect(sent.query).toContain('stargazerCount')
+  })
+
   it('authenticates with the token and pins the API version', async () => {
     const headers: Record<string, string | null> = {}
     mockGitHub()
