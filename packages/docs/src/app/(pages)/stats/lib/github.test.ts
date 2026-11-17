@@ -15,7 +15,31 @@ vi.mock('server-only', () => ({}))
 
 import { getStarHistory } from './github.ts'
 
-const endpoint = 'https://api.github.com/graphql'
+const graphqlEndpoint = 'https://api.github.com/graphql'
+const historyEndpoint =
+  'https://api.github.com/repos/47ng/nuqs/stargazers/history'
+
+type Week = { week: number; total: number; days: number[] }
+
+function week(sunday: string, days: number[]): Week {
+  return {
+    week: Date.parse(sunday) / 1000,
+    total: days.reduce((sum, day) => sum + day, 0),
+    days
+  }
+}
+
+function mockGitHub({ stargazerCount = 100, weeks = [] as Week[] } = {}) {
+  server.use(
+    http.post(graphqlEndpoint, () =>
+      HttpResponse.json({ data: { repository: { stargazerCount } } })
+    ),
+    http.get(historyEndpoint, ({ request }) => {
+      const perPage = new URL(request.url).searchParams.get('per_page') ?? 30
+      return HttpResponse.json(weeks.slice(0, Number(perPage)))
+    })
+  )
+}
 
 async function getAvailableStarHistory() {
   const history = await getStarHistory()
@@ -25,46 +49,12 @@ async function getAvailableStarHistory() {
   return history
 }
 
-function edge(login: string, starredAt: string) {
-  return {
-    starredAt,
-    node: {
-      login,
-      name: null,
-      avatarUrl: `https://avatars.githubusercontent.com/${login}`,
-      company: null,
-      followers: { totalCount: 0 }
-    }
-  }
-}
-
-function page(
-  edges: ReturnType<typeof edge>[],
-  {
-    totalCount = 100,
-    hasNextPage = false,
-    endCursor = null as string | null
-  } = {}
-) {
-  return {
-    data: {
-      repository: {
-        stargazers: {
-          totalCount,
-          pageInfo: { hasNextPage, endCursor },
-          edges
-        }
-      }
-    }
-  }
-}
-
 const server = setupServer()
 beforeAll(() => server.listen({ onUnhandledRequest: 'error' }))
 afterEach(() => server.resetHandlers())
 afterAll(() => server.close())
 
-// Pin "today" to a fixed UTC day so the 12-day window is deterministic.
+// Pin "today" to Saturday 2024-06-15 (UTC): the 12-day window is [06-04 .. 06-15].
 beforeEach(() => {
   vi.useFakeTimers({ toFake: ['Date'] })
   vi.setSystemTime(new Date('2024-06-15T12:00:00Z'))
@@ -85,123 +75,132 @@ describe('getStarHistory', () => {
       'GITHUB_TOKEN is not set: star history is unavailable.'
     )
   })
+
   it('fills the 12-day bins and computes end-of-day star totals', async () => {
-    server.use(
-      http.post(endpoint, () =>
-        HttpResponse.json(
-          page(
-            [
-              edge('a', '2024-06-15T10:00:00Z'),
-              edge('b', '2024-06-15T11:00:00Z'),
-              edge('c', '2024-06-14T09:00:00Z')
-            ],
-            { totalCount: 100 }
-          )
-        )
-      )
-    )
+    mockGitHub({
+      stargazerCount: 100,
+      weeks: [week('2024-06-09', [0, 0, 0, 0, 0, 1, 2])]
+    })
     const history = await getAvailableStarHistory()
     expect(history.count).toBe(100)
     expect(history.bins).toHaveLength(12)
-    expect(history.bins[0]).toMatchObject({
-      date: '2024-06-15',
-      diff: 2,
-      stars: 100
+    expect(history.bins[0]).toEqual({ date: '2024-06-15', diff: 2, stars: 100 })
+    // 06-14 earned 1 star; end-of-day total is the next day minus its diff.
+    expect(history.bins[1]).toEqual({ date: '2024-06-14', diff: 1, stars: 98 })
+    expect(history.bins[2]).toEqual({ date: '2024-06-13', diff: 0, stars: 97 })
+  })
+
+  it('maps each week day to its date, Sunday first, across weeks', async () => {
+    mockGitHub({
+      weeks: [
+        week('2024-06-09', [1, 0, 0, 0, 0, 0, 0]),
+        week('2024-06-02', [3, 0, 0, 0, 0, 0, 4])
+      ]
     })
-    expect(history.bins[0].stargarzers.map(s => s.login)).toEqual(['a', 'b'])
-    // 06-14 earned 1 star; end-of-day total is the prior day minus its diff.
-    expect(history.bins[1]).toMatchObject({
-      date: '2024-06-14',
-      diff: 1,
-      stars: 98
-    })
+    const history = await getAvailableStarHistory()
+    const diffs = Object.fromEntries(history.bins.map(b => [b.date, b.diff]))
+    expect(diffs['2024-06-09']).toBe(1)
+    expect(diffs['2024-06-08']).toBe(4)
   })
 
   it('includes the oldest in-window day and excludes the day before it', async () => {
-    // Window is [today .. today-11] = [06-15 .. 06-04]; 06-04 is bins[11], 06-03 is out.
-    server.use(
-      http.post(endpoint, () =>
-        HttpResponse.json(
-          page([
-            edge('boundary', '2024-06-04T10:00:00Z'),
-            edge('excluded', '2024-06-03T23:00:00Z')
-          ])
-        )
-      )
-    )
+    // Window is [06-15 .. 06-04]: Tuesday 06-04 is bins[11], Monday 06-03 is out.
+    mockGitHub({ weeks: [week('2024-06-02', [0, 5, 7, 0, 0, 0, 0])] })
     const history = await getAvailableStarHistory()
-    expect(history.bins[11].date).toBe('2024-06-04')
-    expect(history.bins[11].stargarzers.map(s => s.login)).toEqual(['boundary'])
-    const allLogins = history.bins.flatMap(b => b.stargarzers.map(s => s.login))
-    expect(allLogins).not.toContain('excluded')
+    expect(history.bins[11]).toMatchObject({ date: '2024-06-04', diff: 7 })
+    expect(history.bins.reduce((sum, b) => sum + b.diff, 0)).toBe(7)
   })
 
-  it('follows the cursor across pages until the window is exhausted', async () => {
+  it.each([
+    ['UTC+2', '2024-06-08T22:00:00Z'],
+    ['UTC-8', '2024-06-09T08:00:00Z'],
+    ['UTC+14', '2024-06-08T10:00:00Z']
+  ])(
+    'aligns weeks starting on Sunday 06-09 in %s to that Sunday',
+    async (_, weekStart) => {
+      mockGitHub({
+        weeks: [
+          {
+            week: Date.parse(weekStart) / 1000,
+            total: 1,
+            days: [1, 0, 0, 0, 0, 0, 0]
+          }
+        ]
+      })
+      const history = await getAvailableStarHistory()
+      expect(history.bins.find(b => b.diff > 0)?.date).toBe('2024-06-09')
+    }
+  )
+
+  it('covers the 12-day window when today is a Sunday', async () => {
+    // Window is [06-05 .. 06-16], over three weeks.
+    vi.setSystemTime(new Date('2024-06-16T12:00:00Z'))
+    mockGitHub({
+      weeks: [
+        week('2024-06-16', [1, 0, 0, 0, 0, 0, 0]),
+        week('2024-06-09', [0, 0, 0, 0, 0, 0, 0]),
+        week('2024-06-02', [0, 0, 0, 3, 0, 0, 0])
+      ]
+    })
+    const history = await getAvailableStarHistory()
+    expect(history.bins[0]).toMatchObject({ date: '2024-06-16', diff: 1 })
+    expect(history.bins[11]).toMatchObject({ date: '2024-06-05', diff: 3 })
+  })
+
+  it('queries the stargazer count of the repository with the token', async () => {
+    const sent = { authorization: null as string | null, query: '' }
+    mockGitHub()
     server.use(
-      http.post(endpoint, async ({ request }) => {
-        const { query } = (await request.json()) as { query: string }
-        if (query.includes('"c1"')) {
-          return HttpResponse.json(
-            page([
-              edge('p2a', '2024-06-13T10:00:00Z'),
-              edge('old', '2024-06-01T10:00:00Z') // before the window
-            ])
-          )
-        }
-        return HttpResponse.json(
-          page(
-            [
-              edge('p1a', '2024-06-15T10:00:00Z'),
-              edge('p1b', '2024-06-14T10:00:00Z')
-            ],
-            { hasNextPage: true, endCursor: 'c1' }
-          )
-        )
+      http.post(graphqlEndpoint, async ({ request }) => {
+        sent.authorization = request.headers.get('authorization')
+        sent.query = ((await request.json()) as { query: string }).query
+        return HttpResponse.json({
+          data: { repository: { stargazerCount: 1 } }
+        })
       })
     )
-    const history = await getAvailableStarHistory()
-    // p2a only appears if the second page was fetched via the cursor.
-    expect(history.bins[0].stargarzers.map(s => s.login)).toEqual(['p1a'])
-    expect(history.bins[1].stargarzers.map(s => s.login)).toEqual(['p1b'])
-    expect(history.bins[2].stargarzers.map(s => s.login)).toEqual(['p2a'])
+    await getAvailableStarHistory()
+    expect(sent.authorization).toBe('bearer test-token')
+    expect(sent.query).toContain('repository(owner: "47ng", name: "nuqs")')
+    expect(sent.query).toContain('stargazerCount')
   })
 
-  it('terminates on an empty page', async () => {
+  it('authenticates with the token and pins the API version', async () => {
+    const headers: Record<string, string | null> = {}
+    mockGitHub()
     server.use(
-      http.post(endpoint, () =>
-        HttpResponse.json(
-          page([], { totalCount: 50, hasNextPage: true, endCursor: 'c1' })
-        )
-      )
+      http.get(historyEndpoint, ({ request }) => {
+        headers.authorization = request.headers.get('authorization')
+        headers.apiVersion = request.headers.get('x-github-api-version')
+        return HttpResponse.json([])
+      })
     )
-    const history = await getAvailableStarHistory()
-    expect(history.count).toBe(50)
-    expect(history.bins).toHaveLength(12)
-    expect(history.bins.every(b => b.diff === 0)).toBe(true)
-    expect(history.bins[0].stars).toBe(50)
+    await getAvailableStarHistory()
+    expect(headers).toEqual({
+      authorization: 'Bearer test-token',
+      apiVersion: '2026-03-10'
+    })
   })
 
   it('returns empty bins with the total count when nothing was starred in the window', async () => {
-    server.use(
-      http.post(endpoint, () =>
-        HttpResponse.json(
-          page([edge('old', '2024-05-01T10:00:00Z')], { totalCount: 200 })
-        )
-      )
-    )
+    mockGitHub({ stargazerCount: 200, weeks: [] })
     const history = await getAvailableStarHistory()
     expect(history.count).toBe(200)
-    expect(history.bins[0]).toMatchObject({ stars: 200, diff: 0 })
-    expect(history.bins.every(b => b.stargarzers.length === 0)).toBe(true)
+    expect(history.bins).toHaveLength(12)
+    expect(history.bins.every(b => b.diff === 0 && b.stars === 200)).toBe(true)
   })
 
   it('returns null when GitHub cannot return the repository', async () => {
+    mockGitHub()
     server.use(
-      http.post(endpoint, () =>
+      http.post(graphqlEndpoint, () =>
         HttpResponse.json({
           data: { repository: null },
           errors: [{ message: 'Repository data is unavailable' }]
         })
+      ),
+      http.get(historyEndpoint, () =>
+        HttpResponse.json({}, { status: 404, statusText: 'Not Found' })
       )
     )
     const error = vi.spyOn(console, 'error').mockImplementation(() => {})
@@ -213,16 +212,38 @@ describe('getStarHistory', () => {
   })
 
   it('throws on a malformed GraphQL response', async () => {
-    server.use(http.post(endpoint, () => HttpResponse.json({ data: {} })))
+    mockGitHub()
+    server.use(
+      http.post(graphqlEndpoint, () => HttpResponse.json({ data: {} }))
+    )
     await expect(getStarHistory()).rejects.toThrow()
   })
 
-  it('throws on a non-ok API response', async () => {
+  it('throws on a malformed history response', async () => {
+    mockGitHub()
     server.use(
-      http.post(endpoint, () =>
+      http.get(historyEndpoint, () => HttpResponse.json([{ week: 'nope' }]))
+    )
+    await expect(getStarHistory()).rejects.toThrow()
+  })
+
+  it('throws on a non-ok GraphQL response', async () => {
+    mockGitHub()
+    server.use(
+      http.post(graphqlEndpoint, () =>
         HttpResponse.json({}, { status: 500, statusText: 'Server Error' })
       )
     )
     await expect(getStarHistory()).rejects.toThrow(/GitHub API error: 500/)
+  })
+
+  it('throws on a non-ok history response', async () => {
+    mockGitHub()
+    server.use(
+      http.get(historyEndpoint, () =>
+        HttpResponse.json({}, { status: 502, statusText: 'Bad Gateway' })
+      )
+    )
+    await expect(getStarHistory()).rejects.toThrow(/GitHub API error: 502/)
   })
 })
