@@ -1,6 +1,7 @@
 import { blog } from '@/src/app/source'
 // import { createMetadata } from '@/utils/metadata'
 import { PageFooter } from '@/src/app/(pages)/_landing/page-footer'
+import { HoverPrefetchLink as Link } from '@/src/components/hover-prefetch-link'
 import { Description } from '@/src/components/typography'
 import {
   Breadcrumb,
@@ -13,7 +14,6 @@ import {
 import { SiBluesky, SiGithub } from '@icons-pack/react-simple-icons'
 import defaultMdxComponents from 'fumadocs-ui/mdx'
 import type { Metadata } from 'next'
-import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { Author } from './_components/author'
 

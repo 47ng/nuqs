@@ -1,8 +1,8 @@
+import { HoverPrefetchLink as Link } from '@/src/components/hover-prefetch-link'
 import { NuqsWordmark } from '@/src/components/logo'
 import { buttonVariants } from '@/src/components/ui/button'
 import { cn } from '@/src/lib/utils'
 import { ChevronDown, Github, Library } from 'lucide-react'
-import Link from 'next/link'
 import { LandingDemo } from './demo'
 import { WorksWith } from './works-with'
 
