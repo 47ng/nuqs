@@ -1,4 +1,5 @@
 import { blog } from '@/src/app/source'
+import { HoverPrefetchLink as Link } from '@/src/components/hover-prefetch-link'
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -11,7 +12,6 @@ import { Card } from 'fumadocs-ui/components/card'
 import { DocsDescription, DocsTitle } from 'fumadocs-ui/page'
 import { RssIcon } from 'lucide-react'
 import type { Metadata } from 'next'
-import Link from 'next/link'
 import { ComponentProps } from 'react'
 import { PageFooter } from '../_landing/page-footer'
 import { getBlogPosts } from './_lib/source'

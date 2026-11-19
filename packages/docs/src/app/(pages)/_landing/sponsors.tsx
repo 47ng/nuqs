@@ -3,6 +3,7 @@ import { cn } from '@/src/lib/utils'
 import { Heart } from 'lucide-react'
 import type { ComponentProps, ReactNode } from 'react'
 import { z } from 'zod'
+import { elmoLogo } from './elmo-logo'
 
 const sponsorSchema = z.object({
   name: z.string().nullish(),
@@ -103,7 +104,7 @@ const SPONSORS: Sponsors = [
     handle: 'elmohq',
     name: 'Elmo',
     url: 'https://www.elmohq.com/?utm_source=nuqs&utm_medium=sponsor&utm_campaign=nuqs',
-    img: '/sponsors/elmo.svg'
+    img: elmoLogo
   },
   {
     handle: 'teknikgeek',

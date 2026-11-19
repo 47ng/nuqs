@@ -1,10 +1,11 @@
 import { Heart } from 'lucide-react'
+import { elmoLogo } from './elmo-logo'
 
 export const asideSponsors: SponsorProps[] = [
   {
     name: 'Elmo',
     url: 'https://www.elmohq.com/?utm_source=nuqs&utm_medium=banner&utm_campaign=nuqs',
-    logoUrl: '/sponsors/elmo.svg',
+    logoUrl: elmoLogo,
     description: 'Open source AI Search tracking and optimization.'
   },
   {

@@ -7,6 +7,7 @@ import { NuqsAdapter } from 'nuqs/adapters/next/app'
 import { type ReactNode } from 'react'
 import { TopBanner } from './banners'
 import { Favicon } from '../components/favicon'
+import { HoverPrefetchLink } from '../components/hover-prefetch-link'
 import { ResponsiveHelper } from '../components/responsive-helpers'
 import { getBaseUrl } from '../lib/url'
 import { cn } from '../lib/utils'
@@ -59,7 +60,10 @@ export default function Layout({ children }: { children: ReactNode }) {
       <Favicon />
       <body>
         <TopBanner />
-        <RootProvider theme={{ hotKey: false }}>
+        <RootProvider
+          theme={{ hotKey: false }}
+          components={{ Link: HoverPrefetchLink }}
+        >
           <NuqsAdapter>{children}</NuqsAdapter>
         </RootProvider>
         {enableAnalytics && (
