@@ -23,6 +23,17 @@ const config = {
   // The changelog page imports the IO-free changelog codec straight from the
   // `scripts` workspace as raw TypeScript; transpile it as part of the build.
   transpilePackages: ['scripts'],
+  headers: async () => {
+    return ['/sponsors/:path*', '/avatar-128.jpeg'].map(source => ({
+      source,
+      headers: [
+        {
+          key: 'Cache-Control',
+          value: 'public, max-age=604800, stale-while-revalidate=86400'
+        }
+      ]
+    }))
+  },
   redirects: async () => {
     return [
       {
