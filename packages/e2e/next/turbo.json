@@ -9,7 +9,8 @@
         "BASE_PATH",
         "REACT_COMPILER",
         "CACHE_COMPONENTS",
-        "E2E_NO_CACHE_ON_RERUN"
+        "E2E_NO_CACHE_ON_RERUN",
+        "NUQS_E2E_UNIFIED_ADAPTER"
       ]
     },
     "test": {
@@ -19,7 +20,8 @@
         "BASE_PATH",
         "REACT_COMPILER",
         "CACHE_COMPONENTS",
-        "E2E_NO_CACHE_ON_RERUN"
+        "E2E_NO_CACHE_ON_RERUN",
+        "NUQS_E2E_UNIFIED_ADAPTER"
       ]
     }
   }
