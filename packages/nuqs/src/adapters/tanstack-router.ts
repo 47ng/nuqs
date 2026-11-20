@@ -22,6 +22,17 @@ type HistorySubscriberArgs = {
   }
 }
 
+// TanStack Router treats `to` as a pathname and runs `cleanPath`
+// (which collapses consecutive slashes `/{2,}/` into a single `/`)
+// and `interpolatePath` (which replaces `{...}` parameter patterns).
+// We percent-encode consecutive slashes and braces so TSR leaves them intact (see #1602).
+function sanitizeQueryStringForTanStackRouter(queryString: string): string {
+  return queryString
+    .replace(/\/{2,}/g, match => '%2F'.repeat(match.length))
+    .replace(/\{/g, '%7B')
+    .replace(/\}/g, '%7D')
+}
+
 function useNuqsTanstackRouterAdapter(watchKeys: string[]): AdapterInterface {
   const pathname = useLocation({ select: state => state.pathname })
   // Use useRouterState instead of useLocation so that structuralSharing
@@ -105,9 +116,11 @@ function useNuqsTanstackRouterAdapter(watchKeys: string[]): AdapterInterface {
           // in other parts of the app.
           //
           // Note: we need to specify pathname + search here to avoid TSR appending
-          // a trailing slash to the pathname, see https://github.com/47ng/nuqs/issues/1215
+          // a trailing slash to the pathname, see https://github.com/47ng/nuqs/issues/1215.
           from: '/',
-          to: pathname + renderQueryString(search),
+          to:
+            pathname +
+            sanitizeQueryStringForTanStackRouter(renderQueryString(search)),
           replace: options.history === 'replace',
           resetScroll: options.scroll,
           hash: prevHash => prevHash ?? '',
