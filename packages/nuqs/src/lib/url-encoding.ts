@@ -1,9 +1,50 @@
 import { error } from './errors'
 
+export type ConfigureOptions = {
+  /**
+   * When `false`, query strings are rendered with `URLSearchParams`
+   * (`application/x-www-form-urlencoded`) instead of the default pretty
+   * encoding, which leaves characters such as `[]{}` unescaped.
+   *
+   * Some tools truncate URLs that contain those characters (for example
+   * Slack, when a `parseAsJson` value includes braces). Opting out keeps
+   * the written URL compatible with those tools. Parsing is unchanged:
+   * the platform decodes either form before nuqs reads it.
+   *
+   * Call `configure` in every runtime that writes URLs (client hooks and
+   * server serializers are separate bundles).
+   *
+   * @default true
+   */
+  prettyEncoding?: boolean
+}
+
+// Per module instance. Duplicate copies of nuqs each keep their own flag;
+// call `configure` on the copy that renders the URL.
+let prettyEncoding = true
+
+/**
+ * Set library-wide defaults. Currently controls how query strings are encoded.
+ *
+ * @see https://github.com/47ng/nuqs/issues/1572
+ */
+export function configure(options: ConfigureOptions): void {
+  prettyEncoding = options.prettyEncoding ?? prettyEncoding
+}
+
 export function renderQueryString(search: URLSearchParams): string {
   if (search.size === 0) {
     return ''
   }
+  // `false` uses URLSearchParams (application/x-www-form-urlencoded).
+  const queryString = prettyEncoding
+    ? renderPrettyQueryString(search)
+    : '?' + search.toString()
+  warnIfURLIsTooLong(queryString)
+  return queryString
+}
+
+function renderPrettyQueryString(search: URLSearchParams): string {
   const query: string[] = []
   for (const [key, value] of search.entries()) {
     // Replace disallowed characters in keys,
@@ -16,9 +57,7 @@ export function renderQueryString(search: URLSearchParams): string {
       .replace(/\?/g, '%3F')
     query.push(`${safeKey}=${encodeQueryValue(value)}`)
   }
-  const queryString = '?' + query.join('&')
-  warnIfURLIsTooLong(queryString)
-  return queryString
+  return '?' + query.join('&')
 }
 
 export function encodeQueryValue(input: string): string {
