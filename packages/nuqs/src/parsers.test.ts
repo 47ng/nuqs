@@ -386,6 +386,13 @@ describe('parsers', () => {
     ).toThrow()
   })
 
+  it('handles custom unreserved separators like hyphen without splitting', () => {
+    const parser = parseAsArrayOf(parseAsString, '-')
+    const serialized = parser.serialize(['foo-bar', 'baz'])
+    expect(serialized).toBe('foo%2Dbar-baz')
+    expect(parser.parse(serialized)).toEqual(['foo-bar', 'baz'])
+  })
+
   describe('parseAsNativeArrayOf', () => {
     it('serializes', () => {
       const parser = parseAsNativeArrayOf(parseAsString)

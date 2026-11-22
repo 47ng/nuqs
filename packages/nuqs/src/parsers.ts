@@ -476,7 +476,10 @@ export function parseAsArrayOf<ItemType>(
   separator = ','
 ): SingleParserBuilder<ItemType[]> {
   const itemEq = itemParser.eq ?? isEqual
-  const encodedSeparator = encodeURIComponent(separator)
+  const encodedSeparator = encodeURIComponent(separator).replace(
+    /[-_.!~*'()]/g,
+    c => `%${c.charCodeAt(0).toString(16).toUpperCase()}`
+  )
   // todo: Handle default item values and make return type non-nullable
   return createParser({
     parse: query => {
@@ -490,7 +493,9 @@ export function parseAsArrayOf<ItemType>(
         .map((item, index) =>
           safeParse(
             itemParser.parse,
-            item.replaceAll(encodedSeparator, separator),
+            item
+              .replaceAll(encodedSeparator, separator)
+              .replaceAll(encodedSeparator.toLowerCase(), separator),
             `[${index}]`
           )
         )
