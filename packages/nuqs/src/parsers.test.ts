@@ -393,6 +393,11 @@ describe('parsers', () => {
     expect(parser.parse(serialized)).toEqual(['foo-bar', 'baz'])
   })
 
+  it('preserves lowercase characters in items when separator contains uppercase letters', () => {
+    const parser = parseAsArrayOf(parseAsString, 'X')
+    expect(parser.parse('maxXbox')).toEqual(['max', 'box'])
+  })
+
   describe('parseAsNativeArrayOf', () => {
     it('serializes', () => {
       const parser = parseAsNativeArrayOf(parseAsString)

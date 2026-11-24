@@ -493,9 +493,7 @@ export function parseAsArrayOf<ItemType>(
         .map((item, index) =>
           safeParse(
             itemParser.parse,
-            item
-              .replaceAll(encodedSeparator, separator)
-              .replaceAll(encodedSeparator.toLowerCase(), separator),
+            item.replaceAll(encodedSeparator, separator),
             `[${index}]`
           )
         )
