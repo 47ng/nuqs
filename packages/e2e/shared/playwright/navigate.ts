@@ -13,5 +13,7 @@ export async function navigateTo(page: Page, pathname: string, search = '') {
     )
   }
   await page.waitForLoadState('networkidle')
-  await page.locator('#hydration-marker').waitFor({ state: 'hidden' })
+  // The hidden marker is inserted by an effect. Waiting for "hidden" also
+  // succeeds before it exists, allowing interactions before hydration.
+  await page.locator('#hydration-marker').waitFor({ state: 'attached' })
 }
