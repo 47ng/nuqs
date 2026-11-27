@@ -136,9 +136,13 @@ export function NuqsAdapter({
    */
   serverSearch?: string | URLSearchParams
 }): React.ReactElement {
+  const value = useMemo(
+    () => ({ fullPageNavigationOnShallowFalseUpdates, serverSearch }),
+    [fullPageNavigationOnShallowFalseUpdates, serverSearch]
+  )
   return createElement(
     NuqsReactAdapterContext.Provider,
-    { value: { fullPageNavigationOnShallowFalseUpdates, serverSearch } },
+    { value },
     createElement(NuqsReactAdapter, {
       ...adapterProps,
       children: [

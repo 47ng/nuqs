@@ -1,4 +1,4 @@
-import { createContext, createElement, useContext } from 'react'
+import { createContext, createElement, useContext, useMemo } from 'react'
 import type { Options } from '../../defs'
 import { error } from '../../lib/errors'
 import { globalWeakSingleton } from '../../lib/global-singleton'
@@ -70,15 +70,13 @@ export type AdapterProvider = (
 export function createAdapterProvider(
   useAdapter: UseAdapterHook
 ): AdapterProvider {
-  return ({ children, defaultOptions, processUrlSearchParams, ...props }) =>
-    createElement(
-      context.Provider,
-      {
-        ...props,
-        value: { useAdapter, defaultOptions, processUrlSearchParams }
-      },
-      children
+  return ({ children, defaultOptions, processUrlSearchParams, ...props }) => {
+    const value = useMemo(
+      () => ({ useAdapter, defaultOptions, processUrlSearchParams }),
+      [defaultOptions, processUrlSearchParams]
     )
+    return createElement(context.Provider, { ...props, value }, children)
+  }
 }
 
 export function useAdapter(watchKeys: string[]): AdapterInterface {
