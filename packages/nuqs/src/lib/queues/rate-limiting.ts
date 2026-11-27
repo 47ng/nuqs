@@ -12,7 +12,8 @@ function getDefaultThrottle() {
     return 50
   }
   try {
-    const match = navigator.userAgent?.match(/version\/([\d\.]+) safari/i)
+    // iPhone and iPad put `Mobile/<build>` between `Version/x` and `Safari`
+    const match = navigator.userAgent?.match(/version\/([\d\.]+).* safari/i)
     return parseFloat(match![1]!) >= 17 ? 120 : 320
   } catch {
     return 320
